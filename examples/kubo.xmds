@@ -8,12 +8,13 @@
   
   <features>
     <benchmark />
-    <error_check />
+    <!-- <error_check /> -->
     <bing />
     <fftw version="3" />
     <openmp />
     <stochastic>
-      <noise kind="gaussian" prefix="n" num="1" />
+      <noise kind="gaussian" prefix="n" num="1" seed="157 9348 234"/>
+      <!-- If there is no seed attribute then seeds will be chosen randomly at run-time -->
     </stochastic>
   </features>
   
@@ -35,8 +36,8 @@
   </field>
   
   <sequence>
-    <integrate algorithm="RK4" interval="10" steps="1000">
-      <samples>100</samples>
+    <integrate algorithm="RK4" interval="100" steps="10000">
+      <samples>1000</samples>
       <operators field="main">
         <integration_vectors>main</integration_vectors>
         <![CDATA[

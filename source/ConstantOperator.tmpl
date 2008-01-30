@@ -30,7 +30,7 @@ ${loopOverFieldInSpaceWithVectorsAndInnerContent($field, $operatorSpace, $vector
   ##
   #set $setOfVectorsToLoopOver = set()
   #silent $setOfVectorsToLoopOver.update($operatorTargetVectorsSet)
-${transformVectorsToSpace(list($setOfVectorsToLoopOver), $operatorSpace)}#slurp
+${transformVectorsToSpace($setOfVectorsToLoopOver, $operatorSpace)}#slurp
   ##
   #silent $setOfVectorsToLoopOver.add($operatorVector)
   ##
@@ -51,6 +51,6 @@ _${resultVector.id}_space = $operatorSpace;
 
 #def evaluateOperatorLoop($setOfVectorsToLoopOver)
   ##
-${loopOverVectorsWithInnerContent(list($setOfVectorsToLoopOver), $insideEvaluateOperatorLoops)}#slurp
+${loopOverVectorsWithInnerContent($setOfVectorsToLoopOver, $insideEvaluateOperatorLoops)}#slurp
   ##
 #end def
