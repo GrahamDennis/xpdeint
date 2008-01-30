@@ -17,7 +17,7 @@ complex $operatorComponentName;
   #set $setOfVectorsToLoopOver = $dependencies.copy()
   ##
   #silent $setOfVectorsToLoopOver.update($operatorTargetVectorsSet)
-${transformVectorsToSpace(list($setOfVectorsToLoopOver), $operatorSpace)}#slurp
+${transformVectorsToSpace($setOfVectorsToLoopOver, $operatorSpace)}#slurp
 
 ${evaluateOperatorLoop($setOfVectorsToLoopOver)}#slurp
   #if $resultVector and $resultVector.needsFourierTransforms
@@ -33,6 +33,6 @@ _${resultVector.id}_space = $operatorSpace;
   #if $resultVector
     #silent $setOfVectorsToLoopOver.add($resultVector)
   #end if
-${loopOverFieldInSpaceWithVectorsAndInnerContent($field, $operatorSpace, list($setOfVectorsToLoopOver), $insideEvaluateOperatorLoops)}#slurp
+${loopOverFieldInSpaceWithVectorsAndInnerContent($field, $operatorSpace, $setOfVectorsToLoopOver, $insideEvaluateOperatorLoops)}#slurp
   ##
 #end def

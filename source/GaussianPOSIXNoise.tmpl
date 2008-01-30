@@ -27,8 +27,9 @@ for (long _i0 = 0; _i0 < _n & ~1; _i0 += 2) {
 }
 
 // If _n is odd, we need to generate the last random number
+// there has to be a way to do this faster
 if (_n & 1) {
-  _noise_vector[_n - 1] = sqrt(-2*log(erand48(${generatorName}))*_var);
+  _noise_vector[_n - 1] = sqrt(-2*log(erand48(${generatorName}))*_var) * cos(2.0*M_PI*erand48(${generatorName}));
 }
   ##
 #end def

@@ -8,10 +8,16 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
 from _Feature import _Feature
+from VectorElement import VectorElement
 from VectorInitialisationCDATA import VectorInitialisationCDATA
 from DeltaAOperator import DeltaAOperator
 
 class _StochasticFeature (_Feature):
+  
+  @property
+  def children(self):
+    return self.noises
+  
   def preflight(self):
     # We need to iterate over everything that could possibly need noises
     # The best way to do that is to have the ability to iterate over everything
@@ -34,7 +40,41 @@ class _StochasticFeature (_Feature):
     for c in classesThatCanUseNoises:
       objectsThatMightUseNoises.update(objectMap[c])
     
+    noiseNameMap = dict([(noise.prefix, noise) for noise in self.noises])
+    fieldToNoisesMap = dict()
     
+    for o in objectsThatMightUseNoises:
+      noises = self.noises
+      if hasattr(o, 'noiseEntity'):
+        noises = []
+        for noiseName in noiseEntity.value:
+          if not noiseName in noiseNameMap:
+            raise ParserException(noiseEntity.xmlElement, "Unknown noise prefix %(noiseName)s." % locals())
+          noises.append(noiseNameMap[noiseName])
+      
+      o.noises = noises
+      if not o.field in fieldToNoisesMap:
+        fieldToNoisesMap[o.field] = set()
+      fieldToNoisesMap[o.field].update(o.noises)
     
+    for field, noises in fieldToNoisesMap.iteritems():
+      for noise in noises:
+        if not hasattr(noise, 'noiseVectors'):
+          noise.noiseVectors = dict()
+        
+        noiseVector = VectorElement(name = '%s_noises' % noise.prefix, field = field,
+                                    searchList = self.searchList(), filter = self.filterTemplateArgument)
+        noiseVector.type = 'double'
+        noiseVector.needsInitialisation = False
+        noiseVector.components = ['%s_%i' % (noise.prefix, i) for i in range(1, noise.noiseCount + 1)]
+        field.managedVectors.add(noiseVector)
+        
+        noise.noiseVectors[field] = noiseVector
+    
+    for o in objectsThatMightUseNoises:
+      # Add to the dependencies for this object the noise vectors corresponding to the noises
+      # that this object wants to use
+      o.dependencies.update([noise.noiseVectorForField(o.field) for noise in o.noises])
+      
     super(_Feature, self).preflight()
   

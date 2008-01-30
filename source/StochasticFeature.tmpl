@@ -9,7 +9,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 #from DeltaAOperator import DeltaAOperator
 
 #def description: Stochastic
-#attr $featureName = 'Stochastic'
+#attr featureName = 'Stochastic'
 
 #*
   Globals
@@ -23,26 +23,35 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 struct _dtdWstore {
   double _step;
   #for noise in noisesNeeded
-    #for noiseVector in noise.noiseVectors.intervalues()
+    #for noiseVector in noise.noiseVectors.itervalues()
   double* _${noiseVector.id};
     #end for
   #end for
   _dtdWstore() {
     _step = 0;
   #for noise in noisesNeeded
-    #for noiseVector in noise.noiseVectors.intervalues()
+    #for noiseVector in noise.noiseVectors.itervalues()
     _${noiseVector.id} = NULL;
     #end for
   #end for
   }
   ~_dtdWstore() {
   #for noise in noisesNeeded
-    #for noiseVector in noise.noiseVectors.intervalues()
+    #for noiseVector in noise.noiseVectors.itervalues()
     xmds_free(_${noiseVector.id});
     #end for
   #end for
   }
 };
+  #super
+  ##
+#end def
+
+#def topLevelSequenceBegin($dict)
+  ##
+  #for noise in $noises
+${noise.initialiseSeeds(noise.seedArray)}#slurp
+  #end for
   ##
 #end def
 
@@ -91,9 +100,9 @@ _make_${noise.prefix}_noises(_var, 0.0, _${noiseVector.id}, _${caller.vector.fie
   ##
   #for field in integrator.integrationFields
 const double _${field.name}_dVdt = #slurp
-  #if len($field.dimensions)
+    #if len($field.dimensions)
 $field.volumeElementInSpace(0) * #slurp
-  #end if
+    #end if
 _noiseStep;
 const double _${field.name}_var = 1.0/_${field.name}_dVdt;
   #end for
@@ -136,8 +145,8 @@ _active_${noiseVector.id} = _${noiseVector.id};
   #for (noise, field) in self.noisesAndFieldsForIntegrator(integrator)
     #set $noiseVector = noise.noiseVectorForField(field)
 
-_make_${noise.prefix}_noises(_${integrationField.name}_var, _${integrationField.name}_dVdt,#slurp
- _${noiseVector.id}, _${integrationField.name}_size * _${noiseVector.id}_ncomponents);
+_make_${noise.prefix}_noises(_${field.name}_var, _${field.name}_dVdt,#slurp
+ _${noiseVector.id}, _${field.name}_size * _${noiseVector.id}_ncomponents);
     ##
     #set $makeNoisesDict = {'noise': noise, 'noiseVector': noiseVector, 'field': field}
 ${insertCodeForFeatures('makeNoisesForFixedStep', featureOrdering, makeNoisesDict)}#slurp

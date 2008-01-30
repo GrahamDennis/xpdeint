@@ -1,5 +1,8 @@
 * Complete Stochastics support
   * Add support for breaking up poissonian noise
+  - Stochastics support is now mostly done, what is missing is:
+	* Stochastics and error checking: the second noise arrays aren't created
+	* 'noise' tags inside initialisation and integrate elements aren't currently parsed
 * Add a 'filter' segment
 * Add 'functions' elements to integrate, filter segments and anything else that
   might use them
@@ -35,3 +38,5 @@
   something else.
 * FFTW2 support. FFTW3 support has been written and tested, and the basic code for FFTW2 is in
   FourierTransformFFTW2.tmpl, however it hasn't been finished.
+* Breakpoint elements.
+* Sequence segments so that you can loop over things.

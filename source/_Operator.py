@@ -30,7 +30,6 @@ class _Operator (ScriptElement):
     ScriptElement.__init__(self, *args, **KWs)
     
     # Set default variables
-    self.dependencies = set()
     self.dependenciesEntity = None
     self.operatorComponents = {}
     self.operatorVector = None

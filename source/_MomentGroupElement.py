@@ -18,7 +18,6 @@ class _MomentGroupElement (FieldElement):
     FieldElement.__init__(self, *args, **KWs)
     
     # Set default variables
-    self.dependencies = set()
     self.requiresInitialSample = False
     self.getVar('momentGroups').append(self)
   

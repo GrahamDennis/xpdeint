@@ -25,6 +25,9 @@ class _ScriptElement (Template):
       objectMap[self.__class__] = set()
     
     objectMap[self.__class__].add(self)
+    
+    self.filterTemplateArgument = KWs['filter']
+    self.dependencies = set()
   
   # Default description of the template
   def description(self):

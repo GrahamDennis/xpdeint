@@ -175,22 +175,28 @@ void _${field.name}_${name}_go_space(unsigned long _newSpace)
   Do the mixed transform for a given dimension
 *#
 #def mixedTransformForDimension($dimensionNumber, $type)
+  ##
 ${features.FourierTransform.createQuickPlanForVectorWithLatticeAndCount($self, '_lattice', '_howMany', $type), autoIndent=True}#slurp
-#if $dimensionNumber > 0
+  #if $dimensionNumber > 0
 for (unsigned long _i0=0; _i0 < _${field.name}_lattice0 * $field.pointsInDimensionsWithIndices($range(1,$dimensionNumber)); _i0++) {
   ${features.FourierTransform.runQuickFFTForVectorWithIndexAndLatticeAndCount($self, '_i0', '_lattice', '_howMany', $type), autoIndent=True}#slurp
 }
-#else
+  #else
 ${features.FourierTransform.runQuickFFTForVectorWithCount($self, '_howMany', $type), autoIndent=True}#slurp
-#end if
+  #end if
 ${features.FourierTransform.destroyQuickPlan(), autoIndent=True}#slurp
+  ##
 #end def
 #*
 
   Initialise vector (called from segment 0)
 *#
 #def initialise
+  ##
+  #if $needsInitialisation
 _${field.name}_${name}_initialise();
+  #end if
+  ##
 #end def
 #*
 

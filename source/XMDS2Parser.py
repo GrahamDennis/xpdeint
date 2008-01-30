@@ -164,6 +164,12 @@ class XMDS2Parser(ScriptParser):
         except ValueError, err:
           raise ParserException(noiseElement, "Cannot understand '%(noiseCountString)s' as an "
                                               "integer number of noises." % locals())
+        noise.noiseCount = noiseCount
+        
+        noise.seedArray = []
+        if noiseElement.hasAttribute('seed'):
+          seedString = noiseElement.getAttribute('seed').strip()
+          noise.seedArray = self.integersInString(seedString)
         
         stochasticFeature.noises.append(noise)
     
