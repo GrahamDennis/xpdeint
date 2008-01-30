@@ -1,0 +1,35 @@
+#*
+ConstantEXOperator.tmpl
+
+Explicit-picture transverse derivative operator
+
+Created by Graham Dennis on 2007-10-20.
+Copyright (c) 2007 __MyCompanyName__. All rights reserved.
+*#
+#extends ConstantOperator
+
+#def description: EX transverse derivative operator for field $field.name
+#attr $operatorKind = ConstantOperator.OtherOperatorKind
+
+#def insideCalculateOperatorFieldLoops
+  ##
+  ## We expect the integrator to have defined '_step'
+  ##
+// ************** Operator code *****************
+${operatorDefinitionCode}
+// **********************************************
+  ##
+#end def
+
+#def insideEvaluateOperatorLoops
+  ##
+  #for $operatorComponentNumber, ($operatorComponentName, $operatorComponentVectors) in enumerate($operatorComponents.iteritems())
+    #for $targetVectorComponents in $operatorComponentVectors.itervalues()
+      #for $targetVectorComponent in $targetVectorComponents
+// ${operatorComponentName}[$targetVectorComponent]
+_${integrator.name}_${name}_${operatorComponentName}_${targetVectorComponent} = $operatorComponentName * $targetVectorComponent;
+      #end for
+    #end for
+  #end for
+  ##
+#end def

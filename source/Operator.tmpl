@@ -1,0 +1,44 @@
+#*
+Operator.tmpl
+
+Created by Graham Dennis on 2007-10-13.
+Copyright (c) 2007 __MyCompanyName__. All rights reserved.
+*#
+#extends _Operator
+
+#def insideEvaluateOperatorLoops
+  ##
+  ## Content must be provided by a subclass
+  #assert 0
+  ##
+#end def
+
+#def allocate
+  ##
+  #for $vector in [$operatorVector, $resultVector]
+    #if $vector
+${vector.allocate}#slurp
+    #end if
+  #end for
+  ##
+#end def
+
+#def initialise
+  ##
+${allocate}#slurp
+  ##
+  #if $operatorVector
+_${integrator.name}_calculate_${name}_field(_step);
+  #end if
+  ##
+#end def
+
+#def finalise
+  ##
+  #for $vector in [$operatorVector, $resultVector]
+    #if $vector
+${vector.free}#slurp
+    #end if
+  #end for
+  ##
+#end def

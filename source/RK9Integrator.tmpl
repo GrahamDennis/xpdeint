@@ -1,0 +1,550 @@
+#*
+RK9Integrator.tmpl
+
+Created by Graham Dennis on 2007-10-20.
+Copyright (c) 2007 __MyCompanyName__. All rights reserved.
+*#
+#extends FixedStepIntegrator
+
+#def description: segment $segmentNumber (RK9 Integrator)
+#attr $ipPropagationStepFractions = \
+  [ '1.000000000000000', '0.978260869565217', '0.903704189521999', '0.855556284282999',
+    '0.477941176470588', '0.771575563871365', '0.456396464100663', '0.356643356643357',
+    '0.517482517482518', '0.931818181818182', '0.749391727493917', '0.332632840343994',
+    '0.144927536231884', '0.102040816326531' ]
+#attr $extraIntegrationArrayNames = \
+  [ 'akafield', 'akbfield', 'akcfield', 'akdfield', 'akefield',
+    'akffield', 'akgfield', 'akhfield', 'akifield', 'akjfield' ]
+
+#def initialise
+// Runge Kutta method constants
+double _a_raw[16];
+double _a[16];
+double _b[16][16];
+double _c[16];
+
+for(unsigned long _i0=0; _i0 < 16; _i0++)
+{
+  _a_raw[_i0] = 0.0;
+  _c[_i0] = 0.0;
+  for(unsigned long _i1=0; _i1 < 16; _i1++)
+   _b[_i0][_i1] = 0.0;
+}
+
+_a_raw[1]  = 0.02173913043478260869565217391304347;
+_a_raw[2]  = 0.09629581047800066670113001679819925;
+_a_raw[3]  = 0.14444371571700100005169502519729888;
+_a_raw[4]  = 0.52205882352941176470588235294117647;
+_a_raw[5]  = 0.22842443612863469578031459099794265;
+_a_raw[6]  = 0.54360353589933733219171338103002937;
+_a_raw[7]  = 0.64335664335664335664335664335664335;
+_a_raw[8]  = 0.48251748251748251748251748251748251;
+_a_raw[9]  = 0.06818181818181818181818181818181818;
+_a_raw[10] = 0.25060827250608272506082725060827250;
+_a_raw[11] = 0.66736715965600568968278165443304378;
+_a_raw[12] = 0.85507246376811594202898550724637681;
+_a_raw[13] = 0.89795918367346938775510204081632653;
+_a_raw[14] = 1.0;
+_a_raw[15] = 1.0;
+
+_a[0]=0.0;
+for(unsigned long _i0=1; _i0 < 16; _i0++)
+  _a[_i0] = _a_raw[_i0] - _a_raw[_i0-1];
+
+_b[1][0]   = 1.0/46.0;
+_b[2][0]   =-0.11698050118114486205818241524969622;
+_b[2][1]   = 0.21327631165914552875931243204789548;
+_b[3][0]   = 0.03611092892925025001292375629932472;
+_b[3][2]   = 0.10833278678775075003877126889797416;
+_b[4][0]   = 1.57329743908138605107331820072051125;
+_b[4][2]   =-5.98400943754042002888532938159655553;
+_b[4][3]   = 4.93277082198844574251789353381722074;
+_b[5][0]   = 0.05052046351120380909008334360006234;
+_b[5][3]   = 0.17686653884807108146683657390397612;
+_b[5][4]   = 0.00103743376935980522339467349390418;
+_b[6][0]   = 0.10543148021953768958529340893598138;
+_b[6][3]   =-0.16042415162569842979496486916719383;
+_b[6][4]   = 0.11643956912829316045688724281285250;
+_b[6][5]   = 0.48215663817720491194449759844838932;
+_b[7][0]   = 0.07148407148407148407148407148407148;
+_b[7][5]   = 0.32971116090443908023196389566296464;
+_b[7][6]   = 0.24216141096813279233990867620960722;
+_b[8][0]   = 0.07162368881118881118881118881118881;
+_b[8][5]   = 0.32859867301674234161492268975519694;
+_b[8][6]   = 0.11622213117906185418927311444060725;
+_b[8][7]   =-0.03392701048951048951048951048951048;
+_b[9][0]   = 0.04861540768024729180628870095388582;
+_b[9][5]   = 0.03998502200331629058445317782406268;
+_b[9][6]   = 0.10715724786209388876739304914053506;
+_b[9][7]   =-0.02177735985419485163815426357369818;
+_b[9][8]   =-0.10579849950964443770179884616296721;
+_b[10][0]  =-0.02540141041535143673515871979014924;
+_b[10][5]  = 1.0/30.0;
+_b[10][6]  =-0.16404854760069182073503553020238782;
+_b[10][7]  = 0.03410548898794737788891414566528526;
+_b[10][8]  = 0.15836825014108792658008718465091487;
+_b[10][9]  = 0.21425115805975734472868683695127609;
+_b[11][0]  = 0.00584833331460742801095934302256470;
+_b[11][5]  =-0.53954170547283522916525526480339109;
+_b[11][6]  = 0.20128430845560909506500331018201158;
+_b[11][7]  = 0.04347222773254789483240207937678906;
+_b[11][8]  =-0.00402998571475307250775349983910179;
+_b[11][9]  = 0.16541535721570612771420482097898952;
+_b[11][10] = 0.79491862412512344573322086551518180;
+_b[12][0]  =-0.39964965968794892497157706711861448;
+_b[12][5]  =-3.79096577568393158554742638116249372;
+_b[12][6]  =-0.40349325653530103387515807815498044;
+_b[12][7]  =-2.82463879530435263378049668286220715;
+_b[12][8]  = 1.04226892772185985533374283289821416;
+_b[12][9]  = 1.12510956420436603974237036536924078;
+_b[12][10] = 3.32746188718986816186934832571938138;
+_b[12][11] = 2.77897957186355606325818219255783627;
+_b[13][0]  = 0.39545306350085237157098218205756922;
+_b[13][5]  = 5.82534730759650564865380791881446903;
+_b[13][6]  =-0.36527452339161313311889856846974452;
+_b[13][7]  = 1.18860324058346533283780076203192232;
+_b[13][8]  = 0.57970467638357921347110271762687972;
+_b[13][9]  =-0.86824862589087693262676988867897834;
+_b[13][10] =-5.20227677296454721392873650976792184;
+_b[13][11] =-0.79895541420753382543211121058675915;
+_b[13][12] = 0.14360623206363792632792463778889008;
+_b[14][0]  = 8.49173149061346398013352206978380938;
+_b[14][5]  = 86.32213734729036800877634194386790750;
+_b[14][6]  = 1.02560575501091662034511526187393241;
+_b[14][7]  = 85.77427969817339941806831550695235092;
+_b[14][8]  =-13.98699305104110611795532466113248067;
+_b[14][9]  =-20.71537405501426352265946477613161883;
+_b[14][10] =-72.16597156619946800281180102605140463;
+_b[14][11] =-76.71211139107806345587696023064419687;
+_b[14][12] = 4.22319427707298828839851258893735507;
+_b[14][13] =-1.25649850482823521641825667745565428;
+_b[15][0]  =-0.42892119881959353241190195318730008;
+_b[15][5]  =-9.16865700950084689999297912545025359;
+_b[15][6]  = 1.08317616770620939241547721530003920;
+_b[15][7]  =-1.23501525358323653198215832293981810;
+_b[15][8]  =-1.21438272617593906232943856422371019;
+_b[15][9]  = 1.37226168507232166621351243731869914;
+_b[15][10] = 9.15723239697162418155377135344394113;
+_b[15][11] = 1.30616301842220047563298585480401671;
+_b[15][12] =-0.25285618808937955976690569433069974;
+_b[15][13] = 0.38099910799663987066763679926508552;
+
+_c[0]  = 0.01490902081978461022483617102382552;
+_c[7]  =-0.20408044692054151258349120934134791;
+_c[8]  = 0.22901438600570447264772469337066476;
+_c[9]  = 0.12800558251147375669208211573729202;
+_c[10] = 0.22380626846054143649770066956485937;
+_c[11] = 0.39553165293700054420552389156421651;
+_c[12] = 0.05416646758806981196568364538360743;
+_c[13] = 0.12691439652445903685643385312168037;
+_c[14] =-0.00052539244262118876455834655383035;
+_c[15] = 1.0/31.0;
+
+  ##
+  #super
+  ##
+#end def
+
+#*
+  Single integration step (RK4)
+*#
+#def singleIntegrationStep
+  ##
+${transformVectorsToSpace($vectors, $homeSpace)}#slurp
+
+// Step 1
+
+${propagationDimension} += _a[0]*_step;
+
+${loopOverVectorsWithInnerContentTemplate($vectors,
+"""_akafield_${vector.id}[$index] = _${vector.id}[$index];
+""")}#slurp
+
+  #for $vector in $vectors
+_active_${vector.id} = _${vector.id};
+  #end for
+
+// a_i = D(a_2*dt)[y1]
+_segment${segmentNumber}_ip_evolve(+1);
+${goFromKSpace}#slurp
+
+  #for $vector in $vectors
+_active_${vector.id} = _akafield_${vector.id};
+  #end for
+
+// a_k = G[a_k, t]
+_segment${segmentNumber}_calculate_delta_a(_step);
+
+// a_i = D(a_2*dt)[y1]
+_segment${segmentNumber}_ip_evolve(+1);
+${goFromKSpace}#slurp
+
+// Step 2
+
+${propagationDimension} += _a[1]*_step;
+
+${loopOverVectorsWithInnerContentTemplate($vectors,
+"""_akbfield_${vector.id}[$index] = _${vector.id}[$index] + _b[1][0]*_akafield_${vector.id}[$index];
+""")}#slurp
+
+  #for $vector in $vectors
+_active_${vector.id} = _akbfield_${vector.id};
+  #end for
+
+// a_i = D(a_2*dt)[y1]
+_segment${segmentNumber}_ip_evolve(-2);
+
+// a_k = G[a_k, t]
+_segment${segmentNumber}_calculate_delta_a(_step);
+
+// a_i = D(a_2*dt)[y1]
+_segment${segmentNumber}_ip_evolve(+2);
+${goFromKSpace}#slurp
+
+// Step 3
+
+${propagationDimension} += _a[2]*_step;
+
+${loopOverVectorsWithInnerContentTemplate($vectors,
+"""_akcfield_${vector.id}[$index] = _${vector.id}[$index] + _b[2][0]*_akafield_${vector.id}[$index] + _b[2][1]*_akbfield_${vector.id}[$index];
+""")}#slurp
+
+  #for $vector in $vectors
+_active_${vector.id} = _akcfield_${vector.id};
+  #end for
+
+// a_i = D(a_2*dt)[y1]
+_segment${segmentNumber}_ip_evolve(-3);
+
+// a_k = G[a_k, t]
+_segment${segmentNumber}_calculate_delta_a(_step);
+
+// a_i = D(a_2*dt)[y1]
+_segment${segmentNumber}_ip_evolve(+3);
+${goFromKSpace}#slurp
+
+// Step 4
+
+${propagationDimension} += _a[3]*_step;
+
+${loopOverVectorsWithInnerContentTemplate($vectors,
+"""_akdfield_${vector.id}[$index] = _${vector.id}[$index] + _b[3][0]*_akafield_${vector.id}[$index]
+    + _b[3][1]*_akbfield_${vector.id}[$index] + _b[3][2]*_akcfield_${vector.id}[$index];
+""")}#slurp
+
+  #for $vector in $vectors
+_active_${vector.id} = _akdfield_${vector.id};
+  #end for
+
+// a_i = D(a_2*dt)[y1]
+_segment${segmentNumber}_ip_evolve(-4);
+
+// a_k = G[a_k, t]
+_segment${segmentNumber}_calculate_delta_a(_step);
+
+// a_i = D(a_2*dt)[y1]
+_segment${segmentNumber}_ip_evolve(+4);
+${goFromKSpace}#slurp
+
+// Step 5
+
+${propagationDimension} += _a[4]*_step;
+
+${loopOverVectorsWithInnerContentTemplate($vectors,
+"""_akefield_${vector.id}[$index] = _${vector.id}[$index] + _b[4][0]*_akafield_${vector.id}[$index]
+    + _b[4][1]*_akbfield_${vector.id}[$index] + _b[4][2]*_akcfield_${vector.id}[$index]
+    + _b[4][3]*_akdfield_${vector.id}[$index];
+""")}#slurp
+
+  #for $vector in $vectors
+_active_${vector.id} = _akefield_${vector.id};
+  #end for
+
+// a_i = D(a_2*dt)[y1]
+_segment${segmentNumber}_ip_evolve(-5);
+
+// a_k = G[a_k, t]
+_segment${segmentNumber}_calculate_delta_a(_step);
+
+// a_i = D(a_2*dt)[y1]
+_segment${segmentNumber}_ip_evolve(+5);
+${goFromKSpace}#slurp
+
+// Step 6
+
+${propagationDimension} += _a[5]*_step;
+
+${loopOverVectorsWithInnerContentTemplate($vectors,
+"""_akifield_${vector.id}[$index] = _${vector.id}[$index] + _b[5][0]*_akafield_${vector.id}[$index]
+    + _b[5][3]*_akdfield_${vector.id}[$index] + _b[5][4]*_akefield_${vector.id}[$index];
+""")}#slurp
+
+  #for $vector in $vectors
+_active_${vector.id} = _akifield_${vector.id};
+  #end for
+
+// a_i = D(a_2*dt)[y1]
+_segment${segmentNumber}_ip_evolve(-6);
+
+// a_k = G[a_k, t]
+_segment${segmentNumber}_calculate_delta_a(_step);
+
+// a_i = D(a_2*dt)[y1]
+_segment${segmentNumber}_ip_evolve(+6);
+${goFromKSpace}#slurp
+
+// Step 7
+
+${propagationDimension} += _a[6]*_step;
+
+${loopOverVectorsWithInnerContentTemplate($vectors,
+"""_akjfield_${vector.id}[$index] = _${vector.id}[$index] + _b[6][0]*_akafield_${vector.id}[$index]
+    + _b[6][3]*_akdfield_${vector.id}[$index] + _b[6][4]*_akefield_${vector.id}[$index]
+    + _b[6][5]*_akifield_${vector.id}[$index];
+""")}#slurp
+
+  #for $vector in $vectors
+_active_${vector.id} = _akjfield_${vector.id};
+  #end for
+
+// a_i = D(a_2*dt)[y1]
+_segment${segmentNumber}_ip_evolve(-7);
+
+// a_k = G[a_k, t]
+_segment${segmentNumber}_calculate_delta_a(_step);
+
+// a_i = D(a_2*dt)[y1]
+_segment${segmentNumber}_ip_evolve(+7);
+${goFromKSpace}#slurp
+
+// Step 8
+
+${propagationDimension} += _a[7]*_step;
+
+${loopOverVectorsWithInnerContentTemplate($vectors,
+"""_akbfield_${vector.id}[$index] = _${vector.id}[$index] + _b[7][0]*_akafield_${vector.id}[$index]
+    + _b[7][5]*_akifield_${vector.id}[$index] + _b[7][6]*_akjfield_${vector.id}[$index];
+""")}#slurp
+
+  #for $vector in $vectors
+_active_${vector.id} = _akbfield_${vector.id};
+  #end for
+
+// a_i = D(a_2*dt)[y1]
+_segment${segmentNumber}_ip_evolve(-8);
+
+// a_k = G[a_k, t]
+_segment${segmentNumber}_calculate_delta_a(_step);
+
+// a_i = D(a_2*dt)[y1]
+_segment${segmentNumber}_ip_evolve(+8);
+${goFromKSpace}#slurp
+
+// Step 9
+
+${propagationDimension} += _a[8]*_step;
+
+${loopOverVectorsWithInnerContentTemplate($vectors,
+"""_akcfield_${vector.id}[$index] = _${vector.id}[$index] + _b[8][0]*_akafield_${vector.id}[$index]
+    + _b[8][5]*_akifield_${vector.id}[$index] + _b[8][6]*_akjfield_${vector.id}[$index]
+    + _b[8][7]*_akbfield_${vector.id}[$index];
+""")}#slurp
+
+  #for $vector in $vectors
+_active_${vector.id} = _akcfield_${vector.id};
+  #end for
+
+// a_i = D(a_2*dt)[y1]
+_segment${segmentNumber}_ip_evolve(-9);
+
+// a_k = G[a_k, t]
+_segment${segmentNumber}_calculate_delta_a(_step);
+
+// a_i = D(a_2*dt)[y1]
+_segment${segmentNumber}_ip_evolve(+9);
+${goFromKSpace}#slurp
+
+// Step 10
+
+${propagationDimension} += _a[9]*_step;
+
+${loopOverVectorsWithInnerContentTemplate($vectors,
+"""_akdfield_${vector.id}[$index] = _${vector.id}[$index] + _b[9][0]*_akafield_${vector.id}[$index]
+    + _b[9][5]*_akifield_${vector.id}[$index] + _b[9][6]*_akjfield_${vector.id}[$index]
+    + _b[9][7]*_akbfield_${vector.id}[$index] + _b[9][8]*_akcfield_${vector.id}[$index];
+""")}#slurp
+
+  #for $vector in $vectors
+_active_${vector.id} = _akdfield_${vector.id};
+  #end for
+
+// a_i = D(a_2*dt)[y1]
+_segment${segmentNumber}_ip_evolve(-10);
+
+// a_k = G[a_k, t]
+_segment${segmentNumber}_calculate_delta_a(_step);
+
+// a_i = D(a_2*dt)[y1]
+_segment${segmentNumber}_ip_evolve(+10);
+${goFromKSpace}#slurp
+
+// Step 11
+
+${propagationDimension} += _a[10]*_step;
+
+${loopOverVectorsWithInnerContentTemplate($vectors,
+"""_akefield_${vector.id}[$index] = _${vector.id}[$index] + _b[10][0]*_akafield_${vector.id}[$index]
+    + _b[10][5]*_akifield_${vector.id}[$index] + _b[10][6]*_akjfield_${vector.id}[$index]
+    + _b[10][7]*_akbfield_${vector.id}[$index] + _b[10][8]*_akcfield_${vector.id}[$index]
+    + _b[10][9]*_akdfield_${vector.id}[$index];
+""")}#slurp
+
+  #for $vector in $vectors
+_active_${vector.id} = _akefield_${vector.id};
+  #end for
+
+// a_i = D(a_2*dt)[y1]
+_segment${segmentNumber}_ip_evolve(-11);
+
+// a_k = G[a_k, t]
+_segment${segmentNumber}_calculate_delta_a(_step);
+
+// a_i = D(a_2*dt)[y1]
+_segment${segmentNumber}_ip_evolve(+11);
+${goFromKSpace}#slurp
+
+// Step 12
+
+${propagationDimension} += _a[11]*_step;
+
+${loopOverVectorsWithInnerContentTemplate($vectors,
+"""_akffield_${vector.id}[$index] = _${vector.id}[$index] + _b[11][0]*_akafield_${vector.id}[$index]
+    + _b[11][5]*_akifield_${vector.id}[$index] + _b[11][6]*_akjfield_${vector.id}[$index]
+    + _b[11][7]*_akbfield_${vector.id}[$index] + _b[11][8]*_akcfield_${vector.id}[$index]
+    + _b[11][9]*_akdfield_${vector.id}[$index] + _b[11][10]*_akefield_${vector.id}[$index];
+""")}#slurp
+
+  #for $vector in $vectors
+_active_${vector.id} = _akffield_${vector.id};
+  #end for
+
+// a_i = D(a_2*dt)[y1]
+_segment${segmentNumber}_ip_evolve(-12);
+
+// a_k = G[a_k, t]
+_segment${segmentNumber}_calculate_delta_a(_step);
+
+// a_i = D(a_2*dt)[y1]
+_segment${segmentNumber}_ip_evolve(+12);
+${goFromKSpace}#slurp
+
+// Step 13
+
+${propagationDimension} += _a[12]*_step;
+
+${loopOverVectorsWithInnerContentTemplate($vectors,
+"""_akgfield_${vector.id}[$index] = _${vector.id}[$index] + _b[12][0]*_akafield_${vector.id}[$index]
+    + _b[12][5]*_akifield_${vector.id}[$index] + _b[12][6]*_akjfield_${vector.id}[$index]
+    + _b[12][7]*_akbfield_${vector.id}[$index] + _b[12][8]*_akcfield_${vector.id}[$index]
+    + _b[12][9]*_akdfield_${vector.id}[$index] + _b[12][10]*_akefield_${vector.id}[$index]
+    + _b[12][11]*_akffield_${vector.id}[$index];
+""")}#slurp
+
+  #for $vector in $vectors
+_active_${vector.id} = _akgfield_${vector.id};
+  #end for
+
+// a_i = D(a_2*dt)[y1]
+_segment${segmentNumber}_ip_evolve(-13);
+
+// a_k = G[a_k, t]
+_segment${segmentNumber}_calculate_delta_a(_step);
+
+// a_i = D(a_2*dt)[y1]
+_segment${segmentNumber}_ip_evolve(+13);
+${goFromKSpace}#slurp
+
+// Step 14
+
+${propagationDimension} += _a[13]*_step;
+
+${loopOverVectorsWithInnerContentTemplate($vectors,
+"""_akhfield_${vector.id}[$index] = _${vector.id}[$index] + _b[13][0]*_akafield_${vector.id}[$index]
+    + _b[13][5]*_akifield_${vector.id}[$index] + _b[13][6]*_akjfield_${vector.id}[$index]
+    + _b[13][7]*_akbfield_${vector.id}[$index] + _b[13][8]*_akcfield_${vector.id}[$index]
+    + _b[13][9]*_akdfield_${vector.id}[$index] + _b[13][10]*_akefield_${vector.id}[$index]
+    + _b[13][11]*_akffield_${vector.id}[$index] + _b[13][12]*_akgfield_${vector.id}[$index];
+""")}#slurp
+
+  #for $vector in $vectors
+_active_${vector.id} = _akhfield_${vector.id};
+  #end for
+
+// a_i = D(a_2*dt)[y1]
+_segment${segmentNumber}_ip_evolve(-14);
+
+// a_k = G[a_k, t]
+_segment${segmentNumber}_calculate_delta_a(_step);
+
+// a_i = D(a_2*dt)[y1]
+_segment${segmentNumber}_ip_evolve(+14);
+${goFromKSpace}#slurp
+
+// Step 15 and 16 combined to reduce memory use
+
+${loopOverVectorsWithInnerContentTemplate($vectors,
+"""_akifield_${vector.id}[$index] = _${vector.id}[$index] + _b[14][0]*_akafield_${vector.id}[$index]
+    + _b[14][5]*_akifield_${vector.id}[$index] + _b[14][6]*_akjfield_${vector.id}[$index]
+    + _b[14][7]*_akbfield_${vector.id}[$index] + _b[14][8]*_akcfield_${vector.id}[$index]
+    + _b[14][9]*_akdfield_${vector.id}[$index] + _b[14][10]*_akefield_${vector.id}[$index]
+    + _b[14][11]*_akffield_${vector.id}[$index] + _b[14][12]*_akgfield_${vector.id}[$index]
+    + _b[14][13]*_akhfield_${vector.id}[$index];
+    
+_akjfield_${vector.id}[$index] = (1-_b[15][5]/_b[14][5])*_${vector.id}[$index]
+    + (_b[15][0]-_b[14][0]*_b[15][5]/_b[14][5])*_akafield_${vector.id}[$index]
+    + (_b[15][5]/_b[14][5])*_akifield_${vector.id}[$index] 
+    + (_b[15][6]-_b[14][6]*_b[15][5]/_b[14][5])*_akjfield_${vector.id}[$index] 
+    + (_b[15][7]-_b[14][7]*_b[15][5]/_b[14][5])*_akbfield_${vector.id}[$index]
+    + (_b[15][8]-_b[14][8]*_b[15][5]/_b[14][5])*_akcfield_${vector.id}[$index]
+    + (_b[15][9]-_b[14][9]*_b[15][5]/_b[14][5])*_akdfield_${vector.id}[$index]
+    + (_b[15][10]-_b[14][10]*_b[15][5]/_b[14][5])*_akefield_${vector.id}[$index]
+    + (_b[15][11]-_b[14][11]*_b[15][5]/_b[14][5])*_akffield_${vector.id}[$index]
+    + (_b[15][12]-_b[14][12]*_b[15][5]/_b[14][5])*_akgfield_${vector.id}[$index]
+    + (_b[15][13]-_b[14][13]*_b[15][5]/_b[14][5])*_akhfield_${vector.id}[$index];
+""")}#slurp
+
+${propagationDimension} += _a[14]*_step;
+
+  #for $vector in $vectors
+_active_${vector.id} = _akifield_${vector.id};
+  #end for
+
+// a_k = G[a_k, t]
+_segment${segmentNumber}_calculate_delta_a(_step);
+${goFromXSpace}#slurp
+
+${propagationDimension} += _a[15]*_step;
+
+  #for $vector in $vectors
+_active_${vector.id} = _akjfield_${vector.id};
+  #end for
+
+// a_k = G[a_k, t]
+_segment${segmentNumber}_calculate_delta_a(_step);
+${goFromXSpace}#slurp
+
+// Take full step
+
+${loopOverVectorsWithInnerContentTemplate($vectors,
+"""
+_${vector.id}[$index] += _c[0]*_akafield_${vector.id}[$index] + _c[7]*_akbfield_${vector.id}[$index] + _c[8]*_akcfield_${vector.id}[$index]
+    + _c[9]*_akdfield_${vector.id}[$index] + _c[10]*_akefield_${vector.id}[$index] + _c[11]*_akffield_${vector.id}[$index]
+    + _c[12]*_akgfield_${vector.id}[$index] + _c[13]*_akhfield_${vector.id}[$index] + _c[14]*_akifield_${vector.id}[$index]
+    + _c[15]*_akjfield_${vector.id}[$index];
+""")}#slurp
+
+  #for $vector in $vectors
+_active_${vector.id} = _${vector.id};
+  #end for
+  ##
+#end def

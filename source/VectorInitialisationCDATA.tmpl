@@ -1,0 +1,34 @@
+#*
+VectorInitialisationCDATA.tmpl
+
+Created by Graham Dennis on 2007-08-29.
+Copyright (c) 2007 __MyCompanyName__. All rights reserved.
+*#
+#extends VectorInitialisation
+#*
+  
+  Description of initialisation method
+*#
+#def description: Vector initialisation from CDATA
+
+#*
+
+  Initialise a vector
+*#
+#def initialiseVector
+  ##
+  #set $featureOrdering = ['Stochastic']
+  ##
+$insertCodeForFeatures('vectorInitialisationBegin', $featureOrdering)#slurp
+$loopOverFieldInSpaceWithVectorsAndInnerContent($vector.field, $vector.initialSpace, [$vector], $insideInitialisationLoops)#slurp
+$insertCodeForFeaturesInReverseOrder('vectorInitialisationEnd', $featureOrdering)#slurp
+  ##
+#end def
+
+#def insideInitialisationLoops
+
+// ********** Initialisation code ***************
+$initialisationCode
+// **********************************************
+
+#end def

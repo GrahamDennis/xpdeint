@@ -1,0 +1,41 @@
+#*
+POSIXNoise.tmpl
+
+Created by Graham Dennis on 2007-12-11.
+Copyright (c) 2007 __MyCompanyName__. All rights reserved.
+*#
+#extends Noise
+
+#def description: Generic POSIX noise
+#def generatorType: unsigned short*
+
+#*
+  Globals
+*#
+#def globals
+  ##
+unsigned short ${generatorName}[3];
+  ##
+#end def
+
+#*
+  Initialise seeds
+*#
+#def initialiseSeeds($seedArray)
+  ##
+  #if len($seedArray)
+    #for $i in range(3)
+      #if $i < len($seedArray)
+${generatorName}[$i] = ${seedArray[$i]};
+      #else
+${generatorName}[$i] = 0;
+      #end if
+    #end for
+  #else
+srandomdev();
+    #for $i in range(3)
+${generatorName}[$i] = random();
+    #end for
+  #end if
+  ##
+#end def

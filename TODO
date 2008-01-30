@@ -1,0 +1,37 @@
+* Complete Stochastics support
+  * Add support for breaking up poissonian noise
+* Add a 'filter' segment
+* Add 'functions' elements to integrate, filter segments and anything else that
+  might use them
+* Add support for passing arguments to simulations
+* Write a front-end to write the simulation source to the appropriate file, 
+  compile it, etc. Read preferences file, auto-configure one somehow.
+* Add ASCII/binary/XSIL vector initialisation options
+* Add the ability to distribute stochastic simulations using MPI
+* Add the ability to distribute stochastic simulations using OpenMP
+* Deterministic MPI
+* Cross-propagation
+* post_processing -- I think this is done in the generator, it just needs the parser
+  to process the appropriate XML element.
+* FFTW wisdom importing and exporting
+* Fix the goToXSpace/goToKSpace transforms in integration algorithms.
+* The exponent needed when calculating the next time step in adaptive algorithms
+  depends on whether or not an algorithm is being used with noise, and also what
+  order the algorithm is.
+* Make sure that all the things that Andy has been doing to enable various simulation
+  parameters can be controlled at simulation run time can be done in xpdeint.
+* Implement field dimensions which can't be fourier transformed, but are indexed by
+  integers. This would be used by vectors for components, like Joe has just 
+  implemented in xmds-1.
+* Write a TextMate grammar for our Cheetah templates (for syntax highlighting
+  goodness)
+* Rewrite parser so that it isn't so long. (Ask Gabriel McManus)
+* Documentation needs to be written (both user and developer). The developer documentation
+  needs to be converted from current straight comments to use docstrings.
+* Licenses: The GPLv2 header needs to be put on all of the source files for this project.
+  I've been very lazy and have just used the default of the text editor I have been using
+  which is simply "copyright (c) Graham Dennis" or the like. My intention is that the whole
+  project should be under GPL2 unless there is some compelling reason why it should be under
+  something else.
+* FFTW2 support. FFTW3 support has been written and tested, and the basic code for FFTW2 is in
+  FourierTransformFFTW2.tmpl, however it hasn't been finished.

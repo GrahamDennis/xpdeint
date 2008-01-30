@@ -1,0 +1,56 @@
+#*
+ConstantOperator.tmpl
+
+Created by Graham Dennis on 2007-10-04.
+Copyright (c) 2007 __MyCompanyName__. All rights reserved.
+*#
+#extends Operator
+
+#def calculateOperatorFieldFunctionImplementation
+  ##
+  #for $operatorComponentName in $operatorComponents.iterkeys()
+complex $operatorComponentName;
+  #end for
+  ##
+${transformVectorsToSpace($dependencies, $operatorSpace)}#slurp
+
+  #set $vectorsToLoopOver = $dependencies.copy()
+  #silent $vectorsToLoopOver.add($operatorVector)
+${loopOverFieldInSpaceWithVectorsAndInnerContent($field, $operatorSpace, $vectorsToLoopOver, $insideCalculateOperatorFieldLoops)}#slurp
+  ##
+#end def
+
+#attr $evaluateOperatorFunctionArgument = 'double _step'
+
+#def evaluateOperatorFunctionImplementation
+  ##
+  ## We need to loop over the operator vector and all of the vectors
+  ## to which we are applying any of our operators, and the vector
+  ## containing the result of this operator evaluation
+  ##
+  #set $setOfVectorsToLoopOver = set()
+  #silent $setOfVectorsToLoopOver.update($operatorTargetVectorsSet)
+${transformVectorsToSpace(list($setOfVectorsToLoopOver), $operatorSpace)}#slurp
+  ##
+  #silent $setOfVectorsToLoopOver.add($operatorVector)
+  ##
+  ## If we have a result vector, add it
+  #if $resultVector
+    #silent $setOfVectorsToLoopOver.add($resultVector)
+  #end if
+  ##
+
+${evaluateOperatorLoop($setOfVectorsToLoopOver)}#slurp
+  ##
+  #if $resultVector and $resultVector.needsFourierTransforms
+
+_${resultVector.id}_space = $operatorSpace;
+  #end if
+  ##
+#end def
+
+#def evaluateOperatorLoop($setOfVectorsToLoopOver)
+  ##
+${loopOverVectorsWithInnerContent(list($setOfVectorsToLoopOver), $insideEvaluateOperatorLoops)}#slurp
+  ##
+#end def

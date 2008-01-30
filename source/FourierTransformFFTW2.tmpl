@@ -1,0 +1,58 @@
+#*
+FourierTransformFFTW2.tmpl
+
+Created by Graham Dennis on 2007-08-23.
+Copyright (c) 2007 __MyCompanyName__. All rights reserved.
+*#
+#extends FourierTransform
+
+#def description: FFTW2
+
+#def includes
+\#include <fftw.h>
+#end def
+
+## defines
+#def defines
+\#define xmds_malloc fftw_malloc
+\#define xmds_free   fftw_free
+#end def
+
+#*
+
+  Globals needed at the start of the simulation
+*#
+#def globals
+## only loop over those fields that have a vector that require fourier transforms
+#for $field in $filter(lambda x: $len($filter(lambda y: y.needsFourierTransforms), $x.vectors) > 0, $fields)
+fftwnd_plan _${field.name}_forward_plan;
+fftwnd_plan _${field.name}_backward_plan;
+#end for
+#end def
+
+## do the (forward/backward) transform for the vector
+#def fullFFTForVector($vector, $type)
+fftwnd(_${vector.field.name}_${type}_plan, _${vector.field.name}_${vector.name}_ncomponents, 
+       _active_${vector.field.name}_${vector.name}, _${vector.field.name}_${vector.name}_ncomponents,
+       1, 0, 0, 0);
+#end def
+
+## create a quick fourier transform plan for use by the mixed transform code
+#def createQuickPlanForVectorWithLatticeAndCount($vector, $lattice, $count, $type)
+fftwnd_plan _plan = fftwnd_create_plan(1, &$lattice, FFTW_${type.upper()}, FFTW_IN_PLACE);
+#end def
+
+## run a quick fourier transform plan for use by the mixed transform code
+#def runQuickFFTForVectorWithIndexAndLatticeAndCount($vector, $index, $lattice, $count, $type)
+fftwnd(_plan, $count, _active_${vector.field.name}_${vector.name} + $index * $lattice * $count, $count, 1, 0, 0, 0);
+#end def
+
+## run a quick fourier transform
+#def runQuickFFTForVectorWithCount($vector, $count, $type)
+fftwnd(_plan, $count, _active_${vector.field.name}_${vector.name}, $count, 1, 0, 0, 0);
+#end def
+
+## destroy the quick plan
+#def destroyQuickPlan()
+fftwnd_destroy_plan(_plan);
+#end def

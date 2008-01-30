@@ -1,0 +1,111 @@
+#*
+OutputFeature.tmpl
+
+Created by Graham Dennis on 2007-08-26.
+Copyright (c) 2007 __MyCompanyName__. All rights reserved.
+*#
+#extends _Feature
+#from PrintfSafeFilter import PrintfSafeFilter
+
+#def description: output
+#attr $featureName = 'Output'
+#*
+
+  Function prototypes
+*#
+#def functionPrototypes
+void _write_output();
+#end def
+#*
+
+  Function implementations
+*#
+#def functionImplementations
+  ##
+void _write_output()
+{
+  printf("Generating output for ${simulationName}\n");
+  
+  FILE* _outfile = fopen("${filename}.xsil", "w");
+  
+  if (!_outfile) {
+    printf("Unable to open output file ${filename}.xsil\n");
+    printf("Exiting.\n");
+    return;
+  }
+
+  ## Find the end tag in a case-insensitive way
+  #set $indexForEndTag = $inputScript.lower().rfind('</simulation>')
+  #set $xsilOutputHeader = $inputScript[0:$indexForEndTag]
+  #filter $PrintfSafeFilter
+    #for $line in $xsilOutputHeader.splitlines()
+  fprintf(_outfile, "${line}\n");
+    #end for
+  #end filter
+  
+  fprintf(_outfile, "\n<info>\n");
+  fprintf(_outfile, "Script compiled with xpdeint version ${xmds.versionString} (${xmds.subversionRevision})\n");
+  fprintf(_outfile, "See http://www.xmds.org for more information.\n");
+  #set $featureOrdering = ['Argv']
+  ${insertCodeForFeatures('xsilOutputInfo', $featureOrdering), autoIndent=True}#slurp
+  fprintf(_outfile, "</info>\n");
+  
+  #for $momentGroup in $momentGroups
+  _${momentGroup.name}_write_out(_outfile);
+  #end for
+  
+  fprintf(_outfile, "</simulation>\n");
+  
+  fclose(_outfile);
+}
+  ##
+#end def
+
+#def mainEnd($dict)
+
+_write_output();
+#end def
+
+#def integrateFixedStepInnerLoopEnd($dict)
+  ##
+  #set $integrator = dict['caller']
+  #assert len($momentGroups) == len($integrator.samples)
+  ##
+  #for $momentGroupNumber, $sampleCount in enumerate($integrator.samples)
+    #if $sampleCount > 0
+      #assert ($integrator.stepCount % $sampleCount) == 0
+      #set $sampleEveryNthStep = $integrator.stepCount / $sampleCount
+if ((_istep % $sampleEveryNthStep) == ${sampleEveryNthStep - 1})
+  _mg${momentGroupNumber}_sample();
+    #end if
+  #end for
+  ##
+#end def
+
+#def integrateAdaptiveStepInnerLoopEnd($dict)
+  ##
+  #set $integrator = dict['caller']
+  #assert len($momentGroups) == len($integrator.samples)
+  ##
+if (_break_next) {
+  #for $momentGroupNumber, $sampleCount in enumerate($integrator.samples)
+  if (_next_sample_flag[$momentGroupNumber]) {
+    _mg${momentGroupNumber}_sample();
+    _next_sample_counter[$momentGroupNumber]++;
+  }
+  #end for
+  #set $momentGroupCount = len($integrator.samples)
+  if (_next_sample_flag[${momentGroupCount}])
+    _next_sample_flag[${momentGroupCount + 1}] = true;
+  else {
+    _break_next = false;
+    _${propagationDimension}_break_next = _${integrator.name}_setup_sampling(_next_sample_flag, _next_sample_counter);
+  }
+}
+
+if ( ${propagationDimension} - _${propagationDimension}_ini + _step > _${propagationDimension}_break_next) {
+  _break_next = true;
+  printf("Current timestep: %e\n", _step/(0.92*pow(fabs(_tolerance/_error), 0.2)));
+  _step = _${propagationDimension}_break_next - ${propagationDimension} + _${propagationDimension}_ini;
+}
+#end def

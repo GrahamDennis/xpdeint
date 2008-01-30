@@ -1,0 +1,34 @@
+#*
+GaussianPOSIXNoise.tmpl
+
+Created by Graham Dennis on 2007-12-11.
+Copyright (c) 2007 __MyCompanyName__. All rights reserved.
+*#
+#extends POSIXNoise
+
+#def description: Gaussian noise
+#attr $noiseDistribution = 'gaussian'
+
+#*
+  Make noises
+*#
+#def makeNoises
+  ##
+for (long _i0 = 0; _i0 < _n & ~1; _i0 += 2) {
+  double _v1, _v2, _rsq;
+  do {
+    _v1 = 2.0*erand48(${generatorName}) - 1.0;
+    _v2 = 2.0*erand48(${generatorName}) - 1.0;
+    _rsq = _v1*_v1 + _v2*_v2;
+  } while(_rsq >= 1.0 || _rsq == 0.0);
+  const double _fac = sqrt(-2.0*_var*log(_rsq)/_rsq);
+  _noise_vector[_i0 + 0] = _v1*_fac;
+  _noise_vector[_i0 + 1] = _v2*_fac;
+}
+
+// If _n is odd, we need to generate the last random number
+if (_n & 1) {
+  _noise_vector[_n - 1] = sqrt(-2*log(erand48(${generatorName}))*_var);
+}
+  ##
+#end def

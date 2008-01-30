@@ -1,0 +1,102 @@
+#*
+AdaptiveStepIPOperator.tmpl
+
+Interaction-picture transverse derivative operator
+
+Created by Graham Dennis on 2007-11-21.
+Copyright (c) 2007 __MyCompanyName__. All rights reserved.
+*#
+#extends ConstantOperator
+
+#def description: IP transverse derivative operator for field $field.name
+#attr $operatorKind = ConstantOperator.IPOperatorKind
+#attr $calculateOperatorFieldFunctionArguments = 'double _step, int _exponent, int _arrayIndex'
+
+#def globals
+  ##
+  #super
+  ##
+  #if len($integrator.ipPropagationStepFractions) > 1
+int _${integrator.name}_${name}_exponent_offset_map[${len($integrator.ipPropagationStepFractions)}];
+  #end if
+  ##
+#end def
+
+#def initialise
+  ##
+${allocate}#slurp
+  ##
+  #if len($integrator.ipPropagationStepFractions) > 1
+bzero(_${integrator.name}_${name}_exponent_offset_map, sizeof(_${integrator.name}_${name}_exponent_offset_map));
+  #end if
+  ##
+#end def
+
+#def calculateOperatorFieldFunctionImplementation
+  ##
+  #if len($integrator.ipPropagationStepFractions) > 1
+static const double _propagationStepFractions[] = {
+  #for $propagationStepFraction in $integrator.ipPropagationStepFractions
+  $propagationStepFraction,
+  #end for
+};
+const double _propagationStepFraction = _propagationStepFractions[abs(_exponent) - 1];
+_${integrator.name}_${name}_exponent_offset_map[abs(_exponent) - 1] = _arrayIndex;
+  #else
+const double _propagationStepFraction = ${integrator.ipPropagationStepFractions[0]};
+  #end if
+
+  #super
+  ##
+#end def
+
+#def insideCalculateOperatorFieldLoops
+  ##
+  ## We expect the integrator to have defined '_step'
+  ##
+// ************** Operator code *****************
+${operatorDefinitionCode}
+// **********************************************
+
+  ## Loop over each operator component
+  #for $operatorComponentNumber, $operatorComponent in enumerate($operatorComponents.iterkeys())
+_${operatorVector.id}[_${operatorVector.id}_index_pointer + _arrayIndex * $len($operatorComponents) + ${operatorComponentNumber}]#slurp
+ = c_exp(${operatorComponent} * _propagationStepFraction * _step);
+  #end for
+  ##
+#end def
+
+#attr $evaluateOperatorFunctionArgument = 'int _exponent'
+
+#def evaluateOperatorLoop($setOfVectorsToLoopOver)
+  ##
+  ## We expect the integrator to have defined _exponent
+  ##
+  #if len($integrator.ipPropagationStepFractions) > 1
+unsigned long _exponentIndex = _${integrator.name}_${name}_exponent_offset_map[abs(_exponent) - 1] * $len($operatorComponents);
+
+  #end if
+if (_exponent > 0) {
+  ${loopOverVectorsWithInnerContent(list($setOfVectorsToLoopOver), $insideEvaluateOperatorLoops('*')), autoIndent=True}#slurp
+} else {
+  ${loopOverVectorsWithInnerContent(list($setOfVectorsToLoopOver), $insideEvaluateOperatorLoops('/')), autoIndent=True}#slurp
+}
+  ##
+#end def
+
+#def insideEvaluateOperatorLoops($operationString)
+  ##
+  #for $operatorComponentNumber, ($operatorComponentName, $operatorComponentVectors) in enumerate($operatorComponents.iteritems())
+    #for $targetVectorComponents in $operatorComponentVectors.itervalues()
+      #for $targetVectorComponent in $targetVectorComponents
+// ${operatorComponentName}[$targetVectorComponent]
+$targetVectorComponent ${operationString}= _${operatorVector.id}[_${operatorVector.id}_index_pointer + $operatorComponentNumber#slurp
+        #if len($integrator.ipPropagationStepFractions) > 1
+ + _exponentIndex#slurp
+        #end if
+];
+      #end for
+    #end for
+  #end for
+  ##
+#end def

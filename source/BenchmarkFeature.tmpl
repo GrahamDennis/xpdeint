@@ -1,0 +1,26 @@
+#*
+BenchmarkFeature.tmpl
+
+Created by Graham Dennis on 2007-08-26.
+Copyright (c) 2007 __MyCompanyName__. All rights reserved.
+*#
+#extends _Feature
+
+#def description: benchmark
+#attr $featureName = 'Benchmark'
+
+#def mainBegin($dict)
+
+// Get the time at which the simulation started
+timeval _tim;
+gettimeofday(&_tim, NULL);
+double _startTime = _tim.tv_sec + (_tim.tv_usec/1e6);
+#end def
+
+#def mainEnd($dict)
+
+// Work out how long the simulation has run for
+gettimeofday(&_tim, NULL);
+double _endTime = _tim.tv_sec + (_tim.tv_usec/1e6);
+printf("Time elapsed for simulation is: %.2f seconds\n", _endTime - _startTime);
+#end def

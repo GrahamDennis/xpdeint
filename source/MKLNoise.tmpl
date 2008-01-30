@@ -1,0 +1,45 @@
+#*
+MKLNoise.tmpl
+
+Created by Graham Dennis on 2007-12-12.
+Copyright (c) 2007 __MyCompanyName__. All rights reserved.
+*#
+#extends Noise
+#from Decorators import callOncePerClassGuard
+
+#def description: Generic Intel MKL noise
+#def generatorType: VSLStreamStatePtr
+
+#*
+  Static includes
+*#
+#@callOncePerClassGuard
+#def static_includes
+  ##
+  #super
+\#include <mkl_vsl.h>
+  ##
+#end def
+
+#*
+  Globals
+*#
+#def globals
+  ##
+VSLStreamStatePtr ${generatorName};
+  ##
+#end def
+
+#*
+  Initialise seeds
+*#
+#def initialiseSeeds($seedArray)
+  ##
+  #if len($seedArray)
+vslNewStream(&${generatorName}, VSL_BRNG_MCG31, $seedArray[0]);
+  #else
+srandomdev();
+vslNewStream(&${generatorName}, VSL_BRNG_MCG31, random());
+  #end if
+  ##
+#end def

@@ -1,0 +1,68 @@
+#*
+ConstantIPOperator.tmpl
+
+Interaction-picture transverse derivative operator
+
+Created by Graham Dennis on 2007-10-06.
+Copyright (c) 2007 __MyCompanyName__. All rights reserved.
+*#
+#extends ConstantOperator
+
+#def description: IP transverse derivative operator for field $field.name
+#attr $operatorKind = ConstantOperator.IPOperatorKind
+
+## FIXME: We need NonConstantIPOperator (for cross-propagation) and the ability to do this in an arbitrary space.
+
+#def insideCalculateOperatorFieldLoops
+  ##
+  ## We expect the integrator to have defined '_step'
+  ##
+// ************** Operator code *****************
+${operatorDefinitionCode}
+// **********************************************
+  ## Loop over the propagation step fractions
+  #for $fractionIndex, $propagationStepFraction in enumerate($integrator.ipPropagationStepFractions)
+    
+    ## Loop over each operator component
+    #for $operatorComponentNumber, $operatorComponent in enumerate($operatorComponents.iterkeys())
+      #set $offsetIndex = $operatorComponentNumber + $fractionIndex * len($operatorComponents)
+_${operatorVector.id}[_${operatorVector.id}_index_pointer + ${offsetIndex}] = c_exp(${operatorComponent} * $propagationStepFraction * _step);
+    #end for
+  #end for
+  ##
+#end def
+
+#attr $evaluateOperatorFunctionArgument = 'int _exponent'
+
+#def evaluateOperatorLoop($setOfVectorsToLoopOver)
+  ##
+  ## We expect the integrator to have defined _exponent
+  ##
+  #if len($integrator.ipPropagationStepFractions) > 1
+unsigned long _exponentIndex = (abs(_exponent) - 1) * $len($operatorComponents);
+
+  #end if
+if (_exponent > 0) {
+  ${loopOverVectorsWithInnerContent(list($setOfVectorsToLoopOver), $insideEvaluateOperatorLoops('*')), autoIndent=True}#slurp
+} else {
+  ${loopOverVectorsWithInnerContent(list($setOfVectorsToLoopOver), $insideEvaluateOperatorLoops('/')), autoIndent=True}#slurp
+}
+  ##
+#end def
+
+#def insideEvaluateOperatorLoops($operationString)
+  ##
+  #for $operatorComponentNumber, ($operatorComponentName, $operatorComponentVectors) in enumerate($operatorComponents.iteritems())
+    #for $targetVectorComponents in $operatorComponentVectors.itervalues()
+      #for $targetVectorComponent in $targetVectorComponents
+// ${operatorComponentName}[$targetVectorComponent]
+$targetVectorComponent ${operationString}= _${operatorVector.id}[_${operatorVector.id}_index_pointer + $operatorComponentNumber#slurp
+        #if len($integrator.ipPropagationStepFractions) > 1
+ + _exponentIndex#slurp
+        #end if
+];
+      #end for
+    #end for
+  #end for
+  ##
+#end def

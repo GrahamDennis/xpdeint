@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <!-- pyXMDS test -->
+  <name>vibstring2</name>
+  <author>Graham Dennis</author>
+  <description>
+    Vibrating string
+  </description>
+  
+  <features>
+    <benchmark />
+    <error_check />
+    <bing />
+    <fftw version="3" />
+    <openmp />
+    <globals>
+      <![CDATA[
+      const double T = 10.0;
+      const double mass = 1e-3;
+      const double length = 1.0;
+      const double mu = mass/length;
+      ]]>
+    </globals>
+  </features>
+  
+  <geometry>
+    <prop_dim> t </prop_dim>
+    <transverse_dimensions>
+      <dimension name="x" lattice="100"  domain="(0, 1)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <field name="main">
+    <vector name="main" initial_space="x">
+      <components type="complex">
+        u uDot
+      </components>
+      <initialisation>
+        <![CDATA[
+          u = exp(-100.0*(x-0.5)*(x-0.5));
+          uDot = 0.0;
+        ]]>
+      </initialisation>
+    </vector>
+  </field>
+  
+  <field name="zero_d_test" dimensions="">
+    <vector name="integrated_u">
+      <components type="complex">
+        mom
+      </components>
+    </vector>
+  </field>
+  
+  <sequence>
+    <integrate algorithm="RK9" interval="2e-3" steps="100">
+      <samples>50 50</samples>
+      <operators field="main">
+        <operator kind="ex" constant="yes">
+          <operator_names>L</operator_names>
+          <![CDATA[
+            L = -T*kx*kx/mu;
+          ]]>
+        </operator>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+          du_dt = uDot;
+          duDot_dt = L[u];
+        ]]>
+      </operators>
+      <operators field="zero_d_test">
+        <!-- the dimensions attribute specifies the target dimensions -->
+        <!-- We need to be able to do this in fourier space -->
+        <!-- Specifically, for integrations, we need to be able to specify -->
+        <!-- which dimensions are in which space when integrated -->
+        <!-- All of the dimensions that are in the moment are going to be in 'x' -->
+        <!-- space as the moment will only be available in the delta a operator -->
+        <!-- That doesn't mean we can't calculate the moment in 'k' space -->
+        <!-- Is there any point making available filters for other operators? -->
+        <!-- Note that the default here will be to integrate, not to just sample -->
+        <!-- In fact, you can't just sample. -->
+        <!-- You must either have a dimensions attribute or a 'target_field' attribute -->
+        <!-- This target field must have at most as many dimensions as the source field -->
+        <operator kind="filter" target_field="zero_d_test" name="filter1">
+          <!-- It's not necessary to have a moments tag here. It would be quite acceptable to -->
+          <!-- use the filter to modify a vector already created -->
+          <moments type="double">moment</moments>
+          <source_field fourier_space="k">main</source_field>
+          <!-- All of the vectors must be in the source_field -->
+          <!-- No, they don't need to be -->
+          <dependencies>main</dependencies>
+          <!-- If the moments are of type 'double', then all dimensions that aren't integrated
+               must be evaluated in 'x' space. -->
+          <![CDATA[
+            moment = mod2(u);
+          ]]>
+        </operator>
+        <integration_vectors>integrated_u</integration_vectors>
+        <dependencies>filter1</dependencies>
+        <![CDATA[
+          dmom_dt = moment;
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  <output format="binary" filename="vibstring2.xsil">
+    <group>
+      <sampling initial_sample="yes">
+        <!-- Any dimension not mentioned is assumed to be in real space and its middle element will be sampled -->
+        <!-- Note that this is different default behaviour to the filter operator. To integrate, put in a dimension -->
+        <!-- with zero lattice points. -->
+        <!-- Note that dimensions can be in any order. Not that I can think of a reason why you would want to do that -->
+        <dimension name="x" lattice="100" fourier_space="x" />
+        <moments>amp</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          amp = u;
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling initial_sample="no">
+        <moments>momR momentR</moments>
+        <dependencies>integrated_u filter1</dependencies>
+        <![CDATA[
+          momR = mom;
+          momentR = moment;
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>
