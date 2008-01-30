@@ -1,0 +1,285 @@
+#*
+ARK45Integrator.tmpl
+
+Created by Graham Dennis on 2007-11-16.
+Copyright (c) 2007 __MyCompanyName__. All rights reserved.
+*#
+#extends AdaptiveStepIntegrator
+
+#def description: segment $segmentNumber (ARK45 Integrator)
+#attr $ipPropagationStepFractions = ['1.0/5.0', '1.0/10.0', '2.0/5.0', '4.0/5.0', '27.0/40.0']
+#attr $nonconstantIPFields = 3
+#attr $extraIntegrationArrayNames = ['akfield', 'aifield', 'ajfield', 'alfield', 'checkfield']
+
+#def initialise
+// Cash-Karp coefficients
+double _a_raw[7];
+double _a[7];
+double _b[7][7];
+double _c[7];
+double _cs[7];
+// linear combinations for the (k_i)s
+double _d[4];
+double _e[5];
+double _f[6];
+double _g[7];
+
+_a_raw[0]=0.0;
+_a_raw[1]=0.0;
+_a_raw[2]=1.0/5;
+_a_raw[3]=3.0/10;
+_a_raw[4]=3.0/5;
+_a_raw[5]=1.0;
+_a_raw[6]=7.0/8.0;
+
+_a[0]=0.0;
+_a[1]=0.0;
+for(long _i0 = 2; _i0 < 7; _i0++)
+  _a[_i0] = _a_raw[_i0] - _a_raw[_i0-1];
+
+_b[2][1]=1.0/5;
+_b[3][1]=3.0/40;
+_b[3][2]=9.0/40;
+_b[4][1]=3.0/10;
+_b[4][2]=-9.0/10;
+_b[4][3]=6.0/5;
+_b[5][1]=-11.0/54;
+_b[5][2]=5.0/2;
+_b[5][3]=-70.0/27;
+_b[5][4]=35.0/27;
+_b[6][1]=1631.0/55296;
+_b[6][2]=175.0/512;
+_b[6][3]=575.0/13824;
+_b[6][4]=44275.0/110592;
+_b[6][5]=253.0/4096;
+
+_c[0]=0.0;
+_c[1]=37.0/378;
+_c[2]=0.0;
+_c[3]=250.0/621;
+_c[4]=125.0/594;
+_c[5]=0.0;
+_c[6]=512.0/1771;
+
+_cs[0]=0.0;
+_cs[1]=2825.0/27648;
+_cs[2]=0.0;
+_cs[3]=18575.0/48384;
+_cs[4]=13525.0/55296;
+_cs[5]=277.0/14336;
+_cs[6]=1.0/4;
+
+_d[0]=0.0;
+_d[1]=1.0-_b[3][1]/_c[1];
+_d[2]=_b[3][1]/_c[1];
+_d[3]=_b[3][2];
+
+_e[0]=0.0;
+_e[1]=1.0-_b[4][1]/_c[1];
+_e[2]=_b[4][1]/_c[1];
+_e[3]=_b[4][2];
+_e[4]=_b[4][3];
+
+_f[0]=0.0;
+_f[1]=1.0-_b[5][1]/_c[1];
+_f[2]=_b[5][1]/_c[1];
+_f[3]=_b[5][2];
+_f[4]=_b[5][3]-_b[5][1]/_c[1]*_c[3];
+_f[5]=_b[5][4]-_b[5][1]/_c[1]*_c[4];
+
+double _den=_c[1]*_cs[4]-_cs[1]*_c[4];
+_g[0]=0.0;
+_g[1]=( _b[6][4]*(_cs[1]-_c[1]) + _b[6][1]*(_c[4]-_cs[4]) )/_den + 1.0;
+_g[2]=  _b[6][2];
+_g[3]=( _b[6][4]*(_cs[1]*_c[3] - _c[1]*_cs[3]) + _b[6][1]*(_cs[3]*_c[4] - _c[3]*_cs[4]) )/_den + _b[6][3];
+_g[4]=( _b[6][1]*_cs[4]-_b[6][4]*_cs[1] )/_den;
+_g[5]=  _b[6][5] + _cs[5]*( _b[6][1]*_c[4]-_b[6][4]*_c[1] )/_den;
+_g[6]=( -_b[6][1]*_c[4]+_b[6][4]*_c[1] )/_den;
+  ##
+  #super
+  ##
+#end def
+
+#*
+  Single integration step (RK4)
+*#
+#def singleIntegrationStep
+  ##
+${transformVectorsToSpace($vectors, $homeSpace)}#slurp
+
+${loopOverVectorsWithInnerContentTemplate($vectors,
+"""// a_k = y1
+_akfield_${vector.id}[$index] = _${vector.id}[$index];
+""")}#slurp
+
+_segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 1, 0);
+
+// a_i = D(a_2*dt)[y1]
+_segment${segmentNumber}_ip_evolve(+1);
+${goFromKSpace}#slurp
+
+${loopOverVectorsWithInnerContentTemplate($vectors,
+"""// a_i = y2 = y1
+_aifield_${vector.id}[$index] = _checkfield_${vector.id}[$index] = _${vector.id}[$index];
+""")}#slurp
+
+  #for $vector in $vectors
+_active_${vector.id} = _akfield_${vector.id};
+  #end for
+
+// a_k = G[a_k, t]
+_segment${segmentNumber}_calculate_delta_a(_step);
+${goFromXSpace}#slurp
+
+// a_i = D(a_2*dt)[a_k]
+_segment${segmentNumber}_ip_evolve(+1);
+${goFromKSpace}#slurp
+
+${loopOverVectorsWithInnerContentTemplate($vectors,
+"""// y1 = y1 + c_1*a_k
+_${vector.id}[$index] += _c[1]*_akfield_${vector.id}[$index];
+// y2 = y2 + cs_1*a_k
+_checkfield_${vector.id}[$index] += _cs[1]*_akfield_${vector.id}[$index];
+// a_k = a_i + b_21*a_k
+_akfield_${vector.id}[$index] = _aifield_${vector.id}[$index] + _b[2][1]*_akfield_${vector.id}[$index];
+""")}#slurp
+
+${propagationDimension} += _a[2] * _step;
+
+// a_k = G[a_k, t + aa_2*dt]
+_segment${segmentNumber}_calculate_delta_a(_step);
+${goFromXSpace}#slurp
+
+// c_2 == cs_2 == 0
+${loopOverVectorsWithInnerContentTemplate($vectors,
+"""// a_j = d_1*a_i + d_2*y1 + d_3*a_k
+_ajfield_${vector.id}[$index] = _d[1]*_aifield_${vector.id}[$index] + _d[2]*_${vector.id}[$index] + _d[3]*_akfield_${vector.id}[$index];
+""")}#slurp
+
+${propagationDimension} += _a[3] * _step;
+
+  #for $vector in $vectors
+_active_${vector.id} = _ajfield_${vector.id};
+  #end for
+
+_segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 2, 1);
+
+// a_j = D((a_3 - a_2)*dt)[a_j]
+_segment${segmentNumber}_ip_evolve(+2);
+${goFromKSpace}#slurp
+
+// a_j = G[a_j, t + aa_3*dt]
+_segment${segmentNumber}_calculate_delta_a(_step);
+${goFromXSpace}#slurp
+
+// a_j = D(-(a_3 - a_2)*dt)[a_j]
+_segment${segmentNumber}_ip_evolve(-2);
+${goFromKSpace}#slurp
+
+${loopOverVectorsWithInnerContentTemplate($vectors,
+"""// a_l = e_1*a_i + e_2*y1 + e_3*a_k + e_4*a_j
+_alfield_${vector.id}[$index] = _e[1]*_aifield_${vector.id}[$index] + _e[2]*_${vector.id}[$index] + _e[3]*_akfield_${vector.id}[$index] + _e[4]*_ajfield_${vector.id}[$index];
+// y1 = y1 + c_3*a_j
+_${vector.id}[$index] += _c[3]*_ajfield_${vector.id}[$index];
+// y2 = y2 + cs_3*a_j
+_checkfield_${vector.id}[$index] += _cs[3]*_ajfield_${vector.id}[$index];
+""")}#slurp
+
+${propagationDimension} += _a[4] * _step;
+
+  #for $vector in $vectors
+_active_${vector.id} = _alfield_${vector.id};
+  #end for
+
+_segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 3, 1);
+
+// a_l = D((a_4 - a_2)*dt)[a_l]
+_segment${segmentNumber}_ip_evolve(+3);
+${goFromKSpace}#slurp
+
+// a_l = G[a_l, t + aa_4*dt]
+_segment${segmentNumber}_calculate_delta_a(_step);
+${goFromXSpace}#slurp
+
+// a_l = D(-(a_4 - a_2)*dt)[a_l]
+_segment${segmentNumber}_ip_evolve(-3);
+${goFromKSpace}#slurp
+
+${loopOverVectorsWithInnerContentTemplate($vectors,
+"""// y1 = y1 + c_4*a_l
+_${vector.id}[$index] += _c[4]*_alfield_${vector.id}[$index];
+// y2 = y2 + cs_4*a_l
+_checkfield_${vector.id}[$index] += _cs[4]*_alfield_${vector.id}[$index];
+// a_l = f_1*a_i + f_2*y1 + f_3*a_k + f_4*a_j + f_5*a_l
+_alfield_${vector.id}[$index] = _f[1]*_aifield_${vector.id}[$index] + _f[2]*_${vector.id}[$index] + _f[3]*_akfield_${vector.id}[$index] + _f[4]*_ajfield_${vector.id}[$index] + _f[5]*_alfield_${vector.id}[$index];
+""")}#slurp
+
+${propagationDimension} += _a[5] * _step;
+
+_segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 4, 1);
+
+// a_l = D((a_5 - a_2)*dt)[a_l]
+_segment${segmentNumber}_ip_evolve(+4);
+${goFromKSpace}#slurp
+
+// a_l = G[a_l, t + aa_5*dt]
+_segment${segmentNumber}_calculate_delta_a(_step);
+${goFromXSpace}#slurp
+
+// a_l = D(-(a_5 - a_2)*dt)[a_l]
+_segment${segmentNumber}_ip_evolve(-4);
+${goFromKSpace}#slurp
+
+// c_5 == 0
+${loopOverVectorsWithInnerContentTemplate($vectors,
+"""// y2 = y2 + cs_5*a_l
+_checkfield_${vector.id}[$index] += _cs[5]*_alfield_${vector.id}[$index];
+// a_l = g_1*a_i + g_2*a_k + g_3*a_j + g_4*y_1 + g_5*a_l + g_6*y2
+_alfield_${vector.id}[$index] = _g[1]*_aifield_${vector.id}[$index] + _g[2]*_akfield_${vector.id}[$index] + _g[3]*_ajfield_${vector.id}[$index] + _g[4]*_${vector.id}[$index] + _g[5]*_alfield_${vector.id}[$index] + _g[6]*_checkfield_${vector.id}[$index];
+""")}#slurp
+
+${propagationDimension} += _a[6] * _step;
+
+_segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 5, 2);
+
+// a_l = D((a_6 - a_2)*dt)[a_l]
+_segment${segmentNumber}_ip_evolve(+5);
+${goFromKSpace}#slurp
+
+// a_l = G[a_l, t + aa_6*dt]
+_segment${segmentNumber}_calculate_delta_a(_step);
+${goFromXSpace}#slurp
+
+// a_l = D(-(a_6 - a_2)*dt)[a_l]
+_segment${segmentNumber}_ip_evolve(-5);
+${goFromKSpace}#slurp
+
+// c_5 == 0
+${loopOverVectorsWithInnerContentTemplate($vectors,
+"""// y1 = y1 + c_6*a_l
+_${vector.id}[$index] += _c[6]*_alfield_${vector.id}[$index];
+// y2 = y2 + cs_6*a_l
+_checkfield_${vector.id}[$index] += _cs[6]*_alfield_${vector.id}[$index];
+""")}#slurp
+
+// t -> t + dt
+${propagationDimension} -= _a[6]*_step;
+
+  #for $vector in $vectors
+_active_${vector.id} = _checkfield_${vector.id};
+  #end for
+
+// y2 = D((1 - a_2)*dt)[y2]
+_segment${segmentNumber}_ip_evolve(+4);
+${goFromKSpace}#slurp
+
+  #for $vector in $vectors
+_active_${vector.id} = _${vector.id};
+  #end for
+
+// y1 = D((1 - a_2)*dt)[y1]
+_segment${segmentNumber}_ip_evolve(+4);
+${goFromKSpace}#slurp
+
+  ##
+#end def

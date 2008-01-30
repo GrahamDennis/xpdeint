@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <!-- pyXMDS test -->
+  <name>lorenz</name>
+  <author>Graham Dennis</author>
+  <description>
+    First script to test parsing in pyXMDS
+  </description>
+  
+  <features>
+    <benchmark />
+    <error_check />
+    <bing />
+    <fftw version="none" />
+    <!-- That's right, this script breaks the shackles with FFTW! -->
+    <globals>
+      <![CDATA[
+      double sigma = 10.0;
+      double b = 8.0/3.0;
+      double r = 28.0;
+      ]]>
+    </globals>
+  </features>
+  
+  <geometry>
+    <prop_dim> t </prop_dim>
+  </geometry>
+  
+  <field name="main" >
+    <vector name="main" type="complex">
+      <components>
+        x y z
+      </components>
+      <initialisation>
+        <![CDATA[
+        x = y = z = 1.0;
+        ]]>
+      </initialisation>
+    </vector>
+  </field>
+  
+  <sequence>
+    <integrate algorithm="ARK45" interval="100.0" steps="25000" tolerance="1e-7">
+      <samples>5000</samples>
+      <operators field="main">
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+        dx_dt = sigma*(y-x);
+        dy_dt = r*x - y - x*z;
+        dz_dt = x*y - b*z;
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  <output format="binary" filename="lorenz.xsil">
+    <group>
+      <sampling initial_sample="yes">
+        <moments>xR yR zR</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          xR = x;
+          yR = y;
+          zR = z;
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>

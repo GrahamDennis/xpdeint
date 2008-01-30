@@ -1,0 +1,19 @@
+#*
+GaussianMKLNoise.tmpl
+
+Created by Graham Dennis on 2007-12-12.
+Copyright (c) 2007 __MyCompanyName__. All rights reserved.
+*#
+#extends MKLNoise
+
+#def description: Gaussian (MKL) noise
+#attr $noiseDistribution = 'gaussian'
+
+#*
+  Make noises
+*#
+#def makeNoises
+  ##
+vdRngGaussian(VSL_METHOD_DGAUSSIAN_BOXMULLER2, ${generatorName}, _n, _noise_vector, 0.0, sqrt(_var));
+  ##
+#end def

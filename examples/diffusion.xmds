@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <name>diffusion</name>
+  <author>Graham Dennis</author>
+  <description>
+    First script to test parsing in pyXMDS
+  </description>
+  
+  <features>
+    <benchmark />
+    <error_check />
+    <bing />
+    <fftw version="3" />
+    <openmp />
+  </features>
+  
+  <geometry>
+    <prop_dim> t </prop_dim>
+    <transverse_dimensions>
+      <dimension name="x" lattice="32"  domain="(-10.0, 10.0)" />
+      <dimension name="y" lattice="128" domain="(-1.0, 1.0)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <field name="main" dimensions="x y">
+    <vector name="main" type="complex" initial_space="x x">
+      <components>
+        phi
+      </components>
+      <initialisation>
+        <![CDATA[
+          phi = exp(-y*y);
+        ]]>
+      </initialisation>
+    </vector>
+  </field>
+  
+  <sequence>
+    <integrate algorithm="ARK45" interval="10.0" steps="2400" tolerance="1e-5">
+      <samples>24</samples>
+      <operators field="main">
+        <operator kind="ex" constant="yes" fourier_space="k k">
+          <operator_names>L</operator_names>
+          <![CDATA[
+            L = -0.02*ky*ky;
+          ]]>
+        </operator>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+          dphi_dt = L[phi];
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  <output format="binary" filename="diffusion.xsil">
+    <group>
+      <sampling initial_sample="yes">
+        <!-- Any dimension not mentioned is assumed to be in real space and its middle element will be sampled -->
+        <!-- Note that dimensions can be in any order. Not that I can think of a reason why you would want to do that -->
+        <dimension name="x" lattice="0" fourier_space="x" />
+        <dimension name="y" lattice="128" fourier_space="x" />
+        <moments>dens</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          dens = mod2(phi);
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>

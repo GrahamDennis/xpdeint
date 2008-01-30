@@ -1,0 +1,334 @@
+#*
+AdaptiveStepIntegrator.tmpl
+
+Created by Graham Dennis on 2007-11-16.
+Copyright (c) 2007 __MyCompanyName__. All rights reserved.
+*#
+#extends Integrator
+
+#from AdaptiveStepIPOperator import AdaptiveStepIPOperator
+
+#def description: segment $segmentNumber (Unnamed adaptive-step integrator)
+
+#*
+  Function prototypes
+*#
+#def functionPrototypes
+  ##
+  #super
+void _segment${segmentNumber}_calculate_nonconstant_ip_fields(double _step, int _exponent, int _arrayIndex);
+double _segment${segmentNumber}_setup_sampling(bool* _next_sample_flag, long* _next_sample_counter);
+#for $vector in $vectors
+double _segment${segmentNumber}_${vector.id}_timestep_error(${vector.type}* _checkfield);
+void _segment${segmentNumber}_${vector.id}_reset(${vector.type}* _reset_to, double _step);
+#end for
+  ##
+#end def
+
+
+#*
+  Function implementations
+*#
+#def functionImplementations
+  ##
+  #super
+${nonConstantIPFieldsFunctionImplementation}#slurp
+
+${setupSamplingFunctionImplementation}#slurp
+  #for $vector in $vectors
+
+${timestepErrorFunctionImplementation($vector)}#slurp
+
+${resetFunctionImplementation($vector)}#slurp
+  #end for
+  ##
+#end def
+
+
+#def nonConstantIPFieldsFunctionImplementation
+  ##
+void _segment${segmentNumber}_calculate_nonconstant_ip_fields(double _step, int _exponent, int _arrayIndex)
+{
+  #for operator in $operators
+    #if not isinstance(operator, AdaptiveStepIPOperator)
+      #continue
+    #end if
+  _segment${segmentNumber}_calculate_${operator.name}_field(_step, _exponent, _arrayIndex);
+  #end for
+}
+  ##
+#end def
+
+#def setupSamplingFunctionImplementation
+  ##
+double _segment${segmentNumber}_setup_sampling(bool* _next_sample_flag, long* _next_sample_counter)
+{
+  // The numbers of the moment groups that need to be sampled at the next sampling point.
+  // An entry of N+1 means "reached end of integration interval"
+  long _momentGroupNumbersNeedingSamplingNext[${len($samples) + 1}];
+  long _numberOfMomentGroupsToBeSampledNext = 1;
+  
+  long _previous_m = 1;
+  long _previous_M = 1;
+  
+  double _${propagationDimension}_break_next = (double)${interval};
+  _momentGroupNumbersNeedingSamplingNext[0] = ${len($samples)};
+  
+  // initialise all flags to false
+  for (long _i0 = 0; _i0 < ${len($samples) + 1}; _i0++)
+    _next_sample_flag[_i0] = false;
+  
+  /* Check if moment group needs sampling at the same time as another already discovered sample (or the final time).
+   * If so, add this moment group to the to-be-sampled list. If moment group demands sampling earlier than all
+   * previously noted moment groups, erase all previous ones from list and set the sample time to this earlier one.
+   */
+  #for $momentGroupNumber, $sampleCount in enumerate($samples)
+    #if $sampleCount == 0
+      #continue
+    #end if
+  if (_next_sample_counter[$momentGroupNumber] * _previous_M == _previous_m * $sampleCount) {
+    _momentGroupNumbersNeedingSamplingNext[_numberOfMomentGroupsToBeSampledNext] = $momentGroupNumber;
+    _numberOfMomentGroupsToBeSampledNext++;
+  } else if (_next_sample_counter[$momentGroupNumber] * _previous_M < _previous_m * $sampleCount) {
+    _${propagationDimension}_break_next = _next_sample_counter[$momentGroupNumber] * $interval / $sampleCount;
+    _numberOfMomentGroupsToBeSampledNext = 1;
+    _momentGroupNumbersNeedingSamplingNext[0] = $momentGroupNumber;
+    _previous_M = $sampleCount;
+    _previous_m = _next_sample_counter[$momentGroupNumber];
+  }
+
+  #end for
+  // _momentGroupNumbersNeedingSamplingNext now contains the complete list of moment groups that need
+  // to be sampled at the next sampling point. Set their flags to true.
+  for (long _i0 = 0; _i0 < _numberOfMomentGroupsToBeSampledNext; _i0++)
+    _next_sample_flag[_momentGroupNumbersNeedingSamplingNext[_i0]] = true;
+  
+  return _${propagationDimension}_break_next;
+}
+  ##
+#end def
+
+
+#def timestepErrorFunctionImplementation($vector)
+  ##
+double _segment${segmentNumber}_${vector.id}_timestep_error(${vector.type}* _checkfield)
+{
+  double _error = 1e-24;
+  double _result[_${vector.id}_ncomponents];
+  double _temp_error = 0.0;
+  double _temp_mod = 0.0;
+  
+  #if len($vector.field.dimensions) > 0
+    ## FIXME: We need to have the capacity to have both a peak cutoff and an absolute cutoff
+  // Find the peak value for each component of the field
+  double _peak[_${vector.id}_ncomponents];
+  
+  for (long _i0 = 0; _i0 < _${vector.id}_ncomponents; _i0++) {
+    _peak[_i0] = 0.0;
+    _result[_i0] = 0.0;
+  }
+
+  {
+    ${loopOverVectorsWithInnerContent([vector], $insideFindPeakLoops(vector)), autoIndent=True}#slurp
+  }
+  
+  for (long _i0 = 0; _i0 < _${vector.id}_ncomponents; _i0++) {
+    if (!isfinite(_peak[_i0]))
+      // Return an error two times the tolerance in this case because the timestep must be reduced.
+      return 2.0*${tolerance};
+    _peak[_i0] *= ${cutoff};
+  }
+  #end if
+  
+  {
+    ${loopOverVectorsWithInnerContent([vector], $insideFindMaxErrorLoops(vector), autoIndent=True)}#slurp
+  }
+  
+  return _error;
+}
+  ##
+#end def
+
+
+#def insideFindPeakLoops($vector)
+  ##
+for (long _i1 = 0; _i1 < _${vector.id}_ncomponents; _i1++) {
+  #if $vector.type == 'complex'
+    #set $modFunction = 'mod2'
+  #else
+    #set $modFunction = 'fabs'
+  #end if
+  _temp_mod = ${modFunction}(_${vector.id}[_${vector.id}_index_pointer + _i1]);
+  if (!isfinite(_temp_mod))
+    _peak[_i1] = INFINITY;
+  else if (_peak[_i1] < _temp_mod)
+    _peak[_i1] = _temp_mod;
+}
+  ##
+#end def
+
+
+#def insideFindMaxErrorLoops($vector)
+  ##
+for (long  _i1 = 0; _i1 < _${vector.id}_ncomponents; _i1++) {
+  #if $vector.type == 'complex'
+    #set $modCutoffFunction = 'mod2'
+  #else
+    #set $modCutoffFunction = 'fabs'
+  #end if
+  #if len($vector.field.dimensions) > 0
+  if (${modCutoffFunction}(_${vector.id}[_${vector.id}_index_pointer + _i1]) > _peak[_i1]) {
+    ${updateMaximumError($vector), autoIndent=True}#slurp
+  }
+  #else
+  ${updateMaximumError($vector), autoIndent=True}#slurp
+  #end if
+}
+  ##
+#end def
+
+
+#def updateMaximumError($vector)
+  ##
+  #if $vector.type == 'complex'
+    #set $modErrorFunction  = 'mod'
+  #else
+    #set $modErrorFunction  = 'fabs'
+  #end if
+_temp_error = ${modErrorFunction}(_${vector.id}[_${vector.id}_index_pointer + _i1] - _checkfield[_${vector.id}_index_pointer + _i1]) / ${modErrorFunction}(_${vector.id}[_${vector.id}_index_pointer + _i1]);
+
+if (_error < _temp_error)
+  _error = _temp_error;
+  ##
+#end def
+
+
+#def resetFunctionImplementation($vector)
+  ##
+void _segment${segmentNumber}_${vector.id}_reset(${vector.type}* _reset_to, double _step)
+{
+  ${loopOverVectorsWithInnerContentTemplate([$vector], "_${vector.id}[$index] = _reset_to[$index];")}
+}
+  ##
+#end def
+
+
+#def segmentFunctionImplementation
+  ##
+void _segment${segmentNumber}()
+{
+  double _step = ${interval}/(double)${stepCount};
+  double _min_step = _step;
+  double _max_step = 0.0;
+  
+  double _tolerance = ${tolerance};
+  ## Insert code for features
+  #set $featureOrderingOuter = ['ErrorCheck', 'Stochastic']
+  ${insertCodeForFeatures('integrateAdaptiveStepBegin', featureOrderingOuter), autoIndent=True}#slurp
+  
+  double _error;
+  #for $vector in $vectors
+  double _${name}_${vector.id}_error;
+  #end for
+  
+  bool _discard = false;
+  bool _break_next = false;
+  
+  #set $momentGroupCount = len($momentGroups)
+  bool _next_sample_flag[${momentGroupCount + 2}];
+  for (long _i0 = 0; _i0 < ${momentGroupCount + 2}; _i0++)
+    _next_sample_flag[_i0] = false;
+  
+  long _next_sample_counter[$momentGroupCount];
+  for (long _i0 = 0; _i0 < $momentGroupCount; _i0++)
+    _next_sample_counter[_i0] = 1;
+  
+  const double _${propagationDimension}_ini = ${propagationDimension};
+  
+  double _${propagationDimension}_break_next = _${name}_setup_sampling(_next_sample_flag, _next_sample_counter);
+  
+  if ( $propagationDimension - _${propagationDimension}_ini + _step >= _${propagationDimension}_break_next) {
+    _break_next = true;
+    _step = _${propagationDimension}_break_next - ${propagationDimension} + _${propagationDimension}_ini;
+  }
+  
+  #if hasattr(self, 'maxIterations') and $maxIterations
+  long _step_counter = 0;
+  long _max_steps = $maxIterations;
+  #end if
+
+  ${initialise, autoIndent=True}#slurp
+  
+  ${setIntegrationArrayPointers, autoIndent=True}#slurp
+  
+  do {
+    do {
+  ## Insert code for features
+  #set $featureOrderingInner = ['Output', 'ErrorCheck', 'Stochastic']
+      ${insertCodeForFeatures('integrateAdaptiveStepInnerLoopBegin', featureOrderingInner), autoIndent=True}#slurp
+
+      ${singleIntegrationStep, autoIndent=True}#slurp
+      
+      _error = 0.0;
+  #for $vector in $vectors
+
+      _${name}_${vector.id}_error = _${name}_${vector.id}_timestep_error(_checkfield_${vector.id});
+      if (_${name}_${vector.id}_error > _error)
+        _error = _${name}_${vector.id}_error;
+  #end for
+      
+      if (_error < _tolerance) {
+        if (_step > _max_step)
+          _max_step = _step;
+        if (!_break_next && _step < _min_step)
+          _min_step = _step;
+        
+        ## FIXME: Power needs to change with the integrator and whether or not there are any
+        ## noises being used by this integrator
+        _step *= 0.92 * pow(fabs(_tolerance/_error), 0.2);
+        _discard = false;
+      } else {
+        t -= _step;
+  #for $vector in $vectors
+
+        _${name}_${vector.id}_reset(_aifield_${vector.id}, _step);
+  #end for
+        _segment${segmentNumber}_ip_evolve(-1);
+
+        ## Power needs to change with the integrator and whether or not there are any
+        ## noises being used by this integrator
+        _step *= 0.92 * pow(fabs(_tolerance/_error), 0.25);
+        _discard = true;
+        _break_next = false;
+      }
+  #if hasattr(self, 'maxIterations') and $maxIterations
+
+      _step_counter++;
+      if (_step_counter >= _max_steps) {
+        _discard = false;
+        _break_next = true;
+        _next_sample_flag[${momentGroupCount + 1}] = true;
+      }
+  #end if
+      
+    } while (_discard);
+    
+    ${insertCodeForFeaturesInReverseOrder('integrateAdaptiveStepInnerLoopEnd', featureOrderingInner), autoIndent=True}#slurp
+  } while (!_next_sample_flag[${momentGroupCount + 1}]);
+
+  printf("Segment ${segmentNumber}: minimum timestep: %e maximum timestep: %e\n", _min_step, _max_step);
+  #if hasattr(self, 'maxIterations') and $maxIterations
+  
+  if (_step_counter >= _max_steps) {
+    printf("\nReached %l iterations, exiting at ${propagationDimension} = %e\n", _max_steps, ${propagationDimension});
+    printf("Last error: %e\n", _error);
+    printf("Last planned timestep: %e\n\n", _step);
+  }
+  #end if
+
+  ${finalise, autoIndent=True}#slurp
+  ##
+  ${insertCodeForFeaturesInReverseOrder('integrateAdaptiveStepEnd', featureOrderingOuter), autoIndent=True}#slurp
+}
+  ##
+#end def

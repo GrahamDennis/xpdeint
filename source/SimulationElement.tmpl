@@ -1,0 +1,55 @@
+#*
+SimulationElement.tmpl
+
+Created by Graham Dennis on 2007-08-23.
+Copyright (c) 2007 __MyCompanyName__. All rights reserved.
+*#
+#extends ScriptElement
+
+#*
+  Description of template
+*#
+#def description: simulation
+
+#*
+  Globals needed at the start of the simulation
+*#
+#def globals
+double ${propagationDimension};
+
+// This stuff is here because libxmds requires it.
+// That is because we need the XML parser in order to be able
+// to load XSIL files to initialise fields
+bool debugFlag = false;
+bool xmlDebugFlag =  false;
+#end def
+
+#def mainRoutine
+int main(int argc, char **argv)
+{
+  #for $field in $fields
+  ${field.allocate, autoIndent=True}#slurp
+    #if $field.isOutputField
+  ${field.initialise, autoIndent=True}#slurp
+    #end if
+  #end for
+  #*
+    And now insert the code for the features that apply in the main function
+  *#
+  ## Note that Bing, and Argv commute
+  #set $featureOrdering = ['Bing', 'Argv', 'FourierTransform', 'Benchmark', 'Output']
+  ${insertCodeForFeatures('mainBegin', $featureOrdering), autoIndent=True}#slurp
+
+  ## This needs to be extracted into a function so that it can be indented further if necessary
+  /* Code that actually does stuff goes here */
+  _segment0();
+  
+  ${insertCodeForFeaturesInReverseOrder('mainEnd', $featureOrdering), autoIndent=True}#slurp
+  ##
+  #for $field in $fields
+  ${field.free, autoIndent=True}#slurp
+  #end for
+  
+  return 0;
+}
+#end def

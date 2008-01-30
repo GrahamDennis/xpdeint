@@ -1,0 +1,37 @@
+#*
+DeltaAOperator.tmpl
+
+delta-a operator, i.e. dstuff_dt = otherStuff;
+
+Created by Graham Dennis on 2007-10-13.
+Copyright (c) 2007 __MyCompanyName__. All rights reserved.
+*#
+#extends _DeltaAOperator
+
+#def description: Delta A propagation operator for field $field.name
+
+#def insideEvaluateOperatorLoops
+  ##
+  ## NonConstantOperator will have defined for us all of the dVariableName_dPropagationDimension variables.
+  ## Note that we assume that all of the integration vectors have an operotor component defined for them.
+\#define d${propagationDimension} _step
+
+// ************* Propagation code ***************
+${propagationCode}
+// **********************************************
+
+\#undef d${propagationDimension}
+
+
+  ## Loop over the components of the integration vectors
+  #for $operatorComponentName in $operatorComponents.iterkeys()
+    #assert len($operatorComponents[$operatorComponentName]) == 1
+    #for $integrationVector, $integrationVectorComponentList in $operatorComponents[$operatorComponentName].iteritems()
+      #set $integrationVectorComponentName = $integrationVectorComponentList[0]
+      #assert $integrationVectorComponentName in $integrationVector.components
+_active_${integrationVector.id}[_${integrationVector.id}_index_pointer + ${integrationVector.components.index($integrationVectorComponentName)}] = #slurp
+$operatorComponentName * _step;
+    #end for
+  #end for
+  ##
+#end def

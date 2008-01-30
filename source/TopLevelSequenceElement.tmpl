@@ -1,0 +1,79 @@
+#*
+TopLevelSequenceElement.tmpl
+
+Created by Graham Dennis on 2007-08-27.
+Copyright (c) 2007 __MyCompanyName__. All rights reserved.
+*#
+#extends _Segment
+#*
+  Description of template
+*#
+#assert $segmentNumber == 0
+#def description: segment $segmentNumber (Top level sequence)
+#*
+
+  Function prototypes
+*#
+#def functionPrototypes
+void _segment0();
+#end def
+#*
+
+  Function implementations
+*#
+#def functionImplementations
+  ##
+void _segment0()
+{
+  ##
+  ## And now insert the code for the features that apply in the top level sequence
+  #set $featureOrdering = ['ErrorCheck', 'Stochastic']
+  #set $dict = {'extraIndent': 0}
+  ${insertCodeForFeatures('topLevelSequenceBegin', featureOrdering, dict), autoIndent=True}#slurp
+  #set $extraIndent = dict['extraIndent']
+
+  ${topLevelSequenceInnerContent, autoIndent=True, extraIndent=extraIndent}#slurp
+  ##
+  ${insertCodeForFeaturesInReverseOrder('topLevelSequenceEnd', featureOrdering, dict), autoIndent=True}#slurp
+}
+  ##
+#end def
+
+
+#def topLevelSequenceInnerContent
+  ##
+$propagationDimension = 0.0;
+  ##
+  #for $field in $filter(lambda x: not x.isOutputField, $fields)
+    #set $result = $field.initialise
+    #if $result
+
+${result}#slurp
+    #end if
+  #end for
+  ##
+  #for $momentGroup in $momentGroups
+    ## We only need to set the sample index for the propagation dimension
+    ## and only if this moment group has the propagation dimension as one
+    ## of its dimensions
+    #if not $momentGroup.hasDimensionName($propagationDimension)
+      #continue
+    #end if
+    #set $dimensionNumber = $momentGroup.indexOfDimensionName($propagationDimension)
+_mg${momentGroup.number}_sample_index${dimensionNumber} = 0;
+  #end for
+  ##
+  #for $momentGroup in $filter(lambda x: x.requiresInitialSample, $momentGroups)
+_mg${momentGroup.number}_sample();
+  #end for
+  ##
+  #for $segment in $childSegments
+_segment${segment.segmentNumber}();
+  #end for
+  ##
+
+  #for $momentGroup in $momentGroups
+_mg${momentGroup.number}_process();
+  #end for  
+  ##
+#end def

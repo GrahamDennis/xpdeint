@@ -1,0 +1,53 @@
+#*
+FourierTransform.tmpl
+
+Created by Graham Dennis on 2007-08-23.
+Copyright (c) 2007 __MyCompanyName__. All rights reserved.
+*#
+#extends _Feature
+#def description: No fourier transform
+#attr $featureName = 'FourierTransform'
+
+## includes needed for fourier transform
+#def includes
+typedef struct {
+  double re;
+  double im;
+} fftw_complex;
+#end def
+
+## defines
+#def defines
+\#define xmds_malloc malloc
+\#define xmds_free   free
+#end def
+
+## do the full transform for the vector
+#def fullFFTForVector($vector, $type)
+#end def
+
+## create a quick fourier transform plan for use by the mixed transform code
+#def createQuickPlanForVectorWithLatticeAndCount($vector, $lattice, $count, $type)
+#end def
+
+## run a quick fourier transform plan for use by the mixed transform code
+#def runQuickFFTForVectorWithIndexAndLatticeAndCount($vector, $index, $lattice, $count, $type)
+#end def
+
+## run a quick fourier transform
+#def runQuickFFTForVectorWithCount($vector, $count, $type)
+#end def
+
+## destroy the quick plan
+#def destroyQuickPlan()
+#end def
+
+#def mainBegin(dict)
+
+// load wisdom and create plans for fft
+#end def
+
+#def mainEnd(dict)
+
+// destroy plans
+#end def
