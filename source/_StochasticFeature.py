@@ -32,13 +32,7 @@ class _StochasticFeature (_Feature):
     # Note that someone (maybe this class) needs to replace the named noises in
     # these classes (as read by the parser) with the actual noise objects
     
-    classesThatCanUseNoises = set([VectorInitialisationCDATA, DeltaAOperator])
-    objectsThatMightUseNoises = set()
-    
-    objectMap = self.getVar('objectMap')
-    
-    for c in classesThatCanUseNoises:
-      objectsThatMightUseNoises.update(objectMap[c])
+    objectsThatMightUseNoises = [o for o in self.getVar('templates') if isinstance(o, (VectorInitialisationCDATA, DeltaAOperator))]
     
     noiseNameMap = dict([(noise.prefix, noise) for noise in self.noises])
     fieldToNoisesMap = dict()
@@ -75,6 +69,13 @@ class _StochasticFeature (_Feature):
       # Add to the dependencies for this object the noise vectors corresponding to the noises
       # that this object wants to use
       o.dependencies.update([noise.noiseVectorForField(o.field) for noise in o.noises])
-      
+    
+    
+    integratorsUsingNoises = set([o.integrator for o in objectsThatMightUseNoises if isinstance(o, DeltaAOperator)])
+    for integrator in integratorsUsingNoises:
+      if hasattr(integrator, 'successfulStepExponent') and hasattr(integrator, 'unsuccessfulStepExponent'):
+        integrator.successfulStepExponent /= 2.0
+        integrator.unsuccessfulStepExponent /= 2.0
+    
     super(_Feature, self).preflight()
   

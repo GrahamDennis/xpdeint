@@ -133,7 +133,7 @@ def main(argv=None):
   globalNameSpace['symbolNames'] = set()
   globalNameSpace['xmds'] = {'versionString': '0.0a',
                              'subversionRevision': 'rF00'}
-  globalNameSpace['objectMap'] = dict()
+  globalNameSpace['templates'] = set()
   
   globalNameSpace['anyObject'] = anyObject
   

@@ -38,7 +38,8 @@ struct _dtdWstore {
   ~_dtdWstore() {
   #for noise in noisesNeeded
     #for noiseVector in noise.noiseVectors.itervalues()
-    xmds_free(_${noiseVector.id});
+    if (_${noiseVector.id})
+      xmds_free(_${noiseVector.id});
     #end for
   #end for
   }
@@ -71,7 +72,7 @@ double _var = 1.0#slurp
 
   #for noise in noisesNeeded
     #set $noiseVector = noise.noiseVectorForField(caller.vector.field)
-_make_${noise.prefix}_noises(_var, 0.0, _${noiseVector.id}, _${caller.vector.field.name}_size * _${noiseVector.id}_ncomponents);
+_make_${noise.prefix}_noises(_var, _${noiseVector.id}, _${caller.vector.field.name}_size * _${noiseVector.id}_ncomponents);
   #end for
   ##
 #end def
@@ -99,12 +100,11 @@ _make_${noise.prefix}_noises(_var, 0.0, _${noiseVector.id}, _${caller.vector.fie
   #set $integrator = dict['caller']
   ##
   #for field in integrator.integrationFields
-const double _${field.name}_dVdt = #slurp
+const double _${field.name}_var = 1.0/(#slurp
     #if len($field.dimensions)
 $field.volumeElementInSpace(0) * #slurp
     #end if
-_noiseStep;
-const double _${field.name}_var = 1.0/_${field.name}_dVdt;
+_noiseStep);
   #end for
   ##
 #end def
@@ -114,12 +114,11 @@ const double _${field.name}_var = 1.0/_${field.name}_dVdt;
   #set $integrator = dict['caller']
   ##
   #for field in integrator.integrationFields
-const double _${field.name}_dVdt = #slurp
-  #if len($field.dimensions)
-$field.volumeElementInSpace(0) * #slurp
-  #end if
-_noiseStep;
-const double _${field.name}_var = 1.0/_${field.name}_dVdt;
+const double _${field.name}_var = 1.0#slurp
+    #if len($field.dimensions)
+/ $field.volumeElementInSpace(0)#slurp
+    #end if
+;
   #end for
 
 list<_dtdWstore> _noise_list;
@@ -131,7 +130,7 @@ list<_dtdWstore>::iterator _active_node;
   ##
   #set $integrator = dict['caller']
   ##
-  #for (noise, field) in self.nosiesAndFieldsForIntegrator(integrator)
+  #for (noise, field) in self.noisesAndFieldsForIntegrator(integrator)
     #set $noiseVector = noise.noiseVectorForField(field)
 _active_${noiseVector.id} = _${noiseVector.id};
   #end for
@@ -145,8 +144,7 @@ _active_${noiseVector.id} = _${noiseVector.id};
   #for (noise, field) in self.noisesAndFieldsForIntegrator(integrator)
     #set $noiseVector = noise.noiseVectorForField(field)
 
-_make_${noise.prefix}_noises(_${field.name}_var, _${field.name}_dVdt,#slurp
- _${noiseVector.id}, _${field.name}_size * _${noiseVector.id}_ncomponents);
+_make_${noise.prefix}_noises(_${field.name}_var, _${noiseVector.id}, _${field.name}_size * _${noiseVector.id}_ncomponents);
     ##
     #set $makeNoisesDict = {'noise': noise, 'noiseVector': noiseVector, 'field': field}
 ${insertCodeForFeatures('makeNoisesForFixedStep', featureOrdering, makeNoisesDict)}#slurp
@@ -167,77 +165,71 @@ if (_noise_list.empty()) {
    #set $noiseVector = noise.noiseVectorForField(field)
 
   _active_${noiseVector.id} = (double*) xmds_malloc(sizeof(double) * _${field.name}_size * _${noiseVector.id}_ncomponents);
-  _make_${noise.prefix}_noises(_${field.name}_var/_step, _${field.name}_dVdt*_step,#slurp
- _active_${noiseVector.id}, _${field.name}_size * _${noiseVector.id}_ncomponents);
+  _make_${noise.prefix}_noises(_${field.name}_var/_step, _active_${noiseVector.id}, _${field.name}_size * _${noiseVector.id}_ncomponents);
   _active_node->_${noiseVector.id} = _active_${noiseVector.id};
   #end for
-} else if (_step*(1.0 + _epsilon) < _noise_list.begin()->_step) {
+} else if (_step*(1.0 + _EPSILON) < _noise_list.begin()->_step) {
   // Create new smallest time step
-  _noise_vector = new double[_main_size*_n_noises];
-  _make_noises(_gen1, _var*(_noise_list.begin()->_step - _step)/(_step*_noise_list.begin()->_step), _noise_vector, _main_size*_n_noises);
-  for (long _i0 = 0; _i0 < _main_size*_n_noises; _i0++) { 
-    _noise_vector[_i0] += _noise_list.begin()->_noise_vector[_i0]; 
-  } 
-  _noise_list.push_front(_dtdWstore()); 
-  _active_node = _noise_list.begin(); 
-  _active_node->_step = _step; 
-  _active_node->_noise_vector = _noise_vector; 
+  
+  // If the step is greater than 50% of the current smallest step size
+  // then we should just use half the step size because we are going to have
+  // to do the other half at some point too.
+  
+  const double _old_smallest_step = _noise_list.begin()->_step;
+  
+  if (_step > 0.5*_old_smallest_step*(1.0 + _EPSILON))
+    _step = 0.5*_old_smallest_step;
+  
+  _noise_list.begin()->_step -= _step;
+  
+  #for noise, field in $noisesAndFieldsForIntegrator(integrator)
+    #set $noiseVector = noise.noiseVectorForField(field)
+    _active_${noiseVector.id} = (double*) xmds_malloc(sizeof(double) * _${field.name}_size * _${noiseVector.id}_ncomponents);
+    _make_${noise.prefix}_noises(_${field.name}_var * (_old_smallest_step - _step)/(_step * _old_smallest_step), 
+        _active_${noiseVector.id}, _${field.name}_size * _${noiseVector.id}_ncomponents);
+    
+    // Now complete creation of the new noise, and update the old noise to be for the remaining component of the time.
+    double* const _old_${noiseVector.id} = _noise_list.begin()->_${noiseVector.id};
+    ${loopOverVectorsWithInnerContentTemplate([$noiseVector], 
+"""_active_${vector.id}[${index}] += _old_${vector.id}[${index}];
+_old_${vector.id}[${index}] = (_old_${vector.id}[${index}]*_old_smallest_step - _active_${vector.id}[${index}]*_step)/(_old_smallest_step - _step);
+"""), autoIndent=True}#slurp
+  #end for
+
+  _noise_list.push_front(_dtdWstore());
+  _active_node = _noise_list.begin();
+  _active_node->_step = _step;
+  #for noise, field in $noisesAndFieldsForIntegrator(integrator)
+    #set $noiseVector = noise.noiseVectorForField(field)
+  _active_node->_${noiseVector.id} = _active_${noiseVector.id};
+  #end for
 } else { 
   // Use time step already attempted 
-  for (_active_node = _noise_list.begin(); (_active_node != _noise_list.end()) && (_active_node->_step <= _step*(1.0+_epsilon)); _active_node++)
+  for (_active_node = _noise_list.begin(); (_active_node != _noise_list.end()) && (_active_node->_step <= _step*(1.0 + _EPSILON)); _active_node++)
     ;
 
   _active_node--;
-  _step = _active_node->_step; 
-  _noise_vector = _active_node->_noise_vector; 
-  if (_break_next && fabs(t + _step - _t_break_next) > _step*_epsilon)
+  _step = _active_node->_step;
+  #for noise, field in $noisesAndFieldsForIntegrator(integrator)
+    #set $noiseVector = noise.noiseVectorForField(field)
+    _active_${noiseVector.id} = _active_node->_${noiseVector.id};
+  #end for
+  if (_break_next && fabs(t + _step - _t_break_next) > _step*_EPSILON)
     _break_next = false;
 } 
-
-
-
-if (_noise_list.empty()) { 
-   // Noise list empty so start afresh
-   _noise_vector = new double[_main_size*_n_noises];
-   _make_noises(_gen1, _var/_step, _noise_vector, _main_size*_n_noises);
-   _noise_list.push_front(_dtdWstore()); 
-   _active_node = _noise_list.begin(); 
-   _active_node->_step = _step; 
-   _active_node->_noise_vector = _noise_vector; 
-} 
-else { 
-   if (_step*(1.0+_epsilon) < _noise_list.begin()->_step) { 
- _noise_vector = new double[_main_size*_n_noises];
-     //Create new smallest time step 
-       _make_noises(_gen1, _var*((_noise_list.begin()->_step)-_step)/(_step*_noise_list.begin()->_step), _noise_vector, _main_size*_n_noises);
-       for (unsigned long _i0=0; _i0<_main_size*_n_noises; _i0+=1) { 
-          _noise_vector[_i0] += _noise_list.begin()->_noise_vector[_i0]; 
-       } 
-    _noise_list.push_front(_dtdWstore()); 
-    _active_node = _noise_list.begin(); 
-    _active_node->_step = _step; 
-    _active_node->_noise_vector = _noise_vector; 
- } 
- else { 
-     //Use time step already attempted 
- for (_active_node = _noise_list.begin(); (_active_node != _noise_list.end()) && (_active_node->_step <= _step*(1.0+_epsilon)); _active_node++) ;
-
- _active_node--; 
-   _step = _active_node->_step; 
-   _noise_vector = _active_node->_noise_vector; 
-   if (_break_next && fabs(t + _step - _t_break_next) > _step*_epsilon)
-     _break_next = false;
- } 
-} 
   
-  
-  
-  
-  #for (noise, field) in $noisesAndFieldsForIntegrator(integrator)
-    #set $noiseVector = noise.noiseVectorForField(field)
-_make_${noise.prefix}_noises(_${field.name}_var / _step, _${field.name}_dVdt * _step,#slurp
- _${noiseVector.id}, _${field.name}_size * _${noiseVector.id}_ncomponents);
-  #end for
+  ##
+#end def
+
+#def adaptiveStepSucceeded(dict)
+  ##
+// Trim dtdW tree
+_active_node++;
+if (_active_node == _noise_list.end())
+  _noise_list.clear();
+else
+  _noise_list.pop_front();
+
   ##
 #end def
 

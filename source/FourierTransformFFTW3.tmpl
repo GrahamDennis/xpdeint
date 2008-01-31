@@ -145,15 +145,17 @@ _${vector.id}_${type}_plan = fftw_plan_many_dft(_${field.name}_ndims, _fftw_latt
 #end def
 
 #def mainEnd($dict)
-
+  ##
+  
 // destroy plans
-#for field in $fields
-  ## only loop over those vectors that need fourier transforms
-  #for vector in filter(lambda x: x.needsFourierTransforms, field.vectors)
+  #for field in $fields
+    ## only loop over those vectors that need fourier transforms
+    #for vector in filter(lambda x: x.needsFourierTransforms, field.vectors)
 fftw_destroy_plan(_${field.name}_${vector.name}_forward_plan);
 fftw_destroy_plan(_${field.name}_${vector.name}_backward_plan);
+    #end for
   #end for
-#end for
 
 fftw_cleanup();
+  ##
 #end def
