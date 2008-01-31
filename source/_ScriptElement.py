@@ -19,12 +19,7 @@ class _ScriptElement (Template):
   def __init__(self, *args, **KWs):
     Template.__init__(self, *args, **KWs)
     
-    objectMap = self.getVar('objectMap')
-    
-    if not self.__class__ in objectMap:
-      objectMap[self.__class__] = set()
-    
-    objectMap[self.__class__].add(self)
+    self.getVar('templates').add(self)
     
     self.filterTemplateArgument = KWs['filter']
     self.dependencies = set()

@@ -3,6 +3,7 @@
   - Stochastics support is now mostly done, what is missing is:
 	* Stochastics and error checking: the second noise arrays aren't created
 	* 'noise' tags inside initialisation and integrate elements aren't currently parsed
+* Add the ARK89 algorithm
 * Add a 'filter' segment
 * Add 'functions' elements to integrate, filter segments and anything else that
   might use them
@@ -40,3 +41,4 @@
   FourierTransformFFTW2.tmpl, however it hasn't been finished.
 * Breakpoint elements.
 * Sequence segments so that you can loop over things.
+* Make xpdeint report the correct subversion revision somehow

@@ -15,6 +15,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *#
 #def makeNoises
   ##
+const double _dVdt = 1.0/_var;
 for (long _i0 = 0; _i0 < _n; _i0++) {
   _noise_vector[_i0] = _var * _poidev(${noiseMeanRate} * _dVdt, ${generatorName});
 }
