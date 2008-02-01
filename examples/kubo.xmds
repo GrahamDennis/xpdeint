@@ -35,7 +35,7 @@
     </vector>
   </field>
   
-  <sequence>
+  <sequence driver="multi-path" paths="1024">
     <integrate algorithm="ARK45" interval="100" steps="10000" tolerance="1e-5">
       <samples>1000</samples>
       <operators field="main">

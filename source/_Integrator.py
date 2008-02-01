@@ -12,6 +12,9 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 from _Segment import _Segment
 
 class _Integrator (_Segment):
+  
+  canBeInitialisedEarly = True
+  
   def __init__(self, *args, **KWs):
     _Segment.__init__(self, *args, **KWs)
     

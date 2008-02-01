@@ -16,18 +16,18 @@ void _segment${segmentNumber}()
   double _noiseStep = ${interval}/(double)${stepCount};
   #set $featureOrderingOuter = ['ErrorCheck', 'Stochastic']
   ${insertCodeForFeatures('integrateFixedStepBegin', featureOrderingOuter), autoIndent=True}#slurp
-
+  
   ${initialise, autoIndent=True}#slurp
   
-  ${setIntegrationArrayPointers, autoIndent=True}#slurp
-    
+  ${localInitialise, autoIndent=True}#slurp
+  
   for (long _istep = 0; _istep < ${stepCount}; _istep++) {
   ## Insert code for features
   #set $featureOrderingInner = ['Output', 'ErrorCheck', 'Stochastic']
   #set $dict = {'extraIndent': 0}
     ${insertCodeForFeatures('integrateFixedStepInnerLoopBegin', featureOrderingInner, dict), autoIndent=True}#slurp
   #set $extraIndent = $dict.extraIndent
-
+    
     ${singleIntegrationStep, autoIndent=True, extraIndent=extraIndent}#slurp
     
     ${insertCodeForFeaturesInReverseOrder('integrateFixedStepInnerLoopEnd', featureOrderingInner, dict), autoIndent=True}#slurp

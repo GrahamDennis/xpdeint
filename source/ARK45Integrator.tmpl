@@ -14,7 +14,14 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 #attr $successfulStepExponent = 0.2
 #attr $unsuccessfulStepExponent = 0.25
 
-#def initialise
+#def localInitialise
+#*doc:
+Initialise all of the Cash-Karp coefficients, etc.
+*#
+  ##
+  #super
+  ##
+
 // Cash-Karp coefficients
 double _a_raw[7];
 double _a[7];
@@ -98,8 +105,6 @@ _g[3]=( _b[6][4]*(_cs[1]*_c[3] - _c[1]*_cs[3]) + _b[6][1]*(_cs[3]*_c[4] - _c[3]*
 _g[4]=( _b[6][1]*_cs[4]-_b[6][4]*_cs[1] )/_den;
 _g[5]=  _b[6][5] + _cs[5]*( _b[6][1]*_c[4]-_b[6][4]*_c[1] )/_den;
 _g[6]=( -_b[6][1]*_c[4]+_b[6][4]*_c[1] )/_den;
-  ##
-  #super
   ##
 #end def
 

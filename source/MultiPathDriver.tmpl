@@ -1,0 +1,57 @@
+#*
+MultiPathDriver.tmpl
+
+Created by Graham Dennis on 2008-02-01.
+Copyright (c) 2008 __MyCompanyName__. All rights reserved.
+*#
+#extends _SimulationDriver
+#*
+  Description of template
+*#
+#assert $segmentNumber == 0
+#def description: segment $segmentNumber (Multipath top level sequence)
+
+#def defines
+  ##
+\#define _n_paths ${pathCount}
+  ##
+#end def
+
+#def functionImplementations
+  ##
+void _segment0()
+{
+  ##
+  ## And now insert the code for the features that apply in the top level sequence
+  #set $featureOrderingOuter = ['Stochastic']
+  ${insertCodeForFeatures('topLevelSequenceBegin', featureOrderingOuter), autoIndent=True}#slurp
+  
+  ## Now loop over anything that can be initalised early and initialise them
+  ## so they don't allocate and free stuff for each path
+  #set $objectsNeedingInitialisation = [o for o in $templates if hasattr(o, 'canBeInitialisedEarly') and o.canBeInitialisedEarly]
+  #for o in $objectsNeedingInitialisation
+  ${o.initialise, autoIndent=True}#slurp
+  #end for
+  
+  for (long _i0=0; _i0 < _n_paths; _i0++) {
+    printf("Starting path %li\n", _i0 + 1);
+    #set $featureOrderingInner = ['ErrorCheck']
+    #set $dict = {'extraIndent': 0}
+    ${insertCodeForFeatures('topLevelSequenceBegin', featureOrderingInner, dict), autoIndent=True}#slurp
+    #set $extraIndent = dict['extraIndent']
+    
+    ${topLevelSequenceInnerContent, autoIndent=True, extraIndent=extraIndent}#slurp
+    
+    ${insertCodeForFeaturesInReverseOrder('topLevelSequenceEnd', featureOrderingInner, dict), autoIndent=True}#slurp
+  }
+  
+  ## Now clean up after all of the objects that we initialised early.
+  #for o in $objectsNeedingInitialisation
+  ${o.finalise, autoIndent=True}#slurp
+  #end for
+  
+  ${insertCodeForFeaturesInReverseOrder('topLevelSequenceEnd', featureOrderingOuter), autoIndent=True}#slurp
+}
+  ##
+#end def
+
