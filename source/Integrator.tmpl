@@ -141,14 +141,15 @@ void _segment${segmentNumber}_evaluate_${operator.name}(${operator.evaluateOpera
   ##
 #end def
 
-## Allocate additional arrays needed for the integrator
-##
-## This is a call once-per-instance function because we may want to do the initialisation
-## (and clean-up) for this segment in a parent segment for efficiency reasons (if, for
-## example we are looping over this segment, or we are running multiple paths).
-##
 #@callOncePerInstanceGuard
 #def initialise
+#*doc:
+Allocate additional arrays needed for the integrator
+
+This is a call once-per-instance function because we may want to do the initialisation
+(and clean-up) for this segment in a parent segment for efficiency reasons (if, for
+example we are looping over this segment, or we are running multiple paths).
+*#
   ##
   ## Loop over the vectors creating the arrays
   #for $vector in $vectors
@@ -182,33 +183,26 @@ $operator.finalise#slurp
   ##
 #end def
 
-## Because the initialisation for the integrator could be in a different function,
-## we need to set up pointers in the integrator to the appropriate arrays.
 #def setIntegrationArrayPointers
+#*doc:
+Because the initialisation for the integrator could be in a different function,
+we need to set up pointers in the integrator to the appropriate arrays.
+*#
   ##
   #for $vector in $vectors
     ## Loop over the variables that need to be created
     #for $arrayName in $extraIntegrationArrayNames
-${vector.type}* __restrict__ _${arrayName}_${vector.id} = _${name}_${arrayName}_${vector.id};
+${vector.type}* _${arrayName}_${vector.id} = _${name}_${arrayName}_${vector.id};
     #end for
   #end for  
   ##
 #end def
 
-## FIXME: This goFromXSpace/goFromKSpace stuff is broken.
-## An example is when the IP operator is in X space,
-## and the homeSpace is K, in that case, no transform would be
-## written, although a transform would be necessary.
-#def goFromXSpace
-  #assert $homeSpace == 0 or $homeSpace == $geometry.spaceMask
-  #if not $homeSpace == 0
-${transformVectorsToSpace($vectors, $geometry.spaceMask)}#slurp
-  #end if
-#end def
-
-#def goFromKSpace
-  #assert $homeSpace == 0 or $homeSpace == $geometry.spaceMask
-  #if not $homeSpace == $geometry.spaceMask
-${transformVectorsToSpace($vectors, 0)}#slurp
-  #end if
+#def goToHomeSpace
+#*doc:
+This method writes the code to transform all of the integration vectors
+back to the 'home space' of the integrator.
+*#
+${transformVectorsToSpace($vectors, $homeSpace)}#slurp
+  ##
 #end def

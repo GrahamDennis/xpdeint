@@ -18,7 +18,6 @@
 * post_processing -- I think this is done in the generator, it just needs the parser
   to process the appropriate XML element.
 * FFTW wisdom importing and exporting
-* Fix the goToXSpace/goToKSpace transforms in integration algorithms.
 * The exponent needed when calculating the next time step in adaptive algorithms
   depends on whether or not an algorithm is being used with noise, and also what
   order the algorithm is.

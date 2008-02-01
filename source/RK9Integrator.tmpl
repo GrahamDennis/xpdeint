@@ -166,7 +166,7 @@ _active_${vector.id} = _${vector.id};
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(+1);
-${goFromKSpace}#slurp
+${goToHomeSpace}#slurp
 
   #for $vector in $vectors
 _active_${vector.id} = _akafield_${vector.id};
@@ -177,7 +177,7 @@ _segment${segmentNumber}_calculate_delta_a(_step);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(+1);
-${goFromKSpace}#slurp
+${goToHomeSpace}#slurp
 
 // Step 2
 
@@ -199,7 +199,7 @@ _segment${segmentNumber}_calculate_delta_a(_step);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(+2);
-${goFromKSpace}#slurp
+${goToHomeSpace}#slurp
 
 // Step 3
 
@@ -221,7 +221,7 @@ _segment${segmentNumber}_calculate_delta_a(_step);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(+3);
-${goFromKSpace}#slurp
+${goToHomeSpace}#slurp
 
 // Step 4
 
@@ -244,7 +244,7 @@ _segment${segmentNumber}_calculate_delta_a(_step);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(+4);
-${goFromKSpace}#slurp
+${goToHomeSpace}#slurp
 
 // Step 5
 
@@ -268,7 +268,7 @@ _segment${segmentNumber}_calculate_delta_a(_step);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(+5);
-${goFromKSpace}#slurp
+${goToHomeSpace}#slurp
 
 // Step 6
 
@@ -291,7 +291,7 @@ _segment${segmentNumber}_calculate_delta_a(_step);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(+6);
-${goFromKSpace}#slurp
+${goToHomeSpace}#slurp
 
 // Step 7
 
@@ -315,7 +315,7 @@ _segment${segmentNumber}_calculate_delta_a(_step);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(+7);
-${goFromKSpace}#slurp
+${goToHomeSpace}#slurp
 
 // Step 8
 
@@ -338,7 +338,7 @@ _segment${segmentNumber}_calculate_delta_a(_step);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(+8);
-${goFromKSpace}#slurp
+${goToHomeSpace}#slurp
 
 // Step 9
 
@@ -362,7 +362,7 @@ _segment${segmentNumber}_calculate_delta_a(_step);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(+9);
-${goFromKSpace}#slurp
+${goToHomeSpace}#slurp
 
 // Step 10
 
@@ -386,7 +386,7 @@ _segment${segmentNumber}_calculate_delta_a(_step);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(+10);
-${goFromKSpace}#slurp
+${goToHomeSpace}#slurp
 
 // Step 11
 
@@ -411,7 +411,7 @@ _segment${segmentNumber}_calculate_delta_a(_step);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(+11);
-${goFromKSpace}#slurp
+${goToHomeSpace}#slurp
 
 // Step 12
 
@@ -436,7 +436,7 @@ _segment${segmentNumber}_calculate_delta_a(_step);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(+12);
-${goFromKSpace}#slurp
+${goToHomeSpace}#slurp
 
 // Step 13
 
@@ -462,7 +462,7 @@ _segment${segmentNumber}_calculate_delta_a(_step);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(+13);
-${goFromKSpace}#slurp
+${goToHomeSpace}#slurp
 
 // Step 14
 
@@ -488,7 +488,7 @@ _segment${segmentNumber}_calculate_delta_a(_step);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(+14);
-${goFromKSpace}#slurp
+${goToHomeSpace}#slurp
 
 // Step 15 and 16 combined to reduce memory use
 
@@ -521,7 +521,7 @@ _active_${vector.id} = _akifield_${vector.id};
 
 // a_k = G[a_k, t]
 _segment${segmentNumber}_calculate_delta_a(_step);
-${goFromXSpace}#slurp
+${goToHomeSpace}#slurp
 
 ${propagationDimension} += _a[15]*_step;
 
@@ -531,7 +531,7 @@ _active_${vector.id} = _akjfield_${vector.id};
 
 // a_k = G[a_k, t]
 _segment${segmentNumber}_calculate_delta_a(_step);
-${goFromXSpace}#slurp
+${goToHomeSpace}#slurp
 
 // Take full step
 
