@@ -24,6 +24,7 @@ from VectorInitialisationCDATA import VectorInitialisationCDATA as VectorInitial
 
 
 from TopLevelSequenceElement import TopLevelSequenceElement as TopLevelSequenceElementTemplate
+from MultiPathDriver import MultiPathDriver as MultiPathDriverTemplate
 
 from FixedStepIntegrator import FixedStepIntegrator
 from AdaptiveStepIntegrator import AdaptiveStepIntegrator
@@ -141,6 +142,7 @@ class XMDS2Parser(ScriptParser):
       for noiseElement in noiseElements:
         kind = noiseElement.getAttribute('kind').strip().lower()
         noiseClass = None
+        noiseAttributeDictionary = dict()
         if kind in ('gauss', 'gaussian', 'gaussian-posix'):
           noiseClass = GaussianPOSIXNoise
         elif kind in ('slow-gaussian', 'slow-gaussian-posix'):
@@ -149,6 +151,10 @@ class XMDS2Parser(ScriptParser):
           noiseClass = UniformPOSIXNoise
         elif kind in ('poissonian', 'poissonian-posix'):
           noiseClass = PoissonianPOSIXNoise
+          if not noiseElement.hasAttribute('mean-rate'):
+            raise ParserException(noiseElement, "Poissonian noise must specify a 'mean-rate' attribute.")
+          meanRate = self.integerInString(noiseElement.getAttribute('mean-rate'))
+          noiseAttributeDictionary['noiseMeanRate'] = meanRate
         elif kind in ('gaussian-mkl'):
           noiseClass = GaussianMKLNoise
         elif kind in ('uniform-mkl'):
@@ -156,8 +162,12 @@ class XMDS2Parser(ScriptParser):
         else:
           raise ParserException(noiseElement, "Unknown noise kind '%(kind)s'." % locals())
         noise = noiseClass(**self.argumentsToTemplateConstructors)
+        
+        self.applyAttributeDictionaryToObject(noiseAttributeDictionary, noise)
+        
         prefix = noiseElement.getAttribute('prefix').strip()
         noise.prefix = prefix
+        
         noiseCountString = noiseElement.getAttribute('num').strip()
         try:
           noiseCount = int(noiseCountString)
@@ -176,6 +186,8 @@ class XMDS2Parser(ScriptParser):
     fftwElement = featuresParentElement.getChildElementByTagName('fftw', optional=True)
     
     fourierTransformClass = None
+    
+    fftAttributeDictionary = dict()
     
     if not fftwElement:
       fourierTransformClass = FourierTransform
@@ -214,8 +226,12 @@ class XMDS2Parser(ScriptParser):
         else:
           # This shouldn't be reached because the fourierTransformClass should be one of the above options
           raise ParserException(fftwElement, "Internal consistency error.")
+        
+        fftAttributeDictionary['threadCount'] = threadCount
     
     fourierTransform = fourierTransformClass(**self.argumentsToTemplateConstructors)
+    
+    self.applyAttributeDictionaryToObject(fftAttributeDictionary, fourierTransform)
   
   def parseGeometryElement(self, simulationElement):
     geometryElement = simulationElement.getChildElementByTagName('geometry')
@@ -459,7 +475,27 @@ class XMDS2Parser(ScriptParser):
   def parseTopLevelSequenceElement(self, simulationElement):
     topLevelSequenceElement = simulationElement.getChildElementByTagName('sequence')
     
-    topLevelSimulationElementTemplate = TopLevelSequenceElementTemplate(**self.argumentsToTemplateConstructors)
+    driverClass = TopLevelSequenceElementTemplate
+    
+    driverAttributeDictionary = dict()
+    
+    if topLevelSequenceElement.hasAttribute('driver'):
+      driverName = topLevelSequenceElement.getAttribute('driver').strip()
+      if driverName == 'multi-path':
+        driverClass = MultiPathDriverTemplate
+        if not topLevelSequenceElement.hasAttribute('paths'):
+          raise ParserException(topLevelSequenceElement, "Missing 'paths' attribute for multi-path driver.")
+        pathCount = self.integerInString(topLevelSequenceElement.getAttribute('paths'))
+        driverAttributeDictionary['pathCount'] = pathCount
+      elif driverName == 'none':
+        pass
+      else:
+        raise ParserException(topLevelSequenceElement, "Unknown driver type '%(driverName)s'. "
+                                                       "The options are 'none' (default), or 'multi-path'." % locals())
+    
+    topLevelSimulationElementTemplate = driverClass(**self.argumentsToTemplateConstructors)
+    
+    self.applyAttributeDictionaryToObject(driverAttributeDictionary, topLevelSimulationElementTemplate)
     
     for childNode in topLevelSequenceElement.childNodes:
       if not childNode.nodeType == minidom.Node.ELEMENT_NODE:

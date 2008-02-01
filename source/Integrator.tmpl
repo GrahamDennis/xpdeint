@@ -150,7 +150,6 @@ This is a call once-per-instance function because we may want to do the initiali
 (and clean-up) for this segment in a parent segment for efficiency reasons (if, for
 example we are looping over this segment, or we are running multiple paths).
 *#
-  ##
   ## Loop over the vectors creating the arrays
   #for $vector in $vectors
     ## Loop over the variables that need to be created
@@ -183,7 +182,7 @@ $operator.finalise#slurp
   ##
 #end def
 
-#def setIntegrationArrayPointers
+#def localInitialise
 #*doc:
 Because the initialisation for the integrator could be in a different function,
 we need to set up pointers in the integrator to the appropriate arrays.

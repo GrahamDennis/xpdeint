@@ -74,3 +74,8 @@ class ScriptParser(object):
     operatorCodeRegex = re.compile(r'\b' + operatorName + r'\[\s*(.+)\s*\]')
     return operatorCodeRegex.findall(propagationCode)
   
+  def applyAttributeDictionaryToObject(self, attrDict, obj):
+    for attrName, attrValue in attrDict.iteritems():
+      obj.__setattr__(attrName, attrValue)
+    
+  
