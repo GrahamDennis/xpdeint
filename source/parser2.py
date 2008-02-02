@@ -157,9 +157,29 @@ def main(argv=None):
     # as children of the SimulationElement, and the SimulationElement should be set as a child of
     # the Simulation.
     # FIXME: Actually, I'm not so fond of the Simulation / SimulationElement distinction. They should be combined.
-    for scriptElement in globalNameSpace['scriptElements']:
-      if hasattr(scriptElement, 'preflight'):
-        scriptElement.preflight()
+    
+    # So the idea here is that each template that has a preflight, but it may not want to execute it until
+    # something else has happened in preflight. So we check if each template can run its preflight, and then run it
+    # If it can't, then we schedule it to run later. If nothing is executed in a whole loop, and we still have stuff
+    # to execute, then we have reached a dead-lock, so we exit.
+    
+    delayedPreflights = set()
+    preflights = set(globalNameSpace['templates'])
+    
+    while len(preflights):
+      for template in preflights:
+        if hasattr(template, 'preflight'):
+          if not template.canRunPreflightYet():
+            delayedPreflights.add(template)
+          else:
+            template.preflight()
+      
+      if len(preflights) == len(delayedPreflights):
+        # If this is true, then everything opted to be delayed.
+        # This means we have a deadlock
+        raise Exception("Deadlock in preflight. Classes involved: %s" % preflights)
+      preflights = delayedPreflights.copy()
+      delayedPreflights = set()
     
   except ParserException, err:  
     elementPath = []

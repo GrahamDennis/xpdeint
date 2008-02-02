@@ -31,8 +31,8 @@ ${vector.type}* _${name}_${arrayName}_${vector.id};
 #def functionPrototypes
   ##
 void _segment${segmentNumber}();
-void _segment${segmentNumber}_calculate_delta_a(double _step);
-void _segment${segmentNumber}_ip_evolve(int _exponent);
+inline void _segment${segmentNumber}_calculate_delta_a(double _step);
+inline void _segment${segmentNumber}_ip_evolve(int _exponent);
 
   #for $operator in $operators
     #if $operator.operatorVector
@@ -74,7 +74,7 @@ ${segmentFunctionImplementation}#slurp
 
 #def ipEvolveFunctionImplementation
   ##
-void _segment${segmentNumber}_ip_evolve(int _exponent)
+inline void _segment${segmentNumber}_ip_evolve(int _exponent)
 {
   #set $blankLineSeparator = ''
   ##
@@ -93,7 +93,7 @@ ${blankLineSeparator}#slurp
 
 #def deltaAFunctionImplementation
   ##
-void _segment${segmentNumber}_calculate_delta_a(double _step)
+inline void _segment${segmentNumber}_calculate_delta_a(double _step)
 {
   #set $blankLineSeparator = ''
   ##

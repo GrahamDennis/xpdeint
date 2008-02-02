@@ -108,8 +108,7 @@ void _${name}_sample()
   _${name}_x${dimensionNumber}[_${name}_sample_index${dimensionNumber}++] = $dimension.name;
   #end for
   
-  printf("Sampled field (for moment group \#${number + 1}) at ${propagationDimension} = %e\n", ${propagationDimension});
-  fflush(stdout);
+  _LOG(_SAMPLE_LOG_LEVEL, "Sampled field (for moment group \#${number + 1}) at ${propagationDimension} = %e\n", ${propagationDimension});
 }
 #end def
 
@@ -140,15 +139,7 @@ void _${name}_process()
       ##
       ## Although we don't have any processing code, one of our features has
       ## processing code that needs to run (but it is simple, right?)
-      ## Let the features modify the template string that we will pass to open the loop
-      ##
-      ## Note that the following string is a Cheetah string and so is directly interpreted for variables, etc
-      ## before being passed to loopOverVectorsWithInnerContentTemplate where it is interpreted by Cheetah *again*
-      #set $dict = {'MomentGroup': $self}
-      #silent $dict['templateString'] = c'_active_${outputField.name}_processed[\${index}] += _active_\${vector.id}[\$index];\n'
-      #set $featureOrdering = ['Stochastic']
-      #silent $insertCodeForFeatures('momentGroupProcessEndNoProcessing', $featureOrdering, $dict)
-  ${loopOverVectorsWithInnerContentTemplate($vectors, $dict.templateString), autoIndent=True}#slurp
+  ${loopOverVectorsWithInnerContentTemplate($vectors, $insideProcessingLoopsNoProcessingCode), autoIndent=True}#slurp
     #end if
   #else
     ## In this case, we did allocate a raw vector, and we will have processing to do
@@ -172,6 +163,14 @@ void _${name}_process()
 }
 #end def
 
+#def insideProcessingLoopsNoProcessingCode
+  ##
+_active_${outputField.name}_processed[\${index}] += _active_\${vector.id}[\${index}];
+  #set $featureOrdering = ['Driver']
+${insertCodeForFeatures('insideMomentGroupProcessingNoProcessingCodeLoop', $featureOrdering)}
+  ##
+#end def
+
 #*
   This function provides the contents of the moment group processing loop
 *#
@@ -181,8 +180,8 @@ void _${name}_process()
 $processingCode
 // **********************************************
 
-  #set $featureOrdering = ['Stochastic']
-$insertCodeForFeatures('insideProcessingLoop', $featureOrdering, {'MomentGroup': $self})#slurp
+  #set $featureOrdering = ['Driver']
+$insertCodeForFeatures('insideMomentGroupProcessingLoop', $featureOrdering)#slurp
   ##
 #end def
 
@@ -197,9 +196,10 @@ void _${name}_write_out(FILE* _outfile)
   #set $numIndependentVariables = len($outputField.dimensions)
   #set $arrayName = c'_active_${outputField.name}_processed'
   #set $outputFieldVectorComponents = $anyObject($outputField.vectors).components
-  #set $dependentVariables = map(lambda x: {'name': x, 'arrayName': arrayName, 'componentNumber': outputFieldVectorComponents.index(x)}, outputFieldVectorComponents)
+  #set $dependentVariables = map(lambda x: {'name': x, 'arrayName': arrayName, 'componentNumber': outputFieldVectorComponents.index(x)},
+                                 outputFieldVectorComponents)
   ##
-  #set $featureOrdering = ['ErrorCheck', 'Stochastic']
+  #set $featureOrdering = ['ErrorCheck', 'Driver']
   #set $dict = {'momentGroup': self, 'dependentVariables': $dependentVariables}
   #set $result = $insertCodeForFeatures('writeOutFunctionImplementationBegin', $featureOrdering, $dict)
   #set $dependentVariables = $dict.dependentVariables
@@ -207,7 +207,7 @@ void _${name}_write_out(FILE* _outfile)
   ## The features can return Cheetah template code suitable for passing to loopOverVectorsWithInnerContentTemplate
   ## in order to create their data. If any have, then we should actually create that loop and run that code.
   #if $result
-  ${loopOverVectorsWithInnerContentTemplate($outputField.vectors, $result), autoIndent=True}#slurp
+  ${loopOverVectorsWithInnerContentTemplate([$processedVector], $result), autoIndent=True}#slurp
   #end if
 
   fprintf(_outfile, "\n");

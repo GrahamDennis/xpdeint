@@ -10,6 +10,8 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 from TopLevelSequenceElement import TopLevelSequenceElement
 
 class _SimulationDriver (TopLevelSequenceElement):
+  logLevelsBeingLogged = "_ALL_LOG_LEVELS"
+  
   def __init__(self, *args, **KWs):
     TopLevelSequenceElement.__init__(self, *args, **KWs)
     

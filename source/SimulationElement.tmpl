@@ -10,10 +10,26 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   Description of template
 *#
 #def description: simulation
+#attr $globalNameSpaceName = "simulation"
 
 #def defines
   ##
 \#define _EPSILON 1e-6
+
+\#define _SAMPLE_LOG_LEVEL      (1 << 0)
+\#define _SEGMENT_LOG_LEVEL     (1 << 1)
+\#define _PATH_LOG_LEVEL        (1 << 2)
+\#define _SIMULATION_LOG_LEVEL  (1 << 3)
+\#define _WARNING_LOG_LEVEL     (1 << 4)
+\#define _ERROR_LOG_LEVEL       (1 << 5)
+\#define _ALL_LOG_LEVELS        _SAMPLE_LOG_LEVEL|_SEGMENT_LOG_LEVEL|_PATH_LOG_LEVEL|_SIMULATION_LOG_LEVEL|_WARNING_LOG_LEVEL|_ERROR_LOG_LEVEL
+\#define _LOG_LEVELS_BEING_LOGGED (${features['Driver'].logLevelsBeingLogged})
+
+\#define _LOG(logLevel, ...) \
+  if (logLevel & _LOG_LEVELS_BEING_LOGGED) { \
+    printf(__VA_ARGS__); \
+    fflush(stdout); \
+  }
   ##
 #end def
 

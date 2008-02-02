@@ -10,6 +10,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 """
 
 from ScriptElement import ScriptElement
+from VectorInitialisation import VectorInitialisation
 
 class _VectorElement (ScriptElement):
   def __init__(self, name, field, *args, **KWs):
@@ -24,6 +25,11 @@ class _VectorElement (ScriptElement):
     self.initialSpace = 0
     self.nComponentsOverride = None
     self.type = 'complex'
+    self.aliases = set()
+    
+    # Set default initialisation to be the zero initialisation template
+    self.initialiser = VectorInitialisation(*args, **KWs)
+    self.initialiser.vector = self
   
   @property
   def id(self):

@@ -53,9 +53,10 @@ for (long _i0 = 0; _i0 < _${vector.field.name}_size * _${vector.field.name}_${ve
 ##
 #def loopOverVectorsWithInnerContent($vectors, $innerContent)
   ## All of the vectors must be in the same field
-  #set $field = $anyObject($vectors).field
+  #set $fields = set([v.field for v in $vectors])
   ##
-  #assert len(filter(lambda x: x.field != field, $vectors)) == 0
+  #assert len($fields) == 1
+  #set $field = $anyObject($fields)
   ##
   #set $featureOrdering = ['OpenMP']
   ##
@@ -489,10 +490,10 @@ _${vector.field.name}_${vector.name}_ncomponents;
 #end def
 
 
-#*
-  Wrap kspace coordinate if necessary
-*#
 #def wrapKSpaceCoordinateForDimensionInField($dimension, $field)
+#*doc:
+Wrap kspace coordinate variable if necessary
+*#
   ##
   #set $dimensionNumber = $field.indexOfDimension($dimension)
   ##
@@ -502,10 +503,10 @@ if ( k${dimension.name} > ((_${field.name}_lattice${dimensionNumber} - 1)/2 + 0.
 #end def
 
 
-#*
-  Transform vectors $vectors to space $space
-*#
 #def transformVectorsToSpace($vectors, $space)
+#*doc:
+Transform vectors $vectors to space $space.
+*#
   ##
   #for $vector in $vectors
     #if not $vector.needsFourierTransforms
