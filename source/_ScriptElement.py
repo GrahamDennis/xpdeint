@@ -22,7 +22,15 @@ class _ScriptElement (Template):
     self.getVar('templates').add(self)
     
     self.filterTemplateArgument = KWs['filter']
+    self.searchListTemplateArgument = KWs['searchList']
     self.dependencies = set()
+    
+    if hasattr(self, 'globalNameSpaceName'):
+      globalNameSpace = KWs['searchList'][0]
+      globalNameSpace[self.globalNameSpaceName] = self
+      if not self in globalNameSpace['scriptElements']:
+        globalNameSpace['scriptElements'].append(self)
+    
   
   # Default description of the template
   def description(self):
@@ -74,10 +82,8 @@ class _ScriptElement (Template):
       # Get the extra indent value, if we were passed one in the dict object
       extraIndent = dict.get('extraIndent', 0)
       
-      # Get the caller object from the previous frame
-      callerFrame = sys._getframe(1)
-      dict['caller'] = callerFrame.f_locals['self']
-      del callerFrame
+      # The caller object is self.
+      dict['caller'] = self
       
       # Call the function with optional dictionary
       featureResult = featureFunction(dict)
@@ -150,10 +156,11 @@ class _ScriptElement (Template):
     
     return ''.join(result)
   
+  def canRunPreflightYet(self):
+    return True
+  
   def preflight(self):
-    if hasattr(self, 'children'):
-      for child in self.children:
-        child.preflight()
+    pass
   
   def vectorsFromEntity(self, entity):
     vectors = set()
@@ -163,3 +170,11 @@ class _ScriptElement (Template):
         raise ParserException(entity.xmlElement, "Unknown vector '%(vectorName)s'." % locals())
       vectors.add(vectorDictionary[vectorName])
     return vectors
+    
+  
+  def remove(self):
+    self.getVar('templates').discard(self)
+    scriptElements = self.getVar('scriptElements')
+    while self in scriptElements:
+      scriptElements.remove(self)
+  

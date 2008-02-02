@@ -24,6 +24,7 @@ from VectorInitialisationCDATA import VectorInitialisationCDATA as VectorInitial
 
 
 from TopLevelSequenceElement import TopLevelSequenceElement as TopLevelSequenceElementTemplate
+from DefaultDriver import DefaultDriver as DefaultDriverTemplate
 from MultiPathDriver import MultiPathDriver as MultiPathDriverTemplate
 
 from FixedStepIntegrator import FixedStepIntegrator
@@ -94,7 +95,6 @@ class XMDS2Parser(ScriptParser):
     self.globalNameSpace['description'] = descriptionElement.innerText()
     
     simulationElementTemplate = SimulationElementTemplate(**self.argumentsToTemplateConstructors)
-    self.globalNameSpace['scriptElements'].append(simulationElementTemplate)
     
     self.parseFeatures(simulationElement)
     
@@ -237,8 +237,6 @@ class XMDS2Parser(ScriptParser):
     geometryElement = simulationElement.getChildElementByTagName('geometry')
     
     geometryTemplate = GeometryElementTemplate(**self.argumentsToTemplateConstructors)
-    self.globalNameSpace['geometry'] = geometryTemplate
-    self.globalNameSpace['scriptElements'].append(geometryTemplate)
     
     ## First grab the propagation dimension name
     
@@ -449,10 +447,9 @@ class XMDS2Parser(ScriptParser):
       vectorTemplate.components.append(componentName)
     
     initialisationElement = vectorElement.getChildElementByTagName('initialisation', optional=True)
-    initialisationTemplate = None
-    if not initialisationElement:
-      initialisationTemplate = VectorInitialisationZeroTemplate(**self.argumentsToTemplateConstructors)
-    else:
+    
+    if initialisationElement:
+      initialisationTemplate = vectorTemplate.initialiser
       kindString = None
       if initialisationElement.hasAttribute('kind'):
         kindString = initialisationElement.getAttribute('kind').lower()
@@ -462,20 +459,28 @@ class XMDS2Parser(ScriptParser):
         if len(initialisationElement.cdataContents()) == 0:
           raise ParserException(initialisationElement, "Empty initialisation code in 'code' initialisation element.")
         initialisationTemplate.initialisationCode = initialisationElement.cdataContents()
+      elif kindString == 'zero':
+        initialisationTemplate = vectorTemplate.initialiser
       else:
         raise ParserException(initialisationElement, "Initialisation kind '%(kindString)s' is unrecognised. "
-                                                     "The options are 'code' (default)." % locals())
-    
-    initialisationTemplate.vector = vectorTemplate
-    vectorTemplate.initialiser = initialisationTemplate
+                                                     "The options are 'code' (default), or 'zero' "
+                                                     "(this is the same as having no initialisation element)." % locals())
       
+      # Untie the old initialiser from the vector
+      # Probably not strictly necessary
+      if not vectorTemplate.initialiser == initialisationTemplate:
+        vectorTemplate.initialiser.vector = None
+        vectorTemplate.initialiser.remove()
+      initialisationTemplate.vector = vectorTemplate
+      vectorTemplate.initialiser = initialisationTemplate
+    
     return vectorTemplate
   
   
   def parseTopLevelSequenceElement(self, simulationElement):
     topLevelSequenceElement = simulationElement.getChildElementByTagName('sequence')
     
-    driverClass = TopLevelSequenceElementTemplate
+    driverClass = DefaultDriverTemplate
     
     driverAttributeDictionary = dict()
     
@@ -970,9 +975,6 @@ class XMDS2Parser(ScriptParser):
                                             **self.argumentsToTemplateConstructors)
       
       targetField.temporaryVectors.add(momentsVector)
-      initialiser = VectorInitialisationZeroTemplate(**self.argumentsToTemplateConstructors)
-      initialiser.vector = momentsVector
-      momentsVector.initialiser = initialiser
       
       if not momentsElement.hasAttribute('type'):
         ## By default, the type will be complex
@@ -1164,10 +1166,6 @@ class XMDS2Parser(ScriptParser):
       momentGroupTemplate.rawVector = rawVectorTemplate
       outputFieldTemplate.dimensions = momentGroupTemplate.dimensions
       
-      initialiserTemplate = VectorInitialisationZeroTemplate(**self.argumentsToTemplateConstructors)
-      initialiserTemplate.vector = rawVectorTemplate
-      rawVectorTemplate.initialiser = initialiserTemplate
-      
       momentsElement = samplingElement.getChildElementByTagName('moments')
       momentNames = self.symbolsInString(momentsElement.innerText())
       
@@ -1204,10 +1202,7 @@ class XMDS2Parser(ScriptParser):
       processedVectorTemplate.needsFourierTransforms = False
       processedVectorTemplate.initialSpace = momentGroupTemplate.outputSpace
       outputFieldTemplate.managedVectors.add(processedVectorTemplate)
-      
-      initialiserTemplate = VectorInitialisationZeroTemplate(**self.argumentsToTemplateConstructors)
-      initialiserTemplate.vector = processedVectorTemplate
-      processedVectorTemplate.initialiser = initialiserTemplate
+      momentGroupTemplate.processedVector = processedVectorTemplate
       
       if not processingElement:
         momentGroupTemplate.hasPostProcessing = False

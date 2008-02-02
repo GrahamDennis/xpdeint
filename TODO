@@ -1,7 +1,6 @@
 * Complete Stochastics support
   * Add support for breaking up poissonian noise
   - Stochastics support is now mostly done, what is missing is:
-	* Stochastics and error checking: the second noise arrays aren't created
 	* 'noise' tags inside initialisation and integrate elements aren't currently parsed
 * Add the ARK89 algorithm
 * Add a 'filter' segment

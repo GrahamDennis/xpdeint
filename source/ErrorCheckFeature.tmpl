@@ -4,7 +4,7 @@ ErrorCheckFeature.tmpl
 Created by Graham Dennis on 2007-08-26.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *#
-#extends _Feature
+#extends _ErrorCheckFeature
 
 #def description: error check
 #attr $featureName = 'ErrorCheck'
@@ -22,6 +22,10 @@ double* _${momentGroupOutputField.name}_fullstep;
 double* _${momentGroupOutputField.name}_halfstep;
   #end for
   ##
+  #for noiseVector in $noiseAliases
+${noiseVector.type}* _${noiseVector.id}2; // half-step noise
+  #end for
+  ##
 #end def
 
 #def topLevelSequenceBegin($dict)
@@ -36,26 +40,27 @@ double* _${momentGroupOutputField.name}_halfstep;
     #set $momentGroupOutputField = $momentGroup.outputField
 
 _${momentGroupOutputField.name}_fullstep = _${momentGroupOutputField.name}_processed;
-_${momentGroupOutputField.name}_halfstep = #slurp
-(double*) xmds_malloc(sizeof(double) * _${momentGroupOutputField.name}_size * _${momentGroupOutputField.name}_processed_ncomponents);
+// _${momentGroupOutputField.name}_halfstep has already been allocated
   #end for
 
 for (_half_step = false; ; _half_step = true)
 {
   if (!_half_step) {
-    printf("Beginning full step integration ...\n");
-    fflush(stdout);
+    _LOG(_SIMULATION_LOG_LEVEL, "Beginning full step integration ...\n");
+  ## Loop over the moment groups setting the output field to the fullstep fiel
+  #for $momentGroup in $momentGroups
+    #set $momentGroupOutputField = $momentGroup.outputField
+    
+    _active_${momentGroupOutputField.name}_processed = _${momentGroupOutputField.name}_fullstep;
+  #end for
   }
   else {
-    printf("Beginning half step integration ...\n");
-    fflush(stdout);
+    _LOG(_SIMULATION_LOG_LEVEL, "Beginning half step integration ...\n");
   ## Loop over the moment groups setting the output field to the already-allocated halfstep field
   #for $momentGroup in $momentGroups
     #set $momentGroupOutputField = $momentGroup.outputField
 
     _active_${momentGroupOutputField.name}_processed = _${momentGroupOutputField.name}_halfstep;
-    ## And now initialise the processed vector again because we've just swapped it to point at something else
-    _${momentGroupOutputField.name}_processed_initialise();
   #end for
   }
   #silent $dict['extraIndent'] += 2
@@ -76,11 +81,11 @@ for (_half_step = false; ; _half_step = true)
 *#
 #def writeOutFunctionImplementationBegin($dict)
   ##
-  #set $momentGroup = $dict.momentGroup
-  #set $dependentVariables = $dict.dependentVariables
+  #set $momentGroup = dict['caller']
+  #set $dependentVariables = dict['dependentVariables']
   ##
   ## So our job is to create _error versions of all of the variables in the momentGroup's outputField.
-  #for $componentNumber, $componentName in enumerate($anyObject($momentGroup.outputField.vectors).components)
+  #for $componentNumber, $componentName in enumerate($momentGroup.processedVector.components)
     ## Add the dependent variable to the dependent variable list
     #set $newVariableDict = {'name': c'error_${componentName}', 'arrayName': c'_${momentGroup.outputField.name}_fullstep', 'componentNumber': $componentNumber}
     #silent $dependentVariables.append($newVariableDict)
@@ -113,10 +118,12 @@ if (_half_step)
   #set $noise = $dict['noise']
   #set $noiseVector = $dict['noiseVector']
   #set $field = $dict['field']
-_make_${noise.prefix}_noises(_${field.name}_var, _${noiseVector.id}2, _${field.name}_size * _${noiseVector.id}_ncomponents);
-${loopOverVectorsWithInnerContentTemplate([$noiseVector],
+if (!_half_step) {
+  _make_${noise.prefix}_noises(_${field.name}_var, _${noiseVector.id}2, _${field.name}_size * _${noiseVector.id}_ncomponents);
+  ${loopOverVectorsWithInnerContentTemplate([$noiseVector],
 """_${vector.id}[$index] = 0.5*(_${vector.id}[$index] + _${vector.id}2[$index]);
-""")}#slurp
+"""), autoIndent=True}#slurp
+}
   ##
 #end def
 

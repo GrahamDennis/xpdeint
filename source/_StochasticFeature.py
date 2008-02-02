@@ -57,7 +57,8 @@ class _StochasticFeature (_Feature):
           noise.noiseVectors = dict()
         
         noiseVector = VectorElement(name = '%s_noises' % noise.prefix, field = field,
-                                    searchList = self.searchList(), filter = self.filterTemplateArgument)
+                                    searchList = self.searchListTemplateArgument,
+                                    filter = self.filterTemplateArgument)
         noiseVector.type = 'double'
         noiseVector.needsInitialisation = False
         noiseVector.components = ['%s_%i' % (noise.prefix, i) for i in range(1, noise.noiseCount + 1)]

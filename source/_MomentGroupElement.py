@@ -36,7 +36,7 @@ class _MomentGroupElement (FieldElement):
       return True
     
     dict = {'returnValue': False, 'MomentGroup': self}
-    featureOrdering = ['Stochastic']
+    featureOrdering = ['Driver']
     
     # This function allows the features to determine whether or not the raw vector
     # needs to be allocated by changing the value of the 'returnValue' key in dict.

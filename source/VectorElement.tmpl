@@ -194,6 +194,11 @@ ${features.FourierTransform.destroyQuickPlan(), autoIndent=True}#slurp
 #def initialise
   ##
   #if $needsInitialisation
+    #for aliasName in $aliases
+_active_${field.name}_${name} = $aliasName;
+_${field.name}_${name}_initialise();
+    #end for
+_active_${field.name}_${name} = _${field.name}_${name};
 _${field.name}_${name}_initialise();
   #end if
   ##
@@ -206,10 +211,16 @@ _${field.name}_${name}_initialise();
 
 _${field.name}_${name} = ($type*) xmds_malloc(sizeof($type) * _${field.name}_size * _${field.name}_${name}_ncomponents);
 _active_${field.name}_${name} = _${field.name}_${name};
+  #for aliasName in $aliases
+$aliasName = ($type*) xmds_malloc(sizeof($type) * _${field.name}_size * _${field.name}_${name}_ncomponents); // alias for _${id}
+  #end for
 #end def
 
 #def free
 
 xmds_free(_${field.name}_${name});
 _active_${field.name}_${name} = _${field.name}_${name} = NULL;
+  #for aliasName in $aliases
+xmds_free($aliasName); // alias for _${id}
+  #end for
 #end def

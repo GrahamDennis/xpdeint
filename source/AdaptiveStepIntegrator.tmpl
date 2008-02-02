@@ -315,13 +315,13 @@ void _segment${segmentNumber}()
     ${insertCodeForFeaturesInReverseOrder('integrateAdaptiveStepInnerLoopEnd', featureOrderingInner), autoIndent=True}#slurp
   } while (!_next_sample_flag[${momentGroupCount + 1}]);
   
-  printf("Segment ${segmentNumber}: minimum timestep: %e maximum timestep: %e\n", _min_step, _max_step);
+  _LOG(_SEGMENT_LOG_LEVEL, "Segment ${segmentNumber}: minimum timestep: %e maximum timestep: %e\n", _min_step, _max_step);
   #if hasattr(self, 'maxIterations') and $maxIterations
   
   if (_step_counter >= _max_steps) {
-    printf("\nReached %l iterations, exiting at ${propagationDimension} = %e\n", _max_steps, ${propagationDimension});
-    printf("Last error: %e\n", _error);
-    printf("Last planned timestep: %e\n\n", _step);
+    _LOG(_WARNING_LOG_LEVEL, "\nReached %l iterations, exiting at ${propagationDimension} = %e\n"
+                             "Last error: %e\n"
+                             "Last planned timestep: %e\n\n", _max_steps, ${propagationDimension}, _error, _step);
   }
   #end if
   

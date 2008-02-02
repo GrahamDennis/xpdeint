@@ -22,5 +22,5 @@ double _startTime = _tim.tv_sec + (_tim.tv_usec/1e6);
 // Work out how long the simulation has run for
 gettimeofday(&_tim, NULL);
 double _endTime = _tim.tv_sec + (_tim.tv_usec/1e6);
-printf("Time elapsed for simulation is: %.2f seconds\n", _endTime - _startTime);
+_LOG(_SIMULATION_LOG_LEVEL, "Time elapsed for simulation is: %.2f seconds\n", _endTime - _startTime);
 #end def

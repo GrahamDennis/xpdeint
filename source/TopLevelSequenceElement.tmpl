@@ -17,27 +17,6 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 #def functionPrototypes
 void _segment0();
 #end def
-#*
-
-  Function implementations
-*#
-#def functionImplementations
-  ##
-void _segment0()
-{
-  ##
-  ## And now insert the code for the features that apply in the top level sequence
-  #set $featureOrdering = ['ErrorCheck', 'Stochastic']
-  #set $dict = {'extraIndent': 0}
-  ${insertCodeForFeatures('topLevelSequenceBegin', featureOrdering, dict), autoIndent=True}#slurp
-  #set $extraIndent = dict['extraIndent']
-
-  ${topLevelSequenceInnerContent, autoIndent=True, extraIndent=extraIndent}#slurp
-  ##
-  ${insertCodeForFeaturesInReverseOrder('topLevelSequenceEnd', featureOrdering, dict), autoIndent=True}#slurp
-}
-  ##
-#end def
 
 
 #def topLevelSequenceInnerContent

@@ -24,13 +24,13 @@ void _write_output();
   ##
 void _write_output()
 {
-  printf("Generating output for ${simulationName}\n");
+  _LOG(_SIMULATION_LOG_LEVEL, "Generating output for ${simulationName}\n");
   
   FILE* _outfile = fopen("${filename}.xsil", "w");
   
   if (!_outfile) {
-    printf("Unable to open output file ${filename}.xsil\n");
-    printf("Exiting.\n");
+    _LOG(_ERROR_LOG_LEVEL, "Unable to open output file ${filename}.xsil\n"
+                           "Exiting.\n");
     return;
   }
 
@@ -105,7 +105,7 @@ if (_break_next) {
 
 if ( ${propagationDimension} - _${propagationDimension}_ini + _step > _${propagationDimension}_break_next) {
   _break_next = true;
-  printf("Current timestep: %e\n", _step/(0.92*pow(fabs(_tolerance/_error), 0.2)));
+  _LOG(_SAMPLE_LOG_LEVEL, "Current timestep: %e\n", _step/(0.92*pow(fabs(_tolerance/_error), $integrator.successfulStepExponent)));
   _step = _${propagationDimension}_break_next - ${propagationDimension} + _${propagationDimension}_ini;
 }
 #end def

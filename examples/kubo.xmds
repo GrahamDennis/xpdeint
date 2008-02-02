@@ -8,7 +8,7 @@
   
   <features>
     <benchmark />
-    <!-- <error_check /> -->
+    <error_check />
     <bing />
     <!-- <fftw version="3" /> -->
     <openmp />
@@ -36,8 +36,8 @@
   </field>
   
   <sequence driver="multi-path" paths="1024">
-    <integrate algorithm="ARK45" interval="100" steps="10000" tolerance="1e-5">
-      <samples>1000</samples>
+    <integrate algorithm="ARK45" interval="10" steps="10000" tolerance="1e-6">
+      <samples>100</samples>
       <operators field="main">
         <integration_vectors>main</integration_vectors>
         <![CDATA[
