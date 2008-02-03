@@ -14,7 +14,8 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *#
 #def makeNoises
   ##
-for (long _i0 = 0; _i0 < _n & ~1; _i0 += 2) {
+const unsigned long _evenNoises = _n & ~1;
+for (long _i0 = 0; _i0 < _evenNoises; _i0 += 2) {
   double _v1, _v2, _rsq;
   do {
     _v1 = 2.0*erand48(${generatorName}) - 1.0;

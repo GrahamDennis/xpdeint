@@ -77,24 +77,6 @@ _make_${noise.prefix}_noises(_var, _${noiseVector.id}, _${caller.vector.field.na
   ##
 #end def
 
-#def noisesAndFieldsForIntegrator($integrator)
-  ##
-  #set $result = []
-  #for field in integrator.integrationFields
-    #set $deltaAOperatorList = filter(lambda x: x.field == field and isinstance(x, DeltaAOperator), integrator.operators)
-    #assert len(deltaAOperatorList) == 1
-    #set $deltaAOperator = deltaAOperatorList[0]
-    ##
-    #set $noisesNeeded = $noises[:]
-    #if hasattr(deltaAOperator, 'noises')
-      #set $noisesNeeded = deltaAOperator.noises[:]
-    #end if
-    #silent result.extend([(noise, field) for noise in noisesNeeded])
-  #end for
-  #return result
-  ##
-#end def
-
 #def integrateFixedStepBegin($dict)
   ##
   #set $integrator = dict['caller']

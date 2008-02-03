@@ -17,6 +17,7 @@ from xml.dom import minidom
 from SimulationElement import SimulationElement as SimulationElementTemplate
 from GeometryElement import GeometryElement as GeometryElementTemplate
 from FieldElement import FieldElement as FieldElementTemplate
+from Dimension import Dimension
 
 from VectorElement import VectorElement as VectorElementTemplate
 from VectorInitialisation import VectorInitialisation as VectorInitialisationZeroTemplate
@@ -247,7 +248,7 @@ class XMDS2Parser(ScriptParser):
     propagationDimensionName = propagationDimensionElement.innerText()
     self.globalNameSpace['propagationDimension'] = propagationDimensionName
     
-    geometryTemplate.dimensions = [{'name': propagationDimensionName, 'transverse': False, 'minimum': 0.0}]
+    geometryTemplate.dimensions = [Dimension(name = propagationDimensionName, transverse = False)]
     
     ## Now grab and parse all of the transverse dimensions
     
@@ -256,21 +257,19 @@ class XMDS2Parser(ScriptParser):
       dimensionElements = transverseDimensionsElement.getChildElementsByTagName('dimension', optional=True)
     
       for dimensionElement in dimensionElements:
-        dimensionDictionary = {'transverse': True}
-        
         def parseAttribute(attrName):
           if not dimensionElement.hasAttribute(attrName) or len(dimensionElement.getAttribute(attrName)) == 0:
             raise ParserException(dimensionElement, "Each dimension element must have a non-empty"
                                                     " '%(attrName)s' attribute" % locals())
           
-          dimensionDictionary[attrName] = dimensionElement.getAttribute(attrName).strip()
+          return dimensionElement.getAttribute(attrName).strip()
         
         
         ## Grab the name of the dimension
-        parseAttribute('name')
-        dimensionName = dimensionDictionary['name']
+        dimensionName = parseAttribute('name')
+        
         try:
-          dimensionDictionary['name'] = self.symbolInString(dimensionName)
+          dimensionName = self.symbolInString(dimensionName)
         except ValueError, err:
           raise ParserException(dimensionElement, "'%(dimensionName)s is not a valid name for a dimension.\n"
                                                   "It must not start with a number, and can only contain "
@@ -283,20 +282,18 @@ class XMDS2Parser(ScriptParser):
         ## Now make sure no-one else steals it
         self.globalNameSpace['symbolNames'].add(dimensionName)
         
-        
         ## Grab the number of lattice points and make sure it's a positive integer
-        parseAttribute('lattice')
-        latticeString = dimensionDictionary['lattice']
+        
+        latticeString = parseAttribute('lattice')
         if not latticeString.isdigit():
           raise ParserException(dimensionElement, "Could not understand lattice value "
                                                   "'%(latticeString)s' as a positive integer." % locals())
         
-        dimensionDictionary['lattice'] = int(latticeString)
-        
+        dimension = Dimension(name = dimensionName, transverse = True, lattice = int(latticeString))
         
         ## Grab the domain strings
-        parseAttribute('domain')
-        domainString = dimensionDictionary['domain']
+        domainString = parseAttribute('domain')
+        
         regex = re.compile(r'\(\s*(\S+),\s*(\S+)\s*\)')
         result = regex.match(domainString)
         if not result:
@@ -314,15 +311,14 @@ class XMDS2Parser(ScriptParser):
         
         
         validateFloatString(minimumString)
-        dimensionDictionary['minimum'] = minimumString
         validateFloatString(maximumString)
-        dimensionDictionary['maximum'] = maximumString
         
         if float(minimumString) >= float(maximumString):
           raise ParserException(dimensionElement, "The end point of the dimension '%(maximumString)s' must be "
                                                   "greater than the start point '%(minimumString)s'." % locals())
         
-        geometryTemplate.dimensions.append(dimensionDictionary)
+        geometryTemplate.dimensions.append(Dimension(name = dimensionName, transverse = True, lattice = int(latticeString),
+                                                     minimum = minimumString, maximum = maximumString))
     
     return geometryTemplate
   
@@ -352,7 +348,7 @@ class XMDS2Parser(ScriptParser):
     fieldTemplate = FieldElementTemplate(name = fieldName, **self.argumentsToTemplateConstructors)
     
     if not fieldElement.hasAttribute('dimensions'):
-      fieldTemplate.dimensions = filter(lambda x: x['transverse'], self.globalNameSpace['geometry'].dimensions)
+      fieldTemplate.dimensions = filter(lambda x: x.transverse, self.globalNameSpace['geometry'].dimensions)
     elif len(fieldElement.getAttribute('dimensions').strip()) == 0:
       # No dimensions
       pass
@@ -1080,11 +1076,10 @@ class XMDS2Parser(ScriptParser):
           sampleCount = 1
       
       momentGroupTemplate.sampleSpace = 0
-      momentGroupTemplate.dimensions = [{'name': self.globalNameSpace['propagationDimension'],
-                                         'lattice': sampleCount,
-                                         'minimum': 0.0,
-                                         'maximum': 1.0, # FIXME: I shouldn't need to provide a maximum value here.
-                                         'override': momentGroupTemplate}]
+      momentGroupTemplate.dimensions = [Dimension(name = self.globalNameSpace['propagationDimension'],
+                                                  transverse = False,
+                                                  lattice = sampleCount,
+                                                  override = momentGroupTemplate)]
       
       dimensionElements = samplingElement.getChildElementsByTagName('dimension', optional=True)
       
@@ -1094,19 +1089,17 @@ class XMDS2Parser(ScriptParser):
                   'Dimension element needs a name attribute corresponding to a dimension name')
         
         dimensionName = dimensionElement.getAttribute('name').strip()
-        dimensionDictionary = {'name': dimensionName}
         geometryTemplate = self.globalNameSpace['geometry']
         
         if not geometryTemplate.hasDimensionName(dimensionName):
           raise ParserException(dimensionElement, 
                   "Dimension name '%(dimensionName)s' doesn't correspond to a previously-defined dimension." % locals())
         
-        geometryDimensionDictionary = geometryTemplate.dimensions[geometryTemplate.indexOfDimensionName(dimensionName)]
-        for key in ['minimum', 'maximum', 'lattice']:
-          dimensionDictionary[key] = geometryDimensionDictionary[key]
+        geometryDimension = geometryTemplate.dimensions[geometryTemplate.indexOfDimensionName(dimensionName)]
+        dimension = geometryDimension.copy()
         
         fourierSpace = False
-        if dimensionElement.hasAttribute('fourier_space'):
+        if dimensionElement.hasAttribute('fourier_space') and dimension.fourier:
           spaceString = dimensionElement.getAttribute('fourier_space').strip().lower()
           if spaceString in ('yes', 'k'):
             fourierSpace = True
@@ -1130,7 +1123,7 @@ class XMDS2Parser(ScriptParser):
                     "Unable to interpret '%(latticeString)s' as an integer" % locals())
           
           lattice = int(latticeString)
-          geometryLattice = int(geometryDimensionDictionary['lattice'])
+          geometryLattice = int(geometryDimension.lattice)
           
           if lattice > geometryLattice:
             raise ParserException(dimensionElement, 
@@ -1145,17 +1138,17 @@ class XMDS2Parser(ScriptParser):
           # is less than the total number of points, something that we have already checked.
           
         if lattice > 1:
-          dimensionDictionary['lattice'] = lattice
-          momentGroupTemplate.dimensions.append(dimensionDictionary)
-          samplingFieldTemplate.dimensions.append(dimensionDictionary)
+          dimension.lattice = lattice
+          momentGroupTemplate.dimensions.append(dimension)
+          samplingFieldTemplate.dimensions.append(dimension)
         elif lattice == 1:
           # In this case, we don't want the dimension in either the moment group, or the sampling field
           pass
         elif lattice == 0:
           # In this case, the dimension only belongs to the sampling field because we are integrating over it.
-          # Note that we previously set the lattice value of the dimensionDictionary to be the same as the number
+          # Note that we previously set the lattice of the dimension to be the same as the number
           # of points in this dimension according to the geometry element.
-          samplingFieldTemplate.dimensions.append(dimensionDictionary)
+          samplingFieldTemplate.dimensions.append(dimension)
       
       # end looping over dimension elements.  
       rawVectorTemplate = VectorElementTemplate(name = 'raw', field = momentGroupTemplate,

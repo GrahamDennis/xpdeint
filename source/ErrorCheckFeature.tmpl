@@ -97,7 +97,7 @@ _\${vector.field.name}_fullstep[\$index] = _\${vector.field.name}_fullstep[\$ind
   ##
 #end def
 
-#def integrateFixedStepBegin($dict)
+#def createFixedStepVariable($dict)
 
 // If we are doing half-step integration, divide the step size by 2
 if (_half_step)
@@ -106,7 +106,7 @@ if (_half_step)
 _noiseStep /= 2.0;
 #end def
 
-#def integrateAdaptiveStepBegin($dict)
+#def createToleranceVariable($dict)
 
 // If we are doing half-step integration, divide the tolerance by 16
 if (_half_step)

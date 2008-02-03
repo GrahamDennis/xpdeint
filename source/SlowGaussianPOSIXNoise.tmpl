@@ -14,7 +14,8 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *#
 #def makeNoises
   ##
-for (long _i0 = 0; _i0 < _n & ~1; _i0 += 2) {
+const unsigned long _evenNoises = _n & ~1;
+for (long _i0 = 0; _i0 < _evenNoises; _i0 += 2) {
   const double _mag = sqrt(-2*log(erand48(${generatorName}))*_var);
   const double _arg = 2*M_PI*erand48(${generatorName});
   _noise_vector[_i0 + 0] = _mag*cos(_arg);

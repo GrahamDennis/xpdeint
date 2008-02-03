@@ -8,13 +8,28 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 
 #def description: segment $segmentNumber (Unnamed fixed-step integrator)
 
+#def createStepVariable
+#*doc:
+This function returns the code that will create a _step variable,
+including any modifications necessary due to the ErrorCheck feature.
+*#
+  ##
+double _step = ${interval}/(double)${stepCount};
+double _noiseStep = ${interval}/(double)${stepCount};
+  ##
+  #set $featureOrdering = ['ErrorCheck']
+${insertCodeForFeatures('createFixedStepVariable', featureOrdering)}#slurp
+  ##
+#end def
+
+
 #def segmentFunctionImplementation
   ##
 void _segment${segmentNumber}()
 {
-  double _step = ${interval}/(double)${stepCount};
-  double _noiseStep = ${interval}/(double)${stepCount};
-  #set $featureOrderingOuter = ['ErrorCheck', 'Stochastic']
+  ${createStepVariable, autoIndent=True}#slurp
+  ##
+  #set $featureOrderingOuter = ['Stochastic']
   ${insertCodeForFeatures('integrateFixedStepBegin', featureOrderingOuter), autoIndent=True}#slurp
   
   ${initialise, autoIndent=True}#slurp

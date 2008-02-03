@@ -212,6 +212,18 @@ void _segment${segmentNumber}_${vector.id}_reset(${vector.type}* _reset_to, doub
   ##
 #end def
 
+#def createToleranceVariable
+#*doc:
+This function returns the code that will create a _step variable,
+including any modifications necessary due to the ErrorCheck feature.
+*#
+  ##
+double _tolerance = ${tolerance};
+  ##
+  #set $featureOrdering = ['ErrorCheck']
+${insertCodeForFeatures('createToleranceVariable', featureOrdering)}#slurp
+  ##
+#end def
 
 #def segmentFunctionImplementation
   ##
@@ -221,9 +233,9 @@ void _segment${segmentNumber}()
   double _min_step = _step;
   double _max_step = 0.0;
   
-  double _tolerance = ${tolerance};
+  ${createToleranceVariable, autoIndent=True}#slurp
   ## Insert code for features
-  #set $featureOrderingOuter = ['ErrorCheck', 'Stochastic']
+  #set $featureOrderingOuter = ['Stochastic']
   ${insertCodeForFeatures('integrateAdaptiveStepBegin', featureOrderingOuter), autoIndent=True}#slurp
   
   double _error;

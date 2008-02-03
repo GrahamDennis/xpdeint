@@ -118,9 +118,9 @@ class _ScriptElement (Template):
   # Return the name of the dimension considering the current space
   def dimensionNameForSpace(self, dimension, space):
     if self.dimensionIsInFourierSpace(dimension, space):
-      return 'k' + dimension['name']
+      return 'k' + dimension.name
     else:
-      return dimension['name']
+      return dimension.name
   
   # Insert contents of function for children
   def implementationsForChildren(self, functionName, arguments=[]):
