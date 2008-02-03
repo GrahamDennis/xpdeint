@@ -18,6 +18,23 @@ class _StochasticFeature (_Feature):
   def children(self):
     return self.noises
   
+  def noisesAndFieldsForIntegrator(self, integrator):
+    result = []
+    
+    for field in integrator.integrationFields:
+      deltaAOperatorList = filter(lambda x: x.field == field and isinstance(x, DeltaAOperator), integrator.operators)
+      assert len(deltaAOperatorList) == 1
+      deltaAOperator = deltaAOperatorList[0]
+      
+      noisesNeeded = self.noises[:]
+      if hasattr(deltaAOperator, 'noises'):
+        noisesNeeded = deltaAOperator.noises[:]
+      
+      result.extend([(noise, field) for noise in noisesNeeded])
+    
+    return result
+  
+  
   def preflight(self):
     # We need to iterate over everything that could possibly need noises
     # The best way to do that is to have the ability to iterate over everything

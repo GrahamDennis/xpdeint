@@ -104,7 +104,7 @@ def main(argv=None):
     print >> sys.stderr, "\t for help use --help"
     return 2
   
-  scriptName = "../examples/kubo.xmds"
+  scriptName = "../examples/fibre.xmds"
   
   minidom.Element.getChildElementsByTagName  = getChildElementsByTagName
   minidom.Document.getChildElementsByTagName = getChildElementsByTagName

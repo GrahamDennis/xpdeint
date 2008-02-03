@@ -55,11 +55,11 @@ class _FieldElement (ScriptElement):
   
   # Do we have the dimension?
   def hasDimension(self, dimension):
-    return self.hasDimensionName(dimension['name'])
+    return self.hasDimensionName(dimension.name)
   
   # Do we have a dimension matching dimensionName?
   def hasDimensionName(self, dimensionName):
-    dimensionList = filter(lambda x: x['name'] == dimensionName, self.dimensions)
+    dimensionList = filter(lambda x: x.name == dimensionName, self.dimensions)
     assert len(dimensionList) <= 1
     
     if len(dimensionList):
@@ -77,11 +77,11 @@ class _FieldElement (ScriptElement):
   
   # The index of the provided dimension
   def indexOfDimension(self, dimension):
-    return self.indexOfDimensionName(dimension['name'])
+    return self.indexOfDimensionName(dimension.name)
 
   # The index of the dimension with the name dimensionName
   def indexOfDimensionName(self, dimensionName):
-    dimensionList = filter(lambda x: x['name'] == dimensionName, self.dimensions)
+    dimensionList = filter(lambda x: x.name == dimensionName, self.dimensions)
     assert len(dimensionList) == 1
     return self.dimensions.index(dimensionList[0])
   
@@ -104,13 +104,13 @@ class _FieldElement (ScriptElement):
   def pointsInDimensionsNumerically(self):
     points = 1
     for dimension in self.dimensions:
-      points *= int(dimension['lattice'])
+      points *= int(dimension.lattice)
     
     return points
   
   # Dimension overrides
   def dimensionOverrides(self):
-    return filter(lambda x: x.has_key('override'), self.dimensions)
+    return filter(lambda x: hasattr(x, 'override'), self.dimensions)
   
   # Initialise field
   def initialise(self):
@@ -135,7 +135,7 @@ class _FieldElement (ScriptElement):
       else:
         dimensionPrefix = 'x'
       
-      result.extend([separator, '_', self.name, '_d', dimensionPrefix, self.indexOfDimension(dimension)])
+      result.extend([separator, '_', self.name, '_d', dimensionPrefix, str(self.indexOfDimension(dimension))])
       separator = ' * '
     result.append(')')
     

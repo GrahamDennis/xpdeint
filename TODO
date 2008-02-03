@@ -17,9 +17,6 @@
 * post_processing -- I think this is done in the generator, it just needs the parser
   to process the appropriate XML element.
 * FFTW wisdom importing and exporting
-* The exponent needed when calculating the next time step in adaptive algorithms
-  depends on whether or not an algorithm is being used with noise, and also what
-  order the algorithm is.
 * Make sure that all the things that Andy has been doing to enable various simulation
   parameters can be controlled at simulation run time can be done in xpdeint.
 * Implement field dimensions which can't be fourier transformed, but are indexed by
