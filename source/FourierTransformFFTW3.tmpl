@@ -65,8 +65,7 @@ fftw_destroy_plan(_plan);
 
 #def mainBegin(dict)
 
-printf("Making FFTW plans\n");
-fflush(stdout);
+_LOG(_SIMULATION_LOG_LEVEL, "Making FFTW plans\n");
 
 // load wisdom and create plans for fft
 int _fftw_lattice[$len($geometry.dimensions)];
@@ -118,8 +117,7 @@ xmds_free(_temporary_vector);
 _temporary_vector = NULL;
   #end if
 
-printf("FFTW planning complete\n");
-fflush(stdout);
+_LOG(_SIMULATION_LOG_LEVEL, "FFTW planning complete\n");
 #end def
 
 #def createPlansForField($field, $type)

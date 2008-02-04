@@ -24,7 +24,7 @@ class _Operator (ScriptElement):
   
   vectorsMustBeInSubsetsOfIntegrationField = True
   
-  calculateOperatorFieldFunctionArguments = 'double _step'
+  calculateOperatorFieldFunctionArguments = ''
   
   def __init__(self, field, integrator, *args, **KWs):
     ScriptElement.__init__(self, *args, **KWs)

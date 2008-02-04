@@ -11,3 +11,4 @@ html: $(SOURCE)
 .PHONY: clean
 clean:
 	rm -rf html
+	rm -rf pdf
