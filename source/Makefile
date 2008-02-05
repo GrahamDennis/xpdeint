@@ -15,3 +15,4 @@ clean:
 	@rm -f .COMPILE
 	@rm -f *.pyc
 	@rm -f $(templates:.tmpl=.py)
+	@rm -f $(templates:.tmpl=.py.bak)
