@@ -129,9 +129,9 @@ for (long _i0 = 0; _i0 < _${field.name}_size; _i0++) {
   @#                          in increasing order
   @########################################################################################################
   @#
-  @# Some vectors will need to have their index pointers set explicitly
-  @# these will include at least those vectors not in field $field
-  @set $vectorsRequiringExplictIndexPointers = filter(lambda x: x.field != field, vectors)
+  @# Some vectors will need to have their index pointers set explicitly.
+  @# These will be those which belong to fields with different dimensions.
+  @set $vectorsRequiringExplictIndexPointers = filter(lambda x: x.field != field and x.field.dimensions != field.dimensions, vectors)
   @# 
   @# If we have kspaceAscendingOrder, (and at least one dimension is in fourier space), then
   @# the vectors in field $field will also need their index pointers set explicitly
@@ -332,9 +332,9 @@ _${vector.field.name}_${vector.name}_index_pointer += _i${fieldDimensionNumber}@
 // Set index pointers explicitly for (some) vectors
   @for $vector in $vectors
     @# There's no need to (re-)set the index pointer for fields that have no dimensions
-    @unless $vector.field.dimensions
+    @if not $vector.field.dimensions
       @continue
-    @end unless
+    @end if
     @#
 _${vector.field.name}_${vector.name}_index_pointer = ( 0@slurp
     @for $dimension in $vector.field.dimensions
@@ -433,7 +433,7 @@ _active_${vector.field.name}_${vector.name}[_${vector.field.name}_${vector.name}
 
 
 @*
-  Increment index pointers but only for those in field $field.
+  Increment index pointers but only for those in field $field or in a field with the same dimensions.
 *@
 @def incrementIndexPointersForVectorsWithFieldAndSpaceAndLastLoopDimension($vectors, $field, $space, $lastLoopDimension)
   @#
@@ -443,10 +443,11 @@ _active_${vector.field.name}_${vector.name}[_${vector.field.name}_${vector.name}
   @if len($vectors) == 0
     @return
   @end if
-// Increment index pointers for vectors in field $field.name
+// Increment index pointers for vectors in field $field.name (or having the same dimensions)
   @for $vector in $vectors
     @# We can only do this for vectors in $field
-    @assert $vector.field == $field
+	@# or that have the same dimensions
+    @assert $vector.field == $field or $vector.field.dimensions == $field.dimensions
     @#
     @# Now we need to increment the vector
     @# We need to know the last loop dimension because we could be looping over the second last dimension and not the last
