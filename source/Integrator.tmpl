@@ -1,207 +1,207 @@
-#*
+@*
 Integrator.tmpl
 
 Created by Graham Dennis on 2007-10-20.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
-*#
-#extends _Integrator
-#from Decorators import callOncePerInstanceGuard
+*@
+@extends _Integrator
+@from Decorators import callOncePerInstanceGuard
 
-#def description: segment $segmentNumber (Unnamed Integrator)
+@def description: segment $segmentNumber (Unnamed Integrator)
 
-#*
+@*
   Globals
-*#
-#def globals
-  ##
-  #for $vector in $vectors
-    ## Loop over the variables that need to be created
-    #for $arrayName in $extraIntegrationArrayNames
+*@
+@def globals
+  @#
+  @for $vector in $vectors
+    @# Loop over the variables that need to be created
+    @for $arrayName in $extraIntegrationArrayNames
 ${vector.type}* _${name}_${arrayName}_${vector.id};
-    #end for
-  #end for
-  ##
-  #super
-  ##
-#end def
+    @end for
+  @end for
+  @#
+  @super
+  @#
+@end def
 
-#*
+@*
   Function prototypes
-*#
-#def functionPrototypes
-  ##
+*@
+@def functionPrototypes
+  @#
 void _segment${segmentNumber}();
 inline void _segment${segmentNumber}_calculate_delta_a(double _step);
 inline void _segment${segmentNumber}_ip_evolve(int _exponent);
 
-  #for $operator in $operators
-    #if $operator.operatorVector
+  @for $operator in $operators
+    @if $operator.operatorVector
 void _segment${segmentNumber}_calculate_${operator.name}_field(${operator.calculateOperatorFieldFunctionArguments});
-    #end if
+    @end if
 void _segment${segmentNumber}_evaluate_${operator.name}(${operator.evaluateOperatorFunctionArgument});
-  #end for
-  ##
+  @end for
+  @#
 
-  #super
-  ##
-#end def
+  @super
+  @#
+@end def
 
-#*
+@*
   Function implementations
-*#
-#def functionImplementations
-  ##
-${deltaAFunctionImplementation}#slurp
+*@
+@def functionImplementations
+  @#
+${deltaAFunctionImplementation}@slurp
 
-  ##
-${ipEvolveFunctionImplementation}#slurp
-  ##
-  #for $operator in $operators
-    #if $operator.operatorVector
+  @#
+${ipEvolveFunctionImplementation}@slurp
+  @#
+  @for $operator in $operators
+    @if $operator.operatorVector
       
-${fieldCalculateOperatorFieldFunctionImplementation($operator)}#slurp
-    #end if
+${fieldCalculateOperatorFieldFunctionImplementation($operator)}@slurp
+    @end if
 
-${fieldEvaluateOperatorFunctionImplementation($operator)}#slurp
-  #end for
+${fieldEvaluateOperatorFunctionImplementation($operator)}@slurp
+  @end for
 
-${segmentFunctionImplementation}#slurp
-  ##
+${segmentFunctionImplementation}@slurp
+  @#
 
-  #super
-  ##
-#end def
+  @super
+  @#
+@end def
 
-#def ipEvolveFunctionImplementation
-  ##
+@def ipEvolveFunctionImplementation
+  @#
 inline void _segment${segmentNumber}_ip_evolve(int _exponent)
 {
-  #set $blankLineSeparator = ''
-  ##
-  #for $operator in $operators
-    #if $operator.operatorKind == $operator.IPOperatorKind
-${blankLineSeparator}#slurp
+  @set $blankLineSeparator = ''
+  @#
+  @for $operator in $operators
+    @if $operator.operatorKind == $operator.IPOperatorKind
+${blankLineSeparator}@slurp
   // ${operator.description}
   _segment${segmentNumber}_evaluate_${operator.name}(_exponent);
-      #set $blankLineSeparator = '\n'
-    #end if
-  #end for
-  ##  
+      @set $blankLineSeparator = '\n'
+    @end if
+  @end for
+  @#  
 }
-  ##
-#end def
+  @#
+@end def
 
-#def deltaAFunctionImplementation
-  ##
+@def deltaAFunctionImplementation
+  @#
 inline void _segment${segmentNumber}_calculate_delta_a(double _step)
 {
-  #set $blankLineSeparator = ''
-  ##
-  ## First loop over operators that aren't IP (because they're dealt with separately), or delta A operators (they must be last)
-  #for $operator in $operators
-    #if $operator.operatorKind in set([$operator.IPOperatorKind, $operator.DeltaAOperatorKind])
-      #continue
-    #end if
-${blankLineSeparator}#slurp
-    #set $blankLineSeparator = '\n'
-    ##
+  @set $blankLineSeparator = ''
+  @#
+  @# First loop over operators that aren't IP (because they're dealt with separately), or delta A operators (they must be last)
+  @for $operator in $operators
+    @if $operator.operatorKind in set([$operator.IPOperatorKind, $operator.DeltaAOperatorKind])
+      @continue
+    @end if
+${blankLineSeparator}@slurp
+    @set $blankLineSeparator = '\n'
+    @#
   // ${operator.description}
   _segment${segmentNumber}_evaluate_${operator.name}(_step);
-  #end for
-  ## Now loop over delta A operators (they must be last)
-  ## See the comment in _Integrator about why this needs to be done in
-  ## this particular order
-  #for $operator in $deltaAOperatorsInFieldDescendingOrder
-    ## Blank line for formatting
+  @end for
+  @# Now loop over delta A operators (they must be last)
+  @# See the comment in _Integrator about why this needs to be done in
+  @# this particular order
+  @for $operator in $deltaAOperatorsInFieldDescendingOrder
+    @# Blank line for formatting
   
   // ${operator.description}
   _segment${segmentNumber}_evaluate_${operator.name}(_step);
-  #end for
+  @end for
 }
-  ##
-#end def
+  @#
+@end def
 
-#def fieldCalculateOperatorFieldFunctionImplementation($operator)
-  ##
+@def fieldCalculateOperatorFieldFunctionImplementation($operator)
+  @#
 // ${operator.description}
 void _segment${segmentNumber}_calculate_${operator.name}_field(${operator.calculateOperatorFieldFunctionArguments})
 {
-  ${operator.calculateOperatorFieldFunctionImplementation, autoIndent=True}#slurp
+  ${operator.calculateOperatorFieldFunctionImplementation, autoIndent=True}@slurp
 }
-  ##
-#end def
+  @#
+@end def
 
-#def fieldEvaluateOperatorFunctionImplementation($operator)
-  ##
+@def fieldEvaluateOperatorFunctionImplementation($operator)
+  @#
 // ${operator.description}
 void _segment${segmentNumber}_evaluate_${operator.name}(${operator.evaluateOperatorFunctionArgument})
 {
-  ${operator.evaluateOperatorFunctionImplementation, autoIndent=True}#slurp
+  ${operator.evaluateOperatorFunctionImplementation, autoIndent=True}@slurp
 }
-  ##
-#end def
+  @#
+@end def
 
-#@callOncePerInstanceGuard
-#def initialise
-#*doc:
+@@callOncePerInstanceGuard
+@def initialise
+@*doc:
 Allocate additional arrays needed for the integrator
 
 This is a call once-per-instance function because we may want to do the initialisation
 (and clean-up) for this segment in a parent segment for efficiency reasons (if, for
 example we are looping over this segment, or we are running multiple paths).
-*#
-  ## Loop over the vectors creating the arrays
-  #for $vector in $vectors
-    ## Loop over the variables that need to be created
-    #for $arrayName in $extraIntegrationArrayNames
-_${name}_${arrayName}_${vector.id} = #slurp
+*@
+  @# Loop over the vectors creating the arrays
+  @for $vector in $vectors
+    @# Loop over the variables that need to be created
+    @for $arrayName in $extraIntegrationArrayNames
+_${name}_${arrayName}_${vector.id} = @slurp
 (${vector.type}*) xmds_malloc(sizeof(${vector.type}) * _${vector.field.name}_size * _${vector.id}_ncomponents);
-    #end for
-  #end for
-  ##
-  ## Let the operators allocate and initialise any arrays they need
-  #for $operator in $operators
-$operator.initialise#slurp
-  #end for
-  ##
-#end def
+    @end for
+  @end for
+  @#
+  @# Let the operators allocate and initialise any arrays they need
+  @for $operator in $operators
+$operator.initialise@slurp
+  @end for
+  @#
+@end def
 
-#@callOncePerInstanceGuard
-#def finalise
-  ##
-  #for $vector in $vectors
-    #for $arrayName in $extraIntegrationArrayNames
+@@callOncePerInstanceGuard
+@def finalise
+  @#
+  @for $vector in $vectors
+    @for $arrayName in $extraIntegrationArrayNames
 xmds_free(_${name}_${arrayName}_${vector.id});
-    #end for
-  #end for
-  ##
-  ## Let the operators do their clean up
-  #for $operator in $operators
-$operator.finalise#slurp
-  #end for
-  ##
-#end def
+    @end for
+  @end for
+  @#
+  @# Let the operators do their clean up
+  @for $operator in $operators
+$operator.finalise@slurp
+  @end for
+  @#
+@end def
 
-#def localInitialise
-#*doc:
+@def localInitialise
+@*doc:
 Because the initialisation for the integrator could be in a different function,
 we need to set up pointers in the integrator to the appropriate arrays.
-*#
-  ##
-  #for $vector in $vectors
-    ## Loop over the variables that need to be created
-    #for $arrayName in $extraIntegrationArrayNames
+*@
+  @#
+  @for $vector in $vectors
+    @# Loop over the variables that need to be created
+    @for $arrayName in $extraIntegrationArrayNames
 ${vector.type}* _${arrayName}_${vector.id} = _${name}_${arrayName}_${vector.id};
-    #end for
-  #end for  
-  ##
-#end def
+    @end for
+  @end for  
+  @#
+@end def
 
-#def goToHomeSpace
-#*doc:
+@def goToHomeSpace
+@*doc:
 This method writes the code to transform all of the integration vectors
 back to the 'home space' of the integrator.
-*#
-${transformVectorsToSpace($vectors, $homeSpace)}#slurp
-  ##
-#end def
+*@
+${transformVectorsToSpace($vectors, $homeSpace)}@slurp
+  @#
+@end def

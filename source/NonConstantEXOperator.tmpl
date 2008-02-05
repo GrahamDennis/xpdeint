@@ -1,35 +1,35 @@
-#*
+@*
 NonConstantEXOperator.tmpl
 
 Explicit-picture transverse derivative operator
 
 Created by Graham Dennis on 2007-10-20.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
-*#
-#extends NonConstantOperator
+*@
+@extends NonConstantOperator
 
-#def description: EX transverse derivative operator for field $field.name (not constant)
-#attr $operatorKind = NonConstantOperator.OtherOperatorKind
+@def description: EX transverse derivative operator for field $field.name (not constant)
+@attr $operatorKind = NonConstantOperator.OtherOperatorKind
 
-#def insideEvaluateOperatorLoops
-  ##
-  ## NonConstantOperator will have defined for us all of the operatorName variables.
-  ## Note that we assume that all of the integration vectors have an operotor component defined for them.
-\#define d${propagationDimension} _step
+@def insideEvaluateOperatorLoops
+  @#
+  @# NonConstantOperator will have defined for us all of the operatorName variables.
+  @# Note that we assume that all of the integration vectors have an operotor component defined for them.
+#define d${propagationDimension} _step
 
 // ************** Operator code *****************
 ${operatorDefinitionCode}
 // **********************************************
 
-\#undef d${propagationDimension}
+#undef d${propagationDimension}
 
-  #for $operatorComponentNumber, ($operatorComponentName, $operatorComponentVectors) in enumerate($operatorComponents.iteritems())
-    #for $targetVectorComponents in $operatorComponentVectors.itervalues()
-      #for $targetVectorComponent in $targetVectorComponents
+  @for $operatorComponentNumber, ($operatorComponentName, $operatorComponentVectors) in enumerate($operatorComponents.iteritems())
+    @for $targetVectorComponents in $operatorComponentVectors.itervalues()
+      @for $targetVectorComponent in $targetVectorComponents
 // ${operatorComponentName}[$targetVectorComponent]
 _${integrator.name}_${name}_${operatorComponentName}_${targetVectorComponent} = $operatorComponentName * $targetVectorComponent;
-      #end for
-    #end for
-  #end for
-  ##
-#end def
+      @end for
+    @end for
+  @end for
+  @#
+@end def

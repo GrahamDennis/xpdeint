@@ -1,38 +1,38 @@
-#*
+@*
 Noise.tmpl
 
 Created by Graham Dennis on 2007-12-14.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
-*#
-#extends ScriptElement
+*@
+@extends ScriptElement
 
-#def description: Generic noise
-#def generatorName: _gen_${prefix}
+@def description: Generic noise
+@def generatorName: _gen_${prefix}
 
-#*
+@*
   Function prototypes
-*#
-#def functionPrototypes
-  ##
+*@
+@def functionPrototypes
+  @#
 inline void _make_${prefix}_noises(double _var, double* _noise_vector, unsigned long _n);
-  ##
-#end def
+  @#
+@end def
 
-#*
+@*
   Function implementations
-*#
-#def functionImplementations
-  ##
+*@
+@def functionImplementations
+  @#
 inline void _make_${prefix}_noises(double _var, double* _noise_vector, unsigned long _n)
 {
-  ${makeNoises, autoIndent=True}#slurp
+  ${makeNoises, autoIndent=True}@slurp
 }
-  ##
-#end def
+  @#
+@end def
 
-#def noiseVectorForField(field)
-  ##
-  #return $noiseVectors[field]
-  ##
-#end def
+@def noiseVectorForField(field)
+  @#
+  @return $noiseVectors[field]
+  @#
+@end def
 

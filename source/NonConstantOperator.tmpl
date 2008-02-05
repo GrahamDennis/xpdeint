@@ -1,38 +1,38 @@
-#*
+@*
 NonConstantOperator.tmpl
 
 Created by Graham Dennis on 2007-10-13.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
-*#
-#extends Operator
+*@
+@extends Operator
 
-#attr $evaluateOperatorFunctionArgument = 'double _step'
+@attr $evaluateOperatorFunctionArgument = 'double _step'
 
-#def evaluateOperatorFunctionImplementation
-  ##
-  #for $operatorComponentName in $operatorComponents.iterkeys()
+@def evaluateOperatorFunctionImplementation
+  @#
+  @for $operatorComponentName in $operatorComponents.iterkeys()
 complex $operatorComponentName;
-  #end for
-  ##
-  #set $setOfVectorsToLoopOver = $dependencies.copy()
-  ##
-  #silent $setOfVectorsToLoopOver.update($operatorTargetVectorsSet)
-${transformVectorsToSpace($setOfVectorsToLoopOver, $operatorSpace)}#slurp
+  @end for
+  @#
+  @set $setOfVectorsToLoopOver = $dependencies.copy()
+  @#
+  @silent $setOfVectorsToLoopOver.update($operatorTargetVectorsSet)
+${transformVectorsToSpace($setOfVectorsToLoopOver, $operatorSpace)}@slurp
 
-${evaluateOperatorLoop($setOfVectorsToLoopOver)}#slurp
-  #if $resultVector and $resultVector.needsFourierTransforms
+${evaluateOperatorLoop($setOfVectorsToLoopOver)}@slurp
+  @if $resultVector and $resultVector.needsFourierTransforms
 
 _${resultVector.id}_space = $operatorSpace;
-  #end if
-  ##
-#end def
+  @end if
+  @#
+@end def
 
-#def evaluateOperatorLoop($setOfVectorsToLoopOver)
-  ##
-  ## If we have a result vector, add it
-  #if $resultVector
-    #silent $setOfVectorsToLoopOver.add($resultVector)
-  #end if
-${loopOverFieldInSpaceWithVectorsAndInnerContent($field, $operatorSpace, $setOfVectorsToLoopOver, $insideEvaluateOperatorLoops)}#slurp
-  ##
-#end def
+@def evaluateOperatorLoop($setOfVectorsToLoopOver)
+  @#
+  @# If we have a result vector, add it
+  @if $resultVector
+    @silent $setOfVectorsToLoopOver.add($resultVector)
+  @end if
+${loopOverFieldInSpaceWithVectorsAndInnerContent($field, $operatorSpace, $setOfVectorsToLoopOver, $insideEvaluateOperatorLoops)}@slurp
+  @#
+@end def

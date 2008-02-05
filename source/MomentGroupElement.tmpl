@@ -1,214 +1,214 @@
-#*
+@*
 MomentGroupElement.tmpl
 
 Created by Graham Dennis on 2007-09-05.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
-*#
-#extends _MomentGroupElement
-#*
+*@
+@extends _MomentGroupElement
+@*
 
   Description of template
-*#
-#def description: moment group $number
+*@
+@def description: moment group $number
 
-#*
+@*
 
   Globals needed at the start of the simulation
-*#
-#def globals
-  ## Call the field version of this function
-  #super
-  ##
-  #for $dimension in $dimensionOverrides
-    ## Loop over the dimensions creating index counters for any dimension which is being overridden,
-    ## for example, the propagation dimension. This is written in this general way in case anyone
-    ## wants to add additional dimensions 'transverse' to the standard integration. I have in mind
-    ## here a possible future dimension for path number.
-    ##
-    #set $dimensionNumber = $dimensions.index($dimension)
+*@
+@def globals
+  @# Call the field version of this function
+  @super
+  @#
+  @for $dimension in $dimensionOverrides
+    @# Loop over the dimensions creating index counters for any dimension which is being overridden,
+    @# for example, the propagation dimension. This is written in this general way in case anyone
+    @# wants to add additional dimensions 'transverse' to the standard integration. I have in mind
+    @# here a possible future dimension for path number.
+    @#
+    @set $dimensionNumber = $dimensions.index($dimension)
 
 unsigned long _${name}_sample_index${dimensionNumber};
 double* _${name}_x${dimensionNumber} = new double[_${name}_lattice${dimensionNumber}];
-  #end for
-#end def
+  @end for
+@end def
 
-#*
+@*
 
   Function prototypes
-*#
-#def functionPrototypes
+*@
+@def functionPrototypes
 void _${name}_sample();
 void _${name}_process();
 void _${name}_write_out(FILE*);
-  ## Call the field version of this function
-  #super
-  ##
-#end def
+  @# Call the field version of this function
+  @super
+  @#
+@end def
 
-#*
+@*
   Function implementations
-*#
-#def functionImplementations
-  ## Call the field version of this function
-  ## to get initialisation and fourier transform
-  ## function implementations (as necessary)
-  #super
-  ##
+*@
+@def functionImplementations
+  @# Call the field version of this function
+  @# to get initialisation and fourier transform
+  @# function implementations (as necessary)
+  @super
+  @#
 
-  ## The sample function
-$sampleFunctionImplementation#slurp
+  @# The sample function
+$sampleFunctionImplementation@slurp
 
-  ## The process function
-$processFunctionImplementation#slurp
+  @# The process function
+$processFunctionImplementation@slurp
 
-  ## The write_out function
-$writeOutFunctionImplementation#slurp
-  ##
-#end def
+  @# The write_out function
+$writeOutFunctionImplementation@slurp
+  @#
+@end def
 
-#*
+@*
   Implementation of the moment group sample function
-*#
-#def sampleFunctionImplementation
+*@
+@def sampleFunctionImplementation
 void _${name}_sample()
 {
-  ## If we have a sampling field, then we should sample with that
-  ## and set the vectorOverrides appropriately
-  #if hasattr($self, 'samplingField')
-    #set $loopingField = $samplingField
-    #set $vectorOverrides = $vectors.copy()
-  #else
-    #set $loopingField = $self
-    #set $vectorOverrides = set()
-  #end if
-  ##
-  ## Now we need to loop over the vector dependencies going the the appropriate space.
-  ${transformVectorsToSpace($dependencies, $sampleSpace), autoIndent=True}#slurp
-  ##
-  ## Set up the index overrides
-  #set $indexOverrides = {}
-  #for $dimension in $dimensionOverrides
-    ## The c'stuff' string is a Cheetah string that is interpreted by Cheetah and 
-    ## in which variable replacements are made. This isn't just a literal string.
-    ## See the Cheetah CHANGES document for release 2.0b3 that documents this feature
-    ## as it isn't in the actual Cheetah docs yet (2007-09-08)
-    #silent $indexOverrides[$dimension.name] = { $self: c'_${name}_sample_index${indexOfDimension($dimension)}'}
-  #end for
-  ##
-  #set $vectorsForLoop = $dependencies.copy()
-  #silent $vectorsForLoop.update($vectors)
-  ## Now actually begin the loop
+  @# If we have a sampling field, then we should sample with that
+  @# and set the vectorOverrides appropriately
+  @if hasattr($self, 'samplingField')
+    @set $loopingField = $samplingField
+    @set $vectorOverrides = $vectors.copy()
+  @else
+    @set $loopingField = $self
+    @set $vectorOverrides = set()
+  @end if
+  @#
+  @# Now we need to loop over the vector dependencies going the the appropriate space.
+  ${transformVectorsToSpace($dependencies, $sampleSpace), autoIndent=True}@slurp
+  @#
+  @# Set up the index overrides
+  @set $indexOverrides = {}
+  @for $dimension in $dimensionOverrides
+    @# The c'stuff' string is a Cheetah string that is interpreted by Cheetah and 
+    @# in which variable replacements are made. This isn't just a literal string.
+    @# See the Cheetah CHANGES document for release 2.0b3 that documents this feature
+    @# as it isn't in the actual Cheetah docs yet (2007-09-08)
+    @silent $indexOverrides[$dimension.name] = { $self: c'_${name}_sample_index${indexOfDimension($dimension)}'}
+  @end for
+  @#
+  @set $vectorsForLoop = $dependencies.copy()
+  @silent $vectorsForLoop.update($vectors)
+  @# Now actually begin the loop
 
-  ${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $sampleSpace, $vectorsForLoop, $insideSamplingLoops, indexOverrides=$indexOverrides, vectorOverrides=$vectorOverrides), autoIndent=True}#slurp
-  ## That's the end of the loop, magic eh?
-  ##
-  #for $dimension in $dimensionOverrides
-    #set $dimensionNumber = $indexOfDimension($dimension)
+  ${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $sampleSpace, $vectorsForLoop, $insideSamplingLoops, indexOverrides=$indexOverrides, vectorOverrides=$vectorOverrides), autoIndent=True}@slurp
+  @# That's the end of the loop, magic eh?
+  @#
+  @for $dimension in $dimensionOverrides
+    @set $dimensionNumber = $indexOfDimension($dimension)
 
   _${name}_x${dimensionNumber}[_${name}_sample_index${dimensionNumber}++] = $dimension.name;
-  #end for
+  @end for
   
-  _LOG(_SAMPLE_LOG_LEVEL, "Sampled field (for moment group \#${number + 1}) at ${propagationDimension} = %e\n", ${propagationDimension});
+  _LOG(_SAMPLE_LOG_LEVEL, "Sampled field (for moment group #${number + 1}) at ${propagationDimension} = %e\n", ${propagationDimension});
 }
-#end def
+@end def
 
-#*
+@*
   This function provides the contents of the moment group sampling loop
-*#
-#def insideSamplingLoops
-  ##
+*@
+@def insideSamplingLoops
+  @#
 // *************** Sampling code ****************
 $samplingCode
 // **********************************************
-  ##
-#end def
+  @#
+@end def
 
-#*
+@*
   Process function implementation
-*#
-#def processFunctionImplementation
+*@
+@def processFunctionImplementation
 void _${name}_process()
 {
-  ## If we don't have any processing code then we don't need to do a complicated loop
-  #if not hasattr($self, 'processingCode')
-    ## If we didn't allocate a raw vector, then there actually is no processing to do
-    ## at all.
-    #if not $rawVectorNeedsToBeAllocated
+  @# If we don't have any processing code then we don't need to do a complicated loop
+  @if not hasattr($self, 'processingCode')
+    @# If we didn't allocate a raw vector, then there actually is no processing to do
+    @# at all.
+    @if not $rawVectorNeedsToBeAllocated
   // No post processing needs to be done
-    #else
-      ##
-      ## Although we don't have any processing code, one of our features has
-      ## processing code that needs to run (but it is simple, right?)
-  ${loopOverVectorsWithInnerContentTemplate($vectors, $insideProcessingLoopsNoProcessingCode), autoIndent=True}#slurp
-    #end if
-  #else
-    ## In this case, we did allocate a raw vector, and we will have processing to do
-    ## Transform the moment group sampling vector into the processing space
-  ${transformVectorsToSpace($vectors, $processingSpace), autoIndent=True}#slurp
-    ##
-    #if len($outputField.dimensions) != len($dimensions)
-      ## If the output field doesn't have the same number of dimensions as the sampled
-      ## data, then we're going to be integrating, and the vectors in the output field
-      ## are going to need to be overridden in the loop
-      #assert len($outputField.dimensions) < len($dimensions)
-      #set $vectorOverrides = $outputField.vectors.copy()
-    #else
-      #set $vectorOverrides = set()
-    #end if
-    #set $vectorsForLoop = $vectors.copy()
-    #silent $vectorsForLoop.update($outputField.vectors)
-  ${loopOverFieldInSpaceWithVectorsAndInnerContent($self, $processingSpace, $vectorsForLoop, $insideProcessingLoops, vectorOverrides=$vectorOverrides), autoIndent=True}#slurp
-  #end if
-  ##
+    @else
+      @#
+      @# Although we don't have any processing code, one of our features has
+      @# processing code that needs to run (but it is simple, right?)
+  ${loopOverVectorsWithInnerContentTemplate($vectors, $insideProcessingLoopsNoProcessingCode), autoIndent=True}@slurp
+    @end if
+  @else
+    @# In this case, we did allocate a raw vector, and we will have processing to do
+    @# Transform the moment group sampling vector into the processing space
+  ${transformVectorsToSpace($vectors, $processingSpace), autoIndent=True}@slurp
+    @#
+    @if len($outputField.dimensions) != len($dimensions)
+      @# If the output field doesn't have the same number of dimensions as the sampled
+      @# data, then we're going to be integrating, and the vectors in the output field
+      @# are going to need to be overridden in the loop
+      @assert len($outputField.dimensions) < len($dimensions)
+      @set $vectorOverrides = $outputField.vectors.copy()
+    @else
+      @set $vectorOverrides = set()
+    @end if
+    @set $vectorsForLoop = $vectors.copy()
+    @silent $vectorsForLoop.update($outputField.vectors)
+  ${loopOverFieldInSpaceWithVectorsAndInnerContent($self, $processingSpace, $vectorsForLoop, $insideProcessingLoops, vectorOverrides=$vectorOverrides), autoIndent=True}@slurp
+  @end if
+  @#
 }
-#end def
+@end def
 
-#def insideProcessingLoopsNoProcessingCode
-  ##
+@def insideProcessingLoopsNoProcessingCode
+  @#
 _active_${outputField.name}_processed[\${index}] += _active_\${vector.id}[\${index}];
-  #set $featureOrdering = ['Driver']
+  @set $featureOrdering = ['Driver']
 ${insertCodeForFeatures('insideMomentGroupProcessingNoProcessingCodeLoop', $featureOrdering)}
-  ##
-#end def
+  @#
+@end def
 
-#*
+@*
   This function provides the contents of the moment group processing loop
-*#
-#def insideProcessingLoops
-  ##
+*@
+@def insideProcessingLoops
+  @#
 // ************** Processing code ***************
 $processingCode
 // **********************************************
 
-  #set $featureOrdering = ['Driver']
-$insertCodeForFeatures('insideMomentGroupProcessingLoop', $featureOrdering)#slurp
-  ##
-#end def
+  @set $featureOrdering = ['Driver']
+$insertCodeForFeatures('insideMomentGroupProcessingLoop', $featureOrdering)@slurp
+  @#
+@end def
 
-#*
+@*
   Write output function implementation
-*#
-#def writeOutFunctionImplementation
-  ##
+*@
+@def writeOutFunctionImplementation
+  @#
 void _${name}_write_out(FILE* _outfile)
 {
-  ##
-  #set $numIndependentVariables = len($outputField.dimensions)
-  #set $arrayName = c'_active_${outputField.name}_processed'
-  #set $outputFieldVectorComponents = $anyObject($outputField.vectors).components
-  #set $dependentVariables = map(lambda x: {'name': x, 'arrayName': arrayName, 'componentNumber': outputFieldVectorComponents.index(x)},
+  @#
+  @set $numIndependentVariables = len($outputField.dimensions)
+  @set $arrayName = c'_active_${outputField.name}_processed'
+  @set $outputFieldVectorComponents = $anyObject($outputField.vectors).components
+  @set $dependentVariables = map(lambda x: {'name': x, 'arrayName': arrayName, 'componentNumber': outputFieldVectorComponents.index(x)},
                                  outputFieldVectorComponents)
-  ##
-  #set $featureOrdering = ['ErrorCheck', 'Driver']
-  #set $dict = {'momentGroup': self, 'dependentVariables': $dependentVariables}
-  #set $result = $insertCodeForFeatures('writeOutFunctionImplementationBegin', $featureOrdering, $dict)
-  #set $dependentVariables = $dict.dependentVariables
-  ##
-  ## The features can return Cheetah template code suitable for passing to loopOverVectorsWithInnerContentTemplate
-  ## in order to create their data. If any have, then we should actually create that loop and run that code.
-  #if $result
-  ${loopOverVectorsWithInnerContentTemplate([$processedVector], $result), autoIndent=True}#slurp
-  #end if
+  @#
+  @set $featureOrdering = ['ErrorCheck', 'Driver']
+  @set $dict = {'momentGroup': self, 'dependentVariables': $dependentVariables}
+  @set $result = $insertCodeForFeatures('writeOutFunctionImplementationBegin', $featureOrdering, $dict)
+  @set $dependentVariables = $dict.dependentVariables
+  @#
+  @# The features can return Cheetah template code suitable for passing to loopOverVectorsWithInnerContentTemplate
+  @# in order to create their data. If any have, then we should actually create that loop and run that code.
+  @if $result
+  ${loopOverVectorsWithInnerContentTemplate([$processedVector], $result), autoIndent=True}@slurp
+  @end if
 
   fprintf(_outfile, "\n");
   fprintf(_outfile, "<XSIL Name=\"moment_group_${number + 1}\">\n");
@@ -216,87 +216,87 @@ void _${name}_write_out(FILE* _outfile)
   fprintf(_outfile, "  <Array Name=\"variables\" Type=\"Text\">\n");
   fprintf(_outfile, "    <Dim>${numIndependentVariables + len($dependentVariables)}</Dim>\n");
   fprintf(_outfile, "    <Stream><Metalink Format=\"Text\" Delimiter=\" \\n\"/>\n");
-  fprintf(_outfile, "#slurp
-  ## First loop over the dimensions (the independent variables)
-  #for $dimension in $outputField.dimensions
-${dimensionNameForSpace($dimension, $outputSpace)} #slurp
-  #end for
-  ##
-  ## Now loop over the dependent variables
-  #for $dependentVariable in $dependentVariables
-${dependentVariable.name} #slurp
-  #end for
+  fprintf(_outfile, "@slurp
+  @# First loop over the dimensions (the independent variables)
+  @for $dimension in $outputField.dimensions
+${dimensionNameForSpace($dimension, $outputSpace)} @slurp
+  @end for
+  @#
+  @# Now loop over the dependent variables
+  @for $dependentVariable in $dependentVariables
+${dependentVariable.name} @slurp
+  @end for
 \n");
   fprintf(_outfile, "    </Stream>\n");
   fprintf(_outfile, "  </Array>\n");
   fprintf(_outfile, "  <Array Name=\"data\" Type=\"double\">\n");
-  ##
-  ## Now loop over the dimensions
-  #for $dimension in $outputField.dimensions
+  @#
+  @# Now loop over the dimensions
+  @for $dimension in $outputField.dimensions
   fprintf(_outfile, "    <Dim>${dimension.lattice}</Dim>\n");
-  #end for
-  ## Now the variables dimension
+  @end for
+  @# Now the variables dimension
   fprintf(_outfile, "    <Dim>${numIndependentVariables + len($dependentVariables)}</Dim>\n");
 
   // The meat of the function goes here
-  #set $featureOrdering = ['Output']
-  #set $dict = {'momentGroup': self, 'dependentVariables': $dependentVariables}
-  ${insertCodeForFeatures('writeOutFunctionImplementationBody', $featureOrdering, $dict), autoIndent=True}#slurp
+  @set $featureOrdering = ['Output']
+  @set $dict = {'momentGroup': self, 'dependentVariables': $dependentVariables}
+  ${insertCodeForFeatures('writeOutFunctionImplementationBody', $featureOrdering, $dict), autoIndent=True}@slurp
 
   fprintf(_outfile, "  </Array>\n");
   fprintf(_outfile, "</XSIL>\n");
 }
-  ##
-#end def
+  @#
+@end def
 
 
-#*
+@*
   Initialise field (called from segment 0)
-*#
-#def initialise
-  ## We will need to do something slightly different here if we didn't
-  ## allocate a raw vector. We'll need to set _active_mgN_raw to point
-  ## to the output field's processed vector
-  #if not $rawVectorNeedsToBeAllocated
-    #set $processedVectorList = filter(lambda x: x.name == 'processed', $outputField.vectors)
-    #assert len($processedVectorList) == 1
+*@
+@def initialise
+  @# We will need to do something slightly different here if we didn't
+  @# allocate a raw vector. We'll need to set _active_mgN_raw to point
+  @# to the output field's processed vector
+  @if not $rawVectorNeedsToBeAllocated
+    @set $processedVectorList = filter(lambda x: x.name == 'processed', $outputField.vectors)
+    @assert len($processedVectorList) == 1
 // raw vector does not need to be initialised because the processed vector was
 _active_${name}_raw = _active_${outputField.name}_processed;
-  #else
-    ## Call super to initialise the raw vector
-    ## This doesn't need to be done in the other case
-    ## because the processed vector will itself be initialised
-    #super
-  #end if
-  ##
-#end def
+  @else
+    @# Call super to initialise the raw vector
+    @# This doesn't need to be done in the other case
+    @# because the processed vector will itself be initialised
+    @super
+  @end if
+  @#
+@end def
 
-#*
+@*
   Allocate (and initialise active pointers) (called from main)
-*#
-#def allocate
-  ## We actually only want to allocate this vector (we should only have one)
-  ## if rawVectorNeedsToBeAllocated is True
-  #assert len($vectors) == 1
-  #assert $anyObject($vectors).name == 'raw'
-  ##
-  #if $rawVectorNeedsToBeAllocated
-    ## Call the superclass to allocate the vector
-    #super
-  #end if
-#end def
+*@
+@def allocate
+  @# We actually only want to allocate this vector (we should only have one)
+  @# if rawVectorNeedsToBeAllocated is True
+  @assert len($vectors) == 1
+  @assert $anyObject($vectors).name == 'raw'
+  @#
+  @if $rawVectorNeedsToBeAllocated
+    @# Call the superclass to allocate the vector
+    @super
+  @end if
+@end def
 
-#*
+@*
   Free
-*#
-#def free
-  ##
-  #assert len($vectors) == 1
-  #assert $anyObject($vectors).name == 'raw'
-  ##
-  #if $rawVectorNeedsToBeAllocated
-    ## Call the superclass to free the vector
-    #super
-  #end if
-  ##
-#end def
+*@
+@def free
+  @#
+  @assert len($vectors) == 1
+  @assert $anyObject($vectors).name == 'raw'
+  @#
+  @if $rawVectorNeedsToBeAllocated
+    @# Call the superclass to free the vector
+    @super
+  @end if
+  @#
+@end def

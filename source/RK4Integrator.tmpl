@@ -1,77 +1,77 @@
-#*
+@*
 RK4Integrator.tmpl
 
 Created by Graham Dennis on 2007-09-23.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
-*#
-#extends FixedStepIntegrator
+*@
+@extends FixedStepIntegrator
 
-#def description: segment $segmentNumber (RK4 Integrator)
-#attr $ipPropagationStepFractions = ['0.5']
-#attr $extraIntegrationArrayNames = ['akfield', 'aifield']
+@def description: segment $segmentNumber (RK4 Integrator)
+@attr $ipPropagationStepFractions = ['0.5']
+@attr $extraIntegrationArrayNames = ['akfield', 'aifield']
 
-#*
+@*
   Single integration step (RK4)
-*#
-#def singleIntegrationStep
-  ##
-${transformVectorsToSpace($vectors, $homeSpace)}#slurp
+*@
+@def singleIntegrationStep
+  @#
+${transformVectorsToSpace($vectors, $homeSpace)}@slurp
 
 ${loopOverVectorsWithInnerContentTemplate($vectors,
 """// a_k = a
 _akfield_${vector.id}[$index] = _${vector.id}[$index];
-""")}#slurp
+""")}@slurp
 
 // a = D[a]
 _segment${segmentNumber}_ip_evolve(+1);
-${goToHomeSpace}#slurp
+${goToHomeSpace}@slurp
 
 ${loopOverVectorsWithInnerContentTemplate($vectors,
 """// a_i = a
 _aifield_${vector.id}[$index] = _${vector.id}[$index];
-""")}#slurp
+""")}@slurp
 
-  #for $vector in $vectors
+  @for $vector in $vectors
 _active_${vector.id} = _akfield_${vector.id};
-  #end for
+  @end for
   
 // a_k = G[a_k, t]
 _segment${segmentNumber}_calculate_delta_a(_step);
 
 // a_k = D[a_k]
 _segment${segmentNumber}_ip_evolve(+1);
-${goToHomeSpace}#slurp
+${goToHomeSpace}@slurp
 
 ${loopOverVectorsWithInnerContentTemplate($vectors, 
 """// a = a + a_k/6
 _${vector.id}[$index] += _akfield_${vector.id}[$index]/6.0;
 // a_k = a_i + a_k/2
 _akfield_${vector.id}[$index] = _aifield_${vector.id}[$index] + _akfield_${vector.id}[$index]/2.0;
-""")}#slurp
+""")}@slurp
 
 ${propagationDimension} += _step/2.0;
 
 // a_k = G[a_k, t + h/2]
 _segment${segmentNumber}_calculate_delta_a(_step);
-${goToHomeSpace}#slurp
+${goToHomeSpace}@slurp
 
 ${loopOverVectorsWithInnerContentTemplate($vectors,
 """// a = a + a_k/3
 _${vector.id}[$index] += _akfield_${vector.id}[$index]/3.0;
 // a_k = a_i + a_k/2
 _akfield_${vector.id}[$index] = _aifield_${vector.id}[$index] + _akfield_${vector.id}[$index]/2.0;
-""")}#slurp
+""")}@slurp
 
 // a_k = G[a_k, t + h/2]
 _segment${segmentNumber}_calculate_delta_a(_step);
-${goToHomeSpace}#slurp
+${goToHomeSpace}@slurp
 
 ${loopOverVectorsWithInnerContentTemplate($vectors,
 """// a = a + a_k/3
 _${vector.id}[$index] += _akfield_${vector.id}[$index]/3.0;
 // a_k = a_i + a_k
 _akfield_${vector.id}[$index] = _aifield_${vector.id}[$index] + _akfield_${vector.id}[$index];
-""")}#slurp
+""")}@slurp
 
 // a_k = D[a_k]
 _segment${segmentNumber}_ip_evolve(+1);
@@ -80,19 +80,19 @@ ${propagationDimension} += _step/2.0;
 
 // a_k = G[a_k, t + h]
 _segment${segmentNumber}_calculate_delta_a(_step);
-${goToHomeSpace}#slurp
+${goToHomeSpace}@slurp
 
-  #for $vector in $vectors
+  @for $vector in $vectors
 _active_${vector.id} = _${vector.id};
-  #end for
+  @end for
 
 // a_k = D[a_k]
 _segment${segmentNumber}_ip_evolve(+1);
-${goToHomeSpace}#slurp
+${goToHomeSpace}@slurp
 
 ${loopOverVectorsWithInnerContentTemplate($vectors, 
 """// a = a + a_k/6
 _${vector.id}[$index] += _akfield_${vector.id}[$index]/6.0;
-""")}#slurp
-  ##
-#end def
+""")}@slurp
+  @#
+@end def

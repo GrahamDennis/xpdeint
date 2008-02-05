@@ -1,42 +1,42 @@
-#*
+@*
 SimulationElement.tmpl
 
 Created by Graham Dennis on 2007-08-23.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
-*#
-#extends ScriptElement
+*@
+@extends ScriptElement
 
-#*
+@*
   Description of template
-*#
-#def description: simulation
-#attr $globalNameSpaceName = "simulation"
+*@
+@def description: simulation
+@attr $globalNameSpaceName = "simulation"
 
-#def defines
-  ##
-\#define _EPSILON 1e-6
+@def defines
+  @#
+#define _EPSILON 1e-6
 
-\#define _SAMPLE_LOG_LEVEL      (1 << 0)
-\#define _SEGMENT_LOG_LEVEL     (1 << 1)
-\#define _PATH_LOG_LEVEL        (1 << 2)
-\#define _SIMULATION_LOG_LEVEL  (1 << 3)
-\#define _WARNING_LOG_LEVEL     (1 << 4)
-\#define _ERROR_LOG_LEVEL       (1 << 5)
-\#define _ALL_LOG_LEVELS        _SAMPLE_LOG_LEVEL|_SEGMENT_LOG_LEVEL|_PATH_LOG_LEVEL|_SIMULATION_LOG_LEVEL|_WARNING_LOG_LEVEL|_ERROR_LOG_LEVEL
-\#define _LOG_LEVELS_BEING_LOGGED (${features['Driver'].logLevelsBeingLogged})
+#define _SAMPLE_LOG_LEVEL      (1 << 0)
+#define _SEGMENT_LOG_LEVEL     (1 << 1)
+#define _PATH_LOG_LEVEL        (1 << 2)
+#define _SIMULATION_LOG_LEVEL  (1 << 3)
+#define _WARNING_LOG_LEVEL     (1 << 4)
+#define _ERROR_LOG_LEVEL       (1 << 5)
+#define _ALL_LOG_LEVELS        _SAMPLE_LOG_LEVEL|_SEGMENT_LOG_LEVEL|_PATH_LOG_LEVEL|_SIMULATION_LOG_LEVEL|_WARNING_LOG_LEVEL|_ERROR_LOG_LEVEL
+#define _LOG_LEVELS_BEING_LOGGED (${features['Driver'].logLevelsBeingLogged})
 
-\#define _LOG(logLevel, ...) \
+#define _LOG(logLevel, ...) \
   if (logLevel & _LOG_LEVELS_BEING_LOGGED) { \
     printf(__VA_ARGS__); \
     fflush(stdout); \
   }
-  ##
-#end def
+  @#
+@end def
 
-#*
+@*
   Globals needed at the start of the simulation
-*#
-#def globals
+*@
+@def globals
 double ${propagationDimension};
 
 // This stuff is here because libxmds requires it.
@@ -44,34 +44,34 @@ double ${propagationDimension};
 // to load XSIL files to initialise fields
 bool debugFlag = false;
 bool xmlDebugFlag =  false;
-#end def
+@end def
 
-#def mainRoutine
+@def mainRoutine
 int main(int argc, char **argv)
 {
-  #for $field in $fields
-  ${field.allocate, autoIndent=True}#slurp
-    #if $field.isOutputField
-  ${field.initialise, autoIndent=True}#slurp
-    #end if
-  #end for
-  #*
+  @for $field in $fields
+  ${field.allocate, autoIndent=True}@slurp
+    @if $field.isOutputField
+  ${field.initialise, autoIndent=True}@slurp
+    @end if
+  @end for
+  @*
     And now insert the code for the features that apply in the main function
-  *#
-  ## Note that Bing, and Argv commute
-  #set $featureOrdering = ['Bing', 'Argv', 'FourierTransform', 'Benchmark', 'Output']
-  ${insertCodeForFeatures('mainBegin', $featureOrdering), autoIndent=True}#slurp
+  *@
+  @# Note that Bing, and Argv commute
+  @set $featureOrdering = ['Bing', 'Argv', 'FourierTransform', 'Benchmark', 'Output']
+  ${insertCodeForFeatures('mainBegin', $featureOrdering), autoIndent=True}@slurp
 
-  ## This needs to be extracted into a function so that it can be indented further if necessary
+  @# This needs to be extracted into a function so that it can be indented further if necessary
   /* Code that actually does stuff goes here */
   _segment0();
   
-  ${insertCodeForFeaturesInReverseOrder('mainEnd', $featureOrdering), autoIndent=True}#slurp
-  ##
-  #for $field in $fields
-  ${field.free, autoIndent=True}#slurp
-  #end for
+  ${insertCodeForFeaturesInReverseOrder('mainEnd', $featureOrdering), autoIndent=True}@slurp
+  @#
+  @for $field in $fields
+  ${field.free, autoIndent=True}@slurp
+  @end for
   
   return 0;
 }
-#end def
+@end def

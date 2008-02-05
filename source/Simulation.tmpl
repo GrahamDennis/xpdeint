@@ -1,101 +1,101 @@
-#*
+@*
 Simulation.tmpl
 
 Created by Graham Dennis on 2007-08-23.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
-*#
-## Base simulation template
+*@
+@# Base simulation template
 // ********************************************************
 // simulation includes
 
-\#include <stdio.h>
-\#include <math.h>
-\#include <string>
-\#include <fstream>
-\#include <sstream>
-\#include <cstdlib>
-\#include <unistd.h>
-\#include <sys/time.h>
-\#include <time.h>
-\#include <stdint.h>
-\#include <list>
-\#include <getopt_xmds.h>
-\#include <vector>
+#include <stdio.h>
+#include <math.h>
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <cstdlib>
+#include <unistd.h>
+#include <sys/time.h>
+#include <time.h>
+#include <stdint.h>
+#include <list>
+#include <getopt_xmds.h>
+#include <vector>
 
-#for $element in filter(lambda x: hasattr(x, 'includes'), $scriptElements)
-${element.includes}#slurp
-#end for
+@for $element in filter(lambda x: hasattr(x, 'includes'), $scriptElements)
+${element.includes}@slurp
+@end for
 
-\#include <xmds_complex.h>
-\#include <xmds_config.h>
+#include <xmds_complex.h>
+#include <xmds_config.h>
 
 using namespace std;
 
 // ********************************************************
 // DEFINES
 // ********************************************************
-## only loop over the elements that implement the defines function
-#for $element in filter(lambda x: hasattr(x, 'defines'), $scriptElements)
-  ## Prevent writing zero-length defines
-  #set $result = $element.defines
-  #if $result
+@# only loop over the elements that implement the defines function
+@for $element in filter(lambda x: hasattr(x, 'defines'), $scriptElements)
+  @# Prevent writing zero-length defines
+  @set $result = $element.defines
+  @if $result
 
 // ********************************************************
 //   $element.description defines
-$result#slurp
-  #end if
-#end for
+$result@slurp
+  @end if
+@end for
 
 
 // ********************************************************
 // GLOBALS
 // ********************************************************
-## only loop over the elements that implement the globals function
-#for $element in filter(lambda x: hasattr(x, 'globals'), $scriptElements)
-  ## Prevent writing zero-length globals
-  #set $result = $element.globals
-  #if $result
+@# only loop over the elements that implement the globals function
+@for $element in filter(lambda x: hasattr(x, 'globals'), $scriptElements)
+  @# Prevent writing zero-length globals
+  @set $result = $element.globals
+  @if $result
 
 // ********************************************************
 //   $element.description globals
-$result#slurp
-  #end if
-#end for
+$result@slurp
+  @end if
+@end for
 
 
 // ********************************************************
 // FUNCTION PROTOTYPES
 // ********************************************************
-## only loop over the elements that implement the prototypes function
-#for $element in filter(lambda x: hasattr(x, 'functionPrototypes'), $scriptElements)
-  ## Prevent writing zero-length globals
-  #set $result = $element.functionPrototypes
-  #if $result
+@# only loop over the elements that implement the prototypes function
+@for $element in filter(lambda x: hasattr(x, 'functionPrototypes'), $scriptElements)
+  @# Prevent writing zero-length globals
+  @set $result = $element.functionPrototypes
+  @if $result
 
 // ********************************************************
 //   $element.description function prototypes
-$result#slurp
-  #end if
-#end for
+$result@slurp
+  @end if
+@end for
 
 
 // ********************************************************
 // FUNCTION IMPLEMENTATIONS
 // ********************************************************
-## only loop over the elements that implement the prototypes function
-#for $element in filter(lambda x: hasattr(x, 'functionImplementations'), $scriptElements)
-  ## Prevent writing zero-length function implementations
-  #set $result = $element.functionImplementations
-  #if $result
+@# only loop over the elements that implement the prototypes function
+@for $element in filter(lambda x: hasattr(x, 'functionImplementations'), $scriptElements)
+  @# Prevent writing zero-length function implementations
+  @set $result = $element.functionImplementations
+  @if $result
 
 // ********************************************************
 //   $element.description function implementations
-$result#slurp
-  #end if
-#end for
+$result@slurp
+  @end if
+@end for
 
 
 // ********************************************************
 // MAIN ROUTINE
 // ********************************************************
-$simulation.mainRoutine#slurp
+$simulation.mainRoutine@slurp

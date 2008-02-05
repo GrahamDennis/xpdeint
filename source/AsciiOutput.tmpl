@@ -1,58 +1,58 @@
-#*
+@*
 AsciiOutput.tmpl
 
 Created by Graham Dennis on 2007-09-18.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
-*#
-#extends OutputFeature
+*@
+@extends OutputFeature
 
-#def description: ascii output
+@def description: ascii output
 
-#*
+@*
   Write out the data in ASCII format
-*#
-#def writeOutFunctionImplementationBody($dict)
-  ## The function prototype in which this code is going is:
-  ##  void _mgN_write_out(FILE* _outfile)
-  ## And this code is being automatically indented.
-  ##
-  #set $momentGroup = $dict.momentGroup
-  #set $dependentVariables = $dict.dependentVariables
+*@
+@def writeOutFunctionImplementationBody($dict)
+  @# The function prototype in which this code is going is:
+  @#  void _mgN_write_out(FILE* _outfile)
+  @# And this code is being automatically indented.
+  @#
+  @set $momentGroup = $dict.momentGroup
+  @set $dependentVariables = $dict.dependentVariables
 fprintf(_outfile, "    <Stream><Metalink Format=\"Text\" Delimiter=\" \\n\"/>\n");
 
-$loopOverFieldInSpaceWithVectorsAndInnerContent($momentGroup.outputField, $momentGroup.outputSpace, $momentGroup.outputField.vectors, $insideOutputLoops($momentGroup, $dependentVariables), $kspaceAscendingOrder=True)#slurp
+$loopOverFieldInSpaceWithVectorsAndInnerContent($momentGroup.outputField, $momentGroup.outputSpace, $momentGroup.outputField.vectors, $insideOutputLoops($momentGroup, $dependentVariables), $kspaceAscendingOrder=True)@slurp
 
 fprintf(_outfile, "    </Stream>\n");
-  ##
-#end def
+  @#
+@end def
 
-#def insideOutputLoops($momentGroup, $dependentVariables)
-  ##
-  #set $variableCount = len($momentGroup.outputField.dimensions) + len($dependentVariables)
-  #set $precisionPrefix = '.12'
-  #if $precision == 'single'
-    #set $precisionPrefix = ''
-  #end if
-fprintf(_outfile, "#slurp
-  ## Loop over the variables that we're writing out
-  #for $variableNumber in range($variableCount)
-    #if $variableNumber != 0
-      ## If this isn't the first dimension, include a space at the start
- %${precisionPrefix}e#slurp
-    #else
-%${precisionPrefix}e#slurp
-    #end if
-  #end for
-\n"#slurp
-  ##
-  #for $dimension in $momentGroup.outputField.dimensions
-, ${dimensionNameForSpace($dimension, $momentGroup.outputSpace)}#slurp
-  #end for
-  ##
-  ## Now loop over the (dependent) variables
-  #for $variable in $dependentVariables
-, ${variable.arrayName}[_${momentGroup.outputField.name}_processed_index_pointer + ${variable.componentNumber}]#slurp
-  #end for
+@def insideOutputLoops($momentGroup, $dependentVariables)
+  @#
+  @set $variableCount = len($momentGroup.outputField.dimensions) + len($dependentVariables)
+  @set $precisionPrefix = '.12'
+  @if $precision == 'single'
+    @set $precisionPrefix = ''
+  @end if
+fprintf(_outfile, "@slurp
+  @# Loop over the variables that we're writing out
+  @for $variableNumber in range($variableCount)
+    @if $variableNumber != 0
+      @# If this isn't the first dimension, include a space at the start
+ %${precisionPrefix}e@slurp
+    @else
+%${precisionPrefix}e@slurp
+    @end if
+  @end for
+\n"@slurp
+  @#
+  @for $dimension in $momentGroup.outputField.dimensions
+, ${dimensionNameForSpace($dimension, $momentGroup.outputSpace)}@slurp
+  @end for
+  @#
+  @# Now loop over the (dependent) variables
+  @for $variable in $dependentVariables
+, ${variable.arrayName}[_${momentGroup.outputField.name}_processed_index_pointer + ${variable.componentNumber}]@slurp
+  @end for
 );
-  ##
-#end def
+  @#
+@end def

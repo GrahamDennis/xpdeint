@@ -1,155 +1,155 @@
-#*
+@*
 StochasticFeature.tmpl
 
 Created by Graham Dennis on 2007-12-11.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
-*#
-#extends _StochasticFeature
+*@
+@extends _StochasticFeature
 
-#from DeltaAOperator import DeltaAOperator
+@from DeltaAOperator import DeltaAOperator
 
-#def description: Stochastic
-#attr featureName = 'Stochastic'
+@def description: Stochastic
+@attr featureName = 'Stochastic'
 
-#*
+@*
   Globals
-*#
-#def globals
-  ##
-  #set $noisesNeeded = filter(lambda x: x.noiseDistribution in ('gaussian', 'poissonian'), $noises)
+*@
+@def globals
+  @#
+  @set $noisesNeeded = filter(lambda x: x.noiseDistribution in ('gaussian', 'poissonian'), $noises)
 // ********************************************************
 // struct used to store step size and noise vector to ensure
 // stochastic convergence
 struct _dtdWstore {
   double _step;
-  #for noise in noisesNeeded
-    #for noiseVector in noise.noiseVectors.itervalues()
+  @for noise in noisesNeeded
+    @for noiseVector in noise.noiseVectors.itervalues()
   double* _${noiseVector.id};
-    #end for
-  #end for
+    @end for
+  @end for
   _dtdWstore() {
     _step = 0;
-  #for noise in noisesNeeded
-    #for noiseVector in noise.noiseVectors.itervalues()
+  @for noise in noisesNeeded
+    @for noiseVector in noise.noiseVectors.itervalues()
     _${noiseVector.id} = NULL;
-    #end for
-  #end for
+    @end for
+  @end for
   }
   ~_dtdWstore() {
-  #for noise in noisesNeeded
-    #for noiseVector in noise.noiseVectors.itervalues()
+  @for noise in noisesNeeded
+    @for noiseVector in noise.noiseVectors.itervalues()
     if (_${noiseVector.id})
       xmds_free(_${noiseVector.id});
-    #end for
-  #end for
+    @end for
+  @end for
   }
 };
-  #super
-  ##
-#end def
+  @super
+  @#
+@end def
 
-#def topLevelSequenceBegin($dict)
-  ##
-  #for noise in $noises
-${noise.initialiseSeeds(noise.seedArray)}#slurp
-  #end for
-  ##
-#end def
+@def topLevelSequenceBegin($dict)
+  @#
+  @for noise in $noises
+${noise.initialiseSeeds(noise.seedArray)}@slurp
+  @end for
+  @#
+@end def
 
-#def vectorInitialisationBegin($dict)
-  ##
-  #set $caller = dict['caller']
-  #set $noisesNeeded = $noises[:]
-  #if hasattr(caller, 'noises')
-    #set $noisesNeeded = caller.noises[:]
-  #end if
+@def vectorInitialisationBegin($dict)
+  @#
+  @set $caller = dict['caller']
+  @set $noisesNeeded = $noises[:]
+  @if hasattr(caller, 'noises')
+    @set $noisesNeeded = caller.noises[:]
+  @end if
 
-double _var = 1.0#slurp
-  #if len(caller.vector.field.dimensions)
- / $caller.vector.field.volumeElementInSpace($caller.vector.initialSpace)#slurp
-  #end if
+double _var = 1.0@slurp
+  @if len(caller.vector.field.dimensions)
+ / $caller.vector.field.volumeElementInSpace($caller.vector.initialSpace)@slurp
+  @end if
 ;
 
-  #for noise in noisesNeeded
-    #set $noiseVector = noise.noiseVectorForField(caller.vector.field)
+  @for noise in noisesNeeded
+    @set $noiseVector = noise.noiseVectorForField(caller.vector.field)
 _make_${noise.prefix}_noises(_var, _${noiseVector.id}, _${caller.vector.field.name}_size * _${noiseVector.id}_ncomponents);
-  #end for
-  ##
-#end def
+  @end for
+  @#
+@end def
 
-#def integrateFixedStepBegin($dict)
-  ##
-  #set $integrator = dict['caller']
-  ##
-  #for field in integrator.integrationFields
-const double _${field.name}_var = 1.0/(#slurp
-    #if len($field.dimensions)
-$field.volumeElementInSpace(0) * #slurp
-    #end if
+@def integrateFixedStepBegin($dict)
+  @#
+  @set $integrator = dict['caller']
+  @#
+  @for field in integrator.integrationFields
+const double _${field.name}_var = 1.0/(@slurp
+    @if len($field.dimensions)
+$field.volumeElementInSpace(0) * @slurp
+    @end if
 _noiseStep);
-  #end for
-  ##
-#end def
+  @end for
+  @#
+@end def
 
-#def integrateAdaptiveStepBegin($dict)
-  ##
-  #set $integrator = dict['caller']
-  ##
-  #for field in integrator.integrationFields
-const double _${field.name}_var = 1.0#slurp
-    #if len($field.dimensions)
-/ $field.volumeElementInSpace(0)#slurp
-    #end if
+@def integrateAdaptiveStepBegin($dict)
+  @#
+  @set $integrator = dict['caller']
+  @#
+  @for field in integrator.integrationFields
+const double _${field.name}_var = 1.0@slurp
+    @if len($field.dimensions)
+/ $field.volumeElementInSpace(0)@slurp
+    @end if
 ;
-  #end for
+  @end for
 
 list<_dtdWstore> _noise_list;
 list<_dtdWstore>::iterator _active_node;
-  ##
-#end def
+  @#
+@end def
 
-#def integrateAdaptiveStepEnd($dict)
-  ##
-  #set $integrator = dict['caller']
-  ##
-  #for (noise, field) in self.noisesAndFieldsForIntegrator(integrator)
-    #set $noiseVector = noise.noiseVectorForField(field)
+@def integrateAdaptiveStepEnd($dict)
+  @#
+  @set $integrator = dict['caller']
+  @#
+  @for (noise, field) in self.noisesAndFieldsForIntegrator(integrator)
+    @set $noiseVector = noise.noiseVectorForField(field)
 _active_${noiseVector.id} = _${noiseVector.id};
-  #end for
-#end def
+  @end for
+@end def
 
-#def integrateFixedStepInnerLoopBegin(dict)
-  ##
-  #set $integrator = dict['caller']
-  #set $featureOrdering = ['ErrorCheck']
-  ##
-  #for (noise, field) in self.noisesAndFieldsForIntegrator(integrator)
-    #set $noiseVector = noise.noiseVectorForField(field)
+@def integrateFixedStepInnerLoopBegin(dict)
+  @#
+  @set $integrator = dict['caller']
+  @set $featureOrdering = ['ErrorCheck']
+  @#
+  @for (noise, field) in self.noisesAndFieldsForIntegrator(integrator)
+    @set $noiseVector = noise.noiseVectorForField(field)
 
 _make_${noise.prefix}_noises(_${field.name}_var, _${noiseVector.id}, _${field.name}_size * _${noiseVector.id}_ncomponents);
-    ##
-    #set $makeNoisesDict = {'noise': noise, 'noiseVector': noiseVector, 'field': field}
-${insertCodeForFeatures('makeNoisesForFixedStep', featureOrdering, makeNoisesDict)}#slurp
-  #end for
-  ##
-#end def
+    @#
+    @set $makeNoisesDict = {'noise': noise, 'noiseVector': noiseVector, 'field': field}
+${insertCodeForFeatures('makeNoisesForFixedStep', featureOrdering, makeNoisesDict)}@slurp
+  @end for
+  @#
+@end def
 
-#def integrateAdaptiveStepInnerLoopBegin(dict)
-  ##
-  #set $integrator = dict['caller']
-  ##
+@def integrateAdaptiveStepInnerLoopBegin(dict)
+  @#
+  @set $integrator = dict['caller']
+  @#
 if (_noise_list.empty()) { 
   // Noise list empty so start afresh
   _noise_list.push_front(_dtdWstore()); 
   _active_node = _noise_list.begin(); 
   _active_node->_step = _step; 
-  #for (noise, field) in $noisesAndFieldsForIntegrator(integrator)
-   #set $noiseVector = noise.noiseVectorForField(field)
+  @for (noise, field) in $noisesAndFieldsForIntegrator(integrator)
+   @set $noiseVector = noise.noiseVectorForField(field)
 
   _active_${noiseVector.id} = (double*) xmds_malloc(sizeof(double) * _${field.name}_size * _${noiseVector.id}_ncomponents);
   _make_${noise.prefix}_noises(_${field.name}_var/_step, _active_${noiseVector.id}, _${field.name}_size * _${noiseVector.id}_ncomponents);
   _active_node->_${noiseVector.id} = _active_${noiseVector.id};
-  #end for
+  @end for
 } else if (_step*(1.0 + _EPSILON) < _noise_list.begin()->_step) {
   // Create new smallest time step
   
@@ -164,8 +164,8 @@ if (_noise_list.empty()) {
   
   _noise_list.begin()->_step -= _step;
   
-  #for noise, field in $noisesAndFieldsForIntegrator(integrator)
-    #set $noiseVector = noise.noiseVectorForField(field)
+  @for noise, field in $noisesAndFieldsForIntegrator(integrator)
+    @set $noiseVector = noise.noiseVectorForField(field)
     _active_${noiseVector.id} = (double*) xmds_malloc(sizeof(double) * _${field.name}_size * _${noiseVector.id}_ncomponents);
     _make_${noise.prefix}_noises(_${field.name}_var * (_old_smallest_step - _step)/(_step * _old_smallest_step), 
         _active_${noiseVector.id}, _${field.name}_size * _${noiseVector.id}_ncomponents);
@@ -175,16 +175,16 @@ if (_noise_list.empty()) {
     ${loopOverVectorsWithInnerContentTemplate([$noiseVector], 
 """_active_${vector.id}[${index}] += _old_${vector.id}[${index}];
 _old_${vector.id}[${index}] = (_old_${vector.id}[${index}]*_old_smallest_step - _active_${vector.id}[${index}]*_step)/(_old_smallest_step - _step);
-"""), autoIndent=True}#slurp
-  #end for
+"""), autoIndent=True}@slurp
+  @end for
 
   _noise_list.push_front(_dtdWstore());
   _active_node = _noise_list.begin();
   _active_node->_step = _step;
-  #for noise, field in $noisesAndFieldsForIntegrator(integrator)
-    #set $noiseVector = noise.noiseVectorForField(field)
+  @for noise, field in $noisesAndFieldsForIntegrator(integrator)
+    @set $noiseVector = noise.noiseVectorForField(field)
   _active_node->_${noiseVector.id} = _active_${noiseVector.id};
-  #end for
+  @end for
 } else { 
   // Use time step already attempted 
   for (_active_node = _noise_list.begin(); (_active_node != _noise_list.end()) && (_active_node->_step <= _step*(1.0 + _EPSILON)); _active_node++)
@@ -192,19 +192,19 @@ _old_${vector.id}[${index}] = (_old_${vector.id}[${index}]*_old_smallest_step - 
 
   _active_node--;
   _step = _active_node->_step;
-  #for noise, field in $noisesAndFieldsForIntegrator(integrator)
-    #set $noiseVector = noise.noiseVectorForField(field)
+  @for noise, field in $noisesAndFieldsForIntegrator(integrator)
+    @set $noiseVector = noise.noiseVectorForField(field)
     _active_${noiseVector.id} = _active_node->_${noiseVector.id};
-  #end for
+  @end for
   if (_break_next && fabs(t + _step - _t_break_next) > _step*_EPSILON)
     _break_next = false;
 } 
   
-  ##
-#end def
+  @#
+@end def
 
-#def adaptiveStepSucceeded(dict)
-  ##
+@def adaptiveStepSucceeded(dict)
+  @#
 // Trim dtdW tree
 _active_node++;
 if (_active_node == _noise_list.end())
@@ -212,6 +212,6 @@ if (_active_node == _noise_list.end())
 else
   _noise_list.pop_front();
 
-  ##
-#end def
+  @#
+@end def
 

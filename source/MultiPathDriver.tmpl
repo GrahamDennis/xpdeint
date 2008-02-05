@@ -1,78 +1,78 @@
-#*
+@*
 MultiPathDriver.tmpl
 
 Created by Graham Dennis on 2008-02-01.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
-*#
-#extends _MultiPathDriver
-#*
+*@
+@extends _MultiPathDriver
+@*
   Description of template
-*#
-#def description: segment $segmentNumber (Multipath top level sequence)
+*@
+@def description: segment $segmentNumber (Multipath top level sequence)
 
-#def defines
-  ##
-\#define _n_paths ${pathCount}
-  ##
-#end def
+@def defines
+  @#
+#define _n_paths ${pathCount}
+  @#
+@end def
 
-#def functionImplementations
-  ##
+@def functionImplementations
+  @#
 void _segment0()
 {
-  ## And now insert the code for the features that apply in the top level sequence
-  #set $featureOrdering = ['ErrorCheck', 'Stochastic']
-  #set $dict = {'extraIndent': 0}
-  ${insertCodeForFeatures('topLevelSequenceBegin', featureOrdering, dict), autoIndent=True}#slurp
-  #set $extraIndent = dict['extraIndent']
+  @# And now insert the code for the features that apply in the top level sequence
+  @set $featureOrdering = ['ErrorCheck', 'Stochastic']
+  @set $dict = {'extraIndent': 0}
+  ${insertCodeForFeatures('topLevelSequenceBegin', featureOrdering, dict), autoIndent=True}@slurp
+  @set $extraIndent = dict['extraIndent']
   
-  ${topLevelSegmentPathLoop, autoIndent=True, extraIndent=extraIndent}#slurp
+  ${topLevelSegmentPathLoop, autoIndent=True, extraIndent=extraIndent}@slurp
   
-  ${insertCodeForFeaturesInReverseOrder('topLevelSequenceEnd', featureOrdering, dict), autoIndent=True}#slurp
+  ${insertCodeForFeaturesInReverseOrder('topLevelSequenceEnd', featureOrdering, dict), autoIndent=True}@slurp
 }
-  ##
-#end def
+  @#
+@end def
 
-#def topLevelSegmentPathLoop
-  ##
-  ## Now loop over anything that can be initalised early and initialise them
-  ## so they don't allocate and free stuff for each path. This is done now
-  ## and not before the ErrorCheck and Stochastic Features because the
-  ## initialisation of IP operators will depend on the step size. It would be
-  ## possible to split this up into two stages of initialisation, but that
-  ## seems to me like it would be ugly.
-  ## 
-  #set $objectsNeedingInitialisation = [o for o in $templates if hasattr(o, 'canBeInitialisedEarly') and o.canBeInitialisedEarly]
-  #for o in $objectsNeedingInitialisation
-${o.initialise}#slurp
-  #end for
-  ##
+@def topLevelSegmentPathLoop
+  @#
+  @# Now loop over anything that can be initalised early and initialise them
+  @# so they don't allocate and free stuff for each path. This is done now
+  @# and not before the ErrorCheck and Stochastic Features because the
+  @# initialisation of IP operators will depend on the step size. It would be
+  @# possible to split this up into two stages of initialisation, but that
+  @# seems to me like it would be ugly.
+  @# 
+  @set $objectsNeedingInitialisation = [o for o in $templates if hasattr(o, 'canBeInitialisedEarly') and o.canBeInitialisedEarly]
+  @for o in $objectsNeedingInitialisation
+${o.initialise}@slurp
+  @end for
+  @#
 for (long _i0=0; _i0 < _n_paths; _i0++) {
   _LOG(_PATH_LOG_LEVEL, "Starting path %li\n", _i0 + 1);
   
-  ${topLevelSequenceInnerContent, autoIndent=True}#slurp
+  ${topLevelSequenceInnerContent, autoIndent=True}@slurp
 }
-  ##
-  ## Now clean up after all of the objects that we initialised early.
-  #for o in $objectsNeedingInitialisation
-${o.finalise}#slurp
-  #end for
-  ##
-#end def
+  @#
+  @# Now clean up after all of the objects that we initialised early.
+  @for o in $objectsNeedingInitialisation
+${o.finalise}@slurp
+  @end for
+  @#
+@end def
 
-#def rawVectorNeedsToBeAllocated(dict)
-#*doc:
+@def rawVectorNeedsToBeAllocated(dict)
+@*doc:
 This function makes moment groups allocate their raw sampling vectors so that
 we can sample both the mean and the standard error.
-*#
-  ##
-  #silent dict['returnValue'] = True
-  #return
-  ##
-#end def
+*@
+  @#
+  @silent dict['returnValue'] = True
+  @return
+  @#
+@end def
 
-#def insideMomentGroupProcessingNoProcessingCodeLoop(dict)
-#*doc:
+@def insideMomentGroupProcessingNoProcessingCodeLoop(dict)
+@*doc:
 This function is called by the moment group so that we can add to the template
 string that will be used to create a loop to perform the processing. The code
 that this function adds calculates the variance of the sampled variable.
@@ -81,16 +81,16 @@ The passed dictionary 'dict' has the following key:
   - 'caller': The moment group which is letting us modify the template string
 
 The return value is the template string that will be added to the processing loop template.
-*#
-  ##
-  #set $momentGroup = dict['caller']
-_active_${momentGroup.outputField.name}_processed_sd[\${index}] += _active_\${vector.id}[\${index}] * _active_\${vector.id}[\${index}];#slurp
-  ##
-#end def
+*@
+  @#
+  @set $momentGroup = dict['caller']
+_active_${momentGroup.outputField.name}_processed_sd[\${index}] += _active_\${vector.id}[\${index}] * _active_\${vector.id}[\${index}];@slurp
+  @#
+@end def
 
 
-#def writeOutFunctionImplementationBegin(dict)
-#*doc:
+@def writeOutFunctionImplementationBegin(dict)
+@*doc:
 This function is called by the moment group at the start of the write out function
 so that we can do any processing necessary before the sampled (and perhaps processed)
 data is written out. The code that this function adds takes account for the fact that
@@ -110,37 +110,37 @@ The passed dictionary 'dict' has the following keys:
     - 'componentNumber': The component number of this variable.
 
 The return value is the template string that will be 
-*#
-  ##
-  #set $momentGroup = dict['caller']
-  #set $dependentVariables = dict['dependentVariables']
-  ## 
-  ## First we need to modify the variable names that will be written, and add our own.
-  ## We need to change all processed vector components from 'someName' to 'mean_someName'
-  ## and add a variable called 'sd_someName'
-  ##
-  #set $processedVector = $momentGroup.processedVector
-  #set $otherArrayNames = set()
-  ##
-  ## Iterate over a copy because we want to modify the list
-  #for dependentVariable in dependentVariables[:]
-    #if not dependentVariable['name'] in processedVector.components
-      #silent otherArrayNames.add(dependentVariable['arrayName'])
-      #continue
-    #end if
-    ##
-    #set $sdVariable = dependentVariable.copy()
-    ##
-    ## Modify the original
-    #silent dependentVariable['name'] = 'mean_' + dependentVariable['name']
-    ##
-    ## Modify the sd version
-    #silent sdVariable['name'] = 'sd_' + sdVariable['name']
-    #silent sdVariable['arrayName'] += '_sd'
-    ##
-    ## Add the sd variable
-    #silent dependentVariables.append(sdVariable)
-  #end for
+*@
+  @#
+  @set $momentGroup = dict['caller']
+  @set $dependentVariables = dict['dependentVariables']
+  @# 
+  @# First we need to modify the variable names that will be written, and add our own.
+  @# We need to change all processed vector components from 'someName' to 'mean_someName'
+  @# and add a variable called 'sd_someName'
+  @#
+  @set $processedVector = $momentGroup.processedVector
+  @set $otherArrayNames = set()
+  @#
+  @# Iterate over a copy because we want to modify the list
+  @for dependentVariable in dependentVariables[:]
+    @if not dependentVariable['name'] in processedVector.components
+      @silent otherArrayNames.add(dependentVariable['arrayName'])
+      @continue
+    @end if
+    @#
+    @set $sdVariable = dependentVariable.copy()
+    @#
+    @# Modify the original
+    @silent dependentVariable['name'] = 'mean_' + dependentVariable['name']
+    @#
+    @# Modify the sd version
+    @silent sdVariable['name'] = 'sd_' + sdVariable['name']
+    @silent sdVariable['arrayName'] += '_sd'
+    @#
+    @# Add the sd variable
+    @silent dependentVariables.append(sdVariable)
+  @end for
 // Calculate the mean
 _active_\${vector.id}[\${index}] /= (double) _n_paths;
 
@@ -151,13 +151,13 @@ if (_active_\${vector.id}_sd[\${index}] > 0.0) // UNVECTORISABLE
   _active_\${vector.id}_sd[\${index}] = sqrt(_active_\${vector.id}_sd[\${index}] / _n_paths);
 else
   _active_\${vector.id}_sd[\${index}] = 0.0;
-  ##
-  #if len($otherArrayNames)
+  @#
+  @if len($otherArrayNames)
 
 // Calculate other means
-    #for arrayName in $otherArrayNames
+    @for arrayName in $otherArrayNames
 ${arrayName}[\${index}] /= (double) _n_paths;
-    #end for
-  #end if
-  ##
-#end def
+    @end for
+  @end if
+  @#
+@end def

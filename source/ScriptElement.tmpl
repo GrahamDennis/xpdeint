@@ -1,99 +1,106 @@
-#*
+@*
 ScriptElement.tmpl
 
 Created by Graham Dennis on 2007-08-23.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
-*#
-#extends _ScriptElement
+*@
+@extends _ScriptElement
 
-##  Insert code to loop over a vector. 
-##  The contents of the loop are specified by a Cheetah template string,
-##  which has the following variables available:
-##    $vector :   The current vector
-##    $index  :   The index variable name
-##
-##  A simple example for the contents of this loop would be (passed as a templateString)
-##    _active_${vector.id}[${index}] $operation;
-##  Where $operation is some operation. If the templateString doesn't end with a new line,
-##  then one is added automatically.
-##  
-##  The intention is that this function is to be used when you have a very simple operation
-##  to be performed in the same way on a range of vectors in possibly different fields.
-##
-#def loopOverVectorsWithInnerContentTemplate($vectors, $templateString)
-  #assert len($templateString) > 0
-  ##
-  #set $featureOrdering = ['OpenMP']
-  ##
-  ## The template string should end with a new line, if it doesn't we'll add it
-  #if $templateString[-1] != '\n'
-    #set $templateString = $templateString + '\n'
-  #end if
-  ##
-  #set $templateVariables = {'index': '_i0'}
-  #set $innerLoopTemplate = Template($templateString, searchList=[$templateVariables])
-  #for $vector in $vectors
-    ## Set the template's current vector
-    #silent $templateVariables['vector'] = $vector
-${insertCodeForFeatures('loopOverVectorsWithInnerContentTemplateBegin', $featureOrdering)}#slurp
+@#  Insert code to loop over a vector. 
+@#  The contents of the loop are specified by a Cheetah template string,
+@#  which has the following variables available:
+@#    $vector :   The current vector
+@#    $index  :   The index variable name
+@#
+@#  A simple example for the contents of this loop would be (passed as a templateString)
+@#    _active_${vector.id}[${index}] $operation;
+@#  Where $operation is some operation. If the templateString doesn't end with a new line,
+@#  then one is added automatically.
+@#  
+@#  The intention is that this function is to be used when you have a very simple operation
+@#  to be performed in the same way on a range of vectors in possibly different fields.
+@#
+@def loopOverVectorsWithInnerContentTemplate($vectors, $templateString)
+  @assert len($templateString) > 0
+  @#
+  @set $featureOrdering = ['OpenMP']
+  @#
+  @# The template string should end with a new line, if it doesn't we'll add it
+  @if $templateString[-1] != '\n'
+    @set $templateString = $templateString + '\n'
+  @end if
+  @#
+  @set $templateVariables = {'index': '_i0'}
+  @set $settings = {'directiveStartToken': '@',
+                    'commentStartToken': '@\#',
+                    'multiLineCommentStartToken': '@*',
+                    'multiLineCommentEndToken': '*@'
+                   }
+  @set $innerLoopTemplate = Template(source=$templateString,
+                                     searchList=[$templateVariables],
+                                     compilerSettings=$settings)
+  @for $vector in $vectors
+    @# Set the template's current vector
+    @silent $templateVariables['vector'] = $vector
+${insertCodeForFeatures('loopOverVectorsWithInnerContentTemplateBegin', $featureOrdering)}@slurp
 for (long _i0 = 0; _i0 < _${vector.field.name}_size * _${vector.field.name}_${vector.name}_ncomponents; _i0++) {
-  ${innerLoopTemplate, autoIndent=True}#slurp
+  ${innerLoopTemplate, autoIndent=True}@slurp
 }
-  #end for
-#end def
+  @end for
+@end def
 
-##  Insert code to loop over vectors in a single field.
-##  Unlike the previous function, this function loops over a single field
-##  and only provides access to vectors in that field.
-##
-##  The intention is that this function is used where a specific operation
-##  needs to be performed that doesn't require loops over individual dimensions,
-##  and so the resulting code can be simplified, and possibly made easier to
-##  optimise in the future with vectorisation and OpenMP.
-##
-#def loopOverVectorsWithInnerContent($vectors, $innerContent)
-  ## All of the vectors must be in the same field
-  #set $fields = set([v.field for v in $vectors])
-  ##
-  #assert len($fields) == 1
-  #set $field = $anyObject($fields)
-  ##
-  #set $featureOrdering = ['OpenMP']
-  ##
-  #set $blankLineSeparator = ''
-  ##
-  ## Initialise index pointers
-  #for $vector in $vectors
-    ## Don't output a blank line for the first vector
-${blankLineSeparator}#slurp
-    #set $blankLineSeparator = '\n'
-    ##
+@#  Insert code to loop over vectors in a single field.
+@#  Unlike the previous function, this function loops over a single field
+@#  and only provides access to vectors in that field.
+@#
+@#  The intention is that this function is used where a specific operation
+@#  needs to be performed that doesn't require loops over individual dimensions,
+@#  and so the resulting code can be simplified, and possibly made easier to
+@#  optimise in the future with vectorisation and OpenMP.
+@#
+@def loopOverVectorsWithInnerContent($vectors, $innerContent)
+  @# All of the vectors must be in the same field
+  @set $fields = set([v.field for v in $vectors])
+  @#
+  @assert len($fields) == 1
+  @set $field = $anyObject($fields)
+  @#
+  @set $featureOrdering = ['OpenMP']
+  @#
+  @set $blankLineSeparator = ''
+  @#
+  @# Initialise index pointers
+  @for $vector in $vectors
+    @# Don't output a blank line for the first vector
+${blankLineSeparator}@slurp
+    @set $blankLineSeparator = '\n'
+    @#
 unsigned long _${vector.id}_index_pointer = 0;
-    ##
-    #for $componentNumber, $componentName in enumerate($vector.components)
-\#define $componentName _active_${vector.field.name}_${vector.name}[_${vector.field.name}_${vector.name}_index_pointer + $componentNumber]
-    #end for
-  #end for
-  #set $dict = {'vectors': $vectors}
-${insertCodeForFeatures('loopOverVectorsWithInnerContentBegin', $featureOrdering, $dict)}#slurp
+    @#
+    @for $componentNumber, $componentName in enumerate($vector.components)
+#define $componentName _active_${vector.field.name}_${vector.name}[_${vector.field.name}_${vector.name}_index_pointer + $componentNumber]
+    @end for
+  @end for
+  @set $dict = {'vectors': $vectors}
+${insertCodeForFeatures('loopOverVectorsWithInnerContentBegin', $featureOrdering, $dict)}@slurp
 for (long _i0 = 0; _i0 < _${field.name}_size; _i0++) {
-  ${insertCodeForFeaturesInReverseOrder('loopOverVectorsWithInnerContentEnd', $featureOrdering, $dict), autoIndent=True}#slurp
-  ##
-  ${innerContent, autoIndent=True}#slurp
+  ${insertCodeForFeaturesInReverseOrder('loopOverVectorsWithInnerContentEnd', $featureOrdering, $dict), autoIndent=True}@slurp
+  @#
+  ${innerContent, autoIndent=True}@slurp
 
-  #for $vector in $vectors
+  @for $vector in $vectors
   _${vector.id}_index_pointer += _${vector.id}_ncomponents;
-  #end for
+  @end for
 }
-  #for $vector in $vectors
-    #for $componentName in $vector.components
-\#undef $componentName
-    #end for
-  #end for
-  ##
-#end def
+  @for $vector in $vectors
+    @for $componentName in $vector.components
+#undef $componentName
+    @end for
+  @end for
+  @#
+@end def
 
-#*
+@*
   Insert code to loop over a fields points making available the given vectors
   Note that this code asserts that the field that will be iterated over is at
   most as fine as the fields underlying the vectors in each dimension that has
@@ -103,420 +110,420 @@ for (long _i0 = 0; _i0 < _${field.name}_size; _i0++) {
   for the vectors cannot be coarser than $field (in dimensions that have more
   than one point). Though this could be changed if a use-case for this can be
   found such that the meaning of this would be well-defined.
-*#
-#def loopOverFieldInSpaceWithVectorsAndInnerContent($field, $space, $vectors, $innerLoopCode, $indexOverrides = {}, $vectorOverrides=[], $kspaceAscendingOrder = False)
-  #########################################################################################################
-  ## Optional arguments:
-  ##
-  ##  indexOverrides:         instead of looping over a dimension, use a specific value for its index
-  ##                          this should be a dictionary mapping dimension names to a dictionary of
-  ##                          field -> override string pairs.
-  ##                          For example, if you want to override the propagation dimension (t):
-  ##                          { 't': {some_field: 'some_t_index_for_field', some_other_field: 'etc'}}
-  ##
-  ##  vectorOverrides:        instead of causing the component names to be directly mapped to the arrays
-  ##                          create variables for each component
-  ##
-  ##  kspaceAscendingOrder:   Loop over kspace dimensions in strictly ascending order instead of starting
-  ##                          at 0, working up to the maximum value, and then doing the negative values
-  ##                          in increasing order
-  #########################################################################################################
-  ##
-  ## Some vectors will need to have their index pointers set explicitly
-  ## these will include at least those vectors not in field $field
-  #set $vectorsRequiringExplictIndexPointers = filter(lambda x: x.field != field, vectors)
-  ## 
-  ## If we have kspaceAscendingOrder, (and at least one dimension is in fourier space), then
-  ## the vectors in field $field will also need their index pointers set explicitly
-  #if $kspaceAscendingOrder and $space
-    #set $vectorsRequiringExplictIndexPointers = $vectors
-  #end if
-  ##
-  ## Now determine the vectors not requiring explicit index pointers
-  #set $vectorsNotRequiringExplicitIndexPointers = filter(lambda x: x not in vectorsRequiringExplictIndexPointers, vectors)
-  ##
-  #set $indentLevel = 0
-  ##
-  #set $blankLineSeparator = ''
-  ## Initialise index pointers
-  #for $vector in $vectors
-    ## Don't output a blank line for the first vector
-${blankLineSeparator}#slurp
-    #set $blankLineSeparator = '\n'
-    ##
+*@
+@def loopOverFieldInSpaceWithVectorsAndInnerContent($field, $space, $vectors, $innerLoopCode, $indexOverrides = {}, $vectorOverrides=[], $kspaceAscendingOrder = False)
+  @########################################################################################################
+  @# Optional arguments:
+  @#
+  @#  indexOverrides:         instead of looping over a dimension, use a specific value for its index
+  @#                          this should be a dictionary mapping dimension names to a dictionary of
+  @#                          field -> override string pairs.
+  @#                          For example, if you want to override the propagation dimension (t):
+  @#                          { 't': {some_field: 'some_t_index_for_field', some_other_field: 'etc'}}
+  @#
+  @#  vectorOverrides:        instead of causing the component names to be directly mapped to the arrays
+  @#                          create variables for each component
+  @#
+  @#  kspaceAscendingOrder:   Loop over kspace dimensions in strictly ascending order instead of starting
+  @#                          at 0, working up to the maximum value, and then doing the negative values
+  @#                          in increasing order
+  @########################################################################################################
+  @#
+  @# Some vectors will need to have their index pointers set explicitly
+  @# these will include at least those vectors not in field $field
+  @set $vectorsRequiringExplictIndexPointers = filter(lambda x: x.field != field, vectors)
+  @# 
+  @# If we have kspaceAscendingOrder, (and at least one dimension is in fourier space), then
+  @# the vectors in field $field will also need their index pointers set explicitly
+  @if $kspaceAscendingOrder and $space
+    @set $vectorsRequiringExplictIndexPointers = $vectors
+  @end if
+  @#
+  @# Now determine the vectors not requiring explicit index pointers
+  @set $vectorsNotRequiringExplicitIndexPointers = filter(lambda x: x not in vectorsRequiringExplictIndexPointers, vectors)
+  @#
+  @set $indentLevel = 0
+  @#
+  @set $blankLineSeparator = ''
+  @# Initialise index pointers
+  @for $vector in $vectors
+    @# Don't output a blank line for the first vector
+${blankLineSeparator}@slurp
+    @set $blankLineSeparator = '\n'
+    @#
 unsigned long _${vector.field.name}_${vector.name}_index_pointer = 0;
-    #if not $vector in $vectorOverrides
-      ## If $vector isn't in $vectorOverrides, then we want to #define the vector's components
-      #for $componentNumber, $componentName in enumerate($vector.components)
-\#define $componentName _active_${vector.field.name}_${vector.name}[_${vector.field.name}_${vector.name}_index_pointer + $componentNumber]
-      #end for
-    #else
-      ## This $vector is in $vectorOverrides, so instead of #defining, we want to create variables
-      #for $componentName in $vector.components
+    @if not $vector in $vectorOverrides
+      @# If $vector isn't in $vectorOverrides, then we want to @define the vector's components
+      @for $componentNumber, $componentName in enumerate($vector.components)
+#define $componentName _active_${vector.field.name}_${vector.name}[_${vector.field.name}_${vector.name}_index_pointer + $componentNumber]
+      @end for
+    @else
+      @# This $vector is in $vectorOverrides, so instead of @defining, we want to create variables
+      @for $componentName in $vector.components
 $vector.type $componentName;
-      #end for
-    #end if
-  #end for
-  ## loop over geometry dimensions creating dimension variable names for those that
-  ## aren't in this field, but are in any of the $vectors fields, unless we have an index override for it.
-  #for $dimension in $geometry.dimensions
-    #if $field.hasDimension($dimension)
-      #continue
-    #end if
-    ##
-    #if $indexOverrides.has_key($dimension.name)
-      #continue
-    #end if
-    ##
-    #set $vectorsWithThisDimension = filter(lambda x: x.field.hasDimension(dimension), $vectors)
-    #if len($vectorsWithThisDimension) == 0
-      #continue
-    #end if
+      @end for
+    @end if
+  @end for
+  @# loop over geometry dimensions creating dimension variable names for those that
+  @# aren't in this field, but are in any of the $vectors fields, unless we have an index override for it.
+  @for $dimension in $geometry.dimensions
+    @if $field.hasDimension($dimension)
+      @continue
+    @end if
+    @#
+    @if $indexOverrides.has_key($dimension.name)
+      @continue
+    @end if
+    @#
+    @set $vectorsWithThisDimension = filter(lambda x: x.field.hasDimension(dimension), $vectors)
+    @if len($vectorsWithThisDimension) == 0
+      @continue
+    @end if
 
-    #if $dimensionIsInFourierSpace($dimension, $space)
-      ## If the current dimension is in fourier space
+    @if $dimensionIsInFourierSpace($dimension, $space)
+      @# If the current dimension is in fourier space
 double k${dimension.name} = 0.0;
-    #else
-      ## If the dimension isn't in fourier space
-      #set $fieldWithDimension = $vectorsWithThisDimension[0].field
-double ${dimension.name} = _${fieldWithDimension.name}_xmin${fieldWithDimension.indexOfDimension($dimension)}#slurp
+    @else
+      @# If the dimension isn't in fourier space
+      @set $fieldWithDimension = $vectorsWithThisDimension[0].field
+double ${dimension.name} = _${fieldWithDimension.name}_xmin${fieldWithDimension.indexOfDimension($dimension)}@slurp
  + (_${fieldWithDimension.name}_lattice${fieldWithDimension.indexOfDimension($dimension)}/2) * _${fieldWithDimension.name}_dx${fieldWithDimension.indexOfDimension($dimension)};
-    #end if
-  #end for
+    @end if
+  @end for
 
-  ##
-  ## loop over the dimensions opening the loops
-  #set $lastLoopDimension = None
-  #for $dimension in $field.dimensions
-    ##
-    #if not $indexOverrides.has_key($dimension.name)
-      ## If there isn't an indexOverride for this dimension, then open a loop
-      #set $lastLoopDimension = $dimension
-${openLoopForDimensionInFieldInSpace($dimension, $field, $space, $vectors, $kspaceAscendingOrder), extraIndent=$indentLevel}#slurp
-      #set $indentLevel = $indentLevel + 2
-    #else
-      ## We have an indexOverride for this dimension. 
-${prologueForOverriddenDimensionInFieldInSpaceWithVectors($dimension, $field, $space, $vectors, $indexOverrides), extraIndent=$indentLevel}#slurp
-    #end if
-    ##
-  #end for $dimension in $field.dimensions
+  @#
+  @# loop over the dimensions opening the loops
+  @set $lastLoopDimension = None
+  @for $dimension in $field.dimensions
+    @#
+    @if not $indexOverrides.has_key($dimension.name)
+      @# If there isn't an indexOverride for this dimension, then open a loop
+      @set $lastLoopDimension = $dimension
+${openLoopForDimensionInFieldInSpace($dimension, $field, $space, $vectors, $kspaceAscendingOrder), extraIndent=$indentLevel}@slurp
+      @set $indentLevel = $indentLevel + 2
+    @else
+      @# We have an indexOverride for this dimension. 
+${prologueForOverriddenDimensionInFieldInSpaceWithVectors($dimension, $field, $space, $vectors, $indexOverrides), extraIndent=$indentLevel}@slurp
+    @end if
+    @#
+  @end for $dimension in $field.dimensions
 
-#set $result = $setExplicitIndexPointersForVectorsWithFieldAndSpace($vectorsRequiringExplictIndexPointers, $field, $space, $indexOverrides)
-## Don't bother writing it out unless it contains more than the comment line
-#if $result and $result.count('\n') > 1
-${result, extraIndent=$indentLevel}#slurp
-#end if
+@set $result = $setExplicitIndexPointersForVectorsWithFieldAndSpace($vectorsRequiringExplictIndexPointers, $field, $space, $indexOverrides)
+@# Don't bother writing it out unless it contains more than the comment line
+@if $result and $result.count('\n') > 1
+${result, extraIndent=$indentLevel}@slurp
+@end if
 
-${innerLoopCode, extraIndent=$indentLevel}#slurp
-${epilogueToIntegrateOverriddenVectorsForSamplingFieldInSpace($vectorOverrides, $field, $space), extraIndent=$indentLevel}#slurp
+${innerLoopCode, extraIndent=$indentLevel}@slurp
+${epilogueToIntegrateOverriddenVectorsForSamplingFieldInSpace($vectorOverrides, $field, $space), extraIndent=$indentLevel}@slurp
 
-  #if $lastLoopDimension
-    ## Increment the index pointers. This needs to be in a function in order to be able
-    ## to use the variable indentation required
-${incrementIndexPointersForVectorsWithFieldAndSpaceAndLastLoopDimension($vectorsNotRequiringExplicitIndexPointers, $field, $space, $lastLoopDimension), extraIndent=$indentLevel}#slurp
-  #end if
-  ##
-  ## loop over the dimensions (in reverse order) closing the loops
-  #set $reversedFieldDimensions = $field.dimensions[:]
-  #silent $reversedFieldDimensions.reverse()
-  ##
-  #for $dimension in $reversedFieldDimensions
-    ##
-    ## If there isn't an indexOverride for this dimension, then reduce the indent and close the loop
-    #if not $indexOverrides.has_key($dimension.name)
-      #set $indentLevel = $indentLevel - 2
-${closeLoopForDimensionInFieldInSpace($dimension, $field, $space, $kspaceAscendingOrder), extraIndent=$indentLevel}#slurp
-    #end if
-    ##
-  #end for
-  ##
-  ## Undefine vector components that weren't in $vectorOverrides
-  #for $vector in $vectors
-    #if $vector in $vectorOverrides
-      #continue
-    #end if
-    #for $componentName in $vector.components
-\#undef $componentName
-    #end for
-  #end for
-  ##
-#end def
+  @if $lastLoopDimension
+    @# Increment the index pointers. This needs to be in a function in order to be able
+    @# to use the variable indentation required
+${incrementIndexPointersForVectorsWithFieldAndSpaceAndLastLoopDimension($vectorsNotRequiringExplicitIndexPointers, $field, $space, $lastLoopDimension), extraIndent=$indentLevel}@slurp
+  @end if
+  @#
+  @# loop over the dimensions (in reverse order) closing the loops
+  @set $reversedFieldDimensions = $field.dimensions[:]
+  @silent $reversedFieldDimensions.reverse()
+  @#
+  @for $dimension in $reversedFieldDimensions
+    @#
+    @# If there isn't an indexOverride for this dimension, then reduce the indent and close the loop
+    @if not $indexOverrides.has_key($dimension.name)
+      @set $indentLevel = $indentLevel - 2
+${closeLoopForDimensionInFieldInSpace($dimension, $field, $space, $kspaceAscendingOrder), extraIndent=$indentLevel}@slurp
+    @end if
+    @#
+  @end for
+  @#
+  @# Undefine vector components that weren't in $vectorOverrides
+  @for $vector in $vectors
+    @if $vector in $vectorOverrides
+      @continue
+    @end if
+    @for $componentName in $vector.components
+#undef $componentName
+    @end for
+  @end for
+  @#
+@end def
 
 
-#*
+@*
   Open loop for dimension $dimension in field $field.
-*#
-#def openLoopForDimensionInFieldInSpace($dimension, $field, $space, $vectors, $kspaceAscendingOrder)
-  ##
-  #set $fieldDimensionNumber    = $field.indexOfDimension($dimension)
-  #set $featureOrdering = ['OpenMP']
-  ##
-  #if $dimensionIsInFourierSpace($dimension, $space)
-    ## If the current dimension is in fourier space
-    #if not $kspaceAscendingOrder
-      ## If we are looping in memory order
+*@
+@def openLoopForDimensionInFieldInSpace($dimension, $field, $space, $vectors, $kspaceAscendingOrder)
+  @#
+  @set $fieldDimensionNumber    = $field.indexOfDimension($dimension)
+  @set $featureOrdering = ['OpenMP']
+  @#
+  @if $dimensionIsInFourierSpace($dimension, $space)
+    @# If the current dimension is in fourier space
+    @if not $kspaceAscendingOrder
+      @# If we are looping in memory order
 double k${dimension.name} = 0;
-    #else
-      ## We are looping in ascending order
+    @else
+      @# We are looping in ascending order
 double k${dimension.name} = -(_${field.name}_lattice${fieldDimensionNumber}/2) * _${field.name}_dk${fieldDimensionNumber};
-    #end if
-\#define dk${dimension.name} _${field.name}_dk${fieldDimensionNumber}
-  #else
-    ## If the current dimension is in x space
-    ##
-    ## Do things slightly differently if we have a dimension override for this dimension
-    #if not $dimension in $field.dimensionOverrides
+    @end if
+#define dk${dimension.name} _${field.name}_dk${fieldDimensionNumber}
+  @else
+    @# If the current dimension is in x space
+    @#
+    @# Do things slightly differently if we have a dimension override for this dimension
+    @if not $dimension in $field.dimensionOverrides
 double ${dimension.name} = _${field.name}_xmin${fieldDimensionNumber};
-\#define d${dimension.name} _${field.name}_dx${fieldDimensionNumber}
-    #else
-\#define ${dimension.name} _${dimension.override.name}_x${dimension.override.indexOfDimension($dimension)}[_i${fieldDimensionNumber}]
-    #end if
-    ##
-  #end if
+#define d${dimension.name} _${field.name}_dx${fieldDimensionNumber}
+    @else
+#define ${dimension.name} _${dimension.override.name}_x${dimension.override.indexOfDimension($dimension)}[_i${fieldDimensionNumber}]
+    @end if
+    @#
+  @end if
 
-  #set $dict = {'dimension': $dimension, 'field': $field, 'vectors': $vectors}
-${insertCodeForFeatures('openLoopForDimensionInFieldInSpaceBegin', $featureOrdering, $dict)}#slurp
-  #if not ($kspaceAscendingOrder and $dimensionIsInFourierSpace($dimension, $space))
-    ## Standard behaviour
+  @set $dict = {'dimension': $dimension, 'field': $field, 'vectors': $vectors}
+${insertCodeForFeatures('openLoopForDimensionInFieldInSpaceBegin', $featureOrdering, $dict)}@slurp
+  @if not ($kspaceAscendingOrder and $dimensionIsInFourierSpace($dimension, $space))
+    @# Standard behaviour
 for (long _i${fieldDimensionNumber} = 0; _i${fieldDimensionNumber} < _${field.name}_lattice${fieldDimensionNumber}; _i${fieldDimensionNumber}++) {
-  #else
-    ## Non-standard behaviour: this dimension is in kspace and we are asked to loop over it in ascending order
+  @else
+    @# Non-standard behaviour: this dimension is in kspace and we are asked to loop over it in ascending order
 for (long _j${fieldDimensionNumber} = -(_${field.name}_lattice${fieldDimensionNumber}/2); _j${fieldDimensionNumber} < (_${field.name}_lattice${fieldDimensionNumber} + 1)/2; _j${fieldDimensionNumber}++) {
   long _i${fieldDimensionNumber} = _j${fieldDimensionNumber};
   if (_i${fieldDimensionNumber} < 0)
     _i${fieldDimensionNumber} += _${field.name}_lattice${fieldDimensionNumber};
-  #end if
-  ${insertCodeForFeaturesInReverseOrder('openLoopForDimensionInFieldInSpaceEnd', $featureOrdering, $dict), autoIndent=True}#slurp
-  ##
-#end def
+  @end if
+  ${insertCodeForFeaturesInReverseOrder('openLoopForDimensionInFieldInSpaceEnd', $featureOrdering, $dict), autoIndent=True}@slurp
+  @#
+@end def
 
 
-#*
+@*
   Insert prologue for dimension $dimension when its index variable has been overridden
-*#
-#def prologueForOverriddenDimensionInFieldInSpaceWithVectors($dimension, $field, $space, $vectors, $indexOverrides)
-  ##
-  #set $fieldDimensionNumber    = $field.indexOfDimension($dimension)
-  ##
-  ## As this field contains this dimension, we must make sure that the indexOverride dictionary contains
-  ## a value for this field
-  #assert $indexOverrides[$dimension.name].has_key($field)
-  ##
+*@
+@def prologueForOverriddenDimensionInFieldInSpaceWithVectors($dimension, $field, $space, $vectors, $indexOverrides)
+  @#
+  @set $fieldDimensionNumber    = $field.indexOfDimension($dimension)
+  @#
+  @# As this field contains this dimension, we must make sure that the indexOverride dictionary contains
+  @# a value for this field
+  @assert $indexOverrides[$dimension.name].has_key($field)
+  @#
 unsigned long _i${fieldDimensionNumber} = ${indexOverrides[$dimension.name][$field]};
-  ## loop over the vectors in field $field, because we need to fix up their index pointers
-  #for $vector in filter(lambda x: x.field == field, vectors)
-_${vector.field.name}_${vector.name}_index_pointer += _i${fieldDimensionNumber}#slurp
+  @# loop over the vectors in field $field, because we need to fix up their index pointers
+  @for $vector in filter(lambda x: x.field == field, vectors)
+_${vector.field.name}_${vector.name}_index_pointer += _i${fieldDimensionNumber}@slurp
  * ${field.pointsInDimensionsWithIndices(range($fieldDimensionNumber + 1, len($field.dimensions)))};
-  #end for
+  @end for
 
-  ##
-#end def
+  @#
+@end def
 
 
-#*
+@*
   Set index pointers for those vectors requiring it to be set explicitly
-*#
-#def setExplicitIndexPointersForVectorsWithFieldAndSpace($vectors, $field, $space, $indexOverrides)
-  ##
-  #if len($vectors) == 0
-    #return
-  #end if
-  ## For the vectors that are not in the field $field, set their index pointers
+*@
+@def setExplicitIndexPointersForVectorsWithFieldAndSpace($vectors, $field, $space, $indexOverrides)
+  @#
+  @if len($vectors) == 0
+    @return
+  @end if
+  @# For the vectors that are not in the field $field, set their index pointers
 // Set index pointers explicitly for (some) vectors
-  #for $vector in $vectors
-    ## There's no need to (re-)set the index pointer for fields that have no dimensions
-    #unless $vector.field.dimensions
-      #continue
-    #end unless
-    ##
-_${vector.field.name}_${vector.name}_index_pointer = ( 0#slurp
-    #for $dimension in $vector.field.dimensions
-      ## Blank line for output formatting
+  @for $vector in $vectors
+    @# There's no need to (re-)set the index pointer for fields that have no dimensions
+    @unless $vector.field.dimensions
+      @continue
+    @end unless
+    @#
+_${vector.field.name}_${vector.name}_index_pointer = ( 0@slurp
+    @for $dimension in $vector.field.dimensions
+      @# Blank line for output formatting
 
-      ## Not all of the dimensions in the vector's field's dimensions will necessarily
-      ## be in $field's dimensions, and we need to do slightly different things when they
-      ## aren't in $field's dimensions.
-      ##
-      ##
-      ## First, check the case that they both have this dimension
-      #set $vectorDimensionNumber = $vector.field.indexOfDimension($dimension)
-      ##
-      #if $field.hasDimension($dimension)
-        ## First, consider when they both contain this dimension
-        ##
-        #set $fieldDimensionNumber = $field.indexOfDimension($dimension)
-        #set $fieldDimension = $field.dimensions[$fieldDimensionNumber]
-        ##
-        #if $dimensionIsInFourierSpace($dimension, $space)
-          ## This dimension is in fourier space
-          #assert $dimension.lattice >= $fieldDimension.lattice
+      @# Not all of the dimensions in the vector's field's dimensions will necessarily
+      @# be in $field's dimensions, and we need to do slightly different things when they
+      @# aren't in $field's dimensions.
+      @#
+      @#
+      @# First, check the case that they both have this dimension
+      @set $vectorDimensionNumber = $vector.field.indexOfDimension($dimension)
+      @#
+      @if $field.hasDimension($dimension)
+        @# First, consider when they both contain this dimension
+        @#
+        @set $fieldDimensionNumber = $field.indexOfDimension($dimension)
+        @set $fieldDimension = $field.dimensions[$fieldDimensionNumber]
+        @#
+        @if $dimensionIsInFourierSpace($dimension, $space)
+          @# This dimension is in fourier space
+          @assert $dimension.lattice >= $fieldDimension.lattice
   + ( _i${fieldDimensionNumber} + (signbit(k${dimension.name}) ? (_${vector.field.name}_lattice${vectorDimensionNumber} - _${field.name}_lattice${fieldDimensionNumber}) : 0 ))
-      * $vector.field.pointsInDimensionsWithIndices(range($vectorDimensionNumber + 1, len($vector.field.dimensions)))#slurp
-        #else
-          ## This dimension isn't in fourier space
-          #assert ($dimension.lattice % $fieldDimension.lattice) == 0
-  + _i${fieldDimensionNumber} * (_${vector.field.name}_lattice${vectorDimensionNumber}/_${field.name}_lattice${fieldDimensionNumber})#slurp
- * $vector.field.pointsInDimensionsWithIndices(range($vectorDimensionNumber + 1, len($vector.field.dimensions)))#slurp
-        #end if
-      #else
-        ## Now, consider when $field doesn't contain this dimension. If this dimension has an index override, then
-        ## use the index pointers from that.
-        #if $indexOverrides.has_key($dimension.name)
-          ## We do have an index override for this dimension
-          ##
-          ## Check that we actually have an entry for this vector's field
-          #assert $indexOverrides[$dimension.name].has_key($vector.field)
-  + ${indexOverrides[$dimension.name][$vector.field]}#slurp
- * $vector.field.pointsInDimensionsWithIndices(range($vectorDimensionNumber + 1, len($vector.field.dimensions)))#slurp
-        #else
-          ## We don't have an index override for this dimension.
-          ## What happens in this case depends on whether or not the vector
-          ## is in fourier space in this dimension. If it is, then we want to take its
-          ## value at k=0 (the first element in this dimension). If it isn't in fourier
-          ## space, then we want to take its element in the middle.
-          ##
-          #if $dimensionIsInFourierSpace($dimension, $space)
-            ## This dimension is in fourier space, so there's nothing to do, because we want the value for k=0,
-            ## which is the first element
-            #pass
-          #else
-            ## This dimension isn't in fourier space
-  + (_${vector.field.name}_lattice${vectorDimensionNumber}/2)#slurp
- * $vector.field.pointsInDimensionsWithIndices(range($vectorDimensionNumber + 1, len($vector.field.dimensions)))#slurp
-          #end if
-        #end if
-      #end if
-    #end for
+      * $vector.field.pointsInDimensionsWithIndices(range($vectorDimensionNumber + 1, len($vector.field.dimensions)))@slurp
+        @else
+          @# This dimension isn't in fourier space
+          @assert ($dimension.lattice % $fieldDimension.lattice) == 0
+  + _i${fieldDimensionNumber} * (_${vector.field.name}_lattice${vectorDimensionNumber}/_${field.name}_lattice${fieldDimensionNumber})@slurp
+ * $vector.field.pointsInDimensionsWithIndices(range($vectorDimensionNumber + 1, len($vector.field.dimensions)))@slurp
+        @end if
+      @else
+        @# Now, consider when $field doesn't contain this dimension. If this dimension has an index override, then
+        @# use the index pointers from that.
+        @if $indexOverrides.has_key($dimension.name)
+          @# We do have an index override for this dimension
+          @#
+          @# Check that we actually have an entry for this vector's field
+          @assert $indexOverrides[$dimension.name].has_key($vector.field)
+  + ${indexOverrides[$dimension.name][$vector.field]}@slurp
+ * $vector.field.pointsInDimensionsWithIndices(range($vectorDimensionNumber + 1, len($vector.field.dimensions)))@slurp
+        @else
+          @# We don't have an index override for this dimension.
+          @# What happens in this case depends on whether or not the vector
+          @# is in fourier space in this dimension. If it is, then we want to take its
+          @# value at k=0 (the first element in this dimension). If it isn't in fourier
+          @# space, then we want to take its element in the middle.
+          @#
+          @if $dimensionIsInFourierSpace($dimension, $space)
+            @# This dimension is in fourier space, so there's nothing to do, because we want the value for k=0,
+            @# which is the first element
+            @pass
+          @else
+            @# This dimension isn't in fourier space
+  + (_${vector.field.name}_lattice${vectorDimensionNumber}/2)@slurp
+ * $vector.field.pointsInDimensionsWithIndices(range($vectorDimensionNumber + 1, len($vector.field.dimensions)))@slurp
+          @end if
+        @end if
+      @end if
+    @end for
  ) * _${vector.field.name}_${vector.name}_ncomponents;
-  #end for
-  ##
-#end def
+  @end for
+  @#
+@end def
 
 
-#*
+@*
   Integrate the overridden vectors
-*#
-#def epilogueToIntegrateOverriddenVectorsForSamplingFieldInSpace($vectorOverrides, $field, $space)
-  ##
-  ## Loop over the overridden vectors
-  #for $vector in $vectorOverrides
+*@
+@def epilogueToIntegrateOverriddenVectorsForSamplingFieldInSpace($vectorOverrides, $field, $space)
+  @#
+  @# Loop over the overridden vectors
+  @for $vector in $vectorOverrides
 
-    ## Determine which dimensions are being integrated over (if any)
-    ## These are the ones that are in $field, but not in the vector's field
-    #set $dimensionsIntegratedOver = filter(lambda x: not vector.field.hasDimension(x), $field.dimensions)
-    ##
-    ## Loop over the components in each vector
-    #for $componentNumber, $componentName in enumerate($vector.components)
-_active_${vector.field.name}_${vector.name}[_${vector.field.name}_${vector.name}_index_pointer + ${componentNumber}] += ${componentName}#slurp  
-      ## Loop over the dimensions
-      #for $dimension in $dimensionsIntegratedOver
-        #if $dimensionIsInFourierSpace($dimension, $space)
-          ## This dimension is in fourier space
- * _${field.name}_dk${field.indexOfDimension($dimension)}#slurp
-        #else
-          ## This dimension is not in fourier space
- * _${field.name}_dx${field.indexOfDimension($dimension)}#slurp
-        #end if
-      #end for
+    @# Determine which dimensions are being integrated over (if any)
+    @# These are the ones that are in $field, but not in the vector's field
+    @set $dimensionsIntegratedOver = filter(lambda x: not vector.field.hasDimension(x), $field.dimensions)
+    @#
+    @# Loop over the components in each vector
+    @for $componentNumber, $componentName in enumerate($vector.components)
+_active_${vector.field.name}_${vector.name}[_${vector.field.name}_${vector.name}_index_pointer + ${componentNumber}] += ${componentName}@slurp  
+      @# Loop over the dimensions
+      @for $dimension in $dimensionsIntegratedOver
+        @if $dimensionIsInFourierSpace($dimension, $space)
+          @# This dimension is in fourier space
+ * _${field.name}_dk${field.indexOfDimension($dimension)}@slurp
+        @else
+          @# This dimension is not in fourier space
+ * _${field.name}_dx${field.indexOfDimension($dimension)}@slurp
+        @end if
+      @end for
 ;
-    #end for
-  #end for
-  ##
-#end def
+    @end for
+  @end for
+  @#
+@end def
 
 
-#*
+@*
   Increment index pointers but only for those in field $field.
-*#
-#def incrementIndexPointersForVectorsWithFieldAndSpaceAndLastLoopDimension($vectors, $field, $space, $lastLoopDimension)
-  ##
-  ## For the vectors that are in the field $field, increment their index pointers.
-  ##
-  ## If none of $vectors have field $field, then there's nothing to do
-  #if len($vectors) == 0
-    #return
-  #end if
+*@
+@def incrementIndexPointersForVectorsWithFieldAndSpaceAndLastLoopDimension($vectors, $field, $space, $lastLoopDimension)
+  @#
+  @# For the vectors that are in the field $field, increment their index pointers.
+  @#
+  @# If none of $vectors have field $field, then there's nothing to do
+  @if len($vectors) == 0
+    @return
+  @end if
 // Increment index pointers for vectors in field $field.name
-  #for $vector in $vectors
-    ## We can only do this for vectors in $field
-    #assert $vector.field == $field
-    ##
-    ## Now we need to increment the vector
-    ## We need to know the last loop dimension because we could be looping over the second last dimension and not the last
-    ## because the last was overridden by an indexOverride. Hence the step may not be _stuff_ncomponents,
-    ## but _stuff_latticeN * _stuff_ncomponents (etc.)
-    ## Currently, I can't see why indexOverrides would be used for dimensions at the end (or in the middle), but hey,
-    ## I better make sure it works.
-_${vector.field.name}_${vector.name}_index_pointer += #slurp
-    ## If the lastLoopDimension isn't the last dimension of the field, we need to multiply by a stride
-    #if $lastLoopDimension != $field.dimensions[len($field.dimensions)-1]
-$field.pointsInDimensionsWithIndices(range($field.indexOfDimension($lastLoopDimension)+1,len($field.dimensions))) * #slurp
-    #end if
+  @for $vector in $vectors
+    @# We can only do this for vectors in $field
+    @assert $vector.field == $field
+    @#
+    @# Now we need to increment the vector
+    @# We need to know the last loop dimension because we could be looping over the second last dimension and not the last
+    @# because the last was overridden by an indexOverride. Hence the step may not be _stuff_ncomponents,
+    @# but _stuff_latticeN * _stuff_ncomponents (etc.)
+    @# Currently, I can't see why indexOverrides would be used for dimensions at the end (or in the middle), but hey,
+    @# I better make sure it works.
+_${vector.field.name}_${vector.name}_index_pointer += @slurp
+    @# If the lastLoopDimension isn't the last dimension of the field, we need to multiply by a stride
+    @if $lastLoopDimension != $field.dimensions[len($field.dimensions)-1]
+$field.pointsInDimensionsWithIndices(range($field.indexOfDimension($lastLoopDimension)+1,len($field.dimensions))) * @slurp
+    @end if
 _${vector.field.name}_${vector.name}_ncomponents;
-  #end for
+  @end for
 
-  ##
-#end def
+  @#
+@end def
 
 
-#*
+@*
   Close loop for dimension $dimension in field $field.
-*#
-#def closeLoopForDimensionInFieldInSpace($dimension, $field, $space, $kspaceAscendingOrder)
-  ##
-  #set $fieldDimensionNumber = $field.indexOfDimension($dimension)
-  ##
-  #if $dimensionIsInFourierSpace($dimension, $space)
-    ## If the current dimension is in fourier space
+*@
+@def closeLoopForDimensionInFieldInSpace($dimension, $field, $space, $kspaceAscendingOrder)
+  @#
+  @set $fieldDimensionNumber = $field.indexOfDimension($dimension)
+  @#
+  @if $dimensionIsInFourierSpace($dimension, $space)
+    @# If the current dimension is in fourier space
   k${dimension.name} += _${field.name}_dk${fieldDimensionNumber};
-  #if not $kspaceAscendingOrder
-    ## If we are looping in memory order, we may need to wrap
-  ${wrapKSpaceCoordinateForDimensionInField($dimension, $field), autoIndent=True}#slurp
-  #end if
-\#undef dk${dimension.name}
-  #else
-    ## If the current dimension is in x space
-    ##
-    ## Do things slightly differently if this dimension is overridden
-    #if not $dimension in $field.dimensionOverrides
+  @if not $kspaceAscendingOrder
+    @# If we are looping in memory order, we may need to wrap
+  ${wrapKSpaceCoordinateForDimensionInField($dimension, $field), autoIndent=True}@slurp
+  @end if
+#undef dk${dimension.name}
+  @else
+    @# If the current dimension is in x space
+    @#
+    @# Do things slightly differently if this dimension is overridden
+    @if not $dimension in $field.dimensionOverrides
   ${dimension.name} += _${field.name}_dx${fieldDimensionNumber};
-\#undef d${dimension.name}
-    #else
-\#undef ${dimension.name}
-    #end if
-  #end if
+#undef d${dimension.name}
+    @else
+#undef ${dimension.name}
+    @end if
+  @end if
 }
-  ##
-#end def
+  @#
+@end def
 
 
-#def wrapKSpaceCoordinateForDimensionInField($dimension, $field)
-#*doc:
+@def wrapKSpaceCoordinateForDimensionInField($dimension, $field)
+@*doc:
 Wrap kspace coordinate variable if necessary
-*#
-  ##
-  #set $dimensionNumber = $field.indexOfDimension($dimension)
-  ##
+*@
+  @#
+  @set $dimensionNumber = $field.indexOfDimension($dimension)
+  @#
 if ( k${dimension.name} > ((_${field.name}_lattice${dimensionNumber} - 1)/2 + 0.1) * _${field.name}_dk${dimensionNumber})
   k${dimension.name} -= _${field.name}_lattice${dimensionNumber} * _${field.name}_dk${dimensionNumber};
-  ##
-#end def
+  @#
+@end def
 
 
-#def transformVectorsToSpace($vectors, $space)
-#*doc:
+@def transformVectorsToSpace($vectors, $space)
+@*doc:
 Transform vectors $vectors to space $space.
-*#
-  ##
-  #for $vector in $vectors
-    #if not $vector.needsFourierTransforms
-      ## If the vector doesn't think it needs fourier transforms, then we can't
-      ## actually transform it. This is OK provided the space we want to go to
-      ## is the same as the vector's initial space.
-      #assert ($space & $vector.field.spaceMask) == $vector.initialSpace
-      #continue
-    #end if
+*@
+  @#
+  @for $vector in $vectors
+    @if not $vector.needsFourierTransforms
+      @# If the vector doesn't think it needs fourier transforms, then we can't
+      @# actually transform it. This is OK provided the space we want to go to
+      @# is the same as the vector's initial space.
+      @assert ($space & $vector.field.spaceMask) == $vector.initialSpace
+      @continue
+    @end if
 _${vector.field.name}_${vector.name}_go_space($space);
-  #end for
-  ##
-#end def
+  @end for
+  @#
+@end def

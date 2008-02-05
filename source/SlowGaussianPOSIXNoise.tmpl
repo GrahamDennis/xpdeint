@@ -1,19 +1,19 @@
-#*
+@*
 SlowGaussianPOSIXNoise.tmpl
 
 Created by Graham Dennis on 2007-12-11.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
-*#
-#extends POSIXNoise
+*@
+@extends POSIXNoise
 
-#def description: (Slow) Gaussian noise
-#attr $noiseDistribution = 'gaussian'
+@def description: (Slow) Gaussian noise
+@attr $noiseDistribution = 'gaussian'
 
-#*
+@*
   Make noises
-*#
-#def makeNoises
-  ##
+*@
+@def makeNoises
+  @#
 const unsigned long _evenNoises = _n & ~1;
 for (long _i0 = 0; _i0 < _evenNoises; _i0 += 2) {
   const double _mag = sqrt(-2*log(erand48(${generatorName}))*_var);
@@ -39,5 +39,5 @@ if (_n & 1) {
     _spareNoiseAvailable = true;
   }
 }
-  ##
-#end def
+  @#
+@end def

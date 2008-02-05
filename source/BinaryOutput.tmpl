@@ -1,42 +1,42 @@
-#*
+@*
 BinaryOutput.tmpl
 
 Created by Graham Dennis on 2007-09-20.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
-*#
-#extends OutputFeature
+*@
+@extends OutputFeature
 
-#def description: binary output
+@def description: binary output
 
-#def functionPrototypes
-#super
+@def functionPrototypes
+@super
 inline bool _isBigEndian();
-#end def
+@end def
 
-#def functionImplementations
-#super
+@def functionImplementations
+@super
 
 inline bool _isBigEndian()
 {
   static const int i = 1;
   return *(char*)&i == 0;
 }
-#end def
+@end def
 
-#*
+@*
   Write out the data in binary format
-*#
-#def writeOutFunctionImplementationBody($dict)
-  ## The function prototype in which this code is going is:
-  ##  void _mgN_write_out(FILE* _outfile)
-  ## And this code is being automatically indented.
-  ##
-  #set $momentGroup = $dict.momentGroup
-  #set $dependentVariables = $dict.dependentVariables
-  #set $outputType = "double"
-  #if $precision == "single"
-    #set $outputType = "float"
-  #end if
+*@
+@def writeOutFunctionImplementationBody($dict)
+  @# The function prototype in which this code is going is:
+  @#  void _mgN_write_out(FILE* _outfile)
+  @# And this code is being automatically indented.
+  @#
+  @set $momentGroup = $dict.momentGroup
+  @set $dependentVariables = $dict.dependentVariables
+  @set $outputType = "double"
+  @if $precision == "single"
+    @set $outputType = "float"
+  @end if
 
 char *encoding = NULL;
 if (_isBigEndian())
@@ -63,58 +63,58 @@ if ((binaryFile = fopen("${filename}_mg${momentGroup.number}.dat", "wb")) == NUL
   exit(255);
 }
 
-  #set $variableNumber = 0
-  ## Loop over the dimensions creating the output arrays
-  #for $dimension in $momentGroup.outputField.dimensions
+  @set $variableNumber = 0
+  @# Loop over the dimensions creating the output arrays
+  @for $dimension in $momentGroup.outputField.dimensions
 unsigned long _outVarLen${variableNumber} = _${momentGroup.outputField.name}_lattice${momentGroup.outputField.indexOfDimension($dimension)};
 ${outputType}* _outVar${variableNumber} = (${outputType}*) malloc(sizeof(${outputType}) * _outVarLen${variableNumber}); // ${dimensionNameForSpace($dimension, $momentGroup.outputSpace)}
-    #set $variableNumber += 1
-  #end for
+    @set $variableNumber += 1
+  @end for
   
-  ## Loop over the dependent variables creating the output arrays
-  #for $variable in $dependentVariables
+  @# Loop over the dependent variables creating the output arrays
+  @for $variable in $dependentVariables
 unsigned long _outVarLen${variableNumber} = _${momentGroup.outputField.name}_size;
 ${outputType}* _outVar${variableNumber} = (${outputType}*) malloc(sizeof($outputType) * _outVarLen${variableNumber}); // ${variable.name}
-    #set $variableNumber += 1
-  #end for
+    @set $variableNumber += 1
+  @end for
 
 unsigned long _variableIndex = 0;
 
-$loopOverFieldInSpaceWithVectorsAndInnerContent($momentGroup.outputField, $momentGroup.outputSpace, $momentGroup.outputField.vectors, $insideOutputLoops($momentGroup, $dependentVariables), $kspaceAscendingOrder=True)#slurp
-  ## Loop over all of the variables
-  #for $i in range($variableNumber)
+$loopOverFieldInSpaceWithVectorsAndInnerContent($momentGroup.outputField, $momentGroup.outputSpace, $momentGroup.outputField.vectors, $insideOutputLoops($momentGroup, $dependentVariables), $kspaceAscendingOrder=True)@slurp
+  @# Loop over all of the variables
+  @for $i in range($variableNumber)
 
 fwrite(&_outVarLen${i}, sizeof(unsigned long), 1, binaryFile);
 fwrite(_outVar${i}, sizeof(${outputType}), _outVarLen${i}, binaryFile);
 free(_outVar${i});
-  #end for
+  @end for
 
 fclose(binaryFile);
 
 fprintf(_outfile, "    </Stream>\n");
-  ##
-#end def
+  @#
+@end def
 
-#def insideOutputLoops($momentGroup, $dependentVariables)
-  ##
-  #set $variableNumber = 0
-  ## Loop over the dimensions
-  #for $dimension in $momentGroup.outputField.dimensions
-    #set $dimensionNumber = $momentGroup.outputField.indexOfDimension($dimension)
-    #if $dimensionIsInFourierSpace($dimension, $momentGroup.outputSpace)
+@def insideOutputLoops($momentGroup, $dependentVariables)
+  @#
+  @set $variableNumber = 0
+  @# Loop over the dimensions
+  @for $dimension in $momentGroup.outputField.dimensions
+    @set $dimensionNumber = $momentGroup.outputField.indexOfDimension($dimension)
+    @if $dimensionIsInFourierSpace($dimension, $momentGroup.outputSpace)
 _outVar${variableNumber}[_j${dimensionNumber} + (_${momentGroup.outputField.name}_lattice${dimensionNumber})/2] = k${dimension.name};
-    #else
+    @else
 _outVar${variableNumber}[_i${dimensionNumber}] = ${dimension.name};
-    #end if
-    #set $variableNumber += 1
-  #end for
-  ##
-  ## Loop over the dependent variables
-  #for $variable in $dependentVariables
+    @end if
+    @set $variableNumber += 1
+  @end for
+  @#
+  @# Loop over the dependent variables
+  @for $variable in $dependentVariables
 _outVar${variableNumber}[_variableIndex] = ${variable.arrayName}[_${momentGroup.outputField.name}_processed_index_pointer + ${variable.componentNumber}]; // ${variable.name}
-    #set $variableNumber += 1
-  #end for
+    @set $variableNumber += 1
+  @end for
   
 _variableIndex++;
-  ##
-#end def
+  @#
+@end def
