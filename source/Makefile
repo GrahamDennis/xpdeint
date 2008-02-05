@@ -1,14 +1,17 @@
 templates = $(wildcard *.tmpl)
 cheetah_settings = directiveStartToken="@",commentStartToken="@\#",multiLineCommentStartToken="@*",multiLineCommentEndToken="*@"
 
-# compile all the templates
-compile: $(templates:.tmpl=.py)
+.PHONY: compile
+compile: .COMPILE
 
-# How to make a py from a tmpl
-%.py: %.tmpl
-	@cheetah compile --settings='$(cheetah_settings)' $<
+# compile templates as needed
+# this is a bit of a hack. is there a better way?
+.COMPILE: $(templates)
+	@cheetah compile --settings='$(cheetah_settings)' $?
+	@touch .COMPILE
 
 # remove all compiled files
 clean:
+	@rm -f .COMPILE
 	@rm -f *.pyc
 	@rm -f $(templates:.tmpl=.py)
