@@ -43,23 +43,21 @@ class Dimension(object):
       dimension.override = self.override
     
     return dimension
-  
+
   def __eq__(self, other):
-    if not type(other) == type(self):
+    try:
+      return (self.name == other.name and
+              self.transverse == other.transverse and
+              self.lattice == other.lattice and
+              self.minimum == other.minimum and
+              self.maximum == other.maximum and
+              self.type == other.type)
+    except AttributeError:
       return NotImplemented
-    
-    if self.name != other.name \
-       or self.transverse != other.transverse \
-       or self.lattice != other.lattice \
-       or self.minimum != other.minimum \
-       or self.maximum != other.maximum \
-       or self.type != other.type:
-       
-       return False
-    
-    return True
-       
-  
+
   def __ne__(self, other):
-    return not self.__eq__(other)
-  
+    eq = self.__eq__(other)
+    if eq is NotImplemented:
+      return NotImplemented
+    else:
+      return not eq
