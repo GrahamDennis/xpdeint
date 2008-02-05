@@ -1,26 +1,26 @@
-#*
+@*
 VectorInitialisation.tmpl
 
 Created by Graham Dennis on 2007-08-29.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
-*#
-#extends ScriptElement
-#*
+*@
+@extends ScriptElement
+@*
   
   Description of initialisation method
-*#
-#def description: Vector initialisation to zero
+*@
+@def description: Vector initialisation to zero
 
-## Property to define the field that this initialisation will occur in
-#@property
-#def field
-  #return $vector.field
-#end def
+@# Property to define the field that this initialisation will occur in
+@@property
+@def field
+  @return $vector.field
+@end def
 
-#*
+@*
 
   Initialise a vector
-*#
-#def initialiseVector
-$loopOverVectorsWithInnerContentTemplate([$vector], '_active_${vector.id}[$index] = 0.0;')#slurp
-#end def
+*@
+@def initialiseVector
+$loopOverVectorsWithInnerContentTemplate([$vector], '_active_${vector.id}[$index] = 0.0;')@slurp
+@end def

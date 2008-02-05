@@ -1,39 +1,39 @@
-#*
+@*
 PoissonianPOSIXNoise.tmpl
 
 Created by Graham Dennis on 2007-12-14.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
-*#
-#extends POSIXNoise
-#from Decorators import callOncePerClassGuard
+*@
+@extends POSIXNoise
+@from Decorators import callOncePerClassGuard
 
-#def description: Poissonian noise
-#attr $noiseDistribution = 'poissonian'
+@def description: Poissonian noise
+@attr $noiseDistribution = 'poissonian'
 
-#*
+@*
   Make noises
-*#
-#def makeNoises
-  ##
+*@
+@def makeNoises
+  @#
 const double _dVdt = 1.0/_var;
 for (long _i0 = 0; _i0 < _n; _i0++) {
   _noise_vector[_i0] = _var * _poidev(${noiseMeanRate} * _dVdt, ${generatorName});
 }
-  ##
-#end def
+  @#
+@end def
 
-#@callOncePerClassGuard
-#def static_functionPrototypes
-  ##
-  #super
+@@callOncePerClassGuard
+@def static_functionPrototypes
+  @#
+  @super
 double _poidev(double xm, unsigned short* _generator);
-  ##
-#end def
+  @#
+@end def
 
-#@callOncePerClassGuard
-#def static_functionImplementations
-  ##
-  #super
+@@callOncePerClassGuard
+@def static_functionImplementations
+  @#
+  @super
 double _poidev(double xm, unsigned short* _generator)
 {
   static double sq, alxm, g;
@@ -70,5 +70,5 @@ double _poidev(double xm, unsigned short* _generator)
   }
   return em;
 }
-  ##
-#end def
+  @#
+@end def

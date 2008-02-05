@@ -1,36 +1,36 @@
-#*
+@*
 VectorInitialisationCDATA.tmpl
 
 Created by Graham Dennis on 2007-08-29.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
-*#
-#extends VectorInitialisation
-#*
+*@
+@extends VectorInitialisation
+@*
   
   Description of initialisation method
-*#
-#def description: Vector initialisation from CDATA
+*@
+@def description: Vector initialisation from CDATA
 
-#*
+@*
 
   Initialise a vector
-*#
-#def initialiseVector
-  ##
-  #set $featureOrdering = ['Stochastic']
-  ##
-  #set $vectorsToLoopOver = set([$vector])
-  #silent $vectorsToLoopOver.update($dependencies)
-$insertCodeForFeatures('vectorInitialisationBegin', $featureOrdering)#slurp
-$loopOverFieldInSpaceWithVectorsAndInnerContent($vector.field, $vector.initialSpace, $vectorsToLoopOver, $insideInitialisationLoops)#slurp
-$insertCodeForFeaturesInReverseOrder('vectorInitialisationEnd', $featureOrdering)#slurp
-  ##
-#end def
+*@
+@def initialiseVector
+  @#
+  @set $featureOrdering = ['Stochastic']
+  @#
+  @set $vectorsToLoopOver = set([$vector])
+  @silent $vectorsToLoopOver.update($dependencies)
+$insertCodeForFeatures('vectorInitialisationBegin', $featureOrdering)@slurp
+$loopOverFieldInSpaceWithVectorsAndInnerContent($vector.field, $vector.initialSpace, $vectorsToLoopOver, $insideInitialisationLoops)@slurp
+$insertCodeForFeaturesInReverseOrder('vectorInitialisationEnd', $featureOrdering)@slurp
+  @#
+@end def
 
-#def insideInitialisationLoops
+@def insideInitialisationLoops
 
 // ********** Initialisation code ***************
 $initialisationCode
 // **********************************************
 
-#end def
+@end def

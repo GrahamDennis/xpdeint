@@ -1,48 +1,48 @@
-#*
+@*
 FieldElement.tmpl
 
 Created by Graham Dennis on 2007-08-28.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
-*#
-#extends _FieldElement
-#*
+*@
+@extends _FieldElement
+@*
 
   Description of template
-*#
-#def description: field $name
+*@
+@def description: field $name
 
-#*
+@*
 
   Defines needed at the start of the simulation
-*#
-#def defines
-  ##
-\#define _${name}_ndims $len($dimensions)
-  #for $dimensionNumber, $dimension in enumerate($dimensions)
+*@
+@def defines
+  @#
+#define _${name}_ndims $len($dimensions)
+  @for $dimensionNumber, $dimension in enumerate($dimensions)
 
-\#define _${name}_lattice${dimensionNumber}  $dimension.lattice
-\#define _${name}_xmin${dimensionNumber}  $dimension.minimum
-\#define _${name}_xmax${dimensionNumber}  $dimension.maximum
-\#define _${name}_dx${dimensionNumber}  (($dimension.maximum - $dimension.minimum)/(double)_${name}_lattice${dimensionNumber})
-\#define _${name}_dk${dimensionNumber}  (2.0*M_PI/($dimension.maximum - $dimension.minimum))
-  #end for
-\#define _${name}_full_kspace_mask  ${spaceMask} // #slurp
-  #set $separator = ''
-  #for $dimension in $geometry.dimensions
-${separator}${dimension.name}: ${($spaceMask >> $geometry.dimensions.index($dimension)) & 1}#slurp
-    #set $separator = ', '
-  #end for
+#define _${name}_lattice${dimensionNumber}  $dimension.lattice
+#define _${name}_xmin${dimensionNumber}  $dimension.minimum
+#define _${name}_xmax${dimensionNumber}  $dimension.maximum
+#define _${name}_dx${dimensionNumber}  (($dimension.maximum - $dimension.minimum)/(double)_${name}_lattice${dimensionNumber})
+#define _${name}_dk${dimensionNumber}  (2.0*M_PI/($dimension.maximum - $dimension.minimum))
+  @end for
+#define _${name}_full_kspace_mask  ${spaceMask} // @slurp
+  @set $separator = ''
+  @for $dimension in $geometry.dimensions
+${separator}${dimension.name}: ${($spaceMask >> $geometry.dimensions.index($dimension)) & 1}@slurp
+    @set $separator = ', '
+  @end for
   
-  ## Call super to get child implementations
-  #super
-  ##
-#end def
-#*
+  @# Call super to get child implementations
+  @super
+  @#
+@end def
+@*
 
   Globals needed at the start of the simulation
-*#
-#def globals
+*@
+@def globals
 const long _${name}_size = $pointsInDimensionsWithIndices($range($len($dimensions)));
-  ## Call super to get child implementations
-  #super
-#end def
+  @# Call super to get child implementations
+  @super
+@end def

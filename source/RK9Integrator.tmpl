@@ -1,22 +1,22 @@
-#*
+@*
 RK9Integrator.tmpl
 
 Created by Graham Dennis on 2007-10-20.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
-*#
-#extends FixedStepIntegrator
+*@
+@extends FixedStepIntegrator
 
-#def description: segment $segmentNumber (RK9 Integrator)
-#attr $ipPropagationStepFractions = \
+@def description: segment $segmentNumber (RK9 Integrator)
+@attr $ipPropagationStepFractions = \
   [ '1.000000000000000', '0.978260869565217', '0.903704189521999', '0.855556284282999',
     '0.477941176470588', '0.771575563871365', '0.456396464100663', '0.356643356643357',
     '0.517482517482518', '0.931818181818182', '0.749391727493917', '0.332632840343994',
     '0.144927536231884', '0.102040816326531' ]
-#attr $extraIntegrationArrayNames = \
+@attr $extraIntegrationArrayNames = \
   [ 'akafield', 'akbfield', 'akcfield', 'akdfield', 'akefield',
     'akffield', 'akgfield', 'akhfield', 'akifield', 'akjfield' ]
 
-#def initialise
+@def initialise
 // Runge Kutta method constants
 double _a_raw[16];
 double _a[16];
@@ -140,17 +140,17 @@ _c[13] = 0.12691439652445903685643385312168037;
 _c[14] =-0.00052539244262118876455834655383035;
 _c[15] = 1.0/31.0;
 
-  ##
-  #super
-  ##
-#end def
+  @#
+  @super
+  @#
+@end def
 
-#*
+@*
   Single integration step (RK4)
-*#
-#def singleIntegrationStep
-  ##
-${transformVectorsToSpace($vectors, $homeSpace)}#slurp
+*@
+@def singleIntegrationStep
+  @#
+${transformVectorsToSpace($vectors, $homeSpace)}@slurp
 
 // Step 1
 
@@ -158,26 +158,26 @@ ${propagationDimension} += _a[0]*_step;
 
 ${loopOverVectorsWithInnerContentTemplate($vectors,
 """_akafield_${vector.id}[$index] = _${vector.id}[$index];
-""")}#slurp
+""")}@slurp
 
-  #for $vector in $vectors
+  @for $vector in $vectors
 _active_${vector.id} = _${vector.id};
-  #end for
+  @end for
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(+1);
-${goToHomeSpace}#slurp
+${goToHomeSpace}@slurp
 
-  #for $vector in $vectors
+  @for $vector in $vectors
 _active_${vector.id} = _akafield_${vector.id};
-  #end for
+  @end for
 
 // a_k = G[a_k, t]
 _segment${segmentNumber}_calculate_delta_a(_step);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(+1);
-${goToHomeSpace}#slurp
+${goToHomeSpace}@slurp
 
 // Step 2
 
@@ -185,11 +185,11 @@ ${propagationDimension} += _a[1]*_step;
 
 ${loopOverVectorsWithInnerContentTemplate($vectors,
 """_akbfield_${vector.id}[$index] = _${vector.id}[$index] + _b[1][0]*_akafield_${vector.id}[$index];
-""")}#slurp
+""")}@slurp
 
-  #for $vector in $vectors
+  @for $vector in $vectors
 _active_${vector.id} = _akbfield_${vector.id};
-  #end for
+  @end for
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(-2);
@@ -199,7 +199,7 @@ _segment${segmentNumber}_calculate_delta_a(_step);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(+2);
-${goToHomeSpace}#slurp
+${goToHomeSpace}@slurp
 
 // Step 3
 
@@ -207,11 +207,11 @@ ${propagationDimension} += _a[2]*_step;
 
 ${loopOverVectorsWithInnerContentTemplate($vectors,
 """_akcfield_${vector.id}[$index] = _${vector.id}[$index] + _b[2][0]*_akafield_${vector.id}[$index] + _b[2][1]*_akbfield_${vector.id}[$index];
-""")}#slurp
+""")}@slurp
 
-  #for $vector in $vectors
+  @for $vector in $vectors
 _active_${vector.id} = _akcfield_${vector.id};
-  #end for
+  @end for
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(-3);
@@ -221,7 +221,7 @@ _segment${segmentNumber}_calculate_delta_a(_step);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(+3);
-${goToHomeSpace}#slurp
+${goToHomeSpace}@slurp
 
 // Step 4
 
@@ -230,11 +230,11 @@ ${propagationDimension} += _a[3]*_step;
 ${loopOverVectorsWithInnerContentTemplate($vectors,
 """_akdfield_${vector.id}[$index] = _${vector.id}[$index] + _b[3][0]*_akafield_${vector.id}[$index]
     + _b[3][1]*_akbfield_${vector.id}[$index] + _b[3][2]*_akcfield_${vector.id}[$index];
-""")}#slurp
+""")}@slurp
 
-  #for $vector in $vectors
+  @for $vector in $vectors
 _active_${vector.id} = _akdfield_${vector.id};
-  #end for
+  @end for
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(-4);
@@ -244,7 +244,7 @@ _segment${segmentNumber}_calculate_delta_a(_step);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(+4);
-${goToHomeSpace}#slurp
+${goToHomeSpace}@slurp
 
 // Step 5
 
@@ -254,11 +254,11 @@ ${loopOverVectorsWithInnerContentTemplate($vectors,
 """_akefield_${vector.id}[$index] = _${vector.id}[$index] + _b[4][0]*_akafield_${vector.id}[$index]
     + _b[4][1]*_akbfield_${vector.id}[$index] + _b[4][2]*_akcfield_${vector.id}[$index]
     + _b[4][3]*_akdfield_${vector.id}[$index];
-""")}#slurp
+""")}@slurp
 
-  #for $vector in $vectors
+  @for $vector in $vectors
 _active_${vector.id} = _akefield_${vector.id};
-  #end for
+  @end for
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(-5);
@@ -268,7 +268,7 @@ _segment${segmentNumber}_calculate_delta_a(_step);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(+5);
-${goToHomeSpace}#slurp
+${goToHomeSpace}@slurp
 
 // Step 6
 
@@ -277,11 +277,11 @@ ${propagationDimension} += _a[5]*_step;
 ${loopOverVectorsWithInnerContentTemplate($vectors,
 """_akifield_${vector.id}[$index] = _${vector.id}[$index] + _b[5][0]*_akafield_${vector.id}[$index]
     + _b[5][3]*_akdfield_${vector.id}[$index] + _b[5][4]*_akefield_${vector.id}[$index];
-""")}#slurp
+""")}@slurp
 
-  #for $vector in $vectors
+  @for $vector in $vectors
 _active_${vector.id} = _akifield_${vector.id};
-  #end for
+  @end for
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(-6);
@@ -291,7 +291,7 @@ _segment${segmentNumber}_calculate_delta_a(_step);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(+6);
-${goToHomeSpace}#slurp
+${goToHomeSpace}@slurp
 
 // Step 7
 
@@ -301,11 +301,11 @@ ${loopOverVectorsWithInnerContentTemplate($vectors,
 """_akjfield_${vector.id}[$index] = _${vector.id}[$index] + _b[6][0]*_akafield_${vector.id}[$index]
     + _b[6][3]*_akdfield_${vector.id}[$index] + _b[6][4]*_akefield_${vector.id}[$index]
     + _b[6][5]*_akifield_${vector.id}[$index];
-""")}#slurp
+""")}@slurp
 
-  #for $vector in $vectors
+  @for $vector in $vectors
 _active_${vector.id} = _akjfield_${vector.id};
-  #end for
+  @end for
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(-7);
@@ -315,7 +315,7 @@ _segment${segmentNumber}_calculate_delta_a(_step);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(+7);
-${goToHomeSpace}#slurp
+${goToHomeSpace}@slurp
 
 // Step 8
 
@@ -324,11 +324,11 @@ ${propagationDimension} += _a[7]*_step;
 ${loopOverVectorsWithInnerContentTemplate($vectors,
 """_akbfield_${vector.id}[$index] = _${vector.id}[$index] + _b[7][0]*_akafield_${vector.id}[$index]
     + _b[7][5]*_akifield_${vector.id}[$index] + _b[7][6]*_akjfield_${vector.id}[$index];
-""")}#slurp
+""")}@slurp
 
-  #for $vector in $vectors
+  @for $vector in $vectors
 _active_${vector.id} = _akbfield_${vector.id};
-  #end for
+  @end for
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(-8);
@@ -338,7 +338,7 @@ _segment${segmentNumber}_calculate_delta_a(_step);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(+8);
-${goToHomeSpace}#slurp
+${goToHomeSpace}@slurp
 
 // Step 9
 
@@ -348,11 +348,11 @@ ${loopOverVectorsWithInnerContentTemplate($vectors,
 """_akcfield_${vector.id}[$index] = _${vector.id}[$index] + _b[8][0]*_akafield_${vector.id}[$index]
     + _b[8][5]*_akifield_${vector.id}[$index] + _b[8][6]*_akjfield_${vector.id}[$index]
     + _b[8][7]*_akbfield_${vector.id}[$index];
-""")}#slurp
+""")}@slurp
 
-  #for $vector in $vectors
+  @for $vector in $vectors
 _active_${vector.id} = _akcfield_${vector.id};
-  #end for
+  @end for
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(-9);
@@ -362,7 +362,7 @@ _segment${segmentNumber}_calculate_delta_a(_step);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(+9);
-${goToHomeSpace}#slurp
+${goToHomeSpace}@slurp
 
 // Step 10
 
@@ -372,11 +372,11 @@ ${loopOverVectorsWithInnerContentTemplate($vectors,
 """_akdfield_${vector.id}[$index] = _${vector.id}[$index] + _b[9][0]*_akafield_${vector.id}[$index]
     + _b[9][5]*_akifield_${vector.id}[$index] + _b[9][6]*_akjfield_${vector.id}[$index]
     + _b[9][7]*_akbfield_${vector.id}[$index] + _b[9][8]*_akcfield_${vector.id}[$index];
-""")}#slurp
+""")}@slurp
 
-  #for $vector in $vectors
+  @for $vector in $vectors
 _active_${vector.id} = _akdfield_${vector.id};
-  #end for
+  @end for
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(-10);
@@ -386,7 +386,7 @@ _segment${segmentNumber}_calculate_delta_a(_step);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(+10);
-${goToHomeSpace}#slurp
+${goToHomeSpace}@slurp
 
 // Step 11
 
@@ -397,11 +397,11 @@ ${loopOverVectorsWithInnerContentTemplate($vectors,
     + _b[10][5]*_akifield_${vector.id}[$index] + _b[10][6]*_akjfield_${vector.id}[$index]
     + _b[10][7]*_akbfield_${vector.id}[$index] + _b[10][8]*_akcfield_${vector.id}[$index]
     + _b[10][9]*_akdfield_${vector.id}[$index];
-""")}#slurp
+""")}@slurp
 
-  #for $vector in $vectors
+  @for $vector in $vectors
 _active_${vector.id} = _akefield_${vector.id};
-  #end for
+  @end for
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(-11);
@@ -411,7 +411,7 @@ _segment${segmentNumber}_calculate_delta_a(_step);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(+11);
-${goToHomeSpace}#slurp
+${goToHomeSpace}@slurp
 
 // Step 12
 
@@ -422,11 +422,11 @@ ${loopOverVectorsWithInnerContentTemplate($vectors,
     + _b[11][5]*_akifield_${vector.id}[$index] + _b[11][6]*_akjfield_${vector.id}[$index]
     + _b[11][7]*_akbfield_${vector.id}[$index] + _b[11][8]*_akcfield_${vector.id}[$index]
     + _b[11][9]*_akdfield_${vector.id}[$index] + _b[11][10]*_akefield_${vector.id}[$index];
-""")}#slurp
+""")}@slurp
 
-  #for $vector in $vectors
+  @for $vector in $vectors
 _active_${vector.id} = _akffield_${vector.id};
-  #end for
+  @end for
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(-12);
@@ -436,7 +436,7 @@ _segment${segmentNumber}_calculate_delta_a(_step);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(+12);
-${goToHomeSpace}#slurp
+${goToHomeSpace}@slurp
 
 // Step 13
 
@@ -448,11 +448,11 @@ ${loopOverVectorsWithInnerContentTemplate($vectors,
     + _b[12][7]*_akbfield_${vector.id}[$index] + _b[12][8]*_akcfield_${vector.id}[$index]
     + _b[12][9]*_akdfield_${vector.id}[$index] + _b[12][10]*_akefield_${vector.id}[$index]
     + _b[12][11]*_akffield_${vector.id}[$index];
-""")}#slurp
+""")}@slurp
 
-  #for $vector in $vectors
+  @for $vector in $vectors
 _active_${vector.id} = _akgfield_${vector.id};
-  #end for
+  @end for
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(-13);
@@ -462,7 +462,7 @@ _segment${segmentNumber}_calculate_delta_a(_step);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(+13);
-${goToHomeSpace}#slurp
+${goToHomeSpace}@slurp
 
 // Step 14
 
@@ -474,11 +474,11 @@ ${loopOverVectorsWithInnerContentTemplate($vectors,
     + _b[13][7]*_akbfield_${vector.id}[$index] + _b[13][8]*_akcfield_${vector.id}[$index]
     + _b[13][9]*_akdfield_${vector.id}[$index] + _b[13][10]*_akefield_${vector.id}[$index]
     + _b[13][11]*_akffield_${vector.id}[$index] + _b[13][12]*_akgfield_${vector.id}[$index];
-""")}#slurp
+""")}@slurp
 
-  #for $vector in $vectors
+  @for $vector in $vectors
 _active_${vector.id} = _akhfield_${vector.id};
-  #end for
+  @end for
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(-14);
@@ -488,7 +488,7 @@ _segment${segmentNumber}_calculate_delta_a(_step);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(+14);
-${goToHomeSpace}#slurp
+${goToHomeSpace}@slurp
 
 // Step 15 and 16 combined to reduce memory use
 
@@ -511,27 +511,27 @@ _akjfield_${vector.id}[$index] = (1-_b[15][5]/_b[14][5])*_${vector.id}[$index]
     + (_b[15][11]-_b[14][11]*_b[15][5]/_b[14][5])*_akffield_${vector.id}[$index]
     + (_b[15][12]-_b[14][12]*_b[15][5]/_b[14][5])*_akgfield_${vector.id}[$index]
     + (_b[15][13]-_b[14][13]*_b[15][5]/_b[14][5])*_akhfield_${vector.id}[$index];
-""")}#slurp
+""")}@slurp
 
 ${propagationDimension} += _a[14]*_step;
 
-  #for $vector in $vectors
+  @for $vector in $vectors
 _active_${vector.id} = _akifield_${vector.id};
-  #end for
+  @end for
 
 // a_k = G[a_k, t]
 _segment${segmentNumber}_calculate_delta_a(_step);
-${goToHomeSpace}#slurp
+${goToHomeSpace}@slurp
 
 ${propagationDimension} += _a[15]*_step;
 
-  #for $vector in $vectors
+  @for $vector in $vectors
 _active_${vector.id} = _akjfield_${vector.id};
-  #end for
+  @end for
 
 // a_k = G[a_k, t]
 _segment${segmentNumber}_calculate_delta_a(_step);
-${goToHomeSpace}#slurp
+${goToHomeSpace}@slurp
 
 // Take full step
 
@@ -541,10 +541,10 @@ _${vector.id}[$index] += _c[0]*_akafield_${vector.id}[$index] + _c[7]*_akbfield_
     + _c[9]*_akdfield_${vector.id}[$index] + _c[10]*_akefield_${vector.id}[$index] + _c[11]*_akffield_${vector.id}[$index]
     + _c[12]*_akgfield_${vector.id}[$index] + _c[13]*_akhfield_${vector.id}[$index] + _c[14]*_akifield_${vector.id}[$index]
     + _c[15]*_akjfield_${vector.id}[$index];
-""")}#slurp
+""")}@slurp
 
-  #for $vector in $vectors
+  @for $vector in $vectors
 _active_${vector.id} = _${vector.id};
-  #end for
-  ##
-#end def
+  @end for
+  @#
+@end def

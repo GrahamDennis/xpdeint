@@ -1,16 +1,16 @@
-#*
+@*
 OpenMPFeature.tmpl
 
 Created by Graham Dennis on 2007-12-18.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
-*#
-#extends _Feature
+*@
+@extends _Feature
 
-#def description: OpenMP
-#attr featureName = 'OpenMP'
+@def description: OpenMP
+@attr featureName = 'OpenMP'
 
-#def loopOverVectorsWithInnerContentTemplateBegin($dict)
-\#ifdef _OPENMP
-\#pragma omp parallel for
-\#endif
-#end def
+@def loopOverVectorsWithInnerContentTemplateBegin($dict)
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+@end def

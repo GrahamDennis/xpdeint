@@ -1,144 +1,144 @@
-#*
+@*
 ErrorCheckFeature.tmpl
 
 Created by Graham Dennis on 2007-08-26.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
-*#
-#extends _ErrorCheckFeature
+*@
+@extends _ErrorCheckFeature
 
-#def description: error check
-#attr $featureName = 'ErrorCheck'
+@def description: error check
+@attr $featureName = 'ErrorCheck'
 
-#def globals
-  ##
+@def globals
+  @#
 bool _half_step;
-  #for $momentGroup in $momentGroups
-    #set $momentGroupOutputField = $momentGroup.outputField
-    #set $processedVectorList = filter(lambda x: x.name == 'processed', $momentGroupOutputField.vectors)
-    #assert len($processedVectorList) == 1
+  @for $momentGroup in $momentGroups
+    @set $momentGroupOutputField = $momentGroup.outputField
+    @set $processedVectorList = filter(lambda x: x.name == 'processed', $momentGroupOutputField.vectors)
+    @assert len($processedVectorList) == 1
 
 // Arrays for full- and half-step moment group results
 double* _${momentGroupOutputField.name}_fullstep;
 double* _${momentGroupOutputField.name}_halfstep;
-  #end for
-  ##
-  #for noiseVector in $noiseAliases
+  @end for
+  @#
+  @for noiseVector in $noiseAliases
 ${noiseVector.type}* _${noiseVector.id}2; // half-step noise
-  #end for
-  ##
-#end def
+  @end for
+  @#
+@end def
 
-#def topLevelSequenceBegin($dict)
-  ##
-  ## Loop over moment groups allocating half step array
-  ## and saving the pointer to the original array
-  ## Note that we allocate the half step array now and not
-  ## later when we actually need it so that if allocating it would
-  ## cause us to run out of virtual memory, we do that at the *start*
-  ## of the simulation, not half way through
-  #for $momentGroup in $momentGroups
-    #set $momentGroupOutputField = $momentGroup.outputField
+@def topLevelSequenceBegin($dict)
+  @#
+  @# Loop over moment groups allocating half step array
+  @# and saving the pointer to the original array
+  @# Note that we allocate the half step array now and not
+  @# later when we actually need it so that if allocating it would
+  @# cause us to run out of virtual memory, we do that at the *start*
+  @# of the simulation, not half way through
+  @for $momentGroup in $momentGroups
+    @set $momentGroupOutputField = $momentGroup.outputField
 
 _${momentGroupOutputField.name}_fullstep = _${momentGroupOutputField.name}_processed;
 // _${momentGroupOutputField.name}_halfstep has already been allocated
-  #end for
+  @end for
 
 for (_half_step = false; ; _half_step = true)
 {
   if (!_half_step) {
     _LOG(_SIMULATION_LOG_LEVEL, "Beginning full step integration ...\n");
-  ## Loop over the moment groups setting the output field to the fullstep fiel
-  #for $momentGroup in $momentGroups
-    #set $momentGroupOutputField = $momentGroup.outputField
+  @# Loop over the moment groups setting the output field to the fullstep fiel
+  @for $momentGroup in $momentGroups
+    @set $momentGroupOutputField = $momentGroup.outputField
     
     _active_${momentGroupOutputField.name}_processed = _${momentGroupOutputField.name}_fullstep;
-  #end for
+  @end for
   }
   else {
     _LOG(_SIMULATION_LOG_LEVEL, "Beginning half step integration ...\n");
-  ## Loop over the moment groups setting the output field to the already-allocated halfstep field
-  #for $momentGroup in $momentGroups
-    #set $momentGroupOutputField = $momentGroup.outputField
+  @# Loop over the moment groups setting the output field to the already-allocated halfstep field
+  @for $momentGroup in $momentGroups
+    @set $momentGroupOutputField = $momentGroup.outputField
 
     _active_${momentGroupOutputField.name}_processed = _${momentGroupOutputField.name}_halfstep;
-  #end for
+  @end for
   }
-  #silent $dict['extraIndent'] += 2
-  ##
-#end def
+  @silent $dict['extraIndent'] += 2
+  @#
+@end def
 
-#def topLevelSequenceEnd($dict)
+@def topLevelSequenceEnd($dict)
 
   if (_half_step)
       break;
 }
-  #silent $dict['extraIndent'] -= 2
-#end def
+  @silent $dict['extraIndent'] -= 2
+@end def
 
 
-#*
+@*
   This function returns a Cheetah template string suitable for passing to loopOverVectorsWithInnerContentTemplate
-*#
-#def writeOutFunctionImplementationBegin($dict)
-  ##
-  #set $momentGroup = dict['caller']
-  #set $dependentVariables = dict['dependentVariables']
-  ##
-  ## So our job is to create _error versions of all of the variables in the momentGroup's outputField.
-  #for $componentNumber, $componentName in enumerate($momentGroup.processedVector.components)
-    ## Add the dependent variable to the dependent variable list
-    #set $newVariableDict = {'name': c'error_${componentName}', 'arrayName': c'_${momentGroup.outputField.name}_fullstep', 'componentNumber': $componentNumber}
-    #silent $dependentVariables.append($newVariableDict)
-  #end for
-  ##
-  ## Now return the template that will be used to create the error vector
+*@
+@def writeOutFunctionImplementationBegin($dict)
+  @#
+  @set $momentGroup = dict['caller']
+  @set $dependentVariables = dict['dependentVariables']
+  @#
+  @# So our job is to create _error versions of all of the variables in the momentGroup's outputField.
+  @for $componentNumber, $componentName in enumerate($momentGroup.processedVector.components)
+    @# Add the dependent variable to the dependent variable list
+    @set $newVariableDict = {'name': c'error_${componentName}', 'arrayName': c'_${momentGroup.outputField.name}_fullstep', 'componentNumber': $componentNumber}
+    @silent $dependentVariables.append($newVariableDict)
+  @end for
+  @#
+  @# Now return the template that will be used to create the error vector
 // Copy the error into the fullstep array
 _\${vector.field.name}_fullstep[\$index] = _\${vector.field.name}_fullstep[\$index] - _\${vector.field.name}_halfstep[\$index];
-  ##
-#end def
+  @#
+@end def
 
-#def createFixedStepVariable($dict)
+@def createFixedStepVariable($dict)
 
 // If we are doing half-step integration, divide the step size by 2
 if (_half_step)
   _step /= 2.0;
 // Regardless, the step size for generated noise is the half-step
 _noiseStep /= 2.0;
-#end def
+@end def
 
-#def createToleranceVariable($dict)
+@def createToleranceVariable($dict)
 
 // If we are doing half-step integration, divide the tolerance by 16
 if (_half_step)
   _tolerance /= 16.0;
-#end def
+@end def
 
-#def makeNoisesForFixedStep($dict)
-  ##
-  #set $noise = $dict['noise']
-  #set $noiseVector = $dict['noiseVector']
-  #set $field = $dict['field']
+@def makeNoisesForFixedStep($dict)
+  @#
+  @set $noise = $dict['noise']
+  @set $noiseVector = $dict['noiseVector']
+  @set $field = $dict['field']
 if (!_half_step) {
   _make_${noise.prefix}_noises(_${field.name}_var, _${noiseVector.id}2, _${field.name}_size * _${noiseVector.id}_ncomponents);
   ${loopOverVectorsWithInnerContentTemplate([$noiseVector],
 """_${vector.id}[$index] = 0.5*(_${vector.id}[$index] + _${vector.id}2[$index]);
-"""), autoIndent=True}#slurp
+"""), autoIndent=True}@slurp
 }
-  ##
-#end def
+  @#
+@end def
 
-#def integrateFixedStepInnerLoopBegin($dict)
-  ##
+@def integrateFixedStepInnerLoopBegin($dict)
+  @#
 
 // If we are doing half-step integration, then we need to do each integrate step twice (but with half the step size)
 for (int _error_check_loop_iter = (_half_step ? 2 : 1); _error_check_loop_iter > 0; _error_check_loop_iter--) {
-  #silent $dict['extraIndent'] += 2
-  ##
-#end def
+  @silent $dict['extraIndent'] += 2
+  @#
+@end def
 
-#def integrateFixedStepInnerLoopEnd($dict)
-  ##
+@def integrateFixedStepInnerLoopEnd($dict)
+  @#
 }
-  #silent $dict['extraIndent'] -= 2
-  ##
-#end def
+  @silent $dict['extraIndent'] -= 2
+  @#
+@end def

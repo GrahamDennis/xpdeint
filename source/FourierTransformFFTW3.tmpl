@@ -1,159 +1,159 @@
-#*
+@*
 FourierTransformFFTW3.tmpl
 
 Created by Graham Dennis on 2007-08-23.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
-*#
-#extends FourierTransform
+*@
+@extends FourierTransform
 
-#def description: FFTW3
+@def description: FFTW3
 
-#def includes
-\#include <fftw3.h>
-#end def
+@def includes
+#include <fftw3.h>
+@end def
 
-## defines
-#def defines
-\#define xmds_malloc fftw_malloc
-\#define xmds_free   fftw_free
-#end def
+@# defines
+@def defines
+#define xmds_malloc fftw_malloc
+#define xmds_free   fftw_free
+@end def
 
-#*
+@*
 
   Globals needed at the start of the simulation
-*#
-#def globals
-#for $field in $fields
-  ## only loop over those vectors that need fourier transforms
-  #for $vector in $filter(lambda x: x.needsFourierTransforms, $field.vectors)
+*@
+@def globals
+@for $field in $fields
+  @# only loop over those vectors that need fourier transforms
+  @for $vector in $filter(lambda x: x.needsFourierTransforms, $field.vectors)
 fftw_plan _${field.name}_${vector.name}_forward_plan;
 fftw_plan _${field.name}_${vector.name}_backward_plan;
-  #end for
-#end for
-#end def
+  @end for
+@end for
+@end def
 
-## do the (forward/backward) transform for the vector
-#def fullFFTForVector($vector, $type)
+@# do the (forward/backward) transform for the vector
+@def fullFFTForVector($vector, $type)
 fftw_execute_dft(_${vector.field.name}_${vector.name}_${type}_plan, reinterpret_cast<fftw_complex*>(_active_${vector.field.name}_${vector.name}),
                  reinterpret_cast<fftw_complex*>(_active_${vector.field.name}_${vector.name}));
-#end def
+@end def
 
-## create a quick fourier transform plan for use by the mixed transform code
-#def createQuickPlanForVectorWithLatticeAndCount($vector, $lattice, $count, $type)
-  ## We need estimate planning as measure planning would overwrite the field, and that would be bad, right?
+@# create a quick fourier transform plan for use by the mixed transform code
+@def createQuickPlanForVectorWithLatticeAndCount($vector, $lattice, $count, $type)
+  @# We need estimate planning as measure planning would overwrite the field, and that would be bad, right?
 fftw_plan _plan = fftw_plan_many_dft(1, &${lattice}, $count,
                                      reinterpret_cast<fftw_complex*>(_active_${vector.field.name}_${vector.name}), NULL, $count, 1,
                                      reinterpret_cast<fftw_complex*>(_active_${vector.field.name}_${vector.name}), NULL, $count, 1,
                                      FFTW_${type.upper()}, FFTW_ESTIMATE);
-#end def
+@end def
 
-## run a quick fourier transform plan for use by the mixed transform code
-#def runQuickFFTForVectorWithIndexAndLatticeAndCount($vector, $index, $lattice, $count, $type)
+@# run a quick fourier transform plan for use by the mixed transform code
+@def runQuickFFTForVectorWithIndexAndLatticeAndCount($vector, $index, $lattice, $count, $type)
 fftw_execute_dft(_plan, reinterpret_cast<fftw_complex*>(_active_${vector.field.name}_${vector.name}) + $index * $lattice * $count,
                         reinterpret_cast<fftw_complex*>(_active_${vector.field.name}_${vector.name}) + $index * $lattice * $count);
-#end def
+@end def
 
-## run a quick fourier transform
-#def runQuickFFTForVectorWithCount($vector, $count, $type)
+@# run a quick fourier transform
+@def runQuickFFTForVectorWithCount($vector, $count, $type)
 fftw_execute(_plan);
-#end def
+@end def
 
-## destroy the quick plan
-#def destroyQuickPlan()
+@# destroy the quick plan
+@def destroyQuickPlan()
 fftw_destroy_plan(_plan);
-#end def
+@end def
 
-#def mainBegin(dict)
+@def mainBegin(dict)
 
 _LOG(_SIMULATION_LOG_LEVEL, "Making FFTW plans\n");
 
 // load wisdom and create plans for fft
 int _fftw_lattice[$len($geometry.dimensions)];
-  ##
-  ## Some of the vectors that we need to create plans for may be temporary vectors,
-  ## and hence will not be allocated yet.
-  ## The solution is to work out the largest of these vectors, allocate space for that,
-  ## and use that to create the plans.
-  ##
-  #set $temporaryVectorsNeedingFourierTransforms = set()
-  #for field in $fields
-    #set $temporaryVectorsInField = filter(lambda x: x.needsFourierTransforms, field.temporaryVectors)
-    #silent temporaryVectorsNeedingFourierTransforms.update(temporaryVectorsInField)
-  #end for
-  #if temporaryVectorsNeedingFourierTransforms
-    ## We have vectors that need something to be allocated
-    #set $vectorSizes = [(vector, vector.field.pointsInDimensionsNumerically * vector.nComponents) for vector in temporaryVectorsNeedingFourierTransforms]
-    #set $maxVector = max(vectorSizes, key=lambda x: x[1])[0]
+  @#
+  @# Some of the vectors that we need to create plans for may be temporary vectors,
+  @# and hence will not be allocated yet.
+  @# The solution is to work out the largest of these vectors, allocate space for that,
+  @# and use that to create the plans.
+  @#
+  @set $temporaryVectorsNeedingFourierTransforms = set()
+  @for field in $fields
+    @set $temporaryVectorsInField = filter(lambda x: x.needsFourierTransforms, field.temporaryVectors)
+    @silent temporaryVectorsNeedingFourierTransforms.update(temporaryVectorsInField)
+  @end for
+  @if temporaryVectorsNeedingFourierTransforms
+    @# We have vectors that need something to be allocated
+    @set $vectorSizes = [(vector, vector.field.pointsInDimensionsNumerically * vector.nComponents) for vector in temporaryVectorsNeedingFourierTransforms]
+    @set $maxVector = max(vectorSizes, key=lambda x: x[1])[0]
 
 // allocate an array so we can create plans for those vectors that we have not allocated yet
 complex* _temporary_vector = (complex*) xmds_malloc(sizeof(complex) * _${maxVector.field.name}_size * _${maxVector.id}_ncomponents);
-  #end if
-  ##
-  #for field in $fields
-    #if len(filter(lambda x: x.needsFourierTransforms, field.vectors)) == 0
-      #continue
-    #end if
+  @end if
+  @#
+  @for field in $fields
+    @if len(filter(lambda x: x.needsFourierTransforms, field.vectors)) == 0
+      @continue
+    @end if
 
 // Plans for field ${field.name}
-    #set $separator = ''
-    #for dimensionNumber, dimension in enumerate(field.dimensions)
-${separator}_fftw_lattice[$dimensionNumber] = $dimension.lattice;#slurp
-      #set $separator = ' '
-    #end for
+    @set $separator = ''
+    @for dimensionNumber, dimension in enumerate(field.dimensions)
+${separator}_fftw_lattice[$dimensionNumber] = $dimension.lattice;@slurp
+      @set $separator = ' '
+    @end for
 
 
-    ##
-    ## Make the forward plans
-${createPlansForField(field, 'forward')}#slurp
+    @#
+    @# Make the forward plans
+${createPlansForField(field, 'forward')}@slurp
 
-    ##
-    ## Make the backward plans
-${createPlansForField(field, 'backward')}#slurp
-  #end for
-  ##
-  #if $temporaryVectorsNeedingFourierTransforms
+    @#
+    @# Make the backward plans
+${createPlansForField(field, 'backward')}@slurp
+  @end for
+  @#
+  @if $temporaryVectorsNeedingFourierTransforms
 
 xmds_free(_temporary_vector);
 _temporary_vector = NULL;
-  #end if
+  @end if
 
 _LOG(_SIMULATION_LOG_LEVEL, "FFTW planning complete\n");
-#end def
+@end def
 
-#def createPlansForField($field, $type)
-  ##
-  #set $blankLineSeparator = ''
-  #set $vectorsNeedingFourierTransforms = filter(lambda x: x.needsFourierTransforms, field.vectors)
-  ##
-  #for vector in vectorsNeedingFourierTransforms
-${blankLineSeparator}#slurp
-    #set $blankLineSeparator = '\n'
-    ## We use measure planning because we want fast transforms. Another option would be to use patient planning,
-    ## however that could be provided as an option.
-    #set $arrayName = c'_${vector.id}'
-    #if vector in field.temporaryVectors
-      #set $arrayName = '_temporary_vector'
-    #end if
+@def createPlansForField($field, $type)
+  @#
+  @set $blankLineSeparator = ''
+  @set $vectorsNeedingFourierTransforms = filter(lambda x: x.needsFourierTransforms, field.vectors)
+  @#
+  @for vector in vectorsNeedingFourierTransforms
+${blankLineSeparator}@slurp
+    @set $blankLineSeparator = '\n'
+    @# We use measure planning because we want fast transforms. Another option would be to use patient planning,
+    @# however that could be provided as an option.
+    @set $arrayName = c'_${vector.id}'
+    @if vector in field.temporaryVectors
+      @set $arrayName = '_temporary_vector'
+    @end if
 _${vector.id}_${type}_plan = fftw_plan_many_dft(_${field.name}_ndims, _fftw_lattice, _${vector.id}_ncomponents,
               reinterpret_cast<fftw_complex*>(${arrayName}), NULL, _${vector.id}_ncomponents, 1,
               reinterpret_cast<fftw_complex*>(${arrayName}), NULL, _${vector.id}_ncomponents, 1,
               FFTW_${type.upper()}, FFTW_MEASURE);
-  #end for
-  ##
-#end def
+  @end for
+  @#
+@end def
 
-#def mainEnd($dict)
-  ##
+@def mainEnd($dict)
+  @#
   
 // destroy plans
-  #for field in $fields
-    ## only loop over those vectors that need fourier transforms
-    #for vector in filter(lambda x: x.needsFourierTransforms, field.vectors)
+  @for field in $fields
+    @# only loop over those vectors that need fourier transforms
+    @for vector in filter(lambda x: x.needsFourierTransforms, field.vectors)
 fftw_destroy_plan(_${field.name}_${vector.name}_forward_plan);
 fftw_destroy_plan(_${field.name}_${vector.name}_backward_plan);
-    #end for
-  #end for
+    @end for
+  @end for
 
 fftw_cleanup();
-  ##
-#end def
+  @#
+@end def
