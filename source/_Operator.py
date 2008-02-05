@@ -83,7 +83,7 @@ class _Operator (ScriptElement):
       dependencies = self.vectorsFromEntity(self.dependenciesEntity)
       
       for dependency in dependencies:
-        if not dependency.initialSpace == (self.operatorSpace & dependency.field.spaceMask):
+        if not (dependency.initialSpace & self.field.spaceMask) == (self.operatorSpace & dependency.field.spaceMask):
           if not dependency.type == 'complex':
             raise ParserException(self.dependenciesEntity.xmlElement,
                     "Cannot satisfy dependence on vector '%s' because it is not "

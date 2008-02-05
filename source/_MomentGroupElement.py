@@ -49,8 +49,13 @@ class _MomentGroupElement (FieldElement):
   def preflight(self):
     dependencies = self.vectorsFromEntity(self.dependenciesEntity)
     
+    if hasattr(self, 'sampleField'):
+      sampleSpaceMask = self.sampleField.spaceMask
+    else:
+      sampleSpaceMask = self.spaceMask
+    
     for dependency in dependencies:
-      if not dependency.initialSpace == (self.sampleSpace & dependency.field.spaceMask):
+      if not (dependency.initialSpace & sampleSpaceMask) == (self.sampleSpace & dependency.field.spaceMask):
         if not dependency.type == 'complex':
           raise ParserException(self.dependenciesEntity.xmlElement,
                   "Cannot satisfy dependence on vector '%s' because it is not "
