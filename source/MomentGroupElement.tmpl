@@ -28,7 +28,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
     @set $dimensionNumber = $dimensions.index($dimension)
 
 unsigned long _${name}_sample_index${dimensionNumber};
-double* _${name}_x${dimensionNumber} = new double[_${name}_lattice${dimensionNumber}];
+double* _${name}_x${dimensionNumber} = (double*) xmds_malloc(sizeof(double) * _${name}_lattice${dimensionNumber});
   @end for
 @end def
 
