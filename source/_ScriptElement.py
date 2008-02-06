@@ -175,6 +175,10 @@ class _ScriptElement (Template):
   def remove(self):
     self.getVar('templates').discard(self)
     scriptElements = self.getVar('scriptElements')
-    while self in scriptElements:
-      scriptElements.remove(self)
+    
+    for someIterable in (self.getVar('scriptElements'), self.getVar('fields'),
+                         self.getVar('vectors'), self.getVar('momentGroups')):
+      while self in someIterable:
+        someIterable.remove(self)
+    
   
