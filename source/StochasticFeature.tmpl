@@ -51,7 +51,7 @@ struct _dtdWstore {
 @def topLevelSequenceBegin($dict)
   @#
   @for noise in $noises
-${noise.initialiseSeeds(noise.seedArray)}@slurp
+${noise.initialiseSeeds}@slurp
   @end for
   @#
 @end def

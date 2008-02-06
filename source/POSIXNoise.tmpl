@@ -6,6 +6,8 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *@
 @extends Noise
 
+@import random
+
 @def description: Generic POSIX noise
 @def generatorType: unsigned short*
 
@@ -21,7 +23,7 @@ unsigned short ${generatorName}[3];
 @*
   Initialise seeds
 *@
-@def initialiseSeeds($seedArray)
+@def initialiseSeeds
   @#
   @if len($seedArray)
     @for $i in range(3)
@@ -33,9 +35,9 @@ ${generatorName}[$i] = 0;
     @end for
 erand48(${generatorName});
   @else
-srandomdev();
+    @set self.generatedSeeds = [random.randrange(0, pow(2, 16)) for i in range(3)]
     @for $i in range(3)
-${generatorName}[$i] = random();
+${generatorName}[$i] = ${generatedSeeds[$i]};
     @end for
   @end if
   @#

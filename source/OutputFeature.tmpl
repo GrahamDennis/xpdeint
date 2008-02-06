@@ -37,16 +37,18 @@ void _write_output()
   @# Find the end tag in a case-insensitive way
   @set $indexForEndTag = $inputScript.lower().rfind('</simulation>')
   @set $xsilOutputHeader = $inputScript[0:$indexForEndTag]
+  
   @filter $PrintfSafeFilter
     @for $line in $xsilOutputHeader.splitlines()
   fprintf(_outfile, "${line}\n");
     @end for
-  @end filter
   
   fprintf(_outfile, "\n<info>\n");
   fprintf(_outfile, "Script compiled with xpdeint version ${xmds.versionString} (${xmds.subversionRevision})\n");
   fprintf(_outfile, "See http://www.xmds.org for more information.\n");
-  @set $featureOrdering = ['Argv']
+  @end filter
+
+  @set $featureOrdering = ['Argv', 'Stochastic']
   ${insertCodeForFeatures('xsilOutputInfo', $featureOrdering), autoIndent=True}@slurp
   fprintf(_outfile, "</info>\n");
   

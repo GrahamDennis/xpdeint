@@ -6,6 +6,8 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *@
 @extends ScriptElement
 
+@from PrintfSafeFilter import PrintfSafeFilter
+
 @def description: Generic noise
 @def generatorName: _gen_${prefix}
 
@@ -36,3 +38,24 @@ inline void _make_${prefix}_noises(double _var, double* _noise_vector, unsigned 
   @#
 @end def
 
+@def xsilOutputInfo($dict)
+@*doc:
+Write to the XSIL file lines naming the seeds that we generated if no seed was provided
+in the script file. These are the seeds that should be provided in the script file to get
+the same results.
+*@
+  @if not hasattr(self, 'generatedSeeds')
+    @return
+  @end if
+  @#
+  @filter $PrintfSafeFilter
+fprintf(_outfile, "\nNo seeds were provided for noise '$prefix'. The seeds generated were:\n");
+fprintf(_outfile, "    @slurp
+    @set $separator = ''
+    @for seed in $generatedSeeds
+${separator}${seed}@slurp
+      @set $separator = ', '
+    @end for
+\n");
+  @end filter
+@end def

@@ -34,6 +34,8 @@ class _StochasticFeature (_Feature):
     
     return result
   
+  def xsilOutputInfo(self, dict):
+    return self.implementationsForClassesAndChildren('xsilOutputInfo', dict)
   
   def preflight(self):
     # We need to iterate over everything that could possibly need noises
