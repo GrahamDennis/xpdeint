@@ -1,4 +1,4 @@
-SOURCE = $(../source/*py)
+SOURCE = $(wildcard ../source/*py)
 
 default: html
 

@@ -5,9 +5,7 @@ Created by Graham Dennis on 2008-02-01.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 *@
 @extends _MultiPathDriver
-@*
-  Description of template
-*@
+
 @def description: segment $segmentNumber (Multipath top level sequence)
 
 @def defines
@@ -77,8 +75,8 @@ This function is called by the moment group so that we can add to the template
 string that will be used to create a loop to perform the processing. The code
 that this function adds calculates the variance of the sampled variable.
 
-The passed dictionary 'dict' has the following key:
-  - 'caller': The moment group which is letting us modify the template string
+The passed dictionary `dict` has the following key:
+  - `caller`: The moment group which is letting us modify the template string
 
 The return value is the template string that will be added to the processing loop template.
 *@
@@ -98,16 +96,16 @@ the processed vectors have been adding the results for all of the paths, and now
 to be divided by the total number of paths. And something similar needs to be done for
 the standard-error variables.
 
-The passed dictionary 'dict' has the following keys:
-  - 'caller': The moment group calling us.
-  - 'dependentVariables': A list of dictionaries describing the variables that are to be written out.
+The passed dictionary `dict` has the following keys:
+  - `caller`: The moment group calling us.
+  - `dependentVariables`: A list of dictionaries describing the variables that are to be written out.
     This list can be modified or added to by this function.
     
     Each of these dictionaries has the following keys:
     
-    - 'name': The name of the variable sampled
-    - 'arrayName': The name of the array that this variable is in. e.g. '_mg0_processed'
-    - 'componentNumber': The component number of this variable.
+    - `name`: The name of the variable sampled
+    - `arrayName`: The name of the array that this variable is in. e.g. `_mg0_processed`
+    - `componentNumber`: The component number of this variable.
 
 The return value is the template string that will be 
 *@
