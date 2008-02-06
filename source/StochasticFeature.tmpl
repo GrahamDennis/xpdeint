@@ -63,6 +63,9 @@ ${noise.initialiseSeeds}@slurp
   @if hasattr(caller, 'noises')
     @set $noisesNeeded = caller.noises[:]
   @end if
+  @if len($noisesNeeded) == 0
+    @return
+  @end if
 
 double _var = 1.0@slurp
   @if len(caller.vector.field.dimensions)
