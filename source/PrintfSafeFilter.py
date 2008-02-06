@@ -17,5 +17,5 @@ class PrintfSafeFilter(Filter):
     s = s.replace("\\", "\\\\")   # Escape single backslashes
     s = s.replace("%", "%%")      # Escape format-string specifiers
     s = s.replace("\"", "\\\"")   # Escape double-quotes
-    ## We're done
+    # We're done
     return s
