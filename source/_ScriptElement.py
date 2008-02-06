@@ -56,6 +56,22 @@ class _ScriptElement (Template):
   def functionImplementations(self):
     return self.implementationsForClassesAndChildren('functionImplementations')
   
+  # Define a whole bunch of static versions of these functions
+  def static_includes(self):
+    pass
+  
+  def static_defines(self):
+    pass
+  
+  def static_globals(self):
+    pass
+  
+  def static_functionPrototypes(self):
+    pass
+  
+  def static_functionImplementations(self):
+    pass
+  
   # Insert code for a list of features by calling a named function
   def insertCodeForFeatures(self, functionName, featureList, dict = {}, reverse = False):
     featureDictionary = self.getVar('features')
@@ -123,7 +139,7 @@ class _ScriptElement (Template):
       return dimension.name
   
   # Insert contents of function for children
-  def implementationsForChildren(self, functionName, arguments=[]):
+  def implementationsForChildren(self, functionName, *args, **KWs):
     if not hasattr(self, 'children'):
       return
     result = []
@@ -131,25 +147,25 @@ class _ScriptElement (Template):
     for child in self.children:
       if hasattr(child, functionName) and callable(getattr(child, functionName)):
         childFunction = getattr(child, functionName)
-        childFunctionOutput = childFunction(*arguments)
-        if childFunctionOutput:
+        childFunctionOutput = childFunction(*args, **KWs)
+        if childFunctionOutput and not childFunctionOutput.isspace():
           result.append(blankLineSeparator)
           blankLineSeparator = '\n'
           result.append(childFunctionOutput)
     
     return ''.join(result)
   
-  def implementationsForClassesAndChildren(self, functionName, arguments=[]):
+  def implementationsForClassesAndChildren(self, functionName, *args, **KWs):
     result = []
     blankLineSeparator = ''
     staticFunctionName = 'static_' + functionName
     if hasattr(self, 'static_' + functionName):
       staticFunction = getattr(self, staticFunctionName)
-      staticFunctionOutput = staticFunction(*arguments)
-      if staticFunctionOutput:
+      staticFunctionOutput = staticFunction(*args, **KWs)
+      if staticFunctionOutput and not staticFunctionOutput.isspace():
         blankLineSeparator = '\n'
         result.append(staticFunctionOutput)
-    childOutput = self.implementationsForChildren(functionName, arguments)
+    childOutput = self.implementationsForChildren(functionName, *args, **KWs)
     if childOutput:
       result.append(blankLineSeparator)
       result.append(childOutput)
