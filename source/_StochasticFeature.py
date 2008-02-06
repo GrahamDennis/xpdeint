@@ -12,6 +12,8 @@ from VectorElement import VectorElement
 from VectorInitialisationCDATA import VectorInitialisationCDATA
 from DeltaAOperator import DeltaAOperator
 
+from ParserException import ParserException
+
 class _StochasticFeature (_Feature):
   
   @property
@@ -58,11 +60,11 @@ class _StochasticFeature (_Feature):
     
     for o in objectsThatMightUseNoises:
       noises = self.noises
-      if hasattr(o, 'noiseEntity'):
+      if hasattr(o, 'noisesEntity'):
         noises = []
-        for noiseName in noiseEntity.value:
+        for noiseName in o.noisesEntity.value:
           if not noiseName in noiseNameMap:
-            raise ParserException(noiseEntity.xmlElement, "Unknown noise prefix %(noiseName)s." % locals())
+            raise ParserException(o.noisesEntity.xmlElement, "Unknown noise prefix '%(noiseName)s'." % locals())
           noises.append(noiseNameMap[noiseName])
       
       o.noises = noises

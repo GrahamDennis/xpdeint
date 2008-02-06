@@ -1,9 +1,9 @@
 * Complete Stochastics support
   * Add support for breaking up poissonian noise
-  - Stochastics support is now mostly done, what is missing is:
-	* 'noise' tags inside initialisation and integrate elements aren't currently parsed
 * Add the ARK89 algorithm
 * Add a 'filter' segment
+  * Write a 'GenericFilter' template that is used by filter operators,
+    filter segments, moment group sampling and moment group post-processing.
 * Add 'functions' elements to integrate, filter segments and anything else that
   might use them
 * Add support for passing arguments to simulations

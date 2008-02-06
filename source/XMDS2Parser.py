@@ -234,6 +234,21 @@ class XMDS2Parser(ScriptParser):
     
     self.applyAttributeDictionaryToObject(fftAttributeDictionary, fourierTransform)
   
+  def parseNoisesAttribute(self, someElement, someTemplate):
+    if not (someElement.hasAttribute('noises') or someElement.hasAttribute('no_noises')):
+      return
+    
+    if someElement.hasAttribute('noises') and someElement.hasAttribute('no_noises'):
+      raise ParserException(someElement, "You cannot specify both a 'noises' attribute and a 'no_noises' attribute.")
+    
+    if someElement.hasAttribute('noises'):
+      noises = self.symbolsInString(someElement.getAttribute('noises'))
+      someTemplate.noisesEntity = ParsedEntity(someElement, noises)
+    
+    if someElement.hasAttribute('no_noises'):
+      if someElement.getAttribute('no_noises').strip().lower() in ('yes', 'true'):
+        someTemplate.noisesEntity = ParsedEntity(someElement, [])
+  
   def parseGeometryElement(self, simulationElement):
     geometryElement = simulationElement.getChildElementByTagName('geometry')
     
@@ -469,6 +484,8 @@ class XMDS2Parser(ScriptParser):
         vectorTemplate.initialiser.remove()
       initialisationTemplate.vector = vectorTemplate
       vectorTemplate.initialiser = initialisationTemplate
+      
+      self.parseNoisesAttribute(initialisationElement, initialisationTemplate)
     
     return vectorTemplate
   
@@ -641,6 +658,8 @@ class XMDS2Parser(ScriptParser):
     deltaAOperatorTemplate = DeltaAOperatorTemplate(field = fieldTemplate, integrator = integratorTemplate,
                                                     **self.argumentsToTemplateConstructors)
     deltaAOperatorTemplate.propagationCode = operatorsElement.cdataContents()
+    
+    self.parseNoisesAttribute(operatorsElement, deltaAOperatorTemplate)
     
     dependenciesElement = operatorsElement.getChildElementByTagName('dependencies', optional=True)
     dependencyVectorNames = []

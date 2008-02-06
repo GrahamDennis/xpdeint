@@ -27,7 +27,7 @@
       <components type="complex">
         z
       </components>
-      <initialisation>
+      <initialisation noises="">
         <![CDATA[
           z = 1.0;
         ]]>
@@ -38,7 +38,7 @@
   <sequence driver="multi-path" paths="1024">
     <integrate algorithm="ARK45" interval="10" steps="10000" tolerance="1e-6">
       <samples>100</samples>
-      <operators field="main">
+      <operators field="main" noises="n">
         <integration_vectors>main</integration_vectors>
         <![CDATA[
           dz_dt = i*z*n_1;
