@@ -13,8 +13,7 @@ from _ScriptElement import _ScriptElement
 
 
 def callOncePerClassGuard(f):
-  """Function decorator to prevent function being called more than once (per class).
-  """
+  """Function decorator to prevent a function being called more than once (per class)."""
   className = sys._getframe(1).f_code.co_name
   attributeGuardName = ''.join(['_', className, '_', f.__name__, '_callOnceGuard_called'])
   
@@ -30,8 +29,7 @@ def callOncePerClassGuard(f):
 
 
 def callOncePerInstanceGuard(f):
-  """Function decorator to prevent function being called more than once for each instance.
-  """
+  """Function decorator to prevent a function being called more than once for each instance."""
   className = sys._getframe(1).f_code.co_name
   attributeGuardName = ''.join(['_', className, '_', f.__name__, '_callOnceGuard_called'])
   
