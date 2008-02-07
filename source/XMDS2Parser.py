@@ -48,6 +48,7 @@ from AsciiOutput import AsciiOutput as AsciiOutputTemplate
 from MomentGroupElement import MomentGroupElement as MomentGroupTemplate
 
 
+from AutoVectoriseFeature import AutoVectoriseFeature
 from BenchmarkFeature import BenchmarkFeature
 from ErrorCheckFeature import ErrorCheckFeature
 from BingFeature import BingFeature
@@ -124,6 +125,7 @@ class XMDS2Parser(ScriptParser):
       return featureElement, feature
     
     
+    parseSimpleFeature('auto_vectorise', AutoVectoriseFeature)
     parseSimpleFeature('benchmark', BenchmarkFeature)
     parseSimpleFeature('error_check', ErrorCheckFeature)
     parseSimpleFeature('bing', BingFeature)

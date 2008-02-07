@@ -28,7 +28,16 @@ to be performed in the same way on a range of vectors in possibly different fiel
 *@
   @assert len($templateString) > 0
   @#
-  @set $featureOrdering = ['OpenMP']
+  @set $templateFeatureOrdering = ['AutoVectorise']
+  @set $dict = {'templateString': $templateString,
+                'originalTemplateString': $templateString,
+                'loopCountPrefixFunction': None}
+  @silent $insertCodeForFeatures('loopOverVectorsWithInnerContentTemplateModifyTemplate',
+                                 $templateFeatureOrdering,
+                                 $dict)
+  @set $templateString = dict['templateString']
+  @# If the loopCountPrefixFunction is None, then provide an empty default
+  @set $loopCountPrefixFunction = dict['loopCountPrefixFunction'] or (lambda v: '')
   @#
   @# The template string should end with a new line, if it doesn't we'll add it
   @if $templateString[-1] != '\n'
@@ -44,11 +53,17 @@ to be performed in the same way on a range of vectors in possibly different fiel
   @set $innerLoopTemplate = Template(source=$templateString,
                                      searchList=[$templateVariables],
                                      compilerSettings=$settings)
+  @#
+  @set $loopFeatureOrdering = ['OpenMP', 'AutoVectorise']
   @for $vector in $vectors
+    @#
+    @# Get the loopCountPrefix from the loopCountPrefixFunction
+    @set $loopCountPrefix = $loopCountPrefixFunction($vector)
+    @#
     @# Set the template's current vector
     @silent $templateVariables['vector'] = $vector
-${insertCodeForFeatures('loopOverVectorsWithInnerContentTemplateBegin', $featureOrdering)}@slurp
-for (long _i0 = 0; _i0 < _${vector.field.name}_size * _${vector.field.name}_${vector.name}_ncomponents; _i0++) {
+${insertCodeForFeatures('loopOverVectorsWithInnerContentTemplateBegin', $loopFeatureOrdering, $dict)}@slurp
+for (long _i0 = 0; _i0 < ${loopCountPrefix}_${vector.field.name}_size * _${vector.field.name}_${vector.name}_ncomponents; _i0++) {
   ${innerLoopTemplate, autoIndent=True}@slurp
 }
   @end for
