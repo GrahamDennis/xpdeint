@@ -4,7 +4,7 @@ from distutils.core import setup
 
 a=setup(name="xpdeint",
       version="0.0.1",
-      description="Postscript Graphics with Python",
+      description="Stochastic ODE/PDE integrator",
       author="Graham Dennis",
       author_email="grahamdennis@users.sourceforge.net",
       maintainer="Graham Dennis",
