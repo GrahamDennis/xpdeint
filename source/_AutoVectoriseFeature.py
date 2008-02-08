@@ -12,6 +12,12 @@ from _Feature import _Feature
 import re
 
 class _AutoVectoriseFeature (_Feature):
+  
+  # Match things of the form someSymbol${someSubstitution}restOfSymbol[${index}]
+  # where the ${someSubstitution} is optional, and the curly braces around the
+  # index replacement are also optional.
+  arrayNameRegex = re.compile(r'\b([a-zA-Z_]\w*(?:\$\{[a-zA-Z0-9_.]+\}\w*)?)(?=\[\$(?:\{index\}|index)\])')
+  
   def loopOverVectorsWithInnerContentTemplateModifyTemplate(self, dict):
     """
     Modifies the `templateString` to add in auto-vectorisation features.
@@ -21,7 +27,10 @@ class _AutoVectoriseFeature (_Feature):
     templateString = dict['templateString']
     
     if 'UNVECTORISABLE' in templateString:
+      dict['vectorisable'] = False
       return
+    else:
+      dict['vectorisable'] = True
     
     # Assert that no-one has touched the loopCountPrefixFunction because I can't
     # think of a possible way to make multiple bits of code that want to modify
@@ -37,15 +46,37 @@ class _AutoVectoriseFeature (_Feature):
     
     dict['loopCountPrefixFunction'] = loopCountPrefixFunction
     
-    newTemplateString = re.sub(r'\b([a-zA-Z_]\w*(\$\{[a-zA-Z0-9_.]+\})?\w*)(?=\[\$(\{index\}|index)\])',
-                               r'_DBL(\1)',
-                               templateString)
+    arrayNames = set(self.arrayNameRegex.findall(templateString))
+    
+    dict['arrayNames'] = arrayNames
+    
+    # Create a template prefix that creates the *_dbl variables
+    vectorisationPreambleContents = ''.join(['  _MAKE_DBL_VARIABLE(%s);\n' % arrayName for arrayName in arrayNames])
+    
+    vectorisationPreambleTemplateFunction = ''.join(["@def vectorisationPreamble\n",
+                                                     vectorisationPreambleContents,
+                                                     "@end def\n"])
+    
+    newTemplateString = self.arrayNameRegex.sub(r'_DBL(\1)', templateString)
     
     dict['templateString'] = newTemplateString
+    dict['templateFunctions'].append(vectorisationPreambleTemplateFunction)
   
   def loopOverVectorsWithInnerContentTemplateBegin(self, dict):
-    if 'UNVECTORISABLE' in dict['originalTemplateString']:
+      if not dict['vectorisable']:
+        return '#pragma novector\n'
+      else:
+        arrayNames = dict['arrayNames']
+        dblVariableConstruction = dict['template'].vectorisationPreamble()
+        dict['extraIndent'] += 2
+        return ''.join(['{\n',
+                        dblVariableConstruction,
+                        '  #pragma ivdep\n'])
+  
+  def loopOverVectorsWithInnerContentTemplateEnd(self, dict):
+    if not dict['vectorisable']:
       return
     else:
-      return '#pragma ivdep\n'
+      dict['extraIndent'] -= 2
+      return '}\n'
   

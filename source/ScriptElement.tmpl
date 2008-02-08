@@ -31,7 +31,8 @@ to be performed in the same way on a range of vectors in possibly different fiel
   @set $templateFeatureOrdering = ['AutoVectorise']
   @set $dict = {'templateString': $templateString,
                 'originalTemplateString': $templateString,
-                'loopCountPrefixFunction': None}
+                'loopCountPrefixFunction': None,
+                'templateFunctions': []}
   @silent $insertCodeForFeatures('loopOverVectorsWithInnerContentTemplateModifyTemplate',
                                  $templateFeatureOrdering,
                                  $dict)
@@ -44,6 +45,8 @@ to be performed in the same way on a range of vectors in possibly different fiel
     @set $templateString = $templateString + '\n'
   @end if
   @#
+  @set $templateString += '\n'.join(dict['templateFunctions'])
+  @#
   @set $templateVariables = {'index': '_i0'}
   @set $settings = {'directiveStartToken': '@',
                     'commentStartToken': '@#',
@@ -54,7 +57,9 @@ to be performed in the same way on a range of vectors in possibly different fiel
                                      searchList=[$templateVariables],
                                      compilerSettings=$settings)
   @#
-  @set $loopFeatureOrdering = ['OpenMP', 'AutoVectorise']
+  @set $loopFeatureOrdering = ['AutoVectorise', 'OpenMP']
+  @silent $dict['extraIndent'] = 0
+  @silent $dict['template'] = $innerLoopTemplate
   @for $vector in $vectors
     @#
     @# Get the loopCountPrefix from the loopCountPrefixFunction
@@ -63,9 +68,13 @@ to be performed in the same way on a range of vectors in possibly different fiel
     @# Set the template's current vector
     @silent $templateVariables['vector'] = $vector
 ${insertCodeForFeatures('loopOverVectorsWithInnerContentTemplateBegin', $loopFeatureOrdering, $dict)}@slurp
+    @capture loopString
 for (long _i0 = 0; _i0 < ${loopCountPrefix}_${vector.field.name}_size * _${vector.field.name}_${vector.name}_ncomponents; _i0++) {
   ${innerLoopTemplate, autoIndent=True}@slurp
 }
+    @end capture
+${loopString, extraIndent=dict['extraIndent']}
+${insertCodeForFeaturesInReverseOrder('loopOverVectorsWithInnerContentTemplateEnd', $loopFeatureOrdering, $dict)}@slurp
   @end for
 @end def
 
