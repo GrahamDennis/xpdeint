@@ -12,16 +12,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 @def defines
   @#
 
-// This magic typedef and macro are to convert complex pointers 
-// (or normal double pointers) into special double pointers
-// that will make the auto-vectorisation feature of various
-// compilers happy.
-  @# Note that this code requires the pointers to be 16-byte
-  @# aligned. This is the case when xmds_malloc is just
-  @# fftw_malloc from fftw2 or fftw3, and when it is malloc
-  @# on OS X, however we probably need to take steps to ensure
-  @# that this data is aligned on other operating systems too.
-typedef double _more_aligned_double __attribute__ ((aligned (8)));
-#define _DBL(x) ((_more_aligned_double* const __restrict__)(x))
+#define _MAKE_DBL_VARIABLE(x) double* __restrict__ x ## _dbl = (double*) x
+#define _DBL(x) (x ## _dbl)
   @#
 @end def
