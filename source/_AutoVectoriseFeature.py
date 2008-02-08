@@ -48,8 +48,6 @@ class _AutoVectoriseFeature (_Feature):
     
     arrayNames = set(self.arrayNameRegex.findall(templateString))
     
-    dict['arrayNames'] = arrayNames
-    
     # Create a template prefix that creates the *_dbl variables
     vectorisationPreambleContents = ''.join(['  _MAKE_DBL_VARIABLE(%s);\n' % arrayName for arrayName in arrayNames])
     
@@ -66,7 +64,6 @@ class _AutoVectoriseFeature (_Feature):
       if not dict['vectorisable']:
         return '#pragma novector\n'
       else:
-        arrayNames = dict['arrayNames']
         dblVariableConstruction = dict['template'].vectorisationPreamble()
         dict['extraIndent'] += 2
         return ''.join(['{\n',
