@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <name>photodetector</name>
+  <author>Graham Dennis</author>
+  <description>
+    Example poissonian noise simulation
+  </description>
+  
+  <features>
+    <benchmark />
+    <error_check />
+    <bing />
+    <!-- <fftw version="3" /> -->
+    <openmp />
+    <stochastic>
+      <noise kind="poissonian" prefix="n" mean-rate="5.0" num="1"/>
+      <!-- If there is no seed attribute then seeds will be chosen randomly at run-time -->
+    </stochastic>
+  </features>
+  
+  <geometry>
+    <prop_dim> t </prop_dim>
+  </geometry>
+  
+  <field name="main">
+    <vector name="main">
+      <components type="real">
+        N
+      </components>
+      <initialisation noises="">
+        <![CDATA[
+          N = 0.0;
+        ]]>
+      </initialisation>
+    </vector>
+  </field>
+  
+  <sequence>
+    <integrate algorithm="RK4" interval="10" steps="1000" tolerance="1e-6">
+      <samples>1000</samples>
+      <operators field="main" noises="n">
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+          dN_dt = n_1;
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  <output format="binary" filename="photodetector.xsil">
+    <group>
+      <sampling initial_sample="yes">
+        <moments>Ndet</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          Ndet = N;
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>

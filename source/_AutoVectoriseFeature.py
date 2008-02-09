@@ -22,7 +22,7 @@ class _AutoVectoriseFeature (_Feature):
     """
     Modifies the `templateString` to add in auto-vectorisation features.
     
-    This function is called from ScriptElement's loopOverVectorsWithInnerContentTemplate.
+    This function is called from `ScriptElement`'s `loopOverVectorsWithInnerContentTemplate`.
     """
     templateString = dict['templateString']
     

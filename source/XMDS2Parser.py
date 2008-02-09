@@ -63,7 +63,7 @@ from PoissonianPOSIXNoise import PoissonianPOSIXNoise
 from GaussianMKLNoise import GaussianMKLNoise
 from UniformMKLNoise import UniformMKLNoise
 
-from FourierTransform import FourierTransform
+from FourierTransformNone import FourierTransformNone
 from FourierTransformFFTW2 import FourierTransformFFTW2
 from FourierTransformFFTW3 import FourierTransformFFTW3
 from FourierTransformFFTW3Threads import FourierTransformFFTW3Threads
@@ -122,6 +122,7 @@ class XMDS2Parser(ScriptParser):
       if featureElement:
         if len(featureElement.innerText()) == 0 or featureElement.innerText().lower() == 'yes':
           feature = featureClass(**self.argumentsToTemplateConstructors)
+          feature.xmlElement = featureElement
       return featureElement, feature
     
     
@@ -156,8 +157,13 @@ class XMDS2Parser(ScriptParser):
           noiseClass = PoissonianPOSIXNoise
           if not noiseElement.hasAttribute('mean-rate'):
             raise ParserException(noiseElement, "Poissonian noise must specify a 'mean-rate' attribute.")
-          meanRate = self.integerInString(noiseElement.getAttribute('mean-rate'))
-          noiseAttributeDictionary['noiseMeanRate'] = meanRate
+          
+          meanRateString = noiseElement.getAttribute('mean-rate')
+          try:
+            meanRate = float(meanRateString)
+          except ValueError, err:
+            raise ParserException(noiseElement, "Unable to understand '%(meanRateString)s' as a real value." % locals())
+          noiseAttributeDictionary['noiseMeanRate'] = meanRateString
         elif kind in ('gaussian-mkl'):
           noiseClass = GaussianMKLNoise
         elif kind in ('uniform-mkl'):
@@ -193,7 +199,7 @@ class XMDS2Parser(ScriptParser):
     fftAttributeDictionary = dict()
     
     if not fftwElement:
-      fourierTransformClass = FourierTransform
+      fourierTransformClass = FourierTransformNone
     else:
       threadCount = 1
       if fftwElement.hasAttribute('threads'):
@@ -215,7 +221,7 @@ class XMDS2Parser(ScriptParser):
       elif fftwElement.getAttribute('version').strip() == '2':
         fourierTransformClass = FourierTransformFFTW2
       elif fftwElement.getAttribute('version').strip().lower() == 'none':
-        fourierTransformClass = FourierTransform
+        fourierTransformClass = FourierTransformNone
       else:
         raise ParserException(fftwElement, "The version attribute must be one of 'None', '2', or '3'.")
       
@@ -224,7 +230,7 @@ class XMDS2Parser(ScriptParser):
           fourierTransformClass = FourierTransformFFTW3Threads
         elif fourierTransformClass == FourierTransformFFTW2:
           raise ParserException(fftwElement, "Can't use threads with FFTW2.")
-        elif fourierTransformClass == FourierTransform:
+        elif fourierTransformClass == FourierTransformNone:
           raise ParserException(fftwElement, "Can't use threads with no fourier transforms.")
         else:
           # This shouldn't be reached because the fourierTransformClass should be one of the above options

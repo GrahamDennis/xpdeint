@@ -136,8 +136,6 @@ _*.py files: These are the python superclasses for Cheetah Templates
 
 Decorators: Used for all Python decorators
 
-xmds.py: Old pre-parser script to test the templates. Don't use.
-
 *Filter.py: Cheetah Filters. These 'filter' the generated source as it  
   goes. IndentFilter indents the code property (if you provide it the  
   right arguments), PrintfFilter properly escapes strings that need to  
