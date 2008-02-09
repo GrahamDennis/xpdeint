@@ -38,13 +38,13 @@ inline bool _isBigEndian()
     @set $outputType = "float"
   @end if
 
-char *encoding = NULL;
+const char *encoding = NULL;
 if (_isBigEndian())
   encoding = "BigEndian";
 else
   encoding = "LittleEndian";
 
-char *unsignedLongType = NULL;
+const char *unsignedLongType = NULL;
 if (sizeof(unsigned long)==4)
   unsignedLongType = "uint32";
 else if (sizeof(unsigned long)==8)

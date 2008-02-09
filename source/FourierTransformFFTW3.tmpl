@@ -9,11 +9,17 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 @def description: FFTW3
 
 @def includes
+  @#
+  @super
+  @#
 #include <fftw3.h>
 @end def
 
 @# defines
 @def defines
+  @#
+  @super
+  @#
 #define xmds_malloc fftw_malloc
 #define xmds_free   fftw_free
 @end def
@@ -23,13 +29,16 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   Globals needed at the start of the simulation
 *@
 @def globals
-@for $field in $fields
-  @# only loop over those vectors that need fourier transforms
-  @for $vector in $filter(lambda x: x.needsFourierTransforms, $field.vectors)
+  @#
+  @super
+  @#
+  @for $field in $fields
+    @# only loop over those vectors that need fourier transforms
+    @for $vector in $filter(lambda x: x.needsFourierTransforms, $field.vectors)
 fftw_plan _${field.name}_${vector.name}_forward_plan;
 fftw_plan _${field.name}_${vector.name}_backward_plan;
+    @end for
   @end for
-@end for
 @end def
 
 @# do the (forward/backward) transform for the vector
@@ -55,12 +64,16 @@ fftw_execute_dft(_plan, reinterpret_cast<fftw_complex*>(_active_${vector.field.n
 
 @# run a quick fourier transform
 @def runQuickFFTForVectorWithCount($vector, $count, $type)
+  @#
 fftw_execute(_plan);
+  @#
 @end def
 
 @# destroy the quick plan
 @def destroyQuickPlan()
+  @#
 fftw_destroy_plan(_plan);
+  @#
 @end def
 
 @def mainBegin(dict)

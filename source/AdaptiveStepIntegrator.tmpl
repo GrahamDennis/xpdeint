@@ -18,10 +18,11 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   @super
 void _segment${segmentNumber}_calculate_nonconstant_ip_fields(double _step, int _exponent, int _arrayIndex);
 double _segment${segmentNumber}_setup_sampling(bool* _next_sample_flag, long* _next_sample_counter);
-@for $vector in $vectors
+  @#
+  @for $vector in $vectors
 double _segment${segmentNumber}_${vector.id}_timestep_error(${vector.type}* _checkfield);
 void _segment${segmentNumber}_${vector.id}_reset(${vector.type}* _reset_to, double _step);
-@end for
+  @end for
   @#
 @end def
 

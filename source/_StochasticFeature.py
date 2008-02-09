@@ -93,9 +93,12 @@ class _StochasticFeature (_Feature):
       o.dependencies.update([noise.noiseVectorForField(o.field) for noise in o.noises])
     
     
-    integratorsUsingNoises = set([o.integrator for o in objectsThatMightUseNoises if isinstance(o, DeltaAOperator)])
-    for integrator in integratorsUsingNoises:
+    integratorsUsingNoises = set([(o.integrator, o) for o in objectsThatMightUseNoises if isinstance(o, DeltaAOperator)])
+    for integrator, deltaAOperator in integratorsUsingNoises:
       if hasattr(integrator, 'successfulStepExponent') and hasattr(integrator, 'unsuccessfulStepExponent'):
+        for noise in deltaAOperator.noises:
+          if noise.noiseDistribution not in ('gaussian'):
+            raise ParserException(self.xmlElement, "Currently only gaussian noises can be used in adaptive integrators.")
         integrator.successfulStepExponent /= 2.0
         integrator.unsuccessfulStepExponent /= 2.0
     

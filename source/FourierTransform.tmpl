@@ -5,22 +5,8 @@ Created by Graham Dennis on 2007-08-23.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *@
 @extends _Feature
-@def description: No fourier transform
+@def description: Abstract fourier transform
 @attr $featureName = 'FourierTransform'
-
-@# includes needed for fourier transform
-@def includes
-typedef struct {
-  double re;
-  double im;
-} fftw_complex;
-@end def
-
-@# defines
-@def defines
-#define xmds_malloc malloc
-#define xmds_free   free
-@end def
 
 @# do the full transform for the vector
 @def fullFFTForVector($vector, $type)
