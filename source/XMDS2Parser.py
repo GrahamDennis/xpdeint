@@ -34,6 +34,7 @@ from AdaptiveStepIntegrator import AdaptiveStepIntegrator
 from RK4Integrator import RK4Integrator as RK4IntegratorTemplate
 from RK9Integrator import RK9Integrator as RK9IntegratorTemplate
 from ARK45Integrator import ARK45Integrator as ARK45IntegratorTemplate
+from ARK89Integrator import ARK89Integrator as ARK89IntegratorTemplate
 
 from DeltaAOperator import DeltaAOperator as DeltaAOperatorTemplate
 from ConstantIPOperator import ConstantIPOperator as ConstantIPOperatorTemplate
@@ -550,9 +551,11 @@ class XMDS2Parser(ScriptParser):
       integratorTemplateClass = RK9IntegratorTemplate
     elif algorithmString == 'ARK45':
       integratorTemplateClass = ARK45IntegratorTemplate
+    elif algorithmString == 'ARK89':
+      integratorTemplateClass = ARK89IntegratorTemplate
     else:
       raise ParserException(integrateElement, "Unknown algorithm '%(algorithmString)s'. "
-                                              "Options are 'RK4', 'RK9' or 'ARK45'." % locals())
+                                              "Options are 'RK4', 'RK9', 'ARK45' or 'ARK89'." % locals())
     
     integratorTemplate = integratorTemplateClass(**self.argumentsToTemplateConstructors)
     

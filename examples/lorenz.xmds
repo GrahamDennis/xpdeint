@@ -40,7 +40,7 @@
   </field>
   
   <sequence>
-    <integrate algorithm="ARK45" interval="100.0" steps="25000" tolerance="1e-7">
+    <integrate algorithm="ARK89" interval="100.0" steps="25000" tolerance="1e-7">
       <samples>5000</samples>
       <operators field="main">
         <integration_vectors>main</integration_vectors>
