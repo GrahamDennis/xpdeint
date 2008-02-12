@@ -51,37 +51,48 @@ class IndentFilter(Filter):
     if kw.get('extraIndent'):
       indentString += ' '*kw['extraIndent']
       firstLineIndent += ' '*kw['extraIndent']
+    
+    replacementString = super(IndentFilter, self).filter(val, **kw)
+    
+    # If the replacement string is just space, just use an empty string instead.
+    if replacementString == None or replacementString.isspace():
+      replacementString = ''
+    
     if kw.get('autoIndent'):
       # Grab the transaction object from our caller's frame. Yay introspection.
       callerFrame = sys._getframe(1)
       trans = callerFrame.f_locals['trans']
       del callerFrame
       
-      lastLine = trans.response().getvalue().rpartition('\n')[2]
-      # only add the contents of the last line if it consists of only whitespace
+      (everythingBeforeLastLine, sep, lastLine) = trans.response().getvalue().rpartition('\n')
+      
+      # Only add the contents of the last line to the indent string if it is only whitespace
       if lastLine.isspace():
         indentString += lastLine
-    replacementString = super(IndentFilter, self).filter(val, **kw)
-    # If we were supposed to be indenting and we have no replacement, then we need to clear
-    # up that indent, but only if we are auto-indenting
-    if kw.get('autoIndent') and len(replacementString) == 0:
-      (everythingBeforeLastLine, sep, lastLine) = trans.response().getvalue().rpartition('\n')
-      # only erase the last line if it is only whitespace
-      if lastLine.isspace():
+      
+      # Erase the last line and return an empty string if we have no replacement
+      # But only if the last line consists of pure whitespace
+      if len(replacementString) == 0 and lastLine.isspace():
         del trans.response()._outputChunks[:]
-        trans.response()._outputChunks.append(everythingBeforeLastLine + "\n")
+        trans.response()._outputChunks.append(everythingBeforeLastLine + '\n')
+        return ''
+    
     # if either the indent string or the replacement string is empty, there's nothing to do
-    if len(indentString) == 0 or len(replacementString) == 0:          
+    if len(indentString) == 0 or len(replacementString) == 0:
       return replacementString
+    
     # split the replacement string into lines (keeping the newline characters)
     replacementLines = replacementString.splitlines(True)
+    
     # we don't do anything to the first line (except add the firstLineIndent),
     # so if there's only one, we're pretty much done
     if len(replacementLines) == 1:
       return firstLineIndent + replacementString
+    
     # add the firstLineIndent to the first line.
     if len(firstLineIndent):
       replacementLines[0] = firstLineIndent + replacementLines[0]
+    
     # add the indentString to the start of each line (except the first). (Yay Python)
     replacementLines[1:] = map(lambda x: indentString + x, replacementLines[1:])
     return "".join(replacementLines)

@@ -24,6 +24,8 @@ def callOncePerClassGuard(f):
     if getattr(_ScriptElement, attributeGuardName) == False:
       setattr(_ScriptElement, attributeGuardName, True)
       return f(*args, **KWs)
+    else:
+      return ''
   
   return wrapper
 
@@ -40,5 +42,7 @@ def callOncePerInstanceGuard(f):
     if getattr(self, attributeGuardName) == False:
       setattr(self, attributeGuardName, True)
       return f(self, *args, **KWs)
+    else:
+      return ''
   
   return wrapper
