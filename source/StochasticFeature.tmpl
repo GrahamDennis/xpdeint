@@ -165,8 +165,6 @@ if (_noise_list.empty()) {
   if (_step > 0.5*_old_smallest_step*(1.0 + _EPSILON))
     _step = 0.5*_old_smallest_step;
   
-  _noise_list.begin()->_step -= _step;
-  
   @for noise, field in $noisesAndFieldsForIntegrator(integrator)
     @set $noiseVector = noise.noiseVectorForField(field)
   _active_${noiseVector.id} = (double*) xmds_malloc(sizeof(double) * _${field.name}_size * _${noiseVector.id}_ncomponents);
@@ -177,7 +175,6 @@ if (_noise_list.empty()) {
   double* const _old_${noiseVector.id} = _noise_list.begin()->_${noiseVector.id};
   ${loopOverVectorsWithInnerContentTemplate([$noiseVector], 
 """_active_${vector.id}[${index}] += _old_${vector.id}[${index}];
-_old_${vector.id}[${index}] = (_old_${vector.id}[${index}]*_old_smallest_step - _active_${vector.id}[${index}]*_step)/(_old_smallest_step - _step);
 """), autoIndent=True}@slurp
   @end for
 
@@ -208,12 +205,29 @@ _old_${vector.id}[${index}] = (_old_${vector.id}[${index}]*_old_smallest_step - 
 
 @def adaptiveStepSucceeded(dict)
   @#
+  @set $integrator = dict['caller']
+  @#
+  
 // Trim dtdW tree
 _active_node++;
 if (_active_node == _noise_list.end())
   _noise_list.clear();
-else
-  _noise_list.pop_front();
+else {
+  for (list<_dtdWstore>::iterator _temp_iter = _active_node; _temp_iter != _noise_list.end(); _temp_iter++) {
+    _temp_iter->_step -= _step;
+    double _temp_step = _temp_iter->_step;
+    
+  @for noise, field in $noisesAndFieldsForIntegrator(integrator)
+    @set $noiseVector = noise.noiseVectorForField(field)
+    ${noiseVector.type}* _temp_${noiseVector.id} = _temp_iter->_${noiseVector.id};
+    ${loopOverVectorsWithInnerContentTemplate([$noiseVector],
+"""_temp_${vector.id}[$index] = (_temp_${vector.id}[$index]*(_temp_step + _step) - _active_${vector.id}[$index]*_step)/_temp_step;
+"""), autoIndent=True}@slurp
+  @end for
+  }
+  
+  _noise_list.erase(_noise_list.begin(), _active_node);
+}
 
   @#
 @end def

@@ -99,8 +99,8 @@ class _StochasticFeature (_Feature):
         for noise in deltaAOperator.noises:
           if noise.noiseDistribution not in ('gaussian'):
             raise ParserException(self.xmlElement, "Currently only gaussian noises can be used in adaptive integrators.")
-        integrator.successfulStepExponent /= 2.0
-        integrator.unsuccessfulStepExponent /= 2.0
+        integrator.successfulStepExponent *= 2.0
+        integrator.unsuccessfulStepExponent *= 2.0
     
     super(_Feature, self).preflight()
   

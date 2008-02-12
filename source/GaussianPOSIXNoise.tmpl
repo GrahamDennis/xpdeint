@@ -31,8 +31,9 @@ for (long _i0 = 0; _i0 < _evenNoises; _i0 += 2) {
 if (_n & 1) {
   static double _spareNoise = 0.0;
   static bool _spareNoiseAvailable = false;
+  static double _old_var = 0.0;
   
-  if (_spareNoiseAvailable) {
+  if (_spareNoiseAvailable && _old_var == _var) {
     _noise_vector[_n - 1] = _spareNoise;
     _spareNoiseAvailable = false;
   } else {
@@ -47,6 +48,7 @@ if (_n & 1) {
     _spareNoise = _v2*_fac;
   
     _spareNoiseAvailable = true;
+    _old_var = _var;
   }
 }
   @#

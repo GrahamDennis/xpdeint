@@ -21,7 +21,7 @@ double _segment${segmentNumber}_setup_sampling(bool* _next_sample_flag, long* _n
   @#
   @for $vector in $vectors
 double _segment${segmentNumber}_${vector.id}_timestep_error(${vector.type}* _checkfield);
-void _segment${segmentNumber}_${vector.id}_reset(${vector.type}* _reset_to, double _step);
+void _segment${segmentNumber}_${vector.id}_reset(${vector.type}* _reset_to);
   @end for
   @#
 @end def
@@ -142,7 +142,7 @@ double _segment${segmentNumber}_${vector.id}_timestep_error(${vector.type}* _che
   @end if
   
   {
-    ${loopOverVectorsWithInnerContent([vector], $insideFindMaxErrorLoops(vector), autoIndent=True)}@slurp
+    ${loopOverVectorsWithInnerContent([vector], $insideFindMaxErrorLoops(vector)), autoIndent=True}@slurp
   }
   
   return _error;
@@ -206,9 +206,9 @@ if (_error < _temp_error)
 
 @def resetFunctionImplementation($vector)
   @#
-void _segment${segmentNumber}_${vector.id}_reset(${vector.type}* _reset_to, double _step)
+void _segment${segmentNumber}_${vector.id}_reset(${vector.type}* _reset_to)
 {
-  ${loopOverVectorsWithInnerContentTemplate([$vector], "_${vector.id}[$index] = _reset_to[$index];")}
+  ${loopOverVectorsWithInnerContentTemplate([$vector], "_${vector.id}[$index] = _reset_to[$index];"), autoIndent=True}@slurp
 }
   @#
 @end def
@@ -305,7 +305,7 @@ void _segment${segmentNumber}()
         t -= _step;
   @for $vector in $vectors
         
-        _${name}_${vector.id}_reset(_${resetFieldName}_${vector.id}, _step);
+        _${name}_${vector.id}_reset(_${resetFieldName}_${vector.id});
   @end for
         _segment${segmentNumber}_ip_evolve(-1);
         
