@@ -148,7 +148,7 @@ if (_noise_list.empty()) {
   _active_node->_step = _step; 
   @for (noise, field) in $noisesAndFieldsForIntegrator(integrator)
    @set $noiseVector = noise.noiseVectorForField(field)
-
+  
   _active_${noiseVector.id} = (double*) xmds_malloc(sizeof(double) * _${field.name}_size * _${noiseVector.id}_ncomponents);
   _make_${noise.prefix}_noises(_${field.name}_var/_step, _active_${noiseVector.id}, _${field.name}_size * _${noiseVector.id}_ncomponents);
   _active_node->_${noiseVector.id} = _active_${noiseVector.id};
@@ -165,19 +165,23 @@ if (_noise_list.empty()) {
   if (_step > 0.5*_old_smallest_step*(1.0 + _EPSILON))
     _step = 0.5*_old_smallest_step;
   
+  _noise_list.begin()->_step -= _step;
+  
   @for noise, field in $noisesAndFieldsForIntegrator(integrator)
     @set $noiseVector = noise.noiseVectorForField(field)
   _active_${noiseVector.id} = (double*) xmds_malloc(sizeof(double) * _${field.name}_size * _${noiseVector.id}_ncomponents);
   _make_${noise.prefix}_noises(_${field.name}_var * (_old_smallest_step - _step)/(_step * _old_smallest_step), 
       _active_${noiseVector.id}, _${field.name}_size * _${noiseVector.id}_ncomponents);
-    
+  
   // Now complete creation of the new noise, and update the old noise to be for the remaining component of the time.
   double* const _old_${noiseVector.id} = _noise_list.begin()->_${noiseVector.id};
+  
   ${loopOverVectorsWithInnerContentTemplate([$noiseVector], 
-"""_active_${vector.id}[${index}] += _old_${vector.id}[${index}];
+"""_active_${vector.id}[$index] += _old_${vector.id}[$index];
+_old_${vector.id}[$index] = (_old_${vector.id}[$index]*_old_smallest_step - _active_${vector.id}[$index]*_step)/(_old_smallest_step - _step);
 """), autoIndent=True}@slurp
   @end for
-
+  
   _noise_list.push_front(_dtdWstore());
   _active_node = _noise_list.begin();
   _active_node->_step = _step;
@@ -186,16 +190,55 @@ if (_noise_list.empty()) {
   _active_node->_${noiseVector.id} = _active_${noiseVector.id};
   @end for
 } else { 
-  // Use time step already attempted 
-  for (_active_node = _noise_list.begin(); (_active_node != _noise_list.end()) && (_active_node->_step <= _step*(1.0 + _EPSILON)); _active_node++)
-    ;
-
-  _active_node--;
-  _step = _active_node->_step;
+  // Use step already attempted
+  double _cumulative_step = 0.0;
+  
+  _active_node = _noise_list.begin();
+  
   @for noise, field in $noisesAndFieldsForIntegrator(integrator)
     @set $noiseVector = noise.noiseVectorForField(field)
   _active_${noiseVector.id} = _active_node->_${noiseVector.id};
   @end for
+  
+  for (_active_node = _noise_list.begin();
+       (_active_node != _noise_list.end()) && (_cumulative_step + _active_node->_step <= _step*(1.0 + _EPSILON));
+       _active_node++)
+    _cumulative_step += _active_node->_step;
+  
+  _active_node--;
+  
+  if (_active_node != _noise_list.begin()) {
+    list<_dtdWstore>::iterator _extra_node = _noise_list.begin();
+    list<_dtdWstore>::iterator _last_node = _active_node;
+    
+    _extra_node++;
+    _last_node++;
+    
+    double _step1 = _noise_list.begin()->_step;
+    double _extra_step = _extra_node->_step;
+
+  @for noise, field in $noisesAndFieldsForIntegrator(integrator)
+    @set $noiseVector = noise.noiseVectorForField(field)
+    ${noiseVector.type}* _extra_${noiseVector.id} = _extra_node->_${noiseVector.id};
+    ${loopOverVectorsWithInnerContentTemplate([$noiseVector],
+"""_active_${vector.id}[$index] = (_step1/_cumulative_step)*_active_${vector.id}[$index] + (_extra_step/_cumulative_step)*_extra_${vector.id}[$index];
+"""), autoIndent=True}@slurp
+  @end for
+    
+    _extra_node++;
+    
+    for (; _extra_node != _last_node; _extra_node++) {
+      _extra_step = _extra_node->_step;
+  @for noise, field in $noisesAndFieldsForIntegrator(integrator)
+    @set $noiseVector = noise.noiseVectorForField(field)
+      _extra_${noiseVector.id} = _extra_node->_${noiseVector.id};
+      ${loopOverVectorsWithInnerContentTemplate([$noiseVector],
+"""_active_${vector.id}[$index] += (_extra_step/_cumulative_step)*_extra_${vector.id}[$index];
+"""), autoIndent=True}@slurp
+  @end for
+    }
+  }
+  
   if (_break_next && fabs(${propagationDimension} - _${propagationDimension}_ini + _step - _${propagationDimension}_break_next) > _step*_EPSILON)
     _break_next = false;
 } 
@@ -212,22 +255,8 @@ if (_noise_list.empty()) {
 _active_node++;
 if (_active_node == _noise_list.end())
   _noise_list.clear();
-else {
-  for (list<_dtdWstore>::iterator _temp_iter = _active_node; _temp_iter != _noise_list.end(); _temp_iter++) {
-    _temp_iter->_step -= _step;
-    double _temp_step = _temp_iter->_step;
-    
-  @for noise, field in $noisesAndFieldsForIntegrator(integrator)
-    @set $noiseVector = noise.noiseVectorForField(field)
-    ${noiseVector.type}* _temp_${noiseVector.id} = _temp_iter->_${noiseVector.id};
-    ${loopOverVectorsWithInnerContentTemplate([$noiseVector],
-"""_temp_${vector.id}[$index] = (_temp_${vector.id}[$index]*(_temp_step + _step) - _active_${vector.id}[$index]*_step)/_temp_step;
-"""), autoIndent=True}@slurp
-  @end for
-  }
-  
+else
   _noise_list.erase(_noise_list.begin(), _active_node);
-}
 
   @#
 @end def
