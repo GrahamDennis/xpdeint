@@ -169,13 +169,13 @@ if (_noise_list.empty()) {
   
   @for noise, field in $noisesAndFieldsForIntegrator(integrator)
     @set $noiseVector = noise.noiseVectorForField(field)
-    _active_${noiseVector.id} = (double*) xmds_malloc(sizeof(double) * _${field.name}_size * _${noiseVector.id}_ncomponents);
-    _make_${noise.prefix}_noises(_${field.name}_var * (_old_smallest_step - _step)/(_step * _old_smallest_step), 
-        _active_${noiseVector.id}, _${field.name}_size * _${noiseVector.id}_ncomponents);
+  _active_${noiseVector.id} = (double*) xmds_malloc(sizeof(double) * _${field.name}_size * _${noiseVector.id}_ncomponents);
+  _make_${noise.prefix}_noises(_${field.name}_var * (_old_smallest_step - _step)/(_step * _old_smallest_step), 
+      _active_${noiseVector.id}, _${field.name}_size * _${noiseVector.id}_ncomponents);
     
-    // Now complete creation of the new noise, and update the old noise to be for the remaining component of the time.
-    double* const _old_${noiseVector.id} = _noise_list.begin()->_${noiseVector.id};
-    ${loopOverVectorsWithInnerContentTemplate([$noiseVector], 
+  // Now complete creation of the new noise, and update the old noise to be for the remaining component of the time.
+  double* const _old_${noiseVector.id} = _noise_list.begin()->_${noiseVector.id};
+  ${loopOverVectorsWithInnerContentTemplate([$noiseVector], 
 """_active_${vector.id}[${index}] += _old_${vector.id}[${index}];
 _old_${vector.id}[${index}] = (_old_${vector.id}[${index}]*_old_smallest_step - _active_${vector.id}[${index}]*_step)/(_old_smallest_step - _step);
 """), autoIndent=True}@slurp
@@ -197,9 +197,9 @@ _old_${vector.id}[${index}] = (_old_${vector.id}[${index}]*_old_smallest_step - 
   _step = _active_node->_step;
   @for noise, field in $noisesAndFieldsForIntegrator(integrator)
     @set $noiseVector = noise.noiseVectorForField(field)
-    _active_${noiseVector.id} = _active_node->_${noiseVector.id};
+  _active_${noiseVector.id} = _active_node->_${noiseVector.id};
   @end for
-  if (_break_next && fabs(t + _step - _t_break_next) > _step*_EPSILON)
+  if (_break_next && fabs(${propagationDimension} - _${propagationDimension}_ini + _step - _${propagationDimension}_break_next) > _step*_EPSILON)
     _break_next = false;
 } 
   
