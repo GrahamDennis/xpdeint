@@ -232,7 +232,7 @@ void _segment${segmentNumber}()
 {
   double _step = ${interval}/(double)${stepCount};
   double _min_step = _step;
-  double _max_step = 0.0;
+  double _max_step = _step;
   
   ${createToleranceVariable, autoIndent=True}@slurp
   @# Insert code for features
