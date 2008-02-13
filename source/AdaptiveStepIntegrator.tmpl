@@ -97,7 +97,7 @@ double _segment${segmentNumber}_setup_sampling(bool* _next_sample_flag, long* _n
     _previous_M = $sampleCount;
     _previous_m = _next_sample_counter[$momentGroupNumber];
   }
-
+  
   @end for
   // _momentGroupNumbersNeedingSamplingNext now contains the complete list of moment groups that need
   // to be sampled at the next sampling point. Set their flags to true.
@@ -284,7 +284,7 @@ void _segment${segmentNumber}()
       
       ${singleIntegrationStep, autoIndent=True}@slurp
       
-      ${insertCodeForFeatures('integrateAdaptiveStepInnerLoopEnd', featureOrderingInnerLoop), autoIndent=True}@slurp
+      ${insertCodeForFeaturesInReverseOrder('integrateAdaptiveStepInnerLoopEnd', featureOrderingInnerLoop), autoIndent=True}@slurp
       
       _error = 0.0;
   @for $vector in $vectors
