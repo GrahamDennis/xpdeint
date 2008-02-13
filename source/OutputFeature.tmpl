@@ -90,7 +90,7 @@ if ((_istep % $sampleEveryNthStep) == ${sampleEveryNthStep - 1})
   @#
 @end def
 
-@def integrateAdaptiveStepInnerLoopEnd($dict)
+@def integrateAdaptiveStepOuterLoopEnd($dict)
   @#
   @set $integrator = dict['caller']
   @assert len($momentGroups) == len($integrator.samples)
