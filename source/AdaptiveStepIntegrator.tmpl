@@ -275,12 +275,16 @@ void _segment${segmentNumber}()
   ${localInitialise, autoIndent=True}@slurp
   
   do {
+  @set $featureOrderingOuterLoop = ['Output', 'ErrorCheck']
+    ${insertCodeForFeatures('integrateAdaptiveStepOuterLoopBegin', featureOrderingOuterLoop), autoIndent=True}@slurp
     do {
   @# Insert code for features
-  @set $featureOrderingInner = ['Output', 'ErrorCheck', 'Stochastic']
-      ${insertCodeForFeatures('integrateAdaptiveStepInnerLoopBegin', featureOrderingInner), autoIndent=True}@slurp
+  @set $featureOrderingInnerLoop = ['Stochastic']
+      ${insertCodeForFeatures('integrateAdaptiveStepInnerLoopBegin', featureOrderingInnerLoop), autoIndent=True}@slurp
       
       ${singleIntegrationStep, autoIndent=True}@slurp
+      
+      ${insertCodeForFeatures('integrateAdaptiveStepInnerLoopEnd', featureOrderingInnerLoop), autoIndent=True}@slurp
       
       _error = 0.0;
   @for $vector in $vectors
@@ -325,7 +329,7 @@ void _segment${segmentNumber}()
     
     } while (_discard);
     
-    ${insertCodeForFeaturesInReverseOrder('integrateAdaptiveStepInnerLoopEnd', featureOrderingInner), autoIndent=True}@slurp
+    ${insertCodeForFeaturesInReverseOrder('integrateAdaptiveStepOuterLoopEnd', featureOrderingOuterLoop), autoIndent=True}@slurp
   } while (!_next_sample_flag[${momentGroupCount + 1}]);
   
   _LOG(_SEGMENT_LOG_LEVEL, "Segment ${segmentNumber}: minimum timestep: %e maximum timestep: %e\n", _min_step, _max_step);

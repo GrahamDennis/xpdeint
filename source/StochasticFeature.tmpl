@@ -108,6 +108,8 @@ const double _${field.name}_var = 1.0@slurp
 
 list<_dtdWstore> _noise_list;
 list<_dtdWstore>::iterator _active_node;
+
+bool _combined_noise_flag = false;
   @#
 @end def
 
@@ -169,7 +171,7 @@ if (_noise_list.empty()) {
   
   @for noise, field in $noisesAndFieldsForIntegrator(integrator)
     @set $noiseVector = noise.noiseVectorForField(field)
-  _active_${noiseVector.id} = (double*) xmds_malloc(sizeof(double) * _${field.name}_size * _${noiseVector.id}_ncomponents);
+  _active_${noiseVector.id} = (${noiseVector.type}*) xmds_malloc(sizeof(${noiseVector.type}) * _${field.name}_size * _${noiseVector.id}_ncomponents);
   _make_${noise.prefix}_noises(_${field.name}_var * (_old_smallest_step - _step)/(_step * _old_smallest_step), 
       _active_${noiseVector.id}, _${field.name}_size * _${noiseVector.id}_ncomponents);
   
@@ -195,11 +197,6 @@ _old_${vector.id}[$index] = (_old_${vector.id}[$index]*_old_smallest_step - _act
   
   _active_node = _noise_list.begin();
   
-  @for noise, field in $noisesAndFieldsForIntegrator(integrator)
-    @set $noiseVector = noise.noiseVectorForField(field)
-  _active_${noiseVector.id} = _active_node->_${noiseVector.id};
-  @end for
-  
   for (_active_node = _noise_list.begin();
        (_active_node != _noise_list.end()) && (_cumulative_step + _active_node->_step <= _step*(1.0 + _EPSILON));
        _active_node++)
@@ -207,21 +204,34 @@ _old_${vector.id}[$index] = (_old_${vector.id}[$index]*_old_smallest_step - _act
   
   _active_node--;
   
-  if (_active_node != _noise_list.begin()) {
+  if (_active_node == _noise_list.begin()) {
+  @for noise, field in $noisesAndFieldsForIntegrator(integrator)
+    @set $noiseVector = noise.noiseVectorForField(field)
+    _active_${noiseVector.id} = _active_node->_${noiseVector.id};
+  @end for
+  } else {
     list<_dtdWstore>::iterator _extra_node = _noise_list.begin();
     list<_dtdWstore>::iterator _last_node = _active_node;
     
     _extra_node++;
     _last_node++;
     
+  @for noise, field in $noisesAndFieldsForIntegrator(integrator)
+    @set $noiseVector = noise.noiseVectorForField(field)
+    _active_${noiseVector.id} = (${noiseVector.type}*) xmds_malloc(sizeof(${noiseVector.type}) * _${field.name}_size * _${noiseVector.id}_ncomponents);
+  @end for
+    
+    _combined_noise_flag = true;
+    
     double _step1 = _noise_list.begin()->_step;
     double _extra_step = _extra_node->_step;
 
   @for noise, field in $noisesAndFieldsForIntegrator(integrator)
     @set $noiseVector = noise.noiseVectorForField(field)
+    ${noiseVector.type}* _begin_${noiseVector.id} = _noise_list.begin()->_${noiseVector.id};
     ${noiseVector.type}* _extra_${noiseVector.id} = _extra_node->_${noiseVector.id};
     ${loopOverVectorsWithInnerContentTemplate([$noiseVector],
-"""_active_${vector.id}[$index] = (_step1/_cumulative_step)*_active_${vector.id}[$index] + (_extra_step/_cumulative_step)*_extra_${vector.id}[$index];
+"""_active_${vector.id}[$index] = (_step1/_cumulative_step)*_begin_${vector.id}[$index] + (_extra_step/_cumulative_step)*_extra_${vector.id}[$index];
 """), autoIndent=True}@slurp
   @end for
     
@@ -246,6 +256,20 @@ _old_${vector.id}[$index] = (_old_${vector.id}[$index]*_old_smallest_step - _act
 } 
   
   @#
+@end def
+
+@def integrateAdaptiveStepInnerLoopEnd(dict)
+  @#
+  @set $integrator = dict['caller']
+  @#
+if (_combined_noise_flag) {
+  _combined_noise_flag = false;
+  @for noise, field in $noisesAndFieldsForIntegrator(integrator)
+    @set $noiseVector = noise.noiseVectorForField(field)
+  xmds_free(_active_${noiseVector.id});
+  _active_${noiseVector.id} = NULL;
+  @end for
+}
 @end def
 
 @def adaptiveStepSucceeded(dict)
