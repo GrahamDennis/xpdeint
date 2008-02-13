@@ -239,6 +239,8 @@ _old_${vector.id}[$index] = (_old_${vector.id}[$index]*_old_smallest_step - _act
     }
   }
   
+  _step = _cumulative_step;
+  
   if (_break_next && fabs(${propagationDimension} - _${propagationDimension}_ini + _step - _${propagationDimension}_break_next) > _step*_EPSILON)
     _break_next = false;
 } 
