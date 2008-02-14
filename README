@@ -8,16 +8,15 @@ First, let's dive into the build instructions before we talk about features.
 
 Build instructions:
 1. Install python 2.5 or greater.
-   Mac OS X: The easiest way to do this and later steps is to install MacPorts
-   (www.macports.org). Once MacPorts is installed, simply type:
-   sudo port install python25 py25-setuptools
-   to install python 2.5 and the setuptools package.
+   Mac OS X: The easiest way to do this is by downloading a .dmg from http://pythonmac.org/packages/.
    If you have Leopard (10.5) or later, then python 2.5 comes pre-installed.
 
    Linux: Install this using your favourite package manager.
 
 2. Install Cheetah version 2.0.1 or later. If you have the setuptools python
    package installed, then you can simply type 'easy_install Cheetah'.
+   Mac OS X: Install setuptools by downloading http://peak.telecommunity.com/dist/ez_setup.py
+       Execute via 'python ez_setup.py'.
 
 3. Cheetah templates (*.tmpl) are compiled into python, to do this, execute the
    following command (in the source/ directory):
@@ -52,7 +51,7 @@ So far the feature list includes:
 * xmds-1 like generated source. In many places existing internal hacks  
   could work in xpdeint.
 
-Features missing:
+Features missing (see the TODO for a more complete list):
 * Stochastic support (I've mostly implemented this)
 * Deterministic MPI support (nightmarish)
 * A front-end (parse command line arguments to xmds, load the right  
