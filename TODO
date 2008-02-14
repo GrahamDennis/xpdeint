@@ -1,39 +1,96 @@
 * Complete Stochastics support
   * Add support for breaking up poissonian noise
-* Add the ARK89 algorithm
+  * Test
+
 * Add a 'filter' segment
-  * Write a 'GenericFilter' template that is used by filter operators,
+  ? Write a 'GenericFilter' template that is used by filter operators,
     filter segments, moment group sampling and moment group post-processing.
+
 * Add 'functions' elements to integrate, filter segments and anything else that
   might use them
+
 * Add support for passing arguments to simulations
+
 * Write a front-end to write the simulation source to the appropriate file, 
   compile it, etc. Read preferences file, auto-configure one somehow.
+
 * Add ASCII/binary/XSIL vector initialisation options
+
 * Add the ability to distribute stochastic simulations using MPI
+
 * Add the ability to distribute stochastic simulations using OpenMP
-* Deterministic MPI
+
+* Deterministic/distributed MPI
+
 * Cross-propagation
+	- without MPI
+	- still defined as vector, but using normal syntax
+	- Within integrate block: <prop_dim>  <algorithm> <boundary_condition kind="left|right">
+
 * post_processing -- I think this is done in the generator, it just needs the parser
   to process the appropriate XML element.
+
 * FFTW wisdom importing and exporting
+
+* Option for FFTW_PATIENT
+
 * Make sure that all the things that Andy has been doing to enable various simulation
   parameters can be controlled at simulation run time can be done in xpdeint.
+
 * Implement field dimensions which can't be fourier transformed, but are indexed by
   integers. This would be used by vectors for components, like Joe has just 
   implemented in xmds-1.
+	- some with integer indices (may never be FT)
+	- some with double spans (default always FTd)
+	- within operators have option for mixed space.  Recommend strongly efficient choice of dimension ordering.
+Default dimensions in field is empty, to be same as output.  Integer dimensions are 2 strings.  psi[u,v][w](x,y,x)  for memory order u v x y z w	
+space="x" should be space="dimensionname"  Don't have boolean option.  Integer-valued dimensions may be in the list if not Fourier
+
 * Write a TextMate grammar for our Cheetah templates (for syntax highlighting
   goodness)
+
 * Rewrite parser so that it isn't so long. (Ask Gabriel McManus)
+
 * Documentation needs to be written (both user and developer). The developer documentation
   needs to be converted from current straight comments to use docstrings.
+
 * Licenses: The GPLv2 header needs to be put on all of the source files for this project.
   I've been very lazy and have just used the default of the text editor I have been using
   which is simply "copyright (c) Graham Dennis" or the like. My intention is that the whole
   project should be under GPL2 unless there is some compelling reason why it should be under
   something else.
-* FFTW2 support. FFTW3 support has been written and tested, and the basic code for FFTW2 is in
+
+? FFTW2 support. FFTW3 support has been written and tested, and the basic code for FFTW2 is in
   FourierTransformFFTW2.tmpl, however it hasn't been finished.
+
 * Breakpoint elements.
+
 * Sequence segments so that you can loop over things.
+
 * Make xpdeint report the correct subversion revision somehow
+
+* Example library
+
+* Sequence elements need to exist and have loop structures.
+
+* EX use filter code (maybe twice)
+
+* operator ordering:  For multiple operators blocks, each group goes in order of dimension size from largest to smallest.
+		Order of blocks: IP out of stream.  
+		All filters, EXs, cross-props, functions in order until DeltaA, which must be followed only by functions.  
+		DeltaAs. 
+		Functions specified after DeltaAs. 
+		
+* Filters source_field should go.  Source dims from union of dependencies.  Target sanity check subset== source dims.
+
+* IP term check.  Spout warning if misaligned.
+
+* EX for arbitrary code.  Buyer beware style.  
+	- L[psi*~psi] 
+	- If operator contents != component name, then it will be its own filter and EX block.  
+	- Watch for exact copies of operator+string
+	- Also reuse repeats of each string (trailing/following whitespace stripped) for efficiency.  L[psi*~psi]  D[ psi*~psi]
+
+* Field dimensions should be stored in canonical order.
+
+? Post-processing
