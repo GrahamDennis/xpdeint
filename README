@@ -35,7 +35,7 @@ This should mostly work. Note that to change the xmds script being used to gener
 the simulation source, you will need to modify the parser2.py file.
 
 So far the feature list includes:
-* RK4, RK9, and ARK45 integrators
+* RK4, RK9, ARK45, ARK89 integrators
 * IP/EX operators are separate from the integration algorithm, so you  
   can have both IP and EX operators in a single integrate block
 * Fields of different dimensions

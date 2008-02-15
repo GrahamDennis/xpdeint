@@ -4,7 +4,7 @@
 parser2.py
 
 Created by Graham Dennis on 2008-01-03.
-Copyright (c) 2007 __MyCompanyName__. All rights reserved.
+Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
 import sys
@@ -88,14 +88,14 @@ def innerText(self):
   
   For example, consider the following XML::
   
-  <root>
-    <someTag> someText </someTag>
-    <![CDATA[
-      some other text.
-    ]]>
-  </root>
+    <root>
+      <someTag> someText </someTag>
+      <![CDATA[
+        some other text.
+        ]]>
+    </root>
   
-  On the `root` element, `innerText` would return " someText some other text." plus
+  On the ``root`` element, `innerText` would return " someText some other text." plus
   or minus some newlines and other whitespace.
   """
   contents = []
