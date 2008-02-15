@@ -23,10 +23,10 @@ Build instructions:
    cheetah compile *.tmpl
    
 4. Test xpdeint by running (in the source/ directory):
-   ./parser2.py > output_file.cc
+   ./parser2.py ../examples/kubo.xmds
 
 5. Hand-compile the generated source file, like:
-   g++ -o output_file output_file.cc -lxmds -lfftw3
+   g++ -o kubo kubo.cc -lxmds -lfftw3
 
    Note that xpdeint currently requires xmds-1 to be installed for things  
    like libxmds and xmds_complex.h

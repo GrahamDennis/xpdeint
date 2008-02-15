@@ -162,7 +162,7 @@ def main(argv=None):
       if option in ("-h", "--help"):
         raise Usage(help_message)
       if option in ("-o", "--output"):
-        output = value
+        output = value+".cc"
 
 	# argument processing
     if len(args)==1:
@@ -327,12 +327,6 @@ def main(argv=None):
   
   # We don't need the 'vectors' variable any more.
   del globalNameSpace['vectors']
-  
-  # FIXME: Currently we just print the generated source to standard out.
-  # What we should do is output the generated source to a file.
-  # The name of the file should come from the <name> tag of the XMDS
-  # script. This variable is available from the globalNameSpace using
-  # globalNameSpace['simulationName'].
   
   if output=='':
 	output=globalNameSpace['simulationName']+".cc"
