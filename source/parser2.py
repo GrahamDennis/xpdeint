@@ -34,8 +34,12 @@ from IndentFilter import IndentFilter
 
 # The help message printed when --help is used as an argument
 help_message = '''
-The help message goes here.
-'''
+usage: parser2 [options] fileToBeParsed
+
+Options and arguments:
+-h          : Print this message (also --help)
+-o filename : This overrides the name of the output file to be generated
+-v          : Verbose mode (also --verbose)'''
 
 
 # These are additional functions that will be added to the XML
@@ -146,10 +150,11 @@ def main(argv=None):
     argv = sys.argv
   try:
     try:
-      opts, args = getopt.getopt(argv[1:], "ho:v", ["help", "output="])
+      opts, args = getopt.gnu_getopt(argv[1:], "ho:v", ["help", "output="])
     except getopt.error, msg:
       raise Usage(msg)
     
+    output=''
     # option processing
     for option, value in opts:
       if option == "-v":
@@ -158,16 +163,18 @@ def main(argv=None):
         raise Usage(help_message)
       if option in ("-o", "--output"):
         output = value
+
+	# argument processing
+    if len(args)==1:
+        scriptName = args[0]
+    else:
+        raise Usage(help_message)
   
   except Usage, err:
     print >> sys.stderr, sys.argv[0].split("/")[-1] + ": " + str(err.msg)
     print >> sys.stderr, "\t for help use --help"
     return 2
-  
-  # FIXME: Work out the simulation script that we read from command-line arguments
-  scriptName = "../examples/kubo.xmds"
-  
-  
+    
   # Add the helper methods defined earlier to the XML classes
   minidom.Element.getChildElementsByTagName  = getChildElementsByTagName
   minidom.Document.getChildElementsByTagName = getChildElementsByTagName
@@ -326,7 +333,12 @@ def main(argv=None):
   # The name of the file should come from the <name> tag of the XMDS
   # script. This variable is available from the globalNameSpace using
   # globalNameSpace['simulationName'].
-  print simulationTemplate
+  
+  if output=='':
+	output=globalNameSpace['simulationName']+".cc"
+  myfile = file(output, "w")
+  print >> myfile, simulationTemplate
+  myfile.close()
 
 
 if __name__ == "__main__":
