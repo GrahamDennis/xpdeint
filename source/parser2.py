@@ -10,6 +10,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 import sys
 import getopt
 from xml.dom import minidom
+import subprocess
 
 # Hack for Leopard so it doesn't import the web rendering
 # framework WebKit when Cheetah tries to import the Python
@@ -162,7 +163,7 @@ def main(argv=None):
       if option in ("-h", "--help"):
         raise Usage(help_message)
       if option in ("-o", "--output"):
-        output = value+".cc"
+        output = value
 
 	# argument processing
     if len(args)==1:
@@ -329,11 +330,25 @@ def main(argv=None):
   del globalNameSpace['vectors']
   
   if output=='':
-	output=globalNameSpace['simulationName']+".cc"
-  myfile = file(output, "w")
+	output=globalNameSpace['simulationName']
+  myfile = file(output+".cc", "w")
   print >> myfile, simulationTemplate
   myfile.close()
 
+
+  from Preferences import CC,CFLAGS
+
+  # These compile variables are defined in Preferences.py
+  # We'll need some kind of check to choose which compiler and options, but not until we need varying options
+
+  compilerLine=CC+" -o "+output+" "+output+".cc "+CFLAGS
+  print "\n",compilerLine,"\n"
+
+  proc = subprocess.Popen(compilerLine,
+                       shell=True,
+                       stdout=subprocess.PIPE,
+                       )
+  print proc.communicate()[0]
 
 if __name__ == "__main__":
   sys.exit(main())
