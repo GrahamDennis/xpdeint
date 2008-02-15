@@ -45,6 +45,7 @@
 	- within operators have option for mixed space.  Recommend strongly efficient choice of dimension ordering.
 Default dimensions in field is empty, to be same as output.  Integer dimensions are 2 strings.  psi[u,v][w](x,y,x)  for memory order u v x y z w	
 space="x" should be space="dimensionname"  Don't have boolean option.  Integer-valued dimensions may be in the list if not Fourier
+  - Integer dimensions are specified with an <integer_valued kind="first|last"> tag
 
 * Write a TextMate grammar for our Cheetah templates (for syntax highlighting
   goodness)
