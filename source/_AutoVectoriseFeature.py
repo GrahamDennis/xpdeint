@@ -20,7 +20,7 @@ class _AutoVectoriseFeature (_Feature):
   
   def loopOverVectorsWithInnerContentTemplateModifyTemplate(self, dict):
     """
-    Modifies the `templateString` to add in auto-vectorisation features.
+    Modifies the ``templateString`` to add in auto-vectorisation features.
     
     This function is called from `ScriptElement`'s `loopOverVectorsWithInnerContentTemplate`.
     """

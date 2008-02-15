@@ -13,14 +13,14 @@ Insert code to loop over a vector.
 The contents of the loop are specified by a Cheetah template string,
 which has the following variables available:
 
-  - `$vector`:   The current vector
-  - `$index`:   The index variable name
+  - ``$vector``:   The current vector
+  - ``$index``:   The index variable name
 
 A simple example for the contents of this loop would be (passed as a `templateString`)::
 
   _active_${vector.id}[${index}] $operation;
 
-Where `$operation` is some operation. If the `templateString` does not end with a new line,
+Where ``$operation`` is some operation. If the `templateString` does not end with a new line,
 then one is added automatically.
 
 The intention is that this function is to be used when you have a very simple operation
@@ -137,9 +137,9 @@ Note that this code asserts that the field that will be iterated over is at
 most as fine as the fields underlying the vectors in each dimension that has
 more than one point.
 
-Note that the vectors CAN be from fields other than `$field`, this makes it easy
+Note that the vectors CAN be from fields other than ``$field``, this makes it easy
 to use this code for moment groups. The only restriction is that the fields
-for the vectors cannot be coarser than `$field` (in dimensions that have more
+for the vectors cannot be coarser than ``$field`` (in dimensions that have more
 than one point). Though this could be changed if a use-case for this can be
 found such that the meaning of this would be well-defined.
 
@@ -149,9 +149,9 @@ Optional arguments:
     This should be a dictionary mapping dimension names to a dictionary of field -> override
     string pairs.
     
-    For example, if you want to override the propagation dimension (`t`)::
+    For example, if you want to override the propagation dimension (``t``)::
     
-    { 't': {some_field: 'some_t_index_for_field', some_other_field: 'etc'}}
+      { 't': {some_field: 'some_t_index_for_field', some_other_field: 'etc'}}
     
   - `vectorOverrides`: instead of causing the component names to be directly mapped to the arrays
     create variables for each component.
