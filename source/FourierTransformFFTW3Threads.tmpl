@@ -8,6 +8,17 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 
 @def description: FFTW3 with threads
 
+@def cflags
+@*doc:
+Return the options that need to be added to ``CFLAG``.
+*@
+  @super
+  @#
+ -lfftw3_threads@slurp
+  @#
+@end def
+
+
 @# defines
 @def defines
   @#
