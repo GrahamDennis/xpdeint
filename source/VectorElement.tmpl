@@ -5,13 +5,13 @@ Created by Graham Dennis on 2007-08-28.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *@
 @extends _VectorElement
-@*
 
+@*
   Description of template
 *@
 @def description: vector $vectorName
-@*
 
+@*
   Defines needed at the start of the simulation
 *@
 @def defines
@@ -20,8 +20,8 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 #define _${field.name}_${name}_ncomponents $nComponents
   @#
 @end def
-@*
 
+@*
   Globals needed at the start of the simulation
 *@
 @def globals
@@ -35,8 +35,8 @@ unsigned long _${field.name}_${name}_space;
   @end if
   @#
 @end def
-@*
 
+@*
   Function prototypes
 *@
 @def functionPrototypes
@@ -54,8 +54,8 @@ void _${field.name}_${name}_go_space(unsigned long _newSpace);
   @end if
   @#
 @end def
-@*
 
+@*
   Function implementations
 *@
 @def functionImplementations
@@ -71,7 +71,7 @@ $initialisationFunctionImplementation@slurp
   @if $needsFourierTransforms
     @# If we need fourier transforms, then write the FFT go_space routine
 
-$goSpaceFunctionImplementation@slurp
+${features['FourierTransform'].goSpaceFunctionImplementationForVector(self)}@slurp
   @end if $needsFourierTransforms
 @end def
 
@@ -90,105 +90,6 @@ void _${field.name}_${name}_initialise()
 @end def
 
 @*
-  Write vector go_space routine
-*@
-@def goSpaceFunctionImplementation
-void _${field.name}_${name}_go_space(unsigned long _newSpace)
-{
-  // This field may not have all of the dimensions in the geometry, so
-  // find the space variable for the dimensions we care about
-  _newSpace &= _${field.name}_full_kspace_mask;
-  if (_${field.name}_${name}_space == _newSpace)
-    return;
-  
-  double _c = 1.0;
-
-  @# First we do the cases for the full forward / backward transforms. This is easy.
-  if ( _${field.name}_${name}_space == 0 && _newSpace == _${field.name}_full_kspace_mask ) {
-    // Do a full forward transform
-    ${features.FourierTransform.fullFFTForVector($self, 'forward'), autoIndent=True}@slurp
-  @for $dimension in $field.dimensions
-    @set $dimensionNumber = $field.indexOfDimension($dimension)
-    _c *= _${field.name}_dx${dimensionNumber} / sqrt(2.0 * M_PI);
-  @end for $dimension
-  } 
-  else if ( _${field.name}_${name}_space == _${field.name}_full_kspace_mask && _newSpace == 0) {
-    // Do a full reverse transform
-    ${features.FourierTransform.fullFFTForVector($self, 'backward'), autoIndent=True}@slurp
-  @for $dimension in $field.dimensions
-    @set $dimensionNumber = $field.indexOfDimension($dimension)
-    _c *= _${field.name}_dk${dimensionNumber} / sqrt(2.0 * M_PI);
-  @end for $dimension
-  }
-  @if $len($field.dimensions) > 1
-    @* 
-  
-      This is the awful case of mixed transforms. It has been put in a block so that it can be
-      overridden in the deterministic MPI case
-    *@
-    @block mixedTransforms
-  // Mixed transform stuff
-  // note that this does not need to be ultra efficient since it is probably only
-  // ever used in filters, moment stuff, and after initialisation
-  else {
-    unsigned long _howMany;
-    int _lattice;
-      @# $powerOfTwo is a bitmask for the _newSpace variable, as such, it depends on the dimension in the geometry, not $field
-      @set $powerOfTwo = 1
-      @for $dimension in $geometry.dimensions
-        @# if the field doesn't have this dimension, then we don't care about it
-        @if not $field.hasDimension($dimension)
-          @set $powerOfTwo *= 2
-          @continue
-        @end if
-        @set $fieldDimensionNumber = $field.indexOfDimension($dimension)
-
-    // Partial transforms for dimension '$dimension.name'
-    _howMany = _${field.name}_${name}_ncomponents * $field.pointsInDimensionsWithIndices($range($fieldDimensionNumber + 1, $len($field.dimensions)));
-    _lattice = _${field.name}_lattice${fieldDimensionNumber};
-    
-    if ( !(_${field.name}_${name}_space & $powerOfTwo) && (_newSpace & $powerOfTwo) ) {
-      // Partial forward transform for dimension '$dimension.name'
-      ${mixedTransformForDimension($fieldDimensionNumber, 'forward'), autoIndent=True}@slurp
-
-      _c *= _${field.name}_dx${fieldDimensionNumber} / sqrt(2.0 * M_PI);
-    }
-    else if ( (_${field.name}_${name}_space & $powerOfTwo) && !(_newSpace & $powerOfTwo) ) {
-      // Partial reverse transform for dimension '$dimension.name'
-      ${mixedTransformForDimension($fieldDimensionNumber, 'backward'), autoIndent=True}@slurp
-
-      _c *= _${field.name}_dk${fieldDimensionNumber} / sqrt(2.0 * M_PI);
-    }
-        @set $powerOfTwo *= 2
-      @end for
-  }
-    @end block
-  @end if $len(field.dimensions) > 1
-  _${field.name}_${name}_space = _newSpace;
-
-  ${loopOverVectorsWithInnerContentTemplate([$self], '_active_${vector.id}[$index] *= _c;'), autoIndent=True}@slurp
-}
-@end def
-
-@*
-
-  Do the mixed transform for a given dimension
-*@
-@def mixedTransformForDimension($dimensionNumber, $type)
-  @#
-${features.FourierTransform.createQuickPlanForVectorWithLatticeAndCount($self, '_lattice', '_howMany', $type), autoIndent=True}@slurp
-  @if $dimensionNumber > 0
-for (unsigned long _i0=0; _i0 < _${field.name}_lattice0 * $field.pointsInDimensionsWithIndices($range(1,$dimensionNumber)); _i0++) {
-  ${features.FourierTransform.runQuickFFTForVectorWithIndexAndLatticeAndCount($self, '_i0', '_lattice', '_howMany', $type), autoIndent=True}@slurp
-}
-  @else
-${features.FourierTransform.runQuickFFTForVectorWithCount($self, '_howMany', $type), autoIndent=True}@slurp
-  @end if
-${features.FourierTransform.destroyQuickPlan(), autoIndent=True}@slurp
-  @#
-@end def
-@*
-
   Initialise vector (called from segment 0)
 *@
 @def initialise
@@ -203,8 +104,8 @@ _${field.name}_${name}_initialise();
   @end if
   @#
 @end def
-@*
 
+@*
   Allocate (and initialise active pointers) (called from main)
 *@
 @def allocate

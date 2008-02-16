@@ -37,3 +37,120 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 
 // destroy plans
 @end def
+
+@def goSpaceFunctionImplementationForVector($vector)
+@*doc:
+Returns the ``go_space`` function implementation for vector `vector`.
+
+This writes the function that does the fourier transforming of a specific vector
+to and from arbitrary combinations of fourier-space and normal-space.
+*@
+  @#
+void _${vector.id}_go_space(unsigned long _newSpace)
+{
+  // This field may not have all of the dimensions in the geometry, so
+  // find the space variable for the dimensions we care about
+  _newSpace &= _${vector.field.name}_full_kspace_mask;
+  if (_${vector.id}_space == _newSpace)
+    return;
+  
+  double _c = 1.0;
+
+  @# First we do the cases for the full forward / backward transforms. This is easy.
+  if ( _${vector.id}_space == 0 && _newSpace == _${vector.field.name}_full_kspace_mask ) {
+    // Do a full forward transform
+    ${fullFFTForVector($vector, 'forward'), autoIndent=True}@slurp
+  @for $dimension in $vector.field.dimensions
+    @set $dimensionNumber = $vector.field.indexOfDimension($dimension)
+    _c *= _${vector.field.name}_dx${dimensionNumber} / sqrt(2.0 * M_PI);
+  @end for
+  } 
+  else if ( _${vector.id}_space == _${vector.field.name}_full_kspace_mask && _newSpace == 0) {
+    // Do a full reverse transform
+    ${fullFFTForVector($vector, 'backward'), autoIndent=True}@slurp
+  @for $dimension in $vector.field.dimensions
+    @set $dimensionNumber = $vector.field.indexOfDimension($dimension)
+    _c *= _${vector.field.name}_dk${dimensionNumber} / sqrt(2.0 * M_PI);
+  @end for
+  }
+  @if $len($vector.field.dimensions) > 1
+    @# 
+    @# This is the awful case of mixed transforms. It has been put in a separate function
+    @# so that it can be overridden in the deterministic MPI case
+    @#
+  ${mixedTransformsForVector($vector), autoIndent=True}@slurp
+  @end if
+  _${vector.id}_space = _newSpace;
+
+  ${loopOverVectorsWithInnerContentTemplate([$vector], '_active_${vector.id}[$index] *= _c;'), autoIndent=True}@slurp
+}
+  @#
+@end def
+
+@def mixedTransformsForVector($vector)
+@*doc:
+Return the part of the ``go_space`` function that does the mixed transforms.
+
+This version of the function is designed to work with most fourier transform libraries
+that may not themselves be capable of doing arbitrary multidimensional loops of fourier
+transforms, so we will provide the loops where necessary.
+*@
+  @#
+// Mixed transform stuff
+// note that this does not need to be ultra efficient since it is probably only
+// ever used in filters, moment stuff, and after initialisation
+else {
+  unsigned long _howMany;
+  int _lattice;
+    @# $powerOfTwo is a bitmask for the _newSpace variable, as such, it depends on the dimension in the geometry, not $field
+    @set $powerOfTwo = 1
+    @for $dimension in $geometry.dimensions
+      @# if the field doesn't have this dimension, then we don't care about it
+      @if not $vector.field.hasDimension($dimension)
+        @set $powerOfTwo *= 2
+        @continue
+      @end if
+      @set $fieldDimensionNumber = $vector.field.indexOfDimension($dimension)
+
+  // Partial transforms for dimension '$dimension.name'
+  _howMany = _${vector.id}_ncomponents * $vector.field.pointsInDimensionsWithIndices(range($fieldDimensionNumber + 1, len($vector.field.dimensions)));
+  _lattice = _${vector.field.name}_lattice${fieldDimensionNumber};
+  
+  if ( !(_${vector.id}_space & $powerOfTwo) && (_newSpace & $powerOfTwo) ) {
+    // Partial forward transform for dimension '$dimension.name'
+    ${mixedTransformForVectorInDimension($vector, $fieldDimensionNumber, 'forward'), autoIndent=True}@slurp
+
+    _c *= _${vector.field.name}_dx${fieldDimensionNumber} / sqrt(2.0 * M_PI);
+  }
+  else if ( (_${vector.id}_space & $powerOfTwo) && !(_newSpace & $powerOfTwo) ) {
+    // Partial reverse transform for dimension '$dimension.name'
+    ${mixedTransformForVectorInDimension($vector, $fieldDimensionNumber, 'backward'), autoIndent=True}@slurp
+
+    _c *= _${vector.field.name}_dk${fieldDimensionNumber} / sqrt(2.0 * M_PI);
+  }
+      @set $powerOfTwo *= 2
+    @end for
+}
+  @#
+@end def
+
+
+@def mixedTransformForVectorInDimension($vector, $dimensionNumber, $type)
+@*doc:
+Transform one dimension of the vector `vector`.
+
+Use `type` to specify the direction, this can either be the string ``'forward'`` 
+or ``'backward'``. (Case-sensitive)
+*@
+  @#
+${createQuickPlanForVectorWithLatticeAndCount($vector, '_lattice', '_howMany', $type), autoIndent=True}@slurp
+  @if $dimensionNumber > 0
+for (unsigned long _i0 = 0; _i0 < _${vector.field.name}_lattice0 * ${vector.field.pointsInDimensionsWithIndices(range(1, $dimensionNumber))}; _i0++) {
+  ${runQuickFFTForVectorWithIndexAndLatticeAndCount($vector, '_i0', '_lattice', '_howMany', $type), autoIndent=True}@slurp
+}
+  @else
+${runQuickFFTForVectorWithCount($vector, '_howMany', $type), autoIndent=True}@slurp
+  @end if
+${destroyQuickPlan, autoIndent=True}@slurp
+  @#
+@end def
