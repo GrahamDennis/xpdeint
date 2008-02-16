@@ -164,8 +164,8 @@ def main(argv=None):
         raise Usage(help_message)
       if option in ("-o", "--output"):
         output = value
-
-	# argument processing
+    
+    # argument processing
     if len(args)==1:
         scriptName = args[0]
     else:
@@ -330,7 +330,7 @@ def main(argv=None):
   del globalNameSpace['vectors']
   
   if output=='':
-	output=globalNameSpace['simulationName']
+    output=globalNameSpace['simulationName']
   myfile = file(output+".cc", "w")
   print >> myfile, simulationTemplate
   myfile.close()

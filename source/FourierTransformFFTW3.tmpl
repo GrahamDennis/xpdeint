@@ -8,11 +8,15 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 
 @def description: FFTW3
 
+@attr $planType = "FFTW_MEASURE"
+
 @def includes
   @#
   @super
   @#
 #include <fftw3.h>
+#include <utility>
+#include <map>
 @end def
 
 @# defines
@@ -24,19 +28,64 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 #define xmds_free   fftw_free
 @end def
 
-@*
-
-  Globals needed at the start of the simulation
-*@
 @def globals
+@*doc:
+Return the string defining the globals needed by FFTW3.
+*@
   @#
   @super
   @#
+  @# The basic idea here is that in addition to the full forward/backward plans
+  @# we should store plans for every other arbitrary space transform that we do.
+  @# For the moment, these transforms will be generated during the simulation as
+  @# they are needed. Because they are generated after initialisation, we can't
+  @# use anything other than FFTW_ESTIMATE planning because FFTW_MEASURE and
+  @# FFTW_PATIENT both overwrite the arrays in the testing process. Eventually
+  @# this will be fixed by creating these plans as well at the start.
+  @#
+  @# So this code creates a map from (old_space, new_space) pairs to a
+  @# _space_transform structure which describes the fourier transform(s) required
+  @# for this operation. E.g. if you go from x ky z to kx y z, then you need two
+  @# transforms, one forward transform to send x to kx, and one reverse transform
+  @# to send ky to y. This is why there is both a _forward_plan and a 
+  @# _backward_plan in the _space_transform structure.
+  @#
+typedef pair<unsigned long, unsigned long> _spaces_pair;
+
+// Less than operator needed by the C++ map class
+struct _spaces_pair_less_than {
+  bool operator()(const _spaces_pair& _x, const _spaces_pair& _y) const {
+    return (_x.first < _y.first) || ((_x.first == _y.first) && (_x.second < _y.second));
+  }
+};
+
+// Structure to hold the fourier transform plans for an arbitrary change of space
+struct _space_transform {
+  fftw_plan _forward_plan;
+  fftw_plan _backward_plan;
+  double _c;
+  
+  _space_transform() {
+    _c = 1.0;
+    _forward_plan = _backward_plan = NULL;
+  }
+  
+  _space_transform(fftw_plan _f_plan, fftw_plan _b_plan, double _c_in) {
+    _c = _c_in;
+    _forward_plan = _f_plan;
+    _backward_plan = _b_plan;
+  }
+};
+
+// Map type for holding (old_space, new_space) -> _space_transform mappings
+typedef map<_spaces_pair, _space_transform, _spaces_pair_less_than> _plan_map;
+
   @for $field in $fields
     @# only loop over those vectors that need fourier transforms
-    @for $vector in $filter(lambda x: x.needsFourierTransforms, $field.vectors)
-fftw_plan _${field.name}_${vector.name}_forward_plan;
-fftw_plan _${field.name}_${vector.name}_backward_plan;
+    @for $vector in filter(lambda x: x.needsFourierTransforms, $field.vectors)
+fftw_plan _${vector.id}_forward_plan;
+fftw_plan _${vector.id}_backward_plan;
+_plan_map _${vector.id}_plan_map;
     @end for
   @end for
 @end def
@@ -75,6 +124,7 @@ fftw_execute(_plan);
 fftw_destroy_plan(_plan);
   @#
 @end def
+
 
 @def mainBegin(dict)
 
@@ -150,7 +200,7 @@ ${blankLineSeparator}@slurp
 _${vector.id}_${type}_plan = fftw_plan_many_dft(_${field.name}_ndims, _fftw_lattice, _${vector.id}_ncomponents,
               reinterpret_cast<fftw_complex*>(${arrayName}), NULL, _${vector.id}_ncomponents, 1,
               reinterpret_cast<fftw_complex*>(${arrayName}), NULL, _${vector.id}_ncomponents, 1,
-              FFTW_${type.upper()}, FFTW_MEASURE);
+              FFTW_${type.upper()}, ${planType});
   @end for
   @#
 @end def
@@ -158,15 +208,144 @@ _${vector.id}_${type}_plan = fftw_plan_many_dft(_${field.name}_ndims, _fftw_latt
 @def mainEnd($dict)
   @#
   
-// destroy plans
+// destroy plans and save wisdom
   @for field in $fields
     @# only loop over those vectors that need fourier transforms
     @for vector in filter(lambda x: x.needsFourierTransforms, field.vectors)
-fftw_destroy_plan(_${field.name}_${vector.name}_forward_plan);
-fftw_destroy_plan(_${field.name}_${vector.name}_backward_plan);
+fftw_destroy_plan(_${vector.id}_forward_plan);
+fftw_destroy_plan(_${vector.id}_backward_plan);
+for (_plan_map::iterator _it = _${vector.id}_plan_map.begin(); _it != _${vector.id}_plan_map.end(); _it++) {
+  if (_it->second._forward_plan)
+    fftw_destroy_plan(_it->second._forward_plan);
+  if (_it->second._backward_plan)
+    fftw_destroy_plan(_it->second._backward_plan);
+}
+_${vector.id}_plan_map.clear();
     @end for
   @end for
 
 fftw_cleanup();
   @#
 @end def
+
+
+@def mixedTransformsForVector($vector)
+@*doc:
+Return the mixed-transform part of the ``go_space`` function for fourier transforming
+a vector `vector` to an arbitrary space.
+
+This FFTW3 version of this function makes use of the 'guru' function interface provided.
+The 'guru' interface allows a multi-dimensional loop of fourier transforms to be specified
+in one plan. This means that an arbitrary change of space can be achieved with a single
+``fftw_execute_dft`` call.
+*@
+  @#
+// Mixed transform stuff
+else {
+  fftw_plan _forward_plan = NULL;
+  fftw_plan _backward_plan = NULL;
+  
+  // If we have not already created the plan, we are going to have to make one.
+  if (_${vector.id}_plan_map.count(_spaces_pair(_${vector.id}_space, _newSpace)) == 0) {
+    fftw_iodim _fft_forward_sizes[${len($vector.field.dimensions)}];
+    fftw_iodim _fft_backward_sizes[${len($vector.field.dimensions)}];
+    fftw_iodim _loop_sizes[${len($vector.field.dimensions) + 1}];
+    fftw_iodim *_iodim_ptr;
+    
+    int _fft_forward_sizes_index = 0;  // The number of forward fourier transforms
+    int _fft_backward_sizes_index = 0; // The number of backward fourier transforms
+    int _loop_sizes_index = 0;         // The number of loops of fourier transforms
+    @for $dimension in $vector.field.dimensions
+      @set $fieldDimensionNumber = $vector.field.indexOfDimension($dimension)
+      @set $geometryDimensionNumber = $geometry.indexOfDimension($dimension)
+      @# All spaces are defined relative to the dimension ordering in the geometry element, not relative to any field's dimensions.
+      @set $bitMask = 1 << $geometryDimensionNumber
+    
+    // Set sizes for transforms in dimension '$dimension.name'
+    if ( !(_${vector.id}_space & ${bitMask}) && (_newSpace & ${bitMask}) ) {
+      // Forward transform for '$dimension.name'
+      _iodim_ptr = &_fft_forward_sizes[_fft_forward_sizes_index++];
+      _c *= _${vector.field.name}_dx${fieldDimensionNumber} / sqrt(2.0 * M_PI);
+    } else if ( (_${vector.id}_space & ${bitMask}) && !(_newSpace & ${bitMask}) ) {
+      // Backward transform for '$dimension.name'
+      _iodim_ptr = &_fft_backward_sizes[_fft_backward_sizes_index++];
+      _c *= _${vector.field.name}_dk${fieldDimensionNumber} / sqrt(2.0 * M_PI);
+    } else {
+      // No transform, simply loop over dimension '$dimension.name'
+      _iodim_ptr = &_loop_sizes[_loop_sizes_index++];
+    }
+    
+    _iodim_ptr->n  = _${vector.field.name}_lattice${fieldDimensionNumber};
+    _iodim_ptr->is = _${vector.id}_ncomponents * ${vector.field.pointsInDimensionsWithIndices(range($fieldDimensionNumber + 1, len($vector.field.dimensions)))};
+    _iodim_ptr->os = _${vector.id}_ncomponents * ${vector.field.pointsInDimensionsWithIndices(range($fieldDimensionNumber + 1, len($vector.field.dimensions)))};
+    @end for
+    
+    // Now the 'components' dimension
+    if (_${vector.id}_ncomponents > 1) {
+      _iodim_ptr = &_loop_sizes[_loop_sizes_index++];
+      
+      _iodim_ptr->n  = _${vector.id}_ncomponents;
+      _iodim_ptr->is = 1;
+      _iodim_ptr->os = 1;
+    }
+    
+    if (_fft_forward_sizes_index) {
+      // If we have dimensions needing forward transforms, then we need a forward fft plan
+      ${createMixedGuruPlanForVector($vector, 'forward'), autoIndent=True}@slurp
+    }
+    if (_fft_backward_sizes_index) {
+      // If we have some dimensions needing backward transforms, then we need a backward fft plan
+      ${createMixedGuruPlanForVector($vector, 'backward'), autoIndent=True}@slurp
+    }
+    
+    // Add our newly-generated plans to the plan_map for this vector so we do not need to generate it in the future
+    _${vector.id}_plan_map[_spaces_pair(_${vector.id}_space, _newSpace)] = _space_transform(_forward_plan, _backward_plan, _c);
+  } else {
+    // We have already generated this plan, so just grab it
+    _space_transform& _transform = _${vector.id}_plan_map[_spaces_pair(_${vector.id}_space, _newSpace)];
+    
+    _forward_plan = _transform._forward_plan;
+    _backward_plan = _transform._backward_plan;
+    _c = _transform._c;
+  }
+  
+  // If we have a forward plan, run it
+  if (_forward_plan) {
+    ${executeGuruPlanForVector('_forward_plan', $vector), autoIndent=True}@slurp
+  }
+  // If we have a backward plan, run it
+  if (_backward_plan) {
+    ${executeGuruPlanForVector('_backward_plan', $vector), autoIndent=True}@slurp
+  }
+  
+}
+  @#
+@end def
+
+
+@def createMixedGuruPlanForVector($vector, $type)
+@*doc:
+Return the FFTW3 'guru' plan creation call needed for this mixed transform.
+*@
+  @#
+  @# This must be ESTIMATE planning for the momoent as this is being called in the go_space function
+  @# Anything other than EXTIMATE planning causes the input and output fields to be overwritten.
+printf("Making $type plan for vector $vector.id.\n");
+_${type}_plan = fftw_plan_guru_dft(_fft_${type}_sizes_index, _fft_${type}_sizes,
+                                   _loop_sizes_index, _loop_sizes,
+                                   reinterpret_cast<fftw_complex*>(_active_${vector.id}),
+                                   reinterpret_cast<fftw_complex*>(_active_${vector.id}),
+                                   FFTW_${type.upper()}, FFTW_ESTIMATE);
+  @#
+@end def
+
+@def executeGuruPlanForVector($planName, $vector)
+@*doc:
+Return the execution call for a plan in a variable named `planName` for a vector `vector`.
+*@
+  @#
+fftw_execute_dft($planName, reinterpret_cast<fftw_complex*>(_active_${vector.id}),
+                 reinterpret_cast<fftw_complex*>(_active_${vector.id}));
+  @#
+@end def
+
