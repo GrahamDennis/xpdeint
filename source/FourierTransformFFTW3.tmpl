@@ -10,6 +10,15 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 
 @attr $planType = "FFTW_MEASURE"
 
+@def cflags
+@*doc:
+Return the options that need to be added to ``CFLAG``.
+*@
+  @#
+-lfftw3@slurp
+  @#
+@end def
+
 @def includes
   @#
   @super

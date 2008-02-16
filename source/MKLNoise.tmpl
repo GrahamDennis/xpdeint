@@ -11,6 +11,16 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 @def description: Generic Intel MKL noise
 @def generatorType: VSLStreamStatePtr
 
+@@callOncePerClassGuard
+@def cflags
+@*doc:
+Return the options that need to be added to ``CFLAG``.
+*@
+  @#
+-lguide -lvml@slurp
+  @#
+@end def
+
 @*
   Static includes
 *@

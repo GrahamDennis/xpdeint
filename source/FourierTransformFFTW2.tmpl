@@ -8,6 +8,15 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 
 @def description: FFTW2
 
+@def cflags
+@*doc:
+Return the options that need to be added to ``CFLAG``.
+*@
+  @#
+-lfftw@slurp
+  @#
+@end def
+
 @def includes
   @#
   @super

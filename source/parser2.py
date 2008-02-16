@@ -334,16 +334,25 @@ def main(argv=None):
   myfile = file(output+".cc", "w")
   print >> myfile, simulationTemplate
   myfile.close()
-
-
+  
+  
   from Preferences import CC,CFLAGS
-
+  
+  # Now let the templates add anything they need to CFLAGS
+  templateCFLAGS = ['']
+  # Iterate through all the templates
+  for template in globalNameSpace['templates']:
+    # If the template has the function 'cflags', then call it, and add it to the list
+    if hasattr(template, 'cflags'):
+      templateCFLAGS.append(template.cflags())
+  
+  
   # These compile variables are defined in Preferences.py
   # We'll need some kind of check to choose which compiler and options, but not until we need varying options
-
-  compilerLine=CC+" -o "+output+" "+output+".cc "+CFLAGS
+  
+  compilerLine = CC + " -o " + output + " " + output + ".cc " + CFLAGS + ' '.join(templateCFLAGS)
   print "\n",compilerLine,"\n"
-
+  
   proc = subprocess.Popen(compilerLine,
                        shell=True,
                        stdout=subprocess.PIPE,
