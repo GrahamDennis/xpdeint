@@ -167,16 +167,11 @@ if (_noise_list.empty()) {
   
   @for noise, field in $noisesAndFieldsForIntegrator(integrator)
     @set $noiseVector = noise.noiseVectorForField(field)
-  _active_${noiseVector.id} = (${noiseVector.type}*) xmds_malloc(sizeof(${noiseVector.type}) * _${field.name}_size * _${noiseVector.id}_ncomponents);
-  _make_${noise.prefix}_noises(_${field.name}_var * (_old_smallest_step - _step)/(_step * _old_smallest_step), 
-      _active_${noiseVector.id}, _${field.name}_size * _${noiseVector.id}_ncomponents);
-  
-  // Now complete creation of the new noise.
-  ${noiseVector.type}* const _old_${noiseVector.id} = _noise_list.begin()->_${noiseVector.id};
-  
-  ${loopOverVectorsWithInnerContentTemplate([$noiseVector], 
-"""_active_${vector.id}[$index] += _old_${vector.id}[$index];
-"""), autoIndent=True}@slurp
+    @if $noise.noiseDistribution == 'gaussian'
+  ${breakGaussianNoiseInField($noise, $field), autoIndent=True}@slurp
+    @else if $noise.noiseDistribution == 'poissonian'
+  ${breakPoissonianNoiseInField($noise, $field), autoIndent=True}@slurp
+    @end if
   @end for
   
   _noise_list.push_front(_dtdWstore());
@@ -201,6 +196,52 @@ if (_noise_list.empty()) {
   if (_break_next && fabs(${propagationDimension} - _${propagationDimension}_ini + _step - _${propagationDimension}_break_next) > _step*_EPSILON)
     _break_next = false;
 } 
+
+  @#
+@end def
+
+@def breakGaussianNoiseInField($noise, $field)
+@*doc:
+Return the code to generate a new smaller gaussian noise from a previous noise.
+
+The previous noise had a time step of ``old_smallest_step`` a variable available in the C
+code, not in the template itself.
+*@
+  @#
+  @set $noiseVector = noise.noiseVectorForField(field)
+  @#
+  @# First allocate the new noise vector
+_active_${noiseVector.id} = (${noiseVector.type}*) xmds_malloc(sizeof(${noiseVector.type}) * _${field.name}_size * _${noiseVector.id}_ncomponents);
+  @# Then generate a new noise of the appropriate variance
+_make_${noise.prefix}_noises(_${field.name}_var * (_old_smallest_step - _step)/(_step * _old_smallest_step), 
+    _active_${noiseVector.id}, _${field.name}_size * _${noiseVector.id}_ncomponents);
+
+  @# Then add the old noise.
+  @# When adding the old noise, the first step is to get a pointer to the old noise itself.
+  @# This pointer is called _old_${noiseVector.id}
+// Now complete creation of the new noise.
+${noiseVector.type}* const _old_${noiseVector.id} = _noise_list.begin()->_${noiseVector.id};
+
+  @# Now do the actual adding. This code creates a loop over the noiseVector
+  @# adding the old vector at each point.
+${loopOverVectorsWithInnerContentTemplate([$noiseVector], 
+"""_active_${vector.id}[$index] += _old_${vector.id}[$index];
+"""), autoIndent=True}@slurp
+
+  @#
+@end def
+
+@def breakPoissonianNoiseInField($noise, $field)
+@*doc:
+Return the code to generate a new smaller poissonian noise from a previous noise.
+
+The previous noise had a time step of ``old_smallest_step`` a variable available in the C
+code, not in the template itself.
+*@
+  @#
+  @set $noiseVector = noise.noiseVectorForField(field)
+  @#
+// Break apart a poissonian noise
 
   @#
 @end def

@@ -97,8 +97,8 @@ class _StochasticFeature (_Feature):
     for integrator, deltaAOperator in integratorsUsingNoises:
       if hasattr(integrator, 'successfulStepExponent') and hasattr(integrator, 'unsuccessfulStepExponent'):
         for noise in deltaAOperator.noises:
-          if noise.noiseDistribution not in ('gaussian'):
-            raise ParserException(self.xmlElement, "Currently only gaussian noises can be used in adaptive integrators.")
+          if noise.noiseDistribution not in ('gaussian', 'poissonian'):
+            raise ParserException(self.xmlElement, "Only gaussian or poissonian noises can be used in adaptive integrators.")
         integrator.successfulStepExponent *= 2.0
         integrator.unsuccessfulStepExponent *= 2.0
     
