@@ -9,6 +9,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 @def description: FFTW3
 
 @attr $planType = "FFTW_MEASURE"
+@attr $wisdomExtension = '.fftw3'
 
 @def cflags
 @*doc:
@@ -111,6 +112,7 @@ fftw_execute_dft(_${vector.field.name}_${vector.name}_${type}_plan, reinterpret_
 _LOG(_SIMULATION_LOG_LEVEL, "Making FFTW plans\n");
 
 // load wisdom and create plans for fft
+${loadWisdom}@slurp
   @#
   @# Some of the vectors that we need to create plans for may be temporary vectors,
   @# and hence will not be allocated yet.
@@ -149,10 +151,11 @@ ${createGuruPlansForField(field)}@slurp
   @end for
   @#
   @if $temporaryVectorsNeedingFourierTransforms
-
 xmds_free(_temporary_vector);
 _temporary_vector = NULL;
+
   @end if
+${saveWisdom}@slurp
 
 _LOG(_SIMULATION_LOG_LEVEL, "FFTW planning complete\n");
 @end def

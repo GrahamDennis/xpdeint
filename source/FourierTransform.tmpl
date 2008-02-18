@@ -7,6 +7,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 @extends _Feature
 @def description: Abstract fourier transform
 @attr $featureName = 'FourierTransform'
+@attr $wisdomExtension = ''
 
 @def globals
 const double _inverse_sqrt_2pi = 1.0 / sqrt(2.0 * M_PI); 
@@ -156,5 +157,51 @@ for (unsigned long _i0 = 0; _i0 < _${vector.field.name}_lattice0 * ${vector.fiel
 ${runQuickFFTForVectorWithCount($vector, '_howMany', $type), autoIndent=True}@slurp
   @end if
 ${destroyQuickPlan, autoIndent=True}@slurp
+  @#
+@end def
+
+@def loadWisdom
+  @#
+char _hostName[256];
+gethostname(_hostName, 256);
+_hostName[255] = '\0'; // just in case
+
+string _pathToWisdom = getenv("HOME");
+_pathToWisdom += "/.xmds/wisdom/";
+
+string _wisdomFileName = _hostName;
+_wisdomFileName += ".wisdom";
+_wisdomFileName += "${wisdomExtension}";
+
+FILE *_fp = NULL;
+
+_fp = fopen(_pathToWisdom.c_str(), "r");
+if (_fp) {
+  fclose(_fp);
+} else {
+  _LOG(_WARNING_LOG_LEVEL, "Warning: Cannot find enlightenment, the path to wisdom ~/.xmds/wisdom doesn't seem to exist.\n"
+                           "         I'll use the current path instead.\n");
+  _pathToWisdom = ""; // present directory
+}
+
+string _wisdomPath = _pathToWisdom + _wisdomFileName;
+
+FILE *_wisdomFile = NULL;
+
+if ( (_wisdomFile = fopen(_wisdomPath.c_str(), "r")) != NULL) {
+  _LOG(_SIMULATION_LOG_LEVEL, "Found enlightenment... (Importing wisdom)\n");
+  fftw_import_wisdom_from_file(_wisdomFile);
+  fclose(_wisdomFile);
+}
+  @#
+@end def
+
+@def saveWisdom
+  @#
+if ( (_wisdomFile = fopen(_wisdomPath.c_str(), "w")) != NULL) {
+  _LOG(_SIMULATION_LOG_LEVEL, "Keeping accumulated wisdom\n");
+  fftw_export_wisdom_to_file(_wisdomFile);
+  fclose(_wisdomFile);
+}
   @#
 @end def
