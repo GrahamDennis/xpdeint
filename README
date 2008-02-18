@@ -64,9 +64,9 @@ Features missing (see the TODO for a more complete list):
 * Lots of small things: ASCII/Binary/XSIL import, a filter element  
   (though there is a filter operator which is similar to (but more  
   powerful than) the XMDS-1 moments operator), 'functions' for  
-  integrate / filter blocks, argument handling, wisdom importing/ 
-  exporting, parser for post_propagation element. The template code for  
-  handling post_propagation has been written, just the parser hasn't.
+  integrate / filter blocks, argument handling, parser for
+  post_propagation element. The template code for handling
+  post_propagation has been written, just the parser hasn't.
 
 Currently the parser2.py is a bare-bones wrapper around the XML parser  
 which loads a hard-coded file (scriptName in parser2.py) and dumps the  
