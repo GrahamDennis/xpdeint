@@ -542,6 +542,8 @@ if ( k${dimension.name} > ((_${field.name}_lattice${dimensionNumber} - 1)/2 + 0.
       @continue
     @end if
 _${vector.field.name}_${vector.name}_go_space($space);
+    @# Add space $space to the set of spaces in which this vector is needed
+    @silent vector.spacesNeeded.add($space)
   @end for
   @#
 @end def
