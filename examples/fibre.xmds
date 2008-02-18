@@ -32,7 +32,7 @@
     </transverse_dimensions>
   </geometry>
   
-  <field name="main">
+  <field name="mainField">
     <vector name="main" initial_space="x">
       <components type="complex">phi</components>
       <initialisation no_noises="true">
@@ -46,7 +46,7 @@
   <sequence driver="multi-path" paths="100">
     <integrate algorithm="RK4" interval="2.5" steps="5000" tolerance="1e-6">
       <samples>50</samples>
-      <operators field="main">
+      <operators field="mainField">
         <operator kind="ip" constant="yes">
           <operator_names>L</operator_names>
           <![CDATA[

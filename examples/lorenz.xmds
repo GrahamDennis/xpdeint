@@ -26,7 +26,7 @@
     <prop_dim> t </prop_dim>
   </geometry>
   
-  <field name="main" >
+  <field name="mainField" >
     <vector name="main" type="complex">
       <components>
         x y z
@@ -42,7 +42,7 @@
   <sequence>
     <integrate algorithm="ARK89" interval="100.0" steps="25000" tolerance="1e-7">
       <samples>5000</samples>
-      <operators field="main">
+      <operators field="mainField">
         <integration_vectors>main</integration_vectors>
         <![CDATA[
         dx_dt = sigma*(y-x);

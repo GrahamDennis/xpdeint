@@ -22,7 +22,7 @@
     <prop_dim> t </prop_dim>
   </geometry>
   
-  <field name="main">
+  <field name="mainField">
     <vector name="main">
       <components type="complex">
         z
@@ -38,7 +38,7 @@
   <sequence driver="multi-path" paths="10240">
     <integrate algorithm="ARK89" interval="10" steps="1000" tolerance="1e-8">
       <samples>100</samples>
-      <operators field="main" noises="n">
+      <operators field="mainField" noises="n">
         <integration_vectors>main</integration_vectors>
         <![CDATA[
           dz_dt = i*z*n_1;

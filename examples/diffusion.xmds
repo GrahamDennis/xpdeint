@@ -22,7 +22,7 @@
     </transverse_dimensions>
   </geometry>
   
-  <field name="main" dimensions="x y">
+  <field name="mainField" dimensions="x y">
     <vector name="main" type="complex" initial_space="x x">
       <components>
         phi
@@ -38,7 +38,7 @@
   <sequence>
     <integrate algorithm="ARK45" interval="10.0" steps="2400" tolerance="1e-5">
       <samples>24</samples>
-      <operators field="main">
+      <operators field="mainField">
         <operator kind="ex" constant="yes" fourier_space="x k">
           <operator_names>L</operator_names>
           <![CDATA[

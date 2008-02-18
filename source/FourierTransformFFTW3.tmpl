@@ -167,7 +167,7 @@ ${createGuruPlansForField(field)}@slurp
 
   @end for
   @#
-  @if $allocatedTemporaryVector
+  @if $temporaryVectorsNeedingFourierTransforms and $allocatedTemporaryVector
 xmds_free(_temporary_vector);
 _temporary_vector = NULL;
 
