@@ -39,7 +39,7 @@
     <integrate algorithm="ARK45" interval="10.0" steps="2400" tolerance="1e-5">
       <samples>24</samples>
       <operators field="main">
-        <operator kind="ex" constant="yes" fourier_space="k k">
+        <operator kind="ex" constant="yes" fourier_space="x k">
           <operator_names>L</operator_names>
           <![CDATA[
             L = -0.02*ky*ky;

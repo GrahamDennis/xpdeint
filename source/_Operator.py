@@ -99,5 +99,8 @@ class _Operator (ScriptElement):
                   % (self.field.name, dependency.vector.name))
       
       self.dependencies.update(dependencies)
+    
+    if self.resultVector:
+      self.resultVector.spacesNeeded.add(self.operatorSpace)
     super(_Operator, self).preflight()
   

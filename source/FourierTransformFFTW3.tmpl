@@ -92,8 +92,8 @@ typedef map<_spaces_pair, _space_transform, _spaces_pair_less_than> _plan_map;
   @for $field in $fields
     @# only loop over those vectors that need fourier transforms
     @for $vector in filter(lambda x: x.needsFourierTransforms, $field.vectors)
-fftw_plan _${vector.id}_forward_plan;
-fftw_plan _${vector.id}_backward_plan;
+fftw_plan _${vector.id}_forward_plan = NULL;
+fftw_plan _${vector.id}_backward_plan = NULL;
 _plan_map _${vector.id}_plan_map;
     @end for
   @end for
@@ -105,42 +105,12 @@ fftw_execute_dft(_${vector.field.name}_${vector.name}_${type}_plan, reinterpret_
                  reinterpret_cast<fftw_complex*>(_active_${vector.field.name}_${vector.name}));
 @end def
 
-@# create a quick fourier transform plan for use by the mixed transform code
-@def createQuickPlanForVectorWithLatticeAndCount($vector, $lattice, $count, $type)
-  @# We need estimate planning as measure planning would overwrite the field, and that would be bad, right?
-fftw_plan _plan = fftw_plan_many_dft(1, &${lattice}, $count,
-                                     reinterpret_cast<fftw_complex*>(_active_${vector.field.name}_${vector.name}), NULL, $count, 1,
-                                     reinterpret_cast<fftw_complex*>(_active_${vector.field.name}_${vector.name}), NULL, $count, 1,
-                                     FFTW_${type.upper()}, FFTW_ESTIMATE);
-@end def
-
-@# run a quick fourier transform plan for use by the mixed transform code
-@def runQuickFFTForVectorWithIndexAndLatticeAndCount($vector, $index, $lattice, $count, $type)
-fftw_execute_dft(_plan, reinterpret_cast<fftw_complex*>(_active_${vector.field.name}_${vector.name}) + $index * $lattice * $count,
-                        reinterpret_cast<fftw_complex*>(_active_${vector.field.name}_${vector.name}) + $index * $lattice * $count);
-@end def
-
-@# run a quick fourier transform
-@def runQuickFFTForVectorWithCount($vector, $count, $type)
-  @#
-fftw_execute(_plan);
-  @#
-@end def
-
-@# destroy the quick plan
-@def destroyQuickPlan()
-  @#
-fftw_destroy_plan(_plan);
-  @#
-@end def
-
 
 @def mainBegin(dict)
 
 _LOG(_SIMULATION_LOG_LEVEL, "Making FFTW plans\n");
 
 // load wisdom and create plans for fft
-int _fftw_lattice[$len($geometry.dimensions)];
   @#
   @# Some of the vectors that we need to create plans for may be temporary vectors,
   @# and hence will not be allocated yet.
@@ -160,6 +130,13 @@ int _fftw_lattice[$len($geometry.dimensions)];
 // allocate an array so we can create plans for those vectors that we have not allocated yet
 complex* _temporary_vector = (complex*) xmds_malloc(sizeof(complex) * _${maxVector.field.name}_size * _${maxVector.id}_ncomponents);
   @end if
+
+fftw_plan _forward_plan, _backward_plan;
+fftw_iodim _forward_sizes[${len($geometry.dimensions)}], _backward_sizes[${len($geometry.dimensions)}], _loop_sizes[${len($geometry.dimensions) + 1}];
+fftw_iodim *_iodim_ptr = NULL;
+
+int _forward_sizes_index, _backward_sizes_index, _loop_sizes_index;
+double _c;
   @#
   @for field in $fields
     @if len(filter(lambda x: x.needsFourierTransforms, field.vectors)) == 0
@@ -167,20 +144,8 @@ complex* _temporary_vector = (complex*) xmds_malloc(sizeof(complex) * _${maxVect
     @end if
 
 // Plans for field ${field.name}
-    @set $separator = ''
-    @for dimensionNumber, dimension in enumerate(field.dimensions)
-${separator}_fftw_lattice[$dimensionNumber] = $dimension.lattice;@slurp
-      @set $separator = ' '
-    @end for
+${createGuruPlansForField(field)}@slurp
 
-
-    @#
-    @# Make the forward plans
-${createPlansForField(field, 'forward')}@slurp
-
-    @#
-    @# Make the backward plans
-${createPlansForField(field, 'backward')}@slurp
   @end for
   @#
   @if $temporaryVectorsNeedingFourierTransforms
@@ -192,7 +157,7 @@ _temporary_vector = NULL;
 _LOG(_SIMULATION_LOG_LEVEL, "FFTW planning complete\n");
 @end def
 
-@def createPlansForField($field, $type)
+@def createGuruPlansForField($field)
   @#
   @set $blankLineSeparator = ''
   @set $vectorsNeedingFourierTransforms = filter(lambda x: x.needsFourierTransforms, field.vectors)
@@ -200,19 +165,76 @@ _LOG(_SIMULATION_LOG_LEVEL, "FFTW planning complete\n");
   @for vector in vectorsNeedingFourierTransforms
 ${blankLineSeparator}@slurp
     @set $blankLineSeparator = '\n'
-    @# We use measure planning because we want fast transforms. Another option would be to use patient planning,
-    @# however that could be provided as an option.
-    @set $arrayName = c'_${vector.id}'
-    @if vector in field.temporaryVectors
-      @set $arrayName = '_temporary_vector'
-    @end if
-_${vector.id}_${type}_plan = fftw_plan_many_dft(_${field.name}_ndims, _fftw_lattice, _${vector.id}_ncomponents,
-              reinterpret_cast<fftw_complex*>(${arrayName}), NULL, _${vector.id}_ncomponents, 1,
-              reinterpret_cast<fftw_complex*>(${arrayName}), NULL, _${vector.id}_ncomponents, 1,
-              FFTW_${type.upper()}, ${planType});
+    @set $numberOfSpacesNeeded = len(vector.spacesNeeded)
+unsigned long _spaces_needed_for_${vector.id}[] = {${', '.join([str(space) for space in vector.spacesNeeded])}};
+
+for (int _from_space_index = 0; _from_space_index < ${numberOfSpacesNeeded}; _from_space_index++) {
+  unsigned long _from_space = _spaces_needed_for_${vector.id}[_from_space_index];
+  for (int _to_space_index = 0; _to_space_index < ${numberOfSpacesNeeded}; _to_space_index++) {
+    unsigned long _to_space = _spaces_needed_for_${vector.id}[_to_space_index];
+    if (_from_space == _to_space)
+      continue;
+    
+    _forward_sizes_index = _backward_sizes_index = _loop_sizes_index = 0;
+    _forward_plan = _backward_plan = NULL;
+    _c = 1.0;
+    @for $dimension in $vector.field.dimensions
+      @set $fieldDimensionNumber = $vector.field.indexOfDimension($dimension)
+      @set $geometryDimensionNumber = $geometry.indexOfDimension($dimension)
+      @# All spaces are defined relative to the dimension ordering in the geometry
+      @set $bitMask = 1 << $geometryDimensionNumber
+    
+    // Set sizes for transforms in dimension '$dimension.name'
+    if ( !(_from_space & ${bitMask}) && (_to_space & ${bitMask})) {
+      // Forward transform for '$dimension.name'
+      _iodim_ptr = &_forward_sizes[_forward_sizes_index++];
+      _c *= _${vector.field.name}_dx${fieldDimensionNumber} * _inverse_sqrt_2pi;
+    } else if ( (_from_space & ${bitMask}) && !(_to_space & ${bitMask}) ) {
+      // Backward transform for '$dimension.name'
+      _iodim_ptr = &_backward_sizes[_backward_sizes_index++];
+      _c *= _${vector.field.name}_dk${fieldDimensionNumber} * _inverse_sqrt_2pi;
+    } else {
+      // No transform, simply loop over dimension '$dimension.name'
+      _iodim_ptr = &_loop_sizes[_loop_sizes_index++];
+    }
+    
+    _iodim_ptr->n  = _${vector.field.name}_lattice${fieldDimensionNumber};
+    _iodim_ptr->is = _${vector.id}_ncomponents * ${vector.field.pointsInDimensionsWithIndices(range($fieldDimensionNumber + 1, len($vector.field.dimensions)))};
+    _iodim_ptr->os = _${vector.id}_ncomponents * ${vector.field.pointsInDimensionsWithIndices(range($fieldDimensionNumber + 1, len($vector.field.dimensions)))};
+    @end for
+    
+    // Now the 'components' dimension
+    if (_${vector.id}_ncomponents > 1) {
+      _iodim_ptr = &_loop_sizes[_loop_sizes_index++];
+      
+      _iodim_ptr->n  = _${vector.id}_ncomponents;
+      _iodim_ptr->is = 1;
+      _iodim_ptr->os = 1;
+    }
+    
+    if (_forward_sizes_index) {
+      // If we have dimensions needing forward transforms, then we need a forward fft plan
+      ${createGuruPlanForVector($vector, 'forward'), autoIndent=True}@slurp
+    }
+    if (_backward_sizes_index) {
+      // If we have some dimensions needing backward transforms, then we need a backward fft plan
+      ${createGuruPlanForVector($vector, 'backward'), autoIndent=True}@slurp
+    }
+    
+    if (_from_space == 0 && _to_space == _${vector.field.name}_full_kspace_mask) {
+      _${vector.id}_forward_plan = _forward_plan;
+    } else if (_from_space == _${vector.field.name}_full_kspace_mask && _to_space == 0) {
+      _${vector.id}_backward_plan = _backward_plan;
+    } else {
+      _${vector.id}_plan_map[_spaces_pair(_from_space, _to_space)] = _space_transform(_forward_plan, _backward_plan, _c);
+    }
+  }
+}
+
   @end for
   @#
 @end def
+
 
 @def mainEnd($dict)
   @#
@@ -256,59 +278,10 @@ else {
   
   // If we have not already created the plan, we are going to have to make one.
   if (_${vector.id}_plan_map.count(_spaces_pair(_${vector.id}_space, _newSpace)) == 0) {
-    fftw_iodim _fft_forward_sizes[${len($vector.field.dimensions)}];
-    fftw_iodim _fft_backward_sizes[${len($vector.field.dimensions)}];
-    fftw_iodim _loop_sizes[${len($vector.field.dimensions) + 1}];
-    fftw_iodim *_iodim_ptr;
-    
-    int _fft_forward_sizes_index = 0;  // The number of forward fourier transforms
-    int _fft_backward_sizes_index = 0; // The number of backward fourier transforms
-    int _loop_sizes_index = 0;         // The number of loops of fourier transforms
-    @for $dimension in $vector.field.dimensions
-      @set $fieldDimensionNumber = $vector.field.indexOfDimension($dimension)
-      @set $geometryDimensionNumber = $geometry.indexOfDimension($dimension)
-      @# All spaces are defined relative to the dimension ordering in the geometry element, not relative to any field's dimensions.
-      @set $bitMask = 1 << $geometryDimensionNumber
-    
-    // Set sizes for transforms in dimension '$dimension.name'
-    if ( !(_${vector.id}_space & ${bitMask}) && (_newSpace & ${bitMask}) ) {
-      // Forward transform for '$dimension.name'
-      _iodim_ptr = &_fft_forward_sizes[_fft_forward_sizes_index++];
-      _c *= _${vector.field.name}_dx${fieldDimensionNumber} / sqrt(2.0 * M_PI);
-    } else if ( (_${vector.id}_space & ${bitMask}) && !(_newSpace & ${bitMask}) ) {
-      // Backward transform for '$dimension.name'
-      _iodim_ptr = &_fft_backward_sizes[_fft_backward_sizes_index++];
-      _c *= _${vector.field.name}_dk${fieldDimensionNumber} / sqrt(2.0 * M_PI);
-    } else {
-      // No transform, simply loop over dimension '$dimension.name'
-      _iodim_ptr = &_loop_sizes[_loop_sizes_index++];
-    }
-    
-    _iodim_ptr->n  = _${vector.field.name}_lattice${fieldDimensionNumber};
-    _iodim_ptr->is = _${vector.id}_ncomponents * ${vector.field.pointsInDimensionsWithIndices(range($fieldDimensionNumber + 1, len($vector.field.dimensions)))};
-    _iodim_ptr->os = _${vector.id}_ncomponents * ${vector.field.pointsInDimensionsWithIndices(range($fieldDimensionNumber + 1, len($vector.field.dimensions)))};
-    @end for
-    
-    // Now the 'components' dimension
-    if (_${vector.id}_ncomponents > 1) {
-      _iodim_ptr = &_loop_sizes[_loop_sizes_index++];
-      
-      _iodim_ptr->n  = _${vector.id}_ncomponents;
-      _iodim_ptr->is = 1;
-      _iodim_ptr->os = 1;
-    }
-    
-    if (_fft_forward_sizes_index) {
-      // If we have dimensions needing forward transforms, then we need a forward fft plan
-      ${createMixedGuruPlanForVector($vector, 'forward'), autoIndent=True}@slurp
-    }
-    if (_fft_backward_sizes_index) {
-      // If we have some dimensions needing backward transforms, then we need a backward fft plan
-      ${createMixedGuruPlanForVector($vector, 'backward'), autoIndent=True}@slurp
-    }
-    
-    // Add our newly-generated plans to the plan_map for this vector so we do not need to generate it in the future
-    _${vector.id}_plan_map[_spaces_pair(_${vector.id}_space, _newSpace)] = _space_transform(_forward_plan, _backward_plan, _c);
+    _LOG(_ERROR_LOG_LEVEL, "Error: We should have plans for every possible transform, but it seems we don't for this transform.\n"
+                           "       The transform is for the vector '${vector.id}' from space %li to space %li\n.",
+                           _${vector.id}_space, _newSpace);
+    exit(1);
   } else {
     // We have already generated this plan, so just grab it
     _space_transform& _transform = _${vector.id}_plan_map[_spaces_pair(_${vector.id}_space, _newSpace)];
@@ -332,19 +305,21 @@ else {
 @end def
 
 
-@def createMixedGuruPlanForVector($vector, $type)
+@def createGuruPlanForVector($vector, $type)
 @*doc:
-Return the FFTW3 'guru' plan creation call needed for this mixed transform.
+Return the FFTW3 'guru' plan creation call needed for this arbitrary transform.
 *@
   @#
-  @# This must be ESTIMATE planning for the momoent as this is being called in the go_space function
-  @# Anything other than EXTIMATE planning causes the input and output fields to be overwritten.
-printf("Making $type plan for vector $vector.id.\n");
-_${type}_plan = fftw_plan_guru_dft(_fft_${type}_sizes_index, _fft_${type}_sizes,
+  @set $arrayName = c'_${vector.id}'
+  @if vector in vector.field.temporaryVectors
+    @set $arrayName = '_temporary_vector'
+  @end if
+  @#
+_${type}_plan = fftw_plan_guru_dft(_${type}_sizes_index, _${type}_sizes,
                                    _loop_sizes_index, _loop_sizes,
-                                   reinterpret_cast<fftw_complex*>(_active_${vector.id}),
-                                   reinterpret_cast<fftw_complex*>(_active_${vector.id}),
-                                   FFTW_${type.upper()}, FFTW_ESTIMATE);
+                                   reinterpret_cast<fftw_complex*>(${arrayName}),
+                                   reinterpret_cast<fftw_complex*>(${arrayName}),
+                                   FFTW_${type.upper()}, ${planType});
   @#
 @end def
 
