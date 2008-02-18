@@ -30,8 +30,6 @@
 * post_processing -- I think this is done in the generator, it just needs the parser
   to process the appropriate XML element.
 
-* Option for FFTW_PATIENT
-
 * Make sure that all the things that Andy has been doing to enable various simulation
   parameters can be controlled at simulation run time can be done in xpdeint.
 

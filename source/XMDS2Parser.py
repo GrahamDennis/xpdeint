@@ -226,6 +226,23 @@ class XMDS2Parser(ScriptParser):
       else:
         raise ParserException(fftwElement, "The version attribute must be one of 'None', '2', or '3'.")
       
+      planType = None
+      if not fftwElement.hasAttribute('plan'):
+        pass
+      elif fftwElement.getAttribute('plan').strip().lower() == 'estimate':
+        planType = 'FFTW_ESTIMATE'
+      elif fftwElement.getAttribute('plan').strip().lower() == 'measure':
+        planType = 'FFTW_MEASURE'
+      elif fftwElement.getAttribute('plan').strip().lower() == 'patient':
+        planType = 'FFTW_PATIENT'
+      elif fftwElement.getAttribute('plan').strip().lower() == 'exhaustive':
+        planType = 'FFTW_EXHAUSTIVE'
+      else:
+        raise ParserException(fftwElement, "The plan attribute must be one of 'estimate', 'measure', 'patient' or 'exhaustive'.")
+      
+      if planType:
+        fftAttributeDictionary['planType'] = planType
+      
       if threadCount > 1:
         if fourierTransformClass == FourierTransformFFTW3:
           fourierTransformClass = FourierTransformFFTW3Threads
