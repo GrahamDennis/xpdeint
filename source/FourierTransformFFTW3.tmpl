@@ -117,20 +117,37 @@ ${loadWisdom}@slurp
   @# Some of the vectors that we need to create plans for may be temporary vectors,
   @# and hence will not be allocated yet.
   @# The solution is to work out the largest of these vectors, allocate space for that,
-  @# and use that to create the plans.
+  @# and use that to create the plans. Unless we can use another vector that we have
+  @# already allocated.
   @#
   @set $temporaryVectorsNeedingFourierTransforms = set()
+  @set $managedVectorsNeedingFourierTransforms = set()
   @for field in $fields
-    @set $temporaryVectorsInField = filter(lambda x: x.needsFourierTransforms, field.temporaryVectors)
-    @silent temporaryVectorsNeedingFourierTransforms.update(temporaryVectorsInField)
+    @silent temporaryVectorsNeedingFourierTransforms.update(filter(lambda x: x.needsFourierTransforms, field.temporaryVectors))
+    @silent managedVectorsNeedingFourierTransforms.update(filter(lambda x: x.needsFourierTransforms, field.managedVectors))
   @end for
   @if temporaryVectorsNeedingFourierTransforms
     @# We have vectors that need something to be allocated
-    @set $vectorSizes = [(vector, vector.field.pointsInDimensionsNumerically * vector.nComponents) for vector in temporaryVectorsNeedingFourierTransforms]
-    @set $maxVector = max(vectorSizes, key=lambda x: x[1])[0]
+    @set $temporaryVectorSizes = [(vector, vector.field.pointsInDimensionsNumerically * vector.nComponents) for vector in temporaryVectorsNeedingFourierTransforms]
+    @set $managedVectorSizes = [(vector, vector.field.pointsInDimensionsNumerically * vector.nComponents) for vector in managedVectorsNeedingFourierTransforms]
+    @set $maxTemporaryVectorAndSize = max(temporaryVectorSizes, key=lambda x: x[1])
+    @set $maxManagedVectorAndSize = max(managedVectorSizes, key=lambda x: x[1])
+    @#
+    @# If the maximum temporary vector is bigger than the maximum managed vector, then we really do need to allocate an array
+    @if $maxTemporaryVectorAndSize[1] > $maxManagedVectorAndSize[1]
+      @set $maxVector = $maxTemporaryVectorAndSize[0]
+      @set $allocatedTemporaryVector = True
 
 // allocate an array so we can create plans for those vectors that we have not allocated yet
 complex* _temporary_vector = (complex*) xmds_malloc(sizeof(complex) * _${maxVector.field.name}_size * _${maxVector.id}_ncomponents);
+    @else
+      @# The maximum managed vector is larger than the maximum temporary vector, so there's no point in allocating an array
+      @set $allocatedTemporaryVector = False
+      @set $maxVector = $maxManagedVectorAndSize[0]
+      
+// just use the _${maxVector.id} array for creating plans for those vectors that we have not allocated yet
+complex* _temporary_vector = _${maxVector.id};
+    @end if
   @end if
 
 fftw_plan _forward_plan, _backward_plan;
@@ -150,7 +167,7 @@ ${createGuruPlansForField(field)}@slurp
 
   @end for
   @#
-  @if $temporaryVectorsNeedingFourierTransforms
+  @if $allocatedTemporaryVector
 xmds_free(_temporary_vector);
 _temporary_vector = NULL;
 
