@@ -30,7 +30,7 @@ class IndentFilter(Filter):
     need to call the filter with the argument ``autoIndent=True``. The following is
     an example of typical usage::
     
-        <some whitespace>${someRandomVariableOrFunction, autoIndent=True}#slurp
+        <some whitespace>${someRandomVariableOrFunction, autoIndent=True}@slurp
     
     This way, the whitespace before the variable replacement will be used for each
     line of the replacement text.
@@ -39,7 +39,7 @@ class IndentFilter(Filter):
     capabilities. (Go Python!)
     
     Additionally, the option ``extraIndent=n`` can be passed which increases
-    the indent by n spaces.
+    the indent by ``n`` spaces.
     """
     # Quickly check for the case where we have nothing to do
     if not (kw.get('autoIndent') or kw.get('extraIndent')):
