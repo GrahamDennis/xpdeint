@@ -61,7 +61,7 @@ class ScriptParser(object):
     if not len(spaces) == len(field.dimensions):
       raise ParserException(element, 
               "The fourier_space attribute must have the same number of yes/no/k/x "
-              "entries as the source_field has dimensions.")
+              "entries as the field has dimensions.")
     
     geometryTemplate = globalNameSpace['geometry']
     resultSpace = 0
