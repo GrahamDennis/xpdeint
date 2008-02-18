@@ -141,4 +141,9 @@ class _FieldElement (ScriptElement):
     
     return ''.join(result)
   
+  def sortDimensions(self):
+    geometryTemplate = self.getVar('geometry')
+    sortFunction = lambda x, y: cmp(geometryTemplate.indexOfDimension(x), geometryTemplate.indexOfDimension(y))
+    self.dimensions.sort(sortFunction)
+  
 

@@ -399,13 +399,15 @@ class XMDS2Parser(ScriptParser):
                                             "list of dimensions" % locals())
       
       geometryTemplate = self.globalNameSpace['geometry']
-          
+      
       for dimensionName in results:
         if not geometryTemplate.hasDimensionName(dimensionName):
           raise ParserException(fieldElement, "Don't recognise '%(dimensionName)s' as one of "
                                               "the dimensions defined in the geometry element." % locals())
         
         fieldTemplate.dimensions.append(geometryTemplate.dimensions[geometryTemplate.indexOfDimensionName(dimensionName)])
+    
+    fieldTemplate.sortDimensions()
     
     for field in self.globalNameSpace['fields']:
       if (not field == fieldTemplate) and fieldTemplate.isSubsetOfField(field) and field.isSubsetOfField(fieldTemplate):
@@ -1005,6 +1007,7 @@ class XMDS2Parser(ScriptParser):
                   "The offending dimension is '%(dimensionName)s'." % locals())
         
         targetField.dimensions.append(geometryTemplate.dimensions[geometryTemplate.indexOfDimensionName(dimensionName)])
+      targetField.sortDimensions()
     else:
       raise ParserException(operatorElement,
               "Filter operators must have either the 'dimensions' attribute "
@@ -1202,6 +1205,9 @@ class XMDS2Parser(ScriptParser):
           # Note that we previously set the lattice of the dimension to be the same as the number
           # of points in this dimension according to the geometry element.
           samplingFieldTemplate.dimensions.append(dimension)
+      
+      samplingFieldTemplate.sortDimensions()
+      momentGroupTemplate.sortDimensions()
       
       # end looping over dimension elements.  
       rawVectorTemplate = VectorElementTemplate(name = 'raw', field = momentGroupTemplate,
