@@ -94,7 +94,7 @@
           <source_field fourier_space="k">main</source_field>
           <!-- All of the vectors must be in the source_field -->
           <!-- No, they don't need to be -->
-          <dependencies>main</dependencies>
+          <dependencies fourier_space="kx">main</dependencies>
           <!-- If the moments are of type 'double', then all dimensions that aren't integrated
                must be evaluated in 'x' space. -->
           <![CDATA[
