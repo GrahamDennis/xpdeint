@@ -26,13 +26,13 @@
   <geometry>
     <prop_dim> t </prop_dim>
     <transverse_dimensions>
-	  <integer_valued kind="first">
-	      <dimension name="u" lattice="2"  domain="(0, 1)" />
-		</integer_valued>
+      <integer_valued kind="first">
+        <dimension name="u" lattice="2"  domain="(0, 1)" />
+      </integer_valued>
       <dimension name="x" lattice="100"  domain="(0, 1)" />
-	  <integer_valued kind="last">
-	      <dimension name="w" domain="(-3, 3)" />
-		</integer_valued>
+      <integer_valued kind="last">
+        <dimension name="w" domain="(-3, 3)" />
+      </integer_valued>
     </transverse_dimensions>
   </geometry>
   

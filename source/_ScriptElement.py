@@ -16,6 +16,16 @@ from IndentFilter import IndentFilter
 from ParserException import ParserException
 
 class _ScriptElement (Template):
+  # Initialise the callOnceGuards to be empty
+  _callOncePerClassGuards = set()
+  _callOncePerInstanceGuards = dict()
+  
+  @classmethod
+  def resetGuards(cls):
+    _ScriptElement._callOncePerClassGuards.clear()
+    for instanceGuardSet in _ScriptElement._callOncePerInstanceGuards.itervalues():
+      instanceGuardSet.clear()
+  
   def __init__(self, *args, **KWs):
     Template.__init__(self, *args, **KWs)
     
@@ -30,6 +40,9 @@ class _ScriptElement (Template):
       globalNameSpace[self.globalNameSpaceName] = self
       if not self in globalNameSpace['scriptElements']:
         globalNameSpace['scriptElements'].append(self)
+    
+    # Create the entry in the callOnceGuards
+    _ScriptElement._callOncePerInstanceGuards[self] = set()
     
   
   # Default description of the template
