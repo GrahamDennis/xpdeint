@@ -36,7 +36,7 @@
     </transverse_dimensions>
   </geometry>
   
-  <field name="main" dimensions="x">
+  <field name="mainField" dimensions="x">
     <vector name="main" initial_space="x">
       <components type="complex">
         u uDot
@@ -61,7 +61,7 @@
   <sequence>
     <integrate algorithm="RK9" interval="2e-3" steps="100">
       <samples>50 50</samples>
-      <operators field="main">
+      <operators field="mainField">
         <operator kind="ex" constant="yes">
           <operator_names>L</operator_names>
           <![CDATA[
@@ -91,7 +91,7 @@
           <!-- It's not necessary to have a moments tag here. It would be quite acceptable to -->
           <!-- use the filter to modify a vector already created -->
           <moments type="double">moment</moments>
-          <source_field fourier_space="k">main</source_field>
+          <source_field fourier_space="k">mainField</source_field>
           <!-- All of the vectors must be in the source_field -->
           <!-- No, they don't need to be -->
           <dependencies fourier_space="kx">main</dependencies>

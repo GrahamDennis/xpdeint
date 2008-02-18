@@ -22,7 +22,7 @@
     <prop_dim> t </prop_dim>
   </geometry>
   
-  <field name="main">
+  <field name="mainField">
     <vector name="main">
       <components type="real">
         N
@@ -38,7 +38,7 @@
   <sequence>
     <integrate algorithm="RK4" interval="10" steps="1000" tolerance="1e-6">
       <samples>1000</samples>
-      <operators field="main" noises="n">
+      <operators field="mainField" noises="n">
         <integration_vectors>main</integration_vectors>
         <![CDATA[
           dN_dt = n_1;

@@ -418,7 +418,15 @@ class XMDS2Parser(ScriptParser):
       if len(filter(lambda x: x.name == vectorName, field.vectors)) > 0:
         raise ParserException(vectorElement, "Vector name '%(vectorName)s' conflicts with a "
                                              "previously defined vector of the same name" % locals())
-      
+    
+    ## Check that the name isn't already taken
+    if vectorName in self.globalNameSpace['symbolNames']:
+      raise ParserException(vectorElement, "Vector name '%(vectorName)s' conflicts with previously "
+                                          "defined symbol of the same name." % locals())
+    
+    ## Make sure no-one else takes the name
+    self.globalNameSpace['symbolNames'].add(vectorName)
+    
     vectorTemplate = VectorElementTemplate(name = vectorName, field = fieldTemplate,
                                            **self.argumentsToTemplateConstructors)
     
@@ -649,7 +657,7 @@ class XMDS2Parser(ScriptParser):
     for operatorsElement in operatorsElements:
       if not operatorsElement.hasAttribute('field'):
         raise ParserException(operatorsElement, "Missing 'field' attribute.")
-      fieldName = operatorsElement.getAttribute('field').strip().lower()
+      fieldName = operatorsElement.getAttribute('field').strip()
       
       if fieldName in fieldNamesUsed:
         raise ParserException(operatorsElement, "There can only be one operators element per field.")
