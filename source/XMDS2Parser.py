@@ -313,8 +313,6 @@ class XMDS2Parser(ScriptParser):
           raise ParserException(dimensionElement, "Could not understand lattice value "
                                                   "'%(latticeString)s' as a positive integer." % locals())
         
-        dimension = Dimension(name = dimensionName, transverse = True, lattice = int(latticeString))
-        
         ## Grab the domain strings
         domainString = parseAttribute('domain')
         
