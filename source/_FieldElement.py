@@ -142,6 +142,7 @@ class _FieldElement (ScriptElement):
     return ''.join(result)
   
   def sortDimensions(self):
+    """Sort the dimensions of the field into canonical (geometry element) order."""
     geometryTemplate = self.getVar('geometry')
     sortFunction = lambda x, y: cmp(geometryTemplate.indexOfDimension(x), geometryTemplate.indexOfDimension(y))
     self.dimensions.sort(sortFunction)

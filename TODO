@@ -15,6 +15,12 @@
 
 * Add ASCII/binary/XSIL vector initialisation options
 
+* CDATA initialisation should be able to depend on other vectors
+
+* Verify that vector dependencies are available when they are to be used.
+  For example, consider the case of a filter element creating a vector in one integrate block,
+  and then referenced in another. This needs to cause the parser to barf.
+
 * Add the ability to distribute stochastic simulations using MPI
 
 * Add the ability to distribute stochastic simulations using OpenMP
@@ -40,7 +46,7 @@
 	- within operators have option for mixed space.  Recommend strongly efficient choice of dimension ordering.
   Default dimensions in field is empty, to be same as output.  Integer dimensions are 2 strings.  psi[u,v][w](x,y,x)  for memory order u v x y z w	
   space="x" should be space="dimensionname"  Don't have boolean option.  Integer-valued dimensions may be in the list if not Fourier
-  - Integer dimensions are specified with an <integer_valued kind="first|last"> tag
+  - Integer dimensions are specified with an <integer_valued kind="first|last"> tag - default to last.
 
 * Write a TextMate grammar for our Cheetah templates (for syntax highlighting
   goodness)
@@ -86,7 +92,5 @@
 	- If operator contents != component name, then it will be its own filter and EX block.  
 	- Watch for exact copies of operator+string
 	- Also reuse repeats of each string (trailing/following whitespace stripped) for efficiency.  L[psi*~psi]  D[ psi*~psi]
-
-* Field dimensions should be stored in canonical order.
 
 ? Post-processing
