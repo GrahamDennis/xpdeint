@@ -1097,10 +1097,13 @@ class XMDS2Parser(ScriptParser):
       raise ParserException(outputElement, "The format attribute must be either 'binary' or 'ascii'.")
     
     
-    if not outputElement.hasAttribute('filename') or not outputElement.getAttribute('filename').strip():
-      raise ParserException(outputElement, "Missing filename attribute.")
+    if not outputElement.hasAttribute('filename'):
+      filename = self.globalNameSpace['simulationName']
+    elif not outputElement.getAttribute('filename').strip():
+      raise ParserException(outputElement, "Filename attribute is empty.")
+    else:
+      filename = outputElement.getAttribute('filename').strip()
     
-    filename = outputElement.getAttribute('filename').strip()
     if filename.lower().endswith('.xsil'):
       index = filename.lower().rindex('.xsil')
       filename = filename[0:index]
