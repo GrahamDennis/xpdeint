@@ -1,0 +1,4 @@
+svn log --xml --verbose | xsltproc admin/svn2cl.xsl - > FullChangeLog
+
+We'll eventually need to replace such structures in new version.  
+I already found myself wanted to scan log messages, so I copied the above over from xmds.

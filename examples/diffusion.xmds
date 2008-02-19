@@ -23,7 +23,7 @@
   </geometry>
   
   <field name="mainField" dimensions="x y">
-    <vector name="main" type="complex" initial_space="x x">
+    <vector name="main" type="complex" initial_space="x y">
       <components>
         phi
       </components>
@@ -39,7 +39,7 @@
     <integrate algorithm="ARK45" interval="10.0" steps="2400" tolerance="1e-5">
       <samples>24</samples>
       <operators field="mainField">
-        <operator kind="ex" constant="yes" fourier_space="x k">
+        <operator kind="ip" constant="yes" fourier_space="x ky">
           <operator_names>L</operator_names>
           <![CDATA[
             L = -0.02*ky*ky;
@@ -47,7 +47,7 @@
         </operator>
         <integration_vectors>main</integration_vectors>
         <![CDATA[
-          dphi_dt = L[phi];
+          dphi_dt = L[phi]+x*x;
         ]]>
       </operators>
     </integrate>
