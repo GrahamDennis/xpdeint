@@ -215,11 +215,11 @@ $vector.type $componentName;
 
     @if $dimensionIsInFourierSpace($dimension, $space)
       @# If the current dimension is in fourier space
-double k${dimension.name} = 0.0;
+${dimension.type} k${dimension.name} = 0.0;
     @else
       @# If the dimension isn't in fourier space
       @set $fieldWithDimension = $vectorsWithThisDimension[0].field
-double ${dimension.name} = _${fieldWithDimension.name}_xmin${fieldWithDimension.indexOfDimension($dimension)}@slurp
+${dimension.type} ${dimension.name} = _${fieldWithDimension.name}_xmin${fieldWithDimension.indexOfDimension($dimension)}@slurp
  + (_${fieldWithDimension.name}_lattice${fieldWithDimension.indexOfDimension($dimension)}/2) * _${fieldWithDimension.name}_dx${fieldWithDimension.indexOfDimension($dimension)};
     @end if
   @end for
@@ -293,10 +293,10 @@ ${closeLoopForDimensionInFieldInSpace($dimension, $field, $space, $kspaceAscendi
     @# If the current dimension is in fourier space
     @if not $kspaceAscendingOrder
       @# If we are looping in memory order
-double k${dimension.name} = 0;
+${dimension.type} k${dimension.name} = 0;
     @else
       @# We are looping in ascending order
-double k${dimension.name} = -(_${field.name}_lattice${fieldDimensionNumber}/2) * _${field.name}_dk${fieldDimensionNumber};
+${dimension.type} k${dimension.name} = -(_${field.name}_lattice${fieldDimensionNumber}/2) * _${field.name}_dk${fieldDimensionNumber};
     @end if
 #define dk${dimension.name} _${field.name}_dk${fieldDimensionNumber}
   @else
@@ -304,7 +304,7 @@ double k${dimension.name} = -(_${field.name}_lattice${fieldDimensionNumber}/2) *
     @#
     @# Do things slightly differently if we have a dimension override for this dimension
     @if not $dimension in $field.dimensionOverrides
-double ${dimension.name} = _${field.name}_xmin${fieldDimensionNumber};
+${dimension.type} ${dimension.name} = _${field.name}_xmin${fieldDimensionNumber};
 #define d${dimension.name} _${field.name}_dx${fieldDimensionNumber}
     @else
 #define ${dimension.name} _${dimension.override.name}_x${dimension.override.indexOfDimension($dimension)}[_i${fieldDimensionNumber}]
