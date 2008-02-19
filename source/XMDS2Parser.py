@@ -934,6 +934,7 @@ class XMDS2Parser(ScriptParser):
           operatorTemplate.operatorComponents[operatorName][vector].append(componentName)
         
         # FIXME: Add a regex to add a warning if dcomponent_dt doesn't occur on the same line as L[component]
+        # and an error if dsomeOtherComponent_dt occurs on the same line as L[component]
         operatorCodeReplacementRegex = re.compile(r'\b' + operatorName + r'\[\s*' + componentName + r'\s*\]')
         
         replacementCode = operatorCodeReplacementRegex.sub('0.0', deltaAOperatorTemplate.propagationCode, count = 1)
