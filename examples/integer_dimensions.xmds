@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <name>lorenz_integer_dimensions</name>
+  <author>Graham Dennis</author>
+  <description>
+    xpdeint script to test integer dimensions.
+  </description>
+  
+  <features>
+    <benchmark />
+    <error_check />
+    <bing />
+    <fftw version="none" />
+  </features>
+  
+  <geometry>
+    <prop_dim> t </prop_dim>
+    <transverse_dimensions>
+      <integer_valued>
+        <dimension name="j" lattice="4" domain="(0,3)" />
+      </integer_valued>
+    </transverse_dimensions>
+  </geometry>
+  
+  <field name="zerod" >
+    <vector name="main" type="complex">
+      <components>
+        x
+      </components>
+      <initialisation>
+        <![CDATA[
+        x[0] = 1.0;
+        x[j] = 1.0e-3;
+        ]]>
+      </initialisation>
+    </vector>
+  </field>
+  
+  <sequence>
+    <integrate algorithm="ARK89" interval="60.0" steps="25000" tolerance="1e-7">
+      <samples>1000</samples>
+      <operators field="zerod">
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+        long j_minus_one = (j-1) % _zerod_lattice0;
+        long j_plus_one  = (j+1) % _zerod_lattice0;
+        dx_dt[j] = x[j]*(x[j_minus_one] - x[j_plus_one]);
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  <output format="binary">
+    <group>
+      <sampling initial_sample="yes">
+        <dimension name="j" />
+        <moments>xR</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          xR = x;
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>
