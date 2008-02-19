@@ -108,6 +108,29 @@ class _FieldElement (ScriptElement):
     
     return points
   
+  @property
+  def integerValuedDimensions(self):
+    result = []
+    
+    dimensionList = []
+    
+    for dim in self.dimensions:
+      # Once we hit a double dimension, we must have passed
+      # the 'first' integer valued dimensions if we have any
+      if dim.type == 'double':
+        if dimensionList:
+          result.append(dimensionList)
+          dimensionList = []
+      elif dim.type == 'long':
+        dimensionList.append(dim)
+      else:
+        # Badness
+        assert False
+    
+    if dimensionList:
+      result.append(dimensionList)
+    return result
+  
   # Dimension overrides
   def dimensionOverrides(self):
     return filter(lambda x: hasattr(x, 'override'), self.dimensions)
