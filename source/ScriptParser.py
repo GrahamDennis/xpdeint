@@ -64,7 +64,10 @@ class ScriptParser(object):
     for fieldDimension in field.dimensions:
         if not firstFieldName:
 	       legalFieldNameString+='|'
-        legalFieldNameString+='k'+fieldDimension.name+'|'+fieldDimension.name
+        if fieldDimension.type=='double':
+            legalFieldNameString+='k'+fieldDimension.name+'|'+fieldDimension.name
+        else:
+            legalFieldNameString+=fieldDimension.name            
         firstFieldName=False
     legalFieldNameString+=r')\b'
     legalRegex = re.compile(legalFieldNameString)
