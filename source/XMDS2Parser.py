@@ -421,6 +421,9 @@ class XMDS2Parser(ScriptParser):
       domainString = dimensionElement.getAttribute('domain').strip()
       
       minimumString, maximumString = self.domainPairFromString(domainString, int, dimensionElement)
+      # We are guaranteed that these can be transformed into int's
+      minimumValue = int(minimumString)
+      maximumValue = int(maximumString)
       
       # If we have a lattice attribute, check that it agrees with the domain
       if dimensionElement.hasAttribute('lattice'):
@@ -429,10 +432,6 @@ class XMDS2Parser(ScriptParser):
           lattice = self.integerInString(latticeString)
         except ValueError, err:
           raise ParserException(dimensionElement, "Unable to understand '%(latticeString)s' as an integer." % locals())
-        
-        # We are guaranteed that these can be transformed into int's
-        minimumValue = int(minimumString)
-        maximumValue = int(maximumString)
         
         if (maximumValue - minimumValue + 1) != lattice:
           raise ParserException(dimensionElement, "The lattice value of '%(latticeString)s' doesn't match with the domain "
