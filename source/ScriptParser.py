@@ -55,19 +55,39 @@ class ScriptParser(object):
     return results[0]
   
   def spaceFromStringForFieldInElement(self, spacesString, field, element, globalNameSpace):
-    spacesRegex = re.compile(r'\b(yes|no|k|x)\b')
-    spaces = spacesRegex.findall(spacesString.lower())
-    
-    if not len(spaces) == len(field.dimensions):
-      raise ParserException(element, 
-              "The fourier_space attribute must have the same number of yes/no/k/x "
-              "entries as the field has dimensions.")
-    
     geometryTemplate = globalNameSpace['geometry']
     resultSpace = 0
-    for dimensionNumber, space in enumerate(spaces):
-      if space == 'yes' or space == 'k':
-        resultSpace |= 1 << geometryTemplate.indexOfDimension(field.dimensions[dimensionNumber])
+
+    # Complain if illegal fieldnames or k[integer-valued] are used
+    firstFieldName=True
+    legalFieldNameString='\\b('
+    for fieldDimension in field.dimensions:
+        if not firstFieldName:
+	       legalFieldNameString+='|'
+        legalFieldNameString+='k'+fieldDimension.name+'|'+fieldDimension.name
+        firstFieldName=False
+    legalFieldNameString+=r')\b'
+    legalRegex = re.compile(legalFieldNameString)
+
+    for symbol in self.symbolsInString(spacesString):
+        if len(legalRegex.findall(symbol))!=1:
+            raise 	ParserException(element,
+		              "The fourier_space string must only contain real-valued dimensions from the"
+                      "designated field.  '%(symbol)s' cannot be used."  % locals())
+    
+    for dimensionNumber, fieldDimension in enumerate(field.dimensions):
+        if fieldDimension.transverse and fieldDimension.type=='double':
+           fieldDimName = fieldDimension.name
+           spacesOptionsString=r'\b('+'k'+fieldDimName+'|'+fieldDimName+r')\b'
+           spacesRegex = re.compile(spacesOptionsString)
+           spaces = spacesRegex.findall(spacesString)
+           if not len(spaces) == 1:
+		      raise ParserException(element,
+		              "The fourier_space attribute must have exactly one entry of either"
+                      "'k%(fieldDimName)s' or '%(fieldDimName)s'."  % locals()) 
+           elif spaces[0] == 'k'+fieldDimName:
+		         resultSpace |= 1 << geometryTemplate.indexOfDimension(field.dimensions[dimensionNumber])
+    
     return resultSpace
   
   def targetComponentsForOperatorInString(self, operatorName, propagationCode):
