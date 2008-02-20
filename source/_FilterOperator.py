@@ -25,7 +25,7 @@ class _FilterOperator (NonConstantOperator):
     return 0
 
   
-  def preflight(self):
+  def bindNamedVectors(self):
     if self.dependenciesEntity:
       dependencies = self.vectorsFromEntity(self.dependenciesEntity)
       for dependency in dependencies:
@@ -38,6 +38,6 @@ class _FilterOperator (NonConstantOperator):
         
       self.dependencies.update(dependencies)
     
-    super(_FilterOperator, self).preflight()
+    super(_FilterOperator, self).bindNamedVectors()
   
 

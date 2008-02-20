@@ -46,7 +46,7 @@ class _MomentGroupElement (FieldElement):
     
     return dict['returnValue']
   
-  def preflight(self):
+  def bindNamedVectors(self):
     dependencies = self.vectorsFromEntity(self.dependenciesEntity)
     
     if hasattr(self, 'sampleField'):
@@ -68,8 +68,7 @@ class _MomentGroupElement (FieldElement):
     
     self.dependencies.update(dependencies)
     
-    super(_MomentGroupElement, self).preflight()
+    super(_MomentGroupElement, self).bindNamedVectors()
   
-
 
 

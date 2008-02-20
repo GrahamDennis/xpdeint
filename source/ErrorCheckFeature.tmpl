@@ -22,10 +22,6 @@ double* _${momentGroupOutputField.name}_fullstep;
 double* _${momentGroupOutputField.name}_halfstep;
   @end for
   @#
-  @for noiseVector in $noiseAliases
-${noiseVector.type}* _${noiseVector.id}2; // half-step noise
-  @end for
-  @#
 @end def
 
 @def topLevelSequenceBegin($dict)

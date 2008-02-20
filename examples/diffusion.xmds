@@ -47,7 +47,7 @@
         </operator>
         <integration_vectors>main</integration_vectors>
         <![CDATA[
-          dphi_dt = L[phi]+x*x;
+          dphi_dt = L[phi];
         ]]>
       </operators>
     </integrate>

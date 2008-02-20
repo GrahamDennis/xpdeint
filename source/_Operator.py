@@ -78,7 +78,7 @@ class _Operator (ScriptElement):
   operatorSpace = property(getOperatorSpace, setOperatorSpace)
   
   
-  def preflight(self):
+  def bindNamedVectors(self):
     if self.dependenciesEntity:
       dependencies = self.vectorsFromEntity(self.dependenciesEntity)
       
@@ -102,5 +102,5 @@ class _Operator (ScriptElement):
     
     if self.resultVector:
       self.resultVector.spacesNeeded.add(self.operatorSpace)
-    super(_Operator, self).preflight()
+    super(_Operator, self).bindNamedVectors()
   

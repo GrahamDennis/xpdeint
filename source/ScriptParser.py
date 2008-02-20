@@ -9,6 +9,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 
 import re
 from ParserException import ParserException
+import RegularExpressionStrings
 
 ## Subclasses for parsing specific scripts types should
 ## override the following functions:
@@ -35,7 +36,7 @@ class ScriptParser(object):
     except for the first character which must be an upper or lower-case 
     character.
     """
-    symbolNameRegex = re.compile(r'\b[a-zA-Z]\w*\b')
+    symbolNameRegex = re.compile(r'\b' + RegularExpressionStrings.symbol + r'\b')
     results = symbolNameRegex.findall(string)
     return results
   
@@ -58,7 +59,7 @@ class ScriptParser(object):
     """
     Return a list of the integers in `string`.
     """
-    integerRegex = re.compile(r'\b[-+]?[0-9]+\b')
+    integerRegex = re.compile(r'\b' + RegularExpressionStrings.integer + r'\b')
     results = integerRegex.findall(string)
     # Convert captured strings into integers
     return [int(result) for result in results]
@@ -123,6 +124,10 @@ class ScriptParser(object):
     operatorCodeRegex = re.compile(r'\b' + operatorName + r'\[\s*(.+)\s*\]')
     return operatorCodeRegex.findall(propagationCode)
   
+  def targetComponentsForOperatorsInString(self, operatorNames, propagationCode):
+    operatorCodeRegex = re.compile(r'\b(' + '|'.join(operatorNames) + ')'+ RegularExpressionStrings.threeLevelsMatchedSquareBrackets, re.VERBOSE)
+    return operatorCodeRegex.findall(propagationCode)
+  
   def applyAttributeDictionaryToObject(self, attrDict, obj):
     for attrName, attrValue in attrDict.iteritems():
       obj.__setattr__(attrName, attrValue)
@@ -138,7 +143,7 @@ class ScriptParser(object):
     be converted to ensure the ordering of the numbers.
     """
     
-    regex = re.compile(r'\(\s*(\S+),\s*(\S+)\s*\)')
+    regex = re.compile(RegularExpressionStrings.domainPair)
     result = regex.match(domainString)
     if not result:
       raise ParserException(element, "Could not understand '%(domainString)s' as a domain"
