@@ -21,8 +21,8 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   @for $dimensionNumber, $dimension in enumerate($dimensions)
 
 #define _${name}_lattice${dimensionNumber}  $dimension.lattice
-#define _${name}_xmin${dimensionNumber}  $dimension.minimum
-#define _${name}_xmax${dimensionNumber}  $dimension.maximum
+#define _${name}_xmin${dimensionNumber}  (($dimension.type)$dimension.minimum)
+#define _${name}_xmax${dimensionNumber}  (($dimension.type)$dimension.maximum)
     @if $dimension.type == 'double'
 #define _${name}_dx${dimensionNumber}  (($dimension.maximum - $dimension.minimum)/(${dimension.type})_${name}_lattice${dimensionNumber})
 #define _${name}_dk${dimensionNumber}  (2.0*M_PI/($dimension.maximum - $dimension.minimum))
