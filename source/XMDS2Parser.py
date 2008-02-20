@@ -892,54 +892,12 @@ class XMDS2Parser(ScriptParser):
                 "Operator name '%(operatorName)s' conflicts with previously-defined symbol." % locals())
       self.globalNameSpace['symbolNames'].add(operatorName)
       
-      operatorTemplate.operatorComponents[operatorName] = {}
-      
-      targetComponentNames = self.targetComponentsForOperatorInString(operatorName, deltaAOperatorTemplate.propagationCode)
-      
-      if not targetComponentNames:
-        raise ParserException(operatorElement, "Unable to parse operator code.")
-      
-      for componentName in targetComponentNames:
-        vectorList = filter(lambda x: componentName in x.components, self.globalNameSpace['vectors'])
-        
-        if not vectorList:
-          raise ParserException(operatorElement,
-              "'%(componentName)s' is not the name of a vector component." % locals())
-        
-        if len(vectorList) > 1:
-          # This shouldn't happen because we should have already checked that no
-          # two vectors contains components with the same names
-          raise ParserException(operatorElement, "Internal consistency error.")
-        
-        vector = vectorList[0]
-        if not vector.field == operatorTemplate.field:
-          raise ParserException(operatorElement,
-                  "Operator '%(operatorName)s' cannot act on component '%(componentName)s' "
-                  "as it is in a different field." % locals())
-        
-        if not vector.type == 'complex':
-          raise ParserException(operatorElement,
-                  "Cannot act on vector '%s' because it is not of type complex." % vector.name)
-        
-        vector.needsFourierTransforms = True
-        
-        if not vector in operatorTemplate.operatorComponents[operatorName]:
-          operatorTemplate.operatorComponents[operatorName][vector] = [componentName]
-        else:
-          if componentName in operatorTemplate.operatorComponents[operatorName][vector]:
-            raise ParserException(operatorElement,
-                    "Check the documentation, IP operators can only appear once in the derivative code.\n"
-                    "The problem was with the '%(operatorName)s[%(componentName)s]' term appearing more "
-                    "than once." % locals())
-          operatorTemplate.operatorComponents[operatorName][vector].append(componentName)
-        
-        # FIXME: Add a regex to add a warning if dcomponent_dt doesn't occur on the same line as L[component]
-        # and an error if dsomeOtherComponent_dt occurs on the same line as L[component]
-        operatorCodeReplacementRegex = re.compile(r'\b' + operatorName + r'\[\s*' + componentName + r'\s*\]')
-        
-        replacementCode = operatorCodeReplacementRegex.sub('0.0', deltaAOperatorTemplate.propagationCode, count = 1)
-        
-        deltaAOperatorTemplate.propagationCode = replacementCode
+    operatorTemplate.deltaAOperator = deltaAOperatorTemplate
+    operatorTemplate.operatorNames = operatorNames
+    
+    operatorTargetPairs = self.targetComponentsForOperatorsInString(operatorNames, deltaAOperatorTemplate.propagationCode)
+    
+    operatorTemplate.operatorComponentsEntity = ParsedEntity(operatorElement, operatorTargetPairs)
     
     segmentName = operatorTemplate.integrator.name
     operatorName = operatorTemplate.name

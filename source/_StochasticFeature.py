@@ -11,11 +11,12 @@ from _Feature import _Feature
 from VectorElement import VectorElement
 from VectorInitialisationCDATA import VectorInitialisationCDATA
 from DeltaAOperator import DeltaAOperator
+from FixedStepIntegrator import FixedStepIntegrator
+from AdaptiveStepIntegrator import AdaptiveStepIntegrator
 
 from ParserException import ParserException
 
 class _StochasticFeature (_Feature):
-  
   @property
   def children(self):
     return self.noises
@@ -39,7 +40,7 @@ class _StochasticFeature (_Feature):
   def xsilOutputInfo(self, dict):
     return self.implementationsForClassesAndChildren('xsilOutputInfo', dict)
   
-  def preflight(self):
+  def createNamedVectors(self):
     # We need to iterate over everything that could possibly need noises
     # The best way to do that is to have the ability to iterate over everything
     # and select those that have a 'canHaveNoises' attribute or the like.
@@ -93,14 +94,34 @@ class _StochasticFeature (_Feature):
       o.dependencies.update([noise.noiseVectorForField(o.field) for noise in o.noises])
     
     
-    integratorsUsingNoises = set([(o.integrator, o) for o in objectsThatMightUseNoises if isinstance(o, DeltaAOperator)])
-    for integrator, deltaAOperator in integratorsUsingNoises:
-      if hasattr(integrator, 'successfulStepExponent') and hasattr(integrator, 'unsuccessfulStepExponent'):
-        for noise in deltaAOperator.noises:
-          if noise.noiseDistribution not in ('gaussian', 'poissonian'):
-            raise ParserException(self.xmlElement, "Only gaussian or poissonian noises can be used in adaptive integrators.")
-        integrator.successfulStepExponent *= 2.0
-        integrator.unsuccessfulStepExponent *= 2.0
+    # For each adaptive step integrator, we need to make sure that the noises being used are
+    # either gaussian or poissonian
+    for deltaAOperator in [o for o in objectsThatMightUseNoises if isinstance(o, DeltaAOperator) and isinstance(o.integrator, AdaptiveStepIntegrator)]:
+      for noise in deltaAOperator.noises:
+        if noise.noiseDistribution not in ('gaussian', 'poissonian'):
+          raise ParserException(self.xmlElement, "Can't use a noise with a '%s' distribution in an adaptive integrator. "
+                                                 "Only gaussian or poissonian noises can be used." % noise.noiseDistribution)
     
-    super(_Feature, self).preflight()
+    # For each adaptive step integrator using noises, we need to reduce the order of the integrator
+    integratorsUsingNoises = set([o.integrator for o in objectsThatMightUseNoises if isinstance(o, DeltaAOperator) and isinstance(o.integrator, AdaptiveStepIntegrator)])
+    for integrator in integratorsUsingNoises:
+      integrator.successfulStepExponent *= 2.0
+      integrator.unsuccessfulStepExponent *= 2.0
+    
+    # When we have error checking, every noise vector used by a delta a operator in a fixed step integrator
+    # needs a '2' noise vector alias for generating two half-step noises and adding them.
+    self.noiseAliases = []
+    if 'ErrorCheck' in self.getVar('features'):
+      noiseVectorsNeedingAlias = set()
+      # Loop over all fixed-step delta A operators ...
+      for deltaAOperator in [o for o in objectsThatMightUseNoises if isinstance(o, DeltaAOperator) and isinstance(o.integrator, FixedStepIntegrator)]:
+        # ... adding the noise vectors used by those noises to the set of noise vectors needing aliases
+        noiseVectorsNeedingAlias.update([noise.noiseVectorForField(deltaAOperator.field) for noise in deltaAOperator.noises])
+      
+      for noiseVector in noiseVectorsNeedingAlias:
+        noiseVector.aliases.add('_%s2' % noiseVector.id)
+        self.noiseAliases.append(noiseVector)
+    
+    
+    super(_Feature, self).createNamedVectors()
   

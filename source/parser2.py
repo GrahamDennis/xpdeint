@@ -42,7 +42,8 @@ usage: parser2 [options] fileToBeParsed
 Options and arguments:
 -h          : Print this message (also --help)
 -o filename : This overrides the name of the output file to be generated
--v          : Verbose mode (also --verbose)'''
+-v          : Verbose mode (also --verbose)
+'''
 
 
 # These are additional functions that will be added to the XML
@@ -120,6 +121,40 @@ def cdataContents(self):
       contents.append(child.data)
   return "".join(contents)
 
+def userUnderstandableXPath(self):
+  """
+  Return an XPath-like string (but more user-friendly) which allows the user to
+  locate this XML element.
+  
+  I'd use line/column numbers too except that that information isn't available as part
+  of the XML spec, so there isn't any function that you can call on an element to get
+  that information. At least from what I can tell.
+  """
+  
+  currentElement = self
+  elementPath = []
+  
+  while 1:
+    if not currentElement:
+      break
+    elementPath.append(currentElement)
+    currentElement = currentElement.parentNode
+  
+  elementPathStringList = []
+  for currentElement in reversed(elementPath):
+    if len(elementPathStringList) > 0:
+      elementPathStringList.append(" --> ")
+    
+    elementDescription = currentElement.nodeName
+    
+    if currentElement.parentNode:
+      siblingElements = currentElement.parentNode.getChildElementsByTagName(currentElement.tagName)
+      if len(siblingElements) > 1:
+        elementDescription += '[' + str(siblingElements.index(currentElement)) + ']'
+    elementPathStringList.extend(["'", elementDescription, "'"])
+  
+  return ''.join(elementPathStringList)
+
 
 def anyObject(iterable):
   """
@@ -187,6 +222,7 @@ def main(argv=None):
   
   minidom.Element.innerText = innerText
   minidom.Element.cdataContents = cdataContents
+  minidom.Element.userUnderstandableXPath = userUnderstandableXPath
   
   
   # globalNameSpace is a dictionary of variables that are available in all
@@ -258,28 +294,15 @@ def main(argv=None):
     # the Simulation.
     # FIXME: Actually, I'm not so fond of the Simulation / SimulationElement distinction. They should be combined.
     
-    # So the idea here is that each template that has a preflight, but it may not want to execute it until
-    # something else has happened in preflight. So we check if each template can run its preflight, and then run it
-    # If it can't, then we schedule it to run later. If nothing is executed in a whole loop, and we still have stuff
-    # to execute, then we have reached a dead-lock, so we exit.
+    # Loop over a copy because we may create templates during iteration
+    for template in globalNameSpace['templates'].copy():
+      template.createNamedVectors()
     
-    delayedPreflights = set()
-    preflights = set(globalNameSpace['templates'])
+    for template in globalNameSpace['templates'].copy():
+      template.bindNamedVectors()
     
-    while len(preflights):
-      for template in preflights:
-        if hasattr(template, 'preflight'):
-          if not template.canRunPreflightYet():
-            delayedPreflights.add(template)
-          else:
-            template.preflight()
-      
-      if len(preflights) == len(delayedPreflights):
-        # If this is true, then everything opted to be delayed.
-        # This means we have a deadlock
-        raise Exception("Deadlock in preflight. Classes involved: %s" % preflights)
-      preflights = delayedPreflights.copy()
-      delayedPreflights = set()
+    for template in globalNameSpace['templates'].copy():
+      template.preflight()
     
     # Preflight is done
     
@@ -287,37 +310,9 @@ def main(argv=None):
   # raised. The ParserException knows the XML element that triggered the exception, and the 
   # error string that should be presented to the user.
   except ParserException, err:  
-    elementPath = []
-    currentElement = err.element
-    
-    # Construct an XPath-like string (but more user-friendly) which allows the user to 
-    # locate the XML element that caused the exception. I'd use line/column numbers too
-    # except that that information isn't available as part of the XML spec, so there isn't
-    # any function that you can all on an element to get that information. At least from
-    # what I can tell.
-    
-    while 1:
-      if not currentElement:
-        break
-      elementPath.append(currentElement)
-      currentElement = currentElement.parentNode
-    
-    elementPathString = ""
-    for currentElement in reversed(elementPath):
-      if len(elementPathString) > 0:
-        elementPathString += " --> "
-      
-      elementDescription = currentElement.nodeName
-      
-      if currentElement.parentNode:
-        siblingElements = currentElement.parentNode.getChildElementsByTagName(currentElement.tagName)
-        if len(siblingElements) > 1:
-          elementDescription += '[' + str(siblingElements.index(currentElement)) + ']'
-      elementPathString = elementPathString + "'" + elementDescription + "'"
-    
     # Print the error to the user
     print >> sys.stderr, "Error: " + err.msg
-    print >> sys.stderr, "    In element: " + elementPathString
+    print >> sys.stderr, "    In element: " + err.element.userUnderstandableXPath()
     print >> sys.stderr, "For a complete traceback, pass -v on the command line."
     
     # If we have the verbose option on, then in addition to the path to the XML element

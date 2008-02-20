@@ -1,6 +1,7 @@
 * Complete Stochastics support
   * Add support for breaking up poissonian noise
   * Test
+  * Add the GNU scientific library as another source for noises
 
 * Add a 'filter' segment
   ? Write a 'GenericFilter' template that is used by filter operators,
@@ -84,8 +85,6 @@
 		Functions specified after DeltaAs. 
 		
 * Filters source_field should go.  Source dims from union of dependencies.  Target sanity check subset== source dims.
-
-* IP term check.  Spout warning if misaligned.
 
 * EX for arbitrary code.  Buyer beware style.  
 	- L[psi*~psi] 

@@ -44,6 +44,11 @@ struct _dtdWstore {
   @end for
   }
 };
+
+  @for noiseAlias in $noiseAliases
+${noiseAlias.type}* _${noiseAlias.id}2;
+  @end for
+  @#
   @super
   @#
 @end def
@@ -124,15 +129,20 @@ _active_${noiseVector.id} = _${noiseVector.id};
 @def integrateFixedStepInnerLoopBegin(dict)
   @#
   @set $integrator = dict['caller']
-  @set $featureOrdering = ['ErrorCheck']
   @#
   @for (noise, field) in self.noisesAndFieldsForIntegrator(integrator)
     @set $noiseVector = noise.noiseVectorForField(field)
 
 _make_${noise.prefix}_noises(_${field.name}_var, _${noiseVector.id}, _${field.name}_size * _${noiseVector.id}_ncomponents);
     @#
-    @set $makeNoisesDict = {'noise': noise, 'noiseVector': noiseVector, 'field': field}
-${insertCodeForFeatures('makeNoisesForFixedStep', featureOrdering, makeNoisesDict)}@slurp
+    @if 'ErrorCheck' in $features
+if (!_half_step) {
+  _make_${noise.prefix}_noises(_${field.name}_var, _${noiseVector.id}2, _${field.name}_size * _${noiseVector.id}_ncomponents);
+  ${loopOverVectorsWithInnerContentTemplate([$noiseVector],
+"""_${vector.id}[$index] = 0.5*(_${vector.id}[$index] + _${vector.id}2[$index]);
+"""), autoIndent=True}@slurp
+}
+    @end if
   @end for
   @#
 @end def

@@ -24,11 +24,11 @@ class _DeltaAOperator (NonConstantOperator):
   def defaultOperatorSpace(self):
     return 0
   
-  def preflight(self):
+  def bindNamedVectors(self):
     if self.integrationVectorsEntity:
-      integrationVectors = self.vectorsFromEntity(self.integrationVectorsEntity)
+      self.integrationVectors = self.vectorsFromEntity(self.integrationVectorsEntity)
       
-      for integrationVector in integrationVectors:
+      for integrationVector in self.integrationVectors:
         if not integrationVector.field == self.field:
           raise ParserException(self.integrationVectorsEntity.xmlElement, 
                                 "Cannot integrate vector '%s' in this operators element as it "
@@ -40,10 +40,10 @@ class _DeltaAOperator (NonConstantOperator):
           # Map of operator names to vector -> component list dictionary
           self.operatorComponents[derivativeString] = {integrationVector: [componentName]}
           
-      self.integrator.vectors.update(integrationVectors)
-      self.dependencies.update(integrationVectors)
+      self.integrator.vectors.update(self.integrationVectors)
+      self.dependencies.update(self.integrationVectors)
     
-    super(_DeltaAOperator, self).preflight()
+    super(_DeltaAOperator, self).bindNamedVectors()
     
   
 

@@ -185,8 +185,11 @@ class _ScriptElement (Template):
     
     return ''.join(result)
   
-  def canRunPreflightYet(self):
-    return True
+  def createNamedVectors(self):
+    pass
+  
+  def bindNamedVectors(self):
+    pass
   
   def preflight(self):
     pass

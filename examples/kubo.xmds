@@ -8,7 +8,7 @@
   
   <features>
     <benchmark />
-    <!-- <error_check /> -->
+    <error_check />
     <bing />
     <!-- <fftw version="3" /> -->
     <openmp />
