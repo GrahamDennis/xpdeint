@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <name>groundstate</name>
+  <author>Graham Dennis</author>
+  <description>
+    Calculate the ground state of a Rubidium BEC in a harmonic magnetic trap.
+  </description>
+  
+  <features>
+    <auto_vectorise />
+    <benchmark />
+    <error_check />
+    <bing />
+    <fftw version="3" plan="exhaustive" />
+    <!-- <openmp /> -->
+    <globals>
+      <![CDATA[
+        const double omegaz = 2*M_PI*20;
+        const double omegarho = 2*M_PI*200;
+        const double hbar = 1.05457148e-34;
+        const double M = 1.409539200000000e-25;
+        const double g = 9.8;
+        const double scatteringLength = 5.57e-9;
+        const double transverseLength = 1e-5;
+        const double Uint = 4.0*M_PI*hbar*hbar*scatteringLength/M/transverseLength/transverseLength;
+        const double Nparticles = 5.0e5;
+
+        /* offset constants */
+        const double EnergyOffset = pow(pow(3.0*Nparticles/4*omegarho*Uint,2.0)*M/2.0,1/3.0); // 1D
+
+      ]]>
+    </globals>
+  </features>
+  
+  <geometry>
+    <prop_dim> t </prop_dim>
+    <transverse_dimensions>
+      <dimension name="y" lattice="1024"  domain="(-2.0e-5, 2.0e-5)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <field name="main">
+    <vector name="potential" initial_space="y">
+      <components type="complex">
+        V1
+      </components>
+      <initialisation>
+        <![CDATA[
+          double Vtrap = 0.5*M*(omegarho*omegarho*y*y);
+        
+          V1  = -i/hbar*(Vtrap - EnergyOffset);
+        
+        ]]>
+      </initialisation>
+    </vector>
+    <vector name="wavefunction" initial_space="y">
+      <components type="complex">
+        phi
+      </components>
+      <initialisation>
+        <![CDATA[
+        
+          if (fabs(y) < 1.0e-5) {
+            phi = sqrt(Nparticles/2.0e-5);
+            // This will be automatically normalised later
+          }
+        
+          // This was the sensible initial state
+          // double E = pow(pow(3.0*Nparticles/4*omegarho*Uint,2.0)*M/2.0,1/3.0);
+          // double magnitudeSq = (E - 0.5*M*(omegarho*omegarho*y*y))/Uint;
+          // if (magnitudeSq > 0.0)
+          //   phi = sqrt(magnitudeSq);
+          // else
+          //   phi = 0.0;
+        
+        ]]>
+      </initialisation>
+    </vector>
+  </field>
+  
+  <sequence>
+    <integrate algorithm="ARK89" interval="1e-4" steps="10000" tolerance="1e-8">
+      <samples>500</samples>
+      <operators field="main">
+        <operator kind="filter" dimensions="" name="normalisation">
+          <moments type="double">
+            Ncalc
+          </moments>
+          <source_field>main</source_field>
+          <dependencies>wavefunction</dependencies>
+          <![CDATA[
+            // Calculate the current normalisation of the wave function
+            Ncalc = mod2(phi);
+          ]]>
+        </operator>
+        <operator kind="filter" target_field="main">
+          <source_field>main</source_field>
+          <dependencies>wavefunction normalisation</dependencies>
+          <![CDATA[
+            // Correct normalisation of the wavefunction
+            phi *= sqrt(Nparticles/Ncalc);
+          ]]>
+        </operator>
+        <operator kind="ip" constant="yes">
+          <operator_names>T</operator_names>
+          <![CDATA[
+            T = -0.5*hbar/M*ky*ky;
+          ]]>
+        </operator>
+        <integration_vectors>wavefunction</integration_vectors>
+        <dependencies>potential</dependencies>
+        <![CDATA[
+          dphi_dt = T[phi] - (i*V1 + Uint/hbar*mod2(phi))*phi;
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  <output format="binary" filename="groundstate.xsil">
+    <group>
+      <sampling initial_sample="yes">
+        <dimension name="y" lattice="1024" />
+        <moments>dens</moments>
+        <dependencies>wavefunction</dependencies>
+        <![CDATA[
+          dens = mod2(phi);
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>
