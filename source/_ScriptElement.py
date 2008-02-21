@@ -15,6 +15,9 @@ from Cheetah.Template import Template
 from IndentFilter import IndentFilter
 from ParserException import ParserException
 
+import re
+import RegularExpressionStrings
+
 class _ScriptElement (Template):
   # Initialise the callOnceGuards to be empty
   _callOncePerClassGuards = set()
@@ -213,4 +216,63 @@ class _ScriptElement (Template):
       while self in someIterable:
         someIterable.remove(self)
     
+  
+  def fixupComponentsWithIntegerValuedDimensions(self, vectors, code):
+    if self.getVar('geometry').integerValuedDimensions:
+      componentsWithIntegerValuedDimensionsRegex = \
+        re.compile(RegularExpressionStrings.componentWithIntegerValuedDimensions(vectors),
+                   re.VERBOSE)
+      
+      originalCode = code
+      
+      for match in componentsWithIntegerValuedDimensionsRegex.finditer(originalCode):
+        # So we now have a component, but if it doesn't have a match for 'integerValuedDimensions'
+        # then we don't have to do anything with it.
+        if not match.group('integerValuedDimensions'):
+          continue
+        
+        componentName = match.group('componentName')
+        vectors = [v for v in vectors if componentName in v.components]
+        assert len(vectors) == 1
+        
+        vector = vectors[0]
+        regex = re.compile(RegularExpressionStrings.componentWithIntegerValuedDimensionsWithComponentAndVector(componentName, vector),
+                           re.VERBOSE)
+        
+        integerValuedDimensionsMatch = regex.search(code)
+        
+        if not integerValuedDimensionsMatch:
+          target = match.group(0)
+          raise ParserException(self.xmlElement,
+                                "Unable to extract the integer-valued dimensions for the '%(componentName)s' variable.\n"
+                                "The string that couldn't be parsed was '%(target)s'." % locals())
+        
+        integerValuedDimensions = vector.field.integerValuedDimensions
+        
+        integerValuedDimensionNames = []
+        for dimList in integerValuedDimensions:
+          integerValuedDimensionNames.extend([dim.name for dim in dimList])
+        
+        # We can do an optimisation here, components accessed with the 'normal' pattern
+        # can be stripped of the integer-valued dimension specifiers. i.e.
+        # phi[j, k] can become just 'phi' if the first integer-valued dimension is 'j' and
+        # the second is 'k'.
+        
+        canOptimiseIntegerValuedDimensions = all([integerValuedDimensionsMatch.group(dimName).strip() == dimName for dimName in integerValuedDimensionNames])
+        
+        if canOptimiseIntegerValuedDimensions:
+          replacementString = componentName
+        else:
+          argumentsString = ', '.join([integerValuedDimensionsMatch.group(dimName).strip() for dimName in integerValuedDimensionNames])
+          
+          replacementString = '_%(componentName)s(%(argumentsString)s)' % locals()
+        
+        escape = RegularExpressionStrings.escapeStringForRegularExpression
+        
+        # Create a regular expression to replace the phi[j] string with the appropriate string
+        operatorCodeReplacementRegex = re.compile(r'\b' + escape(componentName) + escape(match.group('integerValuedDimensions')))
+        
+        code = operatorCodeReplacementRegex.sub(replacementString, code, count = 1)
+    
+    return code
   

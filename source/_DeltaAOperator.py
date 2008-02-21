@@ -103,7 +103,11 @@ class _DeltaAOperator (Operator):
         # Create a regular expression to replace the phi[j] string with the appropriate string
         operatorCodeReplacementRegex = re.compile(r'\b' + escape(componentName) + escape(match.group('integerValuedDimensions')))
         
-        self.propagationCode = operatorCodeReplacementRegex.sub(replacementString, self.propagationCode, count = 1)
+        # This replacement will be made by _ScriptElement.fixupComponentsWithIntegerValuedDimensions
+        # The rest of the code is still here because we need to know what integer-valued dimensions (if any) need reordering
+        # so that delta a operators work correctly.
+        
+        # self.propagationCode = operatorCodeReplacementRegex.sub(replacementString, self.propagationCode, count = 1)
     
     super(_DeltaAOperator, self).preflight()
   
