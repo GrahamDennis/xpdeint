@@ -7,15 +7,15 @@ Created by Graham Dennis on 2008-02-20.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
-from ConstantOperator import ConstantOperator
+from Operator import Operator
 from ParserException import ParserException, parserWarning
 
 import re
 import RegularExpressionStrings
 
-class _IPOperator(ConstantOperator):
+class _IPOperator(Operator):
   
-  operatorKind = ConstantOperator.IPOperatorKind
+  operatorKind = Operator.IPOperatorKind
   
   def preflight(self):
     
@@ -144,4 +144,4 @@ class _IPOperator(ConstantOperator):
                       "The following operator names weren't used: %(unusedOperatorNamesString)s" % locals())
       
     
-    super(ConstantOperator, self).preflight()
+    super(Operator, self).preflight()

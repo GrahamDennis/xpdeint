@@ -8,13 +8,13 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
 
-from NonConstantOperator import NonConstantOperator
+from Operator import Operator
 from ParserException import ParserException
 
-class _DeltaAOperator (NonConstantOperator):
-  operatorKind = NonConstantOperator.DeltaAOperatorKind
+class _DeltaAOperator (Operator):
+  operatorKind = Operator.DeltaAOperatorKind
   def __init__(self, *args, **KWs):
-    NonConstantOperator.__init__(self, *args, **KWs)
+    Operator.__init__(self, *args, **KWs)
     
     # Set default variables
     self.integrationVectorsEntity = None
