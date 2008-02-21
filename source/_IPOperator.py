@@ -34,6 +34,10 @@ class _IPOperator(Operator):
       
       targetComponentNamesUsed = set()
       
+      # FIXME: In order to reduce the number of regular expressions that need to be maintained,
+      # this code should use RegularExpressionStrings.componentWithIntegerValuedDimensions
+      # and RegularExpressionStrings.componentWithIntegerValuedDimensionsWithComponentAndVector
+      
       integerValuedDimensionsRegexString = ''
       integerValuedDimensions = field.integerValuedDimensions
       for listOfIntegerValuedDimensions in integerValuedDimensions:
@@ -83,6 +87,8 @@ class _IPOperator(Operator):
         assert len(tempVectorList) == 1
         targetVector = tempVectorList[0]
         
+        # FIXME: If the operator space is the same as the vector's initial space, then the
+        # vector doesn't need to be complex, and we don't need fourier transforms
         # We need to check that the integration vector this component belongs to is complex
         if targetVector.type != 'complex':
           raise ParserException(self.operatorComponentsEntity.xmlElement,

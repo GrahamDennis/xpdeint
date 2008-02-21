@@ -81,42 +81,54 @@ class ScriptParser(object):
   def spaceFromStringForFieldInElement(self, spacesString, field, element, globalNameSpace):
     """
     Return the ``space`` bitmask corresponding to `spacesString` for `field`.
+    
+    The contents of `spacesString` must be a sequence of dimension names or fourier
+    space versions of those dimension names (i.e. the dimension name prefixed with a 'k')
+    where legal.
+    
+    For example, if the geometry has dimensions 'x', 'y', 'z' and 'u', where 'u' is an
+    integer-valued dimension, then the following are valid entries in `spacesString`:
+    'x', 'kx', 'y', 'ky', 'z' and 'u'.
+    
+    Note that the entries in `spacesString` do not need to be in any order.
     """
     geometryTemplate = globalNameSpace['geometry']
     resultSpace = 0
     
     # Complain if illegal fieldnames or k[integer-valued] are used
-    firstFieldName=True
-    legalFieldNameString= '\\b('
+    legalDimensionNames = set()
     for fieldDimension in field.dimensions:
-        if not firstFieldName:
-          legalFieldNameString+='|'
-        if fieldDimension.type=='double':
-            legalFieldNameString+='k'+fieldDimension.name+'|'+fieldDimension.name
-        else:
-            legalFieldNameString+=fieldDimension.name
-        firstFieldName=False
-    legalFieldNameString+=r')\b'
-    legalRegex = re.compile(legalFieldNameString)
+      legalDimensionNames.add(fieldDimension.name)
+      # If the dimension is of type 'double', then we may be
+      # fourier transforming it.
+      if fieldDimension.type == 'double':
+        legalDimensionNames.add('k' + fieldDimension.name)
     
-    for symbol in self.symbolsInString(spacesString):
-      if len(legalRegex.findall(symbol))!=1:
-        raise ParserException(element,
-                "The fourier_space string must only contain real-valued dimensions from the"
+    spacesSymbols = self.symbolsInString(spacesString)
+    
+    for symbol in spacesSymbols:
+      if not symbol in legalDimensionNames:
+        raise ParserException(element, 
+                "The fourier_space string must only contain real-valued dimensions from the\n"
                 "designated field.  '%(symbol)s' cannot be used."  % locals())
     
     for dimensionNumber, fieldDimension in enumerate(field.dimensions):
-      if fieldDimension.transverse and fieldDimension.type=='double':
-        fieldDimName = fieldDimension.name
-        spacesOptionsString=r'\b('+'k'+fieldDimName+'|'+fieldDimName+r')\b'
-        spacesRegex = re.compile(spacesOptionsString)
-        spaces = spacesRegex.findall(spacesString)
-        if not len(spaces) == 1:
-          raise ParserException(element,
-                  "The fourier_space attribute must have exactly one entry of either"
-                  "'k%(fieldDimName)s' or '%(fieldDimName)s'."  % locals())
-        elif spaces[0] == 'k'+fieldDimName:
-          resultSpace |= 1 << geometryTemplate.indexOfDimension(field.dimensions[dimensionNumber])
+      fieldDimensionName = fieldDimension.name
+      validDimensionNamesForField = set([fieldDimensionName])
+      if fieldDimension.type == 'double':
+        validDimensionNamesForField.add('k' + fieldDimensionName)
+      
+      dimensionOccurrences = sum([spacesSymbols.count(dimName) for dimName in validDimensionNamesForField])
+      
+      if dimensionOccurrences > 1:
+        raise ParserException(element,
+                  "The fourier_space attribute must only have one entry for dimension '%(fieldDimensionName)s'." % locals())
+      elif dimensionOccurrences == 0 and fieldDimension.type == 'double':
+        raise ParserException(element,
+                  "The fourier_space attribute must have an entry for dimension '%(fieldDimensionName)s'." % locals())
+      
+      if fieldDimension.type == 'double' and ('k' + fieldDimensionName) in spacesSymbols:
+        resultSpace |= 1 << geometryTemplate.indexOfDimension(field.dimensions[dimensionNumber])
     
     return resultSpace
   

@@ -70,7 +70,7 @@
           <!-- It's not necessary to have a moments tag here. It would be quite acceptable to -->
           <!-- use the filter to modify a vector already created -->
           <moments type="double">moment</moments>
-          <source_field fourier_space="k">mainField</source_field>
+          <source_field fourier_space="kx">mainField</source_field>
           <!-- All of the vectors must be in the source_field -->
           <!-- No, they don't need to be -->
           <dependencies>main</dependencies>

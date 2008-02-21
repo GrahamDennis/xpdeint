@@ -809,6 +809,8 @@ class XMDS2Parser(ScriptParser):
     
     self.parseOperatorElements(operatorsElement, integratorTemplate, deltaAOperatorTemplate)
     
+    self.xmlElement = operatorsElement
+    
     return deltaAOperatorTemplate
   
   def parseOperatorElements(self, operatorsElement, integratorTemplate, deltaAOperatorTemplate):
@@ -937,52 +939,13 @@ class XMDS2Parser(ScriptParser):
         raise ParserException(operatorNamesElement,
                 "Operator name '%(operatorName)s' conflicts with previously-defined symbol." % locals())
       self.globalNameSpace['symbolNames'].add(operatorName)
-      
-      operatorTemplate.operatorComponents[operatorName] = {}
-      
-      targetComponentNames = self.targetComponentsForOperatorInString(operatorName, deltaAOperatorTemplate.propagationCode)
-      
-      if not targetComponentNames:
-        raise ParserException(operatorElement, "Unable to parse operator code.")
-      
-      for componentName in targetComponentNames:
-        vectorList = filter(lambda x: componentName in x.components, self.globalNameSpace['vectors'])
-        
-        if not vectorList:
-          raise ParserException(operatorElement,
-                  "'%(componentName)s' is not the name of a vector component.\n"
-                  "FIXME: This could be made to work for arbitrary code, not just vector components." % locals())
-        
-        if len(vectorList) > 1:
-          # This shouldn't happen because we should have already checked that no
-          # two vectors contains components with the same names
-          raise ParserException(operatorElement, "Internal consistency error.")
-        
-        vector = vectorList[0]
-        if not vector.field == operatorTemplate.field:
-          raise ParserException(operatorElement, 
-                  "Operator '%(operatorName)s' cannot act on component '%(componentName)s' "
-                  "as it is in a different field." % locals())
-        
-        if not vector.type == 'complex':
-          raise ParserException(operatorElement,
-                  "Cannot act on vector '%s' because it is not of type complex." % vector.name)
-        
-        vector.needsFourierTransforms = True
-        
-        if not operatorTemplate.operatorComponents[operatorName].has_key(vector):
-          operatorTemplate.operatorComponents[operatorName][vector] = [componentName]
-        else:
-          operatorTemplate.operatorComponents[operatorName][vector].append(componentName)
-        
-        resultVectorComponentName = "%(resultVectorComponentPrefix)s_%(operatorName)s_%(componentName)s" % locals()
-        resultVectorComponents.append(resultVectorComponentName)
-        
-        operatorCodeReplacementRegex = re.compile(r'\b' + operatorName + r'\[\s*' + componentName + r'\s*\]')
-        
-        replacementCode = operatorCodeReplacementRegex.sub(resultVectorComponentName, deltaAOperatorTemplate.propagationCode)
-        
-        deltaAOperatorTemplate.propagationCode = replacementCode
+    
+    operatorTemplate.deltaAOperator = deltaAOperatorTemplate
+    operatorTemplate.operatorNames = operatorNames
+    
+    operatorTargetPairs = self.targetComponentsForOperatorsInString(operatorNames, deltaAOperatorTemplate.propagationCode)
+    
+    operatorTemplate.operatorComponentsEntity = ParsedEntity(operatorElement, operatorTargetPairs)
     
     if isinstance(operatorTemplate, ConstantEXOperatorTemplate):
       segmentName = operatorTemplate.integrator.name
