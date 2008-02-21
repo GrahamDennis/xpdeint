@@ -7,15 +7,15 @@ Created by Graham Dennis on 2008-01-01.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
-from NonConstantOperator import NonConstantOperator
+from Operator import Operator
 from ParserException import ParserException
 
-class _FilterOperator (NonConstantOperator):
-  operatorKind = NonConstantOperator.OtherOperatorKind
+class _FilterOperator (Operator):
+  operatorKind = Operator.OtherOperatorKind
   vectorsMustBeInSubsetsOfIntegrationField = False
   
   def __init__(self, *args, **KWs):
-    NonConstantOperator.__init__(self, *args, **KWs)
+    Operator.__init__(self, *args, **KWs)
     
     # Set default variables
     self.integratingMoments = True

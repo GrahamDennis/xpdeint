@@ -42,3 +42,92 @@ ${vector.free}@slurp
   @end for
   @#
 @end def
+
+@def calculateOperatorFieldFunctionImplementation
+  @#
+  @for $operatorComponentName in $operatorComponents.iterkeys()
+complex $operatorComponentName;
+  @end for
+  @#
+${transformVectorsToSpace($dependencies, $operatorSpace)}@slurp
+
+  @set $vectorsToLoopOver = $dependencies.copy()
+  @silent $vectorsToLoopOver.add($operatorVector)
+${loopOverFieldInSpaceWithVectorsAndInnerContent($field, $operatorSpace, $vectorsToLoopOver, $insideCalculateOperatorFieldLoops)}@slurp
+  @#
+@end def
+
+@attr $evaluateOperatorFunctionArgument = 'double _step'
+
+@def evaluateOperatorFunctionImplementation
+  @#
+  @# We need to loop over the operator vector (if we have one),
+  @# all of the vectors to which we are applying any of our operators,
+  @# any dependencies, and the vector containing the result of this
+  @# operator evaluation
+  @#
+  @set $setOfVectorsToLoopOver = $dependencies.copy()
+  @silent $setOfVectorsToLoopOver.update($operatorTargetVectorsSet)
+${transformVectorsToSpace($setOfVectorsToLoopOver, $operatorSpace)}@slurp
+  @#
+  
+  @if $operatorVector
+    @# If we have an operator vector, we will need to loop over it
+    @silent $setOfVectorsToLoopOver.add($operatorVector)
+  @else
+    @# If we don't have an operator vector, then we need to create
+    @# the component variables so that the user can set them inside
+    @# the loop
+    @for $operatorComponentName in $operatorComponents.iterkeys()
+      @set $operatorComponentDictionary = $operatorComponents[$operatorComponentName]
+      @set $typeNamesSet = set([vector.type for vector in operatorComponentDictionary.iterkeys()])
+      @set $typeName = 'double'
+      @if 'complex' in typeNamesSet
+        @set $typeName = 'complex'
+      @end if
+${typeName} ${operatorComponentName};
+    @end for
+    
+  @end if
+  @#
+  @# If we have a result vector, add it
+  @if $resultVector
+    @silent $setOfVectorsToLoopOver.add($resultVector)
+  @end if
+  @#
+
+${evaluateOperatorLoop($setOfVectorsToLoopOver)}@slurp
+  @#
+  @if $resultVector and $resultVector.needsFourierTransforms
+
+_${resultVector.id}_space = $operatorSpace;
+  @end if
+  @#
+@end def
+
+@def evaluateOperatorLoop($setOfVectorsToLoopOver)
+  @#
+  @if $operatorVector
+    @# If we have an operator vector, then there is no user code in this loop
+${loopOverVectorsWithInnerContent($setOfVectorsToLoopOver, $insideEvaluateOperatorLoops)}@slurp
+  @else
+    @# If we don't have an operator vector, then we will be looping over user code.
+    @#
+    @# If we have a result vector, then we need to add that to the loop
+    @if $resultVector
+      @silent $setOfVectorsToLoopOver.add($resultVector)
+    @end if
+${loopOverFieldInSpaceWithVectorsAndInnerContent($field, $operatorSpace, $setOfVectorsToLoopOver, $insideEvaluateOperatorLoops)}@slurp
+  @end if
+  @#
+@end def
+
+@def evaluateOperatorLoop($setOfVectorsToLoopOver)
+  @#
+  @# If we have a result vector, add it
+  @if $resultVector
+    @silent $setOfVectorsToLoopOver.add($resultVector)
+  @end if
+${loopOverFieldInSpaceWithVectorsAndInnerContent($field, $operatorSpace, $setOfVectorsToLoopOver, $insideEvaluateOperatorLoops)}@slurp
+  @#
+@end def
