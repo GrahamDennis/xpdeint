@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
-  <name>lorenz_integer_dimensions</name>
+  <name>integer_dimensions</name>
   <author>Graham Dennis</author>
   <description>
     xpdeint script to test integer dimensions.
@@ -29,20 +29,22 @@
       </components>
       <initialisation>
         <![CDATA[
+        x[j] = 1.0e-1;
         x[0] = 1.0;
-        x[j] = 1.0e-3;
         ]]>
       </initialisation>
     </vector>
   </field>
   
   <sequence>
-    <integrate algorithm="ARK89" interval="60.0" steps="25000" tolerance="1e-7">
+    <integrate algorithm="RK4" interval="60.0" steps="25000">
       <samples>1000</samples>
       <operators field="zerod">
         <integration_vectors>main</integration_vectors>
         <![CDATA[
         long j_minus_one = (j-1) % _zerod_lattice0;
+        if (j_minus_one < 0)
+          j_minus_one += _zerod_lattice0;
         long j_plus_one  = (j+1) % _zerod_lattice0;
         dx_dt = x[j]*(x[j_minus_one] - x[j_plus_one]);
         ]]>

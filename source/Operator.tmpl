@@ -70,7 +70,7 @@ ${loopOverFieldInSpaceWithVectorsAndInnerContent($field, $operatorSpace, $vector
   @silent $setOfVectorsToLoopOver.update($operatorTargetVectorsSet)
 ${transformVectorsToSpace($setOfVectorsToLoopOver, $operatorSpace)}@slurp
   @#
-  
+
   @if $operatorVector
     @# If we have an operator vector, we will need to loop over it
     @silent $setOfVectorsToLoopOver.add($operatorVector)
@@ -87,7 +87,7 @@ ${transformVectorsToSpace($setOfVectorsToLoopOver, $operatorSpace)}@slurp
       @end if
 ${typeName} ${operatorComponentName};
     @end for
-    
+
   @end if
   @#
   @# If we have a result vector, add it

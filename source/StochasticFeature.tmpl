@@ -105,7 +105,7 @@ _noiseStep);
   @#
   @for field in integrator.integrationFields
 const double _${field.name}_var = 1.0@slurp
-    @if len($field.dimensions)
+    @if len([dim for dim in field.dimensions if dim.type == 'double'])
 / $field.volumeElementInSpace(0)@slurp
     @end if
 ;

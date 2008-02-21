@@ -268,7 +268,7 @@ ${prologueForOverriddenDimensionInFieldInSpaceWithVectors($dimension, $field, $s
 ${result, extraIndent=$indentLevel}@slurp
 @end if
 
-${innerLoopCode, extraIndent=$indentLevel}@slurp
+${fixupComponentsWithIntegerValuedDimensions(vectors, innerLoopCode), extraIndent=$indentLevel}@slurp
 ${epilogueToIntegrateOverriddenVectorsForSamplingFieldInSpace($vectorOverrides, $field, $space), extraIndent=$indentLevel}@slurp
 
   @if $lastLoopDimension

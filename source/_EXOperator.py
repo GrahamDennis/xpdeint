@@ -93,26 +93,9 @@ class _EXOperator(Operator):
             # L[phi[j-5, k*2][l, m % 9]]
             # As a result, we need to copy these things back in when making the replacement
             
-            integerValuedDimensionsRegex = \
-              re.compile(RegularExpressionStrings.componentWithIntegerValuedDimensionsWithComponentAndVector(componentName, targetVector),
-                         re.VERBOSE)
+            integerValuedDimensionsString = match.group('integerValuedDimensions')
             
-            integerValuedDimensionsMatch = integerValuedDimensionsRegex.match(target)
-            
-            if not integerValuedDimensionsMatch:
-              raise ParserException(self.operatorComponentsEntity.xmlElement,
-                                    "Unable to extract the integer-valued dimensions for the '%(componentName)s' variable.\n"
-                                    "The string that couldn't be parsed was '%(target)s'." % locals())
-            
-            integerValuedDimensions = targetVector.field.integerValuedDimensions
-            
-            integerValuedDimensionNames = []
-            for dimList in integerValuedDimensions:
-              integerValuedDimensionNames.extend([dim.name for dim in dimList])
-            
-            argumentsString = ', '.join([integerValuedDimensionsMatch.group(dimName).strip() for dimName in integerValuedDimensionNames])
-            
-            replacementString = '_%(replacementString)s(%(argumentsString)s)' % locals()
+            replacementString += integerValuedDimensionsString
         
         escape = RegularExpressionStrings.escapeStringForRegularExpression
         

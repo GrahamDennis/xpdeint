@@ -1181,7 +1181,7 @@ class XMDS2Parser(ScriptParser):
         if fourierSpace:
           momentGroupTemplate.sampleSpace |= 1 << geometryTemplate.indexOfDimensionName(dimensionName)
         
-        lattice = 1
+        lattice = dimension.lattice
         
         if dimensionElement.hasAttribute('lattice'):
           latticeString = dimensionElement.getAttribute('lattice').strip()
@@ -1251,7 +1251,7 @@ class XMDS2Parser(ScriptParser):
       dependencyVectorNames = self.symbolsInString(dependenciesElement.innerText())
       momentGroupTemplate.dependenciesEntity = ParsedEntity(dependenciesElement, dependencyVectorNames)
       
-      samplingCode = samplingElement.cdataContents().strip()
+      samplingCode = samplingElement.cdataContents()
       if not samplingCode:
         raise ParserException(samplingElement, "The CDATA section for the sampling code must not be empty.")
       
