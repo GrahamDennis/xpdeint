@@ -76,6 +76,7 @@ class _Operator (ScriptElement):
     self._operatorSpace = newOperatorSpace
   
   operatorSpace = property(getOperatorSpace, setOperatorSpace)
+  del getOperatorSpace, setOperatorSpace
   
   
   def bindNamedVectors(self):

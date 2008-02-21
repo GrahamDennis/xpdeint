@@ -204,6 +204,7 @@ for (int _from_space_index = 0; _from_space_index < ${numberOfSpacesNeeded}; _fr
       @# All spaces are defined relative to the dimension ordering in the geometry
       @set $bitMask = 1 << $geometryDimensionNumber
     
+      @if $dimension.type == 'double'
     // Set sizes for transforms in dimension '$dimension.name'
     if ( !(_from_space & ${bitMask}) && (_to_space & ${bitMask})) {
       // Forward transform for '$dimension.name'
@@ -217,6 +218,10 @@ for (int _from_space_index = 0; _from_space_index < ${numberOfSpacesNeeded}; _fr
       // No transform, simply loop over dimension '$dimension.name'
       _iodim_ptr = &_loop_sizes[_loop_sizes_index++];
     }
+      @else
+    // Loop over integer-valued dimension '$dimension.name'
+    _iodim_ptr = &_loop_sizes[_loop_sizes_index++];
+      @end if
     
     _iodim_ptr->n  = _${vector.field.name}_lattice${fieldDimensionNumber};
     _iodim_ptr->is = _${vector.id}_ncomponents * ${vector.field.pointsInDimensionsWithIndices(range($fieldDimensionNumber + 1, len($vector.field.dimensions)))};

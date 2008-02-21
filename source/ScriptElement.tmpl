@@ -69,7 +69,7 @@ to be performed in the same way on a range of vectors in possibly different fiel
     @silent $templateVariables['vector'] = $vector
 ${insertCodeForFeatures('loopOverVectorsWithInnerContentTemplateBegin', $loopFeatureOrdering, $dict)}@slurp
     @capture loopString
-for (long _i0 = 0; _i0 < ${loopCountPrefix}_${vector.field.name}_size * _${vector.field.name}_${vector.name}_ncomponents; _i0++) {
+for (long _i0 = 0; _i0 < ${loopCountPrefix}_${vector.field.name}_size * _${vector.id}_ncomponents; _i0++) {
   ${innerLoopTemplate, autoIndent=True}@slurp
 }
     @end capture
@@ -108,7 +108,7 @@ ${blankLineSeparator}@slurp
 unsigned long _${vector.id}_index_pointer = 0;
     @#
     @for $componentNumber, $componentName in enumerate($vector.components)
-#define $componentName _active_${vector.field.name}_${vector.name}[_${vector.field.name}_${vector.name}_index_pointer + $componentNumber]
+#define $componentName _active_${vector.id}[_${vector.id}_index_pointer + $componentNumber]
     @end for
   @end for
   @set $dict = {'vectors': $vectors}
@@ -184,11 +184,32 @@ Optional arguments:
 ${blankLineSeparator}@slurp
     @set $blankLineSeparator = '\n'
     @#
-unsigned long _${vector.field.name}_${vector.name}_index_pointer = 0;
+unsigned long _${vector.id}_index_pointer = 0;
     @if not $vector in $vectorOverrides
       @# If $vector isn't in $vectorOverrides, then we want to @define the vector's components
       @for $componentNumber, $componentName in enumerate($vector.components)
-#define $componentName _active_${vector.field.name}_${vector.name}[_${vector.field.name}_${vector.name}_index_pointer + $componentNumber]
+#define $componentName _active_${vector.id}[_${vector.id}_index_pointer + $componentNumber]
+        @set $integerValuedDimensions = []
+        @for $dimList in $vector.field.integerValuedDimensions
+          @silent $integerValuedDimensions.extend($dimList)
+        @end for
+        @if $integerValuedDimensions
+          @#
+#define _${componentName}(${', '.join([dim.name for dim in integerValuedDimensions])}) \
+  _active_${vector.id}[_${vector.id}_index_pointer + ${componentNumber} \
+          @for $integerDimension in $integerValuedDimensions
+            @set $offsetDueToLooping = ''
+            @if $field.hasDimension($integerDimension)
+              @set $offsetDueToLooping = c' - _i${field.indexOfDimension($integerDimension)}'
+            @end if
+            @set $vectorFieldDimensionIndex = $vector.field.indexOfDimension($integerDimension)
+    + (${integerDimension.name} - ${integerDimension.minimum}${offsetDueToLooping}) \
+      * ${vector.field.pointsInDimensionsWithIndices(range($vectorFieldDimensionIndex + 1, len($vector.field.dimensions)))} \
+      * _${vector.id}_ncomponents \
+          @end for
+          @#
+    ]
+        @end if
       @end for
     @else
       @# This $vector is in $vectorOverrides, so instead of @defining, we want to create variables
@@ -277,6 +298,9 @@ ${closeLoopForDimensionInFieldInSpace($dimension, $field, $space, $kspaceAscendi
     @end if
     @for $componentName in $vector.components
 #undef $componentName
+      @if $vector.field.integerValuedDimensions
+#undef _${componentName}
+      @end if
     @end for
   @end for
   @#
@@ -341,7 +365,7 @@ for (long _j${fieldDimensionNumber} = -(_${field.name}_lattice${fieldDimensionNu
 unsigned long _i${fieldDimensionNumber} = ${indexOverrides[$dimension.name][$field]};
   @# loop over the vectors in field $field, because we need to fix up their index pointers
   @for $vector in filter(lambda x: x.field == field, vectors)
-_${vector.field.name}_${vector.name}_index_pointer += _i${fieldDimensionNumber}@slurp
+_${vector.id}_index_pointer += _i${fieldDimensionNumber}@slurp
  * ${field.pointsInDimensionsWithIndices(range($fieldDimensionNumber + 1, len($field.dimensions)))};
   @end for
 
@@ -363,7 +387,7 @@ _${vector.field.name}_${vector.name}_index_pointer += _i${fieldDimensionNumber}@
       @continue
     @end if
     @#
-_${vector.field.name}_${vector.name}_index_pointer = ( 0@slurp
+_${vector.id}_index_pointer = ( 0@slurp
     @for $dimension in $vector.field.dimensions
       @# Blank line for output formatting
 
@@ -421,7 +445,7 @@ _${vector.field.name}_${vector.name}_index_pointer = ( 0@slurp
         @end if
       @end if
     @end for
- ) * _${vector.field.name}_${vector.name}_ncomponents;
+ ) * _${vector.id}_ncomponents;
   @end for
   @#
 @end def
@@ -439,7 +463,7 @@ _${vector.field.name}_${vector.name}_index_pointer = ( 0@slurp
     @#
     @# Loop over the components in each vector
     @for $componentNumber, $componentName in enumerate($vector.components)
-_active_${vector.field.name}_${vector.name}[_${vector.field.name}_${vector.name}_index_pointer + ${componentNumber}] += ${componentName}@slurp  
+_active_${vector.id}[_${vector.id}_index_pointer + ${componentNumber}] += ${componentName}@slurp  
       @# Loop over the dimensions
       @for $dimension in $dimensionsIntegratedOver
         @if $dimensionIsInFourierSpace($dimension, $space)
@@ -478,12 +502,12 @@ _active_${vector.field.name}_${vector.name}[_${vector.field.name}_${vector.name}
     @# but _stuff_latticeN * _stuff_ncomponents (etc.)
     @# Currently, I can't see why indexOverrides would be used for dimensions at the end (or in the middle), but hey,
     @# I better make sure it works.
-_${vector.field.name}_${vector.name}_index_pointer += @slurp
+_${vector.id}_index_pointer += @slurp
     @# If the lastLoopDimension isn't the last dimension of the field, we need to multiply by a stride
     @if $lastLoopDimension != $field.dimensions[len($field.dimensions)-1]
 $field.pointsInDimensionsWithIndices(range($field.indexOfDimension($lastLoopDimension)+1,len($field.dimensions))) * @slurp
     @end if
-_${vector.field.name}_${vector.name}_ncomponents;
+_${vector.id}_ncomponents;
   @end for
 
   @#
@@ -541,7 +565,7 @@ if ( k${dimension.name} > ((_${field.name}_lattice${dimensionNumber} - 1)/2 + 0.
       @assert ($space & $vector.field.spaceMask) == $vector.initialSpace
       @continue
     @end if
-_${vector.field.name}_${vector.name}_go_space($space);
+_${vector.id}_go_space($space);
     @# Add space $space to the set of spaces in which this vector is needed
     @silent vector.spacesNeeded.add($space & $vector.field.spaceMask)
   @end for

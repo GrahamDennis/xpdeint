@@ -48,7 +48,7 @@ class _FieldElement (ScriptElement):
     geometryElement = self.getVar('geometry')
     
     for dimensionNumber, dimension in enumerate(geometryElement.dimensions):
-      if self.hasDimension(dimension):
+      if self.hasDimension(dimension) and dimension.type == 'double':
         bitMask |= 1 << dimensionNumber
     
     return bitMask
@@ -93,6 +93,7 @@ class _FieldElement (ScriptElement):
     result = []
     separator = ''
     for dimensionIndex in indices:
+      assert dimensionIndex < len(self.dimensions)
       # Only put a multiply sign in for everything after the first dimension
       result.append(separator)
       separator = ' * '

@@ -66,6 +66,9 @@ void _${vector.id}_go_space(unsigned long _newSpace)
     // Do a full forward transform
     ${fullFFTForVector($vector, 'forward'), autoIndent=True}@slurp
   @for $dimension in $vector.field.dimensions
+    @if $dimension.type != 'double'
+      @continue
+    @end if
     @set $dimensionNumber = $vector.field.indexOfDimension($dimension)
     _c *= _${vector.field.name}_dx${dimensionNumber} * _inverse_sqrt_2pi;
   @end for
@@ -74,6 +77,9 @@ void _${vector.id}_go_space(unsigned long _newSpace)
     // Do a full reverse transform
     ${fullFFTForVector($vector, 'backward'), autoIndent=True}@slurp
   @for $dimension in $vector.field.dimensions
+    @if $dimension.type != 'double'
+      @continue
+    @end if
     @set $dimensionNumber = $vector.field.indexOfDimension($dimension)
     _c *= _${vector.field.name}_dk${dimensionNumber} * _inverse_sqrt_2pi;
   @end for
