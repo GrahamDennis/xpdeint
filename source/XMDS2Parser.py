@@ -133,36 +133,34 @@ class XMDS2Parser(ScriptParser):
     parseSimpleFeature('error_check', ErrorCheckFeature)
     parseSimpleFeature('bing', BingFeature)
     parseSimpleFeature('openmp', OpenMPFeature)
-
+    
     argvFeatureElement, argvFeature = parseSimpleFeature('argv', ArgvFeature)
-
+    
     if argvFeatureElement:
       argElements = argvFeatureElement.getChildElementsByTagName('arg')
-
+      
       argList = []
-      shortOptionNameList = []
-
+      # Note that "h" is already taken as the "help" option 
+      shortOptionNames = set(['h'])
+      
       for argElement in argElements:
-        name = argElement.getAttribute('name').strip().lower()
+        name = argElement.getAttribute('name').strip()
         type = argElement.getAttribute('type').strip().lower()
-        defaultValue = argElement.getAttribute('default_value').strip().lower()
-
+        defaultValue = argElement.getAttribute('default_value').strip()
+        
         # Determine the short name (i.e. single character) of the full option name
-        # Note that "h" is already taken as the "help" option 
         shortName = ""
         for character in name:
-          print character
-          if character not in shortOptionNameList and character != "h":
+          if character not in shortOptionNames:
             shortName = character
-            shortOptionNameList.append(character)
+            shortOptionNameList.add(character)
             break
-
         
-        if shortName == "":  
+        if shortName == "":
           raise ParserException(argElement, "Unable to find a short (single character) name for command line option")        
-
+        
         argAttributeDictionary = dict()
-
+        
         argAttributeDictionary['name'] = name
         argAttributeDictionary['shortName'] = shortName
         argAttributeDictionary['type'] = type
@@ -171,8 +169,8 @@ class XMDS2Parser(ScriptParser):
         argList.append(argAttributeDictionary)
       
       argvFeature.argList = argList
-   
-
+    
+    
     globalsElement = featuresParentElement.getChildElementByTagName('globals', optional=True)
     if globalsElement:
       globalsTemplate = GlobalsFeature(**self.argumentsToTemplateConstructors)
