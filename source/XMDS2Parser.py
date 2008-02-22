@@ -153,7 +153,7 @@ class XMDS2Parser(ScriptParser):
         for character in name:
           if character not in shortOptionNames:
             shortName = character
-            shortOptionNameList.add(character)
+            shortOptionNames.add(character)
             break
         
         if shortName == "":
