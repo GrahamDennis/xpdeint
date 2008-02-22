@@ -35,7 +35,7 @@ double _poisplit(double pp, int n, unsigned short* _generator);
   @#
   @super
   @#
-inline void _split_${prefix}_noise(double dV, double _new_step, double _old_step, double* _new_noise_vector, double* _old_noise_vector, unsigned long _n);
+inline void _split_${prefix}_noise(double _new_var, double _old_var, double* _new_noise_vector, double* _old_noise_vector, unsigned long _n);
   @#
 @end def
 
@@ -59,8 +59,8 @@ inline void _split_${prefix}_noises(double _new_var, double _old_var, double* _n
   @super
 double _poidev(double xm, unsigned short* _generator)
 {
-  static double sq, alxm, g;
-  double em, t, y;
+  double sq, alxm, g, em, t, y;
+  
   if (xm < 12.0) {        // Use direct method
     g = exp(-xm);
     em = -1.0;
@@ -94,49 +94,62 @@ double _poidev(double xm, unsigned short* _generator)
   return em;
 }
 
-double _poisplit(double pp, int n, unsigned short* _generator)
+double _poisplit(double pp, long n, unsigned short* _generator)
 {
-/*Returns as a floating-point number an integer value that is a random deviate drawn from 
-a binomial distribution of n trials each of probability pp, using erand48(_generator) as a source of 
-uniform random deviates. This is exactly the distribution that must be sampled when a poissonian process is split over two smaller time steps */
-
-  int j; 
-  double am,em,g,p,bnl,sq,t,y; 
-  static double pc,plog,pclog,en,oldg; 
-  p=(pp <= 0.5 ? pp : 1.0-pp);	// The binomial distribution is invariant under changing pp to 1-pp, if we also change the answer to n minus itself; we'll remember to do this below. 
-  am=n*p; //This is the mean of the deviate to be produced. 
-  if (n < 25) { //Use the direct method while n is not too large. This can require up to 25 calls to erand48(_generator).
-    bnl=0.0; 
-    for (j=1;j<=n;j++) 
-      if (erand48(_generator) < p) ++bnl; 
-  } else if (am < 1.0) { //If fewer than one event is expected out of 25 or more trials, then the distribution is quite accurately Poisson. Use direct Poisson method. 
-    g=exp(-am); 
-    t=1.0; 
-    for (j=0;j<=n;j++) { 
-      t *= erand48(_generator); 
-      if (t < g) break; 
-    } 
-    bnl=(j <= n ? j : n); 
-  } else { 
-    en=n; 
-    oldg=lgamma(en+1.0);  
-    pc=1.0-p; 
-    plog=log(p); 
-    pclog=log(pc);   
-    sq=sqrt(2.0*am*pc); //The following code should by now seem familiar: rejection method with a Lorentzian comparison function. 
-    do { 
-      do { 
-        y=tan(M_PI*erand48(_generator)); 
-        em=sq*y+am; 
-      } while (em < 0.0 || em >= (en+1.0)); //Reject. 
-      em=floor(em); //Trick for integer-valued distribution. 
-      t=1.2*sq*(1.0+y*y)*exp(oldg-lgamma(em+1.0)-lgamma(en-em+1.0)+em*plog+(en-em)*pclog); 
+  /*
+  Returns as a floating-point number an integer value that is a random deviate drawn from
+  a binomial distribution of n trials each of probability pp, using erand48(_generator) as a source of
+  uniform random deviates. This is exactly the distribution that must be sampled when a poissonian process is split over two smaller time steps
+  */
+  
+  long j;
+  double am, em, g, p, bnl, sq, t, y;
+  static double pc, plog, pclog, en, oldg;
+  
+  // The binomial distribution is invariant under changing pp to 1-pp,
+  // if we also change the answer to n minus itself; we do this at the end.
+  p = (pp <= 0.5 ? pp : 1.0-pp);
+  
+  // This is the mean of the deviate to be produced.
+  am = n * p;
+  
+  if (n < 25) {
+    // Use the direct method while n is not too large. This can require up to 25 calls to erand48(_generator).
+    bnl = 0.0;
+    for (j = 1; j <= n; j++)
+      if (erand48(_generator) < p)
+        ++bnl;
+  } else if (am < 1.0) {
+    // If fewer than one event is expected out of 25 or more trials, then the distribution is quite accurately Poisson. Use direct Poisson method.
+    g = exp(-am);
+    t = 1.0;
+    for (j = 0; j <= n; j++) {
+      t *= erand48(_generator);
+      if (t < g)
+        break;
+    }
+    bnl = (j <= n ? j : n);
+  } else {
+    en = n;
+    oldg = lgamma(en + 1.0);
+    pc = 1.0 - p;
+    plog = log(p);
+    pclog = log(pc);
+    sq = sqrt(2.0*am*pc);
+    // The following code should by now seem familiar: rejection method with a Lorentzian comparison function.
+    do {
+      do {
+        y = tan(M_PI*erand48(_generator));
+        em = sq*y + am;
+      } while (em < 0.0 || em >= (en+1.0)); // Reject.
+      em = floor(em); // Trick for integer-valued distribution. 
+      t = 1.2 * sq * (1.0 + y*y) * exp(oldg - lgamma(em + 1.0) - lgamma(en - em + 1.0) + em*plog + (en - em)*pclog); 
     } while (erand48(_generator) > t); // Reject. This happens about 1.5 times per deviate, on average.
-    bnl=em; 
+    bnl = em;
   }
-  if (p != pp) bnl=n-bnl; //Remember to undo the symmetry transformation.
+  if (p != pp) bnl = n - bnl; // Remember to undo the symmetry transformation.
   return bnl;
-}  
+}
 
   @#
 @end def
