@@ -55,6 +55,7 @@ from ErrorCheckFeature import ErrorCheckFeature
 from BingFeature import BingFeature
 from OpenMPFeature import OpenMPFeature
 from GlobalsFeature import GlobalsFeature
+from ArgvFeature import ArgvFeature
 
 from StochasticFeature import StochasticFeature
 from GaussianPOSIXNoise import GaussianPOSIXNoise
@@ -132,7 +133,46 @@ class XMDS2Parser(ScriptParser):
     parseSimpleFeature('error_check', ErrorCheckFeature)
     parseSimpleFeature('bing', BingFeature)
     parseSimpleFeature('openmp', OpenMPFeature)
-    
+
+    argvFeatureElement, argvFeature = parseSimpleFeature('argv', ArgvFeature)
+
+    if argvFeatureElement:
+      argElements = argvFeatureElement.getChildElementsByTagName('arg')
+
+      argList = []
+      shortOptionNameList = []
+
+      for argElement in argElements:
+        name = argElement.getAttribute('name').strip().lower()
+        type = argElement.getAttribute('type').strip().lower()
+        defaultValue = argElement.getAttribute('default_value').strip().lower()
+
+        # Determine the short name (i.e. single character) of the full option name
+        # Note that "h" is already taken as the "help" option 
+        shortName = ""
+        for character in name:
+          print character
+          if character not in shortOptionNameList and character != "h":
+            shortName = character
+            shortOptionNameList.append(character)
+            break
+
+        
+        if shortName == "":  
+          raise ParserException(argElement, "Unable to find a short (single character) name for command line option")        
+
+        argAttributeDictionary = dict()
+
+        argAttributeDictionary['name'] = name
+        argAttributeDictionary['shortName'] = shortName
+        argAttributeDictionary['type'] = type
+        argAttributeDictionary['defaultValue'] = defaultValue
+        
+        argList.append(argAttributeDictionary)
+      
+      argvFeature.argList = argList
+   
+
     globalsElement = featuresParentElement.getChildElementByTagName('globals', optional=True)
     if globalsElement:
       globalsTemplate = GlobalsFeature(**self.argumentsToTemplateConstructors)

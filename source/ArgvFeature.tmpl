@@ -8,8 +8,11 @@ Copyright (c) 2008 Mattias Johnsson. All rights reserved.
 
 @def description: argv
 @attr featureName = 'Argv'
+@def includes
+#include <getopt.h>
+@end def
 
-@def globals($dict)
+@def globals
 // *********** Command line argument global variables *********
   @for $argument in $argList
 $argument.type $argument.name = $argument.defaultValue; 
@@ -24,7 +27,6 @@ while (1) {
   static struct option long_options[] = 
     {
       {"help", no_argument, 0, 'h'},
-
   @for $argument in $argList
       {"$argument.name", required_argument, 0, '$argument.shortName'},
   @end for
@@ -32,7 +34,7 @@ while (1) {
 
   int option_index = 0;
 
-  resp = getopt_long(argc, argv, "@slurp
+  resp = getopt_long(argc, argv, "h@slurp
   @for $argument in $argList
 $argument.shortName:@slurp
   @end for
@@ -70,10 +72,10 @@ $argument.shortName:@slurp
 -$argument.shortName < $argument.type > @slurp
       @end for
 \n\n");
-      printf("Details:\n");
-      printf("Option\t\tType\t\tDefault value\n");
+    printf("Details:\n");
+    printf("Option\t\tType\t\tDefault value\n");
   @for $argument in $argList
-printf("-$argument.shortName, --$argument.name\tdouble \t\t$argument.defaultValue \n");
+    printf("-$argument.shortName, --$argument.name\tdouble \t\t$argument.defaultValue \n");
   @end for
       exit(0);
   }
