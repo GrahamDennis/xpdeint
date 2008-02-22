@@ -13,6 +13,7 @@
 	  <arg name="sigma" type="double" default_value="10.0" />
 	  <arg name="b" type="double" default_value="2.67" />
       <arg name="r" type="double" default_value="28.0" />
+      <arg name="outputFilename" type="string" default_value="myFilename" />
     </argv>
     <benchmark />
     <error_check />
@@ -42,7 +43,7 @@
   
   <sequence>
     <integrate algorithm="ARK89" interval="100.0" steps="25000" tolerance="1e-7">
-      <samples>5000</samples>
+      <samples>10</samples>
       <operators field="mainField">
         <integration_vectors>main</integration_vectors>
         <![CDATA[
