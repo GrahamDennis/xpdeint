@@ -221,6 +221,8 @@ code, not in the template itself.
   @set $noiseVector = noise.noiseVectorForField(field)
   @#
   @# First allocate the new noise vector
+// Split a gaussian noise
+
 _active_${noiseVector.id} = (${noiseVector.type}*) xmds_malloc(sizeof(${noiseVector.type}) * _${field.name}_size * _${noiseVector.id}_ncomponents);
   @# Then generate a new noise of the appropriate variance
 _make_${noise.prefix}_noises(_${field.name}_var * (_old_smallest_step - _step)/(_step * _old_smallest_step), 
@@ -257,7 +259,7 @@ _active_${noiseVector.id} = (${noiseVector.type}*) xmds_malloc(sizeof(${noiseVec
 
 ${noiseVector.type}* const _old_${noiseVector.id} = _noise_list.begin()->_${noiseVector.id};
 
-_split_${noise.prefix}_noises(_${field.name}_var/_step, _${field.name}_var/_old_smallest_step, _active_${noiseVector.id}, _old_${noiseVector.id}, _${field.name}_size * _${noiseVector.id}_ncomponents);
+_split_${noise.prefix}_noises(_${field.name}_var / _step, _${field.name}_var / _old_smallest_step, _active_${noiseVector.id}, _old_${noiseVector.id}, _${field.name}_size * _${noiseVector.id}_ncomponents);
 
   @#
 @end def

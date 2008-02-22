@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
-  <!-- pyXMDS test -->
   <name>lorenz_argv</name>
   <author>Mattias Johnsson</author>
   <description>
@@ -10,9 +9,9 @@
   
   <features>
     <argv>
-	  <arg name="sigma" type="double" default_value="10.0" />
-	  <arg name="b" type="double" default_value="2.67" />
-      <arg name="r" type="double" default_value="28.0" />
+      <arg name="sigma" type="double" default_value="10.0" />
+      <arg name="b"     type="double" default_value="2.67" />
+      <arg name="r"     type="double" default_value="28.0" />
       <arg name="outputFilename" type="string" default_value="myFilename" />
     </argv>
     <benchmark />
@@ -54,7 +53,7 @@
       </operators>
     </integrate>
   </sequence>
-  <output format="binary" filename="lorenz.xsil">
+  <output format="binary">
     <group>
       <sampling initial_sample="yes">
         <moments>xR yR zR</moments>
