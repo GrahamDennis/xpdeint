@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <!-- pyXMDS test -->
+  <name>lorenz_argv</name>
+  <author>Mattias Johnsson</author>
+  <description>
+    First script to test command line argument passing.
+    Othewise the same as the lorenz script
+  </description>
+  
+  <features>
+    <argv>
+	  <arg name="sigma" type="double" default_value="10.0" />
+	  <arg name="b" type="double" default_value="2.67" />
+      <arg name="r" type="double" default_value="28.0" />
+    </argv>
+    <benchmark />
+    <error_check />
+    <bing />
+    <fftw version="none" />
+    <!-- That's right, this script breaks the shackles with FFTW! -->
+    <globals>
+    </globals>
+  </features>
+  
+  <geometry>
+    <prop_dim> t </prop_dim>
+  </geometry>
+  
+  <field name="mainField" >
+    <vector name="main" type="complex">
+      <components>
+        x y z
+      </components>
+      <initialisation>
+        <![CDATA[
+        x = y = z = 1.0;
+        ]]>
+      </initialisation>
+    </vector>
+  </field>
+  
+  <sequence>
+    <integrate algorithm="ARK89" interval="100.0" steps="25000" tolerance="1e-7">
+      <samples>5000</samples>
+      <operators field="mainField">
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+        dx_dt = sigma*(y-x);
+        dy_dt = r*x - y - x*z;
+        dz_dt = x*y - b*z;
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  <output format="binary" filename="lorenz.xsil">
+    <group>
+      <sampling initial_sample="yes">
+        <moments>xR yR zR</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          xR = x;
+          yR = y;
+          zR = z;
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>
