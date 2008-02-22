@@ -8,6 +8,7 @@ Copyright (c) 2008 Mattias Johnsson. All rights reserved.
 
 @def description: argv
 @attr featureName = 'Argv'
+
 @def includes
 #include <getopt.h>
 @end def
@@ -31,15 +32,15 @@ while (1) {
       {"$argument.name", required_argument, 0, '$argument.shortName'},
   @end for
     };
-
+  
   int option_index = 0;
-
+  
   resp = getopt_long(argc, argv, "h@slurp
   @for $argument in $argList
 $argument.shortName:@slurp
   @end for
 ", long_options, &option_index);
-
+  
   if (resp == -1) {
     break;
   }
@@ -57,15 +58,17 @@ $argument.shortName:@slurp
   @end for
       exit(0);
   @for $argument in $argList
+      
     case '$argument.shortName':
       $argument.name = atof(optarg);
       break;
   @end for
-      default:
+      
+    default:
       exit(10);
     }
   }
-
+  
   if (optind < argc) {
     printf("Usage: $simulationName @slurp
       @for $argument in $argList
@@ -77,6 +80,6 @@ $argument.shortName:@slurp
   @for $argument in $argList
     printf("-$argument.shortName, --$argument.name\tdouble \t\t$argument.defaultValue \n");
   @end for
-      exit(0);
+    exit(0);
   }
 @end def
