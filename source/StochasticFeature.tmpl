@@ -245,13 +245,19 @@ ${loopOverVectorsWithInnerContentTemplate([$noiseVector],
 @*doc:
 Return the code to generate a new smaller poissonian noise from a previous noise.
 
-The previous noise had a time step of ``old_smallest_step`` a variable available in the C
+The previous noise had a time step of ``_old_smallest_step`` a variable available in the C
 code, not in the template itself.
 *@
   @#
   @set $noiseVector = noise.noiseVectorForField(field)
   @#
-// Break apart a poissonian noise
+// Split a poissonian noise
+
+_active_${noiseVector.id} = (${noiseVector.type}*) xmds_malloc(sizeof(${noiseVector.type}) * _${field.name}_size * _${noiseVector.id}_ncomponents);
+
+${noiseVector.type}* const _old_${noiseVector.id} = _noise_list.begin()->_${noiseVector.id};
+
+_split_${noise.prefix}_noises(_${field.name}_var/_step, _${field.name}_var/_old_smallest_step, _active_${noiseVector.id}, _old_${noiseVector.id}, _${field.name}_size * _${noiseVector.id}_ncomponents);
 
   @#
 @end def
