@@ -39,17 +39,26 @@ class _Operator (ScriptElement):
     self.field = field
     self.operatorNumber = len(self.integrator.operators)
     integrator.operators.append(self)
+    self._children = []
+    self._loopingField = None
   
   # The children
   @property
   def children(self):
     # Return either or both of operatorVector and resultVector
     # depending on whether or not they are 'None'
-    return filter(lambda x: x, [self.operatorVector, self.resultVector])
+    # And also return the _children
+    result = filter(lambda x: x, [self.operatorVector, self.resultVector])
+    result.extend(self._children)
+    return result
   
   @property
   def name(self):
     return 'operator' + str(self.operatorNumber)
+  
+  @property
+  def id(self):
+    return ''.join([self.integrator.name, '_', self.name])
   
   @property
   def operatorTargetVectorsSet(self):
@@ -66,18 +75,26 @@ class _Operator (ScriptElement):
   def defaultOperatorSpace(self):
     return self.field.spaceMask
   
-  def getOperatorSpace(self):
-    if not hasattr(self, '_operatorSpace'):
+  def _getOperatorSpace(self):
+    if not self.hasattr('_operatorSpace'):
       return self.defaultOperatorSpace
     else:
       return self._operatorSpace
   
-  def setOperatorSpace(self, newOperatorSpace):
+  def _setOperatorSpace(self, newOperatorSpace):
     self._operatorSpace = newOperatorSpace
   
-  operatorSpace = property(getOperatorSpace, setOperatorSpace)
-  del getOperatorSpace, setOperatorSpace
+  operatorSpace = property(_getOperatorSpace, _setOperatorSpace)
+  del _getOperatorSpace, _setOperatorSpace
   
+  def _getLoopingField(self):
+    return self._loopingField or self.field
+  
+  def _setLoopingField(self, value):
+    self._loopingField = value
+  
+  loopingField = property(_getLoopingField, _setLoopingField)
+  del _getLoopingField, _setLoopingField
   
   def bindNamedVectors(self):
     if self.dependenciesEntity:
@@ -104,4 +121,5 @@ class _Operator (ScriptElement):
     if self.resultVector:
       self.resultVector.spacesNeeded.add(self.operatorSpace)
     super(_Operator, self).bindNamedVectors()
+  
   

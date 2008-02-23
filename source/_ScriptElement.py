@@ -38,7 +38,7 @@ class _ScriptElement (Template):
     self.searchListTemplateArgument = KWs['searchList']
     self.dependencies = set()
     
-    if hasattr(self, 'globalNameSpaceName'):
+    if self.hasattr('globalNameSpaceName'):
       globalNameSpace = KWs['searchList'][0]
       globalNameSpace[self.globalNameSpaceName] = self
       if not self in globalNameSpace['scriptElements']:
@@ -47,6 +47,16 @@ class _ScriptElement (Template):
     # Create the entry in the callOnceGuards
     _ScriptElement._callOncePerInstanceGuards[self] = set()
     
+  
+  def hasattr(self, attrName):
+    try:
+      getattr(self, attrName)
+    except AttributeError, err:
+      if hasattr(type(self), attrName):
+        raise
+      return False
+    else:
+      return True
   
   # Default description of the template
   def description(self):
@@ -105,7 +115,7 @@ class _ScriptElement (Template):
       feature = featureDictionary[featureName]
       
       # If the function doesn't exist, we're done
-      if not hasattr(feature, functionName):
+      if not feature.hasattr(functionName):
         continue
       
       # Get functionName on feature by name
@@ -156,12 +166,12 @@ class _ScriptElement (Template):
   
   # Insert contents of function for children
   def implementationsForChildren(self, functionName, *args, **KWs):
-    if not hasattr(self, 'children'):
+    if not self.hasattr('children'):
       return
     result = []
     blankLineSeparator = ''
     for child in self.children:
-      if hasattr(child, functionName) and callable(getattr(child, functionName)):
+      if child.hasattr(functionName) and callable(getattr(child, functionName)):
         childFunction = getattr(child, functionName)
         childFunctionOutput = childFunction(*args, **KWs)
         if childFunctionOutput and not childFunctionOutput.isspace():
@@ -175,7 +185,7 @@ class _ScriptElement (Template):
     result = []
     blankLineSeparator = ''
     staticFunctionName = 'static_' + functionName
-    if hasattr(self, 'static_' + functionName):
+    if self.hasattr('static_' + functionName):
       staticFunction = getattr(self, staticFunctionName)
       staticFunctionOutput = staticFunction(*args, **KWs)
       if staticFunctionOutput and not staticFunctionOutput.isspace():
@@ -232,10 +242,10 @@ class _ScriptElement (Template):
           continue
         
         componentName = match.group('componentName')
-        vectors = [v for v in vectors if componentName in v.components]
-        assert len(vectors) == 1
+        tempVectors = [v for v in vectors if componentName in v.components]
+        assert len(tempVectors) == 1
         
-        vector = vectors[0]
+        vector = tempVectors[0]
         regex = re.compile(RegularExpressionStrings.componentWithIntegerValuedDimensionsWithComponentAndVector(componentName, vector),
                            re.VERBOSE)
         

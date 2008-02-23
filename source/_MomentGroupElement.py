@@ -32,7 +32,7 @@ class _MomentGroupElement (FieldElement):
   @property
   def rawVectorNeedsToBeAllocated(self):
     # If we have processing code, then we definitely need a raw vector
-    if hasattr(self, 'processingCode') and self.processingCode:
+    if self.hasattr('processingCode') and self.processingCode:
       return True
     
     dict = {'returnValue': False, 'MomentGroup': self}
@@ -49,7 +49,7 @@ class _MomentGroupElement (FieldElement):
   def bindNamedVectors(self):
     dependencies = self.vectorsFromEntity(self.dependenciesEntity)
     
-    if hasattr(self, 'sampleField'):
+    if self.hasattr('sampleField'):
       sampleSpaceMask = self.sampleField.spaceMask
     else:
       sampleSpaceMask = self.spaceMask

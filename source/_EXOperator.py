@@ -19,7 +19,7 @@ class _EXOperator(Operator):
   
   def preflight(self):
     
-    if hasattr(self, 'operatorComponentsEntity'):
+    if self.hasattr('operatorComponentsEntity'):
       operatorTargetPairs = self.operatorComponentsEntity.value
       
       operatorNamesUsed = set()
@@ -91,7 +91,9 @@ class _EXOperator(Operator):
           if match.group('integerValuedDimensions'):
             # The target of the operator was a string of the form:
             # L[phi[j-5, k*2][l, m % 9]]
-            # As a result, we need to copy these things back in when making the replacement
+            # As a result, we need to copy these things back in when making the replacement.
+            # _ScriptElement.fixupComponentsWithIntegerValuedDimensions will handle the replacement
+            # of the square brackets with something meaningful later.
             
             integerValuedDimensionsString = match.group('integerValuedDimensions')
             

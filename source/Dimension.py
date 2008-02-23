@@ -37,6 +37,7 @@ class Dimension(object):
     dimension = Dimension(name = self.name, transverse = self.transverse, 
                           lattice = self.lattice, minimum = self.minimum,
                           maximum = self.maximum, type = self.type)
+    # We would use our hasattr, but Dimension isn't a template
     if hasattr(self, '_fourierOverride'):
       dimension._fourierOverride = self._fourierOverride
     if hasattr(self, 'override'):

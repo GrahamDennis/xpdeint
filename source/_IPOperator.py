@@ -19,7 +19,7 @@ class _IPOperator(Operator):
   
   def preflight(self):
     
-    if hasattr(self, 'operatorComponentsEntity'):
+    if self.hasattr('operatorComponentsEntity'):
       operatorTargetPairs = self.operatorComponentsEntity.value
       
       operatorNamesUsed = set()

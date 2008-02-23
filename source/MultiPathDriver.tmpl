@@ -40,7 +40,7 @@ void _segment0()
   @# possible to split this up into two stages of initialisation, but that
   @# seems to me like it would be ugly.
   @# 
-  @set $objectsNeedingInitialisation = [o for o in $templates if hasattr(o, 'canBeInitialisedEarly') and o.canBeInitialisedEarly]
+  @set $objectsNeedingInitialisation = [o for o in $templates if o.hasattr('canBeInitialisedEarly') and o.canBeInitialisedEarly]
   @for o in $objectsNeedingInitialisation
 ${o.initialise}@slurp
   @end for
@@ -55,17 +55,6 @@ for (long _i0=0; _i0 < _n_paths; _i0++) {
   @for o in $objectsNeedingInitialisation
 ${o.finalise}@slurp
   @end for
-  @#
-@end def
-
-@def rawVectorNeedsToBeAllocated(dict)
-@*doc:
-This function makes moment groups allocate their raw sampling vectors so that
-we can sample both the mean and the standard error.
-*@
-  @#
-  @silent dict['returnValue'] = True
-  @return
   @#
 @end def
 

@@ -21,7 +21,7 @@ class _VectorElement (ScriptElement):
     # Set default variables
     self.components = []
     self.needsFourierTransforms = False
-    self.needsInitialisation = True
+    self._needsInitialisation = True
     self._initialSpace = 0
     self.nComponentsOverride = None
     self.type = 'complex'
@@ -36,22 +36,36 @@ class _VectorElement (ScriptElement):
   def id(self):
     return ''.join([self.field.name, '_', self.name])
   
-  def getNComponents(self):
+  def _getNComponents(self):
     if self.nComponentsOverride:
       return self.nComponentsOverride
     return len(self.components)
   
-  def setNComponents(self, value):
+  def _setNComponents(self, value):
     self.nComponentsOverride = value
   
   # Create a property for the class with the above getter and setter methods
-  nComponents = property(getNComponents, setNComponents)
-  del getNComponents, setNComponents
+  nComponents = property(_getNComponents, _setNComponents)
+  del _getNComponents, _setNComponents
   
-  def getInitialSpace(self):
+  def _getNeedsInitialisation(self):
+    return self._needsInitialisation
+  
+  def _setNeedsInitialisation(self, value):
+    self._needsInitialisation = value
+    if not value:
+      self.initialiser.vector = None
+      self.initialiser.remove()
+      self.initialiser = None
+  
+  # Create a property for the class with the above getter and setter methods
+  needsInitialisation = property(_getNeedsInitialisation, _setNeedsInitialisation)
+  del _getNeedsInitialisation, _setNeedsInitialisation
+  
+  def _getInitialSpace(self):
     return self._initialSpace
   
-  def setInitialSpace(self, value):
+  def _setInitialSpace(self, value):
     """
     Set the initial space for the vector.
     
@@ -62,8 +76,8 @@ class _VectorElement (ScriptElement):
     self.spacesNeeded.add(value)
   
   # Create a property for the class with the above getter and setter methods
-  initialSpace = property(getInitialSpace, setInitialSpace)
-  del getInitialSpace, setInitialSpace
+  initialSpace = property(_getInitialSpace, _setInitialSpace)
+  del _getInitialSpace, _setInitialSpace
   
 
 

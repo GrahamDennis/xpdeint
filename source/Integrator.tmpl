@@ -34,14 +34,6 @@ void _segment${segmentNumber}();
 inline void _segment${segmentNumber}_calculate_delta_a(double _step);
 inline void _segment${segmentNumber}_ip_evolve(int _exponent);
 
-  @for $operator in $operators
-    @if $operator.operatorVector
-void _segment${segmentNumber}_calculate_${operator.name}_field(${operator.calculateOperatorFieldFunctionArguments});
-    @end if
-void _segment${segmentNumber}_evaluate_${operator.name}(${operator.evaluateOperatorFunctionArgument});
-  @end for
-  @#
-
   @super
   @#
 @end def
@@ -56,14 +48,6 @@ ${deltaAFunctionImplementation}@slurp
   @#
 ${ipEvolveFunctionImplementation}@slurp
   @#
-  @for $operator in $operators
-    @if $operator.operatorVector
-      
-${fieldCalculateOperatorFieldFunctionImplementation($operator)}@slurp
-    @end if
-
-${fieldEvaluateOperatorFunctionImplementation($operator)}@slurp
-  @end for
 
 ${segmentFunctionImplementation}@slurp
   @#
@@ -117,26 +101,6 @@ ${blankLineSeparator}@slurp
   // ${operator.description}
   _segment${segmentNumber}_evaluate_${operator.name}(_step);
   @end for
-}
-  @#
-@end def
-
-@def fieldCalculateOperatorFieldFunctionImplementation($operator)
-  @#
-// ${operator.description}
-void _segment${segmentNumber}_calculate_${operator.name}_field(${operator.calculateOperatorFieldFunctionArguments})
-{
-  ${operator.calculateOperatorFieldFunctionImplementation, autoIndent=True}@slurp
-}
-  @#
-@end def
-
-@def fieldEvaluateOperatorFunctionImplementation($operator)
-  @#
-// ${operator.description}
-void _segment${segmentNumber}_evaluate_${operator.name}(${operator.evaluateOperatorFunctionArgument})
-{
-  ${operator.evaluateOperatorFunctionImplementation, autoIndent=True}@slurp
 }
   @#
 @end def

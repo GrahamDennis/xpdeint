@@ -17,7 +17,7 @@
     <prop_dim> t </prop_dim>
     <transverse_dimensions>
       <integer_valued>
-        <dimension name="j" lattice="4" domain="(0,3)" />
+        <dimension name="j" lattice="5" domain="(0, 4)" />
       </integer_valued>
     </transverse_dimensions>
   </geometry>

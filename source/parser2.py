@@ -277,8 +277,6 @@ def main(argv=None):
     filterClass = IndentFilter
     # Construct the top-level template class
     simulationTemplate = SimulationTemplate(searchList=[globalNameSpace], filter=filterClass)
-    # Add it to the list of scriptElements
-    globalNameSpace['scriptElements'].append(simulationTemplate)
     # Now get the parser to do the complex job of mapping the XML classes onto our
     # templates.
     simulationTemplate.simulation = parser.parseXMLDocument(xmlDocument, globalNameSpace, filterClass)
@@ -356,7 +354,7 @@ def main(argv=None):
   # Iterate through all the templates
   for template in globalNameSpace['templates']:
     # If the template has the function 'cflags', then call it, and add it to the list
-    if hasattr(template, 'cflags'):
+    if template.hasattr('cflags'):
       templateCFLAGS.append(template.cflags())
   
   

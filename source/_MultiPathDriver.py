@@ -27,3 +27,10 @@ class _MultiPathDriver (_SimulationDriver):
     
     super(_MultiPathDriver, self).createNamedVectors()
   
+  def rawVectorNeedsToBeAllocated(self, dict):
+    """
+    This function makes moment groups allocate their raw sampling vectors so that
+    we can sample both the mean and the standard error.
+    """
+    dict['returnValue'] = True
+  

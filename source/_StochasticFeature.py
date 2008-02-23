@@ -30,7 +30,7 @@ class _StochasticFeature (_Feature):
       deltaAOperator = deltaAOperatorList[0]
       
       noisesNeeded = self.noises[:]
-      if hasattr(deltaAOperator, 'noises'):
+      if deltaAOperator.hasattr('noises'):
         noisesNeeded = deltaAOperator.noises[:]
       
       result.extend([(noise, field) for noise in noisesNeeded])
@@ -61,7 +61,7 @@ class _StochasticFeature (_Feature):
     
     for o in objectsThatMightUseNoises:
       noises = self.noises
-      if hasattr(o, 'noisesEntity'):
+      if o.hasattr('noisesEntity'):
         noises = []
         for noiseName in o.noisesEntity.value:
           if not noiseName in noiseNameMap:
@@ -75,7 +75,7 @@ class _StochasticFeature (_Feature):
     
     for field, noises in fieldToNoisesMap.iteritems():
       for noise in noises:
-        if not hasattr(noise, 'noiseVectors'):
+        if not noise.hasattr('noiseVectors'):
           noise.noiseVectors = dict()
         
         noiseVector = VectorElement(name = '%s_noises' % noise.prefix, field = field,
