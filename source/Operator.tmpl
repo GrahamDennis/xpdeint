@@ -6,6 +6,51 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *@
 @extends _Operator
 
+@def functionPrototypes
+  @#
+  @super
+  @#
+  @if $operatorVector
+void _${integrator.name}_calculate_${name}_field(${calculateOperatorFieldFunctionArguments});
+  @end if
+void _${integrator.name}_evaluate_${name}(${evaluateOperatorFunctionArgument});
+  @#
+@end def
+
+@def functionImplementations
+  @#
+  @super
+  @#
+  @if $operatorVector
+      
+${calculateOperatorFieldFunctionImplementation}@slurp
+  @end if
+
+${evaluateOperatorFunctionImplementation}@slurp
+  @#
+@end def
+
+@def calculateOperatorFieldFunctionImplementation
+  @#
+// ${description}
+void _${integrator.name}_calculate_${name}_field(${calculateOperatorFieldFunctionArguments})
+{
+  ${calculateOperatorFieldFunctionContents, autoIndent=True}@slurp
+}
+  @#
+@end def
+
+@def evaluateOperatorFunctionImplementation
+  @#
+// ${description}
+void _${integrator.name}_evaluate_${name}(${evaluateOperatorFunctionArgument})
+{
+  ${evaluateOperatorFunctionContents, autoIndent=True}@slurp
+}
+  @#
+@end def
+
+
 @def insideEvaluateOperatorLoops
   @#
   @# Content must be provided by a subclass
@@ -15,10 +60,8 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 
 @def allocate
   @#
-  @for $vector in [$operatorVector, $resultVector]
-    @if $vector
+  @for $vector in $children
 ${vector.allocate}@slurp
-    @end if
   @end for
   @#
 @end def
@@ -35,15 +78,13 @@ _${integrator.name}_calculate_${name}_field();
 
 @def finalise
   @#
-  @for $vector in [$operatorVector, $resultVector]
-    @if $vector
+  @for $vector in $children
 ${vector.free}@slurp
-    @end if
   @end for
   @#
 @end def
 
-@def calculateOperatorFieldFunctionImplementation
+@def calculateOperatorFieldFunctionContents
   @#
   @for $operatorComponentName in $operatorComponents.iterkeys()
 complex $operatorComponentName;
@@ -53,13 +94,13 @@ ${transformVectorsToSpace($dependencies, $operatorSpace)}@slurp
 
   @set $vectorsToLoopOver = $dependencies.copy()
   @silent $vectorsToLoopOver.add($operatorVector)
-${loopOverFieldInSpaceWithVectorsAndInnerContent($field, $operatorSpace, $vectorsToLoopOver, $insideCalculateOperatorFieldLoops)}@slurp
+${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $operatorSpace, $vectorsToLoopOver, $insideCalculateOperatorFieldLoops)}@slurp
   @#
 @end def
 
 @attr $evaluateOperatorFunctionArgument = 'double _step'
 
-@def evaluateOperatorFunctionImplementation
+@def evaluateOperatorFunctionContents
   @#
   @# We need to loop over the operator vector (if we have one),
   @# all of the vectors to which we are applying any of our operators,
@@ -78,8 +119,7 @@ ${transformVectorsToSpace($setOfVectorsToLoopOver, $operatorSpace)}@slurp
     @# If we don't have an operator vector, then we need to create
     @# the component variables so that the user can set them inside
     @# the loop
-    @for $operatorComponentName in $operatorComponents.iterkeys()
-      @set $operatorComponentDictionary = $operatorComponents[$operatorComponentName]
+    @for $operatorComponentName, $operatorComponentDictionary in $operatorComponents.iteritems()
       @set $typeNamesSet = set([vector.type for vector in operatorComponentDictionary.iterkeys()])
       @set $typeName = 'double'
       @if 'complex' in typeNamesSet
@@ -117,17 +157,7 @@ ${loopOverVectorsWithInnerContent($setOfVectorsToLoopOver, $insideEvaluateOperat
     @if $resultVector
       @silent $setOfVectorsToLoopOver.add($resultVector)
     @end if
-${loopOverFieldInSpaceWithVectorsAndInnerContent($field, $operatorSpace, $setOfVectorsToLoopOver, $insideEvaluateOperatorLoops)}@slurp
+${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $operatorSpace, $setOfVectorsToLoopOver, $insideEvaluateOperatorLoops)}@slurp
   @end if
-  @#
-@end def
-
-@def evaluateOperatorLoop($setOfVectorsToLoopOver)
-  @#
-  @# If we have a result vector, add it
-  @if $resultVector
-    @silent $setOfVectorsToLoopOver.add($resultVector)
-  @end if
-${loopOverFieldInSpaceWithVectorsAndInnerContent($field, $operatorSpace, $setOfVectorsToLoopOver, $insideEvaluateOperatorLoops)}@slurp
   @#
 @end def

@@ -21,7 +21,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 #include <list>
 #include <vector>
 
-@for $element in filter(lambda x: hasattr(x, 'includes'), $scriptElements)
+@for $element in $scriptElements
 ${element.includes}@slurp
 @end for
 
@@ -34,7 +34,7 @@ using namespace std;
 // DEFINES
 // ********************************************************
 @# only loop over the elements that implement the defines function
-@for $element in filter(lambda x: hasattr(x, 'defines'), $scriptElements)
+@for $element in $scriptElements
   @# Prevent writing zero-length defines
   @set $result = $element.defines
   @if $result
@@ -50,7 +50,7 @@ $result@slurp
 // GLOBALS
 // ********************************************************
 @# only loop over the elements that implement the globals function
-@for $element in filter(lambda x: hasattr(x, 'globals'), $scriptElements)
+@for $element in $scriptElements
   @# Prevent writing zero-length globals
   @set $result = $element.globals
   @if $result
@@ -66,7 +66,7 @@ $result@slurp
 // FUNCTION PROTOTYPES
 // ********************************************************
 @# only loop over the elements that implement the prototypes function
-@for $element in filter(lambda x: hasattr(x, 'functionPrototypes'), $scriptElements)
+@for $element in $scriptElements
   @# Prevent writing zero-length globals
   @set $result = $element.functionPrototypes
   @if $result
@@ -82,7 +82,7 @@ $result@slurp
 // FUNCTION IMPLEMENTATIONS
 // ********************************************************
 @# only loop over the elements that implement the prototypes function
-@for $element in filter(lambda x: hasattr(x, 'functionImplementations'), $scriptElements)
+@for $element in $scriptElements
   @# Prevent writing zero-length function implementations
   @set $result = $element.functionImplementations
   @if $result

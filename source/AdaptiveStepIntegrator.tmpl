@@ -265,7 +265,7 @@ void _segment${segmentNumber}()
     _step = _${propagationDimension}_break_next - ${propagationDimension} + _${propagationDimension}_ini;
   }
   
-  @if hasattr(self, 'maxIterations') and $maxIterations
+  @if self.hasattr('maxIterations') and $maxIterations
   long _step_counter = 0;
   long _max_steps = $maxIterations;
   @end if
@@ -317,7 +317,7 @@ void _segment${segmentNumber}()
         _discard = true;
         _break_next = false;
       }
-  @if hasattr(self, 'maxIterations') and $maxIterations
+  @if self.hasattr('maxIterations') and $maxIterations
       
       _step_counter++;
       if (_step_counter >= _max_steps) {
@@ -333,7 +333,7 @@ void _segment${segmentNumber}()
   } while (!_next_sample_flag[${momentGroupCount + 1}]);
   
   _LOG(_SEGMENT_LOG_LEVEL, "Segment ${segmentNumber}: minimum timestep: %e maximum timestep: %e\n", _min_step, _max_step);
-  @if hasattr(self, 'maxIterations') and $maxIterations
+  @if self.hasattr('maxIterations') and $maxIterations
   
   if (_step_counter >= _max_steps) {
     _LOG(_WARNING_LOG_LEVEL, "\nReached %l iterations, exiting at ${propagationDimension} = %e\n"

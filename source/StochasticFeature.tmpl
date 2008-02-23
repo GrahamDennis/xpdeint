@@ -65,7 +65,7 @@ ${noise.initialiseSeeds}@slurp
   @#
   @set $caller = dict['caller']
   @set $noisesNeeded = $noises[:]
-  @if hasattr(caller, 'noises')
+  @if caller.hasattr('noises')
     @set $noisesNeeded = caller.noises[:]
   @end if
   @if len($noisesNeeded) == 0

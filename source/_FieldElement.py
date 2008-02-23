@@ -14,7 +14,7 @@ from ScriptElement import ScriptElement
 class _FieldElement (ScriptElement):
   def __init__(self, *args, **KWs):
     # The MomentGroup and GeometryElement subclasses define name properties
-    if not hasattr(self, 'name'):
+    if not self.hasattr('name'):
       self.name = KWs['name']
       del KWs['name']
     
@@ -43,6 +43,10 @@ class _FieldElement (ScriptElement):
   # i.e. which parts of the space variable we care about
   @property
   def spaceMask(self):
+    """
+    Return the spaceMask for this field, i.e. which part of a spaces variable
+    that is relevant to this field.
+    """
     bitMask = 0
     
     geometryElement = self.getVar('geometry')
@@ -69,6 +73,7 @@ class _FieldElement (ScriptElement):
   
   # Is the field a subset of another field (in terms of dimensions)
   def isSubsetOfField(self, field):
+    """Return whether this field's dimensions are a subset of the dimensions of field `field`."""
     for dimension in self.dimensions:
       if not field.hasDimension(dimension):
         return False
@@ -77,13 +82,19 @@ class _FieldElement (ScriptElement):
   
   # The index of the provided dimension
   def indexOfDimension(self, dimension):
+    """Return the index (in the `dimensions` list) of the dimension corresponding to `dimension`."""
     return self.indexOfDimensionName(dimension.name)
 
   # The index of the dimension with the name dimensionName
   def indexOfDimensionName(self, dimensionName):
+    """Return the index (in the `dimensions` list) of the dimension that has the name `dimensionName`."""
     dimensionList = filter(lambda x: x.name == dimensionName, self.dimensions)
     assert len(dimensionList) == 1
     return self.dimensions.index(dimensionList[0])
+  
+  def dimensionWithName(self, dimensionName):
+    """Return the dimension that has the name `dimensionName`."""
+    return self.dimensions[self.indexOfDimensionName(dimensionName)]
   
   # Return a string which is the number of points in the dimensions corresponding to the passed indices
   def pointsInDimensionsWithIndices(self, indices):
@@ -134,6 +145,7 @@ class _FieldElement (ScriptElement):
   
   # Dimension overrides
   def dimensionOverrides(self):
+    # We would use our hasattr here, but Dimension classes aren't currently templates
     return filter(lambda x: hasattr(x, 'override'), self.dimensions)
   
   # Initialise field

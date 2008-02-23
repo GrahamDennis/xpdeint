@@ -74,7 +74,7 @@ void _${name}_sample()
 {
   @# If we have a sampling field, then we should sample with that
   @# and set the vectorOverrides appropriately
-  @if hasattr($self, 'samplingField')
+  @if self.hasattr('samplingField')
     @set $loopingField = $samplingField
     @set $vectorOverrides = $vectors.copy()
   @else
@@ -130,7 +130,7 @@ $samplingCode
 void _${name}_process()
 {
   @# If we don't have any processing code then we don't need to do a complicated loop
-  @if not hasattr($self, 'processingCode')
+  @if not self.hasattr('processingCode')
     @# If we didn't allocate a raw vector, then there actually is no processing to do
     @# at all.
     @if not $rawVectorNeedsToBeAllocated

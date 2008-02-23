@@ -10,6 +10,64 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 
 @def description: Delta A propagation operator for field $field.name
 
+@def functionPrototypes
+  @#
+  @super
+  @#
+  @if not $deltaAField
+    @stop
+  @end if
+  @#
+  @set $arguments = ''.join([c', long _${dim.name}_index' for dim in $loopingField.dimensions if not $deltaAField.hasDimension(dim)])
+inline void _${integrator.name}_${name}_copy_delta_a(double _step${arguments});
+  @#
+@end def
+
+@def functionImplementations
+  @#
+  @super
+  @#
+  @if not $deltaAField
+    @stop
+  @end if
+  @#
+  @set $dimensionsWithIndexOverrides = [dim for dim in $loopingField.dimensions if not $deltaAField.hasDimension(dim)]
+  @set $arguments = ''.join([c', long _${dim.name}_index' for dim in $dimensionsWithIndexOverrides])
+
+inline void _${integrator.name}_${name}_copy_delta_a(double _step${arguments})
+{
+  @set $setOfVectorsToLoopOver = set($deltaAField.vectors)
+  @silent setOfVectorsToLoopOver.update($vectorsForcingReordering)
+  @set $indexOverrides = dict([(dim.name, {$loopingField: c'_${dim.name}_index'}) for dim in $dimensionsWithIndexOverrides])
+  ${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $operatorSpace, $setOfVectorsToLoopOver, $insideCopyDeltaALoops, $indexOverrides), autoIndent=True}@slurp
+}
+  @#
+@end def
+
+@def insideCopyDeltaALoops
+  @#
+// This code copies the increments for the components back into the vectors themselves.
+  @for $vector in $vectorsForcingReordering
+    @for $componentName in $vector.components
+${componentName} = d${componentName}_d${propagationDimension} * _step;
+    @end for
+  @end for
+  @#
+@end def
+
+@def callCopyDeltaA
+  @#
+  @# WARNING: The following code depends on the implementation of ScriptElement's loopOverFieldInSpaceWithVectorsAndInnerContent
+  @#          to determine the indices for each of the dimensions being looped over. In the future, we should consider either
+  @#          working out a way to get loopOverFieldInSpaceWithVectorsAndInnerContent to give us this information, or just be
+  @#          aware that should any change be made to the definition of those variables, the following code will need to change.
+  @#
+  @set $arguments = ''.join([c', _i${loopingField.indexOfDimension(dim)}' for dim in $loopingField.dimensions if not $deltaAField.hasDimension(dim)])
+_${integrator.name}_${name}_copy_delta_a(_step${arguments});
+
+  @#
+@end def
+
 @def insideEvaluateOperatorLoops
   @#
   @# The Operator class will have defined for us all of the dVariableName_dPropagationDimension variables.
@@ -33,5 +91,20 @@ _active_${integrationVector.id}[_${integrationVector.id}_index_pointer + ${integ
 $operatorComponentName * _step;
     @end for
   @end for
+  @#
+@end def
+
+@def evaluateOperatorLoop($setOfVectorsToLoopOver)
+  @#
+  @# If we have a deltaAField, then we know we need to add in additional code to copy the delta a operators
+  @# back into the original field.
+  @set $postDimensionLoopClosingCode = {}
+  @#
+  @if $deltaAField
+    @silent postDimensionLoopClosingCode[$deltaAField.dimensions[0].name] = $callCopyDeltaA
+  @end if
+  @#
+${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $operatorSpace, $setOfVectorsToLoopOver,
+                                                 $insideEvaluateOperatorLoops, postDimensionLoopClosingCode=$postDimensionLoopClosingCode)}@slurp
   @#
 @end def

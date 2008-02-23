@@ -48,7 +48,7 @@ Write to the XSIL file lines naming the seeds that we generated if no seed was p
 in the script file. These are the seeds that should be provided in the script file to get
 the same results.
 *@
-  @if not hasattr(self, 'generatedSeeds')
+  @if not self.hasattr('generatedSeeds')
     @return
   @end if
   @#

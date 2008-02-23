@@ -1,5 +1,4 @@
 * Complete Stochastics support
-  * Add support for breaking up poissonian noise
   * Test
   * Add the GNU scientific library as another source for noises
 
@@ -10,9 +9,10 @@
 * Add 'functions' elements to integrate, filter segments and anything else that
   might use them
 
-* Add support for passing arguments to simulations
-
 * Write a front-end to auto-configure preference file.
+  For reading the preferences file, look into using the Python module
+  ConfigParser. It seems to be part of the standard distribution.
+  For a more complete list of options for this, see http://wiki.python.org/moin/ConfigParserShootout
 
 * Add ASCII/binary/XSIL vector initialisation options
 
@@ -38,16 +38,6 @@
 
 * Make sure that all the things that Andy has been doing to enable various simulation
   parameters can be controlled at simulation run time can be done in xpdeint.
-
-* Implement field dimensions which can't be Fourier transformed, but are indexed by
-  integers. This would be used by vectors for components, like Joe has just 
-  implemented in xmds-1.
-	- some with integer indices (may never be FT)
-	- some with double spans (default always FTd)
-	- within operators have option for mixed space.  Recommend strongly efficient choice of dimension ordering.
-  Default dimensions in field is empty, to be same as output.  Integer dimensions are 2 strings.  psi[u,v][w](x,y,x)  for memory order u v x y z w	
-  space="x" should be space="dimensionname"  Don't have boolean option.  Integer-valued dimensions may be in the list if not Fourier
-  - Integer dimensions are specified with an <integer_valued kind="first|last"> tag - default to last.
 
 * Write a TextMate grammar for our Cheetah templates (for syntax highlighting
   goodness)
