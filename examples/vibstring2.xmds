@@ -70,7 +70,7 @@
         <integration_vectors>main</integration_vectors>
         <![CDATA[
           du_dt = uDot;
-          duDot_dt = L[u];
+          duDot_dt = L[u /**/];
         ]]>
       </operators>
       <operators field="zero_d_test">

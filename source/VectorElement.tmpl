@@ -123,5 +123,6 @@ xmds_free(_${field.name}_${name});
 _active_${field.name}_${name} = _${field.name}_${name} = NULL;
   @for aliasName in $aliases
 xmds_free($aliasName); // alias for _${id}
+${aliasName} = NULL;
   @end for
 @end def
