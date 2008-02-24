@@ -229,8 +229,13 @@ class _ScriptElement (Template):
   
   def fixupComponentsWithIntegerValuedDimensions(self, vectors, code):
     if self.getVar('geometry').integerValuedDimensions:
+      components = set()
+      
+      for vector in vectors:
+        components.update(vector.components)
+      
       componentsWithIntegerValuedDimensionsRegex = \
-        re.compile(RegularExpressionStrings.componentWithIntegerValuedDimensions(vectors),
+        re.compile(RegularExpressionStrings.componentWithIntegerValuedDimensions(components),
                    re.VERBOSE)
       
       originalCode = code
@@ -246,7 +251,7 @@ class _ScriptElement (Template):
         assert len(tempVectors) == 1
         
         vector = tempVectors[0]
-        regex = re.compile(RegularExpressionStrings.componentWithIntegerValuedDimensionsWithComponentAndVector(componentName, vector),
+        regex = re.compile(RegularExpressionStrings.componentWithIntegerValuedDimensionsWithComponentAndField(componentName, vector.field),
                            re.VERBOSE)
         
         integerValuedDimensionsMatch = regex.search(code)

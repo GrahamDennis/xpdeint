@@ -85,13 +85,25 @@ class _DeltaAOperator (Operator):
       # we can just do the normal behaviour. This saves memory.
       self.vectorsForcingReordering = set()
       
+      components = set()
+      derivativeMap = {}
+      propagationDimension = self.getVar('propagationDimension')
+      
+      for vector in self.integrationVectors:
+        components.update(vector.components)
+        for componentName in vector.components:
+          derivativeString = ''.join(['d', componentName, '_d', propagationDimension])
+          components.add(derivativeString)
+          derivativeMap[derivativeString] = vector
+      
+      
       # The following regular expression has both a 'good' group and a 'bad' group
       # because we don't care about anything that might match an expression like
       # phi[j] if it happens to be inside another pair of square brackets, i.e.
       # something like L[phi[j]], as that will not be the same array.
       componentsWithIntegerValuedDimensionsRegex = \
         re.compile(r'(?P<bad>'  + RegularExpressionStrings.threeLevelsMatchedSquareBrackets + r')|'
-                   r'(?P<good>' + RegularExpressionStrings.componentWithIntegerValuedDimensions(self.integrationVectors) + ')',
+                   r'(?P<good>' + RegularExpressionStrings.componentWithIntegerValuedDimensions(components) + ')',
                    re.VERBOSE)
       
       for match in componentsWithIntegerValuedDimensionsRegex.finditer(self.propagationCode):
@@ -106,10 +118,15 @@ class _DeltaAOperator (Operator):
         
         componentName = match.group('componentName')
         vectors = [v for v in self.integrationVectors if componentName in v.components]
-        assert len(vectors) == 1
         
-        vector = vectors[0]
-        regex = re.compile(RegularExpressionStrings.componentWithIntegerValuedDimensionsWithComponentAndVector('', vector),
+        if len(vectors) == 1:
+          # Either our component belongs to one of the integration vectors
+          vector = vectors[0]
+        else:
+          # Or it is a derivative, and so the vector we should use is the one for the original component
+          vector = derivativeMap[componentName]
+        
+        regex = re.compile(RegularExpressionStrings.componentWithIntegerValuedDimensionsWithComponentAndField('', vector.field),
                            re.VERBOSE)
         
         integerValuedDimensionsMatch = regex.search(match.group('integerValuedDimensions'))
@@ -136,7 +153,7 @@ class _DeltaAOperator (Operator):
           # ... and add the vector itself to the set of vectors forcing this reordering.
           self.vectorsForcingReordering.add(vector)
           
-        
+      
       
       # We now have all of the dimension names that need re-ordering to the end of the array.
       # We only need to do our magic if this set is non-empty
@@ -205,6 +222,51 @@ class _DeltaAOperator (Operator):
           # Remove the components of the vector from our operatorComponents so that we won't get doubly-defined variables
           for componentName in deltaAVector.components:
             del self.operatorComponents[componentName]
+      
+      
+      # We need to rewrite all the derivatives to only use dimensions in the delta a field (if we have one)
+      deltaAIntegerValuedDimensions = []
+      if self.deltaAField:
+        deltaAIntegerValuedDimensions = self.deltaAField.integerValuedDimensions
+      
+      derivativesWithIntegerValuedDimensionsRegex = \
+        re.compile(RegularExpressionStrings.componentWithIntegerValuedDimensions(derivativeMap.keys()),
+                   re.VERBOSE)
+      
+      originalCode = self.propagationCode
+      for match in derivativesWithIntegerValuedDimensionsRegex.finditer(originalCode):
+        # If we don't have a match for integerValuedDimensions, then everything is OK
+        if not match.group('integerValuedDimensions'):
+          continue
+        
+        componentName = match.group('componentName')
+        
+        vector = derivativeMap[componentName]
+        
+        regex = re.compile(RegularExpressionStrings.componentWithIntegerValuedDimensionsWithComponentAndField('', vector.field),
+                           re.VERBOSE)
+        
+        integerValuedDimensionsMatch = regex.search(match.group('integerValuedDimensions'))
+        
+        if not integerValuedDimensionsMatch:
+          target = match.group(0)
+          raise ParserException(self.xmlElement,
+                                "Unable to extract the integer-valued dimensions for the '%(componentName)s' variable.\n"
+                                "The string that couldn't be parsed was '%(target)s'." % locals())
+        
+        integerValuedDimensionsString = ''
+        for dimList in deltaAIntegerValuedDimensions:
+          integerValuedDimensionsString += '[' + ', '.join([integerValuedDimensionsMatch.group(dim.name) for dim in dimList]) + ']'
+        
+        escape = RegularExpressionStrings.escapeStringForRegularExpression
+        
+        # Replace the derivative string with one accessed using only indices corresponding to dimensions in
+        # the delta a field.
+        self.propagationCode = re.sub(escape(componentName) + escape(match.group('integerValuedDimensions')),
+                                      componentName + integerValuedDimensionsString,
+                                      self.propagationCode, count=1)
+      
+      
     
     super(_DeltaAOperator, self).preflight()
   
