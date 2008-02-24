@@ -3,7 +3,7 @@
   <name>lorenz</name>
   <author>Graham Dennis</author>
   <description>
-    First script to test parsing in pyXMDS
+    The Lorenz Attractor, an example of chaos.
   </description>
   
   <features>
