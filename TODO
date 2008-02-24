@@ -69,8 +69,6 @@
 
 * Sequence elements need to exist and have loop structures.
 
-* EX use filter code (maybe twice)
-
 * operator ordering:  For multiple operators blocks, each group goes in order of dimension size from largest to smallest.
 		Order of blocks: IP out of stream.  
 		All filters, EXs, cross-props, functions in order until DeltaA, which must be followed only by functions.  
@@ -78,11 +76,5 @@
 		Functions specified after DeltaAs. 
 		
 * Filters source_field should go.  Source dims from union of dependencies.  Target sanity check subset== source dims.
-
-* EX for arbitrary code.  Buyer beware style.  
-	- L[psi*~psi] 
-	- If operator contents != component name, then it will be its own filter and EX block.  
-	- Watch for exact copies of operator+string
-	- Also reuse repeats of each string (trailing/following whitespace stripped) for efficiency.  L[psi*~psi]  D[ psi*~psi]
 
 ? Post-processing

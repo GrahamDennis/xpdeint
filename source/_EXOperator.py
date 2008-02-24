@@ -10,6 +10,9 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 from Operator import Operator
 from ParserException import ParserException, parserWarning
 
+from VectorElement import VectorElement
+from FilterOperator import FilterOperator
+
 import re
 import RegularExpressionStrings
 
@@ -27,8 +30,15 @@ class _EXOperator(Operator):
       
       deltaADependencies = self.deltaAOperator.dependencies
       
-      targetRegex = re.compile(RegularExpressionStrings.componentWithIntegerValuedDimensions(deltaADependencies),
+      deltaAComponents = set()
+      for vector in deltaADependencies:
+        deltaAComponents.update(vector.components)
+      
+      targetRegex = re.compile(r'\s*' + RegularExpressionStrings.componentWithIntegerValuedDimensions(deltaAComponents) + r'\s*$',
                                re.VERBOSE)
+      
+      specialTargetsFilter = None
+      specialTargets = []
       
       for operatorName, target in operatorTargetPairs:
         operatorNamesUsed.add(operatorName)
@@ -48,18 +58,59 @@ class _EXOperator(Operator):
         
         if not match:
           # In principle, this could be OK. We just need to construct the variable using the result vector.
-          # FIXME: Make this work, don't barf
-          raise ParserException(self.operatorComponentsEntity.xmlElement,
-                                "At present, EX operators can only act on components of vectors.\n"
-                                "This should be fixed in the future.\n"
-                                "The '%(componentName)s' operator acting on '%(target)s' doesn't seem to be of the right form\n"
-                                "or '%(target)s' isn't in one of the integration or dependency vectors."
-                                % locals())
+          # If the user has made a mistake with their code, the compiler will barf, not xpdeint. This isn't ideal
+          # but we can't understand an arbitrary string; that's what the compiler is for.
+          
+          if not specialTargetsFilter:
+            # Construct a filter operator to create the special targets vector
+            specialTargetsFilter = FilterOperator(field = self.field, integrator = self.integrator,
+                                                  searchList = self.searchListTemplateArgument,
+                                                  filter = self.filterTemplateArgument)
+            
+            # Shift the filter operator to be before this operator
+            self.integrator.operators.remove(specialTargetsFilter)
+            self.integrator.operators.insert(self.integrator.operators.index(self), specialTargetsFilter)
+            
+            specialTargetsFilter.integratingMoments = False
+            
+            # When constructing the 'special targets' we may depend on anything the delta a operator depends on
+            specialTargetsFilter.dependencies = self.deltaAOperator.dependencies
+            
+            specialTargetsFilter.sourceField = self.field
+            specialTargetsFilter.operatorSpace = self.deltaAOperator.operatorSpace
+            specialTargetsFilter.operatorDefinitionCode = ''
+            
+            specialTargetVector = VectorElement(name = self.id + '_special_targets', field = self.field,
+                                                searchList = self.searchListTemplateArgument,
+                                                filter = self.filterTemplateArgument)
+            
+            specialTargetVector.initialSpace = self.deltaAOperator.operatorSpace
+            specialTargetVector.type = 'complex'
+            specialTargetVector.needsFourierTransforms = True
+            specialTargetVector.needsInitialisation = False
+            self.field.temporaryVectors.add(specialTargetVector)
+            
+            specialTargetsFilter.resultVector = specialTargetVector
+            
+            # We have to call preflight on the filter operator in case it has some preflight to do
+            # as it won't be called by parser2.py
+            specialTargetsFilter.preflight()
+          
+          if not target in specialTargets:
+            specialTargets.append(target)
+            targetComponentName = 'target' + str(specialTargets.index(target))
+            specialTargetVector.components.append(targetComponentName)
+            specialTargetsFilter.operatorDefinitionCode += ''.join([targetComponentName, ' = ', target, ';\n'])
+            
+          
+          targetComponentName = 'target' + str(specialTargets.index(target))
+          
+          targetVector = specialTargetVector
         else:
-          componentName = match.group('componentName')
+          targetComponentName = match.group('componentName')
           
           # Now we need to get the vector corresponding to componentName
-          tempVectorList = [v for v in deltaADependencies if componentName in v.components]
+          tempVectorList = [v for v in deltaADependencies if targetComponentName in v.components]
           assert len(tempVectorList) == 1
           targetVector = tempVectorList[0]
           
@@ -74,30 +125,31 @@ class _EXOperator(Operator):
           
           targetVector.needsFourierTransforms = True
           
-          # We have our match, now we need to create the operatorComponents dictionary
-          if not operatorName in self.operatorComponents:
-            self.operatorComponents[operatorName] = {targetVector: [componentName]}
-          elif not targetVector in self.operatorComponents[operatorName]:
-            self.operatorComponents[operatorName][targetVector] = [componentName]
-          else:
-            self.operatorComponents[operatorName][targetVector].append(componentName)
+        # We have our match, now we need to create the operatorComponents dictionary
+        if not operatorName in self.operatorComponents:
+          self.operatorComponents[operatorName] = {}
+        
+        if not targetVector in self.operatorComponents[operatorName]:
+          self.operatorComponents[operatorName][targetVector] = [targetComponentName]
+        else:
+          self.operatorComponents[operatorName][targetVector].append(targetComponentName)
+        
+        # Set the replacement string for the L[x] operator
+        replacementString = "_%(operatorName)s_%(targetComponentName)s" % locals()
           
-          # Set the replacement string for the L[x] operator
-          replacementString = "_%(operatorName)s_%(componentName)s" % locals()
+        # Add the appropriate component to the result vector
+        self.resultVector.components.append(replacementString)
+        
+        if match and match.group('integerValuedDimensions'):
+          # The target of the operator was a string of the form:
+          # L[phi[j-5, k*2][l, m % 9]]
+          # As a result, we need to copy these things back in when making the replacement.
+          # _ScriptElement.fixupComponentsWithIntegerValuedDimensions will handle the replacement
+          # of the square brackets with something meaningful later.
           
-          # Add the appropriate component to the result vector
-          self.resultVector.components.append(replacementString)
+          integerValuedDimensionsString = match.group('integerValuedDimensions')
           
-          if match.group('integerValuedDimensions'):
-            # The target of the operator was a string of the form:
-            # L[phi[j-5, k*2][l, m % 9]]
-            # As a result, we need to copy these things back in when making the replacement.
-            # _ScriptElement.fixupComponentsWithIntegerValuedDimensions will handle the replacement
-            # of the square brackets with something meaningful later.
-            
-            integerValuedDimensionsString = match.group('integerValuedDimensions')
-            
-            replacementString += integerValuedDimensionsString
+          replacementString += integerValuedDimensionsString
         
         escape = RegularExpressionStrings.escapeStringForRegularExpression
         
