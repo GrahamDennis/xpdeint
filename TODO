@@ -9,6 +9,9 @@
 * Add 'functions' elements to integrate, filter segments and anything else that
   might use them
 
+* Make the regular expressions for integer-valued dimensions not consider or modify strings which are
+  in comments or in quotes (e.g. printf strings)
+
 * Write a front-end to auto-configure preference file.
   For reading the preferences file, look into using the Python module
   ConfigParser. It seems to be part of the standard distribution.

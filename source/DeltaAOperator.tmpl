@@ -50,6 +50,7 @@ inline void _${integrator.name}_${name}_copy_delta_a(double _step${arguments})
   @for $vector in $vectorsForcingReordering
     @for $componentName in $vector.components
 ${componentName} = d${componentName}_d${propagationDimension} * _step;
+d${componentName}_d${propagationDimension} = 0.0;
     @end for
   @end for
   @#

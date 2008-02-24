@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <name>gravity</name>
+  <author>Graham Dennis</author>
+  <description>
+    Example system of gravitationally-attracted particles
+  </description>
+  
+  <features>
+    <benchmark />
+    <error_check />
+    <bing />
+    <!-- <fftw version="3" /> -->
+    <openmp />
+    <stochastic>
+      <noise kind="gaussian" prefix="p" num="4"/>
+      <noise kind="poissonian" prefix="q" num="1" mean-rate="4.0"/>
+      <!-- If there is no seed attribute then seeds will be chosen randomly at run-time -->
+    </stochastic>
+  </features>
+  
+  <geometry>
+    <prop_dim> t </prop_dim>
+    <transverse_dimensions>
+      <integer_valued>
+        <!-- Dimension for particle number -->
+        <dimension name="j" lattice="4" domain="(0, 3)" />
+      </integer_valued>
+    </transverse_dimensions>
+  </geometry>
+  
+  <field name="main">
+    <vector name="motion">
+      <components type="double">
+        x y vx vy
+      </components>
+      <initialisation noises="p">
+        <![CDATA[
+          x = 2.0*p_1;
+          y = 2.0*p_2;
+          vx = 0.1*p_3;
+          vy = 0.1*p_4;
+        ]]>
+      </initialisation>
+    </vector>
+    <vector name="mass">
+      <components type="double">
+        m
+      </components>
+      <initialisation noises="q">
+        <![CDATA[
+        // Set the mass equal to a poissonian noise.
+        // but don't let the mass be zero
+        m = q_1;
+        if (m < 0.01) m = 1.0;
+        ]]>
+      </initialisation>
+    </vector>
+  </field>
+  
+  <sequence>
+    <integrate algorithm="ARK89" interval="100" steps="1000" tolerance="1e-8">
+      <samples>1000 100</samples>
+      <operators field="main" noises="">
+        <integration_vectors>motion</integration_vectors>
+        <dependencies>mass</dependencies>
+        <![CDATA[
+          dx_dt = vx;
+          dy_dt = vy;
+          for (long k = 0; k < j; k++) {
+            double inverseSeparationCubed = pow((x[k] - x[j])*(x[k] - x[j]) + (y[k] - y[j])*(y[k] - y[j]), -3.0/2.0);
+            // printf("j: %li k: %li    x[j]: %e x[k]: %e  y[j]: %e y[k]: %e\n", j, k, x[j], x[k], y[j], y[k]);
+            // printf("separationSquared: %e inverseSeparationCubed: %e\n", (x[k] - x[j])*(x[k] - x[j]) + (y[k] - y[j])*(y[k] - y[j]), inverseSeparationCubed);
+            dvx_dt[j] += m[k]*(x[k] - x[j])*inverseSeparationCubed;
+            dvx_dt[k] += m[j]*(x[j] - x[k])*inverseSeparationCubed;
+            dvy_dt[j] += m[k]*(y[k] - y[j])*inverseSeparationCubed;
+            dvy_dt[k] += m[j]*(y[j] - y[k])*inverseSeparationCubed;
+          }
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  <output format="binary">
+    <group>
+      <sampling initial_sample="yes">
+        <dimension name="j" />
+        <moments>xR yR vxR vyR</moments>
+        <dependencies>motion</dependencies>
+        <![CDATA[
+          xR = x;
+          yR = y;
+          vxR = vx;
+          vyR = vy;
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling initial_sample="yes">
+        <dimension name="j" lattice="0" />
+        <moments>energy px py</moments>
+        <dependencies>mass motion</dependencies>
+        <![CDATA[
+        // Check conserved quantities
+          energy = 0.5*m*(vx*vx + vy*vy);
+          for (long k = 0; k < j; k++) {
+            energy += -m[j]*m[k]*pow((x[j]-x[k])*(x[j]-x[k]) + (y[j]-y[k])*(y[j]-y[k]), -0.5);
+          }
+          px = m*vx;
+          py = m*vy;
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>

@@ -369,6 +369,7 @@ def main(argv=None):
                        stdout=subprocess.PIPE,
                        )
   print proc.communicate()[0]
+  return proc.wait()
 
 if __name__ == "__main__":
   sys.exit(main())

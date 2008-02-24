@@ -205,7 +205,7 @@ class _DeltaAOperator (Operator):
                                        filter = self.filterTemplateArgument)
           deltaAVector.needsFourierTransforms = False
           deltaAVector.type = integrationVector.type
-          deltaAVector.needsInitialisation = False
+          # deltaAVector.needsInitialisation = False
           deltaAVector.initialSpace = self.operatorSpace
           # Construct dx_dt variables for the delta a vector.
           deltaAVector.components = [''.join(['d', componentName, '_d', propagationDimension]) for componentName in integrationVector.components]
