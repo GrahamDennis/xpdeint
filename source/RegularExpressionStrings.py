@@ -76,18 +76,16 @@ integer = r'[-+]?[0-9]+'
 # domain pair ( something, somethingElse) regular expression string
 domainPair = r'\(\s*(\S+),\s*(\S+)\s*\)'
 
-def componentWithIntegerValuedDimensions(vectors):
+def componentWithIntegerValuedDimensions(components):
   """
   Return a regular expression string used for matching components followed by integer-valued dimensions specifiers.
   
   For example, this regular expression should match:
   ``phi[j, k, 2*7 - m][n*n, blah]``
-  if 'phi' is a component of one of the elements of `vectors`. All vectors must be in the field `field`.
+  if 'phi' is an element of `components`.
   """
   
-  legalComponentNames = set()
-  for vector in vectors:
-    legalComponentNames.update(vector.components)
+  legalComponentNames = set(components)
   
   # The regular expression is of the form:
   # (?P<componentName>component1|component2)(?P<integerValuedDimensions>\[balancedString\](?:\[balancedString\])?)?
@@ -99,14 +97,14 @@ def componentWithIntegerValuedDimensions(vectors):
               + '(?:' + threeLevelsMatchedSquareBrackets + ')?)?'
 
 
-def componentWithIntegerValuedDimensionsWithComponentAndVector(componentName, vector):
+def componentWithIntegerValuedDimensionsWithComponentAndField(componentName, field):
   """
   Return a regular expression string used for extracting the arguments to the integer-valued dimensions
-  for a given component in a known vector.
+  for a given component in a known field.
   """
   
   integerValuedDimensionsRegexString = ''
-  integerValuedDimensions = vector.field.integerValuedDimensions
+  integerValuedDimensions = field.integerValuedDimensions
   integerValuedDimensionNames = []
   
   for listOfIntegerValuedDimensions in integerValuedDimensions:

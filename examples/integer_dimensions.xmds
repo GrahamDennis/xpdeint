@@ -29,7 +29,7 @@
       </components>
       <initialisation>
         <![CDATA[
-        x[j] = 1.0e-1;
+        x[j] = 1.0e-3;
         x[0] = 1.0;
         ]]>
       </initialisation>
@@ -46,7 +46,7 @@
         if (j_minus_one < 0)
           j_minus_one += _zerod_lattice0;
         long j_plus_one  = (j+1) % _zerod_lattice0;
-        dx_dt = x[j]*(x[j_minus_one] - x[j_plus_one]);
+        dx_dt[j] = x[j]*(x[j_minus_one] - x[j_plus_one]);
         ]]>
       </operators>
     </integrate>

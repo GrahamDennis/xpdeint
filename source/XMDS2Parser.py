@@ -821,6 +821,7 @@ class XMDS2Parser(ScriptParser):
     deltaAOperatorTemplate = DeltaAOperatorTemplate(field = fieldTemplate, integrator = integratorTemplate,
                                                     **self.argumentsToTemplateConstructors)
     deltaAOperatorTemplate.propagationCode = operatorsElement.cdataContents()
+    deltaAOperatorTemplate.xmlElement = operatorsElement
     
     self.parseNoisesAttribute(operatorsElement, deltaAOperatorTemplate)
     
