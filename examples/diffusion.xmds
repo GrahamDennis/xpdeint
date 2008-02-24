@@ -3,7 +3,7 @@
   <name>diffusion</name>
   <author>Graham Dennis</author>
   <description>
-    First script to test parsing in pyXMDS
+    Simple one-dimensional diffusion with a pointless second dimension thrown in for fun
   </description>
   
   <features>
@@ -58,7 +58,7 @@
         <!-- Any dimension not mentioned is assumed to be in real space and its middle element will be sampled -->
         <!-- Note that dimensions can be in any order. Not that I can think of a reason why you would want to do that -->
         <dimension name="x" lattice="0" fourier_space="x" />
-        <dimension name="y" lattice="128" fourier_space="x" />
+        <dimension name="y" lattice="128" fourier_space="y" />
         <moments>dens</moments>
         <dependencies>main</dependencies>
         <![CDATA[

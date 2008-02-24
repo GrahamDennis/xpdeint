@@ -1210,12 +1210,13 @@ class XMDS2Parser(ScriptParser):
         fourierSpace = False
         if dimensionElement.hasAttribute('fourier_space') and dimension.fourier:
           spaceString = dimensionElement.getAttribute('fourier_space').strip().lower()
-          if spaceString in ('yes', 'k'):
+          if spaceString in ('yes', 'k' + dimensionName):
             fourierSpace = True
-          elif spaceString in ('no', 'x'):
+          elif spaceString in ('no', dimensionName):
             fourierSpace = False
           else:
-            raise ParserException(dimensionElement, "fourier_space attribute must be 'yes', 'no', 'k' or 'x'")
+            raise ParserException(dimensionElement, "fourier_space attribute for dimension '%s' must be 'yes' / '%s' or 'no' / '%s'"
+                                                    % (dimensionName, 'k' + dimensionName, dimensionName))
         
         if fourierSpace:
           momentGroupTemplate.sampleSpace |= 1 << geometryTemplate.indexOfDimensionName(dimensionName)
