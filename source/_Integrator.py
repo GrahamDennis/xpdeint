@@ -11,6 +11,8 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 
 from _Segment import _Segment
 
+from ParserException import ParserException
+
 class _Integrator (_Segment):
   
   canBeInitialisedEarly = True
@@ -71,7 +73,7 @@ class _Integrator (_Segment):
     
     for momentGroup, sampleCountString in zip(momentGroups, samplesList):
       sampleCount = int(sampleCountString)
-      if not (self.stepCount % sampleCount) == 0:
+      if sampleCount and not (self.stepCount % sampleCount) == 0:
         raise ParserException(samplesElement, "Sample count does not evenly divide the number of steps")
       self.samples.append(sampleCount)
       # FIXME: The following line is probably wrong when we add additional non-fourier dimensions before

@@ -73,7 +73,7 @@ ${noise.initialiseSeeds}@slurp
   @end if
 
 double _var = 1.0@slurp
-  @if len(caller.vector.field.dimensions)
+  @if len([dim for dim in caller.vector.field.dimensions if dim.type == 'double'])
  / $caller.vector.field.volumeElementInSpace($caller.vector.initialSpace)@slurp
   @end if
 ;
@@ -89,6 +89,10 @@ _make_${noise.prefix}_noises(_var, _${noiseVector.id}, _${caller.vector.field.na
   @#
   @set $integrator = dict['caller']
   @#
+  @if not self.noisesAndFieldsForIntegrator(integrator)
+    @return
+  @end if
+  @#
   @for field in integrator.integrationFields
 const double _${field.name}_var = 1.0/(@slurp
     @if len($field.dimensions)
@@ -102,6 +106,10 @@ _noiseStep);
 @def integrateAdaptiveStepBegin($dict)
   @#
   @set $integrator = dict['caller']
+  @#
+  @if not self.noisesAndFieldsForIntegrator(integrator)
+    @return
+  @end if
   @#
   @for field in integrator.integrationFields
 const double _${field.name}_var = 1.0@slurp
@@ -120,6 +128,10 @@ list<_dtdWstore>::iterator _active_node;
   @#
   @set $integrator = dict['caller']
   @#
+  @if not self.noisesAndFieldsForIntegrator(integrator)
+    @return
+  @end if
+  @#
   @for (noise, field) in self.noisesAndFieldsForIntegrator(integrator)
     @set $noiseVector = noise.noiseVectorForField(field)
 _active_${noiseVector.id} = _${noiseVector.id};
@@ -129,6 +141,10 @@ _active_${noiseVector.id} = _${noiseVector.id};
 @def integrateFixedStepInnerLoopBegin(dict)
   @#
   @set $integrator = dict['caller']
+  @#
+  @if not self.noisesAndFieldsForIntegrator(integrator)
+    @return
+  @end if
   @#
   @for (noise, field) in self.noisesAndFieldsForIntegrator(integrator)
     @set $noiseVector = noise.noiseVectorForField(field)
@@ -150,6 +166,10 @@ if (!_half_step) {
 @def integrateAdaptiveStepInnerLoopBegin(dict)
   @#
   @set $integrator = dict['caller']
+  @#
+  @if not self.noisesAndFieldsForIntegrator(integrator)
+    @return
+  @end if
   @#
 if (_noise_list.empty()) { 
   // Noise list empty so start afresh
@@ -267,6 +287,10 @@ _split_${noise.prefix}_noises(_${field.name}_var / _step, _${field.name}_var / _
 @def adaptiveStepSucceeded(dict)
   @#
   @set $integrator = dict['caller']
+  @#
+  @if not self.noisesAndFieldsForIntegrator(integrator)
+    @return
+  @end if
   @#
 
 // Trim dtdW tree
