@@ -1,0 +1,148 @@
+@*
+MPIMultiPathDriver.tmpl
+
+Created by Graham Dennis on 2008-02-25.
+Copyright (c) 2008 __MyCompanyName__. All rights reserved.
+*@
+@extends MultiPathDriver
+
+@def description: segment $segmentNumber (MPI Multipath top level sequence)
+
+@def compiler
+  @#
+  @return "mpic++"
+  @#
+@end def
+
+
+@def includes
+  @#
+#include <mpi.h>
+  @#
+@end def
+
+@def globals
+  @#
+int rank, size;
+  @#
+@end def
+
+
+@def mainRoutine
+  @#
+int main(int argc, char **argv)
+{
+  MPI_Init(&argc, &argv);
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  
+  @for $field in $fields
+  ${field.allocate, autoIndent=True}@slurp
+    @if $field.isOutputField
+  ${field.initialise, autoIndent=True}@slurp
+    @end if
+  @end for
+  
+  ${mainRoutineInnerContent, autoIndent=True}@slurp
+  
+  MPI_Finalize();
+  
+  return 0;
+}
+  @#
+@end def
+
+
+@def functionImplementations
+  @#
+void _segment0()
+{
+  @# And now insert the code for the features that apply in the top level sequence
+  @set $featureOrdering = ['ErrorCheck', 'Stochastic']
+  @set $dict = {'extraIndent': 0}
+  ${insertCodeForFeatures('topLevelSequenceBegin', featureOrdering, dict), autoIndent=True}@slurp
+  @set $extraIndent = dict['extraIndent']
+  
+  ${topLevelSegmentPathLoop, autoIndent=True, extraIndent=extraIndent}@slurp
+  
+  ${insertCodeForFeaturesInReverseOrder('topLevelSequenceEnd', featureOrdering, dict), autoIndent=True}@slurp
+  
+  @for mg in $momentGroups
+    @for vector in mg.outputField.managedVectors
+      @set $arrayNames = [c'_${vector.id}']
+      @silent $arrayNames.extend($vector.aliases)
+      @set $sizePrefix = ''
+      @if $vector.type == 'complex'
+        @set $sizePrefix = '2 * '
+      @end if
+      @for arrayName in arrayNames
+  
+  if (rank == 0)
+    MPI_Reduce(MPI_IN_PLACE, $arrayName, ${sizePrefix}_${vector.field.name}_size * _${vector.id}_ncomponents,
+               MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  else
+    MPI_Reduce($arrayName, NULL, ${sizePrefix}_${vector.field.name}_size * _${vector.id}_ncomponents,
+               MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+      @end for
+    @end for
+  @end for
+}
+  @#
+@end def
+
+@def writeOutBegin($dict)
+  @#
+if (rank != 0)
+  return;
+  @#
+@end def
+
+
+@def topLevelSegmentPathLoop
+  @#
+  @# Now loop over anything that can be initalised early and initialise them
+  @# so they don't allocate and free stuff for each path. This is done now
+  @# and not before the ErrorCheck and Stochastic Features because the
+  @# initialisation of IP operators will depend on the step size. It would be
+  @# possible to split this up into two stages of initialisation, but that
+  @# seems to me like it would be ugly.
+  @# 
+  @set $objectsNeedingInitialisation = [o for o in $templates if o.hasattr('canBeInitialisedEarly') and o.canBeInitialisedEarly]
+  @for o in $objectsNeedingInitialisation
+${o.initialise}@slurp
+  @end for
+  @#
+for (long _i0 = rank; _i0 < _n_paths; _i0 += size) {
+  _LOG(_PATH_LOG_LEVEL, "Starting path %li\n", _i0 + 1);
+  
+  ${topLevelSequenceInnerContent, autoIndent=True}@slurp
+}
+  @#
+  @# Now clean up after all of the objects that we initialised early.
+  @for o in $objectsNeedingInitialisation
+${o.finalise}@slurp
+  @end for
+  @#
+@end def
+
+@def logFunctionBegin($dict)
+  @#
+  @# Insert code at the start of the _LOG function
+  @#
+if ((rank == 0) || (logLevel & ~_SIMULATION_LOG_LEVEL)) { \
+  if (logLevel & ~_SIMULATION_LOG_LEVEL) \
+    printf("Rank[%i]: ", rank); \
+  @#
+@end def
+
+@def logFunctionEnd($dict)
+  @#
+} \
+  @#
+@end def
+
+@def seedOffset($dict)
+  @#
+ + rank@slurp
+  @#
+@end def

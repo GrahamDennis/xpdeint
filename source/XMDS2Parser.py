@@ -27,6 +27,7 @@ from VectorInitialisationCDATA import VectorInitialisationCDATA as VectorInitial
 from TopLevelSequenceElement import TopLevelSequenceElement as TopLevelSequenceElementTemplate
 from DefaultDriver import DefaultDriver as DefaultDriverTemplate
 from MultiPathDriver import MultiPathDriver as MultiPathDriverTemplate
+from MPIMultiPathDriver import MPIMultiPathDriver as MPIMultiPathDriverTemplate
 
 from FixedStepIntegrator import FixedStepIntegrator
 from AdaptiveStepIntegrator import AdaptiveStepIntegrator
@@ -658,18 +659,46 @@ class XMDS2Parser(ScriptParser):
     driverAttributeDictionary = dict()
     
     if topLevelSequenceElement.hasAttribute('driver'):
-      driverName = topLevelSequenceElement.getAttribute('driver').strip()
-      if driverName == 'multi-path':
-        driverClass = MultiPathDriverTemplate
-        if not topLevelSequenceElement.hasAttribute('paths'):
-          raise ParserException(topLevelSequenceElement, "Missing 'paths' attribute for multi-path driver.")
-        pathCount = RegularExpressionStrings.integerInString(topLevelSequenceElement.getAttribute('paths'))
-        driverAttributeDictionary['pathCount'] = pathCount
-      elif driverName == 'none':
+      driverName = topLevelSequenceElement.getAttribute('driver').strip().lower()
+      
+      class UnknownDriverException(Exception):
         pass
-      else:
+      
+      try:
+        if 'multi-path' in driverName:
+          if driverName == 'multi-path':
+            driverClass = MultiPathDriverTemplate
+          elif driverName == 'mpi-multi-path':
+            driverClass = MPIMultiPathDriverTemplate
+          else:
+            raise UnknownDriverException()
+          
+          if not topLevelSequenceElement.hasAttribute('paths'):
+            raise ParserException(topLevelSequenceElement, "Missing 'paths' attribute for multi-path driver.")
+          pathCount = RegularExpressionStrings.integerInString(topLevelSequenceElement.getAttribute('paths'))
+          driverAttributeDictionary['pathCount'] = pathCount
+        elif driverName == 'none':
+          pass
+        else:
+          raise UnknownDriverException()
+      except UnknownDriverException, err:
         raise ParserException(topLevelSequenceElement, "Unknown driver type '%(driverName)s'. "
-                                                       "The options are 'none' (default), or 'multi-path'." % locals())
+                                                       "The options are 'none' (default), 'multi-path' or 'mpi-multi-path'." % locals())
+      
+      if driverClass == MultiPathDriverTemplate:
+        kindString = None
+        if topLevelSequenceElement.hasAttribute('kind'):
+          kindString = topLevelSequenceElement.getAttribute('kind').strip().lower()
+        if kindString in (None, 'single'):
+          pass
+        elif kindString == 'mpi':
+          driverClass = MPIMultiPathDriverTemplate
+        else:
+          raise ParserException(topLevelSimulationElementTemplate,
+                                "Unknown multi-path kind '%(kindString)s'. "
+                                "The options are 'single' (default), or 'mpi'." % locals())
+    
+    
     
     topLevelSimulationElementTemplate = driverClass(**self.argumentsToTemplateConstructors)
     

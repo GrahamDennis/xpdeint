@@ -25,9 +25,12 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 #define _ALL_LOG_LEVELS        _SAMPLE_LOG_LEVEL|_SEGMENT_LOG_LEVEL|_PATH_LOG_LEVEL|_SIMULATION_LOG_LEVEL|_WARNING_LOG_LEVEL|_ERROR_LOG_LEVEL
 #define _LOG_LEVELS_BEING_LOGGED (${features['Driver'].logLevelsBeingLogged})
 
+  @set $featureOrdering = ['Driver']
 #define _LOG(logLevel, ...) \
   if (logLevel & _LOG_LEVELS_BEING_LOGGED) { \
+    ${insertCodeForFeatures('logFunctionBegin', $featureOrdering), autoIndent=True}@slurp
     printf(__VA_ARGS__); \
+    ${insertCodeForFeaturesInReverseOrder('logFunctionEnd', $featureOrdering), autoIndent=True}@slurp
     fflush(stdout); \
   }
   @#
@@ -46,32 +49,3 @@ bool debugFlag = false;
 bool xmlDebugFlag =  false;
 @end def
 
-@def mainRoutine
-int main(int argc, char **argv)
-{
-  @for $field in $fields
-  ${field.allocate, autoIndent=True}@slurp
-    @if $field.isOutputField
-  ${field.initialise, autoIndent=True}@slurp
-    @end if
-  @end for
-  @*
-    And now insert the code for the features that apply in the main function
-  *@
-  @# Note that Bing, and Argv commute
-  @set $featureOrdering = ['Bing', 'Argv', 'FourierTransform', 'Benchmark', 'Output']
-  ${insertCodeForFeatures('mainBegin', $featureOrdering), autoIndent=True}@slurp
-
-  @# This needs to be extracted into a function so that it can be indented further if necessary
-  /* Code that actually does stuff goes here */
-  _segment0();
-  
-  ${insertCodeForFeaturesInReverseOrder('mainEnd', $featureOrdering), autoIndent=True}@slurp
-  @#
-  @for $field in $fields
-  ${field.free, autoIndent=True}@slurp
-  @end for
-  
-  return 0;
-}
-@end def

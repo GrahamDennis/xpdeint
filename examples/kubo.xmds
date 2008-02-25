@@ -8,12 +8,12 @@
   
   <features>
     <benchmark />
-    <error_check />
+    <!-- <error_check /> -->
     <bing />
     <!-- <fftw version="3" /> -->
     <openmp />
     <stochastic>
-      <noise kind="gaussian" prefix="n" num="1" seed="157 9348 234"/>
+      <noise kind="gaussian" prefix="n" num="1"/>
       <!-- If there is no seed attribute then seeds will be chosen randomly at run-time -->
     </stochastic>
   </features>
@@ -35,7 +35,7 @@
     </vector>
   </field>
   
-  <sequence driver="multi-path" paths="10240">
+  <sequence driver="mpi-multi-path" paths="102400">
     <integrate algorithm="ARK89" interval="10" steps="1000" tolerance="1e-8">
       <samples>100</samples>
       <operators field="mainField" noises="n">
