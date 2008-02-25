@@ -356,6 +356,9 @@ def main(argv=None):
     # If the template has the function 'cflags', then call it, and add it to the list
     if template.hasattr('cflags'):
       templateCFLAGS.append(template.cflags())
+    # FIXME: This is very very dodgy
+    if template.hasattr('compiler'):
+      CC = template.compiler()
   
   
   # These compile variables are defined in Preferences.py

@@ -25,19 +25,22 @@ unsigned short ${generatorName}[3];
 *@
 @def initialiseSeeds
   @#
+  @set $featureOrdering = ['Driver']
+  @silent seedOffset = $insertCodeForFeatures('seedOffset', $featureOrdering)
+  @#
   @if len($seedArray)
     @for $i in range(3)
       @if $i < len($seedArray)
-${generatorName}[$i] = ${seedArray[$i]};
+${generatorName}[$i] = ${seedArray[$i]}${seedOffset};
       @else
-${generatorName}[$i] = 0;
+${generatorName}[$i] = 0${seedOffset};
       @end if
     @end for
 erand48(${generatorName});
   @else
     @set self.generatedSeeds = [random.randrange(0, pow(2, 16)) for i in range(3)]
     @for $i in range(3)
-${generatorName}[$i] = ${generatedSeeds[$i]};
+${generatorName}[$i] = ${generatedSeeds[$i]}${seedOffset};
     @end for
   @end if
   @#

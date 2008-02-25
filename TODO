@@ -25,8 +25,6 @@
   For example, consider the case of a filter element creating a vector in one integrate block,
   and then referenced in another. This needs to cause the parser to barf.
 
-* Add the ability to distribute stochastic simulations using MPI
-
 * Add the ability to distribute stochastic simulations using OpenMP
 
 * Deterministic/distributed MPI

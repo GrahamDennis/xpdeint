@@ -30,6 +30,8 @@ void _write_output();
   @#
 void _write_output()
 {
+  @set $featureOrderingWriteOutput = ['Driver']
+  ${insertCodeForFeatures('writeOutBegin', $featureOrderingWriteOutput), autoIndent=True}@slurp
   _LOG(_SIMULATION_LOG_LEVEL, "Generating output for ${simulationName}\n");
   
   FILE* _outfile = fopen("${filename}.xsil", "w");
@@ -54,8 +56,8 @@ void _write_output()
   fprintf(_outfile, "See http://www.xmds.org for more information.\n");
   @end filter
 
-  @set $featureOrdering = ['Argv', 'Stochastic']
-  ${insertCodeForFeatures('xsilOutputInfo', $featureOrdering), autoIndent=True}@slurp
+  @set $featureOrderingXSILInfo = ['Argv', 'Stochastic']
+  ${insertCodeForFeatures('xsilOutputInfo', $featureOrderingXSILInfo), autoIndent=True}@slurp
   fprintf(_outfile, "</info>\n");
   
   @for $momentGroup in $momentGroups
@@ -65,6 +67,7 @@ void _write_output()
   fprintf(_outfile, "</simulation>\n");
   
   fclose(_outfile);
+  ${insertCodeForFeaturesInReverseOrder('writeOutEnd', $featureOrderingWriteOutput), autoIndent=True}@slurp
 }
   @#
 @end def
