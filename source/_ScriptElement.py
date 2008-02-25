@@ -218,7 +218,7 @@ class _ScriptElement (Template):
  
     
   def transformVectorsToSpace(self, vectors, space):
-     '''Transform vectors $vectors to space $space.'''
+     """Transform vectors `vectors` to space `space`."""
      result=""
      for vector in vectors:
          if not (vector.initialSpace) == (space & vector.field.spaceMask):

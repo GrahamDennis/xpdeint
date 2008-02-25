@@ -86,7 +86,7 @@ class _FieldElement (ScriptElement):
   def indexOfDimension(self, dimension):
     """Return the index (in the `dimensions` list) of the dimension corresponding to `dimension`."""
     return self.indexOfDimensionName(dimension.name)
-
+  
   # The index of the dimension with the name dimensionName
   def indexOfDimensionName(self, dimensionName):
     """Return the index (in the `dimensions` list) of the dimension that has the name `dimensionName`."""
@@ -187,21 +187,21 @@ class _FieldElement (ScriptElement):
   
   def spaceFromString(self, spacesString):
     """
-    Return the ``space`` bitmask corresponding to `spacesString` for `field`.
-
+    Return the ``space`` bitmask corresponding to `spacesString` for this field.
+    
     The contents of `spacesString` must be a sequence of dimension names or fourier
     space versions of those dimension names (i.e. the dimension name prefixed with a 'k')
     where legal.
-
+    
     For example, if the geometry has dimensions 'x', 'y', 'z' and 'u', where 'u' is an
     integer-valued dimension, then the following are valid entries in `spacesString`:
     'x', 'kx', 'y', 'ky', 'z' and 'u'.
-
+    
     Note that the entries in `spacesString` do not need to be in any order.
     """
     geometryTemplate = self.getVar('geometry')
     resultSpace = 0
-
+    
     # Complain if illegal fieldnames or k[integer-valued] are used
     legalDimensionNames = set()
     for fieldDimension in self.dimensions:
@@ -210,32 +210,34 @@ class _FieldElement (ScriptElement):
       # fourier transforming it.
       if fieldDimension.type == 'double':
         legalDimensionNames.add('k' + fieldDimension.name)
-
+    
     spacesSymbols = RegularExpressionStrings.symbolsInString(spacesString)
-
+    
     for symbol in spacesSymbols:
       if not symbol in legalDimensionNames:
         raise ParserException(self.xmlElement, 
                 "The fourier_space string must only contain real-valued dimensions from the\n"
                 "designated field.  '%(symbol)s' cannot be used."  % locals())
-
+    
     for dimensionNumber, fieldDimension in enumerate(self.dimensions):
       fieldDimensionName = fieldDimension.name
       validDimensionNamesForField = set([fieldDimensionName])
       if fieldDimension.type == 'double':
         validDimensionNamesForField.add('k' + fieldDimensionName)
-
+      
       dimensionOccurrences = sum([spacesSymbols.count(dimName) for dimName in validDimensionNamesForField])
-
+      
       if dimensionOccurrences > 1:
         raise ParserException(self.xmlElement,
                   "The fourier_space attribute must only have one entry for dimension '%(fieldDimensionName)s'." % locals())
       elif dimensionOccurrences == 0 and fieldDimension.type == 'double':
         raise ParserException(self.xmlElement,
                   "The fourier_space attribute must have an entry for dimension '%(fieldDimensionName)s'." % locals())
-
+      
       if fieldDimension.type == 'double' and ('k' + fieldDimensionName) in spacesSymbols:
         resultSpace |= 1 << geometryTemplate.indexOfDimension(self.dimensions[dimensionNumber])
-
+    
     return resultSpace
+  
+
 
