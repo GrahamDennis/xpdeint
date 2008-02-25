@@ -36,8 +36,11 @@ class _FilterOperator (Operator):
 
      sourceFieldName = self.integrator.name+'_'+self.name+'_source_field'
      sourceField = FieldElement(name = sourceFieldName, searchList = self.searchListTemplateArgument, filter = self.filterTemplateArgument)
-     sourceField.xmlElement = self.dependenciesEntity.xmlElement
-     
+     if self.dependenciesEntity:
+       sourceField.xmlElement = self.dependenciesEntity.xmlElement
+     else:
+       sourceField.xmlElement = self.xmlElement
+       
      unionOfDimensions = set() 
      for dependency in self.dependencies:
         for fieldDimension in dependency.field.dimensions:
@@ -50,7 +53,7 @@ class _FilterOperator (Operator):
 
      self.sourceField = sourceField
 
-     if self.dependenciesEntity.xmlElement.hasAttribute('fourier_space'):
+     if self.dependenciesEntity and self.dependenciesEntity.xmlElement.hasAttribute('fourier_space'):
          self.operatorSpace = self.sourceField.spaceFromString(self.dependenciesEntity.xmlElement.getAttribute('fourier_space'))    
      # If the source field has the same dimensions as the target field,
      # (remember that the target field must be a subset of the source field)

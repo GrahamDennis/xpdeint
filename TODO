@@ -75,6 +75,4 @@
 		DeltaAs. 
 		Functions specified after DeltaAs. 
 		
-* Filters source_field should go.  Source dims from union of dependencies.  Target sanity check subset== source dims.
-
 ? Post-processing
