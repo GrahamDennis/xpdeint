@@ -101,14 +101,6 @@ class _Operator (ScriptElement):
       dependencies = self.vectorsFromEntity(self.dependenciesEntity)
       
       for dependency in dependencies:
-        if not (dependency.initialSpace & self.field.spaceMask) == (self.operatorSpace & dependency.field.spaceMask):
-          if not dependency.type == 'complex':
-            raise ParserException(self.dependenciesEntity.xmlElement,
-                    "Cannot satisfy dependence on vector '%s' because it is not "
-                    "of type complex, and needs to be fourier transformed for this operator." % dependency.name)
-          else:
-            dependency.needsFourierTransforms = True
-        
         if self.vectorsMustBeInSubsetsOfIntegrationField and not dependency.field.isSubsetOfField(self.field):
           raise ParserException(self.dependenciesEntity.xmlElement,
                   "Can't depend on a vector that is in a field that has dimensions that "

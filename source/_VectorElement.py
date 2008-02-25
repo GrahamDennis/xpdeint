@@ -20,7 +20,6 @@ class _VectorElement (ScriptElement):
     
     # Set default variables
     self.components = []
-    self.needsFourierTransforms = False
     self._needsInitialisation = True
     self._initialSpace = 0
     self.nComponentsOverride = None
@@ -31,6 +30,10 @@ class _VectorElement (ScriptElement):
     # Set default initialisation to be the zero initialisation template
     self.initialiser = VectorInitialisation(*args, **KWs)
     self.initialiser.vector = self
+  
+  @property
+  def needsFourierTransforms(self):
+    return len(self.spacesNeeded) > 1
   
   @property
   def id(self):

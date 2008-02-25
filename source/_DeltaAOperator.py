@@ -203,7 +203,6 @@ class _DeltaAOperator (Operator):
           deltaAVector = VectorElement(name = integrationVector.name, field = self.deltaAField,
                                        searchList = self.searchListTemplateArgument,
                                        filter = self.filterTemplateArgument)
-          deltaAVector.needsFourierTransforms = False
           deltaAVector.type = integrationVector.type
           # deltaAVector.needsInitialisation = False
           deltaAVector.initialSpace = self.operatorSpace

@@ -563,22 +563,3 @@ if ( k${dimension.name} > ((_${field.name}_lattice${dimensionNumber} - 1)/2 + 0.
   k${dimension.name} -= _${field.name}_lattice${dimensionNumber} * _${field.name}_dk${dimensionNumber};
   @#
 @end def
-
-
-@def transformVectorsToSpace($vectors, $space)
-@#doc: Transform vectors $vectors to space $space.
-  @#
-  @for $vector in $vectors
-    @if not $vector.needsFourierTransforms
-      @# If the vector doesn't think it needs fourier transforms, then we can't
-      @# actually transform it. This is OK provided the space we want to go to
-      @# is the same as the vector's initial space.
-      @assert ($space & $vector.field.spaceMask) == $vector.initialSpace
-      @continue
-    @end if
-_${vector.id}_go_space($space);
-    @# Add space $space to the set of spaces in which this vector is needed
-    @silent vector.spacesNeeded.add($space & $vector.field.spaceMask)
-  @end for
-  @#
-@end def

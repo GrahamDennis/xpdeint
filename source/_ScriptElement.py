@@ -215,6 +215,22 @@ class _ScriptElement (Template):
         raise ParserException(entity.xmlElement, "Unknown vector '%(vectorName)s'." % locals())
       vectors.add(vectorDictionary[vectorName])
     return vectors
+ 
+    
+  def transformVectorsToSpace(self, vectors, space):
+     '''Transform vectors $vectors to space $space.'''
+     result=""
+     for vector in vectors:
+         if not (vector.initialSpace) == (space & vector.field.spaceMask):
+           if not vector.type == "complex":
+             raise ParserException(self.xmlElement,
+                     "Cannot satisfy dependence on vector '%s' because it is not "
+                     "of type complex, and needs to be fourier transformed during sampling." % vector.name)
+         if vector.needsFourierTransforms:
+           result+="_"+vector.id+"_go_space("+str(space)+");\n"
+         # Add space $space to the set of spaces in which this vector is needed
+         vector.spacesNeeded.add(space & vector.field.spaceMask) 
+     return result
     
   
   def remove(self):

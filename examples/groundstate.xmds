@@ -82,19 +82,17 @@
     <integrate algorithm="ARK89" interval="1e-4" steps="10000" tolerance="1e-8">
       <samples>500</samples>
       <operators field="main">
-        <operator kind="filter" dimensions="" name="normalisation">
-          <moments type="double">
+        <operator kind="filter">
+          <moments type="double" dimensions="" name="normalisation">
             Ncalc
           </moments>
-          <source_field>main</source_field>
           <dependencies>wavefunction</dependencies>
           <![CDATA[
             // Calculate the current normalisation of the wave function
             Ncalc = mod2(phi);
           ]]>
         </operator>
-        <operator kind="filter" target_field="main">
-          <source_field>main</source_field>
+        <operator kind="filter">
           <dependencies>wavefunction normalisation</dependencies>
           <![CDATA[
             // Correct normalisation of the wavefunction
