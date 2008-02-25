@@ -66,6 +66,7 @@ class _EXOperator(Operator):
             specialTargetsFilter = FilterOperator(field = self.field, integrator = self.integrator,
                                                   searchList = self.searchListTemplateArgument,
                                                   filter = self.filterTemplateArgument)
+            specialTargetsFilter.xmlElement = self.xmlElement
             
             # Shift the filter operator to be before this operator
             self.integrator.operators.remove(specialTargetsFilter)
