@@ -86,16 +86,7 @@ class _IPOperator(Operator):
         tempVectorList = [v for v in integrationVectors if componentName in v.components]
         assert len(tempVectorList) == 1
         targetVector = tempVectorList[0]
-        
-        # FIXME: If the operator space is the same as the vector's initial space, then the
-        # vector doesn't need to be complex, and we don't need fourier transforms
-        # We need to check that the integration vector this component belongs to is complex
-        if targetVector.type != 'complex':
-          raise ParserException(self.operatorComponentsEntity.xmlElement,
-                                "Cannot act on vector '%s' because it is not of type complex." % targetVector.name)
-        
-        targetVector.needsFourierTransforms = True
-        
+                
         # We have our match, now we need to create the operatorComponents dictionary
         if not operatorName in self.operatorComponents:
           self.operatorComponents[operatorName] = {targetVector: [componentName]}

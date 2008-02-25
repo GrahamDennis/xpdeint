@@ -9,6 +9,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 
 from Operator import Operator
 from ParserException import ParserException
+from FieldElement import FieldElement
 
 class _FilterOperator (Operator):
   operatorKind = Operator.OtherOperatorKind
@@ -24,20 +25,40 @@ class _FilterOperator (Operator):
   def defaultOperatorSpace(self):
     return 0
 
-  
   def bindNamedVectors(self):
-    if self.dependenciesEntity:
-      dependencies = self.vectorsFromEntity(self.dependenciesEntity)
-      for dependency in dependencies:
-        if not dependency.field.isSubsetOfField(self.sourceField):
-          vectorName = dependency.name
-          raise ParserException(self.dependenciesEntity.xmlElement,
-                  "Filter vectors must belong to fields which only contain dimensions that "
-                  "exist in the source field.\n"
-                  "Vector '%(vectorName)s' caused this problem." % locals())
-        
-      self.dependencies.update(dependencies)
-    
+    dependencies = self.vectorsFromEntity(self.dependenciesEntity)
+    self.dependencies.update(dependencies)
+
     super(_FilterOperator, self).bindNamedVectors()
   
+  def preflight(self):
+     geometryTemplate = self.getVar('geometry')
+
+     sourceFieldName = self.integrator.name+'_'+self.name+'_source_field'
+     sourceField = FieldElement(name = sourceFieldName, searchList = self.searchListTemplateArgument, filter = self.filterTemplateArgument)
+     sourceField.xmlElement = self.dependenciesEntity.xmlElement
+     
+     unionOfDimensions = set() 
+     for dependency in self.dependencies:
+        for fieldDimension in dependency.field.dimensions:
+            unionOfDimensions = unionOfDimensions.union(fieldDimension.name)
+
+     for fieldDimensionName in unionOfDimensions:
+         if not sourceField.hasDimensionName(fieldDimensionName):
+            sourceField.dimensions.append(geometryTemplate.dimensions[geometryTemplate.indexOfDimensionName(fieldDimensionName)])
+     sourceField.sortDimensions()
+
+     self.sourceField = sourceField
+
+     if self.dependenciesEntity.xmlElement.hasAttribute('fourier_space'):
+         self.operatorSpace = self.sourceField.spaceFromString(self.dependenciesEntity.xmlElement.getAttribute('fourier_space'))    
+     # If the source field has the same dimensions as the target field,
+     # (remember that the target field must be a subset of the source field)
+     # Then we mustn't be doing any integration, and hence we don't need to
+     # do any initialisation when doing the calculation of moments    
+     if self.resultVector and sourceField.isSubsetOfField(self.resultVector.field):
+       self.integratingMoments = False
+     elif not self.resultVector:
+       self.integratingMoments = False
+       
 

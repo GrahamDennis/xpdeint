@@ -86,7 +86,6 @@ class _EXOperator(Operator):
             
             specialTargetVector.initialSpace = self.deltaAOperator.operatorSpace
             specialTargetVector.type = 'complex'
-            specialTargetVector.needsFourierTransforms = True
             specialTargetVector.needsInitialisation = False
             self.field.temporaryVectors.add(specialTargetVector)
             
@@ -113,17 +112,6 @@ class _EXOperator(Operator):
           tempVectorList = [v for v in deltaADependencies if targetComponentName in v.components]
           assert len(tempVectorList) == 1
           targetVector = tempVectorList[0]
-          
-          # FIXME: This check is not necessarily correct.
-          # If the operator space is the same as the vector's initialisation space and the space for the
-          # deltaAOperator, then we don't need the vector to be of type complex
-          
-          # We need to check that the integration vector this component belongs to is complex
-          if targetVector.type != 'complex':
-            raise ParserException(self.operatorComponentsEntity.xmlElement,
-                                  "Cannot act on vector '%s' because it is not of type complex." % targetVector.name)
-          
-          targetVector.needsFourierTransforms = True
           
         # We have our match, now we need to create the operatorComponents dictionary
         if not operatorName in self.operatorComponents:

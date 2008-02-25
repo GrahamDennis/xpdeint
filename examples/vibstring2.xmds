@@ -29,14 +29,16 @@
         <dimension name="u" lattice="2"  domain="(0, 1)" />
       </integer_valued>
       <dimension name="x" lattice="100"  domain="(0, 1)" />
+      <dimension name="y" lattice="100"  domain="(0, 1)" />
+      <dimension name="z" lattice="100"  domain="(0, 1)" />
       <integer_valued kind="last">
         <dimension name="w" domain="(-3, 3)" />
       </integer_valued>
     </transverse_dimensions>
   </geometry>
   
-  <field name="mainField" dimensions="x">
-    <vector name="main" initial_space="x">
+  <field name="mainField" dimensions="x y">
+    <vector name="main" initial_space="x ky">
       <components type="complex">
         u uDot
       </components>
@@ -86,14 +88,11 @@
         <!-- In fact, you can't just sample. -->
         <!-- You must either have a dimensions attribute or a 'target_field' attribute -->
         <!-- This target field must have at most as many dimensions as the source field -->
-        <operator kind="filter" target_field="zero_d_test" name="filter1">
+        <operator kind="filter">
           <!-- It's not necessary to have a moments tag here. It would be quite acceptable to -->
           <!-- use the filter to modify a vector already created -->
-          <moments type="double">moment</moments>
-          <source_field fourier_space="kx">mainField</source_field>
-          <!-- All of the vectors must be in the source_field -->
-          <!-- No, they don't need to be -->
-          <dependencies fourier_space="kx">main</dependencies>
+          <moments type="complex" target_field="zero_d_test" name="filter1">moment</moments>
+         <dependencies fourier_space="kx ky">integrated_u main</dependencies>
           <!-- If the moments are of type 'double', then all dimensions that aren't integrated
                must be evaluated in 'x' space. -->
           <![CDATA[

@@ -55,14 +55,6 @@ class _MomentGroupElement (FieldElement):
       sampleSpaceMask = self.spaceMask
     
     for dependency in dependencies:
-      if not (dependency.initialSpace & sampleSpaceMask) == (self.sampleSpace & dependency.field.spaceMask):
-        if not dependency.type == 'complex':
-          raise ParserException(self.dependenciesEntity.xmlElement,
-                  "Cannot satisfy dependence on vector '%s' because it is not "
-                  "of type complex, and needs to be fourier transformed during sampling." % dependency.name)
-        else:
-          dependency.needsFourierTransforms = True
-      
       if self.hasPostProcessing and dependency.type == 'complex':
         self.rawVector.type = 'complex'
     

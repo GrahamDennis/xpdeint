@@ -12,7 +12,7 @@ from ScriptParser import ScriptParser
 from ParserException import ParserException
 from ParsedEntity import ParsedEntity
 from xml.dom import minidom
-
+import RegularExpressionStrings
 
 from SimulationElement import SimulationElement as SimulationElementTemplate
 from GeometryElement import GeometryElement as GeometryElementTemplate
@@ -227,7 +227,7 @@ class XMDS2Parser(ScriptParser):
         noise.seedArray = []
         if noiseElement.hasAttribute('seed'):
           seedString = noiseElement.getAttribute('seed').strip()
-          noise.seedArray = self.integersInString(seedString)
+          noise.seedArray = RegularExpressionStrings.integersInString(seedString)
         
         stochasticFeature.noises.append(noise)
     
@@ -306,7 +306,7 @@ class XMDS2Parser(ScriptParser):
       raise ParserException(someElement, "You cannot specify both a 'noises' attribute and a 'no_noises' attribute.")
     
     if someElement.hasAttribute('noises'):
-      noises = self.symbolsInString(someElement.getAttribute('noises'))
+      noises = RegularExpressionStrings.symbolsInString(someElement.getAttribute('noises'))
       someTemplate.noisesEntity = ParsedEntity(someElement, noises)
     
     if someElement.hasAttribute('no_noises'):
@@ -348,7 +348,7 @@ class XMDS2Parser(ScriptParser):
         dimensionName = parseAttribute('name')
         
         try:
-          dimensionName = self.symbolInString(dimensionName)
+          dimensionName = RegularExpressionStrings.symbolInString(dimensionName)
         except ValueError, err:
           raise ParserException(dimensionElement, "'%(dimensionName)s is not a valid name for a dimension.\n"
                                                   "It must not start with a number, and can only contain "
@@ -441,7 +441,7 @@ class XMDS2Parser(ScriptParser):
       dimensionName = dimensionElement.getAttribute('name').strip()
       
       try:
-        dimensionName = self.symbolInString(dimensionName)
+        dimensionName = RegularExpressionStrings.symbolInString(dimensionName)
       except ValueError, err:
         raise ParserException(dimensionElement, "'%(dimensionName)s is not a valid name for a dimension.\n"
                                                 "It must not start with a number, and can only contain "
@@ -467,7 +467,7 @@ class XMDS2Parser(ScriptParser):
       if dimensionElement.hasAttribute('lattice'):
         try:
           latticeString = dimensionElement.getAttribute('lattice').strip()
-          lattice = self.integerInString(latticeString)
+          lattice = RegularExpressionStrings.integerInString(latticeString)
         except ValueError, err:
           raise ParserException(dimensionElement, "Unable to understand '%(latticeString)s' as an integer." % locals())
         
@@ -500,7 +500,7 @@ class XMDS2Parser(ScriptParser):
     
     fieldName = fieldElement.getAttribute('name').strip()
     try:
-      fieldName = self.symbolInString(fieldName)
+      fieldName = RegularExpressionStrings.symbolInString(fieldName)
     except ValueError, err:
       raise ParserException(fieldElement, "Cannot accept '%(fieldName)s as the name of a field." % locals())
     
@@ -512,6 +512,7 @@ class XMDS2Parser(ScriptParser):
     self.globalNameSpace['symbolNames'].add(fieldName)
     
     fieldTemplate = FieldElementTemplate(name = fieldName, **self.argumentsToTemplateConstructors)
+    fieldTemplate.xmlElement = fieldElement
     
     if not fieldElement.hasAttribute('dimensions'):
       fieldTemplate.dimensions = filter(lambda x: x.transverse, self.globalNameSpace['geometry'].dimensions)
@@ -520,7 +521,7 @@ class XMDS2Parser(ScriptParser):
       pass
     else:
       dimensionsString = fieldElement.getAttribute('dimensions').strip()
-      results = self.symbolsInString(dimensionsString)
+      results = RegularExpressionStrings.symbolsInString(dimensionsString)
       if not results:
         raise ParserException(fieldElement, "Cannot understand '%(dimensionsString)s' as a "
                                             "list of dimensions" % locals())
@@ -581,9 +582,7 @@ class XMDS2Parser(ScriptParser):
     if not vectorElement.hasAttribute('initial_space'):
       vectorTemplate.initialSpace = 0
     else:
-      vectorTemplate.initialSpace = self.spaceFromStringForFieldInElement(vectorElement.getAttribute('initial_space'),
-                                                                          fieldTemplate, vectorElement,
-                                                                          self.globalNameSpace)
+      vectorTemplate.initialSpace = fieldTemplate.spaceFromString(vectorElement.getAttribute('initial_space'))
     
     componentsElement = vectorElement.getChildElementByTagName('components')
     
@@ -604,7 +603,7 @@ class XMDS2Parser(ScriptParser):
     if not componentsString:
       raise ParserException(componentsElement, "The components element must not be empty")
     
-    results = self.symbolsInString(componentsString)
+    results = RegularExpressionStrings.symbolsInString(componentsString)
     
     if not results:
       raise ParserException(componentsElement, "Could not extract component names from component string "
@@ -664,7 +663,7 @@ class XMDS2Parser(ScriptParser):
         driverClass = MultiPathDriverTemplate
         if not topLevelSequenceElement.hasAttribute('paths'):
           raise ParserException(topLevelSequenceElement, "Missing 'paths' attribute for multi-path driver.")
-        pathCount = self.integerInString(topLevelSequenceElement.getAttribute('paths'))
+        pathCount = RegularExpressionStrings.integerInString(topLevelSequenceElement.getAttribute('paths'))
         driverAttributeDictionary['pathCount'] = pathCount
       elif driverName == 'none':
         pass
@@ -778,7 +777,7 @@ class XMDS2Parser(ScriptParser):
     samplesElement = integrateElement.getChildElementByTagName('samples')
     samplesString = samplesElement.innerText()
     
-    results = self.integersInString(samplesString)
+    results = RegularExpressionStrings.integersInString(samplesString)
     
     if not results:
       raise ParserException(samplesElement, "Could not understand '%(samplesString)s' "
@@ -828,12 +827,12 @@ class XMDS2Parser(ScriptParser):
     dependenciesElement = operatorsElement.getChildElementByTagName('dependencies', optional=True)
     dependencyVectorNames = []
     if dependenciesElement:
-      dependencyVectorNames = self.symbolsInString(dependenciesElement.innerText())
+      dependencyVectorNames = RegularExpressionStrings.symbolsInString(dependenciesElement.innerText())
       deltaAOperatorTemplate.dependenciesEntity = ParsedEntity(dependenciesElement, dependencyVectorNames)
     
     
     integrationVectorsElement = operatorsElement.getChildElementByTagName('integration_vectors')
-    integrationVectorsNames = self.symbolsInString(integrationVectorsElement.innerText())
+    integrationVectorsNames = RegularExpressionStrings.symbolsInString(integrationVectorsElement.innerText())
     
     if not integrationVectorsNames:
       raise ParserException(integrationVectorsElement, "Element must be non-empty.")
@@ -842,8 +841,7 @@ class XMDS2Parser(ScriptParser):
     
     if integrationVectorsElement.hasAttribute('fourier_space'):
       deltaAOperatorTemplate.operatorSpace = \
-        self.spaceFromStringForFieldInElement(integrationVectorsElement.getAttribute('fourier_space'),
-                                              deltaAOperatorTemplate.field, integrationVectorsElement, self.globalNameSpace)
+        deltaAOperatorTemplate.field.spaceFromString(integrationVectorsElement.getAttribute('fourier_space'))
     
     
     self.parseOperatorElements(operatorsElement, integratorTemplate, deltaAOperatorTemplate)
@@ -903,17 +901,16 @@ class XMDS2Parser(ScriptParser):
     
     operatorTemplate = operatorTemplateClass(field = deltaAOperatorTemplate.field, integrator = integratorTemplate,
                                              **self.argumentsToTemplateConstructors)
-    
+    operatorTemplate.xmlElement = operatorElement
     operatorTemplate.operatorDefinitionCode = operatorElement.cdataContents()
     if operatorElement.hasAttribute('fourier_space'):
       operatorTemplate.operatorSpace = \
-        self.spaceFromStringForFieldInElement(operatorElement.getAttribute('fourier_space'), operatorTemplate.field,
-                                              operatorElement, self.globalNameSpace)
+        operatorTemplate.field.spaceFromString(operatorElement.getAttribute('fourier_space'))
     
     dependenciesElement = operatorElement.getChildElementByTagName('dependencies', optional=True)
     dependencyVectorNames = []
     if dependenciesElement:
-      dependencyVectorNames = self.symbolsInString(dependenciesElement.innerText())
+      dependencyVectorNames = RegularExpressionStrings.symbolsInString(dependenciesElement.innerText())
       operatorTemplate.dependenciesEntity = ParsedEntity(dependenciesElement, dependencyVectorNames)
     
     parserMethod(operatorTemplate, operatorElement, deltaAOperatorTemplate)
@@ -922,7 +919,7 @@ class XMDS2Parser(ScriptParser):
   
   def parseIPOperatorElement(self, operatorTemplate, operatorElement, deltaAOperatorTemplate):
     operatorNamesElement = operatorElement.getChildElementByTagName('operator_names')
-    operatorNames = self.symbolsInString(operatorNamesElement.innerText())
+    operatorNames = RegularExpressionStrings.symbolsInString(operatorNamesElement.innerText())
     
     if not operatorNames:
       raise ParserException(operatorNamesElement, "operator_names must not be empty.")
@@ -947,7 +944,6 @@ class XMDS2Parser(ScriptParser):
     operatorVectorTemplate = VectorElementTemplate(name = vectorName, field = operatorTemplate.field,
                                                    **self.argumentsToTemplateConstructors)
     operatorVectorTemplate.type = 'complex'
-    operatorVectorTemplate.needsFourierTransforms = False
     
     operatorVectorTemplate.initialSpace = operatorTemplate.operatorSpace
     operatorVectorTemplate.needsInitialisation = False
@@ -963,7 +959,7 @@ class XMDS2Parser(ScriptParser):
   def parseEXOperatorElement(self, operatorTemplate, operatorElement, deltaAOperatorTemplate):
     operatorNamesElement = operatorElement.getChildElementByTagName('operator_names')
     
-    operatorNames = self.symbolsInString(operatorNamesElement.innerText())
+    operatorNames = RegularExpressionStrings.symbolsInString(operatorNamesElement.innerText())
     
     if not operatorNames:
       raise ParserException(operatorNamesElement, "operator_names must not be empty.")
@@ -994,7 +990,6 @@ class XMDS2Parser(ScriptParser):
       operatorVectorTemplate = VectorElementTemplate(name = vectorName, field = operatorTemplate.field,
                                                      **self.argumentsToTemplateConstructors)
       operatorVectorTemplate.type = 'complex'
-      operatorVectorTemplate.needsFourierTransforms = False
       
       operatorVectorTemplate.initialSpace = operatorTemplate.operatorSpace
       operatorVectorTemplate.needsInitialisation = False
@@ -1007,7 +1002,6 @@ class XMDS2Parser(ScriptParser):
     resultVector = VectorElementTemplate(name = vectorName, field = operatorTemplate.field,
                                          **self.argumentsToTemplateConstructors)
     resultVector.type = 'complex'
-    resultVector.needsFourierTransforms = True
     
     resultVector.initialSpace = 0
     resultVector.needsInitialisation = False
@@ -1026,58 +1020,62 @@ class XMDS2Parser(ScriptParser):
     integratorName = operatorTemplate.integrator.name
     operatorName = operatorTemplate.name
     
-    if operatorElement.hasAttribute('target_field') and operatorElement.hasAttribute('dimensions'):
+    if not operatorTemplate.dependenciesEntity:
       raise ParserException(operatorElement,
-              "Filter operators must have only one of the attributes 'dimensions' and 'target_field'")
-    elif operatorElement.hasAttribute('target_field'):
-      targetFieldName = operatorElement.getAttribute('target_field').strip()
-      fieldsWithName = filter(lambda x: x.name == targetFieldName, self.globalNameSpace['fields'])
-      assert len(fieldsWithName) <= 1
-      if len(fieldsWithName) == 0:
-        raise ParserException(operatorElement, "target_field '%(targetFieldName)s' does not exist." % locals())
-      targetField = fieldsWithName[0]
-      
-      if not targetField.isSubsetOfField(operatorTemplate.field):
-        raise ParserException(operatorElement,
-                "target_field must only contain dimensions that are in the integration field.")
-      
-      momentsVectorName = "%(integratorName)s_%(operatorName)s_moments" % locals()
-    elif operatorElement.hasAttribute('dimensions'):
-      targetField = FieldElementTemplate(name = "%(integratorName)s_%(operatorName)s_field" % locals(),
-                                         **self.argumentsToTemplateConstructors)
-      momentsVectorName = 'moments'
-      
-      dimensionNames = self.symbolsInString(operatorElement.getAttribute('dimensions'))
-      for dimensionName in dimensionNames:
-        if not geometryTemplate.hasDimensionName(dimensionName):
-          raise ParserException(operatorElement, "Dimension name '%(dimensionName)s' does not exist." % locals())
-        if not operatorTemplate.field.hasDimensionName(dimensionName):
-          raise ParserException(operatorElement, 
-                  "Filter moments cannot have dimensions that aren't in the integration field. "
-                  "The offending dimension is '%(dimensionName)s'." % locals())
-        
-        targetField.dimensions.append(geometryTemplate.dimensions[geometryTemplate.indexOfDimensionName(dimensionName)])
-      targetField.sortDimensions()
-    else:
-      raise ParserException(operatorElement,
-              "Filter operators must have either the 'dimensions' attribute "
-              "or the 'target_field' attribute set.")
-    
-    if operatorElement.hasAttribute('name'):
-      filterName = operatorElement.getAttribute('name').strip()
-      if filterName in self.globalNameSpace['symbolNames']:
-        raise ParserException(operatorElement, 
-                "Filter name '%(filterName)s' conflicts with previously defined symbol." % locals())
-      self.globalNameSpace['symbolNames'].add(filterName)
-      momentsVectorName = filterName
+              "Filter operators must have a dependencies element.")
     
     momentsElement = operatorElement.getChildElementByTagName('moments', optional=True)
     if momentsElement:
+      if momentsElement.hasAttribute('target_field') and momentsElement.hasAttribute('dimensions'):
+        raise ParserException(momentsElement,
+                "Filter operators must have only one of the attributes 'dimensions' and 'target_field'")
+      elif momentsElement.hasAttribute('target_field'):
+        targetFieldName = momentsElement.getAttribute('target_field').strip()
+        fieldsWithName = filter(lambda x: x.name == targetFieldName, self.globalNameSpace['fields'])
+        assert len(fieldsWithName) <= 1
+        if len(fieldsWithName) == 0:
+          raise ParserException(momentsElement, "target_field '%(targetFieldName)s' does not exist." % locals())
+        targetField = fieldsWithName[0]
+
+        if not targetField.isSubsetOfField(operatorTemplate.field):
+          raise ParserException(momentsElement,
+                  "target_field must only contain dimensions that are in the integration field.")
+
+        momentsVectorName = "%(integratorName)s_%(operatorName)s_moments" % locals()
+      elif momentsElement.hasAttribute('dimensions'):
+        targetField = FieldElementTemplate(name = "%(integratorName)s_%(operatorName)s_field" % locals(),
+                                           **self.argumentsToTemplateConstructors)
+        momentsVectorName = 'moments'
+
+        dimensionNames = RegularExpressionStrings.symbolsInString(momentsElement.getAttribute('dimensions'))
+        for dimensionName in dimensionNames:
+          if not geometryTemplate.hasDimensionName(dimensionName):
+            raise ParserException(momentsElement, "Dimension name '%(dimensionName)s' does not exist." % locals())
+          if not operatorTemplate.field.hasDimensionName(dimensionName):
+            raise ParserException(momentsElement, 
+                    "Filter moments cannot have dimensions that aren't in the integration field. "
+                    "The offending dimension is '%(dimensionName)s'." % locals())
+
+          targetField.dimensions.append(geometryTemplate.dimensions[geometryTemplate.indexOfDimensionName(dimensionName)])
+        targetField.sortDimensions()
+      else:
+        raise ParserException(momentsElement,
+                "Moments in filter operators must have either the 'dimensions' attribute "
+                "or the 'target_field' attribute set.")
+
+      if momentsElement.hasAttribute('name'):
+        filterName = momentsElement.getAttribute('name').strip()
+        if filterName in self.globalNameSpace['symbolNames']:
+          raise ParserException(momentsElement, 
+                  "Filter moments name '%(filterName)s' conflicts with previously defined symbol." % locals())
+        self.globalNameSpace['symbolNames'].add(filterName)
+        momentsVectorName = filterName
+            
       momentsVector = VectorElementTemplate(name = momentsVectorName, field = targetField,
                                             **self.argumentsToTemplateConstructors)
-      
+
       targetField.temporaryVectors.add(momentsVector)
-      
+
       if not momentsElement.hasAttribute('type'):
         ## By default, the type will be complex
         pass
@@ -1091,42 +1089,19 @@ class XMDS2Parser(ScriptParser):
           raise ParserException(momentsElement, 
                 "Unknown type '%(momentsVectorType)s'. "
                 "Options are 'complex' (default), or 'double' / 'real' (synonyms)." % locals())
-      
-      momentNames = self.symbolsInString(momentsElement.innerText())
-      
+
+      momentNames = RegularExpressionStrings.symbolsInString(momentsElement.innerText())
+
       for momentName in momentNames:
         momentsVector.components.append(momentName)
-      
+
       deltaAOperatorTemplate.dependencies.add(momentsVector)
       operatorTemplate.dependencies.add(momentsVector)
       operatorTemplate.resultVector = momentsVector
       
-      if operatorElement.hasAttribute('name'):
-        self.globalNameSpace['vectors'].append(momentsVector)
-    
-    sourceFieldElement = operatorElement.getChildElementByTagName('source_field')
-    sourceFieldName = sourceFieldElement.innerText().strip()
-    fieldsWithName = filter(lambda x: x.name == sourceFieldName, self.globalNameSpace['fields'])
-    assert len(fieldsWithName) <= 1
-    if len(fieldsWithName) == 0:
-      raise ParserException(sourceFieldElement, "source_field '%(sourceFieldName)s' does not exist." % locals())
-    sourceField = fieldsWithName[0]
-    operatorTemplate.sourceField = sourceField
-    
-    if sourceFieldElement.hasAttribute('fourier_space'):
-      operatorTemplate.operatorSpace = \
-        self.spaceFromStringForFieldInElement(sourceFieldElement.getAttribute('fourier_space'),
-                                              operatorTemplate.sourceField,
-                                              operatorElement, self.globalNameSpace)
-    
-    
-    # If the source field has the same dimensions as the target field,
-    # (remember that the target field must be a subset of the source field)
-    # Then we mustn't be doing any integration, and hence we don't need to
-    # do any initialisation when doing the calculation of moments
-    if sourceField.isSubsetOfField(targetField):
-      operatorTemplate.integratingMoments = False
-    
+      if momentsElement.hasAttribute('name'):
+        self.globalNameSpace['vectors'].append(momentsVector)          
+                    
     return operatorTemplate
   
   
@@ -1273,7 +1248,7 @@ class XMDS2Parser(ScriptParser):
       outputFieldTemplate.dimensions = momentGroupTemplate.dimensions
       
       momentsElement = samplingElement.getChildElementByTagName('moments')
-      momentNames = self.symbolsInString(momentsElement.innerText())
+      momentNames = RegularExpressionStrings.symbolsInString(momentsElement.innerText())
       
       if not momentNames:
         raise ParserException(momentsElement, "Moments element should be a list of moment names")
@@ -1288,7 +1263,7 @@ class XMDS2Parser(ScriptParser):
         rawVectorTemplate.components.append(momentName)
       
       dependenciesElement = samplingElement.getChildElementByTagName('dependencies')
-      dependencyVectorNames = self.symbolsInString(dependenciesElement.innerText())
+      dependencyVectorNames = RegularExpressionStrings.symbolsInString(dependenciesElement.innerText())
       momentGroupTemplate.dependenciesEntity = ParsedEntity(dependenciesElement, dependencyVectorNames)
       
       samplingCode = samplingElement.cdataContents()
@@ -1305,7 +1280,6 @@ class XMDS2Parser(ScriptParser):
       processedVectorTemplate = VectorElementTemplate(name = 'processed', field = outputFieldTemplate,
                                                       **self.argumentsToTemplateConstructors)
       processedVectorTemplate.type = 'double'
-      processedVectorTemplate.needsFourierTransforms = False
       processedVectorTemplate.initialSpace = momentGroupTemplate.outputSpace
       outputFieldTemplate.managedVectors.add(processedVectorTemplate)
       momentGroupTemplate.processedVector = processedVectorTemplate
