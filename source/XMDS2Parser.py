@@ -1036,17 +1036,17 @@ class XMDS2Parser(ScriptParser):
         if len(fieldsWithName) == 0:
           raise ParserException(momentsElement, "target_field '%(targetFieldName)s' does not exist." % locals())
         targetField = fieldsWithName[0]
-
+        
         if not targetField.isSubsetOfField(operatorTemplate.field):
           raise ParserException(momentsElement,
                   "target_field must only contain dimensions that are in the integration field.")
-
+        
         momentsVectorName = "%(integratorName)s_%(operatorName)s_moments" % locals()
       elif momentsElement.hasAttribute('dimensions'):
         targetField = FieldElementTemplate(name = "%(integratorName)s_%(operatorName)s_field" % locals(),
                                            **self.argumentsToTemplateConstructors)
         momentsVectorName = 'moments'
-
+        
         dimensionNames = RegularExpressionStrings.symbolsInString(momentsElement.getAttribute('dimensions'))
         for dimensionName in dimensionNames:
           if not geometryTemplate.hasDimensionName(dimensionName):
@@ -1055,14 +1055,14 @@ class XMDS2Parser(ScriptParser):
             raise ParserException(momentsElement, 
                     "Filter moments cannot have dimensions that aren't in the integration field. "
                     "The offending dimension is '%(dimensionName)s'." % locals())
-
+          
           targetField.dimensions.append(geometryTemplate.dimensions[geometryTemplate.indexOfDimensionName(dimensionName)])
         targetField.sortDimensions()
       else:
         raise ParserException(momentsElement,
                 "Moments in filter operators must have either the 'dimensions' attribute "
                 "or the 'target_field' attribute set.")
-
+      
       if momentsElement.hasAttribute('name'):
         filterName = momentsElement.getAttribute('name').strip()
         if filterName in self.globalNameSpace['symbolNames']:
@@ -1073,9 +1073,9 @@ class XMDS2Parser(ScriptParser):
             
       momentsVector = VectorElementTemplate(name = momentsVectorName, field = targetField,
                                             **self.argumentsToTemplateConstructors)
-
+      
       targetField.temporaryVectors.add(momentsVector)
-
+      
       if not momentsElement.hasAttribute('type'):
         ## By default, the type will be complex
         pass
@@ -1086,22 +1086,22 @@ class XMDS2Parser(ScriptParser):
         elif momentsVectorType in ('double', 'real'):
           momentsVector.type = 'double'
         else:
-          raise ParserException(momentsElement, 
+          raise ParserException(momentsElement,
                 "Unknown type '%(momentsVectorType)s'. "
                 "Options are 'complex' (default), or 'double' / 'real' (synonyms)." % locals())
-
+      
       momentNames = RegularExpressionStrings.symbolsInString(momentsElement.innerText())
-
+      
       for momentName in momentNames:
         momentsVector.components.append(momentName)
-
+      
       deltaAOperatorTemplate.dependencies.add(momentsVector)
       operatorTemplate.dependencies.add(momentsVector)
       operatorTemplate.resultVector = momentsVector
       
       if momentsElement.hasAttribute('name'):
-        self.globalNameSpace['vectors'].append(momentsVector)          
-                    
+        self.globalNameSpace['vectors'].append(momentsVector)
+    
     return operatorTemplate
   
   
