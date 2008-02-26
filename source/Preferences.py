@@ -10,4 +10,4 @@ CFLAGS="-O3 -ffast-math -funroll-all-loops -fomit-frame-pointer -lxmds"
 MPICC="mpic++"
 MPICFLAGS="-O3 -ffast-math -funroll-all-loops -fomit-frame-pointer  -lxmds -lfftw_mpi -lfftw"
 
-versionstring = '0.1 "Blind leading the blind"'
+versionString = '0.1 "Blind leading the blind"'

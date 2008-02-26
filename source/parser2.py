@@ -243,7 +243,7 @@ def main(argv=None):
   xmlDocument = minidom.parse(scriptName)
   
   # Set up the globalNameSpace with the appropriate variables
-  from Preferences import versionstring 
+  from Preferences import versionString 
   from Version import subversionRevisionString
   
   globalNameSpace['xmlDocument'] = xmlDocument
@@ -253,7 +253,7 @@ def main(argv=None):
   globalNameSpace['vectors'] = []
   globalNameSpace['momentGroups'] = []
   globalNameSpace['symbolNames'] = set()
-  globalNameSpace['xmds'] = {'versionString': versionstring,
+  globalNameSpace['xmds'] = {'versionString': versionString,
                              'subversionRevision': subversionRevisionString}
   globalNameSpace['templates'] = set()
   

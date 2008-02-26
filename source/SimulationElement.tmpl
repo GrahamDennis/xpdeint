@@ -28,11 +28,19 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   @set $featureOrdering = ['Driver']
 #define _LOG(logLevel, ...) \
   if (logLevel & _LOG_LEVELS_BEING_LOGGED) { \
-    ${insertCodeForFeatures('logFunctionBegin', $featureOrdering), autoIndent=True}@slurp
-    printf(__VA_ARGS__); \
-    ${insertCodeForFeaturesInReverseOrder('logFunctionEnd', $featureOrdering), autoIndent=True}@slurp
+  @set $dict = {'extraIndent': 0}
+    ${insertCodeForFeatures('logFunctionBegin', $featureOrdering, $dict), autoIndent=True}@slurp
+  @set $extraIndent = dict['extraIndent']
+    ${logFunctionInnerContent, extraIndent=extraIndent}@slurp
+    ${insertCodeForFeaturesInReverseOrder('logFunctionEnd', $featureOrdering, $dict), autoIndent=True}@slurp
     fflush(stdout); \
   }
+  @#
+@end def
+
+@def logFunctionInnerContent
+  @#
+printf(__VA_ARGS__); \
   @#
 @end def
 
