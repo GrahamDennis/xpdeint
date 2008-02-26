@@ -34,9 +34,6 @@
 	- still defined as vector, but using normal syntax
 	- Within integrate block: <prop_dim>  <algorithm> <boundary_condition kind="left|right">
 
-* post_processing -- I think this is done in the generator, it just needs the parser
-  to process the appropriate XML element.
-
 * Make sure that all the things that Andy has been doing to enable various simulation
   parameters can be controlled at simulation run time can be done in xpdeint.
 
@@ -73,4 +70,9 @@
 		DeltaAs. 
 		Functions specified after DeltaAs. 
 		
-? Post-processing
+
+* Output:
+  Add the ability to have filter operators in an output moment group that get called before sampling.
+    This will require changes to all of the operators to refer to a 'parent' instead of an 'integrator'
+    where appropriate.
+  ? Post-processing
