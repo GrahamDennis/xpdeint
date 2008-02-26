@@ -132,11 +132,13 @@ ${o.finalise}@slurp
 if ((rank == 0) || (logLevel & ~_SIMULATION_LOG_LEVEL)) { \
   if (logLevel & ~_SIMULATION_LOG_LEVEL) \
     printf("Rank[%i]: ", rank); \
+  @set $dict['extraIndent'] += 2
   @#
 @end def
 
 @def logFunctionEnd($dict)
   @#
+  @set $dict['extraIndent'] -= 2
 } \
   @#
 @end def

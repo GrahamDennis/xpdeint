@@ -76,3 +76,12 @@
     This will require changes to all of the operators to refer to a 'parent' instead of an 'integrator'
     where appropriate.
   ? Post-processing
+
+* Runtime-limiting support (as in xmds-1)
+
+* NaN-checking (as in xmds-1)
+
+* In adaptive integrators, the ability to set an absolute tolerance (per vector component) in addition to a relative tolerance
+  for step-error calculations.
+
+
