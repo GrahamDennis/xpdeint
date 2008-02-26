@@ -243,6 +243,9 @@ def main(argv=None):
   xmlDocument = minidom.parse(scriptName)
   
   # Set up the globalNameSpace with the appropriate variables
+  from Preferences import versionstring 
+  from Version import subversionRevisionString
+  
   globalNameSpace['xmlDocument'] = xmlDocument
   globalNameSpace['scriptElements'] = []
   globalNameSpace['features'] = {}
@@ -250,8 +253,8 @@ def main(argv=None):
   globalNameSpace['vectors'] = []
   globalNameSpace['momentGroups'] = []
   globalNameSpace['symbolNames'] = set()
-  globalNameSpace['xmds'] = {'versionString': '0.0a',
-                             'subversionRevision': 'rF00'}
+  globalNameSpace['xmds'] = {'versionString': versionstring,
+                             'subversionRevision': subversionRevisionString}
   globalNameSpace['templates'] = set()
   
   # We need the anyObject function in a few templates, so
