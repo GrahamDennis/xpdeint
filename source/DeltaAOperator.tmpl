@@ -49,8 +49,15 @@ inline void _${integrator.name}_${name}_copy_delta_a(double _step${arguments})
 // This code copies the increments for the components back into the vectors themselves.
   @for $vector in $vectorsForcingReordering
     @for $componentName in $vector.components
+      @#
 ${componentName} = d${componentName}_d${propagationDimension} * _step;
+      @#
+      @if $deltaAVectorMap[$vector].needsInitialisation
+        @# If the delta a vector needs initialisation, then we need to
+        @# reset it now that we have copied what we need out of it.
+        @#
 d${componentName}_d${propagationDimension} = 0.0;
+      @end if
     @end for
   @end for
   @#

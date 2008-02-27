@@ -64,8 +64,7 @@ class _EXOperator(Operator):
           if not specialTargetsFilter:
             # Construct a filter operator to create the special targets vector
             specialTargetsFilter = FilterOperator(field = self.field, integrator = self.integrator,
-                                                  searchList = self.searchListTemplateArgument,
-                                                  filter = self.filterTemplateArgument)
+                                                  **self.argumentsToTemplateConstructors)
             specialTargetsFilter.xmlElement = self.xmlElement
             
             # Shift the filter operator to be before this operator
@@ -82,8 +81,7 @@ class _EXOperator(Operator):
             specialTargetsFilter.operatorDefinitionCode = ''
             
             specialTargetVector = VectorElement(name = self.id + '_special_targets', field = self.field,
-                                                searchList = self.searchListTemplateArgument,
-                                                filter = self.filterTemplateArgument)
+                                                **self.argumentsToTemplateConstructors)
             
             specialTargetVector.initialSpace = self.deltaAOperator.operatorSpace
             specialTargetVector.type = 'complex'

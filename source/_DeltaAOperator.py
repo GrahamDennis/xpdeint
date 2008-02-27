@@ -11,6 +11,8 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 from Operator import Operator
 from FieldElement import FieldElement
 from VectorElement import VectorElement
+from VectorInitialisation import VectorInitialisation
+
 from ParserException import ParserException
 
 import re
@@ -25,6 +27,7 @@ class _DeltaAOperator (Operator):
     self.integrationVectorsEntity = None
     self.integrationVectors = set()
     self.deltaAField = None
+    self.deltaAVectorMap = {}
   
   @property
   def defaultOperatorSpace(self):
@@ -180,8 +183,7 @@ class _DeltaAOperator (Operator):
         loopingFieldName = ''.join([self.integrator.name, '_', self.name, '_looping_field'])
         
         loopingField = FieldElement(name = loopingFieldName,
-                                    searchList = self.searchListTemplateArgument,
-                                    filter = self.filterTemplateArgument)
+                                    **self.argumentsToTemplateConstructors)
         
         loopingField.dimensions = newFieldDimensions
         self.loopingField = loopingField
@@ -190,8 +192,7 @@ class _DeltaAOperator (Operator):
         deltaAFieldName = ''.join([self.integrator.name, '_', self.name, '_delta_a_field'])
         
         self.deltaAField = FieldElement(name = deltaAFieldName,
-                                        searchList = self.searchListTemplateArgument,
-                                        filter = self.filterTemplateArgument)
+                                        **self.argumentsToTemplateConstructors)
         
         self.deltaAField.dimensions = dimensionsNeedingReordering
         
@@ -201,10 +202,13 @@ class _DeltaAOperator (Operator):
         # a corresponding vector in the new field.
         for integrationVector in self.vectorsForcingReordering:
           deltaAVector = VectorElement(name = integrationVector.name, field = self.deltaAField,
-                                       searchList = self.searchListTemplateArgument,
-                                       filter = self.filterTemplateArgument)
+                                       **self.argumentsToTemplateConstructors)
           deltaAVector.type = integrationVector.type
-          # deltaAVector.needsInitialisation = False
+          
+          # The vector will only need initialisation if the derivatives are accessed out
+          # of order, i.e. dphi_dt[j+1] for example. We can detect this later and change this
+          # if that is the case.
+          deltaAVector.needsInitialisation = False
           deltaAVector.initialSpace = self.operatorSpace
           # Construct dx_dt variables for the delta a vector.
           deltaAVector.components = [''.join(['d', componentName, '_d', propagationDimension]) for componentName in integrationVector.components]
@@ -221,6 +225,9 @@ class _DeltaAOperator (Operator):
           # Remove the components of the vector from our operatorComponents so that we won't get doubly-defined variables
           for componentName in deltaAVector.components:
             del self.operatorComponents[componentName]
+          
+          # Add the new delta a vector to the integration vector --> delta a vector map
+          self.deltaAVectorMap[integrationVector] = deltaAVector
       
       
       # We need to rewrite all the derivatives to only use dimensions in the delta a field (if we have one)
@@ -240,9 +247,9 @@ class _DeltaAOperator (Operator):
         
         componentName = match.group('componentName')
         
-        vector = derivativeMap[componentName]
+        integrationVector = derivativeMap[componentName]
         
-        regex = re.compile(RegularExpressionStrings.componentWithIntegerValuedDimensionsWithComponentAndField('', vector.field),
+        regex = re.compile(RegularExpressionStrings.componentWithIntegerValuedDimensionsWithComponentAndField('', integrationVector.field),
                            re.VERBOSE)
         
         integerValuedDimensionsMatch = regex.search(match.group('integerValuedDimensions'))
@@ -256,6 +263,18 @@ class _DeltaAOperator (Operator):
         integerValuedDimensionsString = ''
         for dimList in deltaAIntegerValuedDimensions:
           integerValuedDimensionsString += '[' + ', '.join([integerValuedDimensionsMatch.group(dim.name) for dim in dimList]) + ']'
+        
+        # If we have at least one dimension that is not being accessed with the correct index,
+        # we must initialise the delta a vector just in case. (See gravity.xmds for an example)
+        if any([integerValuedDimensionsMatch.group(dim.name).strip() != dim.name for dim in dimList]):
+          
+          # The integrationVector must be in the deltaAVectorMap because we would have had to allocate
+          # a delta-a vector for this integration vector.
+          deltaAVector = self.deltaAVectorMap[integrationVector]
+          if not deltaAVector.needsInitialisation:
+            deltaAVector.needsInitialisation = True
+            deltaAVector.initialiser = VectorInitialisation(**self.argumentsToTemplateConstructors)
+            deltaAVector.initialiser.vector = deltaAVector
         
         escape = RegularExpressionStrings.escapeStringForRegularExpression
         
