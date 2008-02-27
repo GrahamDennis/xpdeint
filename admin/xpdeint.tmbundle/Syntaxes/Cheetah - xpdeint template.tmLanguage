@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>fileTypes</key>
+	<array>
+		<string>tmpl</string>
+	</array>
+	<key>foldingStartMarker</key>
+	<string>/\*\*|\{\s*$</string>
+	<key>foldingStopMarker</key>
+	<string>\*\*/|^\s*\}</string>
+	<key>name</key>
+	<string>Cheetah - xpdeint template</string>
+	<key>patterns</key>
+	<array>
+		<dict>
+			<key>match</key>
+			<string>(@def [_a-zA-Z]\w*|@end def|@set|@extends|@attr)</string>
+			<key>name</key>
+			<string>string.unquoted.keyword.control.cheetah</string>
+		</dict>
+		<dict>
+			<key>match</key>
+			<string>(@if|@end if|@continue|@for|@end for|@else)</string>
+			<key>name</key>
+			<string>string.unquoted.flow.control.cheetah</string>
+		</dict>
+		<dict>
+			<key>begin</key>
+			<string>@\*</string>
+			<key>end</key>
+			<string>\*@</string>
+			<key>name</key>
+			<string>string.unquoted.doc.cheetah</string>
+		</dict>
+		<dict>
+			<key>begin</key>
+			<string>@#</string>
+			<key>beginCaptures</key>
+			<dict>
+				<key>0</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.comment.c</string>
+				</dict>
+			</dict>
+			<key>end</key>
+			<string>$\n?</string>
+			<key>name</key>
+			<string>string.unquoted.comment.line.athash.cheetah</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>match</key>
+					<string>(?&gt;\\\s*\n)</string>
+					<key>name</key>
+					<string>punctuation.separator.continuation.c++</string>
+				</dict>
+			</array>
+		</dict>
+		<dict>
+			<key>include</key>
+			<string>source.c++</string>
+		</dict>
+	</array>
+	<key>scopeName</key>
+	<string>source.c++.xpdeintcheetah</string>
+	<key>uuid</key>
+	<string>8321049C-C450-450C-AD7A-277F8100A544</string>
+</dict>
+</plist>
