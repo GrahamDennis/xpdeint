@@ -35,7 +35,7 @@ class _FilterOperator (Operator):
     geometryTemplate = self.getVar('geometry')
     
     sourceFieldName = self.integrator.name+'_'+self.name+'_source_field'
-    sourceField = FieldElement(name = sourceFieldName, searchList = self.searchListTemplateArgument, filter = self.filterTemplateArgument)
+    sourceField = FieldElement(name = sourceFieldName, **self.argumentsToTemplateConstructors)
     if self.dependenciesEntity:
       sourceField.xmlElement = self.dependenciesEntity.xmlElement
     else:

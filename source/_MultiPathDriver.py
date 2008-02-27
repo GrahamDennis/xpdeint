@@ -18,8 +18,7 @@ class _MultiPathDriver (SimulationDriver):
   def createNamedVectors(self):
     for mg in self.getVar('momentGroups'):
       sdVector = VectorElement(name = 'processed_sd', field = mg.outputField,
-                               searchList = self.searchListTemplateArgument,
-                               filter = self.filterTemplateArgument)
+                               **self.argumentsToTemplateConstructors)
       sdVector.type = 'double'
       sdVector.needsInitialisation = True
       sdVector.nComponents = mg.processedVector.nComponents

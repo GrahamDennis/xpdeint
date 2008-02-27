@@ -34,8 +34,7 @@ class _ScriptElement (Template):
     
     self.getVar('templates').add(self)
     
-    self.filterTemplateArgument = KWs['filter']
-    self.searchListTemplateArgument = KWs['searchList']
+    self.argumentsToTemplateConstructors = KWs
     self.dependencies = set()
     
     if self.hasattr('globalNameSpaceName'):
