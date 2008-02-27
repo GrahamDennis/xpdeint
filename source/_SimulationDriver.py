@@ -7,9 +7,9 @@ Created by Graham Dennis on 2008-02-01.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
-from _ScriptElement import _ScriptElement
+from ScriptElement import ScriptElement
 
-class _SimulationDriver (_ScriptElement):
+class _SimulationDriver (ScriptElement):
   logLevelsBeingLogged = "_ALL_LOG_LEVELS"
   
   def __init__(self, *args, **KWs):
