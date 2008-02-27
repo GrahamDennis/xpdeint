@@ -58,8 +58,6 @@
 
 * Sequence segments so that you can loop over things.
 
-* Make xpdeint report the correct subversion revision somehow
-
 * Example library
 
 * Sequence elements need to exist and have loop structures.
