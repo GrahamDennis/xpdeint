@@ -17,6 +17,8 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *@
 @def defines
   @#
+  @super
+  @#
 #define _${name}_ndims $len($dimensions)
   @for $dimensionNumber, $dimension in enumerate($dimensions)
 
@@ -37,16 +39,16 @@ ${separator}${dimension.name}: ${($spaceMask >> $geometry.dimensions.index($dime
     @set $separator = ', '
   @end for
   
-  @# Call super to get child implementations
-  @super
-  @#
+  @# Child defines will go here
 @end def
 @*
 
   Globals needed at the start of the simulation
 *@
 @def globals
-const long _${name}_size = $pointsInDimensionsWithIndices($range($len($dimensions)));
-  @# Call super to get child implementations
+  @#
   @super
+  @#
+const long _${name}_size = $pointsInDimensionsWithIndices($range($len($dimensions)));
+  @# Child globals will go here
 @end def

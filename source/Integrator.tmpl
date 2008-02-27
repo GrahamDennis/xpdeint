@@ -14,14 +14,14 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *@
 @def globals
   @#
+  @super
+  @#
   @for $vector in $vectors
     @# Loop over the variables that need to be created
     @for $arrayName in $extraIntegrationArrayNames
 ${vector.type}* _${name}_${arrayName}_${vector.id};
     @end for
   @end for
-  @#
-  @super
   @#
 @end def
 
@@ -30,11 +30,12 @@ ${vector.type}* _${name}_${arrayName}_${vector.id};
 *@
 @def functionPrototypes
   @#
+  @super
+  @#
 void _segment${segmentNumber}();
 inline void _segment${segmentNumber}_calculate_delta_a(double _step);
 inline void _segment${segmentNumber}_ip_evolve(int _exponent);
 
-  @super
   @#
 @end def
 
@@ -42,6 +43,8 @@ inline void _segment${segmentNumber}_ip_evolve(int _exponent);
   Function implementations
 *@
 @def functionImplementations
+  @#
+  @super
   @#
 ${deltaAFunctionImplementation}@slurp
 
@@ -52,7 +55,6 @@ ${ipEvolveFunctionImplementation}@slurp
 ${segmentFunctionImplementation}@slurp
   @#
 
-  @super
   @#
 @end def
 

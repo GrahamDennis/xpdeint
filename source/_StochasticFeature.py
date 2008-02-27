@@ -38,7 +38,7 @@ class _StochasticFeature (_Feature):
     return result
   
   def xsilOutputInfo(self, dict):
-    return self.implementationsForClassesAndChildren('xsilOutputInfo', dict)
+    return self.implementationsForChildren('xsilOutputInfo', dict)
   
   def createNamedVectors(self):
     # We need to iterate over everything that could possibly need noises

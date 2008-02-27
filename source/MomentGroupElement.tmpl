@@ -37,11 +37,12 @@ double* _${name}_x${dimensionNumber} = (double*) xmds_malloc(sizeof(double) * _$
   Function prototypes
 *@
 @def functionPrototypes
+  @#
+  @super
+  @#
 void _${name}_sample();
 void _${name}_process();
 void _${name}_write_out(FILE*);
-  @# Call the field version of this function
-  @super
   @#
 @end def
 

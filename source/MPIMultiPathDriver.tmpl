@@ -6,7 +6,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 *@
 @extends MultiPathDriver
 
-@def description: segment $segmentNumber (MPI Multipath top level sequence)
+@def description: MPI Multipath Simulation Driver
 
 @def compiler
   @#
@@ -17,11 +17,15 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 
 @def includes
   @#
+  @super
+  @#
 #include <mpi.h>
   @#
 @end def
 
 @def globals
+  @#
+  @super
   @#
 int rank, size;
   @#
@@ -53,7 +57,7 @@ int main(int argc, char **argv)
 @end def
 
 
-@def functionImplementations
+@def topLevelSegmentFunctionImplementation
   @#
 void _segment0()
 {
@@ -115,7 +119,7 @@ ${o.initialise}@slurp
 for (long _i0 = rank; _i0 < _n_paths; _i0 += size) {
   _LOG(_PATH_LOG_LEVEL, "Starting path %li\n", _i0 + 1);
   
-  ${topLevelSequenceInnerContent, autoIndent=True}@slurp
+  ${topLevelSequence.topLevelSequenceInnerContent, autoIndent=True}@slurp
 }
   @#
   @# Now clean up after all of the objects that we initialised early.

@@ -10,10 +10,17 @@ Copyright (c) 2008 Mattias Johnsson. All rights reserved.
 @attr featureName = 'Argv'
 
 @def includes
+  @#
+  @super
+  @#
 #include <getopt.h>
+  @#
 @end def
 
 @def globals
+  @#
+  @super
+  @#
 // *********** Command line argument global variables *********
   @for $argument in $argList
     @if $argument.type == "string"
@@ -22,6 +29,7 @@ $argument.type $argument.name = "$argument.defaultValue";
 $argument.type $argument.name = $argument.defaultValue; 
     @end if
   @end for
+  @#
 @end def
 
 @def mainBegin($dict)

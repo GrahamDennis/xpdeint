@@ -10,7 +10,9 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 @attr featureName = 'OpenMP'
 
 @def loopOverVectorsWithInnerContentTemplateBegin($dict)
+  @#
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
+  @#
 @end def

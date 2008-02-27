@@ -9,10 +9,12 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 @*
   Description of template
 *@
-@def description: simulation
+@def description: Simulation
 @attr $globalNameSpaceName = "simulation"
 
 @def defines
+  @#
+  @super
   @#
 #define _EPSILON 1e-6
 
@@ -48,6 +50,9 @@ printf(__VA_ARGS__); \
   Globals needed at the start of the simulation
 *@
 @def globals
+  @#
+  @super
+  @#
 double ${propagationDimension};
 
 // This stuff is here because libxmds requires it.
@@ -55,5 +60,6 @@ double ${propagationDimension};
 // to load XSIL files to initialise fields
 bool debugFlag = false;
 bool xmlDebugFlag =  false;
+  @#
 @end def
 
