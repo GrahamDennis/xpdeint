@@ -16,6 +16,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 @def functionPrototypes
   @#
   @super
+  @#
 void _segment${segmentNumber}_calculate_nonconstant_ip_fields(double _step, int _exponent, int _arrayIndex);
 double _segment${segmentNumber}_setup_sampling(bool* _next_sample_flag, long* _next_sample_counter);
   @#
@@ -33,6 +34,7 @@ void _segment${segmentNumber}_${vector.id}_reset(${vector.type}* _reset_to);
 @def functionImplementations
   @#
   @super
+  @#
 ${nonConstantIPFieldsFunctionImplementation}@slurp
 
 ${setupSamplingFunctionImplementation}@slurp

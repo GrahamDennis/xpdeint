@@ -9,7 +9,7 @@ compile: .COMPILE
 .COMPILE: $(templates)
 	@cheetah compile --settings='$(cheetah_settings)' $?
 	@touch .COMPILE
-	./version.sh
+	@./version.sh
 
 # remove all compiled files
 clean:

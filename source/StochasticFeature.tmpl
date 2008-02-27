@@ -16,6 +16,8 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *@
 @def globals
   @#
+  @super
+  @#
   @set $noisesNeeded = filter(lambda x: x.noiseDistribution in ('gaussian', 'poissonian'), $noises)
 // ********************************************************
 // struct used to store step size and noise vector to ensure
@@ -48,8 +50,6 @@ struct _dtdWstore {
   @for noiseAlias in $noiseAliases
 ${noiseAlias.type}* _${noiseAlias.id}2;
   @end for
-  @#
-  @super
   @#
 @end def
 

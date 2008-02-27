@@ -111,7 +111,6 @@ class XMDS2Parser(ScriptParser):
     
     self.parseOutputElement(simulationElement)
     
-    return simulationElementTemplate
   
   
   def parseFeatures(self, simulationElement):
@@ -694,15 +693,16 @@ class XMDS2Parser(ScriptParser):
         elif kindString == 'mpi':
           driverClass = MPIMultiPathDriverTemplate
         else:
-          raise ParserException(topLevelSimulationElementTemplate,
+          raise ParserException(topLevelSequenceElement,
                                 "Unknown multi-path kind '%(kindString)s'. "
                                 "The options are 'single' (default), or 'mpi'." % locals())
     
     
     
-    topLevelSimulationElementTemplate = driverClass(**self.argumentsToTemplateConstructors)
+    simulationDriver = driverClass(**self.argumentsToTemplateConstructors)
+    self.applyAttributeDictionaryToObject(driverAttributeDictionary, simulationDriver)
     
-    self.applyAttributeDictionaryToObject(driverAttributeDictionary, topLevelSimulationElementTemplate)
+    topLevelSequenceElementTemplate = TopLevelSequenceElementTemplate(**self.argumentsToTemplateConstructors)
     
     for childNode in topLevelSequenceElement.childNodes:
       if not childNode.nodeType == minidom.Node.ELEMENT_NODE:
@@ -710,12 +710,12 @@ class XMDS2Parser(ScriptParser):
       
       if childNode.tagName.lower() == 'integrate':
         integrateTemplate = self.parseIntegrateElement(childNode)
-        topLevelSimulationElementTemplate.childSegments.append(integrateTemplate)
+        topLevelSequenceElementTemplate.childSegments.append(integrateTemplate)
       else:
         raise ParserException(childNode, "Unknown child of sequence element. "
                                          "Possible children include 'integrate' elements.")
       
-    return topLevelSimulationElementTemplate
+    return simulationDriver
   
   
   def parseIntegrateElement(self, integrateElement):

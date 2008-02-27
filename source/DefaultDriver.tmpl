@@ -4,9 +4,11 @@ DefaultDriver.tmpl
 Created by Graham Dennis on 2008-02-02.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 *@
-@extends _SimulationDriver
+@extends SimulationDriver
 
-@def functionImplementations
+@def description: Default Simulation Driver
+
+@def topLevelSegmentFunctionImplementation
   @#
 void _segment0()
 {
@@ -16,8 +18,8 @@ void _segment0()
   @set $dict = {'extraIndent': 0}
   ${insertCodeForFeatures('topLevelSequenceBegin', featureOrdering, dict), autoIndent=True}@slurp
   @set $extraIndent = dict['extraIndent']
-
-  ${topLevelSequenceInnerContent, autoIndent=True, extraIndent=extraIndent}@slurp
+  
+  ${topLevelSequence.topLevelSequenceInnerContent, autoIndent=True, extraIndent=extraIndent}@slurp
   @#
   ${insertCodeForFeaturesInReverseOrder('topLevelSequenceEnd', featureOrdering, dict), autoIndent=True}@slurp
 }

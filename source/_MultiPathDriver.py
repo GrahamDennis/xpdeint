@@ -7,12 +7,12 @@ Created by Graham Dennis on 2008-02-02.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
-from _SimulationDriver import _SimulationDriver
+from SimulationDriver import SimulationDriver
 
 from VectorElement import VectorElement
 from VectorInitialisation import VectorInitialisation
 
-class _MultiPathDriver (_SimulationDriver):
+class _MultiPathDriver (SimulationDriver):
   logLevelsBeingLogged = "_PATH_LOG_LEVEL|_SIMULATION_LOG_LEVEL|_WARNING_LOG_LEVEL|_ERROR_LOG_LEVEL"
   
   def createNamedVectors(self):

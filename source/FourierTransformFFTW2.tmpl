@@ -36,7 +36,6 @@ Return the options that need to be added to ``CFLAG``.
 @end def
 
 @*
-
   Globals needed at the start of the simulation
 *@
 @def globals
@@ -48,6 +47,7 @@ Return the options that need to be added to ``CFLAG``.
 fftwnd_plan _${field.name}_forward_plan;
 fftwnd_plan _${field.name}_backward_plan;
   @end for
+  @#
 @end def
 
 @# do the (forward/backward) transform for the vector

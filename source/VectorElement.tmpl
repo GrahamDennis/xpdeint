@@ -16,6 +16,8 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *@
 @def defines
   @#
+  @super
+  @#
 // vector $name defines
 #define _${field.name}_${name}_ncomponents $nComponents
   @#
@@ -25,6 +27,8 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   Globals needed at the start of the simulation
 *@
 @def globals
+  @#
+  @super
   @#
 // vector $name globals
 $type* _${field.name}_${name} = NULL;
@@ -40,6 +44,8 @@ unsigned long _${field.name}_${name}_space;
   Function prototypes
 *@
 @def functionPrototypes
+  @#
+  @super
   @#
   @if not ($needsInitialisation or $needsFourierTransforms)
     @return
@@ -59,6 +65,8 @@ void _${field.name}_${name}_go_space(unsigned long _newSpace);
   Function implementations
 *@
 @def functionImplementations
+  @#
+  @super
   @#
   @if not ($needsInitialisation or $needsFourierTransforms)
     @return

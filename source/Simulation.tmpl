@@ -43,7 +43,7 @@ using namespace std;
 @# only loop over the elements that implement the defines function
 @for $element in $scriptElements
   @# Prevent writing zero-length defines
-  @set $result = $element.defines
+  @set $result = $element.implementationsForFunctionName('defines')
   @if $result
 
 // ********************************************************
@@ -59,7 +59,7 @@ $result@slurp
 @# only loop over the elements that implement the globals function
 @for $element in $scriptElements
   @# Prevent writing zero-length globals
-  @set $result = $element.globals
+  @set $result = $element.implementationsForFunctionName('globals')
   @if $result
 
 // ********************************************************
@@ -75,7 +75,7 @@ $result@slurp
 @# only loop over the elements that implement the prototypes function
 @for $element in $scriptElements
   @# Prevent writing zero-length globals
-  @set $result = $element.functionPrototypes
+  @set $result = $element.implementationsForFunctionName('functionPrototypes')
   @if $result
 
 // ********************************************************
@@ -91,7 +91,7 @@ $result@slurp
 @# only loop over the elements that implement the prototypes function
 @for $element in $scriptElements
   @# Prevent writing zero-length function implementations
-  @set $result = $element.functionImplementations
+  @set $result = $element.implementationsForFunctionName('functionImplementations')
   @if $result
 
 // ********************************************************

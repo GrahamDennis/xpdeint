@@ -64,23 +64,23 @@ class _ScriptElement (Template):
   
   # Includes
   def includes(self):
-    return self.implementationsForClassesAndChildren('includes')
+    pass
   
   # Defines needed at the start of the simulation
   def defines(self):
-    return self.implementationsForClassesAndChildren('defines')
+    pass
   
   # Globals needed at the start of the simulation
   def globals(self):
-    return self.implementationsForClassesAndChildren('globals')
+    pass
   
   # Function prototypes
   def functionPrototypes(self):
-    return self.implementationsForClassesAndChildren('functionPrototypes')
+    pass
   
   # Function implemenations
   def functionImplementations(self):
-    return self.implementationsForClassesAndChildren('functionImplementations')
+    pass
   
   # Define a whole bunch of static versions of these functions
   def static_includes(self):
@@ -164,6 +164,29 @@ class _ScriptElement (Template):
     else:
       return dimension.name
   
+  # Insert contents of function for self, classes and children
+  def implementationsForFunctionName(self, functionName, *args, **KWs):
+    result = []
+    blankLineSeparator = ''
+    staticFunctionName = 'static_' + functionName
+    
+    for attrName in [staticFunctionName, functionName]:
+      if self.hasattr(attrName):
+        function = getattr(self, attrName)
+        functionOutput = function(*args, **KWs)
+        if functionOutput and not functionOutput.isspace():
+          result.append(blankLineSeparator)
+          blankLineSeparator = '\n'
+          result.append(functionOutput)
+    
+    if self.hasattr('children'):
+      for child in self.children:
+        result.append(blankLineSeparator)
+        blankLineSeparator = '\n'
+        result.append(child.implementationsForFunctionName(functionName, *args, **KWs))
+    
+    return ''.join(result)
+  
   # Insert contents of function for children
   def implementationsForChildren(self, functionName, *args, **KWs):
     if not self.hasattr('children'):
@@ -178,23 +201,6 @@ class _ScriptElement (Template):
           result.append(blankLineSeparator)
           blankLineSeparator = '\n'
           result.append(childFunctionOutput)
-    
-    return ''.join(result)
-  
-  def implementationsForClassesAndChildren(self, functionName, *args, **KWs):
-    result = []
-    blankLineSeparator = ''
-    staticFunctionName = 'static_' + functionName
-    if self.hasattr('static_' + functionName):
-      staticFunction = getattr(self, staticFunctionName)
-      staticFunctionOutput = staticFunction(*args, **KWs)
-      if staticFunctionOutput and not staticFunctionOutput.isspace():
-        blankLineSeparator = '\n'
-        result.append(staticFunctionOutput)
-    childOutput = self.implementationsForChildren(functionName, *args, **KWs)
-    if childOutput:
-      result.append(blankLineSeparator)
-      result.append(childOutput)
     
     return ''.join(result)
   
