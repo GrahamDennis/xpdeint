@@ -37,9 +37,6 @@
 * Make sure that all the things that Andy has been doing to enable various simulation
   parameters can be controlled at simulation run time can be done in xpdeint.
 
-* Write a TextMate grammar for our Cheetah templates (for syntax highlighting
-  goodness)
-
 * Rewrite parser so that it isn't so long. (Ask Gabriel McManus)
 
 * Documentation needs to be written (both user and developer). The developer documentation
