@@ -29,15 +29,15 @@ Return the options that need to be added to ``CFLAG``.
   @#
 @end def
 
-@def mainBegin(dict)
+@def mainBegin($dict)
   @#
 fftw_init_threads();
 fftw_plan_with_nthreads(_num_threads);
-  @super
+  @super($dict)
   @#
 @end def
 
 @def mainEnd($dict)
-  @super
+  @super($dict)
 fftw_cleanup_threads();
 @end def
