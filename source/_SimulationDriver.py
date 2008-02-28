@@ -13,7 +13,7 @@ class _SimulationDriver (ScriptElement):
   logLevelsBeingLogged = "_ALL_LOG_LEVELS"
   
   def __init__(self, *args, **KWs):
-    _ScriptElement.__init__(self, *args, **KWs)
+    ScriptElement.__init__(self, *args, **KWs)
     
     self.getVar('features')['Driver'] = self
     # Put ourselves at the start after the simulation element
