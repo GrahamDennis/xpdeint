@@ -16,15 +16,21 @@
 	<array>
 		<dict>
 			<key>match</key>
-			<string>(@def [_a-zA-Z]\w*|@end def|@set|@extends|@attr)</string>
+			<string>@(def|end def|set|extends|attr|return).*$</string>
 			<key>name</key>
 			<string>string.unquoted.keyword.control.cheetah</string>
 		</dict>
 		<dict>
 			<key>match</key>
-			<string>(@if|@end if|@continue|@for|@end for|@else)</string>
+			<string>@(if|end if|continue|for|end for|else).*$</string>
 			<key>name</key>
-			<string>string.unquoted.flow.control.cheetah</string>
+			<string>string.unquoted.keyword.control.flow.cheetah</string>
+		</dict>
+		<dict>
+			<key>match</key>
+			<string>@(super|filter|end filter|capture|end capture|silent|slurp|assert|@).*$</string>
+			<key>name</key>
+			<string>string.unquoted.keyword.other.cheetah</string>
 		</dict>
 		<dict>
 			<key>begin</key>
@@ -32,7 +38,7 @@
 			<key>end</key>
 			<string>\*@</string>
 			<key>name</key>
-			<string>string.unquoted.doc.cheetah</string>
+			<string>string.unquoted.comment.block.cheetah</string>
 		</dict>
 		<dict>
 			<key>begin</key>
@@ -42,22 +48,13 @@
 				<key>0</key>
 				<dict>
 					<key>name</key>
-					<string>punctuation.definition.comment.c</string>
+					<string>punctuation.definition.comment.cheetah</string>
 				</dict>
 			</dict>
 			<key>end</key>
 			<string>$\n?</string>
 			<key>name</key>
 			<string>string.unquoted.comment.line.athash.cheetah</string>
-			<key>patterns</key>
-			<array>
-				<dict>
-					<key>match</key>
-					<string>(?&gt;\\\s*\n)</string>
-					<key>name</key>
-					<string>punctuation.separator.continuation.c++</string>
-				</dict>
-			</array>
 		</dict>
 		<dict>
 			<key>include</key>
