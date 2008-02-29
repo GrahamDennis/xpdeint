@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <name>vibstring_dirichlet_boundary</name>
+  <author>Graham Dennis</author>
+  <description>
+    Vibrating string with Dirichlet boundary conditions.
+  </description>
+  
+  <features>
+    <benchmark />
+    <error_check />
+    <bing />
+    <fftw version="3" plan="patient" />
+    <openmp />
+    <globals>
+      <![CDATA[
+      const double T = 10.0;
+      const double mass = 1e-3;
+      const double length = 1.0;
+      const double mu = mass/length;
+      
+      const double xmax = _mainField_xmax0;
+      const double width = 0.1;
+      ]]>
+    </globals>
+  </features>
+  
+  <geometry>
+    <prop_dim> t </prop_dim>
+    <transverse_dimensions>
+      <dimension name="x" lattice="256"  domain="(-1, 1)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <field name="mainField">
+    <vector name="main" initial_space="x">
+      <components type="complex">
+        u uDot
+      </components>
+      <initialisation>
+        <![CDATA[
+          u = exp(-100.0*(x-0.5)*(x-0.5));
+          uDot = 0.0;
+        ]]>
+      </initialisation>
+    </vector>
+    <vector name="boundary" initial_space="x">
+      <components type="double">
+        bc
+      </components>
+      <initialisation>
+        <![CDATA[
+          double r = fabs(x);
+          double rright = xmax-width;
+
+          if ( r > rright)
+            bc = 0.0;
+          else
+            bc = 1.0;
+            
+          
+        ]]>
+      </initialisation>
+    </vector>
+  </field>
+  
+  <sequence>
+    <integrate algorithm="ARK89" tolerance="1e-8" interval="2e-2" steps="1000">
+      <samples>500</samples>
+      <operators field="mainField">
+        <operator kind="filter">
+          <dependencies>main boundary</dependencies>
+          <![CDATA[
+            u *= bc;
+            uDot *= bc;
+          ]]>
+        </operator>
+        <operator kind="ex" constant="yes">
+          <operator_names>L</operator_names>
+          <![CDATA[
+            L = -T*kx*kx/mu;
+          ]]>
+        </operator>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+          du_dt = uDot;
+          duDot_dt = L[u];
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  <output format="binary">
+    <group>
+      <sampling initial_sample="yes">
+        <!-- Any dimension not mentioned is assumed to be in real space and its middle element will be sampled -->
+        <!-- Note that this is different default behaviour to the filter operator. To integrate, put in a dimension -->
+        <!-- with zero lattice points. -->
+        <!-- Note that dimensions can be in any order. Not that I can think of a reason why you would want to do that -->
+        <dimension name="x" fourier_space="no" />
+        <moments>amp</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          amp = u;
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>
