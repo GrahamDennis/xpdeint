@@ -16,19 +16,19 @@
 	<array>
 		<dict>
 			<key>match</key>
-			<string>@(def|end def|set|extends|attr|return).*$</string>
+			<string>@(def [_a-zA-Z]\w*|end def|set|extends|attr|return)</string>
 			<key>name</key>
 			<string>string.unquoted.keyword.control.cheetah</string>
 		</dict>
 		<dict>
 			<key>match</key>
-			<string>@(if|end if|continue|for|end for|else).*$</string>
+			<string>@(if|end if|continue|for|end for|else)</string>
 			<key>name</key>
 			<string>string.unquoted.keyword.control.flow.cheetah</string>
 		</dict>
 		<dict>
 			<key>match</key>
-			<string>@(super|filter|end filter|capture|end capture|silent|slurp|assert|@).*$</string>
+			<string>@(super|filter|end filter|capture|end capture|silent|slurp|assert|@[_a-zA-Z]\w*)</string>
 			<key>name</key>
 			<string>string.unquoted.keyword.other.cheetah</string>
 		</dict>
