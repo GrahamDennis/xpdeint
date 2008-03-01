@@ -101,6 +101,11 @@ class _ScriptElement (Template):
   def insertCodeForFeatures(self, functionName, featureList, dict = {}, reverse = False):
     featureDictionary = self.getVar('features')
     
+    if self.hasattr('bannedFeatures') and self.bannedFeatures:
+      # Check if any of the features in the featureList are in the bannedFeatures
+      bannedFeatures = self.bannedFeatures
+      featureList = filter(lambda x: x not in bannedFeatures, featureList)
+    
     result = []
     indentFilter = IndentFilter()
     dict['featureList'] = featureList

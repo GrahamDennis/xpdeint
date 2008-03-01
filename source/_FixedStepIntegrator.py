@@ -34,3 +34,12 @@ class _FixedStepIntegrator (Integrator):
   
   cross = property(_getCross, _setCross)
   
+  @property
+  def bannedFeatures(self):
+    """Return the features which are not permitted to be inserted by this instance."""
+    
+    # If we are cross-propagating, then ErrorCheck cannot simply subdivide the step.
+    if self.cross:
+      return ['ErrorCheck']
+    else:
+      return None
