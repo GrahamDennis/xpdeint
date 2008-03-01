@@ -112,7 +112,8 @@ _${vector.id}[$index] += _akfield_${vector.id}[$index]/6.0;
   @if $propagationDirection == '+'
     @set $indexOverrideValue = '_istep'
   @else
-    @set $indexOverrideValue = c'($parent.field.dimensionWithName($propagationDimension).lattice - _istep - 1)'
+    @set $integrationDimensionNumber = $parent.field.indexOfDimensionName($propagationDimension)
+    @set $indexOverrideValue = c'(_${parent.field.name}_lattice${integrationDimensionNumber} - _istep - 1)'
   @end if
   @#
   @# Create the index overrides dictionary. We only need to override the propagation dimension.
