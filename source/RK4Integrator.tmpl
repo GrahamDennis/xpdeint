@@ -51,6 +51,9 @@ _akfield_${vector.id}[$index] = _aifield_${vector.id}[$index] + _akfield_${vecto
 """)}@slurp
 
 ${propagationDimension} += _step/2.0;
+  @if $cross
+${interpolateDependencies}@slurp
+  @end if
 
 // a_k = G[a_k, t + h/2]
 _segment${segmentNumber}_calculate_delta_a(_step);
@@ -78,6 +81,9 @@ _akfield_${vector.id}[$index] = _aifield_${vector.id}[$index] + _akfield_${vecto
 _segment${segmentNumber}_ip_evolve(+1);
 
 ${propagationDimension} += _step/2.0;
+  @if $cross
+${updateDependenciesForNextStep}@slurp
+  @end if
 
 // a_k = G[a_k, t + h]
 _segment${segmentNumber}_calculate_delta_a(_step);
@@ -95,5 +101,63 @@ ${loopOverVectorsWithInnerContentTemplate($vectors,
 """// a = a + a_k/6
 _${vector.id}[$index] += _akfield_${vector.id}[$index]/6.0;
 """)}@slurp
+  @#
+@end def
+
+
+@def interpolateDependencies
+  @#
+  @# Insert code to interpolate the dependency vectors onto the half-step point.
+  @# 
+  @if $propagationDirection == '+'
+    @set $indexOverrideValue = '_istep'
+  @else
+    @set $indexOverrideValue = c'($parent.field.dimensionWithName($propagationDimension).lattice - _istep - 1)'
+  @end if
+  @#
+  @# Create the index overrides dictionary. We only need to override the propagation dimension.
+  @set $indexOverrides = {$propagationDimension: dict([(v.field, indexOverrideValue) for v in $parent.dependencies])}
+  @#
+  @set $setOfVectorsToLoopOver = $dependencies.copy()
+  @silent setOfVectorsToLoopOver.update($parent.dependencies)
+// Create 4th order midpoint interpolation for dependencies
+if (_istep == 0 || _istep == (${stepCount} - 2)) {
+  // We are at the first or last point
+  // FIXME: Make this 4th order too
+  @capture loopString
+    @for $reducedVector, $vector in $dependencyMap.iteritems()
+      @set $indices = range(0, len($vector.field.dimensions))
+      @if $vector.field.hasDimensionName($propagationDimension)
+        @silent indices.remove(vector.field.indexOfDimensionName($propagationDimension))
+      @end if
+      @set $skipSize = $propagationDirection + $vector.field.pointsInDimensionsWithIndices($indices)
+for (long _icomp = 0; _icomp < _${vector.id}_ncomponents; _icomp++) {
+  _active_${reducedVector.id}[_${reducedVector.id}_index_pointer + _icomp] = \
+    0.5*(_active_${vector.id}[_${vector.id}_index_pointer + _icomp]
+       + _active_${vector.id}[_${vector.id}_index_pointer + _icomp + $skipSize]);
+}
+    @end for
+  @end capture
+  ${loopOverFieldInSpaceWithVectorsAndInnerContent($field, $homeSpace, $setOfVectorsToLoopOver, $loopString, indexOverrides = $indexOverrides), autoIndent=True}@slurp
+} else {
+  // We are somewhere in the middle and can make a 4th order interpolation
+  @capture loopString
+    @for $reducedVector, $vector in $dependencyMap.iteritems()
+      @set $indices = range(0, len($vector.field.dimensions))
+      @if $vector.field.hasDimensionName($propagationDimension)
+        @silent indices.remove(vector.field.indexOfDimensionName($propagationDimension))
+      @end if
+      @set $skipSize = $propagationDirection + $vector.field.pointsInDimensionsWithIndices($indices)
+for (long _icomp = 0; _icomp < _${vector.id}_ncomponents; _icomp++) {
+  _active_${reducedVector.id}[_${reducedVector.id}_index_pointer + _icomp] = \
+      9.0/16.0*(_active_${vector.id}[_${vector.id}_index_pointer + _icomp]
+              + _active_${vector.id}[_${vector.id}_index_pointer + _icomp + $skipSize])
+    - 1.0/16.0*(_active_${vector.id}[_${vector.id}_index_pointer + _icomp - $skipSize]
+              + _active_${vector.id}[_${vector.id}_index_pointer + _icomp + 2 * $skipSize]);
+}
+    @end for
+  @end capture
+  ${loopOverFieldInSpaceWithVectorsAndInnerContent($field, $homeSpace, $setOfVectorsToLoopOver, $loopString, indexOverrides = $indexOverrides), autoIndent=True}@slurp
+}
   @#
 @end def

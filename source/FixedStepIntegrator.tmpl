@@ -18,10 +18,27 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   @#
   @if $cross
 
-${initialiseBoundaryConditions}@slurp
+${initialiseCrossPropagation}@slurp
   @end if
   @#
 @end def
+
+
+@def initialiseCrossPropagation
+@*doc:
+  Return code for initialising the boundary conditions of a cross-propagation integrator.
+  
+  This code both sets the boundary conditions and copies in the first values for the
+  dependencies into the local dependency arrays.
+*@
+  @#
+  @# FIXME: Implementation missing
+  @#
+  @# Initialise boundary conditions, create variable for the propagation dimension,
+  @# and put the first values in the local dependency arrays
+  @#
+@end def
+
 
 @def createStepVariable
 @*doc:
@@ -66,6 +83,13 @@ void _segment${segmentNumber}()
     
     ${singleIntegrationStep, autoIndent=True, extraIndent=extraIndent}@slurp
     
+  @if $cross
+    @# If we are cross-integrating, then we now need to copy our result back
+    @# into the original arrays for the integration vectors
+    ${copyResultIntoIntegrationArrays}@slurp
+    
+  @end if
+  @#
     ${insertCodeForFeaturesInReverseOrder('integrateFixedStepInnerLoopEnd', featureOrderingInner, dict), autoIndent=True}@slurp
   }
 
@@ -75,3 +99,72 @@ void _segment${segmentNumber}()
 }
   @#
 @end def
+
+
+@# ---- Cross-propagation methods ----
+
+@def copyResultIntoIntegrationArrays
+@*doc:
+  Returns code to copy the result of our cross-propagation step back into the original arrays
+  for the integation vectors.
+*@
+  @#
+  @if $propagationDirection == '+'
+    @set $indexOverrideValue = '_istep'
+  @else
+    @set $indexOverrideValue = c'($parent.field.dimensionWithName($propagationDimension).lattice - _istep - 1)'
+  @end if
+  @#
+  @# Create the index overrides dictionary. We only need to override the propagation dimension.
+  @set $indexOverrides = {$propagationDimension: dict([(v.field, indexOverrideValue) for v in $parent.integrationVectors])}
+  @#
+  @set $setOfVectorsToLoopOver = $vectors.copy()
+  @silent setOfVectorsToLoopOver.update($parent.integrationVectors)
+  @#
+  @capture loopString
+    @for $reducedVector, $vector in $integrationVectorMap.iteritems()
+for (long _icomp = 0; _icomp < _${vector.id}_ncomponents; _icomp++) {
+  _active_${vector.id}[_${vector.id}_index_pointer + _icomp] = _active_${reducedVector.id}[_${reducedVector.id}_index_pointer + _icomp];
+}
+    @end for
+  @end capture
+  @#
+${loopOverFieldInSpaceWithVectorsAndInnerContent($field, $homeSpace, $setOfVectorsToLoopOver, $loopString)}@slurp
+  @#
+@end def
+
+
+@def updateDependenciesForNextStep
+@*doc:
+  Return code to update our dependencies vectors from the originals for the next step.
+*@
+  @#
+  @if $propagationDirection == '+'
+    @set $indexOverrideValue = '_istep'
+  @else
+    @set $indexOverrideValue = c'($parent.field.dimensionWithName($propagationDimension).lattice - _istep - 1)'
+  @end if
+  @#
+  @# Create the index overrides dictionary. We only need to override the propagation dimension.
+  @set $indexOverrides = {$propagationDimension: dict([(v.field, indexOverrideValue) for v in $parent.dependencies])}
+  @#
+  @set $setOfVectorsToLoopOver = $dependencies.copy()
+  @silent setOfVectorsToLoopOver.update($parent.dependencies)
+  @#
+  @capture loopString
+    @for $reducedVector, $vector in $dependencyMap.iteritems()
+      @set $indices = range(0, len($vector.field.dimensions))
+      @if $vector.field.hasDimensionName($propagationDimension)
+        @silent indices.remove(vector.field.indexOfDimensionName($propagationDimension))
+      @end if
+      @set $skipSize = $propagationDirection + $vector.field.pointsInDimensionsWithIndices($indices)
+for (long _icomp = 0; _icomp < _${vector.id}_ncomponents; _icomp++) {
+  _active_${reducedVector.id}[_${reducedVector.id}_index_pointer + _icomp] = _active_${vector.id}[_${vector.id}_index_pointer + _icomp + $skipSize];
+}
+    @end for
+  @end capture
+  @#
+${loopOverFieldInSpaceWithVectorsAndInnerContent($field, $homeSpace, $setOfVectorsToLoopOver, $loopString)}@slurp
+  @#
+@end def
+
