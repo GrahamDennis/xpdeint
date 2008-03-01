@@ -103,6 +103,7 @@ class _ScriptElement (Template):
     
     result = []
     indentFilter = IndentFilter()
+    dict['featureList'] = featureList
     
     # Loop over the features that we should include
     for featureName in featureList:

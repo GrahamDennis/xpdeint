@@ -4,9 +4,24 @@ FixedStepIntegrator.tmpl
 Created by Graham Dennis on 2007-10-20.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *@
-@extends Integrator
+@extends _FixedStepIntegrator
 
 @def description: segment $segmentNumber (Unnamed fixed-step integrator)
+
+
+@def localInitialise
+@*doc:
+  This function returns the local initialisation code for the integrator.
+*@
+  @#
+  @super
+  @#
+  @if $cross
+
+${initialiseBoundaryConditions}@slurp
+  @end if
+  @#
+@end def
 
 @def createStepVariable
 @*doc:
@@ -39,6 +54,12 @@ void _segment${segmentNumber}()
   for (long _istep = 0; _istep < ${stepCount}; _istep++) {
   @# Insert code for features
   @set $featureOrderingInner = ['Output', 'ErrorCheck', 'Stochastic']
+  @#
+  @# If we are being used as a cross-propagation integrator, then error checking just doesn't work that way.
+  @if $cross
+    @silent featureOrderingInner.remove('ErrorCheck')
+  @end if
+  @#
   @set $dict = {'extraIndent': 0}
     ${insertCodeForFeatures('integrateFixedStepInnerLoopBegin', featureOrderingInner, dict), autoIndent=True}@slurp
   @set $extraIndent = $dict.extraIndent

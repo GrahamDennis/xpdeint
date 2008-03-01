@@ -925,7 +925,7 @@ class XMDS2Parser(ScriptParser):
       parserMethod = self.parseFilterOperatorElement
       operatorTemplateClass = FilterOperatorTemplate
     else:
-      raise ParserException(operatorElement, "Unknown operator kind '%(kindString)'s\n"
+      raise ParserException(operatorElement, "Unknown operator kind '%(kindString)s'\n"
                                              "Valid options are: 'ip', 'ex' or 'filter'." % locals())
     
     operatorTemplate = operatorTemplateClass(field = deltaAOperatorTemplate.field, integrator = integratorTemplate,

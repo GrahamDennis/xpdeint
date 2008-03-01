@@ -92,7 +92,7 @@
           <!-- It's not necessary to have a moments tag here. It would be quite acceptable to -->
           <!-- use the filter to modify a vector already created -->
           <moments type="complex" target_field="zero_d_test" name="filter1">moment</moments>
-         <dependencies fourier_space="kx ky">integrated_u main</dependencies>
+          <dependencies fourier_space="kx ky">integrated_u main</dependencies>
           <!-- If the moments are of type 'double', then all dimensions that aren't integrated
                must be evaluated in 'x' space. -->
           <![CDATA[
