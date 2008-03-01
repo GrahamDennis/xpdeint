@@ -211,7 +211,12 @@ class _ScriptElement (Template):
     pass
   
   def preflight(self):
-    pass
+    # Set each child's parent to self.
+    if self.hasattr('children'):
+      for child in self.children:
+        if not child.hasattr('parent'):
+          child.parent = self
+      
   
   def vectorsFromEntity(self, entity):
     vectors = set()

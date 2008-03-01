@@ -63,6 +63,9 @@ class _FilterOperator (Operator):
      self.integratingMoments = False
     elif not self.resultVector:
      self.integratingMoments = False
+    
+    super(_FilterOperator, self).preflight()
+  
   
 
 

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <name>tla</name>
+  <author>Unknown</author>
+  <description>
+    Two level atom example simulation. Illustrates a cross-propagating field.
+  </description>
+  
+  <features>
+    <auto_vectorise />
+    <benchmark />
+    <error_check />
+    <bing />
+    <fftw version="3" plan="patient" />
+    <openmp />
+    <globals>
+      <![CDATA[
+      const double g = 1.0;
+      const double t0 = 1.0;
+      ]]>
+    </globals>
+  </features>
+  
+  <geometry>
+    <prop_dim> z </prop_dim>
+    <transverse_dimensions>
+      <dimension name="t" lattice="10000"  domain="(-10, 15)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <field name="mainField">
+    <vector name="main" initial_space="t">
+      <components type="double">
+        E
+      </components>
+      <initialisation>
+        <![CDATA[
+          E = 2/t0/cosh(t/t0);
+        ]]>
+      </initialisation>
+    </vector>
+
+    <vector name="cross" initial_space="t">
+      <components type="double">
+        P N
+      </components>
+      <initialisation>
+        <![CDATA[
+          P = 0.0;
+          N = -1.0;
+        ]]>
+      </initialisation>
+    </vector>
+  </field>
+  
+  <sequence>
+    <integrate algorithm="RK4" interval="4" steps="200">
+      <samples>50 50</samples>
+      <operators field="mainField">
+        <operator kind="cross_propagation" algorithm="RK4" propagation_dimension="t">
+          <integration_vectors>cross</integration_vectors>
+          <dependencies>main</dependencies>
+          <boundary_condition kind="left">
+            <![CDATA[
+              P = 0.0;
+              N = -1.0;
+            ]]>
+          </boundary_condition>
+          <![CDATA[
+            dP_dt = E*N;
+            dN_dt = -E*P;
+          ]]>
+        </operator>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+          dE_dz = g*P;
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  <output format="binary" filename="vibstring.xsil">
+    <group>
+      <sampling initial_sample="yes">
+        <dimension name="t" lattice="50" />
+        <moments>pow_dens</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          pow_dens = E*E;
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling initial_sample="no">
+        <dimension name="t" lattice="50" />
+        <moments>P_out N_out</moments>
+        <dependencies>cross</dependencies>
+        <![CDATA[
+          P_out = P;
+          N_out = N;
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>
