@@ -43,3 +43,14 @@ class _FixedStepIntegrator (Integrator):
       return ['ErrorCheck']
     else:
       return None
+  
+  
+  def preflight(self):
+    # If we are cross-propagating, then we aren't a top-level script element, and so will be
+    # called by the appropriate CrossPropagationOperator
+    if self.cross:
+      scriptElements = self.getVar('scriptElements')
+      if self in scriptElements:
+        scriptElements.remove(self)
+    
+    super(Integrator, self).preflight()

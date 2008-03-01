@@ -15,19 +15,15 @@ class _Segment (ScriptElement):
   def __init__(self, *args, **KWs):
     ScriptElement.__init__(self, *args, **KWs)
     
-    globalNameSpace = KWs['searchList'][0]
-    # Set default variables
-    if not globalNameSpace.has_key('segmentCount'):
-      globalNameSpace['segmentCount'] = 0
-    
-    self.segmentNumber = globalNameSpace['segmentCount']
-    globalNameSpace['segmentCount'] += 1
+    self.segmentNumber = len(filter(lambda x: isinstance(x, _Segment), self.getVar('templates'))) - 1
     self.childSegments = []
     
-    self.getVar('scriptElements').append(self)
+    scriptElements = self.getVar('scriptElements')
+    
+    if not self in scriptElements:
+      scriptElements.append(self)
 
   @property
   def name(self):
     return 'segment' + str(self.segmentNumber)
-  
   
