@@ -18,6 +18,7 @@ class _IPOperator(Operator):
   operatorKind = Operator.IPOperatorKind
   
   def preflight(self):
+    super(Operator, self).preflight()
     
     if self.hasattr('operatorComponentsEntity'):
       operatorTargetPairs = self.operatorComponentsEntity.value
@@ -103,7 +104,7 @@ class _IPOperator(Operator):
         
         escape = RegularExpressionStrings.escapeStringForRegularExpression
         
-        sanityRegex = re.compile(r'\bd(' + RegularExpressionStrings.symbol + r')_d' + escape(self.getVar('propagationDimension'))
+        sanityRegex = re.compile(r'\bd(' + RegularExpressionStrings.symbol + r')_d' + escape(self.propagationDimension)
                                  + r'.*' + escape(operatorName) + r'\[' + escape(target) + r'\]')
         
         sanityResult = sanityRegex.findall(self.deltaAOperator.propagationCode)
@@ -115,7 +116,7 @@ class _IPOperator(Operator):
             # If we had a match of the form dy_dt = L[x] we know there is a problem
             # Barf, and tell the user what to do to fix it
             derivativeVariable = sanityResult[0]
-            propagationDimension = self.getVar('propagationDimension')
+            propagationDimension = self.propagationDimension
             raise ParserException(self.operatorComponentsEntity.xmlElement,
                                   "Due to the way IP operators work, they can only contribute\n"
                                   "to the derivative of the variable they act on,\n"
@@ -141,4 +142,6 @@ class _IPOperator(Operator):
                       "The following operator names weren't used: %(unusedOperatorNamesString)s" % locals())
       
     
-    super(Operator, self).preflight()
+  
+
+

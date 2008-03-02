@@ -130,7 +130,8 @@ for (long _i0 = 0; _i0 < _${field.name}_size; _i0++) {
   @#
 @end def
 
-@def loopOverFieldInSpaceWithVectorsAndInnerContent($field, $space, $vectors, $innerLoopCode, $indexOverrides = {}, $vectorOverrides=[], $kspaceAscendingOrder = False, $postDimensionLoopClosingCode = {})
+@# FIXME: Extend this def over multiple lines once my patch to Cheetah gets accepted (and we bump the required version number)
+@def loopOverFieldInSpaceWithVectorsAndInnerContent($field, $space, $vectors, $innerLoopCode, $indexOverrides = {}, $vectorOverrides=[], $kspaceAscendingOrder = False, $postDimensionLoopClosingCode = {}, vectorsNotNeedingDefines = set())
 @*doc:
 Insert code to loop over a fields points making available the given vectors
 Note that this code asserts that the field that will be iterated over is at
@@ -165,6 +166,9 @@ Optional arguments:
     ``x`` dimension, you would pass the following for `postDimensionLoopClosingCode`::
     
       { 'x': lotsAndLotsOfPostLoopCode }
+    
+  - `vectorsNotNeedingDefines`: a set of vectors for which C `#define` statements for vector components will
+    be unnecessary.
 
 *@
   @#
@@ -191,7 +195,7 @@ ${blankLineSeparator}@slurp
     @set $blankLineSeparator = '\n'
     @#
 unsigned long _${vector.id}_index_pointer = 0;
-    @if not $vector in $vectorOverrides
+    @if not $vector in $vectorOverrides and not $vector in $vectorsNotNeedingDefines
       @# If $vector isn't in $vectorOverrides, then we want to @define the vector's components
       @for $componentNumber, $componentName in enumerate($vector.components)
 #define $componentName _active_${vector.id}[_${vector.id}_index_pointer + $componentNumber]
@@ -217,7 +221,7 @@ unsigned long _${vector.id}_index_pointer = 0;
     ]
         @end if
       @end for
-    @else
+    @else if $vector in $vectorOverrides
       @# This $vector is in $vectorOverrides, so instead of @defining, we want to create variables
       @for $componentName in $vector.components
 $vector.type $componentName;
@@ -303,7 +307,7 @@ ${postDimensionLoopClosingCode[$dimension.name], extraIndent=$indentLevel}@slurp
   @#
   @# Undefine vector components that weren't in $vectorOverrides
   @for $vector in $vectors
-    @if $vector in $vectorOverrides
+    @if $vector in $vectorOverrides or $vector in $vectorsNotNeedingDefines
       @continue
     @end if
     @for $componentName in $vector.components

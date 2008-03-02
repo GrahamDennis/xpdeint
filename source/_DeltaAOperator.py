@@ -7,7 +7,6 @@ Created by Graham Dennis on 2008-01-01.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
-
 from Operator import Operator
 from FieldElement import FieldElement
 from VectorElement import VectorElement
@@ -34,6 +33,8 @@ class _DeltaAOperator (Operator):
     return 0
   
   def bindNamedVectors(self):
+    super(_DeltaAOperator, self).bindNamedVectors()
+    
     if self.integrationVectorsEntity:
       self.integrationVectors = self.vectorsFromEntity(self.integrationVectorsEntity)
       
@@ -43,19 +44,23 @@ class _DeltaAOperator (Operator):
                                 "Cannot integrate vector '%s' in this operators element as it "
                                 "belongs to a different field" % integrationVector.name)
         
-        for componentName in integrationVector.components:
-          derivativeString = "d%s_d%s" % (componentName, self.getVar('propagationDimension'))
-          
-          # Map of operator names to vector -> component list dictionary
-          self.operatorComponents[derivativeString] = {integrationVector: [componentName]}
-          
       self.integrator.vectors.update(self.integrationVectors)
       self.dependencies.update(self.integrationVectors)
     
-    super(_DeltaAOperator, self).bindNamedVectors()
     
   
   def preflight(self):
+    super(_DeltaAOperator, self).preflight()
+    
+    # Construct the operator components dictionary
+    for integrationVector in self.integrationVectors:
+      for componentName in integrationVector.components:
+        derivativeString = "d%s_d%s" % (componentName, self.propagationDimension)
+        
+        # Map of operator names to vector -> component list dictionary
+        self.operatorComponents[derivativeString] = {integrationVector: [componentName]}
+        
+    
     if self.field.integerValuedDimensions:
       # Our job here is to consider the case where the user's integration code
       # depends on a component of an integration vector which might get overwritten
@@ -90,7 +95,7 @@ class _DeltaAOperator (Operator):
       
       components = set()
       derivativeMap = {}
-      propagationDimension = self.getVar('propagationDimension')
+      propagationDimension = self.propagationDimension
       
       for vector in self.integrationVectors:
         components.update(vector.components)
@@ -196,7 +201,7 @@ class _DeltaAOperator (Operator):
         
         self.deltaAField.dimensions = dimensionsNeedingReordering
         
-        propagationDimension = self.getVar('propagationDimension')
+        propagationDimension = self.propagationDimension
         
         # For each integration vector forcing the reordering, we need to construct
         # a corresponding vector in the new field.
@@ -286,6 +291,5 @@ class _DeltaAOperator (Operator):
       
       
     
-    super(_DeltaAOperator, self).preflight()
   
 

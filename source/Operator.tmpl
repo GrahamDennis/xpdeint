@@ -6,6 +6,8 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *@
 @extends _Operator
 
+@from VectorElement import VectorElement
+
 @def functionPrototypes
   @#
   @super
@@ -61,7 +63,7 @@ void _${parent.name}_evaluate_${name}(${evaluateOperatorFunctionArgument})
 
 @def allocate
   @#
-  @for $vector in $children
+  @for $vector in filter(lambda x: isinstance(x, VectorElement), $children)
 ${vector.allocate}@slurp
   @end for
   @#
@@ -79,7 +81,7 @@ _${parent.name}_calculate_${name}_field();
 
 @def finalise
   @#
-  @for $vector in $children
+  @for $vector in filter(lambda x: isinstance(x, VectorElement), $children)
 ${vector.free}@slurp
   @end for
   @#

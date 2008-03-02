@@ -47,6 +47,8 @@ class _MomentGroupElement (FieldElement):
     return dict['returnValue']
   
   def bindNamedVectors(self):
+    super(_MomentGroupElement, self).bindNamedVectors()
+    
     dependencies = self.vectorsFromEntity(self.dependenciesEntity)
     
     if self.hasattr('sampleField'):
@@ -59,8 +61,6 @@ class _MomentGroupElement (FieldElement):
         self.rawVector.type = 'complex'
     
     self.dependencies.update(dependencies)
-    
-    super(_MomentGroupElement, self).bindNamedVectors()
   
 
 

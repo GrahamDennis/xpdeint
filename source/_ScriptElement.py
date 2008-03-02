@@ -36,6 +36,9 @@ class _ScriptElement (Template):
     
     self.argumentsToTemplateConstructors = KWs
     self.dependencies = set()
+    self._parent = None
+    self._propagationDimension = None
+    self._propagationDirection = None
     
     if self.hasattr('globalNameSpaceName'):
       globalNameSpace = KWs['searchList'][0]
@@ -46,6 +49,52 @@ class _ScriptElement (Template):
     # Create the entry in the callOnceGuards
     _ScriptElement._callOncePerInstanceGuards[self] = set()
     
+  
+  @property
+  def parent(self):
+    if self._parent:
+      return self._parent
+    
+    potentialParents = filter(lambda x: x.hasattr('children') and self in x.children, self.getVar('templates'))
+    
+    if not potentialParents:
+      return None
+    
+    if len(potentialParents) > 1:
+      raise AssertionError("We seem to have more than one parent: " + ', '.join([repr(potentialParent) for potentialParent in potentialParents]))
+    
+    self._parent = potentialParents[0]
+    return self._parent
+  
+  def _getPropagationDimension(self):
+    if self._propagationDimension:
+      return self._propagationDimension
+    
+    if self.parent:
+      return self.parent.propagationDimension
+    
+    return self.getVar("globalPropagationDimension")
+  
+  def _setPropagationDimension(self, value):
+    self._propagationDimension = value
+  
+  propagationDimension = property(_getPropagationDimension, _setPropagationDimension)
+  del _getPropagationDimension, _setPropagationDimension
+  
+  def _getPropagationDirection(self):
+    if self._propagationDirection:
+      return self._propagationDirection
+    
+    if self.parent:
+      return self.parent.propagationDirection
+    
+    return '+'
+  
+  def _setPropagationDirection(self, value):
+    self._propagationDirection = value
+  
+  propagationDirection = property(_getPropagationDirection, _setPropagationDirection)
+  del _getPropagationDirection, _setPropagationDirection
   
   def hasattr(self, attrName):
     try:
@@ -216,12 +265,7 @@ class _ScriptElement (Template):
     pass
   
   def preflight(self):
-    # Set each child's parent to self.
-    if self.hasattr('children'):
-      for child in self.children:
-        if not child.hasattr('parent'):
-          child.parent = self
-      
+    pass
   
   def vectorsFromEntity(self, entity):
     vectors = set()

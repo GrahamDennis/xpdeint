@@ -41,6 +41,8 @@ class _StochasticFeature (_Feature):
     return self.implementationsForChildren('xsilOutputInfo', dict)
   
   def createNamedVectors(self):
+    super(_Feature, self).createNamedVectors()
+    
     # We need to iterate over everything that could possibly need noises
     # The best way to do that is to have the ability to iterate over everything
     # and select those that have a 'canHaveNoises' attribute or the like.
@@ -122,5 +124,4 @@ class _StochasticFeature (_Feature):
         self.noiseAliases.append(noiseVector)
     
     
-    super(_Feature, self).createNamedVectors()
   

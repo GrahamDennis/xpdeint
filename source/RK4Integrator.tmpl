@@ -121,8 +121,9 @@ _${vector.id}[$index] += _akfield_${vector.id}[$index]/6.0;
   @#
   @set $setOfVectorsToLoopOver = $dependencies.copy()
   @silent setOfVectorsToLoopOver.update($parent.dependencies)
+
 // Create 4th order midpoint interpolation for dependencies
-if (_istep == 0 || _istep == (${stepCount} - 2)) {
+if (_istep == 0 || _istep == (${stepCount} - 1)) {
   // We are at the first or last point
   // FIXME: Make this 4th order too
   @capture loopString
@@ -135,11 +136,13 @@ if (_istep == 0 || _istep == (${stepCount} - 2)) {
 for (long _icomp = 0; _icomp < _${vector.id}_ncomponents; _icomp++) {
   _active_${reducedVector.id}[_${reducedVector.id}_index_pointer + _icomp] = \
     0.5*(_active_${vector.id}[_${vector.id}_index_pointer + _icomp]
-       + _active_${vector.id}[_${vector.id}_index_pointer + _icomp + $skipSize]);
+       + _active_${vector.id}[_${vector.id}_index_pointer + _icomp + $skipSize * _${vector.id}_ncomponents]);
 }
     @end for
   @end capture
-  ${loopOverFieldInSpaceWithVectorsAndInnerContent($field, $homeSpace, $setOfVectorsToLoopOver, $loopString, indexOverrides = $indexOverrides), autoIndent=True}@slurp
+  ${loopOverFieldInSpaceWithVectorsAndInnerContent($parent.reducedField, $homeSpace, $setOfVectorsToLoopOver,
+                                                   $loopString, indexOverrides = $indexOverrides,
+                                                   vectorsNotNeedingDefines = $setOfVectorsToLoopOver), autoIndent=True}@slurp
 } else {
   // We are somewhere in the middle and can make a 4th order interpolation
   @capture loopString
@@ -152,13 +155,15 @@ for (long _icomp = 0; _icomp < _${vector.id}_ncomponents; _icomp++) {
 for (long _icomp = 0; _icomp < _${vector.id}_ncomponents; _icomp++) {
   _active_${reducedVector.id}[_${reducedVector.id}_index_pointer + _icomp] = \
       9.0/16.0*(_active_${vector.id}[_${vector.id}_index_pointer + _icomp]
-              + _active_${vector.id}[_${vector.id}_index_pointer + _icomp + $skipSize])
-    - 1.0/16.0*(_active_${vector.id}[_${vector.id}_index_pointer + _icomp - $skipSize]
-              + _active_${vector.id}[_${vector.id}_index_pointer + _icomp + 2 * $skipSize]);
+              + _active_${vector.id}[_${vector.id}_index_pointer + _icomp + $skipSize * _${vector.id}_ncomponents])
+    - 1.0/16.0*(_active_${vector.id}[_${vector.id}_index_pointer + _icomp - $skipSize * _${vector.id}_ncomponents]
+              + _active_${vector.id}[_${vector.id}_index_pointer + _icomp + 2 * $skipSize * _${vector.id}_ncomponents]);
 }
     @end for
   @end capture
-  ${loopOverFieldInSpaceWithVectorsAndInnerContent($field, $homeSpace, $setOfVectorsToLoopOver, $loopString, indexOverrides = $indexOverrides), autoIndent=True}@slurp
+  ${loopOverFieldInSpaceWithVectorsAndInnerContent($parent.reducedField, $homeSpace, $setOfVectorsToLoopOver,
+                                                   $loopString, indexOverrides = $indexOverrides,
+                                                   vectorsNotNeedingDefines = $setOfVectorsToLoopOver), autoIndent=True}@slurp
 }
   @#
 @end def
