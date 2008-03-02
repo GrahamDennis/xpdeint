@@ -26,12 +26,15 @@ class _FilterOperator (Operator):
     return 0
   
   def bindNamedVectors(self):
+    super(_FilterOperator, self).bindNamedVectors()
+    
     dependencies = self.vectorsFromEntity(self.dependenciesEntity)
     self.dependencies.update(dependencies)
     
-    super(_FilterOperator, self).bindNamedVectors()
   
   def preflight(self):
+    super(_FilterOperator, self).preflight()
+    
     geometryTemplate = self.getVar('geometry')
     
     sourceFieldName = self.integrator.name+'_'+self.name+'_source_field'
@@ -64,7 +67,6 @@ class _FilterOperator (Operator):
     elif not self.resultVector:
      self.integratingMoments = False
     
-    super(_FilterOperator, self).preflight()
   
   
 

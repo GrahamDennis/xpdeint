@@ -29,7 +29,9 @@ class _FieldElement (ScriptElement):
     self.dimensions = []
     
     self.getVar('fields').append(self)
-    self.getVar('scriptElements').append(self)
+    scriptElements = self.getVar('scriptElements')
+    if not self in scriptElements:
+      scriptElements.append(self)
   
   @property
   def vectors(self):

@@ -10,9 +10,11 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 from _Feature import _Feature
 
 class _ErrorCheckFeature (_Feature):
+  
   def preflight(self):
+    super(_ErrorCheckFeature, self).preflight()
+    
     for mg in self.getVar('momentGroups'):
       mg.processedVector.aliases.add('_%s_halfstep' % mg.outputField.name)
     
-    super(_ErrorCheckFeature, self).preflight()
   

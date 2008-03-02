@@ -16,6 +16,8 @@ class _MultiPathDriver (SimulationDriver):
   logLevelsBeingLogged = "_PATH_LOG_LEVEL|_SIMULATION_LOG_LEVEL|_WARNING_LOG_LEVEL|_ERROR_LOG_LEVEL"
   
   def createNamedVectors(self):
+    super(_MultiPathDriver, self).createNamedVectors()
+    
     for mg in self.getVar('momentGroups'):
       sdVector = VectorElement(name = 'processed_sd', field = mg.outputField,
                                **self.argumentsToTemplateConstructors)
@@ -24,7 +26,6 @@ class _MultiPathDriver (SimulationDriver):
       sdVector.nComponents = mg.processedVector.nComponents
       mg.outputField.managedVectors.add(sdVector)
     
-    super(_MultiPathDriver, self).createNamedVectors()
   
   def rawVectorNeedsToBeAllocated(self, dict):
     """

@@ -43,6 +43,7 @@ from AdaptiveStepIPOperator import AdaptiveStepIPOperator as AdaptiveStepIPOpera
 from ConstantEXOperator import ConstantEXOperator as ConstantEXOperatorTemplate
 from NonConstantEXOperator import NonConstantEXOperator as NonConstantEXOperatorTemplate
 from FilterOperator import FilterOperator as FilterOperatorTemplate
+from CrossPropagationOperator import CrossPropagationOperator as CrossPropagationOperatorTemplate
 
 
 from BinaryOutput import BinaryOutput as BinaryOutputTemplate
@@ -325,7 +326,7 @@ class XMDS2Parser(ScriptParser):
       raise ParserException(propagationDimensionElement, "The prop_dim element must not be empty")
     
     propagationDimensionName = propagationDimensionElement.innerText()
-    self.globalNameSpace['propagationDimension'] = propagationDimensionName
+    self.globalNameSpace['globalPropagationDimension'] = propagationDimensionName
     
     geometryTemplate.dimensions = [Dimension(name = propagationDimensionName, transverse = False)]
     
@@ -924,17 +925,18 @@ class XMDS2Parser(ScriptParser):
     elif kindString.lower() == 'filter':
       parserMethod = self.parseFilterOperatorElement
       operatorTemplateClass = FilterOperatorTemplate
+    elif kindString.lower() == 'cross_propagation':
+      parserMethod = self.parseCrossPropagationOperatorElement
+      operatorTemplateClass = CrossPropagationOperatorTemplate
     else:
       raise ParserException(operatorElement, "Unknown operator kind '%(kindString)s'\n"
-                                             "Valid options are: 'ip', 'ex' or 'filter'." % locals())
+                                             "Valid options are: 'ip', 'ex', 'filter' or 'cross-propagation'." % locals())
     
     operatorTemplate = operatorTemplateClass(field = deltaAOperatorTemplate.field, integrator = integratorTemplate,
                                              **self.argumentsToTemplateConstructors)
     operatorTemplate.xmlElement = operatorElement
     operatorTemplate.operatorDefinitionCode = operatorElement.cdataContents()
-    if operatorElement.hasAttribute('fourier_space'):
-      operatorTemplate.operatorSpace = \
-        operatorTemplate.field.spaceFromString(operatorElement.getAttribute('fourier_space'))
+    operatorTemplate.deltaAOperator = deltaAOperatorTemplate
     
     dependenciesElement = operatorElement.getChildElementByTagName('dependencies', optional=True)
     dependencyVectorNames = []
@@ -947,6 +949,10 @@ class XMDS2Parser(ScriptParser):
     return operatorTemplate
   
   def parseIPOperatorElement(self, operatorTemplate, operatorElement, deltaAOperatorTemplate):
+    if operatorElement.hasAttribute('fourier_space'):
+      operatorTemplate.operatorSpace = \
+        operatorTemplate.field.spaceFromString(operatorElement.getAttribute('fourier_space'))
+    
     operatorNamesElement = operatorElement.getChildElementByTagName('operator_names')
     operatorNames = RegularExpressionStrings.symbolsInString(operatorNamesElement.innerText())
     
@@ -959,7 +965,6 @@ class XMDS2Parser(ScriptParser):
                 "Operator name '%(operatorName)s' conflicts with previously-defined symbol." % locals())
       self.globalNameSpace['symbolNames'].add(operatorName)
       
-    operatorTemplate.deltaAOperator = deltaAOperatorTemplate
     operatorTemplate.operatorNames = operatorNames
     
     operatorTargetPairs = self.targetComponentsForOperatorsInString(operatorNames, deltaAOperatorTemplate.propagationCode)
@@ -986,6 +991,10 @@ class XMDS2Parser(ScriptParser):
     return operatorTemplate
   
   def parseEXOperatorElement(self, operatorTemplate, operatorElement, deltaAOperatorTemplate):
+    if operatorElement.hasAttribute('fourier_space'):
+      operatorTemplate.operatorSpace = \
+        operatorTemplate.field.spaceFromString(operatorElement.getAttribute('fourier_space'))
+    
     operatorNamesElement = operatorElement.getChildElementByTagName('operator_names')
     
     operatorNames = RegularExpressionStrings.symbolsInString(operatorNamesElement.innerText())
@@ -1004,7 +1013,6 @@ class XMDS2Parser(ScriptParser):
                 "Operator name '%(operatorName)s' conflicts with previously-defined symbol." % locals())
       self.globalNameSpace['symbolNames'].add(operatorName)
     
-    operatorTemplate.deltaAOperator = deltaAOperatorTemplate
     operatorTemplate.operatorNames = operatorNames
     
     operatorTargetPairs = self.targetComponentsForOperatorsInString(operatorNames, deltaAOperatorTemplate.propagationCode)
@@ -1133,6 +1141,90 @@ class XMDS2Parser(ScriptParser):
     
     return operatorTemplate
   
+  def parseCrossPropagationOperatorElement(self, operatorTemplate, operatorElement, deltaAOperatorTemplate):
+    if not operatorElement.hasAttribute('algorithm'):
+      raise ParserException(operatorElement, "Missing 'algorithm' attribute.")
+    
+    algorithmString = operatorElement.getAttribute('algorithm').strip()
+    
+    crossIntegratorClass = None
+    
+    if algorithmString == 'RK4':
+      crossIntegratorClass = RK4IntegratorTemplate
+    else:
+      raise ParserException(operatorElement, "Unknown cross-propagation algorithm '%(algorithmString)s'.\n"
+                                             "Currently, the only option is 'RK4'." % locals())
+    
+    crossIntegratorTemplate = crossIntegratorClass(**self.argumentsToTemplateConstructors)
+    crossIntegratorTemplate.cross = True
+    
+    if not operatorElement.hasAttribute('propagation_dimension'):
+      raise ParserException(operatorElement, "Missing 'propagation_dimension' attribute.")
+    
+    propagationDimensionName = operatorElement.getAttribute('propagation_dimension').strip()
+    fullField = operatorTemplate.field
+    if not fullField.hasDimensionName(propagationDimensionName):
+      fullFieldName = fullField.name
+      raise ParserException(operatorElement, "The '%(propagationDimensionName)s' dimension must be a dimension of the\n"
+                                             "'%(fullFieldName)s' field in order to cross-propagate along this dimension."
+                                             % locals())
+    
+    operatorTemplate.propagationDimension = propagationDimensionName
+    
+    propagationDimension = fullField.dimensionWithName(propagationDimensionName)
+    
+    if propagationDimension.type != 'double':
+      raise ParserException(operatorElement, "Cannot integrate in the '%(propagationDimensionName)s' direction as it is an integer-valued dimension.\n"
+                                             "Cross-propagators can only integrate along normal dimensions." % locals())
+    
+    fieldPropagationDimensionIndex = fullField.indexOfDimension(propagationDimension)
+    # Set the step
+    crossIntegratorTemplate.step = ''.join(['_', fullField.name, '_dx', str(fieldPropagationDimensionIndex)])
+    # Set the stepCount -- this is the lattice for this dimension minus 1 because we know the value at the starting boundary
+    crossIntegratorTemplate.stepCount = ''.join(['(_', fullField.name, '_lattice', str(fieldPropagationDimensionIndex), ' - 1)'])
+    
+    boundaryConditionElement = operatorElement.getChildElementByTagName('boundary_condition')
+    
+    if not boundaryConditionElement.hasAttribute('kind'):
+      raise ParserException(boundaryConditionElement, "The 'boundary_condition' tag must have a kind='left' or kind='right' attribute.")
+    
+    kindString = boundaryConditionElement.getAttribute('kind').strip().lower()
+    
+    if kindString == 'left':
+      operatorTemplate.propagationDirection = '+'
+    elif kindString == 'right':
+      operatorTemplate.propagationDirection = '-'
+    else:
+      raise ParserException(boundaryConditionElement, "Unknown boundary condition kind '%(kindString)s'. Options are 'left' or 'right'." % locals())
+    
+    boundaryConditionDependenciesElement = boundaryConditionElement.getChildElementByTagName('dependencies', optional=True)
+    boundaryConditionDependencyVectorNames = []
+    if boundaryConditionDependenciesElement:
+      boundaryConditionDependencyVectorNames = RegularExpressionStrings.symbolsInString(boundaryConditionDependenciesElement.innerText())
+      operatorTemplate.boundaryConditionDependenciesEntity = ParsedEntity(boundaryConditionDependenciesElement, boundaryConditionDependencyVectorNames)
+    
+    operatorTemplate.boundaryConditionCode = boundaryConditionElement.cdataContents()
+    
+    integrationVectorsElement = operatorElement.getChildElementByTagName('integration_vectors')
+    integrationVectorNames = RegularExpressionStrings.symbolsInString(integrationVectorsElement.innerText())
+    operatorTemplate.integrationVectorsEntity = ParsedEntity(integrationVectorsElement, integrationVectorNames)
+    
+    # We need to construct the field element for the reduced dimensions
+    reducedField = operatorTemplate.reducedDimensionFieldForField(fullField)
+    operatorTemplate.reducedField = reducedField
+    
+    # Now we can construct the delta a operator for the cross-propagation integrator
+    deltaAOperatorTemplate = DeltaAOperatorTemplate(field = reducedField, integrator = crossIntegratorTemplate,
+                                                    **self.argumentsToTemplateConstructors)
+    deltaAOperatorTemplate.xmlElement = operatorElement
+    deltaAOperatorTemplate.propagationCode = operatorElement.cdataContents()
+    
+    self.parseNoisesAttribute(operatorElement, deltaAOperatorTemplate)
+    
+    operatorTemplate.crossPropagationIntegrator = crossIntegratorTemplate
+    operatorTemplate.crossPropagationIntegratorDeltaAOperator = deltaAOperatorTemplate
+    
+  
   
   def parseOutputElement(self, simulationElement):
     outputElement = simulationElement.getChildElementByTagName('output')
@@ -1189,7 +1281,7 @@ class XMDS2Parser(ScriptParser):
           sampleCount = 1
       
       momentGroupTemplate.sampleSpace = 0
-      momentGroupTemplate.dimensions = [Dimension(name = self.globalNameSpace['propagationDimension'],
+      momentGroupTemplate.dimensions = [Dimension(name = self.globalNameSpace['globalPropagationDimension'],
                                                   transverse = False,
                                                   lattice = sampleCount,
                                                   override = momentGroupTemplate)]

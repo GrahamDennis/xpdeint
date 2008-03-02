@@ -18,6 +18,7 @@ class _FixedStepIntegrator (Integrator):
     
     # Set default variables
     self._cross = False
+    self._step = None
     
     # Is this integrator being used as a cross-propagation integrator?
     self.cross = KWs.get('cross', False)
@@ -33,6 +34,7 @@ class _FixedStepIntegrator (Integrator):
       self._cross = value
   
   cross = property(_getCross, _setCross)
+  del _getCross, _setCross
   
   @property
   def bannedFeatures(self):
@@ -44,8 +46,19 @@ class _FixedStepIntegrator (Integrator):
     else:
       return None
   
+  def _getStep(self):
+    if self._step:
+      return self._step
+    return ''.join([str(self.interval), '/(double)', str(self.stepCount)])
+  
+  def _setStep(self, value):
+    self._step = value
+  
+  step = property(_getStep, _setStep)
+  del _getStep, _setStep
   
   def preflight(self):
+    super(Integrator, self).preflight()
     # If we are cross-propagating, then we aren't a top-level script element, and so will be
     # called by the appropriate CrossPropagationOperator
     if self.cross:
@@ -53,4 +66,5 @@ class _FixedStepIntegrator (Integrator):
       if self in scriptElements:
         scriptElements.remove(self)
     
-    super(Integrator, self).preflight()
+  
+

@@ -21,6 +21,7 @@ class _Integrator (_Segment):
     _Segment.__init__(self, *args, **KWs)
     
     # Set default variables
+    self.samplesEntity = None
     self.samples = []
     self.vectors = set()
     self.operators = []
@@ -61,26 +62,30 @@ class _Integrator (_Segment):
   
   
   def preflight(self):
-    samplesList = self.samplesEntity.value
-    samplesElement = self.samplesEntity.xmlElement
+    super(_Integrator, self).preflight()
     
     momentGroups = self.getVar('momentGroups')
     
-    if not len(samplesList) == len(momentGroups):
-      raise ParserException(samplesElement, "The number of entries (%i) does not match the "
-                                            "number of moment groups (%i)." % \
-                                            (len(samplesList), len(momentGroups)))
-    
-    for momentGroup, sampleCountString in zip(momentGroups, samplesList):
-      sampleCount = int(sampleCountString)
-      if sampleCount and not (self.stepCount % sampleCount) == 0:
-        raise ParserException(samplesElement, "Sample count does not evenly divide the number of steps")
-      self.samples.append(sampleCount)
-      # FIXME: The following line is probably wrong when we add additional non-fourier dimensions before
-      # the propagation dimension. Then, if we are sampling that dimension as well, then it will have a lower
-      # index than the propagation dimension, so the index for the propagation dimension won't be 0.
-      # FIXME: This line will also be wrong when we add sequence elements that support looping.
-      momentGroup.dimensions[0].lattice += sampleCount
+    if not self.samplesEntity:
+      self.samples = [0] * len(momentGroups)
+    else:
+      samplesList = self.samplesEntity.value
+      samplesElement = self.samplesEntity.xmlElement
       
-      super(_Integrator, self).preflight()
+      if not len(samplesList) == len(momentGroups):
+        raise ParserException(samplesElement, "The number of entries (%i) does not match the "
+                                              "number of moment groups (%i)." % \
+                                              (len(samplesList), len(momentGroups)))
+      
+      for momentGroup, sampleCountString in zip(momentGroups, samplesList):
+        sampleCount = int(sampleCountString)
+        if sampleCount and not (self.stepCount % sampleCount) == 0:
+          raise ParserException(samplesElement, "Sample count does not evenly divide the number of steps")
+        self.samples.append(sampleCount)
+        # FIXME: The following line is probably wrong when we add additional non-fourier dimensions before
+        # the propagation dimension. Then, if we are sampling that dimension as well, then it will have a lower
+        # index than the propagation dimension, so the index for the propagation dimension won't be 0.
+        # FIXME: This line will also be wrong when we add sequence elements that support looping.
+        momentGroup.dimensions[0].lattice += sampleCount
+      
   

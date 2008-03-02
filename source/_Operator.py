@@ -97,6 +97,8 @@ class _Operator (ScriptElement):
   del _getLoopingField, _setLoopingField
   
   def bindNamedVectors(self):
+    super(_Operator, self).bindNamedVectors()
+    
     if self.dependenciesEntity:
       dependencies = self.vectorsFromEntity(self.dependenciesEntity)
       
@@ -112,6 +114,5 @@ class _Operator (ScriptElement):
     
     if self.resultVector:
       self.resultVector.spacesNeeded.add(self.operatorSpace)
-    super(_Operator, self).bindNamedVectors()
   
   

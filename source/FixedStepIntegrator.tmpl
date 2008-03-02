@@ -45,27 +45,48 @@ ${initialiseCrossPropagation}@slurp
   @set $setOfVectorsToLoopOver = $vectors.copy()
   @silent setOfVectorsToLoopOver.update($parent.boundaryConditionDependencies)
   @#
-// Set the boundary condition
-${loopOverFieldInSpaceWithVectorsAndInnerContent($field, $homeSpace, $setOfVectorsToLoopOver, $parent.boundaryConditionCode, indexOverrides = $indexOverrides)}@slurp
-
-  @set $integrationDimension = $parent.field.dimensionWithName($propagationDimension)
-${integrationDimension.type} ${integrationDimension.name} = _${parent.field.name}_xmin${parent.field.indexOfDimension($integrationDimension)};
+{
+  // Set the boundary condition
+  ${loopOverFieldInSpaceWithVectorsAndInnerContent($parent.reducedField, $homeSpace, $setOfVectorsToLoopOver,
+                                                   $parent.boundaryConditionCode, indexOverrides = $indexOverrides), autoIndent=True}@slurp
+}
 
   @# Create the index overrides dictionary. We only need to override the propagation dimension.
   @set $indexOverrides = {$propagationDimension: dict([(v.field, indexOverrideValue) for v in $parent.dependencies])}
   @#
   @set $setOfVectorsToLoopOver = $dependencies.copy()
   @silent setOfVectorsToLoopOver.update($parent.dependencies)
+  @silent setOfVectorsToLoopOver.update($integrationVectorMap.keys())
+  @silent setOfVectorsToLoopOver.update($integrationVectorMap.values())
   @#
   @capture loopString
+// Copy the dependencies
     @for $reducedVector, $vector in $dependencyMap.iteritems()
 for (long _icomp = 0; _icomp < _${vector.id}_ncomponents; _icomp++) {
   _active_${reducedVector.id}[_${reducedVector.id}_index_pointer + _icomp] = _active_${vector.id}[_${vector.id}_index_pointer + _icomp];
 }
     @end for
+    @#
+
+// Copy the boundary conditions back.
+    @for $reducedVector, $vector in $integrationVectorMap.iteritems()
+for (long _icomp = 0; _icomp < _${vector.id}_ncomponents; _icomp++) {
+  _active_${vector.id}[_${vector.id}_index_pointer + _icomp] = _active_${reducedVector.id}[_${vector.id}_index_pointer + _icomp];
+}
+    @end for
   @end capture
   @#
-${loopOverFieldInSpaceWithVectorsAndInnerContent($field, $homeSpace, $setOfVectorsToLoopOver, $loopString, indexOverrides = $indexOverrides)}@slurp
+{
+  // Copy the part of the dependencies we need into our local array and copy the boundary condition back into the original array
+  ${loopOverFieldInSpaceWithVectorsAndInnerContent($parent.reducedField, $homeSpace, $setOfVectorsToLoopOver,
+                                                   $loopString, indexOverrides = $indexOverrides,
+                                                   vectorsNotNeedingDefines = $setOfVectorsToLoopOver), autoIndent=True}@slurp
+}
+
+  @set $integrationDimension = $parent.field.dimensionWithName($propagationDimension)
+  @# FIXME: This variable is only available inside the integrator... what about the delta a operator?
+${integrationDimension.type} ${integrationDimension.name} = _${parent.field.name}_xmin${parent.field.indexOfDimension($integrationDimension)};
+
   @#
 @end def
 
@@ -76,8 +97,8 @@ This function returns the code that will create a _step variable,
 including any modifications necessary due to the ErrorCheck feature.
 *@
   @#
-double _step = ${interval}/(double)${stepCount};
-double _noiseStep = ${interval}/(double)${stepCount};
+double _step = ${step};
+double _noiseStep = ${step};
   @#
   @set $featureOrdering = ['ErrorCheck']
   @#
@@ -112,7 +133,7 @@ void _segment${segmentNumber}()
   @if $cross
     @# If we are cross-integrating, then we now need to copy our result back
     @# into the original arrays for the integration vectors
-    ${copyResultIntoIntegrationArrays}@slurp
+    ${copyResultIntoIntegrationArrays, autoIndent=True, extraIndent=extraIndent}@slurp
     
   @end if
   @#
@@ -150,13 +171,21 @@ void _segment${segmentNumber}()
   @#
   @capture loopString
     @for $reducedVector, $vector in $integrationVectorMap.iteritems()
+    @set $indices = range(0, len($vector.field.dimensions))
+    @if $vector.field.hasDimensionName($propagationDimension)
+      @silent indices.remove(vector.field.indexOfDimensionName($propagationDimension))
+    @end if
+    @set $skipSize = $propagationDirection + $vector.field.pointsInDimensionsWithIndices($indices)
 for (long _icomp = 0; _icomp < _${vector.id}_ncomponents; _icomp++) {
-  _active_${vector.id}[_${vector.id}_index_pointer + _icomp] = _active_${reducedVector.id}[_${reducedVector.id}_index_pointer + _icomp];
+  _active_${vector.id}[_${vector.id}_index_pointer + _icomp + $skipSize * _${vector.id}_ncomponents] = \
+    _active_${reducedVector.id}[_${reducedVector.id}_index_pointer + _icomp];
 }
     @end for
   @end capture
   @#
-${loopOverFieldInSpaceWithVectorsAndInnerContent($field, $homeSpace, $setOfVectorsToLoopOver, $loopString, indexOverrides = $indexOverrides)}@slurp
+${loopOverFieldInSpaceWithVectorsAndInnerContent($parent.reducedField, $homeSpace, $setOfVectorsToLoopOver,
+                                                 $loopString, indexOverrides = $indexOverrides,
+                                                 vectorsNotNeedingDefines = $setOfVectorsToLoopOver)}@slurp
   @#
 @end def
 
@@ -187,12 +216,19 @@ ${loopOverFieldInSpaceWithVectorsAndInnerContent($field, $homeSpace, $setOfVecto
       @end if
       @set $skipSize = $propagationDirection + $vector.field.pointsInDimensionsWithIndices($indices)
 for (long _icomp = 0; _icomp < _${vector.id}_ncomponents; _icomp++) {
-  _active_${reducedVector.id}[_${reducedVector.id}_index_pointer + _icomp] = _active_${vector.id}[_${vector.id}_index_pointer + _icomp + $skipSize];
+  _active_${reducedVector.id}[_${reducedVector.id}_index_pointer + _icomp] = \
+    _active_${vector.id}[_${vector.id}_index_pointer + _icomp + $skipSize * _${vector.id}_ncomponents];
 }
     @end for
   @end capture
   @#
-${loopOverFieldInSpaceWithVectorsAndInnerContent($field, $homeSpace, $setOfVectorsToLoopOver, $loopString, indexOverrides = $indexOverrides)}@slurp
+
+{
+  // Update the dependencies for the next step
+  ${loopOverFieldInSpaceWithVectorsAndInnerContent($parent.reducedField, $homeSpace, $setOfVectorsToLoopOver,
+                                                   $loopString, indexOverrides = $indexOverrides,
+                                                   vectorsNotNeedingDefines = $setOfVectorsToLoopOver), autoIndent=True}@slurp
+}
   @#
 @end def
 

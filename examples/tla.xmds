@@ -7,12 +7,10 @@
   </description>
   
   <features>
-    <auto_vectorise />
     <benchmark />
     <error_check />
     <bing />
     <fftw version="3" plan="patient" />
-    <openmp />
     <globals>
       <![CDATA[
       const double g = 1.0;
@@ -55,12 +53,17 @@
   
   <sequence>
     <integrate algorithm="RK4" interval="4" steps="200">
-      <samples>50 50</samples>
+      <samples>100 100</samples>
       <operators field="mainField">
         <operator kind="cross_propagation" algorithm="RK4" propagation_dimension="t">
           <integration_vectors>cross</integration_vectors>
+          <!-- You can have a dependencies tag in here -->
           <dependencies>main</dependencies>
           <boundary_condition kind="left">
+            <!-- You can also have a dependencies tag in here -->
+            <!-- like the one shown below, but none are needed -->
+            <!-- in this example -->
+            <!-- <dependencies>cross</dependencies> -->
             <![CDATA[
               P = 0.0;
               N = -1.0;
@@ -78,10 +81,11 @@
       </operators>
     </integrate>
   </sequence>
-  <output format="binary" filename="vibstring.xsil">
+  
+  <output format="binary" filename="tla.xsil">
     <group>
       <sampling initial_sample="yes">
-        <dimension name="t" lattice="50" />
+        <dimension name="t" lattice="1000" />
         <moments>pow_dens</moments>
         <dependencies>main</dependencies>
         <![CDATA[
@@ -91,7 +95,7 @@
     </group>
     <group>
       <sampling initial_sample="no">
-        <dimension name="t" lattice="50" />
+        <dimension name="t" lattice="1000" />
         <moments>P_out N_out</moments>
         <dependencies>cross</dependencies>
         <![CDATA[

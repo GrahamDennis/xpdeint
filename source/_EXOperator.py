@@ -21,6 +21,7 @@ class _EXOperator(Operator):
   operatorKind = Operator.OtherOperatorKind
   
   def preflight(self):
+    super(Operator, self).preflight()
     
     if self.hasattr('operatorComponentsEntity'):
       operatorTargetPairs = self.operatorComponentsEntity.value
@@ -156,4 +157,4 @@ class _EXOperator(Operator):
                       "The following operator names weren't used: %(unusedOperatorNamesString)s" % locals())
       
     
-    super(Operator, self).preflight()
+  
