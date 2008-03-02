@@ -16,7 +16,7 @@
 	<array>
 		<dict>
 			<key>match</key>
-			<string>@(def [_a-zA-Z]\w*|end def|set|extends|attr|return|stop)</string>
+			<string>@(def [_a-zA-Z]\w*|end def|set|extends|attr|return|stop|import|from)</string>
 			<key>name</key>
 			<string>string.unquoted.keyword.control.cheetah</string>
 		</dict>
