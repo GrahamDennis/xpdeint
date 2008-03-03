@@ -41,8 +41,9 @@ class _FixedStepIntegrator (Integrator):
     """Return the features which are not permitted to be inserted by this instance."""
     
     # If we are cross-propagating, then ErrorCheck cannot simply subdivide the step.
+    # And we don't want to sample anything for moment groups
     if self.cross:
-      return ['ErrorCheck']
+      return ['ErrorCheck', 'Output']
     else:
       return None
   

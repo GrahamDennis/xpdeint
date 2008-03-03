@@ -45,6 +45,11 @@ ${initialiseCrossPropagation}@slurp
   @set $setOfVectorsToLoopOver = $vectors.copy()
   @silent setOfVectorsToLoopOver.update($parent.boundaryConditionDependencies)
   @#
+  @# FIXME: The order of the boundary-condition setting isn't the best. The order should go:
+  @# 1. Copy stuff out of the cross-propagation integration vectors into our 'reduced' vectors
+  @# 2. Apply boundary condition code
+  @# 3. Copy result back into the full integration vectors.
+  @#
 {
   // Set the boundary condition
   ${loopOverFieldInSpaceWithVectorsAndInnerContent($parent.reducedField, $homeSpace, $setOfVectorsToLoopOver,
