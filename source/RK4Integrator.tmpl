@@ -126,44 +126,22 @@ _${vector.id}[$index] += _akfield_${vector.id}[$index]/6.0;
 if (_istep == 0 || _istep == (${stepCount} - 1)) {
   // We are at the first or last point
   // FIXME: Make this 4th order too
-  @capture loopString
-    @for $reducedVector, $vector in $dependencyMap.iteritems()
-      @set $indices = range(0, len($vector.field.dimensions))
-      @if $vector.field.hasDimensionName($propagationDimension)
-        @silent indices.remove(vector.field.indexOfDimensionName($propagationDimension))
-      @end if
-      @set $skipSize = $propagationDirection + $vector.field.pointsInDimensionsWithIndices($indices)
-for (long _icomp = 0; _icomp < _${vector.id}_ncomponents; _icomp++) {
-  _active_${reducedVector.id}[_${reducedVector.id}_index_pointer + _icomp] = \
-    0.5*(_active_${vector.id}[_${vector.id}_index_pointer + _icomp]
-       + _active_${vector.id}[_${vector.id}_index_pointer + _icomp + $skipSize * _${vector.id}_ncomponents]);
-}
-    @end for
-  @end capture
-  ${loopOverFieldInSpaceWithVectorsAndInnerContent($parent.reducedField, $homeSpace, $setOfVectorsToLoopOver,
-                                                   $loopString, indexOverrides = $indexOverrides,
-                                                   vectorsNotNeedingDefines = $setOfVectorsToLoopOver), autoIndent=True}@slurp
+  ${reducedFieldCopy($dependencyMap, 
+"""
+_active_${reducedVector.id}[_${reducedVector.id}_index_pointer + ${componentIndex}] = \\
+    0.5*(_active_${vector.id}[_${vector.id}_index_pointer + ${componentIndex}]
+       + _active_${vector.id}[_${vector.id}_index_pointer + ${componentIndex} + ${skipSize} * _${vector.id}_ncomponents]);
+"""), autoIndent=True}@slurp
 } else {
   // We are somewhere in the middle and can make a 4th order interpolation
-  @capture loopString
-    @for $reducedVector, $vector in $dependencyMap.iteritems()
-      @set $indices = range(0, len($vector.field.dimensions))
-      @if $vector.field.hasDimensionName($propagationDimension)
-        @silent indices.remove(vector.field.indexOfDimensionName($propagationDimension))
-      @end if
-      @set $skipSize = $propagationDirection + $vector.field.pointsInDimensionsWithIndices($indices)
-for (long _icomp = 0; _icomp < _${vector.id}_ncomponents; _icomp++) {
-  _active_${reducedVector.id}[_${reducedVector.id}_index_pointer + _icomp] = \
-      9.0/16.0*(_active_${vector.id}[_${vector.id}_index_pointer + _icomp]
-              + _active_${vector.id}[_${vector.id}_index_pointer + _icomp + $skipSize * _${vector.id}_ncomponents])
-    - 1.0/16.0*(_active_${vector.id}[_${vector.id}_index_pointer + _icomp - $skipSize * _${vector.id}_ncomponents]
-              + _active_${vector.id}[_${vector.id}_index_pointer + _icomp + 2 * $skipSize * _${vector.id}_ncomponents]);
-}
-    @end for
-  @end capture
-  ${loopOverFieldInSpaceWithVectorsAndInnerContent($parent.reducedField, $homeSpace, $setOfVectorsToLoopOver,
-                                                   $loopString, indexOverrides = $indexOverrides,
-                                                   vectorsNotNeedingDefines = $setOfVectorsToLoopOver), autoIndent=True}@slurp
+  ${reducedFieldCopy($dependencyMap, 
+"""
+_active_${reducedVector.id}[_${reducedVector.id}_index_pointer + ${componentIndex}] = \\
+    9.0/16.0*(_active_${vector.id}[_${vector.id}_index_pointer + ${componentIndex}]
+            + _active_${vector.id}[_${vector.id}_index_pointer + ${componentIndex} + ${skipSize} * _${vector.id}_ncomponents])
+  - 1.0/16.0*(_active_${vector.id}[_${vector.id}_index_pointer + ${componentIndex} - ${skipSize} * _${vector.id}_ncomponents]
+            + _active_${vector.id}[_${vector.id}_index_pointer + ${componentIndex} + 2 * ${skipSize} * _${vector.id}_ncomponents]);
+"""), autoIndent=True}@slurp
 }
   @#
 @end def

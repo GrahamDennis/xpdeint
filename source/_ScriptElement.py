@@ -367,3 +367,13 @@ class _ScriptElement (Template):
     
     return code
   
+  def templateObjectFromStringWithTemplateVariables(self, templateString, templateVars):
+    settings = {'directiveStartToken': '@',
+                'commentStartToken': '@#',
+                'multiLineCommentStartToken': '@*',
+                'multiLineCommentEndToken': '*@'
+               }
+    return Template(source = templateString,
+                    searchList = [templateVars],
+                    compilerSettings = settings)
+  

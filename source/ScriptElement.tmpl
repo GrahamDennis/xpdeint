@@ -123,14 +123,7 @@ to be performed in the same way on a range of vectors in possibly different fiel
   @set $templateString += '\n'.join(dict['templateFunctions'])
   @#
   @set $templateVariables = {'index': '_i0'}
-  @set $settings = {'directiveStartToken': '@',
-                    'commentStartToken': '@#',
-                    'multiLineCommentStartToken': '@*',
-                    'multiLineCommentEndToken': '*@'
-                   }
-  @set $innerLoopTemplate = Template(source=$templateString,
-                                     searchList=[$templateVariables],
-                                     compilerSettings=$settings)
+  @set $innerLoopTemplate = $templateObjectFromStringWithTemplateVariables($templateString, $templateVariables)
   @#
   @set $loopFeatureOrdering = ['AutoVectorise', 'OpenMP']
   @silent $dict['extraIndent'] = 0

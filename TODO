@@ -27,6 +27,8 @@
 
 * Add the ability to distribute stochastic simulations using OpenMP
 
+* Add the ability to distribute stochastic simulations using MPI with the scheduling method
+
 * Deterministic/distributed MPI
 
 * Cross-propagation
@@ -79,4 +81,7 @@
 * In adaptive integrators, the ability to set an absolute tolerance (per vector component) in addition to a relative tolerance
   for step-error calculations.
 
-
+* Check that all bug fixes to xmds-1 since September 1, 2007 have been added to xpdeint. In particular, I don't think the changes to the adaptive
+  step error-calculation routine have been made.
+  
+* Add the semi-implicit integrator from xmds-1 (other implicit or semi-implicit integrators would be good too).
