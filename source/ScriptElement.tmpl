@@ -399,7 +399,7 @@ ${postDimensionLoopClosingCode[$dimension.name], extraIndent=$indentLevel}@slurp
 @def openLoopForDimensionInFieldInSpace($dimension, $field, $space, $vectors, $kspaceAscendingOrder)
 @#doc: Open loop for dimension `dimension` in field `field`.
   @#
-  @set $fieldDimensionNumber    = $field.indexOfDimension($dimension)
+  @set $fieldDimensionNumber = $field.indexOfDimension($dimension)
   @set $featureOrdering = ['OpenMP']
   @#
   @if $dimensionIsInFourierSpace($dimension, $space)
@@ -424,6 +424,7 @@ ${dimension.type} ${dimension.name} = _${field.name}_xmin${fieldDimensionNumber}
     @end if
     @#
   @end if
+#define _N${dimension.name} _${field.name}_lattice${fieldDimensionNumber}
 
   @set $dict = {'dimension': $dimension, 'field': $field, 'vectors': $vectors}
 ${insertCodeForFeatures('openLoopForDimensionInFieldInSpaceBegin', $featureOrdering, $dict)}@slurp
@@ -628,6 +629,7 @@ _${vector.id}_ncomponents;
 #undef ${dimension.name}
     @end if
   @end if
+#undef _N${dimension.name}
 }
   @#
 @end def
