@@ -29,14 +29,21 @@ Build instructions:
    Note that xpdeint currently requires xmds-1 to be installed for things  
    like libxmds and xmds_complex.h
 
-This should mostly work. Note that to change the xmds script being used to generate
-the simulation source, you will need to modify the parser2.py file.
+This should mostly work.
 
 So far the feature list includes:
 * RK4, RK9, ARK45, ARK89 integrators
 * IP/EX operators are separate from the integration algorithm, so you  
-  can have both IP and EX operators in a single integrate block
-* Fields of different dimensions
+  can have both IP and EX operators in a single integrate block. Also,
+  EX operators can act on arbitrary code, not just vector components.
+* The ability to have more than one noise kind in a simulation.
+* Adaptive integrators that are stochastic-safe for poissonian noises
+  as well as gaussian noises.
+* Cross propagation in the increasing direction of a given dimension
+  or in the decreasing dimension. And you can have more than one
+  cross-propagator in a given integrator (going in different directions
+  or dimensions).
+* Fields of different dimensions.
 * Integrate more than one vector (in more than one field), so you can  
   now simultaneously integrate a PDE and a coupled ODE
 * OpenMP support
@@ -49,27 +56,8 @@ So far the feature list includes:
 * xmds-1 like generated source. In many places existing internal hacks  
   could work in xpdeint.
 
-Features missing (see the TODO for a more complete list):
-* Stochastic support (I've mostly implemented this)
-* Deterministic MPI support (nightmarish)
-* A front-end (parse command line arguments to xmds, load the right  
-  script, generate the right file, read a configuration file, work out  
-  how to compile the script and compile it)
-* An XMDS-1 parser. Currently it has a parser for the new xmds-2 xml  
-  format (see example *.xmds files), but the parser has been written so  
-  that you can simply write another subclass of the parser to handle  
-  xmds-1 scripts so that xmds-2 could be backwards-compatible.
-* Lots of small things: ASCII/Binary/XSIL import, a filter element  
-  (though there is a filter operator which is similar to (but more  
-  powerful than) the XMDS-1 moments operator), 'functions' for  
-  integrate / filter blocks, argument handling, parser for
-  post_propagation element. The template code for handling
-  post_propagation has been written, just the parser hasn't.
-
-Currently the parser2.py is a bare-bones wrapper around the XML parser  
-which loads a hard-coded file (scriptName in parser2.py) and dumps the  
-generated source file to stdout.
-
+Currently the parser2.py doesn't read any preferences, it just loads an xmds script passed
+as an argument writes the generated source to file, and compiles the file.
 
 Here are a couple of potential projects that would be good introductions
 into the code base:
@@ -92,6 +80,7 @@ into the code base:
 2. Rewrite xsil2graphics using Python and Cheetah for templates.
    This is a good intro project into using Cheetah.
 
+3. Anything in the TODO.
 
 
 Cheetah templates are basically a nice way of writing code whose primary purpose
@@ -131,7 +120,7 @@ _*.py files: These are the python superclasses for Cheetah Templates
 
 *parser* files: The XML parser and its tools
 
-Decorators: Used for all Python decorators
+Decorators.py: Used for all Python decorators
 
 *Filter.py: Cheetah Filters. These 'filter' the generated source as it  
   goes. IndentFilter indents the code property (if you provide it the  
@@ -139,11 +128,7 @@ Decorators: Used for all Python decorators
   go in a printf statement.
 
 *.xmds: xmds-2 script files used for testing. The syntax is fairly  
-  obvious. Though the format is up for debate. I am currently debating  
-  whether or not to remove the 'features' tag and move all children up  
-  to the 'simulation' top level. The parser currently supports scripts  
-  written either way, though I may completely remove the 'features' tag  
-  in the future.
+  obvious. Though the format is up for debate.
 
 
 I've tried to document my code as I went, and where I  
@@ -151,7 +136,7 @@ didn't, make variable and method names sufficiently verbose to make
 things clear. About the only real piece of black magic is  
 ScriptElement.tmpl which writes all of the looping code and handles  
 whether or not dimensions are being looped over, integrated, etc.
-Note that my documentation isn't in the form of docstrings. This needs
+Note that not all documentation is in the form of docstrings. This needs
 to be fixed.
 
 The only other thing I would mention is that the Cheetah documentation  
@@ -159,4 +144,5 @@ is incomplete, and is from version 1.0. There have been a few features
 added through to 2.0 that I have been using that are only described in  
 the CHANGES document available from the Cheetah website. Specifically,  
 I've been using 'Cheetah strings' (c'stuff' syntax, like Python's  
-r'stuff' raw-string syntax), and decorators in templates.
+r'stuff' raw-string syntax), decorators in templates, and the 'capture'
+directive.
