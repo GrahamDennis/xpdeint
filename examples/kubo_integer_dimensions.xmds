@@ -58,8 +58,8 @@
         <moments>zR zI</moments>
         <dependencies>main</dependencies>
         <![CDATA[
-          zR = z.re/_mainField_lattice0;
-          zI = z.im/_mainField_lattice0;
+          zR = z.re/_Nj;
+          zI = z.im/_Nj;
         ]]>
       </sampling>
     </group>
