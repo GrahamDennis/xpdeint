@@ -1049,7 +1049,7 @@ class XMDS2Parser(ScriptParser):
     
     return operatorTemplate
   
-  def parseFilterOperatorElement(self, operatorTemplate, operatorElement, deltaAOperatorTemplate):
+  def parseFilterOperatorElement(self, operatorTemplate, operatorElement, parentTemplate):
     targetField = None
     momentsVectorName = None
     geometryTemplate = self.globalNameSpace['geometry']
@@ -1132,7 +1132,7 @@ class XMDS2Parser(ScriptParser):
       for momentName in momentNames:
         momentsVector.components.append(momentName)
       
-      deltaAOperatorTemplate.dependencies.add(momentsVector)
+      parentTemplate.dependencies.add(momentsVector)
       operatorTemplate.dependencies.add(momentsVector)
       operatorTemplate.resultVector = momentsVector
       
