@@ -120,7 +120,7 @@ _*.py files: These are the python superclasses for Cheetah Templates
 
 *parser* files: The XML parser and its tools
 
-Decorators.py: Used for all Python decorators
+CallOnceGuards.py: Used for all Python CallOnceGuards
 
 *Filter.py: Cheetah Filters. These 'filter' the generated source as it  
   goes. IndentFilter indents the code property (if you provide it the  
@@ -144,5 +144,5 @@ is incomplete, and is from version 1.0. There have been a few features
 added through to 2.0 that I have been using that are only described in  
 the CHANGES document available from the Cheetah website. Specifically,  
 I've been using 'Cheetah strings' (c'stuff' syntax, like Python's  
-r'stuff' raw-string syntax), decorators in templates, and the 'capture'
+r'stuff' raw-string syntax), CallOnceGuards in templates, and the 'capture'
 directive.

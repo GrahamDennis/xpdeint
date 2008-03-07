@@ -61,11 +61,13 @@ from ArgvFeature import ArgvFeature
 
 from StochasticFeature import StochasticFeature
 from GaussianPOSIXNoise import GaussianPOSIXNoise
-from SlowGaussianPOSIXNoise import SlowGaussianPOSIXNoise
 from UniformPOSIXNoise import UniformPOSIXNoise
 from PoissonianPOSIXNoise import PoissonianPOSIXNoise
 from GaussianMKLNoise import GaussianMKLNoise
 from UniformMKLNoise import UniformMKLNoise
+from GaussianDSFMTNoise import GaussianDSFMTNoise
+from UniformDSFMTNoise import UniformDSFMTNoise
+from PoissonianDSFMTNoise import PoissonianDSFMTNoise
 
 from FourierTransformNone import FourierTransformNone
 from FourierTransformFFTW2 import FourierTransformFFTW2
@@ -189,12 +191,14 @@ class XMDS2Parser(ScriptParser):
         noiseAttributeDictionary = dict()
         if kind in ('gauss', 'gaussian', 'gaussian-posix'):
           noiseClass = GaussianPOSIXNoise
-        elif kind in ('slow-gaussian', 'slow-gaussian-posix'):
-          noiseClass = SlowGaussianPOSIXNoise
         elif kind in ('uniform', 'uniform-posix'):
           noiseClass = UniformPOSIXNoise
-        elif kind in ('poissonian', 'poissonian-posix'):
-          noiseClass = PoissonianPOSIXNoise
+        elif kind in ('poissonian', 'poissonian-posix', 'poissonian-dsfmt'):
+          if kind.endswith('dsfmt'):
+            noiseClass = PoissonianDSFMTNoise
+          else:
+            noiseClass = PoissonianPOSIXNoise
+          
           if not noiseElement.hasAttribute('mean-rate'):
             raise ParserException(noiseElement, "Poissonian noise must specify a 'mean-rate' attribute.")
           
@@ -208,6 +212,10 @@ class XMDS2Parser(ScriptParser):
           noiseClass = GaussianMKLNoise
         elif kind in ('uniform-mkl'):
           noiseClass = UniformMKLNoise
+        elif kind in ('gaussian-dsfmt'):
+          noiseClass = GaussianDSFMTNoise
+        elif kind in ('uniform-dsfmt'):
+          noiseClass = UniformDSFMTNoise
         else:
           raise ParserException(noiseElement, "Unknown noise kind '%(kind)s'." % locals())
         noise = noiseClass(**self.argumentsToTemplateConstructors)

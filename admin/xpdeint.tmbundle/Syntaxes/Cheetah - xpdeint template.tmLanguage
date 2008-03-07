@@ -28,7 +28,7 @@
 		</dict>
 		<dict>
 			<key>match</key>
-			<string>@(super|filter|end filter|capture|end capture|silent|slurp|assert|@[_a-zA-Z]\w*)</string>
+			<string>@(super|filter|end filter|capture|end capture|silent|slurp|assert|@[_a-zA-Z][_a-zA-Z0-9.]*)</string>
 			<key>name</key>
 			<string>string.unquoted.keyword.other.cheetah</string>
 		</dict>

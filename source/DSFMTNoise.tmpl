@@ -1,0 +1,68 @@
+@*
+dSFMTNoise.tmpl
+
+Created by Graham Dennis on 2008-03-05.
+Copyright (c) 2008 __MyCompanyName__. All rights reserved.
+*@
+@extends Noise
+
+@from CallOnceGuards import callOnceGuard
+@import random
+
+@def description: Generic dSFMT noise
+@def generatorType: dsfmt_t*
+
+@@callOnceGuard
+@def cflags
+@*doc:
+Return the options that need to be added to ``CFLAG``.
+*@
+  @#
+-msse2 -finline-functions -fno-strict-aliasing --param max-inline-insns-single=1800 -DDSFMT_MEXP=19937 -DHAVE_SSE2 dSFMT.c@slurp
+  @#
+@end def
+
+@*
+  Static includes
+*@
+@@callOnceGuard
+@def static_includes
+  @#
+  @super
+  @#
+#define DSFMT_DO_NOT_USE_OLD_NAMES
+#include "dSFMT.h"
+  @#
+@end def
+
+@*
+  Globals
+*@
+@def globals
+  @#
+  @super
+  @#
+dsfmt_t* ${generatorName};
+  @#
+@end def
+
+@*
+  Initialise seeds
+*@
+@def initialiseSeeds
+  @#
+  @set $featureOrdering = ['Driver']
+  @silent seedOffset = $insertCodeForFeatures('seedOffset', $featureOrdering)
+  @#
+  @if not len($seedArray)
+    @set self.generatedSeeds = [random.randrange(0, pow(2, 31)) for i in range(3)]
+    @set seedArray = self.generatedSeeds
+  @end if
+  @#
+  @set $seedString = ', '.join([str(seed) for seed in $seedArray])
+  @#
+uint32_t _${prefix}_seeds[${len($seedArray)}] = { $seedString };
+${generatorName} = (dsfmt_t *)xmds_malloc(sizeof(dsfmt_t));
+dsfmt_init_by_array(${generatorName}, _${prefix}_seeds, ${len($seedArray)});
+  @#
+@end def
