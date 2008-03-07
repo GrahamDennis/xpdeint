@@ -29,9 +29,13 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 #include <vector>
 
 @for $element in $scriptElements
-${element.includes}@slurp
-@end for
+  @# Prevent writing zero-length defines
+  @set $result = $element.implementationsForFunctionName('includes')
+  @if $result and not $result.isspace()
+${result}@slurp
 
+  @end if
+@end for
 #include <xmds_complex.h>
 #include <xmds_config.h>
 

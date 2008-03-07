@@ -14,7 +14,7 @@
     <fftw version="3" />
     <!-- <openmp /> -->
     <stochastic>
-      <noise kind="gaussian" prefix="n" num="2"/>
+      <noise kind="gaussian-dsfmt" prefix="n" num="2"/>
       <!-- If there is no seed attribute then seeds will be chosen randomly at run-time -->
     </stochastic>
     <globals>

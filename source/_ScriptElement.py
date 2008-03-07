@@ -20,16 +20,27 @@ import RegularExpressionStrings
 
 class _ScriptElement (Template):
   # Initialise the callOnceGuards to be empty
-  _callOncePerClassGuards = set()
+  _callOnceGuards = set()
   _callOncePerInstanceGuards = dict()
   
   @classmethod
   def resetGuards(cls):
-    _ScriptElement._callOncePerClassGuards.clear()
+    _ScriptElement._callOnceGuards.clear()
     for instanceGuardSet in _ScriptElement._callOncePerInstanceGuards.itervalues():
       instanceGuardSet.clear()
   
+  _ScriptElement_haveCalledInit = False
+  
   def __init__(self, *args, **KWs):
+    # If we have a diamond-inheritence, this function could be called more than once
+    # And that would be bad. Let's check for that case, and return if it is the case.
+    # Template can deal with being called more than once, but some of the code below
+    # wouldn't be safe called more than once
+    if self._ScriptElement_haveCalledInit:
+      return
+    
+    self._ScriptElement_haveCalledInit = True
+    
     Template.__init__(self, *args, **KWs)
     
     self.getVar('templates').add(self)
