@@ -8,7 +8,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
 from DSFMTNoise import DSFMTNoise
-from GaussianBoxMuellerNoiseMethod import GaussianBoxMuellerNoiseMethod
+from ..GaussianBoxMuellerNoiseMethod import GaussianBoxMuellerNoiseMethod
 
 class _GaussianDSFMTNoise(DSFMTNoise, GaussianBoxMuellerNoiseMethod):
   # Because generated Cheetah templates directly call their superclass' __init__ function

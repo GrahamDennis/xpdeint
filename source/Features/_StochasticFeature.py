@@ -10,9 +10,9 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 from _Feature import _Feature
 from VectorElement import VectorElement
 from VectorInitialisationCDATA import VectorInitialisationCDATA
-from DeltaAOperator import DeltaAOperator
-from FixedStepIntegrator import FixedStepIntegrator
-from AdaptiveStepIntegrator import AdaptiveStepIntegrator
+from .Operators.DeltaAOperator import DeltaAOperator
+from .Segments.Integrators.FixedStepIntegrator import FixedStepIntegrator
+from .Segments.Integrators.AdaptiveStepIntegrator import AdaptiveStepIntegrator
 
 from ParserException import ParserException
 
