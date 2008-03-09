@@ -9,7 +9,7 @@ Created by Graham Dennis on 2007-10-18.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 """
 
-from _Segment import _Segment
+from .._Segment import _Segment
 
 from ParserException import ParserException
 

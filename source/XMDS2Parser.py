@@ -24,55 +24,55 @@ from VectorInitialisation import VectorInitialisation as VectorInitialisationZer
 from VectorInitialisationCDATA import VectorInitialisationCDATA as VectorInitialisationCDATATemplate
 
 
-from TopLevelSequenceElement import TopLevelSequenceElement as TopLevelSequenceElementTemplate
-from DefaultDriver import DefaultDriver as DefaultDriverTemplate
-from MultiPathDriver import MultiPathDriver as MultiPathDriverTemplate
-from MPIMultiPathDriver import MPIMultiPathDriver as MPIMultiPathDriverTemplate
+from Segments.TopLevelSequenceElement import TopLevelSequenceElement as TopLevelSequenceElementTemplate
+from SimulationDrivers.DefaultDriver import DefaultDriver as DefaultDriverTemplate
+from SimulationDrivers.MultiPathDriver import MultiPathDriver as MultiPathDriverTemplate
+from SimulationDrivers.MPIMultiPathDriver import MPIMultiPathDriver as MPIMultiPathDriverTemplate
 
-from FixedStepIntegrator import FixedStepIntegrator
-from AdaptiveStepIntegrator import AdaptiveStepIntegrator
+from Segments.Integrators.FixedStepIntegrator import FixedStepIntegrator
+from Segments.Integrators.AdaptiveStepIntegrator import AdaptiveStepIntegrator
 
-from RK4Integrator import RK4Integrator as RK4IntegratorTemplate
-from RK9Integrator import RK9Integrator as RK9IntegratorTemplate
-from ARK45Integrator import ARK45Integrator as ARK45IntegratorTemplate
-from ARK89Integrator import ARK89Integrator as ARK89IntegratorTemplate
+from Segments.Integrators.RK4Integrator import RK4Integrator as RK4IntegratorTemplate
+from Segments.Integrators.RK9Integrator import RK9Integrator as RK9IntegratorTemplate
+from Segments.Integrators.ARK45Integrator import ARK45Integrator as ARK45IntegratorTemplate
+from Segments.Integrators.ARK89Integrator import ARK89Integrator as ARK89IntegratorTemplate
 
-from DeltaAOperator import DeltaAOperator as DeltaAOperatorTemplate
-from ConstantIPOperator import ConstantIPOperator as ConstantIPOperatorTemplate
-from AdaptiveStepIPOperator import AdaptiveStepIPOperator as AdaptiveStepIPOperatorTemplate
-from ConstantEXOperator import ConstantEXOperator as ConstantEXOperatorTemplate
-from NonConstantEXOperator import NonConstantEXOperator as NonConstantEXOperatorTemplate
-from FilterOperator import FilterOperator as FilterOperatorTemplate
-from CrossPropagationOperator import CrossPropagationOperator as CrossPropagationOperatorTemplate
+from Operators.DeltaAOperator import DeltaAOperator as DeltaAOperatorTemplate
+from Operators.ConstantIPOperator import ConstantIPOperator as ConstantIPOperatorTemplate
+from Operators.AdaptiveStepIPOperator import AdaptiveStepIPOperator as AdaptiveStepIPOperatorTemplate
+from Operators.ConstantEXOperator import ConstantEXOperator as ConstantEXOperatorTemplate
+from Operators.NonConstantEXOperator import NonConstantEXOperator as NonConstantEXOperatorTemplate
+from Operators.FilterOperator import FilterOperator as FilterOperatorTemplate
+from Operators.CrossPropagationOperator import CrossPropagationOperator as CrossPropagationOperatorTemplate
 
 
-from BinaryOutput import BinaryOutput as BinaryOutputTemplate
-from AsciiOutput import AsciiOutput as AsciiOutputTemplate
+from Features.BinaryOutput import BinaryOutput as BinaryOutputTemplate
+from Features.AsciiOutput import AsciiOutput as AsciiOutputTemplate
 from MomentGroupElement import MomentGroupElement as MomentGroupTemplate
 
 
-from AutoVectoriseFeature import AutoVectoriseFeature
-from BenchmarkFeature import BenchmarkFeature
-from ErrorCheckFeature import ErrorCheckFeature
-from BingFeature import BingFeature
-from OpenMPFeature import OpenMPFeature
-from GlobalsFeature import GlobalsFeature
-from ArgvFeature import ArgvFeature
+from Features.AutoVectoriseFeature import AutoVectoriseFeature
+from Features.BenchmarkFeature import BenchmarkFeature
+from Features.ErrorCheckFeature import ErrorCheckFeature
+from Features.BingFeature import BingFeature
+from Features.OpenMPFeature import OpenMPFeature
+from Features.GlobalsFeature import GlobalsFeature
+from Features.ArgvFeature import ArgvFeature
 
-from StochasticFeature import StochasticFeature
-from GaussianPOSIXNoise import GaussianPOSIXNoise
-from UniformPOSIXNoise import UniformPOSIXNoise
-from PoissonianPOSIXNoise import PoissonianPOSIXNoise
-from GaussianMKLNoise import GaussianMKLNoise
-from UniformMKLNoise import UniformMKLNoise
-from GaussianDSFMTNoise import GaussianDSFMTNoise
-from UniformDSFMTNoise import UniformDSFMTNoise
-from PoissonianDSFMTNoise import PoissonianDSFMTNoise
+from Features.StochasticFeature import StochasticFeature
+from Features.Noises.POSIX.GaussianPOSIXNoise import GaussianPOSIXNoise
+from Features.Noises.POSIX.UniformPOSIXNoise import UniformPOSIXNoise
+from Features.Noises.POSIX.PoissonianPOSIXNoise import PoissonianPOSIXNoise
+from Features.Noises.MKL.GaussianMKLNoise import GaussianMKLNoise
+from Features.Noises.MKL.UniformMKLNoise import UniformMKLNoise
+from Features.Noises.DSFMT.GaussianDSFMTNoise import GaussianDSFMTNoise
+from Features.Noises.DSFMT.UniformDSFMTNoise import UniformDSFMTNoise
+from Features.Noises.DSFMT.PoissonianDSFMTNoise import PoissonianDSFMTNoise
 
-from FourierTransformNone import FourierTransformNone
-from FourierTransformFFTW2 import FourierTransformFFTW2
-from FourierTransformFFTW3 import FourierTransformFFTW3
-from FourierTransformFFTW3Threads import FourierTransformFFTW3Threads
+from Features.FourierTransformNone import FourierTransformNone
+from Features.FourierTransformFFTW2 import FourierTransformFFTW2
+from Features.FourierTransformFFTW3 import FourierTransformFFTW3
+from Features.FourierTransformFFTW3Threads import FourierTransformFFTW3Threads
 
 # TODO: Must check that we are never sampling a temporary vector when it doesn't exist.
 # The way to do this is after the template tree has been built to iterate over all elements that can sample

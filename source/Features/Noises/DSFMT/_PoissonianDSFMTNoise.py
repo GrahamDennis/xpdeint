@@ -8,7 +8,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
 from DSFMTNoise import DSFMTNoise
-from PoissonianNoiseMethod import PoissonianNoiseMethod
+from ..PoissonianNoiseMethod import PoissonianNoiseMethod
 
 class _PoissonianDSFMTNoise(DSFMTNoise, PoissonianNoiseMethod):
   # Because generated Cheetah templates directly call their superclass' __init__ function

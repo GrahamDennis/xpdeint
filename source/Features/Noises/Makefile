@@ -1,7 +1,6 @@
 templates = $(wildcard *.tmpl)
-cheetah_settings = directiveStartToken="@",commentStartToken="@\#",multiLineCommentStartToken="@*",multiLineCommentEndToken="*@"
 
-SUBDIRS = SimulationDrivers Segments Operators Features
+SUBDIRS = POSIX MKL DSFMT
 
 .PHONY: all compile clean
 
@@ -19,7 +18,6 @@ compile: .COMPILE
 	@if test "$?"; then \
 	cheetah compile --settings='$(cheetah_settings)' $?; fi
 	@touch .COMPILE
-	@./version.sh
 
 
 # remove all compiled files
