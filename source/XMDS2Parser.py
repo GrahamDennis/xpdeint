@@ -44,16 +44,8 @@ from Features.BinaryOutput import BinaryOutput as BinaryOutputTemplate
 from Features.AsciiOutput import AsciiOutput as AsciiOutputTemplate
 from MomentGroupElement import MomentGroupElement as MomentGroupTemplate
 
+import Features
 
-from Features.AutoVectoriseFeature import AutoVectoriseFeature
-from Features.BenchmarkFeature import BenchmarkFeature
-from Features.ErrorCheckFeature import ErrorCheckFeature
-from Features.BingFeature import BingFeature
-from Features.OpenMPFeature import OpenMPFeature
-from Features.GlobalsFeature import GlobalsFeature
-from Features.ArgvFeature import ArgvFeature
-
-from Features.StochasticFeature import StochasticFeature
 from Features.Noises.POSIX.GaussianPOSIXNoise import GaussianPOSIXNoise
 from Features.Noises.POSIX.UniformPOSIXNoise import UniformPOSIXNoise
 from Features.Noises.POSIX.PoissonianPOSIXNoise import PoissonianPOSIXNoise
@@ -125,13 +117,13 @@ class XMDS2Parser(ScriptParser):
       return featureElement, feature
     
     
-    parseSimpleFeature('auto_vectorise', AutoVectoriseFeature)
-    parseSimpleFeature('benchmark', BenchmarkFeature)
-    parseSimpleFeature('error_check', ErrorCheckFeature)
-    parseSimpleFeature('bing', BingFeature)
-    parseSimpleFeature('openmp', OpenMPFeature)
+    parseSimpleFeature('auto_vectorise', Features.AutoVectorise)
+    parseSimpleFeature('benchmark', Features.Benchmark)
+    parseSimpleFeature('error_check', Features.ErrorCheck)
+    parseSimpleFeature('bing', Features.Bing)
+    parseSimpleFeature('openmp', Features.OpenMP)
     
-    argvFeatureElement, argvFeature = parseSimpleFeature('argv', ArgvFeature)
+    argvFeatureElement, argvFeature = parseSimpleFeature('argv', Features.Argv)
     
     if argvFeatureElement:
       argElements = argvFeatureElement.getChildElementsByTagName('arg')
@@ -170,10 +162,10 @@ class XMDS2Parser(ScriptParser):
     
     globalsElement = featuresParentElement.getChildElementByTagName('globals', optional=True)
     if globalsElement:
-      globalsTemplate = GlobalsFeature(**self.argumentsToTemplateConstructors)
+      globalsTemplate = Features.Globals(**self.argumentsToTemplateConstructors)
       globalsTemplate.globalsCode = globalsElement.cdataContents()
     
-    stochasticFeatureElement, stochasticFeature = parseSimpleFeature('stochastic', StochasticFeature)
+    stochasticFeatureElement, stochasticFeature = parseSimpleFeature('stochastic', Features.Stochastic)
     
     if stochasticFeature:
       stochasticFeature.xmlElement = stochasticFeatureElement
