@@ -29,13 +29,7 @@ from SimulationDrivers.DefaultDriver import DefaultDriver as DefaultDriverTempla
 from SimulationDrivers.MultiPathDriver import MultiPathDriver as MultiPathDriverTemplate
 from SimulationDrivers.MPIMultiPathDriver import MPIMultiPathDriver as MPIMultiPathDriverTemplate
 
-from Segments.Integrators.FixedStepIntegrator import FixedStepIntegrator
-from Segments.Integrators.AdaptiveStepIntegrator import AdaptiveStepIntegrator
-
-from Segments.Integrators.RK4Integrator import RK4Integrator as RK4IntegratorTemplate
-from Segments.Integrators.RK9Integrator import RK9Integrator as RK9IntegratorTemplate
-from Segments.Integrators.ARK45Integrator import ARK45Integrator as ARK45IntegratorTemplate
-from Segments.Integrators.ARK89Integrator import ARK89Integrator as ARK89IntegratorTemplate
+from Segments import Integrators as IntegratorTemplates
 
 from Operators.DeltaAOperator import DeltaAOperator as DeltaAOperatorTemplate
 from Operators.ConstantIPOperator import ConstantIPOperator as ConstantIPOperatorTemplate
@@ -735,13 +729,13 @@ class XMDS2Parser(ScriptParser):
     
     algorithmString = integrateElement.getAttribute('algorithm')
     if algorithmString == 'RK4':
-      integratorTemplateClass = RK4IntegratorTemplate
+      integratorTemplateClass = IntegratorTemplates.RK4
     elif algorithmString == 'RK9':
-      integratorTemplateClass = RK9IntegratorTemplate
+      integratorTemplateClass = IntegratorTemplates.RK9
     elif algorithmString == 'ARK45':
-      integratorTemplateClass = ARK45IntegratorTemplate
+      integratorTemplateClass = IntegratorTemplates.ARK45
     elif algorithmString == 'ARK89':
-      integratorTemplateClass = ARK89IntegratorTemplate
+      integratorTemplateClass = IntegratorTemplates.ARK89
     else:
       raise ParserException(integrateElement, "Unknown algorithm '%(algorithmString)s'. "
                                               "Options are 'RK4', 'RK9', 'ARK45' or 'ARK89'." % locals())
@@ -757,7 +751,7 @@ class XMDS2Parser(ScriptParser):
       else:
         raise ParserException(integrateElement, "home_space must be either 'k' or 'x'.")
     
-    if issubclass(integratorTemplateClass, AdaptiveStepIntegrator):
+    if issubclass(integratorTemplateClass, IntegratorTemplates.AdaptiveStep):
       if not integrateElement.hasAttribute('tolerance'):
         raise ParserException(integrateElement, "Adaptive integrators need a 'tolerance' attribute.")
       else:
@@ -913,7 +907,7 @@ class XMDS2Parser(ScriptParser):
       if not constantString.lower() == 'yes':
         raise ParserException(operatorElement, "There isn't a non-constant IP operator.")
       
-      if not isinstance(integratorTemplate, AdaptiveStepIntegrator):
+      if not isinstance(integratorTemplate, IntegratorTemplates.AdaptiveStep):
         operatorTemplateClass = ConstantIPOperatorTemplate
       else:
         operatorTemplateClass = AdaptiveStepIPOperatorTemplate
@@ -1158,7 +1152,7 @@ class XMDS2Parser(ScriptParser):
     crossIntegratorClass = None
     
     if algorithmString == 'RK4':
-      crossIntegratorClass = RK4IntegratorTemplate
+      crossIntegratorClass = IntegratorTemplates.RK4
     else:
       raise ParserException(operatorElement, "Unknown cross-propagation algorithm '%(algorithmString)s'.\n"
                                              "Currently, the only option is 'RK4'." % locals())

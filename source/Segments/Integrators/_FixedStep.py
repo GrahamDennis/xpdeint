@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 """
-_FixedStepIntegrator.py
+_FixedStep.py
 
 Created by Graham Dennis on 2008-03-01.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
@@ -9,7 +9,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 
 from Integrator import Integrator
 
-class _FixedStepIntegrator (Integrator):
+class _FixedStep (Integrator):
   # Is this integrator capable of doing cross-propagation integration?
   isCrossCapable = False
   

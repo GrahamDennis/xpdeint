@@ -11,8 +11,8 @@ from _Feature import _Feature
 from VectorElement import VectorElement
 from VectorInitialisationCDATA import VectorInitialisationCDATA
 from .Operators.DeltaAOperator import DeltaAOperator
-from .Segments.Integrators.FixedStepIntegrator import FixedStepIntegrator
-from .Segments.Integrators.AdaptiveStepIntegrator import AdaptiveStepIntegrator
+from .Segments.Integrators.FixedStep import FixedStep as FixedStepIntegrator
+from .Segments.Integrators.AdaptiveStep import AdaptiveStep as AdaptiveStepIntegrator
 
 from ParserException import ParserException
 
