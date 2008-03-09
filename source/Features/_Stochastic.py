@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 """
-_StochasticFeature.py
+_Stochastic.py
 
 Created by Graham Dennis on 2008-01-13.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
@@ -16,7 +16,7 @@ from .Segments.Integrators.AdaptiveStep import AdaptiveStep as AdaptiveStepInteg
 
 from ParserException import ParserException
 
-class _StochasticFeature (_Feature):
+class _Stochastic (_Feature):
   @property
   def children(self):
     return self.noises

@@ -59,7 +59,7 @@ class _FixedStep (Integrator):
   del _getStep, _setStep
   
   def preflight(self):
-    super(Integrator, self).preflight()
+    super(_FixedStep, self).preflight()
     # If we are cross-propagating, then we aren't a top-level script element, and so will be
     # called by the appropriate CrossPropagationOperator
     if self.cross:

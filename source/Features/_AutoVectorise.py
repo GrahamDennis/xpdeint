@@ -11,7 +11,7 @@ from _Feature import _Feature
 
 import re
 
-class _AutoVectoriseFeature (_Feature):
+class _AutoVectorise (_Feature):
   
   # Match things of the form someSymbol${someSubstitution}restOfSymbol[${index}]
   # where the ${someSubstitution} is optional, and the curly braces around the
