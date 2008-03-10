@@ -1,0 +1,19 @@
+@*
+OperatorContainer.tmpl
+
+Created by Graham Dennis on 2008-03-10.
+Copyright (c) 2008 __MyCompanyName__. All rights reserved.
+*@
+@extends _OperatorContainer
+
+@def _evaluateOperatorsWithArgument($operators, $argument)
+  @#
+  @set $blankLineSeparator = ''
+  @for operator in operators
+${blankLineSeparator}@slurp
+// ${operator.description}
+_${operator.parent.id}_evaluate_${operator.name}($argument);
+    @set $blankLineSeparator = '\n'
+  @end for
+  @#
+@end def

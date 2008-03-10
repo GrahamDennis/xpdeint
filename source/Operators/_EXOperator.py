@@ -23,19 +23,25 @@ class _EXOperator(Operator):
   def preflight(self):
     super(Operator, self).preflight()
     
-    if self.hasattr('operatorComponentsEntity'):
-      operatorTargetPairs = self.operatorComponentsEntity.value
-      
+    operatorTargetPairs = self.targetComponentsForOperatorsInString(self.operatorNames, self.parent.sharedCode)
+    
+    if operatorTargetPairs:
       operatorNamesUsed = set()
       operatorNames = set(self.operatorNames)
       
-      deltaADependencies = self.deltaAOperator.dependencies
+      parentDependencies = self.parent.dependencies
       
-      deltaAComponents = set()
-      for vector in deltaADependencies:
-        deltaAComponents.update(vector.components)
+      targetComponents = set()
+      for vector in parentDependencies:
+        targetComponents.update(vector.components)
       
-      targetRegex = re.compile(r'\s*' + RegularExpressionStrings.componentWithIntegerValuedDimensions(deltaAComponents) + r'\s*$',
+      # Add the result vector to the shared dependencies for the operator container
+      # These dependencies are just the delta a dependencies, so this is just adding
+      # our result vector to the dependencies for the delta a operator
+      if self.resultVector:
+        self.parent.dependencies.add(self.resultVector)
+      
+      targetRegex = re.compile(r'\s*' + RegularExpressionStrings.componentWithIntegerValuedDimensions(targetComponents) + r'\s*$',
                                re.VERBOSE)
       
       specialTargetsFilter = None
@@ -64,27 +70,27 @@ class _EXOperator(Operator):
           
           if not specialTargetsFilter:
             # Construct a filter operator to create the special targets vector
-            specialTargetsFilter = FilterOperator(field = self.field, integrator = self.integrator,
+            specialTargetsFilter = FilterOperator(parent = self.parent, xmlElement = self.xmlElement,
                                                   **self.argumentsToTemplateConstructors)
-            specialTargetsFilter.xmlElement = self.xmlElement
             
             # Shift the filter operator to be before this operator
-            self.integrator.operators.remove(specialTargetsFilter)
-            self.integrator.operators.insert(self.integrator.operators.index(self), specialTargetsFilter)
+            # It will currently be in the postDeltaAOperators list.
+            self.parent.postDeltaAOperators.remove(specialTargetsFilter)
+            self.parent.preDeltaAOperators.insert(self.parent.preDeltaAOperators.index(self), specialTargetsFilter)
             
             specialTargetsFilter.integratingMoments = False
             
-            # When constructing the 'special targets' we may depend on anything the delta a operator depends on
-            specialTargetsFilter.dependencies = self.deltaAOperator.dependencies
+            # When constructing the 'special targets' we may depend on anything the parent code (usually delta a operator) depends on
+            specialTargetsFilter.dependencies = self.parent.dependencies
             
             specialTargetsFilter.sourceField = self.field
-            specialTargetsFilter.operatorSpace = self.deltaAOperator.operatorSpace
+            specialTargetsFilter.operatorSpace = self.parent.sharedCodeSpace
             specialTargetsFilter.operatorDefinitionCode = ''
             
             specialTargetVector = VectorElement(name = self.id + '_special_targets', field = self.field,
                                                 **self.argumentsToTemplateConstructors)
             
-            specialTargetVector.initialSpace = self.deltaAOperator.operatorSpace
+            specialTargetVector.initialSpace = self.parent.sharedCodeSpace
             specialTargetVector.type = 'complex'
             specialTargetVector.needsInitialisation = False
             self.field.temporaryVectors.add(specialTargetVector)
@@ -109,7 +115,7 @@ class _EXOperator(Operator):
           targetComponentName = match.group('componentName')
           
           # Now we need to get the vector corresponding to componentName
-          tempVectorList = [v for v in deltaADependencies if targetComponentName in v.components]
+          tempVectorList = [v for v in parentDependencies if targetComponentName in v.components]
           assert len(tempVectorList) == 1
           targetVector = tempVectorList[0]
           
@@ -144,16 +150,16 @@ class _EXOperator(Operator):
         # Create a regular expression to replace the L[x] string with the appropriate string
         operatorCodeReplacementRegex = re.compile(r'\b' + escape(operatorName) + r'\[\s*' + escape(target) + r'\s*\]')
         
-        replacementCode = operatorCodeReplacementRegex.sub(replacementString, self.deltaAOperator.propagationCode, count = 1)
+        replacementCode = operatorCodeReplacementRegex.sub(replacementString, self.parent.sharedCode, count = 1)
         
-        self.deltaAOperator.propagationCode = replacementCode
+        self.parent.sharedCode = replacementCode
       
       
       # If any operator names weren't used in the code, issue a warning
       unusedOperatorNames = operatorNames.difference(operatorNamesUsed)
       if unusedOperatorNames:
         unusedOperatorNamesString = ', '.join(unusedOperatorNames)
-        parserWarning(self.operatorComponentsEntity.xmlElement,
+        parserWarning(self.xmlElement,
                       "The following operator names weren't used: %(unusedOperatorNamesString)s" % locals())
       
     

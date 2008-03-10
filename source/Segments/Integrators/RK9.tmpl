@@ -152,17 +152,17 @@ _c[15] = 1.0/31.0;
 *@
 @def singleIntegrationStep
   @#
-${transformVectorsToSpace($vectors, $homeSpace)}@slurp
+${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
 
 // Step 1
 
 ${propagationDimension} += _a[0]*_step;
 
-${loopOverVectorsWithInnerContentTemplate($vectors,
+${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """_akafield_${vector.id}[$index] = _${vector.id}[$index];
 """)}@slurp
 
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
 _active_${vector.id} = _${vector.id};
   @end for
 
@@ -170,7 +170,7 @@ _active_${vector.id} = _${vector.id};
 _segment${segmentNumber}_ip_evolve(+1);
 ${goToHomeSpace}@slurp
 
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
 _active_${vector.id} = _akafield_${vector.id};
   @end for
 
@@ -185,11 +185,11 @@ ${goToHomeSpace}@slurp
 
 ${propagationDimension} += _a[1]*_step;
 
-${loopOverVectorsWithInnerContentTemplate($vectors,
+${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """_akbfield_${vector.id}[$index] = _${vector.id}[$index] + _b[1][0]*_akafield_${vector.id}[$index];
 """)}@slurp
 
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
 _active_${vector.id} = _akbfield_${vector.id};
   @end for
 
@@ -207,11 +207,11 @@ ${goToHomeSpace}@slurp
 
 ${propagationDimension} += _a[2]*_step;
 
-${loopOverVectorsWithInnerContentTemplate($vectors,
+${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """_akcfield_${vector.id}[$index] = _${vector.id}[$index] + _b[2][0]*_akafield_${vector.id}[$index] + _b[2][1]*_akbfield_${vector.id}[$index];
 """)}@slurp
 
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
 _active_${vector.id} = _akcfield_${vector.id};
   @end for
 
@@ -229,12 +229,12 @@ ${goToHomeSpace}@slurp
 
 ${propagationDimension} += _a[3]*_step;
 
-${loopOverVectorsWithInnerContentTemplate($vectors,
+${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """_akdfield_${vector.id}[$index] = _${vector.id}[$index] + _b[3][0]*_akafield_${vector.id}[$index]
     + _b[3][1]*_akbfield_${vector.id}[$index] + _b[3][2]*_akcfield_${vector.id}[$index];
 """)}@slurp
 
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
 _active_${vector.id} = _akdfield_${vector.id};
   @end for
 
@@ -252,13 +252,13 @@ ${goToHomeSpace}@slurp
 
 ${propagationDimension} += _a[4]*_step;
 
-${loopOverVectorsWithInnerContentTemplate($vectors,
+${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """_akefield_${vector.id}[$index] = _${vector.id}[$index] + _b[4][0]*_akafield_${vector.id}[$index]
     + _b[4][1]*_akbfield_${vector.id}[$index] + _b[4][2]*_akcfield_${vector.id}[$index]
     + _b[4][3]*_akdfield_${vector.id}[$index];
 """)}@slurp
 
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
 _active_${vector.id} = _akefield_${vector.id};
   @end for
 
@@ -276,12 +276,12 @@ ${goToHomeSpace}@slurp
 
 ${propagationDimension} += _a[5]*_step;
 
-${loopOverVectorsWithInnerContentTemplate($vectors,
+${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """_akifield_${vector.id}[$index] = _${vector.id}[$index] + _b[5][0]*_akafield_${vector.id}[$index]
     + _b[5][3]*_akdfield_${vector.id}[$index] + _b[5][4]*_akefield_${vector.id}[$index];
 """)}@slurp
 
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
 _active_${vector.id} = _akifield_${vector.id};
   @end for
 
@@ -299,13 +299,13 @@ ${goToHomeSpace}@slurp
 
 ${propagationDimension} += _a[6]*_step;
 
-${loopOverVectorsWithInnerContentTemplate($vectors,
+${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """_akjfield_${vector.id}[$index] = _${vector.id}[$index] + _b[6][0]*_akafield_${vector.id}[$index]
     + _b[6][3]*_akdfield_${vector.id}[$index] + _b[6][4]*_akefield_${vector.id}[$index]
     + _b[6][5]*_akifield_${vector.id}[$index];
 """)}@slurp
 
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
 _active_${vector.id} = _akjfield_${vector.id};
   @end for
 
@@ -323,12 +323,12 @@ ${goToHomeSpace}@slurp
 
 ${propagationDimension} += _a[7]*_step;
 
-${loopOverVectorsWithInnerContentTemplate($vectors,
+${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """_akbfield_${vector.id}[$index] = _${vector.id}[$index] + _b[7][0]*_akafield_${vector.id}[$index]
     + _b[7][5]*_akifield_${vector.id}[$index] + _b[7][6]*_akjfield_${vector.id}[$index];
 """)}@slurp
 
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
 _active_${vector.id} = _akbfield_${vector.id};
   @end for
 
@@ -346,13 +346,13 @@ ${goToHomeSpace}@slurp
 
 ${propagationDimension} += _a[8]*_step;
 
-${loopOverVectorsWithInnerContentTemplate($vectors,
+${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """_akcfield_${vector.id}[$index] = _${vector.id}[$index] + _b[8][0]*_akafield_${vector.id}[$index]
     + _b[8][5]*_akifield_${vector.id}[$index] + _b[8][6]*_akjfield_${vector.id}[$index]
     + _b[8][7]*_akbfield_${vector.id}[$index];
 """)}@slurp
 
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
 _active_${vector.id} = _akcfield_${vector.id};
   @end for
 
@@ -370,13 +370,13 @@ ${goToHomeSpace}@slurp
 
 ${propagationDimension} += _a[9]*_step;
 
-${loopOverVectorsWithInnerContentTemplate($vectors,
+${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """_akdfield_${vector.id}[$index] = _${vector.id}[$index] + _b[9][0]*_akafield_${vector.id}[$index]
     + _b[9][5]*_akifield_${vector.id}[$index] + _b[9][6]*_akjfield_${vector.id}[$index]
     + _b[9][7]*_akbfield_${vector.id}[$index] + _b[9][8]*_akcfield_${vector.id}[$index];
 """)}@slurp
 
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
 _active_${vector.id} = _akdfield_${vector.id};
   @end for
 
@@ -394,14 +394,14 @@ ${goToHomeSpace}@slurp
 
 ${propagationDimension} += _a[10]*_step;
 
-${loopOverVectorsWithInnerContentTemplate($vectors,
+${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """_akefield_${vector.id}[$index] = _${vector.id}[$index] + _b[10][0]*_akafield_${vector.id}[$index]
     + _b[10][5]*_akifield_${vector.id}[$index] + _b[10][6]*_akjfield_${vector.id}[$index]
     + _b[10][7]*_akbfield_${vector.id}[$index] + _b[10][8]*_akcfield_${vector.id}[$index]
     + _b[10][9]*_akdfield_${vector.id}[$index];
 """)}@slurp
 
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
 _active_${vector.id} = _akefield_${vector.id};
   @end for
 
@@ -419,14 +419,14 @@ ${goToHomeSpace}@slurp
 
 ${propagationDimension} += _a[11]*_step;
 
-${loopOverVectorsWithInnerContentTemplate($vectors,
+${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """_akffield_${vector.id}[$index] = _${vector.id}[$index] + _b[11][0]*_akafield_${vector.id}[$index]
     + _b[11][5]*_akifield_${vector.id}[$index] + _b[11][6]*_akjfield_${vector.id}[$index]
     + _b[11][7]*_akbfield_${vector.id}[$index] + _b[11][8]*_akcfield_${vector.id}[$index]
     + _b[11][9]*_akdfield_${vector.id}[$index] + _b[11][10]*_akefield_${vector.id}[$index];
 """)}@slurp
 
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
 _active_${vector.id} = _akffield_${vector.id};
   @end for
 
@@ -444,7 +444,7 @@ ${goToHomeSpace}@slurp
 
 ${propagationDimension} += _a[12]*_step;
 
-${loopOverVectorsWithInnerContentTemplate($vectors,
+${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """_akgfield_${vector.id}[$index] = _${vector.id}[$index] + _b[12][0]*_akafield_${vector.id}[$index]
     + _b[12][5]*_akifield_${vector.id}[$index] + _b[12][6]*_akjfield_${vector.id}[$index]
     + _b[12][7]*_akbfield_${vector.id}[$index] + _b[12][8]*_akcfield_${vector.id}[$index]
@@ -452,7 +452,7 @@ ${loopOverVectorsWithInnerContentTemplate($vectors,
     + _b[12][11]*_akffield_${vector.id}[$index];
 """)}@slurp
 
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
 _active_${vector.id} = _akgfield_${vector.id};
   @end for
 
@@ -470,7 +470,7 @@ ${goToHomeSpace}@slurp
 
 ${propagationDimension} += _a[13]*_step;
 
-${loopOverVectorsWithInnerContentTemplate($vectors,
+${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """_akhfield_${vector.id}[$index] = _${vector.id}[$index] + _b[13][0]*_akafield_${vector.id}[$index]
     + _b[13][5]*_akifield_${vector.id}[$index] + _b[13][6]*_akjfield_${vector.id}[$index]
     + _b[13][7]*_akbfield_${vector.id}[$index] + _b[13][8]*_akcfield_${vector.id}[$index]
@@ -478,7 +478,7 @@ ${loopOverVectorsWithInnerContentTemplate($vectors,
     + _b[13][11]*_akffield_${vector.id}[$index] + _b[13][12]*_akgfield_${vector.id}[$index];
 """)}@slurp
 
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
 _active_${vector.id} = _akhfield_${vector.id};
   @end for
 
@@ -494,7 +494,7 @@ ${goToHomeSpace}@slurp
 
 // Step 15 and 16 combined to reduce memory use
 
-${loopOverVectorsWithInnerContentTemplate($vectors,
+${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """_akifield_${vector.id}[$index] = _${vector.id}[$index] + _b[14][0]*_akafield_${vector.id}[$index]
     + _b[14][5]*_akifield_${vector.id}[$index] + _b[14][6]*_akjfield_${vector.id}[$index]
     + _b[14][7]*_akbfield_${vector.id}[$index] + _b[14][8]*_akcfield_${vector.id}[$index]
@@ -517,7 +517,7 @@ _akjfield_${vector.id}[$index] = (1-_b[15][5]/_b[14][5])*_${vector.id}[$index]
 
 ${propagationDimension} += _a[14]*_step;
 
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
 _active_${vector.id} = _akifield_${vector.id};
   @end for
 
@@ -527,7 +527,7 @@ ${goToHomeSpace}@slurp
 
 ${propagationDimension} += _a[15]*_step;
 
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
 _active_${vector.id} = _akjfield_${vector.id};
   @end for
 
@@ -537,7 +537,7 @@ ${goToHomeSpace}@slurp
 
 // Take full step
 
-${loopOverVectorsWithInnerContentTemplate($vectors,
+${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """
 _${vector.id}[$index] += _c[0]*_akafield_${vector.id}[$index] + _c[7]*_akbfield_${vector.id}[$index] + _c[8]*_akcfield_${vector.id}[$index]
     + _c[9]*_akdfield_${vector.id}[$index] + _c[10]*_akefield_${vector.id}[$index] + _c[11]*_akffield_${vector.id}[$index]
@@ -545,7 +545,7 @@ _${vector.id}[$index] += _c[0]*_akafield_${vector.id}[$index] + _c[7]*_akbfield_
     + _c[15]*_akjfield_${vector.id}[$index];
 """)}@slurp
 
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
 _active_${vector.id} = _${vector.id};
   @end for
   @#

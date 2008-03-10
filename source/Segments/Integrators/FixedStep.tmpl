@@ -189,7 +189,7 @@ void _${name}_initialise_cross_propagation()
   @# Create the index overrides dictionary for the boundary conditions. We only need to override the propagation dimension.
   @set $indexOverrides = {$propagationDimension: dict([(v.field, indexOverrideValue) for v in $parent.boundaryConditionDependencies])}
   @#
-  @set $setOfVectorsToLoopOver = $vectors.copy()
+  @set $setOfVectorsToLoopOver = $integrationVectors.copy()
   @silent setOfVectorsToLoopOver.update($parent.boundaryConditionDependencies)
   @#
   // Set the boundary condition

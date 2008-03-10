@@ -116,9 +116,9 @@ _g[6]=( -_b[6][1]*_c[4]+_b[6][4]*_c[1] )/_den;
 *@
 @def singleIntegrationStep
   @#
-${transformVectorsToSpace($vectors, $homeSpace)}@slurp
+${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
 
-${loopOverVectorsWithInnerContentTemplate($vectors,
+${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """// a_k = y1
 _akfield_${vector.id}[$index] = _${vector.id}[$index];
 """)}@slurp
@@ -129,12 +129,12 @@ _segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 1, 0);
 _segment${segmentNumber}_ip_evolve(+1);
 ${goToHomeSpace}@slurp
 
-${loopOverVectorsWithInnerContentTemplate($vectors,
+${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """// a_i = y2 = y1
 _aifield_${vector.id}[$index] = _checkfield_${vector.id}[$index] = _${vector.id}[$index];
 """)}@slurp
 
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
 _active_${vector.id} = _akfield_${vector.id};
   @end for
 
@@ -146,7 +146,7 @@ ${goToHomeSpace}@slurp
 _segment${segmentNumber}_ip_evolve(+1);
 ${goToHomeSpace}@slurp
 
-${loopOverVectorsWithInnerContentTemplate($vectors,
+${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """// y1 = y1 + c_1*a_k
 _${vector.id}[$index] += _c[1]*_akfield_${vector.id}[$index];
 // y2 = y2 + cs_1*a_k
@@ -162,14 +162,14 @@ _segment${segmentNumber}_calculate_delta_a(_step);
 ${goToHomeSpace}@slurp
 
 // c_2 == cs_2 == 0
-${loopOverVectorsWithInnerContentTemplate($vectors,
+${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """// a_j = d_1*a_i + d_2*y1 + d_3*a_k
 _ajfield_${vector.id}[$index] = _d[1]*_aifield_${vector.id}[$index] + _d[2]*_${vector.id}[$index] + _d[3]*_akfield_${vector.id}[$index];
 """)}@slurp
 
 ${propagationDimension} += _a[3] * _step;
 
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
 _active_${vector.id} = _ajfield_${vector.id};
   @end for
 
@@ -187,7 +187,7 @@ ${goToHomeSpace}@slurp
 _segment${segmentNumber}_ip_evolve(-2);
 ${goToHomeSpace}@slurp
 
-${loopOverVectorsWithInnerContentTemplate($vectors,
+${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """// a_l = e_1*a_i + e_2*y1 + e_3*a_k + e_4*a_j
 _alfield_${vector.id}[$index] = _e[1]*_aifield_${vector.id}[$index] + _e[2]*_${vector.id}[$index] + _e[3]*_akfield_${vector.id}[$index] + _e[4]*_ajfield_${vector.id}[$index];
 // y1 = y1 + c_3*a_j
@@ -198,7 +198,7 @@ _checkfield_${vector.id}[$index] += _cs[3]*_ajfield_${vector.id}[$index];
 
 ${propagationDimension} += _a[4] * _step;
 
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
 _active_${vector.id} = _alfield_${vector.id};
   @end for
 
@@ -216,7 +216,7 @@ ${goToHomeSpace}@slurp
 _segment${segmentNumber}_ip_evolve(-3);
 ${goToHomeSpace}@slurp
 
-${loopOverVectorsWithInnerContentTemplate($vectors,
+${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """// y1 = y1 + c_4*a_l
 _${vector.id}[$index] += _c[4]*_alfield_${vector.id}[$index];
 // y2 = y2 + cs_4*a_l
@@ -242,7 +242,7 @@ _segment${segmentNumber}_ip_evolve(-4);
 ${goToHomeSpace}@slurp
 
 // c_5 == 0
-${loopOverVectorsWithInnerContentTemplate($vectors,
+${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """// y2 = y2 + cs_5*a_l
 _checkfield_${vector.id}[$index] += _cs[5]*_alfield_${vector.id}[$index];
 // a_l = g_1*a_i + g_2*a_k + g_3*a_j + g_4*y_1 + g_5*a_l + g_6*y2
@@ -266,7 +266,7 @@ _segment${segmentNumber}_ip_evolve(-5);
 ${goToHomeSpace}@slurp
 
 // c_5 == 0
-${loopOverVectorsWithInnerContentTemplate($vectors,
+${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """// y1 = y1 + c_6*a_l
 _${vector.id}[$index] += _c[6]*_alfield_${vector.id}[$index];
 // y2 = y2 + cs_6*a_l
@@ -276,7 +276,7 @@ _checkfield_${vector.id}[$index] += _cs[6]*_alfield_${vector.id}[$index];
 // t -> t + dt
 ${propagationDimension} -= _a[6]*_step;
 
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
 _active_${vector.id} = _checkfield_${vector.id};
   @end for
 
@@ -284,7 +284,7 @@ _active_${vector.id} = _checkfield_${vector.id};
 _segment${segmentNumber}_ip_evolve(+4);
 ${goToHomeSpace}@slurp
 
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
 _active_${vector.id} = _${vector.id};
   @end for
 

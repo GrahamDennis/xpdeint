@@ -199,7 +199,7 @@ for (long _i0 = 0; _i0 < _${field.name}_size; _i0++) {
 @end def
 
 @# FIXME: Extend this def over multiple lines once my patch to Cheetah gets accepted (and we bump the required version number)
-@def loopOverFieldInSpaceWithVectorsAndInnerContent($field, $space, $vectors, $innerLoopCode, $indexOverrides = {}, $vectorOverrides=[], $kspaceAscendingOrder = False, $postDimensionLoopClosingCode = {}, vectorsNotNeedingDefines = set())
+@def loopOverFieldInSpaceWithVectorsAndInnerContent($field, $space, $vectors, $innerLoopCode, $indexOverrides = None, $vectorOverrides = None, $kspaceAscendingOrder = False, $postDimensionLoopClosingCode = None, vectorsNotNeedingDefines = None)
 @*doc:
 Insert code to loop over a fields points making available the given vectors
 Note that this code asserts that the field that will be iterated over is at
@@ -239,6 +239,13 @@ Optional arguments:
     not wanted.
 
 *@
+  @#
+  @# Defaults
+  @#
+  @set indexOverrides = indexOverrides or {}
+  @set vectorOverrides = vectorOverrides or []
+  @set postDimensionLoopClosingCode = postDimensionLoopClosingCode or {}
+  @set vectorsNotNeedingDefines = vectorsNotNeedingDefines or set()
   @#
   @# Some vectors will need to have their index pointers set explicitly.
   @# These will be those which belong to fields with different dimensions.

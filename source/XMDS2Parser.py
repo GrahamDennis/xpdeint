@@ -31,6 +31,8 @@ from SimulationDrivers.MPIMultiPathDriver import MPIMultiPathDriver as MPIMultiP
 
 from Segments import Integrators as IntegratorTemplates
 
+from Operators.OperatorContainer import OperatorContainer as OperatorContainerTemplate
+
 from Operators.DeltaAOperator import DeltaAOperator as DeltaAOperatorTemplate
 from Operators.ConstantIPOperator import ConstantIPOperator as ConstantIPOperatorTemplate
 from Operators.AdaptiveStepIPOperator import AdaptiveStepIPOperator as AdaptiveStepIPOperatorTemplate
@@ -841,10 +843,37 @@ class XMDS2Parser(ScriptParser):
     
   
   def parseOperatorsElement(self, operatorsElement, integratorTemplate, fieldTemplate):
-    deltaAOperatorTemplate = DeltaAOperatorTemplate(field = fieldTemplate, integrator = integratorTemplate,
+    operatorContainer = OperatorContainerTemplate(field = fieldTemplate, xmlElement = operatorsElement,
+                                                  **self.argumentsToTemplateConstructors)
+    integratorTemplate.operatorContainers.append(operatorContainer)
+    
+    self.parseOperatorElements(operatorsElement, operatorContainer, integratorTemplate)
+  
+  def parseOperatorElements(self, operatorsElement, operatorContainer, integratorTemplate):
+    haveHitDeltaAOperator = False
+    for childNode in operatorsElement.childNodes:
+      if childNode.nodeType == minidom.Node.ELEMENT_NODE and childNode.tagName == 'operator':
+        # We have an operator element
+        operatorTemplate = self.parseOperatorElement(childNode, operatorContainer)
+        
+        if haveHitDeltaAOperator and not isinstance(operatorTemplate, ()):
+          # Currently all operators after the CDATA code will trigger this exception, but when we
+          # implement 'functions' operators, they will need to be added to the above list so they don't
+          # trigger this exception.
+          raise ParserException(childNode, "You cannot have this kind of operator after the CDATA section\n"
+                                           "of the <operators> element. The only operators that can be put\n"
+                                           "after the CDATA section are ''. Currently there aren't any, but\n"
+                                           "the plan is that 'functions' operators can be put here.")
+      
+      elif childNode.nodeType == minidom.Node.CDATA_SECTION_NODE:
+        deltaAOperatorTemplate = self.parseDeltaAOperator(operatorsElement, operatorContainer)
+    
+  
+  def parseDeltaAOperator(self, operatorsElement, operatorContainer):
+    deltaAOperatorTemplate = DeltaAOperatorTemplate(parent = operatorContainer, xmlElement = operatorsElement,
                                                     **self.argumentsToTemplateConstructors)
+    
     deltaAOperatorTemplate.propagationCode = operatorsElement.cdataContents()
-    deltaAOperatorTemplate.xmlElement = operatorsElement
     
     self.parseNoisesAttribute(operatorsElement, deltaAOperatorTemplate)
     
@@ -853,7 +882,6 @@ class XMDS2Parser(ScriptParser):
     if dependenciesElement:
       dependencyVectorNames = RegularExpressionStrings.symbolsInString(dependenciesElement.innerText())
       deltaAOperatorTemplate.dependenciesEntity = ParsedEntity(dependenciesElement, dependencyVectorNames)
-    
     
     integrationVectorsElement = operatorsElement.getChildElementByTagName('integration_vectors')
     integrationVectorsNames = RegularExpressionStrings.symbolsInString(integrationVectorsElement.innerText())
@@ -866,20 +894,8 @@ class XMDS2Parser(ScriptParser):
     if integrationVectorsElement.hasAttribute('fourier_space'):
       deltaAOperatorTemplate.operatorSpace = \
         deltaAOperatorTemplate.field.spaceFromString(integrationVectorsElement.getAttribute('fourier_space'))
-    
-    
-    self.parseOperatorElements(operatorsElement, integratorTemplate, deltaAOperatorTemplate)
-    
-    self.xmlElement = operatorsElement
-    
-    return deltaAOperatorTemplate
   
-  def parseOperatorElements(self, operatorsElement, integratorTemplate, deltaAOperatorTemplate):
-    operatorElements = operatorsElement.getChildElementsByTagName('operator', optional=True)
-    for operatorElement in operatorElements:
-      operatorTemplate = self.parseOperatorElement(operatorElement, integratorTemplate, deltaAOperatorTemplate)
-  
-  def parseOperatorElement(self, operatorElement, integratorTemplate, deltaAOperatorTemplate):
+  def parseOperatorElement(self, operatorElement, operatorContainer):
     if not operatorElement.hasAttribute('kind'):
       raise ParserException(operatorElement, "Missing 'kind' attribute.")
     
@@ -898,6 +914,8 @@ class XMDS2Parser(ScriptParser):
         
       if not constantString.lower() == 'yes':
         raise ParserException(operatorElement, "There isn't a non-constant IP operator.")
+      
+      integratorTemplate = operatorContainer.parent
       
       if not isinstance(integratorTemplate, IntegratorTemplates.AdaptiveStep):
         operatorTemplateClass = ConstantIPOperatorTemplate
@@ -926,11 +944,11 @@ class XMDS2Parser(ScriptParser):
       raise ParserException(operatorElement, "Unknown operator kind '%(kindString)s'\n"
                                              "Valid options are: 'ip', 'ex', 'filter' or 'cross-propagation'." % locals())
     
-    operatorTemplate = operatorTemplateClass(field = deltaAOperatorTemplate.field, integrator = integratorTemplate,
+    operatorTemplate = operatorTemplateClass(parent = operatorContainer,
+                                             xmlElement = operatorElement,
                                              **self.argumentsToTemplateConstructors)
-    operatorTemplate.xmlElement = operatorElement
+    
     operatorTemplate.operatorDefinitionCode = operatorElement.cdataContents()
-    operatorTemplate.deltaAOperator = deltaAOperatorTemplate
     
     dependenciesElement = operatorElement.getChildElementByTagName('dependencies', optional=True)
     dependencyVectorNames = []
@@ -938,11 +956,11 @@ class XMDS2Parser(ScriptParser):
       dependencyVectorNames = RegularExpressionStrings.symbolsInString(dependenciesElement.innerText())
       operatorTemplate.dependenciesEntity = ParsedEntity(dependenciesElement, dependencyVectorNames)
     
-    parserMethod(operatorTemplate, operatorElement, deltaAOperatorTemplate)
+    parserMethod(operatorTemplate, operatorElement)
     
     return operatorTemplate
   
-  def parseIPOperatorElement(self, operatorTemplate, operatorElement, deltaAOperatorTemplate):
+  def parseIPOperatorElement(self, operatorTemplate, operatorElement):
     if operatorElement.hasAttribute('fourier_space'):
       operatorTemplate.operatorSpace = \
         operatorTemplate.field.spaceFromString(operatorElement.getAttribute('fourier_space'))
@@ -961,13 +979,7 @@ class XMDS2Parser(ScriptParser):
       
     operatorTemplate.operatorNames = operatorNames
     
-    operatorTargetPairs = self.targetComponentsForOperatorsInString(operatorNames, deltaAOperatorTemplate.propagationCode)
-    
-    operatorTemplate.operatorComponentsEntity = ParsedEntity(operatorElement, operatorTargetPairs)
-    
-    segmentName = operatorTemplate.integrator.name
-    operatorName = operatorTemplate.name
-    vectorName = "%(segmentName)s_%(operatorName)s_field" % locals()
+    vectorName = operatorTemplate.id + "_field"
     
     operatorVectorTemplate = VectorElementTemplate(name = vectorName, field = operatorTemplate.field,
                                                    **self.argumentsToTemplateConstructors)
@@ -976,15 +988,19 @@ class XMDS2Parser(ScriptParser):
     operatorVectorTemplate.initialSpace = operatorTemplate.operatorSpace
     operatorVectorTemplate.needsInitialisation = False
     operatorVectorTemplate.field.temporaryVectors.add(operatorVectorTemplate)
+    
+    operatorContainer = operatorTemplate.parent
+    integratorTemplate = operatorContainer.parent
+    
     if not isinstance(operatorTemplate, AdaptiveStepIPOperatorTemplate):
-      operatorVectorTemplate.nComponents = len(operatorTemplate.integrator.ipPropagationStepFractions) * len(operatorNames)
+      operatorVectorTemplate.nComponents = len(integratorTemplate.ipPropagationStepFractions) * len(operatorNames)
     else:
-      operatorVectorTemplate.nComponents = operatorTemplate.integrator.nonconstantIPFields * len(operatorNames)
+      operatorVectorTemplate.nComponents = integratorTemplate.nonconstantIPFields * len(operatorNames)
     operatorTemplate.operatorVector = operatorVectorTemplate
     
     return operatorTemplate
   
-  def parseEXOperatorElement(self, operatorTemplate, operatorElement, deltaAOperatorTemplate):
+  def parseEXOperatorElement(self, operatorTemplate, operatorElement):
     if operatorElement.hasAttribute('fourier_space'):
       operatorTemplate.operatorSpace = \
         operatorTemplate.field.spaceFromString(operatorElement.getAttribute('fourier_space'))
@@ -996,9 +1012,7 @@ class XMDS2Parser(ScriptParser):
     if not operatorNames:
       raise ParserException(operatorNamesElement, "operator_names must not be empty.")
     
-    segmentName = operatorTemplate.integrator.name
-    operatorName = operatorTemplate.name
-    resultVectorComponentPrefix = "_%(segmentName)s_%(operatorName)s" % locals()
+    resultVectorComponentPrefix = "_" + operatorTemplate.id
     resultVectorComponents = []
     
     for operatorName in operatorNames:
@@ -1009,14 +1023,8 @@ class XMDS2Parser(ScriptParser):
     
     operatorTemplate.operatorNames = operatorNames
     
-    operatorTargetPairs = self.targetComponentsForOperatorsInString(operatorNames, deltaAOperatorTemplate.propagationCode)
-    
-    operatorTemplate.operatorComponentsEntity = ParsedEntity(operatorElement, operatorTargetPairs)
-    
     if isinstance(operatorTemplate, ConstantEXOperatorTemplate):
-      segmentName = operatorTemplate.integrator.name
-      operatorNumber = len(operatorTemplate.integrator.operators)
-      vectorName = "%(segmentName)s_operator%(operatorNumber)i_field" % locals()
+      vectorName = operatorTemplate.id + "_field"
       
       operatorVectorTemplate = VectorElementTemplate(name = vectorName, field = operatorTemplate.field,
                                                      **self.argumentsToTemplateConstructors)
@@ -1029,7 +1037,7 @@ class XMDS2Parser(ScriptParser):
       operatorTemplate.operatorVector = operatorVectorTemplate
     
     
-    vectorName = "%(segmentName)s_operator%(operatorNumber)i_result" % locals()
+    vectorName = operatorTemplate.id + "_result"
     resultVector = VectorElementTemplate(name = vectorName, field = operatorTemplate.field,
                                          **self.argumentsToTemplateConstructors)
     resultVector.type = 'complex'
@@ -1039,17 +1047,13 @@ class XMDS2Parser(ScriptParser):
     resultVector.field.temporaryVectors.add(resultVector)
     resultVector.components = resultVectorComponents
     operatorTemplate.resultVector = resultVector
-    deltaAOperatorTemplate.dependencies.add(resultVector)
     
     return operatorTemplate
   
-  def parseFilterOperatorElement(self, operatorTemplate, operatorElement, parentTemplate):
+  def parseFilterOperatorElement(self, operatorTemplate, operatorElement):
     targetField = None
     momentsVectorName = None
     geometryTemplate = self.globalNameSpace['geometry']
-    
-    integratorName = operatorTemplate.integrator.name
-    operatorName = operatorTemplate.name
     
     if not operatorTemplate.dependenciesEntity:
       raise ParserException(operatorElement,
@@ -1072,9 +1076,9 @@ class XMDS2Parser(ScriptParser):
           raise ParserException(momentsElement,
                   "target_field must only contain dimensions that are in the integration field.")
         
-        momentsVectorName = "%(integratorName)s_%(operatorName)s_moments" % locals()
+        momentsVectorName = operatorTemplate.id + "_moments"
       elif momentsElement.hasAttribute('dimensions'):
-        targetField = FieldElementTemplate(name = "%(integratorName)s_%(operatorName)s_field" % locals(),
+        targetField = FieldElementTemplate(name = operatorTemplate.id + "_field" % locals(),
                                            **self.argumentsToTemplateConstructors)
         momentsVectorName = 'moments'
         
@@ -1126,7 +1130,6 @@ class XMDS2Parser(ScriptParser):
       for momentName in momentNames:
         momentsVector.components.append(momentName)
       
-      parentTemplate.dependencies.add(momentsVector)
       operatorTemplate.dependencies.add(momentsVector)
       operatorTemplate.resultVector = momentsVector
       
@@ -1135,7 +1138,7 @@ class XMDS2Parser(ScriptParser):
     
     return operatorTemplate
   
-  def parseCrossPropagationOperatorElement(self, operatorTemplate, operatorElement, deltaAOperatorTemplate):
+  def parseCrossPropagationOperatorElement(self, operatorTemplate, operatorElement):
     if not operatorElement.hasAttribute('algorithm'):
       raise ParserException(operatorElement, "Missing 'algorithm' attribute.")
     
@@ -1149,7 +1152,8 @@ class XMDS2Parser(ScriptParser):
       raise ParserException(operatorElement, "Unknown cross-propagation algorithm '%(algorithmString)s'.\n"
                                              "Currently, the only option is 'RK4'." % locals())
     
-    crossIntegratorTemplate = crossIntegratorClass(**self.argumentsToTemplateConstructors)
+    crossIntegratorTemplate = crossIntegratorClass(xmlElement = operatorElement,
+                                                   **self.argumentsToTemplateConstructors)
     crossIntegratorTemplate.cross = True
     
     if not operatorElement.hasAttribute('propagation_dimension'):
@@ -1207,8 +1211,12 @@ class XMDS2Parser(ScriptParser):
     reducedField = operatorTemplate.reducedDimensionFieldForField(fullField)
     operatorTemplate.reducedField = reducedField
     
+    operatorContainer = OperatorContainerTemplate(field = reducedField,
+                                                  **self.argumentsToTemplateConstructors)
+    crossIntegratorTemplate.operatorContainers.append(operatorContainer)
+    
     # Now we can construct the delta a operator for the cross-propagation integrator
-    deltaAOperatorTemplate = DeltaAOperatorTemplate(field = reducedField, integrator = crossIntegratorTemplate,
+    deltaAOperatorTemplate = DeltaAOperatorTemplate(parent = operatorContainer,
                                                     **self.argumentsToTemplateConstructors)
     deltaAOperatorTemplate.xmlElement = operatorElement
     deltaAOperatorTemplate.propagationCode = operatorElement.cdataContents()
