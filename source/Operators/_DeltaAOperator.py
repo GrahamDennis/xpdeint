@@ -32,6 +32,12 @@ class _DeltaAOperator (Operator):
   def defaultOperatorSpace(self):
     return 0
   
+  @property
+  def integrator(self):
+    # Our parent is an OperatorContainer, and its parent is the Integrator
+    return self.parent.parent
+  
+  
   def bindNamedVectors(self):
     super(_DeltaAOperator, self).bindNamedVectors()
     
@@ -44,7 +50,6 @@ class _DeltaAOperator (Operator):
                                 "Cannot integrate vector '%s' in this operators element as it "
                                 "belongs to a different field" % integrationVector.name)
         
-      self.integrator.vectors.update(self.integrationVectors)
       self.dependencies.update(self.integrationVectors)
     
     

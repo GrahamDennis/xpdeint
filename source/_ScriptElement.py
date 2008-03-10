@@ -41,15 +41,28 @@ class _ScriptElement (Template):
     
     self._ScriptElement_haveCalledInit = True
     
+    legalKWs = ['xmlElement']
+    localKWs = {}
+    for key in KWs.copy():
+      if key in legalKWs:
+        localKWs[key] = KWs[key]
+        del KWs[key]
+    
     Template.__init__(self, *args, **KWs)
     
     self.getVar('templates').add(self)
     
     self.argumentsToTemplateConstructors = KWs
-    self.dependencies = set()
+    
+    # Only set the dependencies attribute if it isn't taken
+    # care of elsewhere
+    if not hasattr(type(self), 'dependencies'):
+      self.dependencies = set()
+    
     self._parent = None
     self._propagationDimension = None
     self._propagationDirection = None
+    self.xmlElement = localKWs.get('xmlElement', None)
     
     if self.hasattr('globalNameSpaceName'):
       globalNameSpace = KWs['searchList'][0]
@@ -76,6 +89,17 @@ class _ScriptElement (Template):
     
     self._parent = potentialParents[0]
     return self._parent
+  
+  @property
+  def id(self):
+    result = []
+    currentObject = self
+    while currentObject:
+      if currentObject.hasattr('name') and currentObject.name:
+        result.append(currentObject.name)
+      currentObject = currentObject.parent
+    result.reverse()
+    return '_'.join(result)
   
   def _getPropagationDimension(self):
     if self._propagationDimension:
@@ -116,6 +140,23 @@ class _ScriptElement (Template):
       return False
     else:
       return True
+  
+  def valueForKeyPath(self, keyPath):
+    """Return the value for a dotted-name lookup of `keyPath` anchored at `self`."""
+    attrNames = keyPath.split('.')
+    currentObject = self
+    for attrName in attrNames:
+      currentObject = getattr(currentObject, attrName)
+    return currentObject
+  
+  def setValueForKeyPath(self, value, keyPath):
+    """Set the value of the result of the dotted-name lookup of `keyPath` anchored at `self` to `value`."""
+    attrNames = keyPath.split('.')
+    lastAttrName = attrNames.pop()
+    currentObject = self
+    for attrName in attrNames:
+      currentObject = getattr(currentObject, attrName)
+    setattr(currentObject, lastAttrName, value)
   
   # Default description of the template
   def description(self):
@@ -158,8 +199,11 @@ class _ScriptElement (Template):
     pass
   
   # Insert code for a list of features by calling a named function
-  def insertCodeForFeatures(self, functionName, featureList, dict = {}, reverse = False):
+  def insertCodeForFeatures(self, functionName, featureList, dict = None, reverse = False):
     featureDictionary = self.getVar('features')
+    
+    if not dict:
+        dict = {}
     
     if self.hasattr('bannedFeatures') and self.bannedFeatures:
       # Check if any of the features in the featureList are in the bannedFeatures
@@ -205,7 +249,7 @@ class _ScriptElement (Template):
     return ''.join(result)
   
   # Insert code for a list of features (in reverse order) by calling a named function
-  def insertCodeForFeaturesInReverseOrder(self, functionName, featureList, dict = {}):
+  def insertCodeForFeaturesInReverseOrder(self, functionName, featureList, dict = None):
     # Create a reversed feature list
     reversedFeatureList = featureList[:]
     reversedFeatureList.reverse()

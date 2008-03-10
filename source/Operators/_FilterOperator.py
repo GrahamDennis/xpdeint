@@ -35,9 +35,13 @@ class _FilterOperator (Operator):
   def preflight(self):
     super(_FilterOperator, self).preflight()
     
+    if self.resultVector:
+      # Add the result of our filter to the list of dependencies for our parent.
+      self.parent.dependencies.add(self.resultVector)
+    
     geometryTemplate = self.getVar('geometry')
     
-    sourceFieldName = self.integrator.name+'_'+self.name+'_source_field'
+    sourceFieldName = ''.join([self.parent.id, '_', self.name, '_source_field'])
     sourceField = FieldElement(name = sourceFieldName, **self.argumentsToTemplateConstructors)
     if self.dependenciesEntity:
       sourceField.xmlElement = self.dependenciesEntity.xmlElement

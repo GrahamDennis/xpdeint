@@ -20,7 +20,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 void _segment${segmentNumber}_calculate_nonconstant_ip_fields(double _step, int _exponent, int _arrayIndex);
 double _segment${segmentNumber}_setup_sampling(bool* _next_sample_flag, long* _next_sample_counter);
   @#
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
 double _segment${segmentNumber}_${vector.id}_timestep_error(${vector.type}* _checkfield);
 void _segment${segmentNumber}_${vector.id}_reset(${vector.type}* _reset_to);
   @end for
@@ -38,7 +38,7 @@ void _segment${segmentNumber}_${vector.id}_reset(${vector.type}* _reset_to);
 ${nonConstantIPFieldsFunctionImplementation}@slurp
 
 ${setupSamplingFunctionImplementation}@slurp
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
 
 ${timestepErrorFunctionImplementation($vector)}@slurp
 
@@ -52,11 +52,13 @@ ${resetFunctionImplementation($vector)}@slurp
   @#
 void _segment${segmentNumber}_calculate_nonconstant_ip_fields(double _step, int _exponent, int _arrayIndex)
 {
-  @for operator in $operators
-    @if not isinstance(operator, AdaptiveStepIPOperator)
-      @continue
-    @end if
-  _segment${segmentNumber}_calculate_${operator.name}_field(_step, _exponent, _arrayIndex);
+  @for operatorContainer in $operatorContainers
+    @for operator in operatorContainer.ipOperators
+      @if not isinstance(operator, AdaptiveStepIPOperator)
+        @continue
+      @end if
+  _${operator.parent.id}_calculate_${operator.name}_field(_step, _exponent, _arrayIndex);
+    @end for
   @end for
 }
   @#
@@ -242,7 +244,7 @@ void _segment${segmentNumber}()
   ${insertCodeForFeatures('integrateAdaptiveStepBegin', featureOrderingOuter), autoIndent=True}@slurp
   
   double _error;
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
   double _${name}_${vector.id}_error;
   @end for
   
@@ -289,7 +291,7 @@ void _segment${segmentNumber}()
       ${insertCodeForFeaturesInReverseOrder('integrateAdaptiveStepInnerLoopEnd', featureOrderingInnerLoop), autoIndent=True}@slurp
       
       _error = 0.0;
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
       
       _${name}_${vector.id}_error = _${name}_${vector.id}_timestep_error(_${errorFieldName}_${vector.id});
       if (_${name}_${vector.id}_error > _error)
@@ -309,7 +311,7 @@ void _segment${segmentNumber}()
       } else {
         ${insertCodeForFeatures('adaptiveStepFailed', $featureOrderingForToleranceChecking), autoIndent=True}@slurp
         t -= _step;
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
         
         _${name}_${vector.id}_reset(_${resetFieldName}_${vector.id});
   @end for

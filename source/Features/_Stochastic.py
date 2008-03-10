@@ -25,7 +25,7 @@ class _Stochastic (_Feature):
     result = []
     
     for field in integrator.integrationFields:
-      deltaAOperatorList = filter(lambda x: x.field == field and isinstance(x, DeltaAOperator), integrator.operators)
+      deltaAOperatorList = [oc.deltaAOperator for oc in integrator.operatorContainers if oc.field == field]
       assert len(deltaAOperatorList) == 1
       deltaAOperator = deltaAOperatorList[0]
       

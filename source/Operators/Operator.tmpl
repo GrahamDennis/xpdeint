@@ -13,9 +13,9 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   @super
   @#
   @if $operatorVector
-void _${parent.name}_calculate_${name}_field(${calculateOperatorFieldFunctionArguments});
+void _${parent.id}_calculate_${name}_field(${calculateOperatorFieldFunctionArguments});
   @end if
-void _${parent.name}_evaluate_${name}(${evaluateOperatorFunctionArgument});
+void _${parent.id}_evaluate_${name}(${evaluateOperatorFunctionArgument});
   @#
 @end def
 
@@ -36,7 +36,7 @@ ${evaluateOperatorFunctionImplementation}@slurp
 @def calculateOperatorFieldFunctionImplementation
   @#
 // ${description}
-void _${parent.name}_calculate_${name}_field(${calculateOperatorFieldFunctionArguments})
+void _${parent.id}_calculate_${name}_field(${calculateOperatorFieldFunctionArguments})
 {
   ${calculateOperatorFieldFunctionContents, autoIndent=True}@slurp
 }
@@ -46,7 +46,7 @@ void _${parent.name}_calculate_${name}_field(${calculateOperatorFieldFunctionArg
 @def evaluateOperatorFunctionImplementation
   @#
 // ${description}
-void _${parent.name}_evaluate_${name}(${evaluateOperatorFunctionArgument})
+void _${parent.id}_evaluate_${name}(${evaluateOperatorFunctionArgument})
 {
   ${evaluateOperatorFunctionContents, autoIndent=True}@slurp
 }
@@ -74,7 +74,7 @@ ${vector.allocate}@slurp
 ${allocate}@slurp
   @#
   @if $operatorVector
-_${parent.name}_calculate_${name}_field();
+_${parent.id}_calculate_${name}_field();
   @end if
   @#
 @end def

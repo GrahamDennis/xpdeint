@@ -9,8 +9,11 @@ Created by Graham Dennis on 2007-10-18.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 """
 
-from ScriptElement import ScriptElement
+from .ScriptElement import ScriptElement
 from ParserException import ParserException
+
+import RegularExpressionStrings
+import re
 
 class _Operator (ScriptElement):
   evaluateOperatorFunctionArgument = 'double _step'
@@ -26,7 +29,7 @@ class _Operator (ScriptElement):
   
   calculateOperatorFieldFunctionArguments = ''
   
-  def __init__(self, field, integrator, *args, **KWs):
+  def __init__(self, parent, *args, **KWs):
     ScriptElement.__init__(self, *args, **KWs)
     
     # Set default variables
@@ -35,10 +38,9 @@ class _Operator (ScriptElement):
     self.operatorVector = None
     self.resultVector = None
     self.operatorNumber = -1
-    self.integrator = integrator
-    self.field = field
-    self.operatorNumber = len(self.integrator.operators)
-    integrator.operators.append(self)
+    self._parent = parent
+    parent.addOperator(self)
+    self._field = None
     self._children = []
     self._loopingField = None
   
@@ -57,10 +59,6 @@ class _Operator (ScriptElement):
     return 'operator' + str(self.operatorNumber)
   
   @property
-  def id(self):
-    return ''.join([self.integrator.name, '_', self.name])
-  
-  @property
   def operatorTargetVectorsSet(self):
     setOfTargetVectors = set()
     
@@ -70,10 +68,10 @@ class _Operator (ScriptElement):
     
     return setOfTargetVectors
   
-  
   @property
   def defaultOperatorSpace(self):
     return self.field.spaceMask
+  
   
   def _getOperatorSpace(self):
     if not self.hasattr('_operatorSpace'):
@@ -87,6 +85,7 @@ class _Operator (ScriptElement):
   operatorSpace = property(_getOperatorSpace, _setOperatorSpace)
   del _getOperatorSpace, _setOperatorSpace
   
+  
   def _getLoopingField(self):
     return self._loopingField or self.field
   
@@ -95,6 +94,24 @@ class _Operator (ScriptElement):
   
   loopingField = property(_getLoopingField, _setLoopingField)
   del _getLoopingField, _setLoopingField
+  
+  
+  def _getField(self):
+    if self._field:
+      return self._field
+    else:
+      return self.parent.field
+  
+  def _setField(self, value):
+    self._field = value
+  
+  field = property(_getField, _setField)
+  del _getField, _setField
+  
+  def targetComponentsForOperatorsInString(self, operatorNames, propagationCode):
+    operatorCodeRegex = re.compile(r'\b(' + '|'.join(operatorNames) + ')'+ RegularExpressionStrings.threeLevelsMatchedSquareBrackets, re.VERBOSE)
+    return operatorCodeRegex.findall(propagationCode)
+  
   
   def bindNamedVectors(self):
     super(_Operator, self).bindNamedVectors()

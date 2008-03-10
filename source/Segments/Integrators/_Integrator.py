@@ -23,14 +23,25 @@ class _Integrator (_Segment):
     # Set default variables
     self.samplesEntity = None
     self.samples = []
-    self.vectors = set()
-    self.operators = []
+    self._integrationVectors = set()
     self.homeSpace = 0
     self.cutoff = 1e-3
+    self.operatorContainers = []
   
   @property
   def children(self):
-    return self.operators[:]
+    return self.operatorContainers[:]
+  
+  @property
+  def integrationVectors(self):
+    if self._integrationVectors:
+      return self._integrationVectors.copy()
+    
+    deltaAOperators = [oc.deltaAOperator for oc in self.operatorContainers if oc.deltaAOperator]
+    for op in deltaAOperators:
+      self._integrationVectors.update(op.integrationVectors)
+    
+    return self._integrationVectors.copy()
   
   @property
   def name(self):
@@ -38,10 +49,10 @@ class _Integrator (_Segment):
   
   @property
   def integrationFields(self):
-    return set([v.field for v in self.vectors])
+    return set([v.field for v in self.integrationVectors])
   
   
-  # List of the delta A operators in descending order of the number of dimensions in its field.
+  # List of the operator containers in descending order of the number of dimensions in their fields.
   #
   # This is needed because when delta A operators are evaluated, they replace the components
   # with their propagation-dimension increments. i.e. They do phi = dphi_dt * dt
@@ -55,10 +66,10 @@ class _Integrator (_Segment):
   # on another field with 0 or 1 dimensions, it doesn't make sense for a 0 or 1 dimensional field to depend directly
   # on a 3 dimensional field. It may depend on the 3 dimensional field through moments of the field, however they will
   # be calculated in other operators that would have already been evaluated.
-  def deltaAOperatorsInFieldDescendingOrder(self):
-    deltaAOperators = filter(lambda x: x.operatorKind == x.DeltaAOperatorKind, self.operators)
-    deltaAOperators.sort(lambda x, y: cmp(len(x.field.dimensions), len(y.field.dimensions)), reverse=True)
-    return deltaAOperators
+  def operatorContainersInFieldDescendingOrder(self):
+    operatorContainers = self.operatorContainers[:]
+    operatorContainers.sort(lambda x, y: cmp(len(x.field.dimensions), len(y.field.dimensions)), reverse=True)
+    return operatorContainers
   
   
   def preflight(self):

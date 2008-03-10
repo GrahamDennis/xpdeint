@@ -16,7 +16,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   @super
   @#
   @if len($integrator.ipPropagationStepFractions) > 1
-int _${integrator.name}_${name}_exponent_offset_map[${len($integrator.ipPropagationStepFractions)}];
+int _${id}_exponent_offset_map[${len($integrator.ipPropagationStepFractions)}];
   @end if
   @#
 @end def
@@ -26,7 +26,7 @@ int _${integrator.name}_${name}_exponent_offset_map[${len($integrator.ipPropagat
 ${allocate}@slurp
   @#
   @if len($integrator.ipPropagationStepFractions) > 1
-bzero(_${integrator.name}_${name}_exponent_offset_map, sizeof(_${integrator.name}_${name}_exponent_offset_map));
+bzero(_${id}_exponent_offset_map, sizeof(_${id}_exponent_offset_map));
   @end if
   @#
 @end def
@@ -40,7 +40,7 @@ static const double _propagationStepFractions[] = {
   @end for
 };
 const double _propagationStepFraction = _propagationStepFractions[abs(_exponent) - 1];
-_${integrator.name}_${name}_exponent_offset_map[abs(_exponent) - 1] = _arrayIndex;
+_${id}_exponent_offset_map[abs(_exponent) - 1] = _arrayIndex;
   @else
 const double _propagationStepFraction = ${integrator.ipPropagationStepFractions[0]};
   @end if
@@ -72,7 +72,7 @@ _${operatorVector.id}[_${operatorVector.id}_index_pointer + _arrayIndex * $len($
   @# We expect the integrator to have defined _exponent
   @#
   @if len($integrator.ipPropagationStepFractions) > 1
-unsigned long _exponentIndex = _${integrator.name}_${name}_exponent_offset_map[abs(_exponent) - 1] * $len($operatorComponents);
+unsigned long _exponentIndex = _${id}_exponent_offset_map[abs(_exponent) - 1] * $len($operatorComponents);
 
   @end if
 if (_exponent > 0) {

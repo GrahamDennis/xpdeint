@@ -17,16 +17,21 @@ class _IPOperator(Operator):
   
   operatorKind = Operator.IPOperatorKind
   
+  @property
+  def integrator(self):
+    # Our parent is an OperatorContainer, and its parent is the Integrator
+    return self.parent.parent
+  
   def preflight(self):
     super(Operator, self).preflight()
     
-    if self.hasattr('operatorComponentsEntity'):
-      operatorTargetPairs = self.operatorComponentsEntity.value
-      
+    operatorTargetPairs = self.targetComponentsForOperatorsInString(self.operatorNames, self.parent.sharedCode)
+    
+    if operatorTargetPairs:
       operatorNamesUsed = set()
       operatorNames = set(self.operatorNames)
       
-      integrationVectors = self.deltaAOperator.integrationVectors
+      integrationVectors = self.parent.deltaAOperator.integrationVectors
       field = self.field
       
       legalTargetComponentNames = set()
@@ -66,7 +71,7 @@ class _IPOperator(Operator):
         match = targetRegex.match(target)
         
         if not match:
-          raise ParserException(self.operatorComponentsEntity.xmlElement,
+          raise ParserException(self.xmlElement,
                                 "IP operators can only act on components of integration vectors.\n"
                                 "The '%(componentName)s' operator acting on '%(target)s' doesn't seem to be of the right form\n"
                                 "or '%(target)s' isn't in one of the integration vectors."
@@ -74,7 +79,7 @@ class _IPOperator(Operator):
         
         componentName = match.group('componentName')
         if componentName in targetComponentNamesUsed:
-          raise ParserException(self.operatorComponentsEntity.xmlElement,
+          raise ParserException(self.xmlElement,
                                 "Check the documentation, only one IP operator can act on a given component,\n"
                                 "and this operator can only appear once.\n"
                                 "The problem was with the '%(componentName)s' term appearing more than once in an IP operator.\n"
@@ -107,7 +112,7 @@ class _IPOperator(Operator):
         sanityRegex = re.compile(r'\bd(' + RegularExpressionStrings.symbol + r')_d' + escape(self.propagationDimension)
                                  + r'.*' + escape(operatorName) + r'\[' + escape(target) + r'\]')
         
-        sanityResult = sanityRegex.findall(self.deltaAOperator.propagationCode)
+        sanityResult = sanityRegex.findall(self.parent.sharedCode)
         
         assert len(sanityResult) <= 1
         
@@ -117,7 +122,7 @@ class _IPOperator(Operator):
             # Barf, and tell the user what to do to fix it
             derivativeVariable = sanityResult[0]
             propagationDimension = self.propagationDimension
-            raise ParserException(self.operatorComponentsEntity.xmlElement,
+            raise ParserException(self.xmlElement,
                                   "Due to the way IP operators work, they can only contribute\n"
                                   "to the derivative of the variable they act on,\n"
                                   "i.e. dx_dt = L[x] not dy_dt = L[x].\n\n"
@@ -129,16 +134,16 @@ class _IPOperator(Operator):
         # Create a regular expression to replace the L[x] string with 0.0
         operatorCodeReplacementRegex = re.compile(r'\b' + escape(operatorName) + r'\[\s*' + escape(target) + r'\s*\]')
         
-        replacementCode = operatorCodeReplacementRegex.sub('0.0', self.deltaAOperator.propagationCode, count = 1)
+        replacementCode = operatorCodeReplacementRegex.sub('0.0', self.parent.sharedCode, count = 1)
         
-        self.deltaAOperator.propagationCode = replacementCode
+        self.parent.sharedCode = replacementCode
       
       
       # If any operator names weren't used in the code, issue a warning
       unusedOperatorNames = operatorNames.difference(operatorNamesUsed)
       if unusedOperatorNames:
         unusedOperatorNamesString = ', '.join(unusedOperatorNames)
-        parserWarning(self.operatorComponentsEntity.xmlElement,
+        parserWarning(self.xmlElement,
                       "The following operator names weren't used: %(unusedOperatorNamesString)s" % locals())
       
     

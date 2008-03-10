@@ -16,9 +16,9 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *@
 @def singleIntegrationStep
   @#
-${transformVectorsToSpace($vectors, $homeSpace)}@slurp
+${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
 
-${loopOverVectorsWithInnerContentTemplate($vectors,
+${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """// a_k = a
 _akfield_${vector.id}[$index] = _${vector.id}[$index];
 """)}@slurp
@@ -27,12 +27,12 @@ _akfield_${vector.id}[$index] = _${vector.id}[$index];
 _segment${segmentNumber}_ip_evolve(+1);
 ${goToHomeSpace}@slurp
 
-${loopOverVectorsWithInnerContentTemplate($vectors,
+${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """// a_i = a
 _aifield_${vector.id}[$index] = _${vector.id}[$index];
 """)}@slurp
 
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
 _active_${vector.id} = _akfield_${vector.id};
   @end for
   
@@ -43,7 +43,7 @@ _segment${segmentNumber}_calculate_delta_a(_step);
 _segment${segmentNumber}_ip_evolve(+1);
 ${goToHomeSpace}@slurp
 
-${loopOverVectorsWithInnerContentTemplate($vectors, 
+${loopOverVectorsWithInnerContentTemplate($integrationVectors, 
 """// a = a + a_k/6
 _${vector.id}[$index] += _akfield_${vector.id}[$index]/6.0;
 // a_k = a_i + a_k/2
@@ -60,7 +60,7 @@ ${interpolateDependencies}@slurp
 _segment${segmentNumber}_calculate_delta_a(_step);
 ${goToHomeSpace}@slurp
 
-${loopOverVectorsWithInnerContentTemplate($vectors,
+${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """// a = a + a_k/3
 _${vector.id}[$index] += _akfield_${vector.id}[$index]/3.0;
 // a_k = a_i + a_k/2
@@ -71,7 +71,7 @@ _akfield_${vector.id}[$index] = _aifield_${vector.id}[$index] + _akfield_${vecto
 _segment${segmentNumber}_calculate_delta_a(_step);
 ${goToHomeSpace}@slurp
 
-${loopOverVectorsWithInnerContentTemplate($vectors,
+${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """// a = a + a_k/3
 _${vector.id}[$index] += _akfield_${vector.id}[$index]/3.0;
 // a_k = a_i + a_k
@@ -91,7 +91,7 @@ ${updateDependenciesForNextStep}@slurp
 _segment${segmentNumber}_calculate_delta_a(_step);
 ${goToHomeSpace}@slurp
 
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
 _active_${vector.id} = _${vector.id};
   @end for
 
@@ -99,7 +99,7 @@ _active_${vector.id} = _${vector.id};
 _segment${segmentNumber}_ip_evolve(+1);
 ${goToHomeSpace}@slurp
 
-${loopOverVectorsWithInnerContentTemplate($vectors, 
+${loopOverVectorsWithInnerContentTemplate($integrationVectors, 
 """// a = a + a_k/6
 _${vector.id}[$index] += _akfield_${vector.id}[$index]/6.0;
 """)}@slurp

@@ -108,7 +108,7 @@ class _CrossPropagationOperator (Operator):
                                 "Cannot integrate vector '%s' in this cross-propagation element as it "
                                 "does not belong to the '%s' field." % (integrationVector.name, self.field.name))
         
-        if integrationVector in self.deltaAOperator.integrationVectors:
+        if integrationVector in self.parent.deltaAOperator.integrationVectors:
           raise ParserException(self.integrationVectorsEntity.xmlElement,
                                 "Cannot integrate vector '%s' in this cross-propagation element as it "
                                 "is being integrated by the ancestor integrator." % integrationVector.name)
@@ -118,11 +118,11 @@ class _CrossPropagationOperator (Operator):
       
       # Add the reduced integration vectors to the various parts of the cross-propagation integrator
       reducedIntegrationVectors = set(self.integrationVectorMap.values())
-      self.crossPropagationIntegrator.vectors.update(reducedIntegrationVectors)
+      self.crossPropagationIntegrator.integrationVectors.update(reducedIntegrationVectors)
       self.crossPropagationIntegratorDeltaAOperator.integrationVectors.update(reducedIntegrationVectors)
       self.crossPropagationIntegratorDeltaAOperator.dependencies.update(reducedIntegrationVectors)
       
-      self.deltaAOperator.dependencies.update(self.integrationVectors)
+      self.parent.dependencies.update(self.integrationVectors)
     
     if self.boundaryConditionDependenciesEntity:
       self.boundaryConditionDependencies = self.vectorsFromEntity(self.boundaryConditionDependenciesEntity)

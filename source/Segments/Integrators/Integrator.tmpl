@@ -16,7 +16,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   @#
   @super
   @#
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
     @# Loop over the variables that need to be created
     @for $arrayName in $extraIntegrationArrayNames
 ${vector.type}* _${name}_${arrayName}_${vector.id};
@@ -64,13 +64,10 @@ inline void _segment${segmentNumber}_ip_evolve(int _exponent)
 {
   @set $blankLineSeparator = ''
   @#
-  @for $operator in $operators
-    @if $operator.operatorKind == $operator.IPOperatorKind
+  @for $operatorContainer in $operatorContainers
 ${blankLineSeparator}@slurp
-  // ${operator.description}
-  _segment${segmentNumber}_evaluate_${operator.name}(_exponent);
-      @set $blankLineSeparator = '\n'
-    @end if
+  ${operatorContainer.evaluateIPOperators(argString = '_exponent'), autoIndent=True}@slurp
+    @set $blankLineSeparator = '\n'
   @end for
   @#  
 }
@@ -83,25 +80,35 @@ inline void _segment${segmentNumber}_calculate_delta_a(double _step)
 {
   @set $blankLineSeparator = ''
   @#
-  @# First loop over operators that aren't IP (because they're dealt with separately), or delta A operators (they must be last)
-  @for $operator in $operators
-    @if $operator.operatorKind in set([$operator.IPOperatorKind, $operator.DeltaAOperatorKind])
-      @continue
-    @end if
+  @# First loop over operators that come before the delta A operators in the order in which
+  @# they appear in the xmds script.
+  @#
+  @for $operatorContainer in $operatorContainers
 ${blankLineSeparator}@slurp
     @set $blankLineSeparator = '\n'
     @#
-  // ${operator.description}
-  _segment${segmentNumber}_evaluate_${operator.name}(_step);
+  ${operatorContainer.evaluatePreDeltaAOperators(argString = '_step'), autoIndent=True}@slurp
   @end for
-  @# Now loop over delta A operators (they must be last)
+  @#
+  @# Now loop over delta A operators
   @# See the comment in _Integrator about why this needs to be done in
   @# this particular order
-  @for $operator in $deltaAOperatorsInFieldDescendingOrder
+  @for $operatorContainer in $operatorContainersInFieldDescendingOrder
     @# Blank line for formatting
   
-  // ${operator.description}
-  _segment${segmentNumber}_evaluate_${operator.name}(_step);
+  ${operatorContainer.evaluateDeltaAOperator(argString = '_step'), autoIndent=True}@slurp
+  @end for
+  @#
+  @# Lastly, loop over the operators that come after the delta a operators in the order in
+  @# which they appear in the xmds script.
+  @#
+  @for $operatorContainer in $operatorContainers
+    @set $result = $operatorContainer.evaluatePostDeltaAOperators(argString = '_step')
+    @if not result.isspace()
+    @# Blank line for formatting
+  
+  ${result, autoIndent=True}@slurp
+    @end if
   @end for
 }
   @#
@@ -117,7 +124,7 @@ This is a call once-per-instance function because we may want to do the initiali
 example we are looping over this segment, or we are running multiple paths).
 *@
   @# Loop over the vectors creating the arrays
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
     @# Loop over the variables that need to be created
     @for $arrayName in $extraIntegrationArrayNames
 _${name}_${arrayName}_${vector.id} = @slurp
@@ -126,8 +133,8 @@ _${name}_${arrayName}_${vector.id} = @slurp
   @end for
   @#
   @# Let the operators allocate and initialise any arrays they need
-  @for $operator in $operators
-$operator.initialise@slurp
+  @for $operatorContainer in $operatorContainers
+$operatorContainer.initialise@slurp
   @end for
   @#
 @end def
@@ -135,15 +142,15 @@ $operator.initialise@slurp
 @@callOncePerInstanceGuard
 @def finalise
   @#
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
     @for $arrayName in $extraIntegrationArrayNames
 xmds_free(_${name}_${arrayName}_${vector.id});
     @end for
   @end for
   @#
   @# Let the operators do their clean up
-  @for $operator in $operators
-$operator.finalise@slurp
+  @for $operatorContainer in $operatorContainers
+$operatorContainer.finalise@slurp
   @end for
   @#
 @end def
@@ -154,7 +161,7 @@ Because the initialisation for the integrator could be in a different function,
 we need to set up pointers in the integrator to the appropriate arrays.
 *@
   @#
-  @for $vector in $vectors
+  @for $vector in $integrationVectors
     @# Loop over the variables that need to be created
     @for $arrayName in $extraIntegrationArrayNames
 ${vector.type}* _${arrayName}_${vector.id} = _${name}_${arrayName}_${vector.id};
@@ -168,6 +175,6 @@ ${vector.type}* _${arrayName}_${vector.id} = _${name}_${arrayName}_${vector.id};
 This method writes the code to transform all of the integration vectors
 back to the 'home space' of the integrator.
 *@
-${transformVectorsToSpace($vectors, $homeSpace)}@slurp
+${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
   @#
 @end def

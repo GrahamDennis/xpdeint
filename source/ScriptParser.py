@@ -27,14 +27,6 @@ class ScriptParser(object):
   def parseXMLDocument(self, xmlDocument, globalNameSpace):
     return None
   
-  def targetComponentsForOperatorInString(self, operatorName, propagationCode):
-    operatorCodeRegex = re.compile(r'\b' + operatorName + r'\[\s*(.+)\s*\]')
-    return operatorCodeRegex.findall(propagationCode)
-  
-  def targetComponentsForOperatorsInString(self, operatorNames, propagationCode):
-    operatorCodeRegex = re.compile(r'\b(' + '|'.join(operatorNames) + ')'+ RegularExpressionStrings.threeLevelsMatchedSquareBrackets, re.VERBOSE)
-    return operatorCodeRegex.findall(propagationCode)
-  
   def applyAttributeDictionaryToObject(self, attrDict, obj):
     for attrName, attrValue in attrDict.iteritems():
       obj.__setattr__(attrName, attrValue)
