@@ -61,11 +61,17 @@
 
 * Sequence elements need to exist and have loop structures.
 
-* operator ordering:  For multiple operators blocks, each group goes in order of dimension size from largest to smallest.
-		Order of blocks: IP out of stream.  
-		All filters, EXs, cross-props, functions in order until DeltaA, which must be followed only by functions.  
-		DeltaAs. 
-		Functions specified after DeltaAs. 
+* Filter moments (now computed_vectors) all have to go into global or higher level elements. (see vibstring3.xmds for planned notation)
+   - Dependencies trigger construction of filter
+   - Check component names unique
+
+* Filters that do things (called filters) all happen in between timesteps.  (See vibstring3.xmds for planned notation)   
+
+* operator ordering (operators in stream now involves EX, cross, func, cdata, computed_vectors):  
+    - computed_vectors happen first.  Safe dependency order must be generated from the list of dependencies.
+    - everything above CDATA in XML order
+    - CDATA from largest to smallest
+    - everything below CDATA in XML order
 		
 
 * Output:
