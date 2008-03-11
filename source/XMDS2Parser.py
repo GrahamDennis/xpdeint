@@ -1091,7 +1091,7 @@ class XMDS2Parser(ScriptParser):
                     "Filter moments cannot have dimensions that aren't in the integration field. "
                     "The offending dimension is '%(dimensionName)s'." % locals())
           
-          targetField.dimensions.append(geometryTemplate.dimensions[geometryTemplate.indexOfDimensionName(dimensionName)])
+          targetField.dimensions.append(geometryTemplate.dimensionWithName(dimensionName))
         targetField.sortDimensions()
       else:
         raise ParserException(momentsElement,

@@ -93,12 +93,6 @@ class _OperatorContainer(ScriptElement):
     
     op.operatorNumber = len(self.operators) - 1
   
-  def preflight(self):
-    super(_OperatorContainer, self).preflight()
-    
-    if self.field and self.deltaAOperator:
-      assert self.field == self.deltaAOperator.field
-    
   
   def evaluateIPOperators(self, argString = ''):
     return self._evaluateOperatorsWithArgument(self.ipOperators, argString)
@@ -112,9 +106,21 @@ class _OperatorContainer(ScriptElement):
   def evaluateDeltaAOperator(self, argString = ''):
     return self._evaluateOperatorsWithArgument([self.deltaAOperator], argString)
   
+  def evaluateOperators(self, argString = ''):
+    assert not self.postDeltaAOperators and not self.deltaAOperator and not self.ipOperators
+    return self._evaluateOperatorsWithArgument(self.preDeltaAOperators, argString)
+  
   def initialise(self):
     return '\n'.join([op.initialise() for op in self.operators])
   
   def finalise(self):
     return '\n'.join([op.finalise() for op in self.operators])
+  
+  
+  def preflight(self):
+    super(_OperatorContainer, self).preflight()
+    
+    if self.field and self.deltaAOperator:
+      assert self.field == self.deltaAOperator.field
+    
 

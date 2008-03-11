@@ -71,15 +71,17 @@
   <sequence>
     <integrate algorithm="RK9" interval="2e-3" steps="100">
       <samples>50 50</samples>
-          <computed_vector name="filter2" target_field="zero_d_test">
-            <components type="complex">sparemoment</components>
-            <dependencies fourier_space="kx ky">integrated_u main</dependencies>
-            <!-- If the moments are of type 'double', then all dimensions that aren't integrated
-                 must be evaluated in 'x' space. -->
-            <![CDATA[
-              sparemoment = mod2(u);
-            ]]>
-          </computed_vector>
+      
+      <computed_vector name="filter2" target_field="zero_d_test">
+        <components type="complex">sparemoment</components>
+        <dependencies fourier_space="kx ky">integrated_u main</dependencies>
+        <!-- If the moments are of type 'double', then all dimensions that aren't integrated
+             must be evaluated in 'x' space. -->
+        <![CDATA[
+          sparemoment = mod2(u);
+        ]]>
+      </computed_vector>
+      
       <operators field="mainField">
         <operator kind="ex" constant="yes">
           <operator_names>L</operator_names>
@@ -93,6 +95,7 @@
           duDot_dt = L[u /**/];
         ]]>
       </operators>
+      
       <operators field="zero_d_test">
         <integration_vectors>integrated_u</integration_vectors>
         <dependencies>filter1</dependencies>
@@ -100,36 +103,36 @@
           dmom_dt = moment;
         ]]>
       </operators>
+      
       <filters>
-          <filter>
-              <![CDATA[
-                du_dt = uDot;
-                duDot_dt = L[u];
-              ]]>
-              <dependencies>filter1 main</dependencies>
-          </filter>
+        <filter>
+          <dependencies>filter1 main</dependencies>
+          <![CDATA[
+            u = 1.0 * u;
+          ]]>
+        </filter>
       </filters>
     </integrate>
   </sequence>
- 
+  
   <output format="binary" filename="vibstring3.xsil">
     <group>
       <sampling initial_sample="yes">
-          <computed_vector name="filter3" target_field="zero_d_test">
-            <components type="complex">sparemomentagain</components>
-            <dependencies fourier_space="kx ky">integrated_u main</dependencies>
-            <!-- If the moments are of type 'double', then all dimensions that aren't integrated
-                 must be evaluated in 'x' space. -->
-            <![CDATA[
-              sparemomentagain = mod2(u);
-            ]]>
-          </computed_vector>
-          <operator kind="ex" constant="yes">
-            <operator_names>L</operator_names>
-            <![CDATA[
-              L = -T*kx*kx/mu;
-            ]]>
-          </operator>
+        <computed_vector name="filter3" target_field="zero_d_test">
+          <components type="complex">sparemomentagain</components>
+          <dependencies fourier_space="kx ky">integrated_u main</dependencies>
+          <!-- If the moments are of type 'double', then all dimensions that aren't integrated
+               must be evaluated in 'x' space. -->
+          <![CDATA[
+            sparemomentagain = mod2(u);
+          ]]>
+        </computed_vector>
+        <operator kind="ex" constant="yes">
+          <operator_names>L</operator_names>
+          <![CDATA[
+            L = -T*kx*kx/mu;
+          ]]>
+        </operator>
         <dimension name="x" lattice="100" fourier_space="x" />
         <moments>amp ke</moments>
         <dependencies>main filter1</dependencies>

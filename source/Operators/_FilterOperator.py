@@ -48,14 +48,13 @@ class _FilterOperator (Operator):
     else:
       sourceField.xmlElement = self.xmlElement
     
-    unionOfDimensions = set()
+    sourceFieldDimensionNames = set()
     for dependency in self.dependencies:
-      for fieldDimension in dependency.field.dimensions:
-        unionOfDimensions = unionOfDimensions.union(fieldDimension.name)
+      sourceFieldDimensionNames.update([dim.name for dim in dependency.field.dimensions])
     
-    for fieldDimensionName in unionOfDimensions:
+    for fieldDimensionName in sourceFieldDimensionNames:
       if not sourceField.hasDimensionName(fieldDimensionName):
-        sourceField.dimensions.append(geometryTemplate.dimensions[geometryTemplate.indexOfDimensionName(fieldDimensionName)])
+        sourceField.dimensions.append(geometryTemplate.dimensionWithName(fieldDimensionName)])
     sourceField.sortDimensions()
     
     self.sourceField = sourceField
