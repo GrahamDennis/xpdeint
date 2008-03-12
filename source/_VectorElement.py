@@ -13,6 +13,8 @@ from ScriptElement import ScriptElement
 from VectorInitialisation import VectorInitialisation
 
 class _VectorElement (ScriptElement):
+  isComputed = False
+  
   def __init__(self, name, field, *args, **KWs):
     ScriptElement.__init__(self, *args, **KWs)
     self.name = name
@@ -56,7 +58,7 @@ class _VectorElement (ScriptElement):
   
   def _setNeedsInitialisation(self, value):
     self._needsInitialisation = value
-    if not value:
+    if not value and self.initialiser:
       self.initialiser.vector = None
       self.initialiser.remove()
       self.initialiser = None

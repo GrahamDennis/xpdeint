@@ -61,10 +61,6 @@
 
 * Sequence elements need to exist and have loop structures.
 
-* Filter moments (now computed_vectors) all have to go into global or higher level elements. (see vibstring3.xmds for planned notation)
-   - Dependencies trigger construction of filter
-   - Check component names unique
-
 * Filters that do things (called filters) all happen in between timesteps.  (See vibstring3.xmds for planned notation)   
 
 * operator ordering (operators in stream now involves EX, cross, func, cdata, computed_vectors):  

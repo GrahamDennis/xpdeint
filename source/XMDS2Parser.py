@@ -20,10 +20,12 @@ from FieldElement import FieldElement as FieldElementTemplate
 from Dimension import Dimension
 
 from VectorElement import VectorElement as VectorElementTemplate
+from ComputedVector import ComputedVector as ComputedVectorTemplate
 from VectorInitialisation import VectorInitialisation as VectorInitialisationZeroTemplate
 from VectorInitialisationCDATA import VectorInitialisationCDATA as VectorInitialisationCDATATemplate
 
 
+from Segments._Segment import _Segment as _SegmentTemplate
 from Segments.TopLevelSequenceElement import TopLevelSequenceElement as TopLevelSequenceElementTemplate
 from SimulationDrivers.DefaultDriver import DefaultDriver as DefaultDriverTemplate
 from SimulationDrivers.MultiPathDriver import MultiPathDriver as MultiPathDriverTemplate
@@ -541,15 +543,15 @@ class XMDS2Parser(ScriptParser):
     
     self.parseVectorElements(fieldElement, fieldTemplate)
     
+    self.parseComputedVectorElements(fieldElement, fieldTemplate)
     return fieldTemplate
   
   
   def parseVectorElements(self, fieldElement, fieldTemplate):
-    vectorElements = fieldElement.getChildElementsByTagName('vector')
+    vectorElements = fieldElement.getChildElementsByTagName('vector', optional=True)
     for vectorElement in vectorElements:
       vectorTemplate = self.parseVectorElement(vectorElement, fieldTemplate)
       fieldTemplate.managedVectors.add(vectorTemplate)
-    
   
   def parseVectorElement(self, vectorElement, fieldTemplate):
     if not vectorElement.hasAttribute('name') or len(vectorElement.getAttribute('name')) == 0:
@@ -643,6 +645,132 @@ class XMDS2Parser(ScriptParser):
       vectorTemplate.initialiser = initialisationTemplate
       
       self.parseNoisesAttribute(initialisationElement, initialisationTemplate)
+    
+    return vectorTemplate
+  
+  def parseComputedVectorElements(self, parentElement, parentTemplate):
+    results = []
+    computedVectorElements = parentElement.getChildElementsByTagName('computed_vector', optional=True)
+    for computedVectorElement in computedVectorElements:
+      # Add the computed vector template to the results
+      results.append(self.parseComputedVectorElement(computedVectorElement, parentTemplate))
+    
+    return results
+  
+  def parseComputedVectorElement(self, computedVectorElement, parentTemplate):
+    if not computedVectorElement.hasAttribute('name') or len(computedVectorElement.getAttribute('name')) == 0:
+      raise ParserException(computedVectorElement, "Each computed vector element must have a non-empty 'name' attribute")
+    
+    vectorName = computedVectorElement.getAttribute('name')
+    
+    # Check that this vector name is unique
+    for field in self.globalNameSpace['fields']:
+      if len(filter(lambda x: x.name == vectorName, field.vectors)) > 0:
+        raise ParserException(vectorElement, "Computed vector name '%(vectorName)s' conflicts with a "
+                                             "previously defined vector of the same name" % locals())
+    
+    ## Check that the name isn't already taken
+    if vectorName in self.globalNameSpace['symbolNames']:
+      raise ParserException(vectorElement, "Computed vector name '%(vectorName)s' conflicts with previously "
+                                          "defined symbol of the same name." % locals())
+    
+    ## Make sure no-one else takes the name
+    self.globalNameSpace['symbolNames'].add(vectorName)
+    
+    
+    if isinstance(parentTemplate, FieldElementTemplate):
+      fieldTemplate = parentTemplate
+    else:
+      if computedVectorElement.hasAttribute('field') and computedVectorElement.hasAttribute('dimensions'):
+        raise ParserException(computedVectorElement, "Computed vectors must have only one of the attributes 'field' or 'dimensions'.")
+      elif computedVectorElement.hasAttribute('field'):
+        fieldName = computedVectorElement.getAttribute('field').strip()
+        fieldsWithName = filter(lambda x: x.name == fieldName, self.globalNameSpace['fields'])
+        assert len(fieldsWithName) <= 1
+        if len(fieldsWithName) == 0:
+          raise ParserException(momentsElement, "field '%(fieldName)s' does not exist." % locals())
+        fieldTemplate = fieldsWithName[0]
+      elif computedVectorElement.hasAttribute('dimensions'):
+        geometryTemplate = self.globalNameSpace['geometry']
+        dimensionNames = RegularExpressionStrings.symbolsInString(computedVectorElement.getAttribute('dimensions'))
+        for dimensionName in dimensionNames:
+          if not geometryTemplate.hasDimensionName(dimensionName):
+            raise ParserException(computedVectorElement, "Dimension name '%(dimensionName)s' does not exist." % locals())
+          if dimensionNames.count(dimensionName) > 1:
+            raise ParserException(computedVectorElement, "A dimension name appear more than once in the 'dimensions' attribute.")
+        
+        dimensionNames.sort(lambda x, y: cmp(geometryTemplate.indexOfDimensionName(x), geometryTemplate.indexOfDimensionName(y)))
+        
+        fieldDimensions = [geometryTemplate.dimensionWithName(dimName) for dimName in dimensionNames]
+        
+        potentialParentFields = filter(lambda x: x.dimensions == fieldDimensions, self.globalNameSpace['fields'])
+        
+        if potentialParentFields:
+          # If there is a field already in existence that matches our requirements, use it
+          fieldTemplate = potentialParentFields[0]
+        else:
+          # Otherwise we need to construct our own
+          fieldName = '_' + ''.join(dimensionNames) + '_field'
+          fieldTemplate = FieldElementTemplate(name = fieldName, **self.argumentsToTemplateConstructors)
+          # Copy in our dimensions
+          fieldTemplate.dimensions[:] = fieldDimensions
+      else:
+        # This means we don't have either a 'field' attribute or a 'target_field' attribute
+        raise ParserException(computedVectorElement, "This computed_vector must have either the 'dimensions' attribute "
+                                                     "or the 'target_field' attribute set.")
+    
+    # One way or another, we now have our fieldTemplate
+    # So we can now construct the computed vector template
+    vectorTemplate = ComputedVectorTemplate(name = vectorName, field = fieldTemplate,
+                                            **self.argumentsToTemplateConstructors)
+    
+    self.globalNameSpace['vectors'].append(vectorTemplate)
+    
+    componentsElement = computedVectorElement.getChildElementByTagName('components')
+    
+    typeString = None
+    if componentsElement.hasAttribute('type'):
+      typeString = componentsElement.getAttribute('type').lower()
+    
+    if typeString in (None, 'complex'):
+      vectorTemplate.type = 'complex'
+    elif typeString in ('double', 'real'):
+      vectorTemplate.type = 'double'
+    else:
+      raise ParserException(componentsElement, "Unknown type '%(typeString)s'. "
+                                               "Options are 'complex' (default), "
+                                               "or 'double' / 'real' (synonyms)" % locals())
+    
+    componentsString = componentsElement.innerText()
+    if not componentsString:
+      raise ParserException(componentsElement, "The components element must not be empty")
+    
+    results = RegularExpressionStrings.symbolsInString(componentsString)
+    
+    if not results:
+      raise ParserException(componentsElement, "Could not extract component names from component string "
+                                               "'%(componentsString)s'." % locals())
+    
+    for componentName in results:
+      if componentName in self.globalNameSpace['symbolNames']:
+        raise ParserException(componentsElement, "Component name '%(componentName)s' conflicts with "
+                                                 "a previously-defined symbol of the same name." % locals())
+      self.globalNameSpace['symbolNames'].add(componentName)
+      
+      vectorTemplate.components.append(componentName)
+    
+    dependenciesElement = computedVectorElement.getChildElementByTagName('dependencies')
+    dependencyVectorNames = RegularExpressionStrings.symbolsInString(dependenciesElement.innerText())
+    vectorTemplate.dependenciesEntity = ParsedEntity(dependenciesElement, dependencyVectorNames)
+    
+    vectorTemplate.evaluationCode = computedVectorElement.cdataContents()
+    
+    # self.parseNoisesAttribute(computedVectorElement, vectorTemplate)
+    
+    if isinstance(parentTemplate, _SegmentTemplate):
+      fieldTemplate.temporaryVectors.add(vectorTemplate)
+    else:
+      fieldTemplate.managedVectors.add(vectorTemplate)
     
     return vectorTemplate
   
@@ -813,6 +941,8 @@ class XMDS2Parser(ScriptParser):
       raise ParserException(samplesElement, "All sample counts must be greater than zero.")
     
     integratorTemplate.samplesEntity = ParsedEntity(samplesElement, results)
+    
+    integratorTemplate.computedVectors.update(self.parseComputedVectorElements(integrateElement, integratorTemplate))
     
     self.parseOperatorsElements(integrateElement, integratorTemplate)
     
@@ -1274,6 +1404,8 @@ class XMDS2Parser(ScriptParser):
                                                  **self.argumentsToTemplateConstructors)
       outputFieldTemplate.isOutputField = True
       momentGroupTemplate.outputField = outputFieldTemplate
+      
+      momentGroupTemplate.computedVectors.update(self.parseComputedVectorElements(samplingElement, momentGroupTemplate))
       
       sampleCount = 0
       

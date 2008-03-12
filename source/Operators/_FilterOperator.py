@@ -54,7 +54,7 @@ class _FilterOperator (Operator):
     
     for fieldDimensionName in sourceFieldDimensionNames:
       if not sourceField.hasDimensionName(fieldDimensionName):
-        sourceField.dimensions.append(geometryTemplate.dimensionWithName(fieldDimensionName)])
+        sourceField.dimensions.append(geometryTemplate.dimensionWithName(fieldDimensionName))
     sourceField.sortDimensions()
     
     self.sourceField = sourceField

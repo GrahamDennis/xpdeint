@@ -131,7 +131,11 @@ ${loadWisdom}@slurp
     @set $temporaryVectorSizes = [(vector, vector.field.pointsInDimensionsNumerically * vector.nComponents) for vector in temporaryVectorsNeedingFourierTransforms]
     @set $managedVectorSizes = [(vector, vector.field.pointsInDimensionsNumerically * vector.nComponents) for vector in managedVectorsNeedingFourierTransforms]
     @set $maxTemporaryVectorAndSize = max(temporaryVectorSizes, key=lambda x: x[1])
-    @set $maxManagedVectorAndSize = max(managedVectorSizes, key=lambda x: x[1])
+    @if managedVectorSizes
+      @set $maxManagedVectorAndSize = max(managedVectorSizes, key=lambda x: x[1])
+    @else
+      @set $maxManagedVectorAndSize = (None, 0)
+    @end if
     @#
     @# If the maximum temporary vector is bigger than the maximum managed vector, then we really do need to allocate an array
     @if $maxTemporaryVectorAndSize[1] > $maxManagedVectorAndSize[1]

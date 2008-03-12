@@ -78,15 +78,15 @@ ${blankLineSeparator}@slurp
   @#
 inline void _segment${segmentNumber}_calculate_delta_a(double _step)
 {
-  @set $blankLineSeparator = ''
+  @# First evaluate any computed vector that any of our operators may depend on
+  @set allDependencies = $allOperatorDependencies
+  ${evaluateComputedVectors($allDependencies), autoIndent=True}@slurp
   @#
-  @# First loop over operators that come before the delta A operators in the order in which
+  @# Then loop over operators that come before the delta A operators in the order in which
   @# they appear in the xmds script.
   @#
   @for $operatorContainer in $operatorContainers
-${blankLineSeparator}@slurp
-    @set $blankLineSeparator = '\n'
-    @#
+  
   ${operatorContainer.evaluatePreDeltaAOperators(argString = '_step'), autoIndent=True}@slurp
   @end for
   @#
@@ -132,6 +132,11 @@ _${name}_${arrayName}_${vector.id} = @slurp
     @end for
   @end for
   @#
+  @# Loop over the computed vectors, as we need to allocate their arrays
+  @for $vector in $computedVectors
+$vector.allocate@slurp
+  @end for
+  @#
   @# Let the operators allocate and initialise any arrays they need
   @for $operatorContainer in $operatorContainers
 $operatorContainer.initialise@slurp
@@ -146,6 +151,11 @@ $operatorContainer.initialise@slurp
     @for $arrayName in $extraIntegrationArrayNames
 xmds_free(_${name}_${arrayName}_${vector.id});
     @end for
+  @end for
+  @#
+  @# Loop over the computed vectors, as we need to clean up their arrays
+  @for $vector in $computedVectors
+$vector.free@slurp
   @end for
   @#
   @# Let the operators do their clean up

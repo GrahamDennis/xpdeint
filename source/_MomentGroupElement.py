@@ -10,6 +10,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 """
 
 from FieldElement import FieldElement
+from ParserException import ParserException
 
 class _MomentGroupElement (FieldElement):
   def __init__(self, number, *args, **KWs):
@@ -20,6 +21,13 @@ class _MomentGroupElement (FieldElement):
     # Set default variables
     self.requiresInitialSample = False
     self.getVar('momentGroups').append(self)
+    self.computedVectors = set()
+  
+  @property
+  def children(self):
+    result = set(super(_MomentGroupElement, self).children)
+    result.update(self.computedVectors)
+    return result
   
   # The name of the moment group (used for the vector names, etc)
   @property
@@ -59,6 +67,15 @@ class _MomentGroupElement (FieldElement):
     for dependency in dependencies:
       if self.hasPostProcessing and dependency.type == 'complex':
         self.rawVector.type = 'complex'
+      # If the vector is computed, we need to run a check that we are able to access this vector.
+      if dependency.isComputed:
+        # We can access it if its parent is its field, or if its parent is us
+        if not dependency.parent in (dependency.field, self):
+          raise ParserException(self.dependenciesEntity.xmlElement,
+                  "The computed vector '%s' cannot be accessed here.\n"
+                  "The computed vector must be moved into the <sampling> element or\n"
+                  "into a <field> element at the top of the simulation script." % dependency.name)
+      
     
     self.dependencies.update(dependencies)
   

@@ -73,6 +73,9 @@ $writeOutFunctionImplementation@slurp
 @def sampleFunctionImplementation
 void _${name}_sample()
 {
+  @# Evaluate any computed vectors we have
+  ${evaluateComputedVectors($dependencies)}@slurp
+  @#
   @# If we have a sampling field, then we should sample with that
   @# and set the vectorOverrides appropriately
   @if self.hasattr('samplingField')
@@ -285,6 +288,11 @@ _active_${name}_raw = _active_${outputField.name}_processed;
     @# Call the superclass to allocate the vector
     @super
   @end if
+  @#
+  @for vector in $computedVectors
+${vector.allocate}@slurp
+  @end for
+  @#
 @end def
 
 @*
@@ -299,5 +307,9 @@ _active_${name}_raw = _active_${outputField.name}_processed;
     @# Call the superclass to free the vector
     @super
   @end if
+  @#
+  @for vector in $computedVectors
+${vector.free}@slurp
+  @end for
   @#
 @end def
