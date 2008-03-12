@@ -46,6 +46,13 @@
   <sequence>
     <integrate algorithm="RK4" interval="2e-3" steps="100">
       <samples>50</samples>
+      <computed_vector name="moment_creator" dimensions="">
+        <components type="double">moment</components>
+        <dependencies fourier_space="kx"> main </dependencies>
+        <![CDATA[
+          moment = mod2(u);
+        ]]>
+      </computed_vector>
       <operators field="mainField">
         <operator kind="ex" constant="yes">
           <operator_names>L</operator_names>
@@ -53,18 +60,8 @@
             L = -T*kx*kx/mu;
           ]]>
         </operator>
-        <operator kind="filter" dimensions="">
-          <!-- It's not necessary to have a moments tag here. It would be quite acceptable to -->
-          <!-- use the filter to modify a vector already created -->
-          <moments type="double" dimensions="">moment</moments>
-          <dependencies fourier_space="kx">main</dependencies>
-          <!-- If the moments are of type 'double', then all dimensions that aren't integrated
-               must be evaluated in 'x' space. -->
-          <![CDATA[
-            moment = mod2(u);
-          ]]>
-        </operator>
         <integration_vectors>main</integration_vectors>
+        <dependencies>moment_creator</dependencies>
         <![CDATA[
           du_dt = uDot;
           duDot_dt = L[u];

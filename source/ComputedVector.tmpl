@@ -1,0 +1,72 @@
+@*
+ComputedVector.tmpl
+
+Created by Graham Dennis on 2008-03-12.
+Copyright (c) 2008 __MyCompanyName__. All rights reserved.
+*@
+@extends _ComputedVector
+
+@*
+  Description of template
+*@
+@def description: computed vector $vectorName
+
+@*
+  Function prototypes
+*@
+@def functionPrototypes
+  @#
+  @super
+  @#
+// computed vector $name function prototypes
+void _${id}_evaluate();
+  @#
+@end def
+
+@*
+  Function implementations
+*@
+@def functionImplementations
+  @#
+  @super
+  @#
+
+// computed vector $name function implementations
+${evaluationFunctionImplementation}@slurp
+  @#
+@end def
+
+@*
+  Write the vector evaluation routine
+*@
+@def evaluationFunctionImplementation
+@*doc:
+  This function returns the code for the calculated vector's ``evaluate()`` function.
+  
+  The ``evaluate()`` function executes the code that defines the calculated vector.
+*@
+void _${id}_evaluate()
+{
+  @if $integratingComponents
+    @# If this vector is constructed through an integral, then we first
+    @# need to initialise ourselves to zero.
+  ${initialise, autoIndent=True}@slurp
+  
+  @end if
+  @#
+  ${transformVectorsToSpace($dependencies, $initialSpace), autoIndent=True}@slurp
+  
+  @set $setOfVectorsToLoopOver = $dependencies.copy()
+  @silent $setOfVectorsToLoopOver.add(self)
+  @set $featureOrdering = ['Stochastic']
+  @#
+  ${insertCodeForFeatures('computedVectorEvaluationBegin', $featureOrdering), autoIndent=True}@slurp
+  ${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $initialSpace, $setOfVectorsToLoopOver, $evaluationCode, vectorOverrides=[self]), autoIndent=True}@slurp
+  ${insertCodeForFeaturesInReverseOrder('computedVectorEvaluationEnd', $featureOrdering), autoIndent=True}@slurp
+  @#
+  @if $needsFourierTransforms
+  
+  _${field.name}_${name}_space = $initialSpace;
+  @end if
+}
+@end def

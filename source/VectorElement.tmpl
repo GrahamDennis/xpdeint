@@ -91,7 +91,7 @@ void _${field.name}_${name}_initialise()
 {
   ${initialiser.initialiseVector, autoIndent=True}@slurp
   @if $needsFourierTransforms
-
+  
   _${field.name}_${name}_space = $initialSpace;
   @end if
 }

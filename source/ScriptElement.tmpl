@@ -644,3 +644,12 @@ if ( k${dimension.name} > ((_${field.name}_lattice${dimensionNumber} - 1)/2 + 0.
   k${dimension.name} -= _${field.name}_lattice${dimensionNumber} * _${field.name}_dk${dimensionNumber};
   @#
 @end def
+
+@def evaluateComputedVectors($vectors)
+@#doc: Evaluate the computed vectors in an appropriate order taking into account dependencies
+  @#
+  @for vector in self._computedVectorOrderingForVectors(vectors)
+_${vector.id}_evaluate();
+  @end for
+  @#
+@end def

@@ -83,6 +83,9 @@ class _FieldElement (ScriptElement):
         return False
     return True
   
+  def isEquivalentToField(self, field):
+    """Return whether this field and field `field` have the same dimensions."""
+    return self.isSubsetOfField(field) and field.isSubsetOfField(self)
   
   # The index of the provided dimension
   def indexOfDimension(self, dimension):

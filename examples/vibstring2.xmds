@@ -38,7 +38,7 @@
   </geometry>
   
   <field name="mainField" dimensions="x y">
-    <vector name="main" initial_space="x ky">
+    <vector name="main" initial_space="x y">
       <components type="complex">
         u uDot
       </components>
@@ -57,6 +57,13 @@
         mom
       </components>
     </vector>
+    <computed_vector name="filter1">
+      <components type="complex">moment</components>
+      <dependencies>integrated_u main</dependencies>
+      <![CDATA[
+        moment = mod2(u);
+      ]]>
+    </computed_vector>
   </field>
   
   <sequence>
@@ -76,29 +83,6 @@
         ]]>
       </operators>
       <operators field="zero_d_test">
-        <!-- the dimensions attribute specifies the target dimensions -->
-        <!-- We need to be able to do this in fourier space -->
-        <!-- Specifically, for integrations, we need to be able to specify -->
-        <!-- which dimensions are in which space when integrated -->
-        <!-- All of the dimensions that are in the moment are going to be in 'x' -->
-        <!-- space as the moment will only be available in the delta a operator -->
-        <!-- That doesn't mean we can't calculate the moment in 'k' space -->
-        <!-- Is there any point making available filters for other operators? -->
-        <!-- Note that the default here will be to integrate, not to just sample -->
-        <!-- In fact, you can't just sample. -->
-        <!-- You must either have a dimensions attribute or a 'target_field' attribute -->
-        <!-- This target field must have at most as many dimensions as the source field -->
-        <operator kind="filter">
-          <!-- It's not necessary to have a moments tag here. It would be quite acceptable to -->
-          <!-- use the filter to modify a vector already created -->
-          <moments type="complex" target_field="zero_d_test" name="filter1">moment</moments>
-          <dependencies fourier_space="kx ky">integrated_u main</dependencies>
-          <!-- If the moments are of type 'double', then all dimensions that aren't integrated
-               must be evaluated in 'x' space. -->
-          <![CDATA[
-            moment = mod2(u);
-          ]]>
-        </operator>
         <integration_vectors>integrated_u</integration_vectors>
         <dependencies>filter1</dependencies>
         <![CDATA[

@@ -334,18 +334,18 @@ class _ScriptElement (Template):
     
   def transformVectorsToSpace(self, vectors, space):
      """Transform vectors `vectors` to space `space`."""
-     result=""
+     result=[]
      for vector in vectors:
          if not (vector.initialSpace) == (space & vector.field.spaceMask):
            if not vector.type == "complex":
              raise ParserException(self.xmlElement,
                      "Cannot satisfy dependence on vector '%s' because it is not "
-                     "of type complex, and needs to be fourier transformed during sampling." % vector.name)
+                     "of type complex, and needs to be fourier transformed." % vector.name)
          if vector.needsFourierTransforms:
-           result+="_"+vector.id+"_go_space("+str(space)+");\n"
+           result.extend(['_', vector.id, '_go_space(', str(space), ');\n'])
          # Add space $space to the set of spaces in which this vector is needed
          vector.spacesNeeded.add(space & vector.field.spaceMask) 
-     return result
+     return ''.join(result)
     
   
   def remove(self):
@@ -432,3 +432,37 @@ class _ScriptElement (Template):
                     searchList = [templateVars],
                     compilerSettings = settings)
   
+  
+  def _computedVectorOrderingForVectors(self, vectors):
+    computedVectors = [v for v in vectors if v.isComputed]
+    # Map of vector name => [list of dependency vectors]
+    dependencyTree = dict([(v, [u for u in v.dependencies if u.isComputed]) for v in computedVectors])
+    
+    stack = []
+    
+    def orderedDependenciesForVectors(vectors):
+      orderedDependencies = []
+      for v in vectors:
+        # If v is in the ordering, then it has already been taken care of
+        if v in orderedDependencies:
+          continue
+        
+        # If v is on the stack, then we have a circular dependency
+        if v in stack:
+          startIndex = stack.index(v)
+          conflictList = stack[startIndex:]
+          conflictList.append(v)
+          raise ParserException(self, "Cannot construct ordering for computed vector dependencies.\n"
+                                      "The vectors causing the conflict are: %s." % ' --> '.join([v.name for v in conflictList]))
+        
+        # v is not on the stack, so we are safe
+        # Put v on the stack
+        stack.append(v)
+        # Add the dependencies for v at the end of my dependencies
+        orderedDependencies.extend(orderedDependenciesForVectors(dependencyTree[v]))
+        # Pop v off the stack and put it on our orderedDependencies
+        orderedDependencies.append(stack.pop())
+      
+      return orderedDependencies
+    
+    return orderedDependenciesForVectors(computedVectors)

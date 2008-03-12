@@ -27,10 +27,13 @@ class _Integrator (_Segment):
     self.homeSpace = 0
     self.cutoff = 1e-3
     self.operatorContainers = []
+    self.computedVectors = set()
   
   @property
   def children(self):
-    return self.operatorContainers[:]
+    result = self.operatorContainers[:]
+    result.extend(self.computedVectors)
+    return result
   
   @property
   def integrationVectors(self):
@@ -70,6 +73,13 @@ class _Integrator (_Segment):
     operatorContainers = self.operatorContainers[:]
     operatorContainers.sort(lambda x, y: cmp(len(x.field.dimensions), len(y.field.dimensions)), reverse=True)
     return operatorContainers
+  
+  def allOperatorDependencies(self):
+    result = set()
+    for operatorContainer in self.operatorContainers:
+      for operator in operatorContainer.operators:
+        result.update(operator.dependencies)
+    return result
   
   
   def preflight(self):
