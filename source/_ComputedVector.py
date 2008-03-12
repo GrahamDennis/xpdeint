@@ -22,9 +22,30 @@ class _ComputedVector (VectorElement):
     # Set default variables
     self.loopingField = None
     self.dependenciesEntity = None
-    self.integratingComponents = True
-    self.evaluationSpace = 0
+    self._integratingComponents = True
+    self._evaluationSpace = 0
+    self.evaluationCode = ''
   
+  def _getEvaluationSpace(self):
+    return self._evaluationSpace
+  
+  def _setEvaluationSpace(self, value):
+    self._evaluationSpace = value
+    self.initialSpace = value & self.field.spaceMask
+  
+  evaluationSpace = property(_getEvaluationSpace, _setEvaluationSpace)
+  del _getEvaluationSpace, _setEvaluationSpace
+  
+  def _getIntegratingComponents(self):
+    return self._integratingComponents
+  
+  def _setIntegratingComponents(self, value):
+    self._integratingComponents = value
+    # The computed vector only needs initialisation to zero if we are integrating.
+    self.needsInitialisation = value
+  
+  integratingComponents = property(_getIntegratingComponents, _setIntegratingComponents)
+  del _getIntegratingComponents, _setIntegratingComponents
   
   def bindNamedVectors(self):
     super(VectorElement, self).bindNamedVectors()
@@ -38,26 +59,14 @@ class _ComputedVector (VectorElement):
     for dependency in self.dependencies:
       loopingDimensionNames.update([dim.name for dim in dependency.field.dimensions])
     
-    loopingFieldName = ''.join([self.id, '_looping_field'])
-    self.loopingField = FieldElement(name = loopingFieldName, **self.argumentsToTemplateConstructors)
+    self.loopingField = FieldElement.sortedFieldWithDimensionNames(loopingDimensionNames)
     
-    geometryTemplate = self.getVar('geometry')
-    
-    for dimensionName in loopingDimensionNames:
-      self.loopingField.dimensions.append(geometryTemplate.dimensionWithName(dimensionName))
-    self.loopingField.sortDimensions()
-    
-    dependenciesXMLElement = self.dependenciesEntity.xmlElement
-    self.loopingField.xmlElement = dependenciesXMLElement
-    
-    if dependenciesXMLElement.hasAttribute('fourier_space'):
+    if self.dependenciesEntity and self.dependenciesEntity.xmlElement.hasAttribute('fourier_space'):
+      dependenciesXMLElement = self.dependenciesEntity.xmlElement
       self.evaluationSpace = self.loopingField.spaceFromString(dependenciesXMLElement.getAttribute('fourier_space'))
-      self.initialSpace = self.evaluationSpace & self.field.spaceMask
     
     # Our components are constructed by an integral if the looping field doesn't have the same
     # dimensions as the field to which the computed vector belongs.
     self.integratingComponents = not self.loopingField.isEquivalentToField(self.field)
-    # The computed vector only needs initialisation to zero if we are integrating.
-    self.needsInitialisation = self.integratingComponents
   
 

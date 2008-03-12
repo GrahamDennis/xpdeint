@@ -41,8 +41,8 @@ ${separator}${dimension.name}: ${($spaceMask >> $geometry.dimensions.index($dime
   
   @# Child defines will go here
 @end def
-@*
 
+@*
   Globals needed at the start of the simulation
 *@
 @def globals
@@ -52,3 +52,4 @@ ${separator}${dimension.name}: ${($spaceMask >> $geometry.dimensions.index($dime
 const long _${name}_size = $pointsInDimensionsWithIndices($range($len($dimensions)));
   @# Child globals will go here
 @end def
+

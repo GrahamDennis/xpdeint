@@ -10,8 +10,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 from Operator import Operator
 from ParserException import ParserException, parserWarning
 
-from VectorElement import VectorElement
-from FilterOperator import FilterOperator
+from ComputedVector import ComputedVector
 
 import re
 import RegularExpressionStrings
@@ -35,16 +34,10 @@ class _EXOperator(Operator):
       for vector in parentDependencies:
         targetComponents.update(vector.components)
       
-      # Add the result vector to the shared dependencies for the operator container
-      # These dependencies are just the delta a dependencies, so this is just adding
-      # our result vector to the dependencies for the delta a operator
-      if self.resultVector:
-        self.parent.dependencies.add(self.resultVector)
-      
       targetRegex = re.compile(r'\s*' + RegularExpressionStrings.componentWithIntegerValuedDimensions(targetComponents) + r'\s*$',
                                re.VERBOSE)
       
-      specialTargetsFilter = None
+      specialTargetsVector = None
       specialTargets = []
       
       for operatorName, target in operatorTargetPairs:
@@ -68,49 +61,35 @@ class _EXOperator(Operator):
           # If the user has made a mistake with their code, the compiler will barf, not xpdeint. This isn't ideal
           # but we can't understand an arbitrary string; that's what the compiler is for.
           
-          if not specialTargetsFilter:
+          if not specialTargetsVector:
             # Construct a filter operator to create the special targets vector
-            specialTargetsFilter = FilterOperator(parent = self.parent, xmlElement = self.xmlElement,
+            specialTargetsVector = ComputedVector(name = self.id + "_special_targets", field = self.field,
+                                                  xmlElement = self.xmlElement,
                                                   **self.argumentsToTemplateConstructors)
             
-            # Shift the filter operator to be before this operator
-            # It will currently be in the postDeltaAOperators list.
-            self.parent.postDeltaAOperators.remove(specialTargetsFilter)
-            self.parent.preDeltaAOperators.insert(self.parent.preDeltaAOperators.index(self), specialTargetsFilter)
+            self.field.temporaryVectors.add(specialTargetsVector)
+            integrator = self.parent.parent
+            integrator.computedVectors.add(specialTargetsVector)
             
-            specialTargetsFilter.integratingMoments = False
+            # When constructing the 'special targets' vector it may depend on anything the parent code (usually delta a operator) depends on
+            specialTargetsVector.dependencies = self.parent.dependencies.copy()
             
-            # When constructing the 'special targets' we may depend on anything the parent code (usually delta a operator) depends on
-            specialTargetsFilter.dependencies = self.parent.dependencies
-            
-            specialTargetsFilter.sourceField = self.field
-            specialTargetsFilter.operatorSpace = self.parent.sharedCodeSpace
-            specialTargetsFilter.operatorDefinitionCode = ''
-            
-            specialTargetVector = VectorElement(name = self.id + '_special_targets', field = self.field,
-                                                **self.argumentsToTemplateConstructors)
-            
-            specialTargetVector.initialSpace = self.parent.sharedCodeSpace
-            specialTargetVector.type = 'complex'
-            specialTargetVector.needsInitialisation = False
-            self.field.temporaryVectors.add(specialTargetVector)
-            
-            specialTargetsFilter.resultVector = specialTargetVector
+            specialTargetsVector.evaluationSpace = self.parent.sharedCodeSpace
+            specialTargetsVector.evaluationCode = ''
+            specialTargetsVector.integratingComponents = False
             
             # We have to call preflight on the filter operator in case it has some preflight to do
             # as it won't be called by parser2.py
-            specialTargetsFilter.preflight()
+            specialTargetsVector.preflight()
           
           if not target in specialTargets:
             specialTargets.append(target)
             targetComponentName = 'target' + str(specialTargets.index(target))
-            specialTargetVector.components.append(targetComponentName)
-            specialTargetsFilter.operatorDefinitionCode += ''.join([targetComponentName, ' = ', target, ';\n'])
-            
+            specialTargetsVector.components.append(targetComponentName)
+            specialTargetsVector.evaluationCode += ''.join([targetComponentName, ' = ', target, ';\n'])
           
           targetComponentName = 'target' + str(specialTargets.index(target))
-          
-          targetVector = specialTargetVector
+          targetVector = specialTargetsVector
         else:
           targetComponentName = match.group('componentName')
           
@@ -162,5 +141,12 @@ class _EXOperator(Operator):
         parserWarning(self.xmlElement,
                       "The following operator names weren't used: %(unusedOperatorNamesString)s" % locals())
       
+    
+    # Add the result vector to the shared dependencies for the operator container
+    # These dependencies are just the delta a dependencies, so this is just adding
+    # our result vector to the dependencies for the delta a operator
+    if self.resultVector:
+      self.parent.dependencies.add(self.resultVector)
+    
     
   

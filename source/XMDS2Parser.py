@@ -14,6 +14,8 @@ from ParsedEntity import ParsedEntity
 from xml.dom import minidom
 import RegularExpressionStrings
 
+from _ScriptElement import _ScriptElement
+
 from SimulationElement import SimulationElement as SimulationElementTemplate
 from GeometryElement import GeometryElement as GeometryElementTemplate
 from FieldElement import FieldElement as FieldElementTemplate
@@ -25,7 +27,6 @@ from VectorInitialisation import VectorInitialisation as VectorInitialisationZer
 from VectorInitialisationCDATA import VectorInitialisationCDATA as VectorInitialisationCDATATemplate
 
 
-from Segments._Segment import _Segment as _SegmentTemplate
 from Segments.TopLevelSequenceElement import TopLevelSequenceElement as TopLevelSequenceElementTemplate
 from SimulationDrivers.DefaultDriver import DefaultDriver as DefaultDriverTemplate
 from SimulationDrivers.MultiPathDriver import MultiPathDriver as MultiPathDriverTemplate
@@ -80,6 +81,8 @@ class XMDS2Parser(ScriptParser):
   def parseXMLDocument(self, xmlDocument, globalNameSpace, filterClass):
     self.argumentsToTemplateConstructors = {'searchList':[globalNameSpace], 'filter': filterClass}
     self.globalNameSpace = globalNameSpace
+    
+    _ScriptElement.argumentsToTemplateConstructors = self.argumentsToTemplateConstructors
     
     simulationElement = xmlDocument.getChildElementByTagName("simulation")
     
@@ -677,7 +680,6 @@ class XMDS2Parser(ScriptParser):
     ## Make sure no-one else takes the name
     self.globalNameSpace['symbolNames'].add(vectorName)
     
-    
     if isinstance(parentTemplate, FieldElementTemplate):
       fieldTemplate = parentTemplate
     else:
@@ -691,7 +693,6 @@ class XMDS2Parser(ScriptParser):
           raise ParserException(momentsElement, "field '%(fieldName)s' does not exist." % locals())
         fieldTemplate = fieldsWithName[0]
       elif computedVectorElement.hasAttribute('dimensions'):
-        geometryTemplate = self.globalNameSpace['geometry']
         dimensionNames = RegularExpressionStrings.symbolsInString(computedVectorElement.getAttribute('dimensions'))
         for dimensionName in dimensionNames:
           if not geometryTemplate.hasDimensionName(dimensionName):
@@ -699,21 +700,7 @@ class XMDS2Parser(ScriptParser):
           if dimensionNames.count(dimensionName) > 1:
             raise ParserException(computedVectorElement, "A dimension name appear more than once in the 'dimensions' attribute.")
         
-        dimensionNames.sort(lambda x, y: cmp(geometryTemplate.indexOfDimensionName(x), geometryTemplate.indexOfDimensionName(y)))
-        
-        fieldDimensions = [geometryTemplate.dimensionWithName(dimName) for dimName in dimensionNames]
-        
-        potentialParentFields = filter(lambda x: x.dimensions == fieldDimensions, self.globalNameSpace['fields'])
-        
-        if potentialParentFields:
-          # If there is a field already in existence that matches our requirements, use it
-          fieldTemplate = potentialParentFields[0]
-        else:
-          # Otherwise we need to construct our own
-          fieldName = '_' + ''.join(dimensionNames) + '_field'
-          fieldTemplate = FieldElementTemplate(name = fieldName, **self.argumentsToTemplateConstructors)
-          # Copy in our dimensions
-          fieldTemplate.dimensions[:] = fieldDimensions
+        fieldTemplate = FieldElementTemplate.sortedFieldWithDimensionNames(dimensionNames)
       else:
         # This means we don't have either a 'field' attribute or a 'target_field' attribute
         raise ParserException(computedVectorElement, "This computed_vector must have either the 'dimensions' attribute "
@@ -767,7 +754,7 @@ class XMDS2Parser(ScriptParser):
     
     # self.parseNoisesAttribute(computedVectorElement, vectorTemplate)
     
-    if isinstance(parentTemplate, _SegmentTemplate):
+    if not type(parentTemplate) == FieldElementTemplate:
       fieldTemplate.temporaryVectors.add(vectorTemplate)
     else:
       fieldTemplate.managedVectors.add(vectorTemplate)

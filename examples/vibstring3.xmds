@@ -72,7 +72,7 @@
     <integrate algorithm="RK9" interval="2e-3" steps="100">
       <samples>50 50</samples>
       
-      <computed_vector name="filter2" target_field="zero_d_test">
+      <computed_vector name="filter2" field="zero_d_test">
         <components type="complex">sparemoment</components>
         <dependencies fourier_space="kx ky">integrated_u main</dependencies>
         <!-- If the moments are of type 'double', then all dimensions that aren't integrated
@@ -118,7 +118,7 @@
   <output format="binary" filename="vibstring3.xsil">
     <group>
       <sampling initial_sample="yes">
-        <computed_vector name="filter3" target_field="zero_d_test">
+        <computed_vector name="filter3" field="zero_d_test">
           <components type="complex">sparemomentagain</components>
           <dependencies fourier_space="kx ky">integrated_u main</dependencies>
           <!-- If the moments are of type 'double', then all dimensions that aren't integrated
@@ -137,8 +137,8 @@
         <moments>amp ke</moments>
         <dependencies>main filter1</dependencies>
         <![CDATA[
-          amp = u + moment;
-          ke= L[u];
+          amp = mod2(u + moment);
+          ke = mod2(L[u]);
         ]]>
       </sampling>
     </group>

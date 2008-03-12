@@ -60,8 +60,13 @@ void _${id}_evaluate()
   @silent $setOfVectorsToLoopOver.add(self)
   @set $featureOrdering = ['Stochastic']
   @#
+  @set $vectorOverrides = []
+  @if $integratingComponents
+    @silent vectorOverrides.append(self)
+  @end if
+  @#
   ${insertCodeForFeatures('computedVectorEvaluationBegin', $featureOrdering), autoIndent=True}@slurp
-  ${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $initialSpace, $setOfVectorsToLoopOver, $evaluationCode, vectorOverrides=[self]), autoIndent=True}@slurp
+  ${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $initialSpace, $setOfVectorsToLoopOver, $evaluationCode, vectorOverrides=vectorOverrides), autoIndent=True}@slurp
   ${insertCodeForFeaturesInReverseOrder('computedVectorEvaluationEnd', $featureOrdering), autoIndent=True}@slurp
   @#
   @if $needsFourierTransforms

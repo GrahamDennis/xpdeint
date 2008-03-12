@@ -281,8 +281,8 @@ _active_${name}_raw = _active_${outputField.name}_processed;
 @def allocate
   @# We actually only want to allocate this vector (we should only have one)
   @# if rawVectorNeedsToBeAllocated is True
-  @assert len($vectors) == 1
-  @assert $anyObject($vectors).name == 'raw'
+  @assert len($managedVectors) == 1
+  @assert $anyObject($managedVectors).name == 'raw'
   @#
   @if $rawVectorNeedsToBeAllocated
     @# Call the superclass to allocate the vector
@@ -300,8 +300,8 @@ ${vector.allocate}@slurp
 *@
 @def free
   @#
-  @assert len($vectors) == 1
-  @assert $anyObject($vectors).name == 'raw'
+  @assert len($managedVectors) == 1
+  @assert $anyObject($managedVectors).name == 'raw'
   @#
   @if $rawVectorNeedsToBeAllocated
     @# Call the superclass to free the vector

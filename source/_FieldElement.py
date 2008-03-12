@@ -10,6 +10,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 """
 
 from ScriptElement import ScriptElement
+
 import RegularExpressionStrings
 from ParserException import ParserException
 
@@ -243,6 +244,41 @@ class _FieldElement (ScriptElement):
         resultSpace |= 1 << geometryTemplate.indexOfDimension(self.dimensions[dimensionNumber])
     
     return resultSpace
+  
+  @classmethod
+  def sortedFieldWithDimensionNames(cls, dimensionNames):
+    """
+    Return a field containing `dimensionNames` as the dimensions in canonical order.
+    This function will either return an existing field, or create one if necessary.
+    
+    Although this class method is defined on `_FieldElement`, it must be called as
+    ``FieldElement.sortedFieldWithDimensionNames`` in order to get a FieldElement
+    instance out.
+    """
+    globalNameSpace = cls.argumentsToTemplateConstructors['searchList'][0]
+    geometry = globalNameSpace['geometry']
+    fields = globalNameSpace['fields']
+    
+    dimensionNames = list(dimensionNames)
+    
+    dimensionNames.sort(lambda x, y: cmp(geometry.indexOfDimensionName(x), geometry.indexOfDimensionName(y)))
+    
+    fieldDimensions = [geometry.dimensionWithName(dimName) for dimName in dimensionNames]
+    
+    fieldName = '_' + ''.join(dimensionNames) + '_field'
+    potentialFields = filter(lambda x: x.dimensions == fieldDimensions and x.name == fieldName, fields)
+    
+    if potentialFields:
+      # If there is a field already in existence that matches our requirements, use it
+      fieldTemplate = potentialFields[0]
+    else:
+      # Otherwise we need to construct our own
+      fieldName = '_' + ''.join(dimensionNames) + '_field'
+      fieldTemplate = cls(name = fieldName, **cls.argumentsToTemplateConstructors)
+      # Copy in our dimensions
+      fieldTemplate.dimensions[:] = fieldDimensions
+    
+    return fieldTemplate
   
 
 
