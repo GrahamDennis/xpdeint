@@ -19,6 +19,7 @@ import re
 import RegularExpressionStrings
 
 class _ScriptElement (Template):
+  argumentsToTemplateConstructors = {}
   # Initialise the callOnceGuards to be empty
   _callOnceGuards = set()
   _callOncePerInstanceGuards = dict()
@@ -51,8 +52,6 @@ class _ScriptElement (Template):
     Template.__init__(self, *args, **KWs)
     
     self.getVar('templates').add(self)
-    
-    self.argumentsToTemplateConstructors = KWs
     
     # Only set the dependencies attribute if it isn't taken
     # care of elsewhere
@@ -330,23 +329,23 @@ class _ScriptElement (Template):
         raise ParserException(entity.xmlElement, "Unknown vector '%(vectorName)s'." % locals())
       vectors.add(vectorDictionary[vectorName])
     return vectors
- 
     
+  
   def transformVectorsToSpace(self, vectors, space):
-     """Transform vectors `vectors` to space `space`."""
-     result=[]
-     for vector in vectors:
-         if not (vector.initialSpace) == (space & vector.field.spaceMask):
-           if not vector.type == "complex":
-             raise ParserException(self.xmlElement,
-                     "Cannot satisfy dependence on vector '%s' because it is not "
-                     "of type complex, and needs to be fourier transformed." % vector.name)
-         if vector.needsFourierTransforms:
-           result.extend(['_', vector.id, '_go_space(', str(space), ');\n'])
-         # Add space $space to the set of spaces in which this vector is needed
-         vector.spacesNeeded.add(space & vector.field.spaceMask) 
-     return ''.join(result)
-    
+    """Transform vectors `vectors` to space `space`."""
+    result = []
+    for vector in vectors:
+      if not (vector.initialSpace) == (space & vector.field.spaceMask):
+        if not vector.type == "complex":
+          raise ParserException(self.xmlElement,
+                  "Cannot satisfy dependence on vector '%s' because it is not "
+                  "of type complex, and needs to be fourier transformed." % vector.name)
+      if vector.needsFourierTransforms:
+        result.extend(['_', vector.id, '_go_space(', str(space), ');\n'])
+      # Add space $space to the set of spaces in which this vector is needed
+      vector.spacesNeeded.add(space & vector.field.spaceMask)
+    return ''.join(result)
+  
   
   def remove(self):
     self.getVar('templates').discard(self)
@@ -434,13 +433,33 @@ class _ScriptElement (Template):
   
   
   def _computedVectorOrderingForVectors(self, vectors):
+    """
+    Return the ordering for the computed vectors in `vectors` taking into account
+    any dependencies between the computed vectors.
+    """
     computedVectors = [v for v in vectors if v.isComputed]
     # Map of vector name => [list of dependency vectors]
     dependencyTree = dict([(v, [u for u in v.dependencies if u.isComputed]) for v in computedVectors])
     
     stack = []
     
+    # The algorithm here is basically to start with any given vector and traverse
+    # the dependencies recursively until a vector with no dependencies is found,
+    # then it is added to the list of ordered dependencies. If, during a traversal,
+    # a vector is encountered twice (the history of traversed dependencies is stored
+    # in the stack variable), then a circular dependency chain has been hit and a
+    # ParserException will be raised. Once all of a vectors dependencies have been
+    # added to the orderedDependencies, the vector itself can be added.
+    # Finally, if a vector is already in orderedDependencies, we don't need to consider
+    # its dependencies as they will have already been considered when considering the
+    # dependencies of another vector that depends on the first vector.
+    
     def orderedDependenciesForVectors(vectors):
+      """
+      Helper function that is called recursively to return the ordering for the computed
+      vectors such that all dependencies of a computed vector are evaluated first. Any
+      circular dependencies will result in a ParserException.
+      """
       orderedDependencies = []
       for v in vectors:
         # If v is in the ordering, then it has already been taken care of
@@ -466,3 +485,5 @@ class _ScriptElement (Template):
       return orderedDependencies
     
     return orderedDependenciesForVectors(computedVectors)
+  
+  

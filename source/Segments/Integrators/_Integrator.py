@@ -79,6 +79,7 @@ class _Integrator (_Segment):
     for operatorContainer in self.operatorContainers:
       for operator in operatorContainer.operators:
         result.update(operator.dependencies)
+        result.update(operator.operatorTargetVectorsSet)
     return result
   
   

@@ -8,26 +8,8 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *@
 @extends _FilterOperator
 
-@def description: Filter (moment) operator for source field $sourceField.name
+@def description: Filter operator
 @attr $evaluateOperatorFunctionArgument = 'double _step'
-
-@def evaluateOperatorLoop($setOfVectorsToLoopOver)
-  @#
-  @set $vectorOverrides = []
-  @# If we have a result vector, add it
-  @if $resultVector
-    @# If we need to integrate for the moments, then
-    @# we need to initialise the moments
-    @if $integratingMoments
-$resultVector.initialise@slurp
-      @silent $vectorOverrides.append($resultVector)
-    @end if
-    @silent $setOfVectorsToLoopOver.add($resultVector)
-  @end if
-${loopOverFieldInSpaceWithVectorsAndInnerContent($sourceField, $operatorSpace, 
-    $setOfVectorsToLoopOver, $insideEvaluateOperatorLoops, vectorOverrides=$vectorOverrides)}@slurp
-  @#
-@end def
 
 @def insideEvaluateOperatorLoops
   @#
