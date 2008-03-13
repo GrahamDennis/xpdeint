@@ -438,8 +438,6 @@ class _ScriptElement (Template):
     any dependencies between the computed vectors.
     """
     computedVectors = [v for v in vectors if v.isComputed]
-    # Map of vector name => [list of dependency vectors]
-    dependencyTree = dict([(v, [u for u in v.dependencies if u.isComputed]) for v in computedVectors])
     
     stack = []
     
@@ -478,7 +476,7 @@ class _ScriptElement (Template):
         # Put v on the stack
         stack.append(v)
         # Add the dependencies for v at the end of my dependencies
-        orderedDependencies.extend(orderedDependenciesForVectors(dependencyTree[v]))
+        orderedDependencies.extend(orderedDependenciesForVectors([u for u in v.dependencies if u.isComputed]))
         # Pop v off the stack and put it on our orderedDependencies
         orderedDependencies.append(stack.pop())
       
