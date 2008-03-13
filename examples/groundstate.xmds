@@ -61,8 +61,10 @@
         <![CDATA[
         
           if (fabs(y) < 1.0e-5) {
-            phi = sqrt(Nparticles/2.0e-5);
+            phi = 1.0; //sqrt(Nparticles/2.0e-5);
             // This will be automatically normalised later
+          } else {
+            phi = 0.0;
           }
         
           // This was the sensible initial state
@@ -92,6 +94,12 @@
   </field>
   
   <sequence>
+    <filter>
+      <dependencies>normalisation</dependencies>
+      <![CDATA[
+        printf("Hello world from a filter segment!\n");
+      ]]>
+    </filter>
     <integrate algorithm="ARK89" interval="1e-4" steps="10000" tolerance="1e-8">
       <samples>500</samples>
       <filters>
@@ -120,7 +128,7 @@
   </sequence>
   <output format="binary" filename="groundstate.xsil">
     <group>
-      <sampling initial_sample="yes">
+      <sampling initial_sample="no">
         <dimension name="y" lattice="1024" />
         <moments>norm_dens</moments>
         <dependencies>wavefunction normalisation</dependencies>

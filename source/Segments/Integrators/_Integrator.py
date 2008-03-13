@@ -84,13 +84,6 @@ class _Integrator (_Segment):
     operatorContainers.sort(lambda x, y: cmp(len(x.field.dimensions), len(y.field.dimensions)), reverse=True)
     return operatorContainers
   
-  def operatorDependenciesForOperatorContainers(self, operatorContainers):
-    result = set()
-    for operatorContainer in operatorContainers:
-      result.update(operatorContainer.operatorDependencies)
-    return result
-  
-  
   def preflight(self):
     super(_Integrator, self).preflight()
     

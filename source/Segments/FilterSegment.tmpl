@@ -1,0 +1,63 @@
+@*
+FilterSegment.tmpl
+
+Created by Graham Dennis on 2008-03-13.
+Copyright (c) 2008 __MyCompanyName__. All rights reserved.
+*@
+@extends _FilterSegment
+@from CallOnceGuards import callOncePerInstanceGuard
+
+@*
+  Description of template
+*@
+@def description: segment $segmentNumber (Filter)
+
+@*
+  Function prototypes
+*@
+@def functionPrototypes
+  @#
+  @super
+  @#
+void _segment${segmentNumber}();
+@end def
+
+@*
+  Function implementations
+*@
+@def functionImplementations
+  @#
+  @super
+  @#
+void _segment${segmentNumber}()
+{
+  @set allDependencies = $operatorDependenciesForOperatorContainers($operatorContainers)
+  ${evaluateComputedVectors($allDependencies), autoIndent=True}@slurp
+  @#
+  @for $operatorContainer in $operatorContainers
+  
+  ${operatorContainer.evaluateOperators, autoIndent=True}@slurp
+  @end for
+}
+
+  @#
+@end def
+
+@@callOncePerInstanceGuard
+@def initialise
+  @# Let the operators allocate and initialise any arrays they need
+  @for $operatorContainer in $operatorContainers
+$operatorContainer.initialise@slurp
+  @end for
+  @#
+@end def
+
+@@callOncePerInstanceGuard
+@def finalise
+  @#
+  @# Let the operators do their own clean up
+  @for $operatorContainer in $operatorContainers
+$operatorContainer.finalise@slurp
+  @end for
+  @#
+@end def

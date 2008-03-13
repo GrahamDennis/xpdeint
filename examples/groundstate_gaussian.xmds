@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <name>groundstate_gaussian</name>
+  <author>Graham Dennis</author>
+  <description>
+    Calculate the ground state of a negative gaussian potential.
+  </description>
+  
+  <features>
+    <auto_vectorise />
+    <benchmark />
+    <bing />
+    <fftw version="3" plan="patient" />
+    <!-- <openmp /> -->
+  </features>
+  
+  <geometry>
+    <prop_dim> t </prop_dim>
+    <transverse_dimensions>
+      <dimension name="y" lattice="1024"  domain="(-12.0, 12.0)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <field name="main">
+    <vector name="potential" initial_space="y">
+      <components type="complex">
+        V1
+      </components>
+      <initialisation>
+        <![CDATA[
+          double Vtrap = -exp(-y*y);
+        
+          V1  = -i*Vtrap;
+        
+        ]]>
+      </initialisation>
+    </vector>
+    <vector name="wavefunction" initial_space="y">
+      <components type="complex">
+        phi
+      </components>
+      <initialisation>
+        <![CDATA[
+        
+        // This will be automatically normalised later
+        phi = exp(-y*y);
+        ]]>
+      </initialisation>
+    </vector>
+  </field>
+  
+  <field name="zerod" dimensions="">
+    <computed_vector name="normalisation">
+      <components type="double">
+        Ncalc
+      </components>
+      <dependencies fourier_space="y">wavefunction</dependencies>
+      <![CDATA[
+        // Calculate the current normalisation of the wave function.
+        Ncalc = mod2(phi);
+      ]]>
+    </computed_vector>
+  </field>
+  
+  <sequence>
+    <integrate algorithm="RK9" interval="10.0" steps="10000" tolerance="1e-8">
+      <samples>500 500</samples>
+      <filters>
+        <filter>
+          <dependencies>wavefunction normalisation</dependencies>
+          <![CDATA[
+            // Correct normalisation of the wavefunction
+            phi *= sqrt(1.0/Ncalc);
+          ]]>
+        </filter>
+      </filters>
+      <operators field="main">
+        <operator kind="ip" constant="yes">
+          <operator_names>T</operator_names>
+          <![CDATA[
+            T = -0.5*ky*ky;
+          ]]>
+        </operator>
+        <integration_vectors>wavefunction</integration_vectors>
+        <dependencies>potential</dependencies>
+        <![CDATA[
+          dphi_dt = T[phi] - (i*V1)*phi;
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  <output format="binary">
+    <group>
+      <sampling initial_sample="no">
+        <dimension name="y" />
+        <moments>dens</moments>
+        <dependencies>wavefunction</dependencies>
+        <![CDATA[
+          dens = mod2(phi);
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling initial_sample="no">
+        <moments>N</moments>
+        <dependencies>normalisation</dependencies>
+        <![CDATA[
+          N = Ncalc;
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>
