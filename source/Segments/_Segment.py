@@ -22,8 +22,9 @@ class _Segment (ScriptElement):
     
     if not self in scriptElements:
       scriptElements.append(self)
-
+  
   @property
   def name(self):
     return 'segment' + str(self.segmentNumber)
   
+

@@ -70,6 +70,12 @@
     <integrate algorithm="RK9" interval="2e-3" steps="100">
       <samples>50 50</samples>
       <operators field="mainField">
+        <operator kind="functions">
+          <![CDATA[
+            // print one '.' per integration step.
+            printf(".");
+          ]]>
+        </operator>
         <operator kind="ex" constant="yes">
           <operator_names>L</operator_names>
           <![CDATA[

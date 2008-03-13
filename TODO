@@ -2,13 +2,6 @@
   * Test
   * Add the GNU scientific library as another source for noises
 
-* Add a 'filter' segment
-  ? Write a 'GenericFilter' template that is used by filter operators,
-    filter segments, moment group sampling and moment group post-processing.
-
-* Add 'functions' elements to integrate, filter segments and anything else that
-  might use them
-
 * Make the regular expressions for integer-valued dimensions not consider or modify strings which are
   in comments or in quotes (e.g. printf strings)
 
@@ -21,20 +14,11 @@
 
 * CDATA initialisation should be able to depend on other vectors
 
-* Verify that vector dependencies are available when they are to be used.
-  For example, consider the case of a filter element creating a vector in one integrate block,
-  and then referenced in another. This needs to cause the parser to barf.
-
 * Add the ability to distribute stochastic simulations using OpenMP
 
 * Add the ability to distribute stochastic simulations using MPI with the scheduling method
 
 * Deterministic/distributed MPI
-
-* Cross-propagation
-	- without MPI
-	- still defined as vector, but using normal syntax
-	- Within integrate block: <prop_dim>  <algorithm> <boundary_condition kind="left|right">
 
 * Make sure that all the things that Andy has been doing to enable various simulation
   parameters can be controlled at simulation run time can be done in xpdeint.
@@ -61,19 +45,7 @@
 
 * Sequence elements need to exist and have loop structures.
 
-* Filters that do things (called filters) all happen in between timesteps.  (See vibstring3.xmds for planned notation)   
-
-* operator ordering (operators in stream now involves EX, cross, func, cdata, computed_vectors):  
-    - computed_vectors happen first.  Safe dependency order must be generated from the list of dependencies.
-    - everything above CDATA in XML order
-    - CDATA from largest to smallest
-    - everything below CDATA in XML order
-		
-
 * Output:
-  Add the ability to have filter operators in an output moment group that get called before sampling.
-    This will require changes to all of the operators to refer to a 'parent' instead of an 'integrator'
-    where appropriate.
   ? Post-processing
 
 * Runtime-limiting support (as in xmds-1)

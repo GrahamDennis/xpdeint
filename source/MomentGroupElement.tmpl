@@ -73,8 +73,11 @@ $writeOutFunctionImplementation@slurp
 @def sampleFunctionImplementation
 void _${name}_sample()
 {
-  @# Evaluate any computed vectors we have
-  ${evaluateComputedVectors($dependencies)}@slurp
+  @# Evaluate any computed vectors we have that either we or one
+  @# of our operators depends on
+  @set $allDependencies = $dependencies.copy()
+  @silent allDependencies.update($operatorDependenciesForOperatorContainers($operatorContainers))
+  ${evaluateComputedVectors(allDependencies)}@slurp
   @#
   @# Execute any operatorContainers
   @for $operatorContainer in $operatorContainers

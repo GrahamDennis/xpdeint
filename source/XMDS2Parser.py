@@ -33,6 +33,7 @@ from SimulationDrivers.MultiPathDriver import MultiPathDriver as MultiPathDriver
 from SimulationDrivers.MPIMultiPathDriver import MPIMultiPathDriver as MPIMultiPathDriverTemplate
 
 from Segments import Integrators as IntegratorTemplates
+from Segments.FilterSegment import FilterSegment as FilterSegmentTemplate
 
 from Operators.OperatorContainer import OperatorContainer as OperatorContainerTemplate
 
@@ -43,6 +44,7 @@ from Operators.ConstantEXOperator import ConstantEXOperator as ConstantEXOperato
 from Operators.NonConstantEXOperator import NonConstantEXOperator as NonConstantEXOperatorTemplate
 from Operators.FilterOperator import FilterOperator as FilterOperatorTemplate
 from Operators.CrossPropagationOperator import CrossPropagationOperator as CrossPropagationOperatorTemplate
+from Operators.FunctionsOperator import FunctionsOperator as FunctionsOperatorTemplate
 
 
 from Features.BinaryOutput import BinaryOutput as BinaryOutputTemplate
@@ -820,12 +822,25 @@ class XMDS2Parser(ScriptParser):
       if not childNode.nodeType == minidom.Node.ELEMENT_NODE:
         continue
       
-      if childNode.tagName.lower() == 'integrate':
+      tagName = childNode.tagName.lower()
+      
+      if tagName == 'integrate':
         integrateTemplate = self.parseIntegrateElement(childNode)
         topLevelSequenceElementTemplate.childSegments.append(integrateTemplate)
+      elif tagName == 'filter':
+        # Construct the filter segment
+        filterSegmentTemplate = FilterSegmentTemplate(**self.argumentsToTemplateConstructors)
+        # Add it to the sequence element as a child segment
+        topLevelSequenceElementTemplate.childSegments.append(filterSegmentTemplate)
+        # Create an operator container to house the filter operator
+        operatorContainer = OperatorContainerTemplate(**self.argumentsToTemplateConstructors)
+        # Add the operator container to the filter segment
+        filterSegmentTemplate.operatorContainers.append(operatorContainer)
+        # parse the filter operator
+        filterOperator = self.parseFilterOperator(childNode, operatorContainer)
       else:
         raise ParserException(childNode, "Unknown child of sequence element. "
-                                         "Possible children include 'integrate' elements.")
+                                         "Possible children include 'integrate' or 'filter' elements.")
       
     return simulationDriver
   
@@ -956,10 +971,13 @@ class XMDS2Parser(ScriptParser):
                                               "Valid options are: 'step start' (default) or 'step end'." % locals())
     
   
-  def parseFilterElements(self, filtersElement):
-    filterElements = filtersElement.getChildElementsByTagName('filter')
+  def parseFilterElements(self, filtersElement, optional = False):
+    filterElements = filtersElement.getChildElementsByTagName('filter', optional = optional)
     
-    operatorContainer = OperatorContainerTemplate(**self.argumentsToTemplateConstructors)
+    if filterElements:
+      operatorContainer = OperatorContainerTemplate(**self.argumentsToTemplateConstructors)
+    else:
+      operatorContainer = None
     
     for filterElement in filterElements:
       filterTemplate = self.parseFilterOperator(filterElement, operatorContainer)
@@ -1018,14 +1036,13 @@ class XMDS2Parser(ScriptParser):
         # We have an operator element
         operatorTemplate = self.parseOperatorElement(childNode, operatorContainer)
         
-        if haveHitDeltaAOperator and not isinstance(operatorTemplate, ()):
+        if haveHitDeltaAOperator and not isinstance(operatorTemplate, (FunctionsOperatorTemplate)):
           # Currently all operators after the CDATA code will trigger this exception, but when we
           # implement 'functions' operators, they will need to be added to the above list so they don't
           # trigger this exception.
           raise ParserException(childNode, "You cannot have this kind of operator after the CDATA section\n"
                                            "of the <operators> element. The only operators that can be put\n"
-                                           "after the CDATA section are ''. Currently there aren't any, but\n"
-                                           "the plan is that 'functions' operators can be put here.")
+                                           "after the CDATA section are 'functions' operators.")
       
       elif childNode.nodeType == minidom.Node.CDATA_SECTION_NODE:
         deltaAOperatorTemplate = self.parseDeltaAOperator(operatorsElement, operatorContainer)
@@ -1099,6 +1116,9 @@ class XMDS2Parser(ScriptParser):
     elif kindString == 'cross_propagation':
       parserMethod = self.parseCrossPropagationOperatorElement
       operatorTemplateClass = CrossPropagationOperatorTemplate
+    elif kindString == 'functions':
+      parserMethod = None
+      operatorTemplateClass = FunctionsOperatorTemplate
     else:
       raise ParserException(operatorElement, "Unknown operator kind '%(kindString)s'\n"
                                              "Valid options are: 'ip', 'ex', 'filter' or 'cross-propagation'." % locals())
@@ -1115,7 +1135,8 @@ class XMDS2Parser(ScriptParser):
       dependencyVectorNames = RegularExpressionStrings.symbolsInString(dependenciesElement.innerText())
       operatorTemplate.dependenciesEntity = ParsedEntity(dependenciesElement, dependencyVectorNames)
     
-    parserMethod(operatorTemplate, operatorElement)
+    if parserMethod:
+      parserMethod(operatorTemplate, operatorElement)
     
     return operatorTemplate
   
@@ -1473,6 +1494,10 @@ class XMDS2Parser(ScriptParser):
       momentGroupTemplate.samplingCode = samplingCode
       momentGroupTemplate.outputSpace = momentGroupTemplate.sampleSpace & momentGroupTemplate.spaceMask
       
+      operatorContainer = self.parseFilterElements(samplingElement, optional=True)
+      if operatorContainer:
+        momentGroupTemplate.operatorContainers.append(operatorContainer)
+      
       # operatorElements = samplingElement.getChildElementsByTagName('operator', optional=True)
       # if operatorElements:
       #   operatorContainer = OperatorContainerTemplate(field = samplingFieldTemplate,
@@ -1486,9 +1511,9 @@ class XMDS2Parser(ScriptParser):
       #   momentGroupTemplate.operatorContainers.append(operatorContainer)
       #   for operatorElement in operatorElements:
       #     kindString = operatorElement.getAttribute('kind').strip().lower()
-      #     if not kindString in ('ex'):
+      #     if not kindString in ('ex', 'functions'):
       #       raise ParserException(operatorElement, "Unrecognised operator kind '%(kindString)s'."
-      #                                              "Valid operator kinds in sampling elements are currently only 'ex'." % locals())
+      #                                              "Valid operator kinds in sampling elements are 'ex' or 'functions'." % locals())
       #     operatorTemplate = self.parseOperatorElement(operatorElement, operatorContainer)
       # 
       
