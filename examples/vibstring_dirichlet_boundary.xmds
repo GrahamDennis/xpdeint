@@ -67,14 +67,16 @@
   <sequence>
     <integrate algorithm="ARK89" tolerance="1e-8" interval="2e-2" steps="1000">
       <samples>500</samples>
-      <operators field="mainField">
-        <operator kind="filter">
+      <filters>
+        <filter>
           <dependencies>main boundary</dependencies>
           <![CDATA[
-            u *= bc;
-            uDot *= bc;
+          u *= bc;
+          uDot *= bc;
           ]]>
-        </operator>
+        </filter>
+      </filters>
+      <operators field="mainField">
         <operator kind="ex" constant="yes">
           <operator_names>L</operator_names>
           <![CDATA[

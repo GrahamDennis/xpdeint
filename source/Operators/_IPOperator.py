@@ -14,7 +14,7 @@ import re
 import RegularExpressionStrings
 
 class _IPOperator(Operator):
-  
+  evaluateOperatorFunctionArguments = [('int', '_exponent')]
   operatorKind = Operator.IPOperatorKind
   
   @property

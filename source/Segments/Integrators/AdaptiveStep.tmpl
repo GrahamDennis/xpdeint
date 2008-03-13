@@ -281,6 +281,8 @@ void _segment${segmentNumber}()
   do {
   @set $featureOrderingOuterLoop = ['Output', 'ErrorCheck']
     ${insertCodeForFeatures('integrateAdaptiveStepOuterLoopBegin', featureOrderingOuterLoop), autoIndent=True}@slurp
+    
+    ${preSingleStep, autoIndent=True}@slurp
     do {
   @# Insert code for features
   @set $featureOrderingInnerLoop = ['Stochastic']
@@ -332,6 +334,7 @@ void _segment${segmentNumber}()
   @end if
     
     } while (_discard);
+    ${postSingleStep, autoIndent=True}@slurp
     
     ${insertCodeForFeaturesInReverseOrder('integrateAdaptiveStepOuterLoopEnd', featureOrderingOuterLoop), autoIndent=True}@slurp
   } while (!_next_sample_flag[${momentGroupCount + 1}]);

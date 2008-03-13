@@ -16,6 +16,7 @@ import re
 import RegularExpressionStrings
 
 class _EXOperator(Operator):
+  evaluateOperatorFunctionArguments = []
   
   operatorKind = Operator.OtherOperatorKind
   

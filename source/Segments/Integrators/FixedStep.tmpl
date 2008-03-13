@@ -87,7 +87,9 @@ void _segment${segmentNumber}()
     ${insertCodeForFeatures('integrateFixedStepInnerLoopBegin', featureOrderingInner, dict), autoIndent=True}@slurp
   @set $extraIndent = $dict.extraIndent
     
+    ${preSingleStep, autoIndent=True, extraIndent=extraIndent}@slurp
     ${singleIntegrationStep, autoIndent=True, extraIndent=extraIndent}@slurp
+    ${postSingleStep, autoIndent=True, extraIndent=extraIndent}@slurp
     
   @if $cross
     @# If we are cross-integrating, then we now need to copy our result back

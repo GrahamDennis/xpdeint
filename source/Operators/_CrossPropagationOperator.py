@@ -16,6 +16,7 @@ from ParserException import ParserException
 
 class _CrossPropagationOperator (Operator):
   operatorKind = Operator.OtherOperatorKind
+  evaluateOperatorFunctionArguments = []
   
   def __init__(self, *args, **KWs):
     Operator.__init__(self, *args, **KWs)

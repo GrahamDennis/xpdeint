@@ -13,9 +13,9 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   @super
   @#
   @if $operatorVector
-void _${parent.id}_calculate_${name}_field(${calculateOperatorFieldFunctionArguments});
+void _${parent.id}_calculate_${name}_field($calculateOperatorFieldFunctionArgumentString);
   @end if
-void _${parent.id}_evaluate_${name}(${evaluateOperatorFunctionArgument});
+void _${parent.id}_evaluate_${name}(${evaluateOperatorFunctionArgumentString});
   @#
 @end def
 
@@ -36,7 +36,7 @@ ${evaluateOperatorFunctionImplementation}@slurp
 @def calculateOperatorFieldFunctionImplementation
   @#
 // ${description}
-void _${parent.id}_calculate_${name}_field(${calculateOperatorFieldFunctionArguments})
+void _${parent.id}_calculate_${name}_field(${calculateOperatorFieldFunctionArgumentString})
 {
   ${calculateOperatorFieldFunctionContents, autoIndent=True}@slurp
 }
@@ -46,7 +46,7 @@ void _${parent.id}_calculate_${name}_field(${calculateOperatorFieldFunctionArgum
 @def evaluateOperatorFunctionImplementation
   @#
 // ${description}
-void _${parent.id}_evaluate_${name}(${evaluateOperatorFunctionArgument})
+void _${parent.id}_evaluate_${name}(${evaluateOperatorFunctionArgumentString})
 {
   ${evaluateOperatorFunctionContents, autoIndent=True}@slurp
 }
@@ -111,7 +111,7 @@ ${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $operatorSpace, 
   @# operator evaluation
   @#
   @set $setOfVectorsToLoopOver = $dependencies.copy()
-  @silent $setOfVectorsToLoopOver.update($operatorTargetVectorsSet)
+  @silent $setOfVectorsToLoopOver.update($targetVectors)
 ${transformVectorsToSpace($setOfVectorsToLoopOver, $operatorSpace)}@slurp
   @#
 

@@ -933,8 +933,53 @@ class XMDS2Parser(ScriptParser):
     
     self.parseOperatorsElements(integrateElement, integratorTemplate)
     
+    self.parseFiltersElements(integrateElement, integratorTemplate)
+    
     return integratorTemplate
   
+  def parseFiltersElements(self, integrateElement, integratorTemplate):
+    filtersElements = integrateElement.getChildElementsByTagName('filters', optional=True)
+    
+    for filtersElement in filtersElements:
+      filterOperatorContainer = self.parseFilterElements(filtersElement)
+      
+      whereString = None
+      if filtersElement.hasAttribute('where'):
+        whereString = filtersElement.getAttribute('where').strip()
+      
+      if whereString in (None, 'step start'):
+        integratorTemplate.stepStartOperatorContainers.append(filterOperatorContainer)
+      elif whereString == 'step end':
+        integratorTemplate.stepEndOperatorContainers.append(filterOperatorContainer)
+      else:
+        raise ParserException(filtersElement, "Unknown placement of filters in the 'where' tag of '%(whereString)s'.\n"
+                                              "Valid options are: 'step start' (default) or 'step end'." % locals())
+    
+  
+  def parseFilterElements(self, filtersElement):
+    filterElements = filtersElement.getChildElementsByTagName('filter')
+    
+    operatorContainer = OperatorContainerTemplate(**self.argumentsToTemplateConstructors)
+    
+    for filterElement in filterElements:
+      filterTemplate = self.parseFilterOperator(filterElement, operatorContainer)
+    
+    return operatorContainer
+  
+  def parseFilterOperator(self, filterElement, operatorContainer):
+    filterTemplate = FilterOperatorTemplate(parent = operatorContainer,
+                                            xmlElement = filterElement,
+                                            **self.argumentsToTemplateConstructors)
+    
+    filterTemplate.operatorDefinitionCode = filterElement.cdataContents()
+    
+    dependenciesElement = filterElement.getChildElementByTagName('dependencies')
+    dependencyVectorNames = []
+    if dependenciesElement:
+      dependencyVectorNames = RegularExpressionStrings.symbolsInString(dependenciesElement.innerText())
+      filterTemplate.dependenciesEntity = ParsedEntity(dependenciesElement, dependencyVectorNames)
+    
+    return filterTemplate
   
   def parseOperatorsElements(self, integrateElement, integratorTemplate):
     operatorsElements = integrateElement.getChildElementsByTagName('operators')
@@ -962,7 +1007,7 @@ class XMDS2Parser(ScriptParser):
   def parseOperatorsElement(self, operatorsElement, integratorTemplate, fieldTemplate):
     operatorContainer = OperatorContainerTemplate(field = fieldTemplate, xmlElement = operatorsElement,
                                                   **self.argumentsToTemplateConstructors)
-    integratorTemplate.operatorContainers.append(operatorContainer)
+    integratorTemplate.intraStepOperatorContainers.append(operatorContainer)
     
     self.parseOperatorElements(operatorsElement, operatorContainer, integratorTemplate)
   
@@ -1016,20 +1061,20 @@ class XMDS2Parser(ScriptParser):
     if not operatorElement.hasAttribute('kind'):
       raise ParserException(operatorElement, "Missing 'kind' attribute.")
     
-    kindString = operatorElement.getAttribute('kind').strip()
+    kindString = operatorElement.getAttribute('kind').strip().lower()
     
     constantString = None
     if operatorElement.hasAttribute('constant'):
-      constantString = operatorElement.getAttribute('constant').strip()
+      constantString = operatorElement.getAttribute('constant').strip().lower()
     
     parserMethod = None
     operatorTemplateClass = None
     
-    if kindString.lower() == 'ip':
+    if kindString == 'ip':
       if not constantString:
         raise ParserException(operatorElement, "Missing 'constant' attribute.")
         
-      if not constantString.lower() == 'yes':
+      if not constantString == 'yes':
         raise ParserException(operatorElement, "There isn't a non-constant IP operator.")
       
       integratorTemplate = operatorContainer.parent
@@ -1040,21 +1085,18 @@ class XMDS2Parser(ScriptParser):
         operatorTemplateClass = AdaptiveStepIPOperatorTemplate
       
       parserMethod = self.parseIPOperatorElement
-    elif kindString.lower() == 'ex':
+    elif kindString == 'ex':
       if not constantString:
         raise ParserException(operatorElement, "Missing 'constant' attribute.")
       
       parserMethod = self.parseEXOperatorElement
-      if constantString.lower() == 'yes':
+      if constantString == 'yes':
         operatorTemplateClass = ConstantEXOperatorTemplate
-      elif constantString.lower() == 'no':
+      elif constantString == 'no':
         operatorTemplateClass = NonConstantEXOperatorTemplate
       else:
         raise ParserException(operatorElement, "The constant attribute must be either 'yes' or 'no'.")
-    elif kindString.lower() == 'filter':
-      parserMethod = self.parseFilterOperatorElement
-      operatorTemplateClass = FilterOperatorTemplate
-    elif kindString.lower() == 'cross_propagation':
+    elif kindString == 'cross_propagation':
       parserMethod = self.parseCrossPropagationOperatorElement
       operatorTemplateClass = CrossPropagationOperatorTemplate
     else:
@@ -1092,7 +1134,7 @@ class XMDS2Parser(ScriptParser):
       if operatorName in self.globalNameSpace['symbolNames']:
         raise ParserException(operatorNamesElement,
                 "Operator name '%(operatorName)s' conflicts with previously-defined symbol." % locals())
-      self.globalNameSpace['symbolNames'].add(operatorName)
+      # self.globalNameSpace['symbolNames'].add(operatorName)
       
     operatorTemplate.operatorNames = operatorNames
     
@@ -1136,7 +1178,10 @@ class XMDS2Parser(ScriptParser):
       if operatorName in self.globalNameSpace['symbolNames']:
         raise ParserException(operatorNamesElement,
                 "Operator name '%(operatorName)s' conflicts with previously-defined symbol." % locals())
-      self.globalNameSpace['symbolNames'].add(operatorName)
+      # I'm not sure that we should be protecting the operator names in an EX or IP operator (except within
+      # an operators element)
+      
+      # self.globalNameSpace['symbolNames'].add(operatorName)
     
     operatorTemplate.operatorNames = operatorNames
     
@@ -1167,93 +1212,6 @@ class XMDS2Parser(ScriptParser):
     
     return operatorTemplate
   
-  def parseFilterOperatorElement(self, operatorTemplate, operatorElement):
-    targetField = None
-    momentsVectorName = None
-    geometryTemplate = self.globalNameSpace['geometry']
-    
-    if not operatorTemplate.dependenciesEntity:
-      raise ParserException(operatorElement,
-              "Filter operators must have a dependencies element.")
-    
-    momentsElement = operatorElement.getChildElementByTagName('moments', optional=True)
-    if momentsElement:
-      if momentsElement.hasAttribute('target_field') and momentsElement.hasAttribute('dimensions'):
-        raise ParserException(momentsElement,
-                "Filter operators must have only one of the attributes 'dimensions' and 'target_field'")
-      elif momentsElement.hasAttribute('target_field'):
-        targetFieldName = momentsElement.getAttribute('target_field').strip()
-        fieldsWithName = filter(lambda x: x.name == targetFieldName, self.globalNameSpace['fields'])
-        assert len(fieldsWithName) <= 1
-        if len(fieldsWithName) == 0:
-          raise ParserException(momentsElement, "target_field '%(targetFieldName)s' does not exist." % locals())
-        targetField = fieldsWithName[0]
-        
-        if not targetField.isSubsetOfField(operatorTemplate.field):
-          raise ParserException(momentsElement,
-                  "target_field must only contain dimensions that are in the integration field.")
-        
-        momentsVectorName = operatorTemplate.id + "_moments"
-      elif momentsElement.hasAttribute('dimensions'):
-        targetField = FieldElementTemplate(name = operatorTemplate.id + "_field" % locals(),
-                                           **self.argumentsToTemplateConstructors)
-        momentsVectorName = 'moments'
-        
-        dimensionNames = RegularExpressionStrings.symbolsInString(momentsElement.getAttribute('dimensions'))
-        for dimensionName in dimensionNames:
-          if not geometryTemplate.hasDimensionName(dimensionName):
-            raise ParserException(momentsElement, "Dimension name '%(dimensionName)s' does not exist." % locals())
-          if not operatorTemplate.field.hasDimensionName(dimensionName):
-            raise ParserException(momentsElement, 
-                    "Filter moments cannot have dimensions that aren't in the integration field. "
-                    "The offending dimension is '%(dimensionName)s'." % locals())
-          
-          targetField.dimensions.append(geometryTemplate.dimensionWithName(dimensionName))
-        targetField.sortDimensions()
-      else:
-        raise ParserException(momentsElement,
-                "Moments in filter operators must have either the 'dimensions' attribute "
-                "or the 'target_field' attribute set.")
-      
-      if momentsElement.hasAttribute('name'):
-        filterName = momentsElement.getAttribute('name').strip()
-        if filterName in self.globalNameSpace['symbolNames']:
-          raise ParserException(momentsElement, 
-                  "Filter moments name '%(filterName)s' conflicts with previously defined symbol." % locals())
-        self.globalNameSpace['symbolNames'].add(filterName)
-        momentsVectorName = filterName
-            
-      momentsVector = VectorElementTemplate(name = momentsVectorName, field = targetField,
-                                            **self.argumentsToTemplateConstructors)
-      
-      targetField.temporaryVectors.add(momentsVector)
-      
-      if not momentsElement.hasAttribute('type'):
-        ## By default, the type will be complex
-        pass
-      else:
-        momentsVectorType = momentsElement.getAttribute('type').strip().lower()
-        if momentsVectorType == 'complex':
-          momentsVector.type = 'complex'
-        elif momentsVectorType in ('double', 'real'):
-          momentsVector.type = 'double'
-        else:
-          raise ParserException(momentsElement,
-                "Unknown type '%(momentsVectorType)s'. "
-                "Options are 'complex' (default), or 'double' / 'real' (synonyms)." % locals())
-      
-      momentNames = RegularExpressionStrings.symbolsInString(momentsElement.innerText())
-      
-      for momentName in momentNames:
-        momentsVector.components.append(momentName)
-      
-      operatorTemplate.dependencies.add(momentsVector)
-      operatorTemplate.resultVector = momentsVector
-      
-      if momentsElement.hasAttribute('name'):
-        self.globalNameSpace['vectors'].append(momentsVector)
-    
-    return operatorTemplate
   
   def parseCrossPropagationOperatorElement(self, operatorTemplate, operatorElement):
     if not operatorElement.hasAttribute('algorithm'):
@@ -1330,7 +1288,7 @@ class XMDS2Parser(ScriptParser):
     
     operatorContainer = OperatorContainerTemplate(field = reducedField,
                                                   **self.argumentsToTemplateConstructors)
-    crossIntegratorTemplate.operatorContainers.append(operatorContainer)
+    crossIntegratorTemplate.intraStepOperatorContainers.append(operatorContainer)
     
     # Now we can construct the delta a operator for the cross-propagation integrator
     deltaAOperatorTemplate = DeltaAOperatorTemplate(parent = operatorContainer,
@@ -1513,7 +1471,27 @@ class XMDS2Parser(ScriptParser):
         raise ParserException(samplingElement, "The CDATA section for the sampling code must not be empty.")
       
       momentGroupTemplate.samplingCode = samplingCode
-      momentGroupTemplate.outputSpace = momentGroupTemplate.sampleSpace
+      momentGroupTemplate.outputSpace = momentGroupTemplate.sampleSpace & momentGroupTemplate.spaceMask
+      
+      # operatorElements = samplingElement.getChildElementsByTagName('operator', optional=True)
+      # if operatorElements:
+      #   operatorContainer = OperatorContainerTemplate(field = samplingFieldTemplate,
+      #                                                 # Point the proxies for the shared code etc at
+      #                                                 # the moment group object's sampling code, the sampling space, etc.
+      #                                                 sharedCodeKeyPath = 'parent.samplingCode',
+      #                                                 sharedCodeSpaceKeyPath = 'parent.sampleSpace',
+      #                                                 dependenciesKeyPath = 'parent.dependencies',
+      #                                                 **self.argumentsToTemplateConstructors)
+      #   
+      #   momentGroupTemplate.operatorContainers.append(operatorContainer)
+      #   for operatorElement in operatorElements:
+      #     kindString = operatorElement.getAttribute('kind').strip().lower()
+      #     if not kindString in ('ex'):
+      #       raise ParserException(operatorElement, "Unrecognised operator kind '%(kindString)s'."
+      #                                              "Valid operator kinds in sampling elements are currently only 'ex'." % locals())
+      #     operatorTemplate = self.parseOperatorElement(operatorElement, operatorContainer)
+      # 
+      
       
       # We have now dealt with the sampling element, and now need to deal with the processing element.
       # TODO: Implement processing element.

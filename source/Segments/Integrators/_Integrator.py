@@ -26,13 +26,16 @@ class _Integrator (_Segment):
     self._integrationVectors = set()
     self.homeSpace = 0
     self.cutoff = 1e-3
-    self.operatorContainers = []
+    self.stepStartOperatorContainers = []
+    self.intraStepOperatorContainers = []
+    self.stepEndOperatorContainers = []
     self.computedVectors = set()
   
   @property
   def children(self):
-    result = self.operatorContainers[:]
-    result.extend(self.computedVectors)
+    result = []
+    for array in [self.stepStartOperatorContainers, self.intraStepOperatorContainers, self.stepEndOperatorContainers, self.computedVectors]:
+      result.extend(array)
     return result
   
   @property
@@ -40,11 +43,18 @@ class _Integrator (_Segment):
     if self._integrationVectors:
       return self._integrationVectors.copy()
     
-    deltaAOperators = [oc.deltaAOperator for oc in self.operatorContainers if oc.deltaAOperator]
+    deltaAOperators = [oc.deltaAOperator for oc in self.intraStepOperatorContainers if oc.deltaAOperator]
     for op in deltaAOperators:
       self._integrationVectors.update(op.integrationVectors)
     
     return self._integrationVectors.copy()
+  
+  @property
+  def operatorContainers(self):
+    result = []
+    for array in [self.stepStartOperatorContainers, self.intraStepOperatorContainers, self.stepEndOperatorContainers]:
+      result.extend(array)
+    return result
   
   @property
   def name(self):
@@ -69,17 +79,15 @@ class _Integrator (_Segment):
   # on another field with 0 or 1 dimensions, it doesn't make sense for a 0 or 1 dimensional field to depend directly
   # on a 3 dimensional field. It may depend on the 3 dimensional field through moments of the field, however they will
   # be calculated in other operators that would have already been evaluated.
-  def operatorContainersInFieldDescendingOrder(self):
-    operatorContainers = self.operatorContainers[:]
+  def intraStepOperatorContainersInFieldDescendingOrder(self):
+    operatorContainers = self.intraStepOperatorContainers[:]
     operatorContainers.sort(lambda x, y: cmp(len(x.field.dimensions), len(y.field.dimensions)), reverse=True)
     return operatorContainers
   
-  def allOperatorDependencies(self):
+  def operatorDependenciesForOperatorContainers(self, operatorContainers):
     result = set()
-    for operatorContainer in self.operatorContainers:
-      for operator in operatorContainer.operators:
-        result.update(operator.dependencies)
-        result.update(operator.operatorTargetVectorsSet)
+    for operatorContainer in operatorContainers:
+      result.update(operatorContainer.operatorDependencies)
     return result
   
   
