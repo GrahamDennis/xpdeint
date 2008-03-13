@@ -18,7 +18,9 @@ import re
 import RegularExpressionStrings
 
 class _DeltaAOperator (Operator):
+  evaluateOperatorFunctionArguments = [('double', '_step')]
   operatorKind = Operator.DeltaAOperatorKind
+  
   def __init__(self, *args, **KWs):
     Operator.__init__(self, *args, **KWs)
     

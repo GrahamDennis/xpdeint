@@ -76,6 +76,12 @@ void _${name}_sample()
   @# Evaluate any computed vectors we have
   ${evaluateComputedVectors($dependencies)}@slurp
   @#
+  @# Execute any operatorContainers
+  @for $operatorContainer in $operatorContainers
+  
+  ${operatorContainer.evaluateOperators}@slurp
+  @end for
+  
   @# If we have a sampling field, then we should sample with that
   @# and set the vectorOverrides appropriately
   @if self.hasattr('samplingField')
@@ -293,6 +299,10 @@ _active_${name}_raw = _active_${outputField.name}_processed;
 ${vector.allocate}@slurp
   @end for
   @#
+  @for operatorContainer in $operatorContainers
+${operatorContainer.initialise}@slurp
+  @end for
+  @#
 @end def
 
 @*
@@ -310,6 +320,10 @@ ${vector.allocate}@slurp
   @#
   @for vector in $computedVectors
 ${vector.free}@slurp
+  @end for
+  @#
+  @for operatorContainer in $operatorContainers
+${operatorContainer.finalise}@slurp
   @end for
   @#
 @end def

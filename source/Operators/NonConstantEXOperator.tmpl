@@ -15,13 +15,10 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   @#
   @# NonConstantOperator will have defined for us all of the operatorName variables.
   @# Note that we assume that all of the integration vectors have an operotor component defined for them.
-#define d${propagationDimension} _step
 
 // ************** Operator code *****************
 ${operatorDefinitionCode}
 // **********************************************
-
-#undef d${propagationDimension}
 
   @for $operatorComponentNumber, ($operatorComponentName, $operatorComponentVectors) in enumerate($operatorComponents.iteritems())
     @for $targetVectorComponents in $operatorComponentVectors.itervalues()

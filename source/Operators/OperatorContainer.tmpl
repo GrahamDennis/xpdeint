@@ -6,13 +6,18 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 *@
 @extends _OperatorContainer
 
-@def _evaluateOperatorsWithArgument($operators, $argument)
+@def _evaluateOperatorsWithArgument($operators, $arguments)
   @#
   @set $blankLineSeparator = ''
   @for operator in operators
 ${blankLineSeparator}@slurp
+    @# The following line will trigger an exception if an operator expects an argument 
+    @# (as defined by the evaluateOperatorFunctionArguments) but it was not passed into
+    @# the 'arguments' dictionary argument to this function.
+    @set $argumentString = ', '.join([arguments[pair[1]] for pair in operator.evaluateOperatorFunctionArguments])
+    @#
 // ${operator.description}
-_${operator.parent.id}_evaluate_${operator.name}($argument);
+_${operator.parent.id}_evaluate_${operator.name}($argumentString);
     @set $blankLineSeparator = '\n'
   @end for
   @#

@@ -94,14 +94,16 @@
   <sequence>
     <integrate algorithm="ARK89" interval="1e-4" steps="10000" tolerance="1e-8">
       <samples>500</samples>
-      <operators field="main">
-        <operator kind="filter">
+      <filters>
+        <filter>
           <dependencies>wavefunction normalisation</dependencies>
           <![CDATA[
             // Correct normalisation of the wavefunction
             phi *= sqrt(Nparticles/Ncalc);
           ]]>
-        </operator>
+        </filter>
+      </filters>
+      <operators field="main">
         <operator kind="ip" constant="yes">
           <operator_names>T</operator_names>
           <![CDATA[

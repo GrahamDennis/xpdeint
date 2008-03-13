@@ -66,7 +66,7 @@ inline void _segment${segmentNumber}_ip_evolve(int _exponent)
   @#
   @for $operatorContainer in $operatorContainers
 ${blankLineSeparator}@slurp
-  ${operatorContainer.evaluateIPOperators(argString = '_exponent'), autoIndent=True}@slurp
+  ${operatorContainer.evaluateIPOperators(arguments = {'_exponent': '_exponent'}), autoIndent=True}@slurp
     @set $blankLineSeparator = '\n'
   @end for
   @#  
@@ -79,31 +79,31 @@ ${blankLineSeparator}@slurp
 inline void _segment${segmentNumber}_calculate_delta_a(double _step)
 {
   @# First evaluate any computed vector that any of our operators may depend on
-  @set allDependencies = $allOperatorDependencies
+  @set allDependencies = $operatorDependenciesForOperatorContainers($intraStepOperatorContainers)
   ${evaluateComputedVectors($allDependencies), autoIndent=True}@slurp
   @#
   @# Then loop over operators that come before the delta A operators in the order in which
   @# they appear in the xmds script.
   @#
-  @for $operatorContainer in $operatorContainers
+  @for $operatorContainer in $intraStepOperatorContainers
   
-  ${operatorContainer.evaluatePreDeltaAOperators(argString = '_step'), autoIndent=True}@slurp
+  ${operatorContainer.evaluatePreDeltaAOperators(arguments = {'_step': '_step'}), autoIndent=True}@slurp
   @end for
   @#
   @# Now loop over delta A operators
   @# See the comment in _Integrator about why this needs to be done in
   @# this particular order
-  @for $operatorContainer in $operatorContainersInFieldDescendingOrder
+  @for $operatorContainer in $intraStepOperatorContainersInFieldDescendingOrder
     @# Blank line for formatting
   
-  ${operatorContainer.evaluateDeltaAOperator(argString = '_step'), autoIndent=True}@slurp
+  ${operatorContainer.evaluateDeltaAOperator(arguments = {'_step': '_step'}), autoIndent=True}@slurp
   @end for
   @#
   @# Lastly, loop over the operators that come after the delta a operators in the order in
   @# which they appear in the xmds script.
   @#
-  @for $operatorContainer in $operatorContainers
-    @set $result = $operatorContainer.evaluatePostDeltaAOperators(argString = '_step')
+  @for $operatorContainer in $intraStepOperatorContainers
+    @set $result = $operatorContainer.evaluatePostDeltaAOperators(arguments = {'_step': '_step'})
     @if not result.isspace()
     @# Blank line for formatting
   
@@ -113,6 +113,31 @@ inline void _segment${segmentNumber}_calculate_delta_a(double _step)
 }
   @#
 @end def
+
+@def preSingleStep
+  @#
+  @set allDependencies = $operatorDependenciesForOperatorContainers($stepStartOperatorContainers)
+${evaluateComputedVectors($allDependencies)}@slurp
+  @#
+  @for $operatorContainer in $stepStartOperatorContainers
+  
+${operatorContainer.evaluateOperators}@slurp
+  @end for
+  @#
+@end def
+
+@def postSingleStep
+  @#
+  @set allDependencies = $operatorDependenciesForOperatorContainers($stepEndOperatorContainers)
+${evaluateComputedVectors($allDependencies)}@slurp
+  @#
+  @for $operatorContainer in $stepEndOperatorContainers
+  
+${operatorContainer.evaluateOperators}@slurp
+  @end for
+  @#
+@end def
+
 
 @@callOncePerInstanceGuard
 @def initialise

@@ -9,7 +9,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 @extends _IPOperator
 
 @def description: IP transverse derivative operator for field $field.name
-@attr $calculateOperatorFieldFunctionArguments = 'double _step, int _exponent, int _arrayIndex'
+@attr $calculateOperatorFieldFunctionArguments = [('double', '_step'), ('int', '_exponent'), ('int', '_arrayIndex')]
 
 @def globals
   @#
@@ -64,8 +64,6 @@ _${operatorVector.id}[_${operatorVector.id}_index_pointer + _arrayIndex * $len($
   @end for
   @#
 @end def
-
-@attr $evaluateOperatorFunctionArgument = 'int _exponent'
 
 @def evaluateOperatorLoop($setOfVectorsToLoopOver)
   @#

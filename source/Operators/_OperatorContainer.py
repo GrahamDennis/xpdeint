@@ -14,7 +14,7 @@ from .ParserException import ParserException
 
 class _OperatorContainer(ScriptElement):
   def __init__(self, *args, **KWs):
-    legalKWs = ['field', 'name', 'sharedCodeKeyPath', 'dependenciesKeyPath', 'sharedCodeKeyPath']
+    legalKWs = ['field', 'name', 'sharedCodeKeyPath', 'dependenciesKeyPath', 'sharedCodeSpaceKeyPath']
     localKWs = {}
     for key in KWs.copy():
       if key in legalKWs:
@@ -79,6 +79,14 @@ class _OperatorContainer(ScriptElement):
   def children(self):
     return self.operators
   
+  @property
+  def operatorDependencies(self):
+    result = set()
+    for operator in self.operators:
+      result.update(operator.dependencies)
+      result.update(operator.targetVectors)
+    return result
+  
   def addOperator(self, op):
     if op.operatorKind == _Operator.IPOperatorKind:
       self.ipOperators.append(op)
@@ -94,21 +102,29 @@ class _OperatorContainer(ScriptElement):
     op.operatorNumber = len(self.operators) - 1
   
   
-  def evaluateIPOperators(self, argString = ''):
-    return self._evaluateOperatorsWithArgument(self.ipOperators, argString)
+  def evaluateIPOperators(self, arguments = None):
+    arguments = arguments or {}
+    return self._evaluateOperatorsWithArgument(self.ipOperators, arguments)
   
-  def evaluatePreDeltaAOperators(self, argString = ''):
-    return self._evaluateOperatorsWithArgument(self.preDeltaAOperators, argString)
+  def evaluatePreDeltaAOperators(self, arguments = None):
+    arguments = arguments or {}
+    return self._evaluateOperatorsWithArgument(self.preDeltaAOperators, arguments)
   
-  def evaluatePostDeltaAOperators(self, argString = ''):
-    return self._evaluateOperatorsWithArgument(self.postDeltaAOperators, argString)
+  def evaluatePostDeltaAOperators(self, arguments = None):
+    arguments = arguments or {}
+    return self._evaluateOperatorsWithArgument(self.postDeltaAOperators, arguments)
   
-  def evaluateDeltaAOperator(self, argString = ''):
-    return self._evaluateOperatorsWithArgument([self.deltaAOperator], argString)
+  def evaluateDeltaAOperator(self, arguments = None):
+    arguments = arguments or {}
+    if self.deltaAOperator:
+      return self._evaluateOperatorsWithArgument([self.deltaAOperator], arguments)
+    else:
+      return ''
   
-  def evaluateOperators(self, argString = ''):
+  def evaluateOperators(self, arguments = None):
+    arguments = arguments or {}
     assert not self.postDeltaAOperators and not self.deltaAOperator and not self.ipOperators
-    return self._evaluateOperatorsWithArgument(self.preDeltaAOperators, argString)
+    return self._evaluateOperatorsWithArgument(self.preDeltaAOperators, arguments)
   
   def initialise(self):
     return '\n'.join([op.initialise() for op in self.operators])

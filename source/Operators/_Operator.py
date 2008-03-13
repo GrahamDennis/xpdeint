@@ -16,7 +16,8 @@ import RegularExpressionStrings
 import re
 
 class _Operator (ScriptElement):
-  evaluateOperatorFunctionArgument = 'double _step'
+  # This is an ordered list of (type, argName) pairs
+  evaluateOperatorFunctionArguments = [('double', '_step')]
   
   # Operator kinds
   IPOperatorKind     = 1
@@ -59,19 +60,26 @@ class _Operator (ScriptElement):
     return 'operator' + str(self.operatorNumber)
   
   @property
-  def operatorTargetVectorsSet(self):
-    setOfTargetVectors = set()
+  def targetVectors(self):
+    targetVectors = set()
     
     # Loop over the vectors that the operators are going to operate on
-    for operatorTargetVectors in self.operatorComponents.itervalues():
-      setOfTargetVectors.update(set(operatorTargetVectors.keys()))
+    for targetVectorDict in self.operatorComponents.itervalues():
+      targetVectors.update(set(targetVectorDict.keys()))
     
-    return setOfTargetVectors
+    return targetVectors
   
   @property
   def defaultOperatorSpace(self):
     return self.field.spaceMask
   
+  @property
+  def calculateOperatorFieldFunctionArgumentString(self):
+    return ', '.join([pair[0] + ' ' + pair[1] for pair in self.calculateOperatorFieldFunctionArguments])
+  
+  @property
+  def evaluateOperatorFunctionArgumentString(self):
+    return ', '.join([pair[0] + ' ' + pair[1] for pair in self.evaluateOperatorFunctionArguments])
   
   def _getOperatorSpace(self):
     if not self.hasattr('_operatorSpace'):
@@ -125,7 +133,7 @@ class _Operator (ScriptElement):
                   "Can't depend on a vector that is in a field that has dimensions that "
                   "aren't in this field (%s).\n"
                   "The vector causing this problem is '%s'." 
-                  % (self.field.name, dependency.vector.name))
+                  % (self.field.name, dependency.name))
         
         # If the vector is computed, we need to run a check that we are able to access this vector.
         if dependency.isComputed:

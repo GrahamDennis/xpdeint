@@ -143,9 +143,14 @@ class _ScriptElement (Template):
   def valueForKeyPath(self, keyPath):
     """Return the value for a dotted-name lookup of `keyPath` anchored at `self`."""
     attrNames = keyPath.split('.')
-    currentObject = self
-    for attrName in attrNames:
-      currentObject = getattr(currentObject, attrName)
+    try:
+      currentObject = self
+      for attrName in attrNames:
+        currentObject = getattr(currentObject, attrName)
+    except Exception, err:
+      selfRep = repr(self)
+      print >> sys.stderr, "Hit exception trying to get keyPath '%(keyPath)s' on object %(selfRep)s." % locals()
+      raise
     return currentObject
   
   def setValueForKeyPath(self, value, keyPath):
@@ -153,9 +158,15 @@ class _ScriptElement (Template):
     attrNames = keyPath.split('.')
     lastAttrName = attrNames.pop()
     currentObject = self
-    for attrName in attrNames:
-      currentObject = getattr(currentObject, attrName)
-    setattr(currentObject, lastAttrName, value)
+    try:
+      for attrName in attrNames:
+        currentObject = getattr(currentObject, attrName)
+      setattr(currentObject, lastAttrName, value)
+    except Exception, err:
+      selfRep = repr(self)
+      print >> sys.stderr, "Hit exception trying to set keyPath '%(keyPath)s' on object %(selfRep)s." % locals()
+      raise
+    
   
   # Default description of the template
   def description(self):
@@ -437,7 +448,6 @@ class _ScriptElement (Template):
     Return the ordering for the computed vectors in `vectors` taking into account
     any dependencies between the computed vectors.
     """
-    computedVectors = [v for v in vectors if v.isComputed]
     
     stack = []
     
@@ -446,11 +456,11 @@ class _ScriptElement (Template):
     # then it is added to the list of ordered dependencies. If, during a traversal,
     # a vector is encountered twice (the history of traversed dependencies is stored
     # in the stack variable), then a circular dependency chain has been hit and a
-    # ParserException will be raised. Once all of a vectors dependencies have been
+    # ParserException will be raised. Once all of a vector's dependencies have been
     # added to the orderedDependencies, the vector itself can be added.
     # Finally, if a vector is already in orderedDependencies, we don't need to consider
     # its dependencies as they will have already been considered when considering the
-    # dependencies of another vector that depends on the first vector.
+    # dependencies of another vector that depends on the first vector. Clear as mud?
     
     def orderedDependenciesForVectors(vectors):
       """
@@ -482,6 +492,7 @@ class _ScriptElement (Template):
       
       return orderedDependencies
     
+    computedVectors = [v for v in vectors if v.isComputed]
     return orderedDependenciesForVectors(computedVectors)
   
   

@@ -86,8 +86,8 @@
   <sequence>
     <integrate algorithm="ARK89" tolerance="1e-7" interval="7.0" steps="100000">
       <samples>200</samples>
-      <operators field="mainField">
-        <operator kind="filter">
+      <filters>
+        <filter>
           <dependencies>main dampConstants</dependencies>
           <![CDATA[
             // Kill off anything near the edges
@@ -95,7 +95,9 @@
             // numerical artefacts on the edges
             W *= damping;
           ]]>
-        </operator>
+        </filter>
+      </filters>
+      <operators field="mainField">
         <operator kind="ex" constant="yes">
           <operator_names>Lx Ly Lxxx Lxxy Lxyy Lyyy</operator_names>
           <![CDATA[

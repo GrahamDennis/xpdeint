@@ -14,6 +14,7 @@ import RegularExpressionStrings
 from .ParserException import ParserException
 
 class _FilterOperator (Operator):
+  evaluateOperatorFunctionArguments = []
   operatorKind = Operator.OtherOperatorKind
   vectorsMustBeInSubsetsOfIntegrationField = False
   
@@ -28,10 +29,10 @@ class _FilterOperator (Operator):
     for dependency in self.dependencies:
       dimensionNames.update([dim.name for dim in dependency.field.dimensions])
     
-    self.sourceField = FieldElement.sortedFieldWithDimensionNames(dimensionNames)
+    self.loopingField = FieldElement.sortedFieldWithDimensionNames(dimensionNames)
     
     if self.dependenciesEntity and self.dependenciesEntity.xmlElement.hasAttribute('fourier_space'):
-       self.operatorSpace = self.sourceField.spaceFromString(self.dependenciesEntity.xmlElement.getAttribute('fourier_space'))
+       self.operatorSpace = self.loopingField.spaceFromString(self.dependenciesEntity.xmlElement.getAttribute('fourier_space'))
   
   
 

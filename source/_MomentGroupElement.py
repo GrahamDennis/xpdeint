@@ -22,11 +22,13 @@ class _MomentGroupElement (FieldElement):
     self.requiresInitialSample = False
     self.getVar('momentGroups').append(self)
     self.computedVectors = set()
+    self.operatorContainers = []
   
   @property
   def children(self):
     result = set(super(_MomentGroupElement, self).children)
     result.update(self.computedVectors)
+    result.update(self.operatorContainers)
     return result
   
   # The name of the moment group (used for the vector names, etc)
