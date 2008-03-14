@@ -10,7 +10,7 @@
   ConfigParser. It seems to be part of the standard distribution.
   For a more complete list of options for this, see http://wiki.python.org/moin/ConfigParserShootout
 
-* Add ASCII/binary/XSIL vector initialisation options
+* Add ASCII/binary vector initialisation options
 
 * CDATA initialisation should be able to depend on other vectors
 

@@ -41,6 +41,12 @@ class _VectorElement (ScriptElement):
   def id(self):
     return ''.join([self.field.name, '_', self.name])
   
+  @property
+  def children(self):
+    if self.initialiser:
+      return [self.initialiser]
+    return []
+  
   def _getNComponents(self):
     if self.nComponentsOverride:
       return self.nComponentsOverride

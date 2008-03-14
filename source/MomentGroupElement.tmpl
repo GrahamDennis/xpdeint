@@ -20,6 +20,13 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   @super
   @#
   @for $dimension in $dimensionOverrides
+    @# If the dimension in the dimensionOverrides only has one point in it, then throw it out
+    @# of our dimensions.
+    @if $dimension.lattice <= 1
+      @silent self.dimensions.remove(dimension)
+      @continue
+    @end if
+    @#
     @# Loop over the dimensions creating index counters for any dimension which is being overridden,
     @# for example, the propagation dimension. This is written in this general way in case anyone
     @# wants to add additional dimensions 'transverse' to the standard integration. I have in mind
@@ -27,8 +34,8 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
     @#
     @set $dimensionNumber = $dimensions.index($dimension)
 
-unsigned long _${name}_sample_index${dimensionNumber};
-double* _${name}_x${dimensionNumber} = (double*) xmds_malloc(sizeof(double) * _${name}_lattice${dimensionNumber});
+unsigned long _${name}_sample_index_${dimension.name};
+double* _${name}_${dimension.name} = (double*) xmds_malloc(sizeof(double) * _${name}_lattice_${dimension.name});
   @end for
 @end def
 
@@ -105,20 +112,19 @@ void _${name}_sample()
     @# in which variable replacements are made. This isn't just a literal string.
     @# See the Cheetah CHANGES document for release 2.0b3 that documents this feature
     @# as it isn't in the actual Cheetah docs yet (2007-09-08)
-    @silent $indexOverrides[$dimension.name] = { $self: c'_${name}_sample_index${indexOfDimension($dimension)}'}
+    @silent $indexOverrides[$dimension.name] = { $self: c'_${name}_sample_index_${dimension.name}'}
   @end for
   @#
   @set $vectorsForLoop = $dependencies.copy()
   @silent $vectorsForLoop.update($vectors)
   @# Now actually begin the loop
-
+  
   ${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $sampleSpace, $vectorsForLoop, $insideSamplingLoops, indexOverrides=$indexOverrides, vectorOverrides=$vectorOverrides), autoIndent=True}@slurp
   @# That's the end of the loop, magic eh?
   @#
   @for $dimension in $dimensionOverrides
-    @set $dimensionNumber = $indexOfDimension($dimension)
-
-  _${name}_x${dimensionNumber}[_${name}_sample_index${dimensionNumber}++] = $dimension.name;
+  
+  _${name}_${dimension.name}[_${name}_sample_index_${dimension.name}++] = $dimension.name;
   @end for
   
   _LOG(_SAMPLE_LOG_LEVEL, "Sampled field (for moment group #${number + 1}) at ${propagationDimension} = %e\n", ${propagationDimension});

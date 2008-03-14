@@ -36,6 +36,8 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
     ${logFunctionInnerContent, extraIndent=extraIndent}@slurp
     ${insertCodeForFeaturesInReverseOrder('logFunctionEnd', $featureOrdering, $dict), autoIndent=True}@slurp
     fflush(stdout); \
+    if (logLevel & _ERROR_LOG_LEVEL) \
+      exit(1); \
   }
   @#
 @end def

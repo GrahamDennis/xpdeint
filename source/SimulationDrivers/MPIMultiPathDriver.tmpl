@@ -144,6 +144,8 @@ if ((rank == 0) || (logLevel & ~_SIMULATION_LOG_LEVEL)) { \
   @#
   @set $dict['extraIndent'] -= 2
 } \
+if (logLevel & _ERROR_LOG_LEVEL) \
+  MPI_Abort(MPI_COMM_WORLD, 1); \
   @#
 @end def
 

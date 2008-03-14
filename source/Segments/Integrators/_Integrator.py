@@ -105,10 +105,7 @@ class _Integrator (_Segment):
         if sampleCount and not (self.stepCount % sampleCount) == 0:
           raise ParserException(samplesElement, "Sample count does not evenly divide the number of steps")
         self.samples.append(sampleCount)
-        # FIXME: The following line is probably wrong when we add additional non-fourier dimensions before
-        # the propagation dimension. Then, if we are sampling that dimension as well, then it will have a lower
-        # index than the propagation dimension, so the index for the propagation dimension won't be 0.
-        # FIXME: This line will also be wrong when we add sequence elements that support looping.
-        momentGroup.dimensions[0].lattice += sampleCount
+        # FIXME: This line will be wrong when we add sequence elements that support looping.
+        momentGroup.dimensionWithName(self.propagationDimension).lattice += sampleCount
       
   

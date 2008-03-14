@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
-  <name>vibstring_circle</name>
+  <name>vibstring_dirichlet_boundary2</name>
   <author>Graham Dennis</author>
   <description>
-    Vibrating string with Dirichlet boundary conditions on a circle.
+    Vibrating string with Dirichlet boundary conditions.
   </description>
   
   <features>
     <benchmark />
-    <error_check />
     <bing />
     <fftw version="3" plan="patient" />
     <openmp />
@@ -21,7 +20,6 @@
       
       const double xmax = _mainField_max_x;
       const double width = 0.1;
-      const double absorb = 80.0;
       ]]>
     </globals>
   </features>
@@ -30,35 +28,27 @@
     <prop_dim> t </prop_dim>
     <transverse_dimensions>
       <dimension name="x" lattice="256"  domain="(-1, 1)" />
-      <dimension name="y" lattice="256"  domain="(-1, 1)" />
     </transverse_dimensions>
   </geometry>
   
   <field name="mainField">
-    <vector name="main" initial_space="x y">
+    <vector name="main" initial_space="x">
       <components type="complex">
         u uDot
       </components>
-      <initialisation>
-        <![CDATA[
-          u = exp(-100.0*((x-0.5)*(x-0.5) + y*y));
-          uDot = 0.0;
-        ]]>
+      <initialisation kind="xsil">
+        <filename moment_group="2" geometry_matching_mode="strict">vibstring_dirichlet_boundary.xsil</filename>
       </initialisation>
     </vector>
-    <vector name="boundary" initial_space="x y">
+    <vector name="boundary" initial_space="x">
       <components type="double">
         bc
       </components>
       <initialisation>
         <![CDATA[
-          double r = sqrt(x*x + y*y);
+          double r = fabs(x);
           double rright = xmax-width;
-          double rdamping = r > rright ? absorb*(1-cos(M_PI*(r - rright)/width)) : 0.0;
 
-          bc = exp(-rdamping);
-          if (r > xmax)
-            bc = 0.0;
           if ( r > rright)
             bc = 0.0;
           else
@@ -71,7 +61,7 @@
   </field>
   
   <sequence>
-    <integrate algorithm="RK4" tolerance="1e-8" interval="2e-2" steps="1000">
+    <integrate algorithm="ARK89" tolerance="1e-8" interval="2e-2" steps="1000">
       <samples>500</samples>
       <filters>
         <filter>
@@ -86,7 +76,7 @@
         <operator kind="ex" constant="yes">
           <operator_names>L</operator_names>
           <![CDATA[
-            L = -T*(kx*kx + ky*ky)/mu;
+            L = -T*kx*kx/mu;
           ]]>
         </operator>
         <integration_vectors>main</integration_vectors>
@@ -105,7 +95,6 @@
         <!-- with zero lattice points. -->
         <!-- Note that dimensions can be in any order. Not that I can think of a reason why you would want to do that -->
         <dimension name="x" fourier_space="no" />
-        <dimension name="y" fourier_space="no" />
         <moments>amp</moments>
         <dependencies>main</dependencies>
         <![CDATA[

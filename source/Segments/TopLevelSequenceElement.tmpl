@@ -43,8 +43,7 @@ ${result}@slurp
     @if not $momentGroup.hasDimensionName($propagationDimension)
       @continue
     @end if
-    @set $dimensionNumber = $momentGroup.indexOfDimensionName($propagationDimension)
-_mg${momentGroup.number}_sample_index${dimensionNumber} = 0;
+_mg${momentGroup.number}_sample_index_${propagationDimension} = 0;
   @end for
   @#
   @for $momentGroup in $filter(lambda x: x.requiresInitialSample, $momentGroups)

@@ -3,7 +3,7 @@ cheetah_settings = directiveStartToken="@",commentStartToken="@\#",multiLineComm
 
 SUBDIRS = SimulationDrivers Segments Operators Features
 
-.PHONY: all compile clean
+.PHONY: all compile clean check
 
 MYMAKEFLAGS = 'cheetah_settings=$(cheetah_settings)'
 
@@ -30,3 +30,8 @@ clean:
 	@rm -f $(templates:.tmpl=.py.bak)
 	@for i in $(SUBDIRS); do \
 	(cd $$i; $(MAKE) $(MFLAGS) clean); done
+
+# check examples compile
+check:
+	@for i in ../examples/*.xmds; do \
+	echo $$i; ./parser2.py $$i; done
