@@ -66,7 +66,7 @@ void _${id}_evaluate()
   @end if
   @#
   ${insertCodeForFeatures('computedVectorEvaluationBegin', $featureOrdering), autoIndent=True}@slurp
-  ${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $initialSpace, $setOfVectorsToLoopOver, $evaluationCode, vectorOverrides=vectorOverrides), autoIndent=True}@slurp
+  ${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $evaluationSpace, $setOfVectorsToLoopOver, $evaluationCode, vectorOverrides=vectorOverrides), autoIndent=True}@slurp
   ${insertCodeForFeaturesInReverseOrder('computedVectorEvaluationEnd', $featureOrdering), autoIndent=True}@slurp
   @#
   @if $needsFourierTransforms
