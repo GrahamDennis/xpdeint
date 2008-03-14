@@ -23,6 +23,8 @@
 * Make sure that all the things that Andy has been doing to enable various simulation
   parameters can be controlled at simulation run time can be done in xpdeint.
 
+* Also reimplement the line/column numbers for error reporting. The parser implemented by minidom is expat, a C-class wrapped by pyexpat a.k.a. xml.parsers.expat, then imported by xml.dom.expatbuilder and finally imported by xml.dom.minidom. The idea here would be to add UserData to each openning tag with associated line/column numbers. The C implementation of expat seems to give access to this information, but I have no idea how to bridge these together! In xmds-1 it was easy to hack our own XML parser...
+
 * Rewrite parser so that it isn't so long. (Ask Gabriel McManus)
 
 * Documentation needs to be written (both user and developer). The developer documentation
