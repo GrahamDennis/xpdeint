@@ -32,7 +32,7 @@ from SimulationDrivers.DefaultDriver import DefaultDriver as DefaultDriverTempla
 from SimulationDrivers.MultiPathDriver import MultiPathDriver as MultiPathDriverTemplate
 from SimulationDrivers.MPIMultiPathDriver import MPIMultiPathDriver as MPIMultiPathDriverTemplate
 
-from Segments import Integrators as IntegratorTemplates
+from Segments import Integrators
 from Segments.FilterSegment import FilterSegment as FilterSegmentTemplate
 
 from Operators.OperatorContainer import OperatorContainer as OperatorContainerTemplate
@@ -126,13 +126,13 @@ class XMDS2Parser(ScriptParser):
       return featureElement, feature
     
     
-    parseSimpleFeature('auto_vectorise', Features.AutoVectorise)
-    parseSimpleFeature('benchmark', Features.Benchmark)
-    parseSimpleFeature('error_check', Features.ErrorCheck)
-    parseSimpleFeature('bing', Features.Bing)
-    parseSimpleFeature('openmp', Features.OpenMP)
+    parseSimpleFeature('auto_vectorise', Features.AutoVectorise.AutoVectorise)
+    parseSimpleFeature('benchmark', Features.Benchmark.Benchmark)
+    parseSimpleFeature('error_check', Features.ErrorCheck.ErrorCheck)
+    parseSimpleFeature('bing', Features.Bing.Bing)
+    parseSimpleFeature('openmp', Features.OpenMP.OpenMP)
     
-    argvFeatureElement, argvFeature = parseSimpleFeature('argv', Features.Argv)
+    argvFeatureElement, argvFeature = parseSimpleFeature('argv', Features.Argv.Argv)
     
     if argvFeatureElement:
       argElements = argvFeatureElement.getChildElementsByTagName('arg')
@@ -171,10 +171,10 @@ class XMDS2Parser(ScriptParser):
     
     globalsElement = featuresParentElement.getChildElementByTagName('globals', optional=True)
     if globalsElement:
-      globalsTemplate = Features.Globals(**self.argumentsToTemplateConstructors)
+      globalsTemplate = Features.Globals.Globals(**self.argumentsToTemplateConstructors)
       globalsTemplate.globalsCode = globalsElement.cdataContents()
     
-    stochasticFeatureElement, stochasticFeature = parseSimpleFeature('stochastic', Features.Stochastic)
+    stochasticFeatureElement, stochasticFeature = parseSimpleFeature('stochastic', Features.Stochastic.Stochastic)
     
     if stochasticFeature:
       stochasticFeature.xmlElement = stochasticFeatureElement
@@ -853,13 +853,13 @@ class XMDS2Parser(ScriptParser):
     
     algorithmString = integrateElement.getAttribute('algorithm')
     if algorithmString == 'RK4':
-      integratorTemplateClass = IntegratorTemplates.RK4
+      integratorTemplateClass = Integrators.RK4.RK4
     elif algorithmString == 'RK9':
-      integratorTemplateClass = IntegratorTemplates.RK9
+      integratorTemplateClass = Integrators.RK9.RK9
     elif algorithmString == 'ARK45':
-      integratorTemplateClass = IntegratorTemplates.ARK45
+      integratorTemplateClass = Integrators.ARK45.ARK45
     elif algorithmString == 'ARK89':
-      integratorTemplateClass = IntegratorTemplates.ARK89
+      integratorTemplateClass = Integrators.ARK89.ARK89
     else:
       raise ParserException(integrateElement, "Unknown algorithm '%(algorithmString)s'. "
                                               "Options are 'RK4', 'RK9', 'ARK45' or 'ARK89'." % locals())
@@ -875,7 +875,7 @@ class XMDS2Parser(ScriptParser):
       else:
         raise ParserException(integrateElement, "home_space must be either 'k' or 'x'.")
     
-    if issubclass(integratorTemplateClass, IntegratorTemplates.AdaptiveStep):
+    if issubclass(integratorTemplateClass, Integrators.AdaptiveStep.AdaptiveStep):
       if not integrateElement.hasAttribute('tolerance'):
         raise ParserException(integrateElement, "Adaptive integrators need a 'tolerance' attribute.")
       else:
@@ -1096,7 +1096,7 @@ class XMDS2Parser(ScriptParser):
       
       integratorTemplate = operatorContainer.parent
       
-      if not isinstance(integratorTemplate, IntegratorTemplates.AdaptiveStep):
+      if not isinstance(integratorTemplate, Integrators.AdaptiveStep.AdaptiveStep):
         operatorTemplateClass = ConstantIPOperatorTemplate
       else:
         operatorTemplateClass = AdaptiveStepIPOperatorTemplate
@@ -1243,7 +1243,7 @@ class XMDS2Parser(ScriptParser):
     crossIntegratorClass = None
     
     if algorithmString == 'RK4':
-      crossIntegratorClass = IntegratorTemplates.RK4
+      crossIntegratorClass = Integrators.RK4.RK4
     else:
       raise ParserException(operatorElement, "Unknown cross-propagation algorithm '%(algorithmString)s'.\n"
                                              "Currently, the only option is 'RK4'." % locals())
