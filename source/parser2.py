@@ -10,6 +10,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 import sys
 import getopt
 from xml.dom import minidom
+from xml.dom import expatbuilder
 import subprocess
 
 # Hack for Leopard so it doesn't import the web rendering
@@ -155,6 +156,41 @@ def userUnderstandableXPath(self):
   
   return ''.join(elementPathStringList)
 
+from functools import wraps
+
+def concatenateFunctions(f1, f2):
+  """
+  A function decorator to concatenate two functions.
+  
+  The function returned by this function first calls `f1`, and then
+  `f2`, but returns the result of `f1`.
+  """
+  @wraps(f1)
+  def wrapper(*args, **KWs):
+    result = f1(*args, **KWs)
+    f2(*args, **KWs)
+    return result
+  
+  return wrapper
+
+
+def setLineAndColumnHandlers(self):
+  """
+  Set the line and column number handlers for an ExpatBuilder.
+  """
+  def setLineAndColumnValues(*args, **KWs):
+    """
+    Set the line and column numbers from the expat parser.
+    This data is copied into the ``userData`` dictionary of the node.
+    The start of the XML tag's line number is available with the key
+    'lineNumber', and its column number with the key 'columnNumber'.
+    """
+    parser = self._parser
+    self.curNode.setUserData('lineNumber', parser.CurrentLineNumber, None)
+    self.curNode.setUserData('columnNumber', parser.CurrentColumnNumber, None)
+  
+  self.start_element_handler = concatenateFunctions(self.start_element_handler, setLineAndColumnValues)
+
 
 def anyObject(iterable):
   """
@@ -224,6 +260,12 @@ def main(argv=None):
   minidom.Element.cdataContents = cdataContents
   minidom.Element.userUnderstandableXPath = userUnderstandableXPath
   
+  # Add our setLineAndColumnHandlers function to the end of the 'reset' function of ExpatBuilder
+  # This will ensure that our line and column number handlers are installed when any ExpatBuilder
+  # instance is created. This gets us line and column number information on our XML nodes as minidom
+  # uses ExpatBuilder to do the parsing for it.
+  # Note that 'reset' gets called during initialisation of the ExpatBuilder.
+  expatbuilder.ExpatBuilder.reset = concatenateFunctions(expatbuilder.ExpatBuilder.reset, setLineAndColumnHandlers)
   
   # globalNameSpace is a dictionary of variables that are available in all
   # templates
@@ -329,7 +371,10 @@ def main(argv=None):
   # error string that should be presented to the user.
   except ParserException, err:  
     # Print the error to the user
+    lineNumber = err.element.getUserData('lineNumber')
+    columnNumber = err.element.getUserData('columnNumber')
     print >> sys.stderr, "Error: " + err.msg
+    print >> sys.stderr, "    At line %(lineNumber)i, column %(columnNumber)i." % locals()
     print >> sys.stderr, "    In element: " + err.element.userUnderstandableXPath()
     print >> sys.stderr, "For a complete traceback, pass -v on the command line."
     
