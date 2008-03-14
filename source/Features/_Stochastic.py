@@ -9,7 +9,8 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 
 from _Feature import _Feature
 from VectorElement import VectorElement
-from VectorInitialisationCDATA import VectorInitialisationCDATA
+from VectorInitialisationFromCDATA import VectorInitialisationFromCDATA
+from VectorInitialisationFromXSIL import VectorInitialisationFromXSIL
 from .Operators.DeltaAOperator import DeltaAOperator
 from .Segments.Integrators.FixedStep import FixedStep as FixedStepIntegrator
 from .Segments.Integrators.AdaptiveStep import AdaptiveStep as AdaptiveStepIntegrator
@@ -56,7 +57,9 @@ class _Stochastic (_Feature):
     # Note that someone (maybe this class) needs to replace the named noises in
     # these classes (as read by the parser) with the actual noise objects
     
-    objectsThatMightUseNoises = [o for o in self.getVar('templates') if isinstance(o, (VectorInitialisationCDATA, DeltaAOperator))]
+    classesThatCanUseNoises = (VectorInitialisationFromCDATA, VectorInitialisationFromXSIL, DeltaAOperator)
+    
+    objectsThatMightUseNoises = [o for o in self.getVar('templates') if isinstance(o, classesThatCanUseNoises)]
     
     noiseNameMap = dict([(noise.prefix, noise) for noise in self.noises])
     fieldToNoisesMap = dict()

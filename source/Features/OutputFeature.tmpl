@@ -36,12 +36,11 @@ void _write_output()
   
   FILE* _outfile = fopen("${filename}.xsil", "w");
   
-  if (!_outfile) {
+  if (!_outfile)
+    // _LOG will cause the simulation to exit
     _LOG(_ERROR_LOG_LEVEL, "Unable to open output file ${filename}.xsil\n"
                            "Exiting.\n");
-    return;
-  }
-
+  
   @# Find the end tag in a case-insensitive way
   @set $indexForEndTag = $inputScript.lower().rfind('</simulation>')
   @set $xsilOutputHeader = $inputScript[0:$indexForEndTag]

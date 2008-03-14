@@ -28,10 +28,10 @@
         const double alpha_0 = 3.0;
         
         /* grid constants */
-        const double xmin = _mainField_xmin0;
-        const double xmax = _mainField_xmax0;
-        const double ymin = _mainField_xmin1;
-        const double ymax = _mainField_xmax1;
+        const double xmin = _mainField_min_x;
+        const double xmax = _mainField_max_x;
+        const double ymin = _mainField_min_y;
+        const double ymax = _mainField_max_y;
         
       /* used for calculating constants derived from arguments */
         bool firstTime = true;

@@ -8,8 +8,8 @@
   
   <features>
     <benchmark />
-    <error_check />
     <bing />
+    <error_check />
     <fftw version="3" plan="patient" />
     <openmp />
     <globals>
@@ -19,7 +19,7 @@
       const double length = 1.0;
       const double mu = mass/length;
       
-      const double xmax = _mainField_xmax0;
+      const double xmax = _mainField_max_x;
       const double width = 0.1;
       ]]>
     </globals>
@@ -66,7 +66,7 @@
   
   <sequence>
     <integrate algorithm="ARK89" tolerance="1e-8" interval="2e-2" steps="1000">
-      <samples>500</samples>
+      <samples>500 1</samples>
       <filters>
         <filter>
           <dependencies>main boundary</dependencies>
@@ -103,6 +103,19 @@
         <dependencies>main</dependencies>
         <![CDATA[
           amp = u;
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling initial_sample="no">
+        <dimension name="x" />
+        <moments>uR uI uDotR uDotI</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          uR = u.re;
+          uI = u.im;
+          uDotR = uDot.re;
+          uDotI = uDot.im;
         ]]>
       </sampling>
     </group>

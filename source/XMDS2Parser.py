@@ -24,7 +24,8 @@ from Dimension import Dimension
 from VectorElement import VectorElement as VectorElementTemplate
 from ComputedVector import ComputedVector as ComputedVectorTemplate
 from VectorInitialisation import VectorInitialisation as VectorInitialisationZeroTemplate
-from VectorInitialisationCDATA import VectorInitialisationCDATA as VectorInitialisationCDATATemplate
+from VectorInitialisationFromCDATA import VectorInitialisationFromCDATA as VectorInitialisationFromCDATATemplate
+from VectorInitialisationFromXSIL import VectorInitialisationFromXSIL as VectorInitialisationFromXSILTemplate
 
 
 from Segments.TopLevelSequenceElement import TopLevelSequenceElement as TopLevelSequenceElementTemplate
@@ -630,15 +631,39 @@ class XMDS2Parser(ScriptParser):
         kindString = initialisationElement.getAttribute('kind').lower()
       
       if kindString in (None, 'code'):
-        initialisationTemplate = VectorInitialisationCDATATemplate(**self.argumentsToTemplateConstructors)
+        initialisationTemplate = VectorInitialisationFromCDATATemplate(**self.argumentsToTemplateConstructors)
         if len(initialisationElement.cdataContents()) == 0:
           raise ParserException(initialisationElement, "Empty initialisation code in 'code' initialisation element.")
         initialisationTemplate.initialisationCode = initialisationElement.cdataContents()
       elif kindString == 'zero':
         initialisationTemplate = vectorTemplate.initialiser
+      elif kindString == 'xsil':
+        initialisationTemplate = VectorInitialisationFromXSILTemplate(**self.argumentsToTemplateConstructors)
+        filenameElement = initialisationElement.getChildElementByTagName('filename')
+        geometryMatchingMode = 'strict'
+        if filenameElement.hasAttribute('geometry_matching_mode'):
+          geometryMatchingMode = filenameElement.getAttribute('geometry_matching_mode').strip().lower()
+          if not geometryMatchingMode in ('strict', 'loose'):
+            raise ParserException(filenameElement, "The geometry matching mode for XSIL import must either be 'strict' or 'loose'.")
+        initialisationTemplate.geometryMatchingMode = geometryMatchingMode
+        
+        momentGroupName = 'NULL'
+        if filenameElement.hasAttribute('moment_group'):
+          momentGroupName = 'moment_group_' + filenameElement.getAttribute('moment_group').strip()
+        
+        initialisationTemplate.momentGroupName = momentGroupName
+        
+        initialisationTemplate.initialisationCode = initialisationElement.cdataContents()
+        
+        fileName = filenameElement.innerText()
+        if fileName.isspace():
+          raise ParserException(filenameElement, "The contents of the filename tag must be non-empty.")
+        
+        initialisationTemplate.fileName = fileName
+        
       else:
-        raise ParserException(initialisationElement, "Initialisation kind '%(kindString)s' is unrecognised. "
-                                                     "The options are 'code' (default), or 'zero' "
+        raise ParserException(initialisationElement, "Initialisation kind '%(kindString)s' is unrecognised.\n"
+                                                     "The options are 'code' (default), 'xsil', or 'zero' "
                                                      "(this is the same as having no initialisation element)." % locals())
       
       # Untie the old initialiser from the vector
@@ -1273,9 +1298,9 @@ class XMDS2Parser(ScriptParser):
     
     fieldPropagationDimensionIndex = fullField.indexOfDimension(propagationDimension)
     # Set the step
-    crossIntegratorTemplate.step = ''.join(['_', fullField.name, '_dx', str(fieldPropagationDimensionIndex)])
+    crossIntegratorTemplate.step = ''.join(['_', fullField.name, '_d', propagationDimensionName])
     # Set the stepCount -- this is the lattice for this dimension minus 1 because we know the value at the starting boundary
-    crossIntegratorTemplate.stepCount = ''.join(['(_', fullField.name, '_lattice', str(fieldPropagationDimensionIndex), ' - 1)'])
+    crossIntegratorTemplate.stepCount = ''.join(['(_', fullField.name, '_lattice_', propagationDimensionName, ' - 1)'])
     
     boundaryConditionElement = operatorElement.getChildElementByTagName('boundary_condition')
     

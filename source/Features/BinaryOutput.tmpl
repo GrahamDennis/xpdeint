@@ -63,16 +63,15 @@ fprintf(_outfile, "    <Stream><Metalink Format=\"Binary\" UnsignedLong=\"%s\""
 fprintf(_outfile, "${filename}_mg${momentGroup.number}.dat\n");
 
 FILE* binaryFile;
-if ((binaryFile = fopen("${filename}_mg${momentGroup.number}.dat", "wb")) == NULL) {
-  fprintf(stderr, "Unable to open output file diffusionpostprop_mg1.dat\n");
-  fprintf(stderr, "Chucking a spack...\n");
-  exit(255);
-}
+if ((binaryFile = fopen("${filename}_mg${momentGroup.number}.dat", "wb")) == NULL)
+  // _LOG will cause the simulation to exit
+  _LOG(_ERROR_LOG_LEVEL, "Unable top open output file ${filename}_mg${momentGroup.number}.dat\n"
+                         "Chucking a spack...\n");
 
   @set $variableNumber = 0
   @# Loop over the dimensions creating the output arrays
   @for $dimension in $momentGroup.outputField.dimensions
-unsigned long _outVarLen${variableNumber} = _${momentGroup.outputField.name}_lattice${momentGroup.outputField.indexOfDimension($dimension)};
+unsigned long _outVarLen${variableNumber} = _${momentGroup.outputField.name}_lattice_${dimension.name};
 ${outputType}* _outVar${variableNumber} = (${outputType}*) malloc(sizeof(${outputType}) * _outVarLen${variableNumber}); // ${dimensionNameForSpace($dimension, $momentGroup.outputSpace)}
     @set $variableNumber += 1
   @end for
@@ -108,7 +107,7 @@ fprintf(_outfile, "    </Stream>\n");
   @for $dimension in $momentGroup.outputField.dimensions
     @set $dimensionNumber = $momentGroup.outputField.indexOfDimension($dimension)
     @if $dimensionIsInFourierSpace($dimension, $momentGroup.outputSpace)
-_outVar${variableNumber}[_j${dimensionNumber} + (_${momentGroup.outputField.name}_lattice${dimensionNumber})/2] = k${dimension.name};
+_outVar${variableNumber}[_j${dimensionNumber} + (_${momentGroup.outputField.name}_lattice_${dimension.name})/2] = k${dimension.name};
     @else
 _outVar${variableNumber}[_i${dimensionNumber}] = ${dimension.name};
     @end if

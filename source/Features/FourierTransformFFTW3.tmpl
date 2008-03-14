@@ -213,11 +213,11 @@ for (int _from_space_index = 0; _from_space_index < ${numberOfSpacesNeeded}; _fr
     if ( !(_from_space & ${bitMask}) && (_to_space & ${bitMask})) {
       // Forward transform for '$dimension.name'
       _iodim_ptr = &_forward_sizes[_forward_sizes_index++];
-      _c *= _${vector.field.name}_dx${fieldDimensionNumber} * _inverse_sqrt_2pi;
+      _c *= _${vector.field.name}_d${dimension.name} * _inverse_sqrt_2pi;
     } else if ( (_from_space & ${bitMask}) && !(_to_space & ${bitMask}) ) {
       // Backward transform for '$dimension.name'
       _iodim_ptr = &_backward_sizes[_backward_sizes_index++];
-      _c *= _${vector.field.name}_dk${fieldDimensionNumber} * _inverse_sqrt_2pi;
+      _c *= _${vector.field.name}_dk${dimension.name} * _inverse_sqrt_2pi;
     } else {
       // No transform, simply loop over dimension '$dimension.name'
       _iodim_ptr = &_loop_sizes[_loop_sizes_index++];
@@ -227,7 +227,7 @@ for (int _from_space_index = 0; _from_space_index < ${numberOfSpacesNeeded}; _fr
     _iodim_ptr = &_loop_sizes[_loop_sizes_index++];
       @end if
     
-    _iodim_ptr->n  = _${vector.field.name}_lattice${fieldDimensionNumber};
+    _iodim_ptr->n  = _${vector.field.name}_lattice_${dimension.name};
     _iodim_ptr->is = _${vector.id}_ncomponents * ${vector.field.pointsInDimensionsWithIndices(range($fieldDimensionNumber + 1, len($vector.field.dimensions)))};
     _iodim_ptr->os = _${vector.id}_ncomponents * ${vector.field.pointsInDimensionsWithIndices(range($fieldDimensionNumber + 1, len($vector.field.dimensions)))};
     @end for
@@ -310,7 +310,7 @@ else {
     _LOG(_ERROR_LOG_LEVEL, "Error: We should have plans for every possible transform, but it seems we don't for this transform.\n"
                            "       The transform is for the vector '${vector.id}' from space %li to space %li\n.",
                            _${vector.id}_space, _newSpace);
-    exit(1);
+    // _LOG will cause the simulation to exit
   } else {
     // We have already generated this plan, so just grab it
     _space_transform& _transform = _${vector.id}_plan_map[_spaces_pair(_${vector.id}_space, _newSpace)];
