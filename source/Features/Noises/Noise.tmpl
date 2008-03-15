@@ -49,13 +49,16 @@ Write to the XSIL file lines naming the seeds that we generated if no seed was p
 in the script file. These are the seeds that should be provided in the script file to get
 the same results.
 *@
+  @#
+  @set $fp = dict['fp']
+  @#
   @if not self.hasattr('generatedSeeds')
     @return
   @end if
   @#
   @filter $PrintfSafeFilter
-fprintf(_outfile, "\nNo seeds were provided for noise '$prefix'. The seeds generated were:\n");
-fprintf(_outfile, "    @slurp
+fprintf($fp, "\nNo seeds were provided for noise '$prefix'. The seeds generated were:\n");
+fprintf($fp, "    @slurp
     @set $separator = ''
     @for seed in $generatedSeeds
 ${separator}${seed}@slurp

@@ -12,21 +12,14 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   @#
   @super
   @#
-inline bool _isBigEndian();
-  @#
+${isBigEndian_functionPrototype}@slurp
 @end def
 
 @def functionImplementations
   @#
   @super
   @#
-
-inline bool _isBigEndian()
-{
-  static const int i = 1;
-  return *(char*)&i == 0;
-}
-  @#
+${isBigEndian_functionImplementation}@slurp
 @end def
 
 @*

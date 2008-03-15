@@ -18,7 +18,7 @@ class ParserException(Exception):
 def parserWarning(element, msg):
   lineNumber = element.getUserData('lineNumber')
   columnNumber = element.getUserData('columnNumber')
-  print >> sys.stderr, "Error: " + msg
+  print >> sys.stderr, "Warning: " + msg
   print >> sys.stderr, "    At line %(lineNumber)i, column %(columnNumber)i" % locals()
-  print >> sys.stderr, "    In element: " + err.element.userUnderstandableXPath()
+  print >> sys.stderr, "    In element: " + element.userUnderstandableXPath()
 
