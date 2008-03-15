@@ -1,0 +1,265 @@
+@*
+BreakpointSegment.tmpl
+
+Created by Graham Dennis on 2008-03-15.
+Copyright (c) 2008 __MyCompanyName__. All rights reserved.
+*@
+@extends _BreakpointSegment
+@from CallOnceGuards import callOnceGuard
+
+@*
+  Description of template
+*@
+@def description: segment $segmentNumber (Breakpoint)
+
+@*
+  Static globals
+*@
+@@callOnceGuard
+@def static_globals
+  @#
+  @super
+  @#
+long _breakpointAutoNameCounter = 0;
+  @#
+@end def
+
+@@callOnceGuard
+@def static_functionPrototypes
+  @#
+  @super
+  @#
+${isBigEndian_functionPrototype}@slurp
+  @#
+@end def
+
+@*
+  Function prototypes
+*@
+@def functionPrototypes
+  @#
+  @super
+  @#
+void _segment${segmentNumber}();
+  @#
+@end def
+
+@@callOnceGuard
+@def static_functionImplementations
+  @#
+  @super
+  @#
+${isBigEndian_functionImplementation}@slurp
+  @#
+@end def
+
+
+@*
+  Function implementations
+*@
+@def functionImplementations
+  @#
+  @super
+  @#
+
+void _segment${segmentNumber}()
+{
+  ${evaluateComputedVectors($dependencies), autoIndent=True}@slurp
+  
+  ${transformVectorsToSpace($dependencies, $breakpointSpace), autoIndent=True}@slurp
+  
+  @set $featureOrdering = ['Driver']
+  @set $dict = {'extraIndent': 0}
+  ${insertCodeForFeatures('breakpointBegin', featureOrdering, dict), autoIndent=True}@slurp
+  @set $extraIndent = dict['extraIndent']
+  
+  ${breakpointFunctionContents, autoIndent=True, extraIndent=extraIndent}@slurp
+  
+  ${insertCodeForFeaturesInReverseOrder('breakpointEnd', $featureOrdering), autoIndent=True}@slurp
+}
+
+  @#
+@end def
+
+@def breakpointFunctionContents
+  @#
+  @if not $filename
+    @# If we don't have a filename, then we are auto-naming
+_breakpointAutoNameCounter++;
+char *_baseFilename = (char*)malloc(100);
+snprintf(_baseFilename, 100, "%li", _breakpointAutoNameCounter);
+  @else
+    @# We have a name, rip off the extension if its 'xsil'
+    @set baseFilename = $filename
+    @if baseFilename.endswith('.xsil')
+      @set baseFilename = baseFilename[0:-5]
+    @end if
+char *_baseFilename = "$baseFilename";
+  @end if
+  
+char *_xsilFilename = (char*)malloc(200);
+char *_datFilename  = (char*)malloc(200);
+strncpy(_xsilFilename, _baseFilename, 200);
+strncpy(_datFilename, _baseFilename, 200);
+strcat(_xsilFilename, ".xsil");
+strcat(_datFilename, ".dat");
+
+FILE *_outfile = fopen(_xsilFilename, "w");
+
+if (_outfile == NULL)
+  // _LOG will cause the simulation to exit
+  _LOG(_ERROR_LOG_LEVEL, "Unable to open output file '%s'.\n"
+                         "Exiting.\n", _xsilFilename);
+
+  @set $dict = {'fp': '_outfile'}
+  @set featureOrdering = ['Output']
+${insertCodeForFeatures('xsilHeader', featureOrdering, dict)}@slurp
+  
+  @set $components = self.outputComponents
+fprintf(_outfile, "\n<XSIL Name=\"breakpoint\">\n");
+fprintf(_outfile, "  <Param Name=\"n_independent\">${len($field.dimensions)}</Param>\n");
+fprintf(_outfile, "  <Array Name=\"variables\" Type=\"Text\">\n");
+fprintf(_outfile, "    <Dim>${len($field.dimensions) + len($components)}</Dim>\n");
+fprintf(_outfile, "    <Stream><Metalink Format=\"Text\" Delimiter=\" \\n\"/>\n");
+fprintf(_outfile, "@slurp
+${''.join([$dimensionNameForSpace($dim, $breakpointSpace) + ' ' for dim in $field.dimensions])}@slurp
+${' '.join($components)} \n");
+fprintf(_outfile, "    </Stream>\n");
+fprintf(_outfile, "  </Array>\n");
+fprintf(_outfile, "  <Array Name=\"data\" Type=\"double\">\n");
+  @for $dim in $field.dimensions
+fprintf(_outfile, "    <Dim>%li</Dim>\n", _${field.name}_lattice_${dim.name});
+  @end for
+fprintf(_outfile, "    <Dim>${len($field.dimensions) + len($components)}</Dim>\n");
+
+const char *encoding = NULL;
+if (_isBigEndian())
+  encoding = "BigEndian";
+else
+  encoding = "LittleEndian";
+
+const char *unsignedLongType = NULL;
+if (sizeof(unsigned long) == 4)
+  unsignedLongType = "uint32";
+else if (sizeof(unsigned long) == 8)
+  unsignedLongType = "uint64";
+else
+  unsignedLongType = "ulong";
+  
+fprintf(_outfile, "    <Stream><Metalink Format=\"Binary\" UnsignedLong=\"%s\""
+                  " precision=\"double\" Type=\"Remote\" Encoding=\"%s\"/>\n", unsignedLongType, encoding);
+fprintf(_outfile, "%s\n", _datFilename);
+fprintf(_outfile, "    </Stream>\n");
+fprintf(_outfile, "  </Array>\n");
+fprintf(_outfile, "</XSIL>\n");
+
+${insertCodeForFeaturesInReverseOrder('xsilFooter', featureOrdering, dict)}@slurp
+
+fclose(_outfile);
+
+FILE* fpBinary;
+if ((fpBinary = fopen(_datFilename, "wb")) == NULL)
+  // _LOG will cause the simulation to exit
+  _LOG(_ERROR_LOG_LEVEL, "Unable top open output file %s\n"
+                         "Chucking a spack...\n", _datFilename);
+
+unsigned long dataSize;
+off_t fieldOffset = 0;
+double coordinate;
+
+  @for $dim in $field.dimensions
+dataSize = _${field.name}_lattice_${dim.name};
+fwrite(&dataSize, sizeof(unsigned long), 1, fpBinary);
+coordinate = _${field.name}_min_${dimensionNameForSpace($dim, $breakpointSpace)};
+    @if $dimensionIsInFourierSpace($dim, $breakpointSpace)
+      @# k-space
+      @set $start = c'-(_${field.name}_lattice_${dim.name})/2'
+      @set $stop = c'(_${field.name}_lattice_${dim.name}+1)/2'
+    @else
+      @set $start = '0'
+      @set $stop = c'_${field.name}_lattice_${dim.name}'
+    @end if
+for (long _i0 = ${start}; _i0 < ${stop}; _i0++, coordinate += _main_d${dimensionNameForSpace($dim, $breakpointSpace)})
+  fwrite(&coordinate, sizeof(double), 1, fpBinary);
+fieldOffset += sizeof(unsigned long) + sizeof(double) * _${field.name}_lattice_${dim.name};
+
+  @end for
+off_t vectorFieldSize = _${field.name}_size * sizeof(double) + sizeof(unsigned long);
+dataSize = _${field.name}_size;
+
+  @for i in range(len(components))
+fseeko(fpBinary, fieldOffset + $i * vectorFieldSize, SEEK_SET);
+fwrite(&dataSize, sizeof(unsigned long), 1, fpBinary);
+
+  @end for
+
+  @# This is where all of the magic MPI code goes
+  @set $featureOrdering = ['Driver']
+  @set $dict = {'components': components, 'extraIndent': 0}
+${insertCodeForFeatures('breakpointWriteOutBegin', $featureOrdering, dict)}@slurp
+  @set $extraIndent = dict['extraIndent']
+
+${breakpointWriteData($components), extraIndent=extraIndent}@slurp
+
+  @# This is where the rest of the magic MPI code goes
+${insertCodeForFeaturesInReverseOrder('breakpointWriteOutEnd', $featureOrdering, dict)}@slurp
+
+fclose(fpBinary);
+
+  @#
+@end def
+
+@def breakpointWriteData($components)
+  @#
+  @set variablesInEarlierVectors = 0
+  @for $vector in $orderedDependencies
+    @set $componentNameSizePrefix = ''
+    @if $vector.type == 'complex'
+      @set $componentNameSizePrefix = '2 * '
+    @end if
+for (unsigned int _component = 0; _component < ${componentNameSizePrefix}_${vector.id}_ncomponents; _component++) {
+  off_t _outputfield_index_pointer, _outputfield_old_index_pointer;
+  _outputfield_index_pointer = -42; // Just so that we always seek the first time
+
+    @set $innerContent = $breakpointInnerLoopsForVector($vector, variablesInEarlierVectors = variablesInEarlierVectors)
+  ${loopOverFieldInSpaceWithVectorsAndInnerContent($field, $breakpointSpace, [$vector], $innerContent), autoIndent=True}@slurp
+} // end loop over components of vector '$vector.id'
+    @set $variablesInEarlierVectors += $vector.nComponents
+    @if $vector.type == 'complex'
+      @set $variablesInEarlierVectors += $vector.nComponents
+    @end if
+  @end for
+
+  @#
+@end def
+
+
+@def breakpointInnerLoopsForVector($vector, $variablesInEarlierVectors)
+  @#
+_outputfield_old_index_pointer = _outputfield_index_pointer;
+_outputfield_index_pointer = 0;
+
+// Calculate the output field index pointer
+  @for $dim in $field.dimensions
+    @if $dimensionIsInFourierSpace($dim, $breakpointSpace)
+_outputfield_index_pointer += (lround(k${dim.name}/_${field.name}_dk${dim.name}) + _${field.name}_lattice_${dim.name}/2)@slurp
+    @else
+_outputfield_index_pointer += lround((${dim.name} - _${field.name}_min_${dim.name})/_${field.name}_d${dim.name})@slurp
+    @end if
+ * ${$field.pointsInDimensionsWithIndices(range($field.indexOfDimension($dim)+1, len($field.dimensions)))};
+  @end for
+
+if (_outputfield_index_pointer != _outputfield_old_index_pointer + 1)
+  fseeko(fpBinary, fieldOffset + _outputfield_index_pointer * sizeof(double) + (${variablesInEarlierVectors} + _component) * vectorFieldSize + sizeof(unsigned long), SEEK_SET);
+
+  @if $vector.type == 'double'
+fwrite(&_active_${vector.id}[_${vector.id}_index_pointer + _component], sizeof(double), 1, fpBinary);
+  @else
+if (_component & 1)
+  fwrite(&_active_${vector.id}[_${vector.id}_index_pointer + _component/2].im, sizeof(double), 1, fpBinary);
+else
+  fwrite(&_active_${vector.id}[_${vector.id}_index_pointer + _component/2].re, sizeof(double), 1, fpBinary);
+  @end if
+  @#
+@end def
+

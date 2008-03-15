@@ -154,11 +154,11 @@ unsigned long _nDataComponents;
 unsigned long *_inputLattice;
 int *_componentInputIndices;
 
-if (!initialiseFieldFromXSILFile("${fileName}", "${momentGroupName}", _${vector.field.name}_ndims, _dimNames, _componentNames, 
+if (!initialiseFieldFromXSILFile("${filename}", "${momentGroupName}", _${vector.field.name}_ndims, _dimNames, _componentNames, 
                                  // output variables
                                  &_binaryDataFilename, &_unsignedLongSize, &_dataEncodingIsNative, &_isPrecisionDouble,
                                  &_nDataComponents, &_inputLattice, &_componentInputIndices))
-  _LOG(_ERROR_LOG_LEVEL, "Unable to load data from ${fileName}\nExiting.\n");
+  _LOG(_ERROR_LOG_LEVEL, "Unable to load data from ${filename}\nExiting.\n");
 
 FILE *_inputFile = fopen(_binaryDataFilename, "rb");
 if (_inputFile == NULL)

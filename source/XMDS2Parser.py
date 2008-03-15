@@ -9,7 +9,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 
 import re
 from ScriptParser import ScriptParser
-from ParserException import ParserException
+from ParserException import ParserException, parserWarning
 from ParsedEntity import ParsedEntity
 from xml.dom import minidom
 import RegularExpressionStrings
@@ -35,6 +35,7 @@ from SimulationDrivers.MPIMultiPathDriver import MPIMultiPathDriver as MPIMultiP
 
 from Segments import Integrators
 from Segments.FilterSegment import FilterSegment as FilterSegmentTemplate
+from Segments.BreakpointSegment import BreakpointSegment as BreakpointSegmentTemplate
 
 from Operators.OperatorContainer import OperatorContainer as OperatorContainerTemplate
 
@@ -111,6 +112,15 @@ class XMDS2Parser(ScriptParser):
     self.parseOutputElement(simulationElement)
     
   
+  def parseDependencies(self, element, optional = False):
+    dependenciesElement = element.getChildElementByTagName('dependencies', optional)
+    dependencyVectorNames = []
+    if dependenciesElement:
+      dependencyVectorNames = RegularExpressionStrings.symbolsInString(dependenciesElement.innerText())
+      return ParsedEntity(dependenciesElement, dependencyVectorNames)
+    else:
+      return None
+    
   
   def parseFeatures(self, simulationElement):
     featuresParentElement = simulationElement.getChildElementByTagName('features', optional=True)
@@ -157,6 +167,13 @@ class XMDS2Parser(ScriptParser):
         
         if shortName == "":
           raise ParserException(argElement, "Unable to find a short (single character) name for command line option")        
+        
+        if type == 'real':
+          type = 'double'
+        
+        if not type in ('int', 'long', 'double', 'string'):
+          raise ParserException(argElement, "Invalid type name '%(type)s'.\n"
+                                            "Valid options are 'int', 'long', 'double' or 'string'." % locals())
         
         argAttributeDictionary = dict()
         
@@ -587,7 +604,8 @@ class XMDS2Parser(ScriptParser):
     if not vectorElement.hasAttribute('initial_space'):
       vectorTemplate.initialSpace = 0
     else:
-      vectorTemplate.initialSpace = fieldTemplate.spaceFromString(vectorElement.getAttribute('initial_space'))
+      vectorTemplate.initialSpace = fieldTemplate.spaceFromString(vectorElement.getAttribute('initial_space'),
+                                                                  xmlElement = vectorElement)
     
     componentsElement = vectorElement.getChildElementByTagName('components')
     
@@ -655,11 +673,11 @@ class XMDS2Parser(ScriptParser):
         
         initialisationTemplate.initialisationCode = initialisationElement.cdataContents()
         
-        fileName = filenameElement.innerText()
-        if fileName.isspace():
+        filename = filenameElement.innerText()
+        if filename.isspace():
           raise ParserException(filenameElement, "The contents of the filename tag must be non-empty.")
         
-        initialisationTemplate.fileName = fileName
+        initialisationTemplate.filename = filename
         
       else:
         raise ParserException(initialisationElement, "Initialisation kind '%(kindString)s' is unrecognised.\n"
@@ -773,9 +791,7 @@ class XMDS2Parser(ScriptParser):
       
       vectorTemplate.components.append(componentName)
     
-    dependenciesElement = computedVectorElement.getChildElementByTagName('dependencies')
-    dependencyVectorNames = RegularExpressionStrings.symbolsInString(dependenciesElement.innerText())
-    vectorTemplate.dependenciesEntity = ParsedEntity(dependenciesElement, dependencyVectorNames)
+    vectorTemplate.dependenciesEntity = self.parseDependencies(computedVectorElement)
     
     vectorTemplate.evaluationCode = computedVectorElement.cdataContents()
     
@@ -863,6 +879,18 @@ class XMDS2Parser(ScriptParser):
         filterSegmentTemplate.operatorContainers.append(operatorContainer)
         # parse the filter operator
         filterOperator = self.parseFilterOperator(childNode, operatorContainer)
+      elif tagName == 'breakpoint':
+        # Construct the breakpoint segment
+        breakpointSegmentTemplate = BreakpointSegmentTemplate(**self.argumentsToTemplateConstructors)
+        # Add it to the sequence element as a child segment
+        topLevelSequenceElementTemplate.childSegments.append(breakpointSegmentTemplate)
+        # parse a dependencies element
+        breakpointSegmentTemplate.dependenciesEntity = self.parseDependencies(childNode)
+        
+        if childNode.hasAttribute('filename'):
+          breakpointSegmentTemplate.filename = childNode.getAttribute('filename').strip()
+        else:
+          parserWarning(childNode, "Breakpoint names defaulting to the sequence 1.xsil, 2.xsil, etc.")
       else:
         raise ParserException(childNode, "Unknown child of sequence element. "
                                          "Possible children include 'integrate' or 'filter' elements.")
@@ -1016,11 +1044,7 @@ class XMDS2Parser(ScriptParser):
     
     filterTemplate.operatorDefinitionCode = filterElement.cdataContents()
     
-    dependenciesElement = filterElement.getChildElementByTagName('dependencies')
-    dependencyVectorNames = []
-    if dependenciesElement:
-      dependencyVectorNames = RegularExpressionStrings.symbolsInString(dependenciesElement.innerText())
-      filterTemplate.dependenciesEntity = ParsedEntity(dependenciesElement, dependencyVectorNames)
+    filterTemplate.dependenciesEntity = self.parseDependencies(filterElement)
     
     return filterTemplate
   
@@ -1081,11 +1105,7 @@ class XMDS2Parser(ScriptParser):
     
     self.parseNoisesAttribute(operatorsElement, deltaAOperatorTemplate)
     
-    dependenciesElement = operatorsElement.getChildElementByTagName('dependencies', optional=True)
-    dependencyVectorNames = []
-    if dependenciesElement:
-      dependencyVectorNames = RegularExpressionStrings.symbolsInString(dependenciesElement.innerText())
-      deltaAOperatorTemplate.dependenciesEntity = ParsedEntity(dependenciesElement, dependencyVectorNames)
+    deltaAOperatorTemplate.dependenciesEntity = self.parseDependencies(operatorsElement, optional=True)
     
     integrationVectorsElement = operatorsElement.getChildElementByTagName('integration_vectors')
     integrationVectorsNames = RegularExpressionStrings.symbolsInString(integrationVectorsElement.innerText())
@@ -1154,11 +1174,7 @@ class XMDS2Parser(ScriptParser):
     
     operatorTemplate.operatorDefinitionCode = operatorElement.cdataContents()
     
-    dependenciesElement = operatorElement.getChildElementByTagName('dependencies', optional=True)
-    dependencyVectorNames = []
-    if dependenciesElement:
-      dependencyVectorNames = RegularExpressionStrings.symbolsInString(dependenciesElement.innerText())
-      operatorTemplate.dependenciesEntity = ParsedEntity(dependenciesElement, dependencyVectorNames)
+    operatorTemplate.dependenciesEntity = self.parseDependencies(operatorElement, optional=True)
     
     if parserMethod:
       parserMethod(operatorTemplate, operatorElement)
@@ -1168,7 +1184,8 @@ class XMDS2Parser(ScriptParser):
   def parseIPOperatorElement(self, operatorTemplate, operatorElement):
     if operatorElement.hasAttribute('fourier_space'):
       operatorTemplate.operatorSpace = \
-        operatorTemplate.field.spaceFromString(operatorElement.getAttribute('fourier_space'))
+        operatorTemplate.field.spaceFromString(operatorElement.getAttribute('fourier_space'),
+                                               xmlElement = operatorElement)
     
     operatorNamesElement = operatorElement.getChildElementByTagName('operator_names')
     operatorNames = RegularExpressionStrings.symbolsInString(operatorNamesElement.innerText())
@@ -1208,7 +1225,8 @@ class XMDS2Parser(ScriptParser):
   def parseEXOperatorElement(self, operatorTemplate, operatorElement):
     if operatorElement.hasAttribute('fourier_space'):
       operatorTemplate.operatorSpace = \
-        operatorTemplate.field.spaceFromString(operatorElement.getAttribute('fourier_space'))
+        operatorTemplate.field.spaceFromString(operatorElement.getAttribute('fourier_space'),
+                                               xmlElement = operatorElement)
     
     operatorNamesElement = operatorElement.getChildElementByTagName('operator_names')
     
@@ -1316,11 +1334,7 @@ class XMDS2Parser(ScriptParser):
     else:
       raise ParserException(boundaryConditionElement, "Unknown boundary condition kind '%(kindString)s'. Options are 'left' or 'right'." % locals())
     
-    boundaryConditionDependenciesElement = boundaryConditionElement.getChildElementByTagName('dependencies', optional=True)
-    boundaryConditionDependencyVectorNames = []
-    if boundaryConditionDependenciesElement:
-      boundaryConditionDependencyVectorNames = RegularExpressionStrings.symbolsInString(boundaryConditionDependenciesElement.innerText())
-      operatorTemplate.boundaryConditionDependenciesEntity = ParsedEntity(boundaryConditionDependenciesElement, boundaryConditionDependencyVectorNames)
+    operatorTemplate.boundaryConditionDependenciesEntity = self.parseDependencies(boundaryConditionElement, optional=True)
     
     operatorTemplate.boundaryConditionCode = boundaryConditionElement.cdataContents()
     
@@ -1508,9 +1522,7 @@ class XMDS2Parser(ScriptParser):
         ## We don't add the momentName to the symbol list because they can be used by other moment groups safely
         rawVectorTemplate.components.append(momentName)
       
-      dependenciesElement = samplingElement.getChildElementByTagName('dependencies')
-      dependencyVectorNames = RegularExpressionStrings.symbolsInString(dependenciesElement.innerText())
-      momentGroupTemplate.dependenciesEntity = ParsedEntity(dependenciesElement, dependencyVectorNames)
+      momentGroupTemplate.dependenciesEntity = self.parseDependencies(samplingElement)
       
       samplingCode = samplingElement.cdataContents()
       if not samplingCode:

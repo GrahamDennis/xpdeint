@@ -41,35 +41,51 @@ void _write_output()
     _LOG(_ERROR_LOG_LEVEL, "Unable to open output file ${filename}.xsil\n"
                            "Exiting.\n");
   
-  @# Find the end tag in a case-insensitive way
-  @set $indexForEndTag = $inputScript.lower().rfind('</simulation>')
-  @set $xsilOutputHeader = $inputScript[0:$indexForEndTag]
-  
-  @filter $PrintfSafeFilter
-    @for $line in $xsilOutputHeader.splitlines()
-  fprintf(_outfile, "${line}\n");
-    @end for
-  
-  fprintf(_outfile, "\n<info>\n");
-  fprintf(_outfile, "Script compiled with xpdeint version ${xmds.versionString} (${xmds.subversionRevision})\n");
-  fprintf(_outfile, "See http://www.xmds.org for more information.\n");
-  @end filter
-
-  @set $featureOrderingXSILInfo = ['Argv', 'Stochastic']
-  ${insertCodeForFeatures('xsilOutputInfo', $featureOrderingXSILInfo), autoIndent=True}@slurp
-  fprintf(_outfile, "</info>\n");
+  @set dict = {'fp': '_outfile'}
+  ${xsilHeader(dict), autoIndent=True}@slurp
   
   @for $momentGroup in $momentGroups
   _${momentGroup.name}_write_out(_outfile);
   @end for
   
-  fprintf(_outfile, "</simulation>\n");
+  ${xsilFooter(dict), autoIndent=True}@slurp
   
   fclose(_outfile);
   ${insertCodeForFeaturesInReverseOrder('writeOutEnd', $featureOrderingWriteOutput), autoIndent=True}@slurp
 }
   @#
 @end def
+
+@def xsilHeader($dict)
+  @#
+  @set $fp = dict['fp']
+  @# Find the end tag in a case-insensitive way
+  @set $indexForEndTag = $inputScript.lower().rfind('</simulation>')
+  @set $xsilOutputHeader = $inputScript[0:$indexForEndTag]
+  @filter $PrintfSafeFilter
+    @for $line in $xsilOutputHeader.splitlines()
+fprintf($fp, "${line}\n");
+    @end for
+
+fprintf($fp, "\n<info>\n");
+fprintf($fp, "Script compiled with xpdeint version ${xmds.versionString} (${xmds.subversionRevision})\n");
+fprintf($fp, "See http://www.xmds.org for more information.\n");
+  @end filter
+
+  @set $featureOrderingXSILInfo = ['Argv', 'Stochastic']
+${insertCodeForFeatures('xsilOutputInfo', $featureOrderingXSILInfo, $dict)}@slurp
+fprintf($fp, "</info>\n");
+  @#
+@end def
+
+@def xsilFooter($dict)
+  @#
+  @set $fp = dict['fp']
+  @#
+fprintf($fp, "</simulation>\n");
+  @#
+@end def
+
 
 @def mainEnd($dict)
 

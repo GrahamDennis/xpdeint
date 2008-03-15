@@ -125,6 +125,9 @@
         ]]>
       </operators>
     </integrate>
+    <breakpoint filename="groundstate_break.xsil">
+      <dependencies fourier_space="ky">wavefunction</dependencies>
+    </breakpoint>
   </sequence>
   <output format="binary" filename="groundstate.xsil">
     <group>

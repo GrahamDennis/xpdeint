@@ -72,10 +72,12 @@ $argument.shortName:@slurp
   @for $argument in $argList
       
     case '$argument.shortName':
-    @if $argument.type == "string"
+    @if $argument.type == 'string'
       $argument.name = string(optarg);
-    @else  
-      $argument.name = atof(optarg);
+    @elif $argument.type in ('int', 'long'):
+      $argument.name = strtol(optarg, NULL, 10);
+    @elif $argument.type in 'double'
+      $argument.name = strtod(optarg, NULL);
     @end if
       break;
   @end for
@@ -98,4 +100,21 @@ $argument.shortName:@slurp
   @end for
     exit(0);
   }
+@end def
+
+@def xsilOutputInfo($dict)
+  @#
+  @set $fp = dict['fp']
+  @set $formatSpecifierMap = {'string': ('s', '.c_str()'),
+                              'int':    ('i', ''),
+                              'long':   ('li', ''),
+                              'double': ('e', '')}
+  @#
+fprintf($fp, "\nVariables that can be specified on the command line:\n");
+  @for $argument in $argList
+
+    @set formatSpecifier, argumentSuffix = formatSpecifierMap[$argument.type]
+fprintf($fp, "  Command line argument ${argument.name} = %${formatSpecifier}\n", ${argument.name}${argumentSuffix});
+  @end for
+  @#
 @end def

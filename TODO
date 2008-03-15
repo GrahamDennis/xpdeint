@@ -37,8 +37,6 @@
 ? FFTW2 support. FFTW3 support has been written and tested, and the basic code for FFTW2 is in
   FourierTransformFFTW2.tmpl, however it hasn't been finished.
 
-* Breakpoint elements.
-
 * Sequence segments so that you can loop over things.
 
 * Example library

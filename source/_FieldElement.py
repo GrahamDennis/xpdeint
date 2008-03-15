@@ -186,7 +186,7 @@ class _FieldElement (ScriptElement):
     sortFunction = lambda x, y: cmp(geometryTemplate.indexOfDimension(x), geometryTemplate.indexOfDimension(y))
     self.dimensions.sort(sortFunction)
   
-  def spaceFromString(self, spacesString):
+  def spaceFromString(self, spacesString, xmlElement = None):
     """
     Return the ``space`` bitmask corresponding to `spacesString` for this field.
     
@@ -203,6 +203,8 @@ class _FieldElement (ScriptElement):
     geometryTemplate = self.getVar('geometry')
     resultSpace = 0
     
+    xmlElement = xmlElement or self.xmlElement
+    
     # Complain if illegal fieldnames or k[integer-valued] are used
     legalDimensionNames = set()
     for fieldDimension in self.dimensions:
@@ -216,7 +218,7 @@ class _FieldElement (ScriptElement):
     
     for symbol in spacesSymbols:
       if not symbol in legalDimensionNames:
-        raise ParserException(self.xmlElement, 
+        raise ParserException(xmlElement, 
                 "The fourier_space string must only contain real-valued dimensions from the\n"
                 "designated field.  '%(symbol)s' cannot be used."  % locals())
     
@@ -229,10 +231,10 @@ class _FieldElement (ScriptElement):
       dimensionOccurrences = sum([spacesSymbols.count(dimName) for dimName in validDimensionNamesForField])
       
       if dimensionOccurrences > 1:
-        raise ParserException(self.xmlElement,
+        raise ParserException(xmlElement,
                   "The fourier_space attribute must only have one entry for dimension '%(fieldDimensionName)s'." % locals())
       elif dimensionOccurrences == 0 and fieldDimension.type == 'double':
-        raise ParserException(self.xmlElement,
+        raise ParserException(xmlElement,
                   "The fourier_space attribute must have an entry for dimension '%(fieldDimensionName)s'." % locals())
       
       if fieldDimension.type == 'double' and ('k' + fieldDimensionName) in spacesSymbols:

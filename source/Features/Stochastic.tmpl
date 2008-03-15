@@ -200,7 +200,7 @@ if (_noise_list.empty()) {
     @set $noiseVector = noise.noiseVectorForField(field)
     @if $noise.noiseDistribution == 'gaussian'
   ${breakGaussianNoiseInField($noise, $field), autoIndent=True}@slurp
-    @else if $noise.noiseDistribution == 'poissonian'
+    @elif $noise.noiseDistribution == 'poissonian'
   ${breakPoissonianNoiseInField($noise, $field), autoIndent=True}@slurp
     @end if
   @end for

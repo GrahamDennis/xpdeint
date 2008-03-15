@@ -27,7 +27,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
   @#
   @super
   @#
-int rank, size;
+int _rank, _size;
   @#
 @end def
 
@@ -37,8 +37,8 @@ int rank, size;
 int main(int argc, char **argv)
 {
   MPI_Init(&argc, &argv);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &_size);
+  MPI_Comm_rank(MPI_COMM_WORLD, &_rank);
   
   @for $field in $fields
   ${field.allocate, autoIndent=True}@slurp
@@ -81,7 +81,7 @@ void _segment0()
       @end if
       @for arrayName in arrayNames
   
-  if (rank == 0)
+  if (_rank == 0)
     MPI_Reduce(MPI_IN_PLACE, $arrayName, ${sizePrefix}_${vector.field.name}_size * _${vector.id}_ncomponents,
                MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
   else
@@ -96,7 +96,7 @@ void _segment0()
 
 @def writeOutBegin($dict)
   @#
-if (rank != 0)
+if (_rank != 0)
   return;
   @#
 @end def
@@ -116,7 +116,7 @@ if (rank != 0)
 ${o.initialise}@slurp
   @end for
   @#
-for (long _i0 = rank; _i0 < _n_paths; _i0 += size) {
+for (long _i0 = _rank; _i0 < _n_paths; _i0 += _size) {
   _LOG(_PATH_LOG_LEVEL, "Starting path %li\n", _i0 + 1);
   
   ${topLevelSequence.topLevelSequenceInnerContent, autoIndent=True}@slurp
@@ -133,9 +133,9 @@ ${o.finalise}@slurp
   @#
   @# Insert code at the start of the _LOG function
   @#
-if ((rank == 0) || (logLevel & ~_SIMULATION_LOG_LEVEL)) { \
+if ((_rank == 0) || (logLevel & ~_SIMULATION_LOG_LEVEL)) { \
   if (logLevel & ~_SIMULATION_LOG_LEVEL) \
-    printf("Rank[%i]: ", rank); \
+    printf("Rank[%i]: ", _rank); \
   @set $dict['extraIndent'] += 2
   @#
 @end def
@@ -151,6 +151,6 @@ if (logLevel & _ERROR_LOG_LEVEL) \
 
 @def seedOffset($dict)
   @#
- + rank@slurp
+ + _rank@slurp
   @#
 @end def

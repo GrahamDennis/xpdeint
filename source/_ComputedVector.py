@@ -63,7 +63,8 @@ class _ComputedVector (VectorElement):
     
     if self.dependenciesEntity and self.dependenciesEntity.xmlElement.hasAttribute('fourier_space'):
       dependenciesXMLElement = self.dependenciesEntity.xmlElement
-      self.evaluationSpace = self.loopingField.spaceFromString(dependenciesXMLElement.getAttribute('fourier_space'))
+      self.evaluationSpace = self.loopingField.spaceFromString(dependenciesXMLElement.getAttribute('fourier_space'),
+                                                               xmlElement = dependenciesXMLElement)
     
     # Our components are constructed by an integral if the looping field doesn't have the same
     # dimensions as the field to which the computed vector belongs.

@@ -32,7 +32,8 @@ class _FilterOperator (Operator):
     self.loopingField = FieldElement.sortedFieldWithDimensionNames(dimensionNames)
     
     if self.dependenciesEntity and self.dependenciesEntity.xmlElement.hasAttribute('fourier_space'):
-       self.operatorSpace = self.loopingField.spaceFromString(self.dependenciesEntity.xmlElement.getAttribute('fourier_space'))
+       self.operatorSpace = self.loopingField.spaceFromString(self.dependenciesEntity.xmlElement.getAttribute('fourier_space'),
+                                                              xmlElement = self.dependenciesEntity.xmlElement)
   
   
 
