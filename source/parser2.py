@@ -339,9 +339,6 @@ def main(argv=None):
     
     # Loop over a copy because we may create templates during iteration
     for template in globalNameSpace['templates'].copy():
-      template.createNamedVectors()
-    
-    for template in globalNameSpace['templates'].copy():
       template.bindNamedVectors()
     
     for template in globalNameSpace['templates'].copy():

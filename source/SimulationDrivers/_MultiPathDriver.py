@@ -15,8 +15,8 @@ from VectorInitialisation import VectorInitialisation
 class _MultiPathDriver (SimulationDriver):
   logLevelsBeingLogged = "_PATH_LOG_LEVEL|_SIMULATION_LOG_LEVEL|_WARNING_LOG_LEVEL|_ERROR_LOG_LEVEL"
   
-  def createNamedVectors(self):
-    super(_MultiPathDriver, self).createNamedVectors()
+  def preflight(self):
+    super(_MultiPathDriver, self).preflight()
     
     for mg in self.getVar('momentGroups'):
       sdVector = VectorElement(name = 'processed_sd', field = mg.outputField,
