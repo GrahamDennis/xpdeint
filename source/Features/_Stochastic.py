@@ -41,8 +41,8 @@ class _Stochastic (_Feature):
   def xsilOutputInfo(self, dict):
     return self.implementationsForChildren('xsilOutputInfo', dict)
   
-  def createNamedVectors(self):
-    super(_Feature, self).createNamedVectors()
+  def preflight(self):
+    super(_Feature, self).preflight()
     
     # We need to iterate over everything that could possibly need noises
     # The best way to do that is to have the ability to iterate over everything

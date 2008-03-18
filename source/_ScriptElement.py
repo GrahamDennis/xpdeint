@@ -323,9 +323,6 @@ class _ScriptElement (Template):
     
     return ''.join(result)
   
-  def createNamedVectors(self):
-    pass
-  
   def bindNamedVectors(self):
     pass
   
