@@ -129,7 +129,7 @@ if (_break_next) {
   }
 }
 
-if ( ${propagationDimension} - _${propagationDimension}_ini + _step > _${propagationDimension}_break_next) {
+if ( (${propagationDimension} - _${propagationDimension}_ini + _step)*(1.0 + _EPSILON) > _${propagationDimension}_break_next) {
   _break_next = true;
   _LOG(_SAMPLE_LOG_LEVEL, "Current timestep: %e\n", _step/(0.92*pow(fabs(_tolerance/_error), $integrator.successfulStepExponent)));
   _step = _${propagationDimension}_break_next - ${propagationDimension} + _${propagationDimension}_ini;

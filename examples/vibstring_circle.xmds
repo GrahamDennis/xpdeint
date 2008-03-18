@@ -19,7 +19,7 @@
       const double length = 1.0;
       const double mu = mass/length;
       
-      const double xmax = _mainField_max_x;
+      const double xmax = _xy_max_x;
       const double width = 0.1;
       const double absorb = 80.0;
       ]]>
@@ -34,45 +34,44 @@
     </transverse_dimensions>
   </geometry>
   
-  <field name="mainField">
-    <vector name="main" initial_space="x y">
-      <components type="complex">
-        u uDot
-      </components>
-      <initialisation>
-        <![CDATA[
-          u = exp(-100.0*((x-0.5)*(x-0.5) + y*y));
-          uDot = 0.0;
-        ]]>
-      </initialisation>
-    </vector>
-    <vector name="boundary" initial_space="x y">
-      <components type="double">
-        bc
-      </components>
-      <initialisation>
-        <![CDATA[
-          double r = sqrt(x*x + y*y);
-          double rright = xmax-width;
-          double rdamping = r > rright ? absorb*(1-cos(M_PI*(r - rright)/width)) : 0.0;
+  <vector name="main" initial_space="x y">
+    <components type="complex">
+      u uDot
+    </components>
+    <initialisation>
+      <![CDATA[
+        u = exp(-100.0*((x-0.5)*(x-0.5) + y*y));
+        uDot = 0.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <vector name="boundary" initial_space="x y">
+    <components type="double">
+      bc
+    </components>
+    <initialisation>
+      <![CDATA[
+        double r = sqrt(x*x + y*y);
+        double rright = xmax-width;
+        double rdamping = r > rright ? absorb*(1-cos(M_PI*(r - rright)/width)) : 0.0;
 
-          bc = exp(-rdamping);
-          if (r > xmax)
-            bc = 0.0;
-          if ( r > rright)
-            bc = 0.0;
-          else
-            bc = 1.0;
-            
+        bc = exp(-rdamping);
+        if (r > xmax)
+          bc = 0.0;
+        if ( r > rright)
+          bc = 0.0;
+        else
+          bc = 1.0;
           
-        ]]>
-      </initialisation>
-    </vector>
-  </field>
+        
+      ]]>
+    </initialisation>
+  </vector>
   
   <sequence>
-    <integrate algorithm="RK4" tolerance="1e-8" interval="2e-2" steps="1000">
-      <samples>500</samples>
+    <integrate algorithm="ARK89" tolerance="1e-7" interval="2e-2" steps="1000">
+      <samples>50</samples>
       <filters>
         <filter>
           <dependencies>main boundary</dependencies>
@@ -82,7 +81,7 @@
           ]]>
         </filter>
       </filters>
-      <operators field="mainField">
+      <operators>
         <operator kind="ex" constant="yes">
           <operator_names>L</operator_names>
           <![CDATA[

@@ -4,7 +4,7 @@ TopLevelSequenceElement.tmpl
 Created by Graham Dennis on 2007-08-27.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *@
-@extends _Segment
+@extends SequenceSegment
 
 @assert $segmentNumber == 0
 @attr $globalNameSpaceName = "topLevelSequence"
@@ -14,14 +14,11 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *@
 @def description: segment $segmentNumber (Top level sequence)
 
-@*
-  Function prototypes
-*@
-@def functionPrototypes
+@def functionImplementations
   @#
-  @super
+  @# Make this empty as the content of the top-level sequence will be written by
+  @# a simulation driver
   @#
-void _segment0();
 @end def
 
 @def topLevelSequenceInnerContent
@@ -50,9 +47,7 @@ _mg${momentGroup.number}_sample_index_${propagationDimension} = 0;
 _mg${momentGroup.number}_sample();
   @end for
   @#
-  @for $segment in $childSegments
-_segment${segment.segmentNumber}();
-  @end for
+${segmentImplementationInnerContents}@slurp
   @#
 
   @for $momentGroup in $momentGroups

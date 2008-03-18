@@ -61,9 +61,7 @@ class _OperatorContainer(ScriptElement):
     if not self.field:
       # We are deliberately not setting self._name here
       return ''
-    result = [dim.name for dim in self.field.dimensions]
-    result.append('_operators')
-    self._name = ''.join(result)
+    self._name = 'container' + str(self.parent.operatorContainers.index(self))
     return self._name
   
   @property

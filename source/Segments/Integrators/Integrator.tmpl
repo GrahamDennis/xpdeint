@@ -5,21 +5,9 @@ Created by Graham Dennis on 2007-10-20.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *@
 @extends _Integrator
-@from CallOnceGuards import callOnceGuard, callOncePerInstanceGuard
+@from CallOnceGuards import callOncePerInstanceGuard
 
 @def description: segment $segmentNumber (Unnamed Integrator)
-
-@@callOnceGuard
-@def static_defines
-  @#
-  @super
-  @#
-// Define an isfinite that should work on systems that don't have isfinite
-#ifndef isfinite
-#define isfinite(x) ((x) - (x) == 0)
-#endif
-  @#
-@end def
 
 @*
   Globals

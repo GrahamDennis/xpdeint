@@ -29,19 +29,17 @@
     </transverse_dimensions>
   </geometry>
   
-  <field name="mainField">
-    <vector name="main" initial_space="x">
-      <components type="complex">
-        u uDot
-      </components>
-      <initialisation>
-        <![CDATA[
-          u = exp(-100.0*(x-0.5)*(x-0.5));
-          uDot = 0.0;
-        ]]>
-      </initialisation>
-    </vector>
-  </field>
+  <vector name="main" initial_space="x">
+    <components type="complex">
+      u uDot
+    </components>
+    <initialisation>
+      <![CDATA[
+        u = exp(-100.0*(x-0.5)*(x-0.5));
+        uDot = 0.0;
+      ]]>
+    </initialisation>
+  </vector>
   
   <sequence>
     <integrate algorithm="RK4" interval="2e-3" steps="100">
@@ -53,7 +51,7 @@
           moment = mod2(u);
         ]]>
       </computed_vector>
-      <operators field="mainField">
+      <operators>
         <operator kind="ex" constant="yes">
           <operator_names>L</operator_names>
           <![CDATA[

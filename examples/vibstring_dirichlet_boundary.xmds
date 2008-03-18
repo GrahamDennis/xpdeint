@@ -19,7 +19,7 @@
       const double length = 1.0;
       const double mu = mass/length;
       
-      const double xmax = _mainField_max_x;
+      const double xmax = _x_max_x;
       const double width = 0.1;
       ]]>
     </globals>
@@ -32,37 +32,35 @@
     </transverse_dimensions>
   </geometry>
   
-  <field name="mainField">
-    <vector name="main" initial_space="x">
-      <components type="complex">
-        u uDot
-      </components>
-      <initialisation>
-        <![CDATA[
-          u = exp(-100.0*(x-0.5)*(x-0.5));
-          uDot = 0.0;
-        ]]>
-      </initialisation>
-    </vector>
-    <vector name="boundary" initial_space="x">
-      <components type="double">
-        bc
-      </components>
-      <initialisation>
-        <![CDATA[
-          double r = fabs(x);
-          double rright = xmax-width;
+  <vector name="main" initial_space="x">
+    <components type="complex">
+      u uDot
+    </components>
+    <initialisation>
+      <![CDATA[
+        u = exp(-100.0*(x-0.5)*(x-0.5));
+        uDot = 0.0;
+      ]]>
+    </initialisation>
+  </vector>
+  <vector name="boundary" initial_space="x">
+    <components type="double">
+      bc
+    </components>
+    <initialisation>
+      <![CDATA[
+        double r = fabs(x);
+        double rright = xmax-width;
 
-          if ( r > rright)
-            bc = 0.0;
-          else
-            bc = 1.0;
-            
+        if ( r > rright)
+          bc = 0.0;
+        else
+          bc = 1.0;
           
-        ]]>
-      </initialisation>
-    </vector>
-  </field>
+        
+      ]]>
+    </initialisation>
+  </vector>
   
   <sequence>
     <integrate algorithm="ARK89" tolerance="1e-8" interval="2e-2" steps="1000">
@@ -76,7 +74,7 @@
           ]]>
         </filter>
       </filters>
-      <operators field="mainField">
+      <operators>
         <operator kind="ex" constant="yes">
           <operator_names>L</operator_names>
           <![CDATA[

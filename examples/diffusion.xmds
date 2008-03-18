@@ -22,23 +22,21 @@
     </transverse_dimensions>
   </geometry>
   
-  <field name="mainField" dimensions="x y">
-    <vector name="main" type="complex" initial_space="x y">
-      <components>
-        phi
-      </components>
-      <initialisation>
-        <![CDATA[
-          phi = exp(-y*y);
-        ]]>
-      </initialisation>
-    </vector>
-  </field>
+  <vector name="main" type="complex" initial_space="x y">
+    <components>
+      phi
+    </components>
+    <initialisation>
+      <![CDATA[
+        phi = exp(-y*y);
+      ]]>
+    </initialisation>
+  </vector>
   
   <sequence>
     <integrate algorithm="ARK45" interval="10.0" steps="2400" tolerance="1e-5">
       <samples>24</samples>
-      <operators field="mainField">
+      <operators>
         <operator kind="ip" constant="yes" fourier_space="x ky">
           <operator_names>L</operator_names>
           <![CDATA[

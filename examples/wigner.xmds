@@ -28,10 +28,10 @@
         const double alpha_0 = 3.0;
         
         /* grid constants */
-        const double xmin = _mainField_min_x;
-        const double xmax = _mainField_max_x;
-        const double ymin = _mainField_min_y;
-        const double ymax = _mainField_max_y;
+        const double xmin = _xy_min_x;
+        const double xmax = _xy_max_x;
+        const double ymin = _xy_min_y;
+        const double ymax = _xy_max_y;
         
       /* used for calculating constants derived from arguments */
         bool firstTime = true;
@@ -56,32 +56,31 @@
     </transverse_dimensions>
   </geometry>
   
-  <field name="mainField">
-    <vector name="main" initial_space="x y">
-      <components type="complex">
-        W
-      </components>
-      <initialisation>
-        <![CDATA[
-          W = 2.0/M_PI * exp(-2.0*(y*y + (x-alpha_0)*(x-alpha_0)));
-        ]]>
-      </initialisation>
-    </vector>
-    <vector name="dampConstants" initial_space="x y">
-      <components type="double">damping</components>
-      <initialisation>
-        <![CDATA[
-        double r = sqrt(x*x + y*y);
-        double rright = xmax-width;
-        double rdamping = r > rright ? absorb*(1-cos(M_PI*(r - rright)/width)) : 0.0;
-        
-        damping = exp(-rdamping);
-        if (r > xmax)
-          damping = 0.0;
-        ]]>
-      </initialisation>
-    </vector>
-  </field>
+  <vector name="main" initial_space="x y">
+    <components type="complex">
+      W
+    </components>
+    <initialisation>
+      <![CDATA[
+        W = 2.0/M_PI * exp(-2.0*(y*y + (x-alpha_0)*(x-alpha_0)));
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <vector name="dampConstants" initial_space="x y">
+    <components type="double">damping</components>
+    <initialisation>
+      <![CDATA[
+      double r = sqrt(x*x + y*y);
+      double rright = xmax-width;
+      double rdamping = r > rright ? absorb*(1-cos(M_PI*(r - rright)/width)) : 0.0;
+      
+      damping = exp(-rdamping);
+      if (r > xmax)
+        damping = 0.0;
+      ]]>
+    </initialisation>
+  </vector>
   
   <sequence>
     <integrate algorithm="ARK89" tolerance="1e-7" interval="7.0" steps="100000">
@@ -97,7 +96,7 @@
           ]]>
         </filter>
       </filters>
-      <operators field="mainField">
+      <operators>
         <operator kind="ex" constant="yes">
           <operator_names>Lx Ly Lxxx Lxxy Lxyy Lyyy</operator_names>
           <![CDATA[

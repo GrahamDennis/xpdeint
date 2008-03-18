@@ -37,42 +37,38 @@
     </transverse_dimensions>
   </geometry>
   
-  <field name="mainField" dimensions="x y">
-    <vector name="main" initial_space="x ky">
-      <components type="complex">
-        u uDot
-      </components>
-      <initialisation>
-        <![CDATA[
-          u = exp(-100.0*(x-0.5)*(x-0.5));
-          uDot = 0.0;
-        ]]>
-      </initialisation>
-    </vector>
-  </field>
-  
-  <field name="zero_d_test" dimensions="">
-    <vector name="integrated_u">
-      <components type="complex">
-        mom
-      </components>
-    </vector>
-    <computed_vector name="filter1">
-      <components type="complex">moment</components>
-      <dependencies fourier_space="kx ky">integrated_u main</dependencies>
-      <!-- If the moments are of type 'double', then all dimensions that aren't integrated
-           must be evaluated in 'x' space. -->
+  <vector name="main" dimensions="x y" initial_space="x ky">
+    <components type="complex">
+      u uDot
+    </components>
+    <initialisation>
       <![CDATA[
-        moment = mod2(u);
+        u = exp(-100.0*(x-0.5)*(x-0.5));
+        uDot = 0.0;
       ]]>
-    </computed_vector>
-  </field>
+    </initialisation>
+  </vector>
+  
+  <vector name="integrated_u" dimensions="">
+    <components type="complex">
+      mom
+    </components>
+  </vector>
+  <computed_vector name="filter1" dimensions="">
+    <components type="complex">moment</components>
+    <dependencies fourier_space="kx ky">integrated_u main</dependencies>
+    <!-- If the moments are of type 'double', then all dimensions that aren't integrated
+         must be evaluated in 'x' space. -->
+    <![CDATA[
+      moment = mod2(u);
+    ]]>
+  </computed_vector>
   
   <sequence>
     <integrate algorithm="RK9" interval="2e-3" steps="100">
       <samples>50 50</samples>
       
-      <computed_vector name="filter2" field="zero_d_test">
+      <computed_vector name="filter2" dimensions="">
         <components type="complex">sparemoment</components>
         <dependencies fourier_space="kx ky">integrated_u main</dependencies>
         <!-- If the moments are of type 'double', then all dimensions that aren't integrated
@@ -82,7 +78,7 @@
         ]]>
       </computed_vector>
       
-      <operators field="mainField">
+      <operators dimensions="x y">
         <operator kind="ex" constant="yes">
           <operator_names>L</operator_names>
           <![CDATA[
@@ -96,7 +92,7 @@
         ]]>
       </operators>
       
-      <operators field="zero_d_test">
+      <operators dimensions="">
         <integration_vectors>integrated_u</integration_vectors>
         <dependencies>filter1</dependencies>
         <![CDATA[
@@ -118,7 +114,7 @@
   <output format="binary" filename="vibstring3.xsil">
     <group>
       <sampling initial_sample="yes">
-        <computed_vector name="filter3" field="zero_d_test">
+        <computed_vector name="filter3" dimensions="">
           <components type="complex">sparemomentagain</components>
           <dependencies fourier_space="kx ky">integrated_u main</dependencies>
           <!-- If the moments are of type 'double', then all dimensions that aren't integrated

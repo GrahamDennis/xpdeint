@@ -26,35 +26,33 @@
     </transverse_dimensions>
   </geometry>
   
-  <field name="mainField">
-    <vector name="main" initial_space="t">
-      <components type="double">
-        E
-      </components>
-      <initialisation>
-        <![CDATA[
-          E = 2/t0/cosh(t/t0);
-        ]]>
-      </initialisation>
-    </vector>
+  <vector name="main" initial_space="t">
+    <components type="double">
+      E
+    </components>
+    <initialisation>
+      <![CDATA[
+        E = 2/t0/cosh(t/t0);
+      ]]>
+    </initialisation>
+  </vector>
 
-    <vector name="cross" initial_space="t">
-      <components type="double">
-        P N
-      </components>
-      <initialisation>
-        <![CDATA[
-          P = 0.0;
-          N = -1.0;
-        ]]>
-      </initialisation>
-    </vector>
-  </field>
+  <vector name="cross" initial_space="t">
+    <components type="double">
+      P N
+    </components>
+    <initialisation>
+      <![CDATA[
+        P = 0.0;
+        N = -1.0;
+      ]]>
+    </initialisation>
+  </vector>
   
   <sequence>
     <integrate algorithm="RK4" interval="4" steps="200">
       <samples>100 100</samples>
-      <operators field="mainField">
+      <operators>
         <operator kind="cross_propagation" algorithm="RK4" propagation_dimension="t">
           <integration_vectors>cross</integration_vectors>
           <!-- You can have a dependencies tag in here -->

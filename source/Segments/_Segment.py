@@ -16,7 +16,9 @@ class _Segment (ScriptElement):
     ScriptElement.__init__(self, *args, **KWs)
     
     self.segmentNumber = len(filter(lambda x: isinstance(x, _Segment), self.getVar('templates'))) - 1
-    self.childSegments = []
+    self._childSegments = []
+    self.parentSegment = None
+    self.localCycles = 1
     
     scriptElements = self.getVar('scriptElements')
     
@@ -26,5 +28,22 @@ class _Segment (ScriptElement):
   @property
   def name(self):
     return 'segment' + str(self.segmentNumber)
+  
+  @property
+  def childSegments(self):
+    return self._childSegments[:]
+  
+  @property
+  def totalCycles(self):
+    currSegment = self
+    totalCycles = 1
+    while currSegment:
+      totalCycles *= currSegment.localCycles
+      currSegment = currSegment.parentSegment
+    return totalCycles
+  
+  def addSegment(self, seg):
+    self._childSegments.append(seg)
+    seg.parentSegment = self
   
 
