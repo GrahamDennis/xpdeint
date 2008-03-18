@@ -243,7 +243,7 @@ class _FieldElement (ScriptElement):
     return resultSpace
   
   @classmethod
-  def sortedFieldWithDimensionNames(cls, dimensionNames):
+  def sortedFieldWithDimensionNames(cls, dimensionNames, xmlElement = None, createIfNeeded = True):
     """
     Return a field containing `dimensionNames` as the dimensions in canonical order.
     This function will either return an existing field, or create one if necessary.
@@ -258,24 +258,40 @@ class _FieldElement (ScriptElement):
     
     dimensionNames = list(dimensionNames)
     
+    # If we have an xmlElement, first check that all of the dimension names provided
+    # are valid dimension names
+    if xmlElement:
+      for dimensionName in dimensionNames:
+        if not geometry.hasDimensionName(dimensionName):
+          raise ParserException(xmlElement, "Don't recognise '%(dimensionName)s' as one of "
+                                            "the dimensions defined in the geometry element." % locals())
+    
     dimensionNames.sort(lambda x, y: cmp(geometry.indexOfDimensionName(x), geometry.indexOfDimensionName(y)))
     
     fieldDimensions = [geometry.dimensionWithName(dimName) for dimName in dimensionNames]
     
-    fieldName = '_' + ''.join(dimensionNames) + '_field'
+    if len(dimensionNames):
+      fieldName = ''.join(dimensionNames)
+    else:
+      fieldName = 'dimensionless'
+    
     potentialFields = filter(lambda x: x.dimensions == fieldDimensions and x.name == fieldName, fields)
+    
+    field = None
     
     if potentialFields:
       # If there is a field already in existence that matches our requirements, use it
-      fieldTemplate = potentialFields[0]
-    else:
+      field = potentialFields[0]
+    elif createIfNeeded:
       # Otherwise we need to construct our own
-      fieldName = '_' + ''.join(dimensionNames) + '_field'
-      fieldTemplate = cls(name = fieldName, **cls.argumentsToTemplateConstructors)
+      field = cls(name = fieldName, **cls.argumentsToTemplateConstructors)
       # Copy in our dimensions
-      fieldTemplate.dimensions[:] = fieldDimensions
+      field.dimensions[:] = fieldDimensions
+      
+      if xmlElement:
+        field.xmlElement = xmlElement
     
-    return fieldTemplate
+    return field
   
 
 

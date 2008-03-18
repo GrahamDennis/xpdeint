@@ -4,29 +4,27 @@ GeometryElement.tmpl
 Created by Graham Dennis on 2007-08-28.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *@
-@extends _FieldElement
+@extends FieldElement
 @*
 
   Description of template
 *@
-@def description: geometry
+@def description: Geometry
 @attr $name = "geometry"
 @attr $globalNameSpaceName = "geometry"
+
+@def defines
+  @#
+${definesForDimensionsWithPrefix(filter(lambda x: x.transverse, $dimensions), '')}@slurp
+  @#
+@end def
+
 
 @*
   Globals needed at the start of the simulation
 *@
-@# @def globals
-@# @end def
+@def globals
+  @#
+  @#
+@end def
 
-@*
-  Function prototypes
-*@
-@# @def functionPrototypes
-@# @end def
-
-@*
-  Function implementations
-*@
-@# @def functionImplementations
-@# @end def

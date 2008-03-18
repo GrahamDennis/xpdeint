@@ -36,6 +36,7 @@ from SimulationDrivers.MPIMultiPathDriver import MPIMultiPathDriver as MPIMultiP
 from Segments import Integrators
 from Segments.FilterSegment import FilterSegment as FilterSegmentTemplate
 from Segments.BreakpointSegment import BreakpointSegment as BreakpointSegmentTemplate
+from Segments.SequenceSegment import SequenceSegment as SequenceSegmentTemplate
 
 from Operators.OperatorContainer import OperatorContainer as OperatorContainerTemplate
 
@@ -105,7 +106,9 @@ class XMDS2Parser(ScriptParser):
     
     self.parseGeometryElement(simulationElement)
     
-    self.parseFieldElements(simulationElement)
+    self.parseVectorElements(simulationElement)
+    
+    self.parseComputedVectorElements(simulationElement, simulationElementTemplate)
     
     self.parseTopLevelSequenceElement(simulationElement)
     
@@ -511,72 +514,28 @@ class XMDS2Parser(ScriptParser):
     
     
   
-  def parseFieldElements(self, simulationElement):
-    fieldElements = simulationElement.getChildElementsByTagName('field')
-    for fieldElement in fieldElements:
-      self.parseFieldElement(fieldElement)
-  
-  def parseFieldElement(self, fieldElement):
-    if not fieldElement.hasAttribute('name') or len(fieldElement.getAttribute('name')) == 0:
-      raise ParserException(fieldElement, "Each field element must have a non-empty 'name' attribute")
-    
-    fieldName = fieldElement.getAttribute('name').strip()
-    try:
-      fieldName = RegularExpressionStrings.symbolInString(fieldName)
-    except ValueError, err:
-      raise ParserException(fieldElement, "Cannot accept '%(fieldName)s as the name of a field." % locals())
-    
-    ## Check that the name isn't already taken
-    if fieldName in self.globalNameSpace['symbolNames']:
-      raise ParserException(fieldElement, "Field name '%(fieldName)s' conflicts with previously "
-                                          "defined symbol of the same name." % locals())
-    ## Make sure no-one else takes the name
-    self.globalNameSpace['symbolNames'].add(fieldName)
-    
-    fieldTemplate = FieldElementTemplate(name = fieldName, **self.argumentsToTemplateConstructors)
-    fieldTemplate.xmlElement = fieldElement
-    
-    if not fieldElement.hasAttribute('dimensions'):
-      fieldTemplate.dimensions = filter(lambda x: x.transverse, self.globalNameSpace['geometry'].dimensions)
-    elif len(fieldElement.getAttribute('dimensions').strip()) == 0:
-      # No dimensions
-      pass
-    else:
-      dimensionsString = fieldElement.getAttribute('dimensions').strip()
-      results = RegularExpressionStrings.symbolsInString(dimensionsString)
-      if not results:
-        raise ParserException(fieldElement, "Cannot understand '%(dimensionsString)s' as a "
-                                            "list of dimensions" % locals())
-      
-      geometryTemplate = self.globalNameSpace['geometry']
-      
-      for dimensionName in results:
-        if not geometryTemplate.hasDimensionName(dimensionName):
-          raise ParserException(fieldElement, "Don't recognise '%(dimensionName)s' as one of "
-                                              "the dimensions defined in the geometry element." % locals())
-        
-        fieldTemplate.dimensions.append(geometryTemplate.dimensions[geometryTemplate.indexOfDimensionName(dimensionName)])
-    
-    fieldTemplate.sortDimensions()
-    
-    for field in self.globalNameSpace['fields']:
-      if (not field == fieldTemplate) and fieldTemplate.isSubsetOfField(field) and field.isSubsetOfField(fieldTemplate):
-        raise ParserException(fieldElement, "Cannot have two fields with the same dimensions."
-                                            " Conflict between '%s' and '%s'." % (field.name, fieldTemplate.name))
-    
-    self.parseVectorElements(fieldElement, fieldTemplate)
-    
-    self.parseComputedVectorElements(fieldElement, fieldTemplate)
-    return fieldTemplate
-  
-  
-  def parseVectorElements(self, fieldElement, fieldTemplate):
-    vectorElements = fieldElement.getChildElementsByTagName('vector', optional=True)
+  def parseVectorElements(self, parentElement):
+    vectorElements = parentElement.getChildElementsByTagName('vector', optional=True)
     for vectorElement in vectorElements:
-      vectorTemplate = self.parseVectorElement(vectorElement, fieldTemplate)
-      fieldTemplate.managedVectors.add(vectorTemplate)
+      vectorTemplate = self.parseVectorElement(vectorElement)
+      vectorTemplate.field.managedVectors.add(vectorTemplate)
   
-  def parseVectorElement(self, vectorElement, fieldTemplate):
+  def parseVectorElement(self, vectorElement):
+    if not vectorElement.hasAttribute('dimensions'):
+      dimensionNames = [dim.name for dim in self.globalNameSpace['geometry'].dimensions if dim.transverse]
+    elif len(vectorElement.getAttribute('dimensions').strip()) == 0:
+      # No dimensions
+      dimensionNames = []
+    else:
+      dimensionsString = vectorElement.getAttribute('dimensions').strip()
+      dimensionNames = RegularExpressionStrings.symbolsInString(dimensionsString)
+      if not dimensionNames:
+        raise ParserException(vectorElement, "Cannot understand '%(dimensionsString)s' as a "
+                                            "list of dimensions" % locals())
+        
+    
+    fieldTemplate = FieldElementTemplate.sortedFieldWithDimensionNames(dimensionNames, xmlElement = vectorElement)
+    
     if not vectorElement.hasAttribute('name') or len(vectorElement.getAttribute('name')) == 0:
       raise ParserException(vectorElement, "Each vector element must have a non-empty 'name' attribute")
     
@@ -714,42 +673,31 @@ class XMDS2Parser(ScriptParser):
     # Check that this vector name is unique
     for field in self.globalNameSpace['fields']:
       if len(filter(lambda x: x.name == vectorName, field.vectors)) > 0:
-        raise ParserException(vectorElement, "Computed vector name '%(vectorName)s' conflicts with a "
-                                             "previously defined vector of the same name" % locals())
+        raise ParserException(computedVectorElement, "Computed vector name '%(vectorName)s' conflicts with a "
+                                                     "previously defined vector of the same name" % locals())
     
     ## Check that the name isn't already taken
     if vectorName in self.globalNameSpace['symbolNames']:
-      raise ParserException(vectorElement, "Computed vector name '%(vectorName)s' conflicts with previously "
-                                          "defined symbol of the same name." % locals())
+      raise ParserException(computedVectorElement, "Computed vector name '%(vectorName)s' conflicts with previously "
+                                                   "defined symbol of the same name." % locals())
     
     ## Make sure no-one else takes the name
     self.globalNameSpace['symbolNames'].add(vectorName)
     
-    if isinstance(parentTemplate, FieldElementTemplate):
-      fieldTemplate = parentTemplate
+    if not computedVectorElement.hasAttribute('dimensions'):
+      dimensionNames = [dim.name for dim in self.globalNameSpace['geometry'].dimensions if dim.transverse]
+    elif len(computedVectorElement.getAttribute('dimensions').strip()) == 0:
+      # No dimensions
+      dimensionNames = []
     else:
-      if computedVectorElement.hasAttribute('field') and computedVectorElement.hasAttribute('dimensions'):
-        raise ParserException(computedVectorElement, "Computed vectors must have only one of the attributes 'field' or 'dimensions'.")
-      elif computedVectorElement.hasAttribute('field'):
-        fieldName = computedVectorElement.getAttribute('field').strip()
-        fieldsWithName = filter(lambda x: x.name == fieldName, self.globalNameSpace['fields'])
-        assert len(fieldsWithName) <= 1
-        if len(fieldsWithName) == 0:
-          raise ParserException(momentsElement, "field '%(fieldName)s' does not exist." % locals())
-        fieldTemplate = fieldsWithName[0]
-      elif computedVectorElement.hasAttribute('dimensions'):
-        dimensionNames = RegularExpressionStrings.symbolsInString(computedVectorElement.getAttribute('dimensions'))
-        for dimensionName in dimensionNames:
-          if not geometryTemplate.hasDimensionName(dimensionName):
-            raise ParserException(computedVectorElement, "Dimension name '%(dimensionName)s' does not exist." % locals())
-          if dimensionNames.count(dimensionName) > 1:
-            raise ParserException(computedVectorElement, "A dimension name appear more than once in the 'dimensions' attribute.")
+      dimensionsString = computedVectorElement.getAttribute('dimensions').strip()
+      dimensionNames = RegularExpressionStrings.symbolsInString(dimensionsString)
+      if not dimensionNames:
+        raise ParserException(computedVectorElement, "Cannot understand '%(dimensionsString)s' as a "
+                                                     "list of dimensions" % locals())
         
-        fieldTemplate = FieldElementTemplate.sortedFieldWithDimensionNames(dimensionNames)
-      else:
-        # This means we don't have either a 'field' attribute or a 'target_field' attribute
-        raise ParserException(computedVectorElement, "This computed_vector must have either the 'dimensions' attribute "
-                                                     "or the 'target_field' attribute set.")
+    
+    fieldTemplate = FieldElementTemplate.sortedFieldWithDimensionNames(dimensionNames, xmlElement = computedVectorElement)
     
     # One way or another, we now have our fieldTemplate
     # So we can now construct the computed vector template
@@ -797,7 +745,7 @@ class XMDS2Parser(ScriptParser):
     
     # self.parseNoisesAttribute(computedVectorElement, vectorTemplate)
     
-    if not type(parentTemplate) == FieldElementTemplate:
+    if not type(parentTemplate) == SimulationElementTemplate:
       fieldTemplate.temporaryVectors.add(vectorTemplate)
     else:
       fieldTemplate.managedVectors.add(vectorTemplate)
@@ -859,7 +807,24 @@ class XMDS2Parser(ScriptParser):
     
     topLevelSequenceElementTemplate = TopLevelSequenceElementTemplate(**self.argumentsToTemplateConstructors)
     
-    for childNode in topLevelSequenceElement.childNodes:
+    self.parseSequenceElement(topLevelSequenceElement, topLevelSequenceElementTemplate)
+    
+    return simulationDriver
+  
+  def parseSequenceElement(self, sequenceElement, sequenceTemplate):
+    if sequenceElement.hasAttribute('cycles'):
+      cyclesString = sequenceElement.getAttribute('cycles')
+      try:
+        cycles = int(cyclesString)
+      except ValueError, err:
+        raise ParserException(sequenceElement, "Unable to understand '%(cyclesString)s' as an integer.")
+      
+      if cycles <= 0:
+        raise ParserException(sequenceElement, "The number of cycles must be positive.")
+      
+      sequenceTemplate.localCycles = cycles
+    
+    for childNode in sequenceElement.childNodes:
       if not childNode.nodeType == minidom.Node.ELEMENT_NODE:
         continue
       
@@ -867,12 +832,12 @@ class XMDS2Parser(ScriptParser):
       
       if tagName == 'integrate':
         integrateTemplate = self.parseIntegrateElement(childNode)
-        topLevelSequenceElementTemplate.childSegments.append(integrateTemplate)
+        sequenceTemplate.addSegment(integrateTemplate)
       elif tagName == 'filter':
         # Construct the filter segment
         filterSegmentTemplate = FilterSegmentTemplate(**self.argumentsToTemplateConstructors)
         # Add it to the sequence element as a child segment
-        topLevelSequenceElementTemplate.childSegments.append(filterSegmentTemplate)
+        sequenceTemplate.addSegment(filterSegmentTemplate)
         # Create an operator container to house the filter operator
         operatorContainer = OperatorContainerTemplate(**self.argumentsToTemplateConstructors)
         # Add the operator container to the filter segment
@@ -883,7 +848,7 @@ class XMDS2Parser(ScriptParser):
         # Construct the breakpoint segment
         breakpointSegmentTemplate = BreakpointSegmentTemplate(**self.argumentsToTemplateConstructors)
         # Add it to the sequence element as a child segment
-        topLevelSequenceElementTemplate.childSegments.append(breakpointSegmentTemplate)
+        sequenceTemplate.addSegment(breakpointSegmentTemplate)
         # parse a dependencies element
         breakpointSegmentTemplate.dependenciesEntity = self.parseDependencies(childNode)
         
@@ -891,12 +856,16 @@ class XMDS2Parser(ScriptParser):
           breakpointSegmentTemplate.filename = childNode.getAttribute('filename').strip()
         else:
           parserWarning(childNode, "Breakpoint names defaulting to the sequence 1.xsil, 2.xsil, etc.")
+      elif tagName == 'sequence':
+        # Construct the sequence segment
+        sequenceSegmentTemplate = SequenceSegmentTemplate(**self.argumentsToTemplateConstructors)
+        sequenceTemplate.addSegment(sequenceSegmentTemplate)
+        
+        self.parseSequenceElement(childNode, sequenceSegmentTemplate)
       else:
         raise ParserException(childNode, "Unknown child of sequence element. "
-                                         "Possible children include 'integrate' or 'filter' elements.")
-      
-    return simulationDriver
-  
+                                         "Possible children include 'sequence', 'integrate', 'filter' or 'breakpoint' elements.")
+    
   
   def parseIntegrateElement(self, integrateElement):
     if not integrateElement.hasAttribute('algorithm'):
@@ -1051,22 +1020,24 @@ class XMDS2Parser(ScriptParser):
   def parseOperatorsElements(self, integrateElement, integratorTemplate):
     operatorsElements = integrateElement.getChildElementsByTagName('operators')
     
-    fieldNamesUsed = set()
+    fieldsUsed = set()
     validFieldNames = [field.name for field in self.globalNameSpace['fields']]
     
     for operatorsElement in operatorsElements:
-      if not operatorsElement.hasAttribute('field'):
-        raise ParserException(operatorsElement, "Missing 'field' attribute.")
-      fieldName = operatorsElement.getAttribute('field').strip()
+      if not operatorsElement.hasAttribute('dimensions'):
+        dimensionNames = [dim.name for dim in self.globalNameSpace['geometry'].dimensions if dim.transverse]
+      else:
+        dimensionNames = RegularExpressionStrings.symbolsInString(operatorsElement.getAttribute('dimensions'))
       
-      if fieldName in fieldNamesUsed:
-        raise ParserException(operatorsElement, "There can only be one operators element per field.")
+      fieldTemplate = FieldElementTemplate.sortedFieldWithDimensionNames(dimensionNames, createIfNeeded = False)
       
-      if not fieldName in validFieldNames:
-        raise ParserException(operatorsElement, "'%(fieldName)s' isn't the name of a field." % locals())
+      if not fieldTemplate:
+        raise ParserException(operatorsElement, "There are no vectors with this combination of dimensions.")
       
-      fieldNamesUsed.add(fieldName)
-      fieldTemplate = filter(lambda x: x.name == fieldName, self.globalNameSpace['fields'])[0]
+      if fieldTemplate in fieldsUsed:
+        raise ParserException(operatorsElement, "There can only be one operators element per combination of dimensions.")
+      
+      fieldsUsed.add(fieldTemplate)
       
       self.parseOperatorsElement(operatorsElement, integratorTemplate, fieldTemplate)
     
@@ -1535,24 +1506,24 @@ class XMDS2Parser(ScriptParser):
       if operatorContainer:
         momentGroupTemplate.operatorContainers.append(operatorContainer)
       
-      # operatorElements = samplingElement.getChildElementsByTagName('operator', optional=True)
-      # if operatorElements:
-      #   operatorContainer = OperatorContainerTemplate(field = samplingFieldTemplate,
-      #                                                 # Point the proxies for the shared code etc at
-      #                                                 # the moment group object's sampling code, the sampling space, etc.
-      #                                                 sharedCodeKeyPath = 'parent.samplingCode',
-      #                                                 sharedCodeSpaceKeyPath = 'parent.sampleSpace',
-      #                                                 dependenciesKeyPath = 'parent.dependencies',
-      #                                                 **self.argumentsToTemplateConstructors)
-      #   
-      #   momentGroupTemplate.operatorContainers.append(operatorContainer)
-      #   for operatorElement in operatorElements:
-      #     kindString = operatorElement.getAttribute('kind').strip().lower()
-      #     if not kindString in ('ex', 'functions'):
-      #       raise ParserException(operatorElement, "Unrecognised operator kind '%(kindString)s'."
-      #                                              "Valid operator kinds in sampling elements are 'ex' or 'functions'." % locals())
-      #     operatorTemplate = self.parseOperatorElement(operatorElement, operatorContainer)
-      # 
+      operatorElements = samplingElement.getChildElementsByTagName('operator', optional=True)
+      if operatorElements:
+        operatorContainer = OperatorContainerTemplate(field = samplingFieldTemplate,
+                                                      # Point the proxies for the shared code etc at
+                                                      # the moment group object's sampling code, the sampling space, etc.
+                                                      sharedCodeKeyPath = 'parent.samplingCode',
+                                                      sharedCodeSpaceKeyPath = 'parent.sampleSpace',
+                                                      dependenciesKeyPath = 'parent.dependencies',
+                                                      **self.argumentsToTemplateConstructors)
+        
+        momentGroupTemplate.operatorContainers.append(operatorContainer)
+        for operatorElement in operatorElements:
+          kindString = operatorElement.getAttribute('kind').strip().lower()
+          if not kindString in ('functions'): # FIXME: EX would be good here too, but we would need to work out the field...
+            raise ParserException(operatorElement, "Unrecognised operator kind '%(kindString)s'."
+                                                   "The only valid operator kind in sampling elements is 'functions' (at the moment)." % locals())
+          operatorTemplate = self.parseOperatorElement(operatorElement, operatorContainer)
+      
       
       
       # We have now dealt with the sampling element, and now need to deal with the processing element.

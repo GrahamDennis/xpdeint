@@ -335,10 +335,20 @@ class _ScriptElement (Template):
   def vectorsFromEntity(self, entity):
     vectors = set()
     vectorDictionary = dict([(vector.name, vector) for vector in self.getVar('vectors')])
+    
+    ancestors = []
+    currObject = self
+    while currObject:
+      ancestors.append(currObject)
+      currObject = currObject.parent
+    
     for vectorName in entity.value:
       if not vectorName in vectorDictionary:
         raise ParserException(entity.xmlElement, "Unknown vector '%(vectorName)s'." % locals())
-      vectors.add(vectorDictionary[vectorName])
+      vector = vectorDictionary[vectorName]
+      if not (vector.parent == vector.field or vector.parent in ancestors):
+        raise ParserException(entity.xmlElement, "Cannot access vector '%(vectorName)s' here. It is not available in this scope." % locals())
+      vectors.add(vector)
     return vectors
     
   

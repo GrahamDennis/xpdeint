@@ -24,15 +24,6 @@ long _breakpointAutoNameCounter = 0;
   @#
 @end def
 
-@@callOnceGuard
-@def static_functionPrototypes
-  @#
-  @super
-  @#
-${isBigEndian_functionPrototype}@slurp
-  @#
-@end def
-
 @*
   Function prototypes
 *@
@@ -43,16 +34,6 @@ ${isBigEndian_functionPrototype}@slurp
 void _segment${segmentNumber}();
   @#
 @end def
-
-@@callOnceGuard
-@def static_functionImplementations
-  @#
-  @super
-  @#
-${isBigEndian_functionImplementation}@slurp
-  @#
-@end def
-
 
 @*
   Function implementations
@@ -179,7 +160,7 @@ coordinate = _${field.name}_min_${dimensionNameForSpace($dim, $breakpointSpace)}
       @set $start = '0'
       @set $stop = c'_${field.name}_lattice_${dim.name}'
     @end if
-for (long _i0 = ${start}; _i0 < ${stop}; _i0++, coordinate += _main_d${dimensionNameForSpace($dim, $breakpointSpace)})
+for (long _i0 = ${start}; _i0 < ${stop}; _i0++, coordinate += _${field.name}_d${dimensionNameForSpace($dim, $breakpointSpace)})
   fwrite(&coordinate, sizeof(double), 1, fpBinary);
 fieldOffset += sizeof(unsigned long) + sizeof(double) * _${field.name}_lattice_${dim.name};
 

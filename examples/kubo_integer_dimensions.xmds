@@ -27,23 +27,21 @@
     </transverse_dimensions>
   </geometry>
   
-  <field name="mainField">
-    <vector name="main">
-      <components type="complex">
-        z
-      </components>
-      <initialisation noises="">
-        <![CDATA[
-          z = 1.0;
-        ]]>
-      </initialisation>
-    </vector>
-  </field>
+  <vector name="main">
+    <components type="complex">
+      z
+    </components>
+    <initialisation noises="">
+      <![CDATA[
+        z = 1.0;
+      ]]>
+    </initialisation>
+  </vector>
   
   <sequence>
     <integrate algorithm="ARK89" interval="10" steps="1000" tolerance="1e-8">
       <samples>100</samples>
-      <operators field="mainField" noises="n">
+      <operators noises="n">
         <integration_vectors>main</integration_vectors>
         <![CDATA[
           dz_dt[j] = i*z*n_1;

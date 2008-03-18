@@ -37,39 +37,35 @@
     </transverse_dimensions>
   </geometry>
   
-  <field name="mainField" dimensions="x y">
-    <vector name="main" initial_space="x y">
-      <components type="complex">
-        u uDot
-      </components>
-      <initialisation>
-        <![CDATA[
-          u = exp(-100.0*(x-0.5)*(x-0.5));
-          uDot = 0.0;
-        ]]>
-      </initialisation>
-    </vector>
-  </field>
-  
-  <field name="zero_d_test" dimensions="">
-    <vector name="integrated_u">
-      <components type="complex">
-        mom
-      </components>
-    </vector>
-    <computed_vector name="filter1">
-      <components type="complex">moment</components>
-      <dependencies>integrated_u main</dependencies>
+  <vector name="main" dimensions="x y" initial_space="x y">
+    <components type="complex">
+      u uDot
+    </components>
+    <initialisation>
       <![CDATA[
-        moment = mod2(u);
+        u = exp(-100.0*(x-0.5)*(x-0.5));
+        uDot = 0.0;
       ]]>
-    </computed_vector>
-  </field>
+    </initialisation>
+  </vector>
   
-  <sequence>
+  <vector name="integrated_u" dimensions="">
+    <components type="complex">
+      mom
+    </components>
+  </vector>
+  <computed_vector name="filter1" dimensions="">
+    <components type="complex">moment</components>
+    <dependencies>integrated_u main</dependencies>
+    <![CDATA[
+      moment = mod2(u);
+    ]]>
+  </computed_vector>
+  
+  <sequence cycles="10">
     <integrate algorithm="RK9" interval="2e-3" steps="100">
-      <samples>50 50</samples>
-      <operators field="mainField">
+      <samples>10 10</samples>
+      <operators dimensions="x y">
         <operator kind="functions">
           <![CDATA[
             // print one '.' per integration step.
@@ -88,7 +84,7 @@
           duDot_dt = L[u /**/];
         ]]>
       </operators>
-      <operators field="zero_d_test">
+      <operators dimensions="">
         <integration_vectors>integrated_u</integration_vectors>
         <dependencies>filter1</dependencies>
         <![CDATA[

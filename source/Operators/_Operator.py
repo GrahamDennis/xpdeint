@@ -17,7 +17,7 @@ import re
 
 class _Operator (ScriptElement):
   # This is an ordered list of (type, argName) pairs
-  evaluateOperatorFunctionArguments = [('double', '_step')]
+  evaluateOperatorFunctionArguments = []
   
   # Operator kinds
   IPOperatorKind     = 1
@@ -40,10 +40,11 @@ class _Operator (ScriptElement):
     self.resultVector = None
     self.operatorNumber = -1
     self._parent = parent
-    parent.addOperator(self)
     self._field = None
     self._children = []
     self._loopingField = None
+    
+    parent.addOperator(self)
   
   # The children
   @property
@@ -134,16 +135,6 @@ class _Operator (ScriptElement):
                   "aren't in this field (%s).\n"
                   "The vector causing this problem is '%s'." 
                   % (self.field.name, dependency.name))
-        
-        # If the vector is computed, we need to run a check that we are able to access this vector.
-        if dependency.isComputed:
-          # We can access it if its parent is its field, or if its parent is our container's parent
-          operatorContainer = self.parent
-          if not dependency.parent in (dependency.field, operatorContainer.parent):
-            raise ParserException(self.dependenciesEntity.xmlElement,
-                    "The computed vector '%s' cannot be accessed here.\n"
-                    "The computed vector must be moved into the <integrator> element for this operator or\n"
-                    "into a <field> element at the top of the simulation script." % dependency.name)
       
       self.dependencies.update(dependencies)
     

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
-  <name>integer_dimensions</name>
+  <name>van_der_pol</name>
   <author>Graham Dennis</author>
   <description>
-    xpdeint script to test integer dimensions.
+    Van der Pol oscillator. An example of a stiff equation.
   </description>
   
   <features>
@@ -11,52 +11,49 @@
     <error_check />
     <bing />
     <fftw version="none" />
+    <!-- That's right, this script breaks the shackles with FFTW! -->
+    <argv>
+      <arg name="lambda" type="double" default_value="100.0" />
+    </argv>
   </features>
   
   <geometry>
     <prop_dim> t </prop_dim>
-    <transverse_dimensions>
-      <integer_valued>
-        <dimension name="j" lattice="5" domain="(0, 4)" />
-      </integer_valued>
-    </transverse_dimensions>
   </geometry>
   
   <vector name="main" type="complex">
     <components>
-      x
+      y yDot
     </components>
     <initialisation>
       <![CDATA[
-      x[j] = 1.0e-3;
-      x[0] = 1.0;
+      y = 1.0;
+      yDot = 0.0;
       ]]>
     </initialisation>
   </vector>
   
   <sequence>
-    <integrate algorithm="RK4" interval="60.0" steps="25000">
-      <samples>1000</samples>
+    <integrate algorithm="ARK89" interval="100.0" steps="25000" tolerance="1e-7">
+      <samples>5000</samples>
       <operators>
         <integration_vectors>main</integration_vectors>
         <![CDATA[
-        long j_minus_one = (j-1) % _Nj;
-        if (j_minus_one < 0)
-          j_minus_one += _Nj;
-        long j_plus_one  = (j+1) % _Nj;
-        dx_dt[j] = x[j]*(x[j_minus_one] - x[j_plus_one]);
+        dy_dt = yDot;
+        dyDot_dt = lambda*(1.0 - y*y)*yDot - y;
+        
         ]]>
       </operators>
     </integrate>
   </sequence>
-  <output format="binary">
+  <output format="binary" filename="van_der_pol.xsil">
     <group>
       <sampling initial_sample="yes">
-        <dimension name="j" />
-        <moments>xR</moments>
+        <moments>yR yDotR</moments>
         <dependencies>main</dependencies>
         <![CDATA[
-          xR = x;
+          yR = y;
+          yDotR = yDot;
         ]]>
       </sampling>
     </group>

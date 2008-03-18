@@ -29,39 +29,38 @@
     </transverse_dimensions>
   </geometry>
   
-  <field name="main">
-    <vector name="motion">
-      <components type="double">
-        x y vx vy
-      </components>
-      <initialisation noises="p">
-        <![CDATA[
-          x = 2.0*p_1;
-          y = 2.0*p_2;
-          vx = 0.1*p_3;
-          vy = 0.1*p_4;
-        ]]>
-      </initialisation>
-    </vector>
-    <vector name="mass">
-      <components type="double">
-        m
-      </components>
-      <initialisation noises="q">
-        <![CDATA[
-        // Set the mass equal to a poissonian noise.
-        // but don't let the mass be zero
-        m = q_1;
-        if (m < 0.01) m = 1.0;
-        ]]>
-      </initialisation>
-    </vector>
-  </field>
+  <vector name="motion">
+    <components type="double">
+      x y vx vy
+    </components>
+    <initialisation noises="p">
+      <![CDATA[
+        x = 2.0*p_1;
+        y = 2.0*p_2;
+        vx = 0.1*p_3;
+        vy = 0.1*p_4;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <vector name="mass">
+    <components type="double">
+      m
+    </components>
+    <initialisation noises="q">
+      <![CDATA[
+      // Set the mass equal to a poissonian noise.
+      // but don't let the mass be zero
+      m = q_1;
+      if (m < 0.01) m = 1.0;
+      ]]>
+    </initialisation>
+  </vector>
   
   <sequence>
     <integrate algorithm="ARK89" interval="100" steps="1000" tolerance="1e-8">
       <samples>1000 100</samples>
-      <operators field="main" noises="">
+      <operators noises="">
         <integration_vectors>motion</integration_vectors>
         <dependencies>mass</dependencies>
         <![CDATA[

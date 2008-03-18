@@ -105,7 +105,7 @@ class _Integrator (_Segment):
         if sampleCount and not (self.stepCount % sampleCount) == 0:
           raise ParserException(samplesElement, "Sample count does not evenly divide the number of steps")
         self.samples.append(sampleCount)
-        # FIXME: This line will be wrong when we add sequence elements that support looping.
-        momentGroup.dimensionWithName(self.propagationDimension).lattice += sampleCount
+        
+        momentGroup.dimensionWithName(self.propagationDimension).lattice += sampleCount * self.totalCycles
       
   

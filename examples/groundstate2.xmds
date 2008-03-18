@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
-  <name>groundstate</name>
+  <name>groundstate2</name>
   <author>Graham Dennis</author>
   <description>
     Calculate the ground state of a Rubidium BEC in a harmonic magnetic trap.
+    Modified from groundstate.xmds to show an ugly hack where a functions operator calls a breakpoint segment
   </description>
   
   <features>
     <auto_vectorise />
     <benchmark />
-    <error_check />
     <bing />
     <fftw version="3" plan="exhaustive" />
     <!-- <openmp /> -->
@@ -91,14 +91,8 @@
   </computed_vector>
   
   <sequence>
-    <filter>
-      <dependencies>normalisation</dependencies>
-      <![CDATA[
-        printf("Hello world from a filter segment!\n");
-      ]]>
-    </filter>
     <integrate algorithm="ARK89" interval="1e-4" steps="10000" tolerance="1e-8">
-      <samples>500</samples>
+      <samples>4</samples>
       <filters>
         <filter>
           <dependencies>wavefunction normalisation</dependencies>
@@ -122,16 +116,24 @@
         ]]>
       </operators>
     </integrate>
-    <breakpoint filename="groundstate_break.xsil">
+    <breakpoint>
       <dependencies fourier_space="ky">wavefunction</dependencies>
     </breakpoint>
   </sequence>
-  <output format="binary" filename="groundstate.xsil">
+  <output format="binary" filename="groundstate2.xsil">
     <group>
       <sampling initial_sample="no">
         <dimension name="y" lattice="1024" />
         <moments>norm_dens</moments>
         <dependencies>wavefunction normalisation</dependencies>
+        <operator kind="functions">
+          <![CDATA[
+          // Call the breakpoint segment so that every time this moment group gets called,
+          // we execute the breakpoint. As the breakpoint is auto-naming, this won't cause
+          // older files to get clobbered.
+            _segment2();
+          ]]>
+        </operator>
         <![CDATA[
           norm_dens = mod2(phi)/Ncalc;
         ]]>

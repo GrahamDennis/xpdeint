@@ -27,23 +27,21 @@
     <prop_dim> t </prop_dim>
   </geometry>
   
-  <field name="mainField" >
-    <vector name="main" type="complex">
-      <components>
-        x y z
-      </components>
-      <initialisation>
-        <![CDATA[
-        x = y = z = 1.0;
-        ]]>
-      </initialisation>
-    </vector>
-  </field>
+  <vector name="main" type="complex">
+    <components>
+      x y z
+    </components>
+    <initialisation>
+      <![CDATA[
+      x = y = z = 1.0;
+      ]]>
+    </initialisation>
+  </vector>
   
   <sequence>
     <integrate algorithm="ARK89" interval="100.0" steps="25000" tolerance="1e-7">
       <samples>10</samples>
-      <operators field="mainField">
+      <operators>
         <integration_vectors>main</integration_vectors>
         <![CDATA[
         dx_dt = sigma*(y-x);

@@ -12,29 +12,17 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 @def description: field $name
 
 @*
-
   Defines needed at the start of the simulation
 *@
 @def defines
   @#
   @super
   @#
-#define _${name}_ndims $len($dimensions)
-  @for $dimensionNumber, $dimension in enumerate($dimensions)
+  @set $prefix = c'_${name}'
+#define ${prefix}_ndims ${len($dimensions)}
 
-#define _${name}_lattice_${dimension.name}  $dimension.lattice
-#define _${name}_min_${dimension.name}  (($dimension.type)$dimension.minimum)
-#define _${name}_max_${dimension.name}  (($dimension.type)$dimension.maximum)
-    @if $dimension.type == 'double'
-#define _${name}_d${dimension.name}  (($dimension.maximum - $dimension.minimum)/(${dimension.type})_${name}_lattice_${dimension.name})
-#define _${name}_dk${dimension.name} (2.0*M_PI/($dimension.maximum - $dimension.minimum))
-#define _${name}_min_k${dimension.name} (-(_${name}_lattice_${dimension.name}/2) * _${name}_dk${dimension.name})
-#define _${name}_max_k${dimension.name} ((_${name}_lattice_${dimension.name} - 1)/2) * _${name}_dk${dimension.name}
-    @else
-#define _${name}_d${dimension.name}  1
-    @end if
-  @end for
-#define _${name}_full_kspace_mask  ${spaceMask} // @slurp
+${definesForDimensionsWithPrefix($dimensions, $prefix)}@slurp
+#define ${prefix}_full_kspace_mask  ${spaceMask} // @slurp
   @set $separator = ''
   @for $dimension in $geometry.dimensions
 ${separator}${dimension.name}: ${($spaceMask >> $geometry.dimensions.index($dimension)) & 1}@slurp
@@ -42,6 +30,25 @@ ${separator}${dimension.name}: ${($spaceMask >> $geometry.dimensions.index($dime
   @end for
   
   @# Child defines will go here
+@end def
+
+@def definesForDimensionsWithPrefix($dimensions, $prefix)
+  @#
+  @for $dimensionNumber, $dimension in enumerate(dimensions)
+#define ${prefix}_lattice_${dimension.name}  $dimension.lattice
+#define ${prefix}_min_${dimension.name}  (($dimension.type)$dimension.minimum)
+#define ${prefix}_max_${dimension.name}  (($dimension.type)$dimension.maximum)
+    @if $dimension.type == 'double'
+#define ${prefix}_d${dimension.name}  (($dimension.maximum - $dimension.minimum)/(${dimension.type})${prefix}_lattice_${dimension.name})
+#define ${prefix}_dk${dimension.name} (2.0*M_PI/($dimension.maximum - $dimension.minimum))
+#define ${prefix}_min_k${dimension.name} (-(${prefix}_lattice_${dimension.name}/2) * ${prefix}_dk${dimension.name})
+#define ${prefix}_max_k${dimension.name} ((${prefix}_lattice_${dimension.name} - 1)/2) * ${prefix}_dk${dimension.name}
+    @else
+#define ${prefix}_d${dimension.name}  1
+    @end if
+
+  @end for
+  @#
 @end def
 
 @*

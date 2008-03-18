@@ -1,0 +1,87 @@
+@*
+SequenceSegment.tmpl
+
+Created by Graham Dennis on 2008-03-18.
+Copyright (c) 2008 __MyCompanyName__. All rights reserved.
+*@
+@extends _Segment
+@from CallOnceGuards import callOncePerInstanceGuard
+
+@*
+  Description of template
+*@
+@def description: segment $segmentNumber (Sequence)
+
+@*
+  Function prototypes
+*@
+@def functionPrototypes
+  @#
+  @super
+  @#
+void _segment${segmentNumber}();
+@end def
+
+@*
+  Function implementations
+*@
+@def functionImplementations
+  @#
+  @super
+  @#
+void _segment${segmentNumber}()
+{
+  ${segmentImplementationInnerContents, autoIndent=True}@slurp
+}
+
+  @#
+@end def
+
+@def segmentImplementationInnerContents
+  @#
+  @set $extraIndent = 0
+  @if $localCycles > 1
+// Initialise child segments
+${initialise, autoIndent=True}@slurp
+for (unsigned long _cycle = 0; _cycle < ${localCycles}; _cycle++) {
+    @set $extraIndent = 2
+  @end if
+  @#
+${callChildSegments, autoIndent=True, extraIndent=extraIndent}@slurp
+  @#
+  @if $localCycles > 1
+}
+    @set $extraIndent = 0
+// Finalise child segments
+${finalise, autoIndent=True}@slurp
+  @end if
+  @#
+@end def
+
+
+@def callChildSegments
+  @#
+  @for $segment in $childSegments
+_${segment.name}();
+  @end for
+  @#
+@end def
+
+
+@@callOncePerInstanceGuard
+@def initialise
+  @#
+  @for $segment in $childSegments
+$segment.initialise@slurp
+  @end for
+  @#
+@end def
+
+@@callOncePerInstanceGuard
+@def finalise
+  @#
+  @for $segment in $childSegments
+$segment.finalise@slurp
+  @end for
+  @#
+@end def

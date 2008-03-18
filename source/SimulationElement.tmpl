@@ -33,18 +33,28 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   @set $dict = {'extraIndent': 0}
     ${insertCodeForFeatures('logFunctionBegin', $featureOrdering, $dict), autoIndent=True}@slurp
   @set $extraIndent = dict['extraIndent']
-    ${logFunctionInnerContent, extraIndent=extraIndent}@slurp
+    ${logFunctionInnerContent, autoIndent=True, extraIndent=extraIndent}@slurp
     ${insertCodeForFeaturesInReverseOrder('logFunctionEnd', $featureOrdering, $dict), autoIndent=True}@slurp
-    fflush(stdout); \
     if (logLevel & _ERROR_LOG_LEVEL) \
       exit(1); \
   }
+
+#ifndef INFINITY
+#define INFINITY HUGE_VAL
+#endif
+
+// Define an isfinite that should work on systems that don't have isfinite
+#ifndef isfinite
+#define isfinite(x) ((x) - (x) == 0)
+#endif
+
   @#
 @end def
 
 @def logFunctionInnerContent
   @#
 printf(__VA_ARGS__); \
+fflush(stdout); \
   @#
 @end def
 
@@ -65,3 +75,22 @@ bool xmlDebugFlag =  false;
   @#
 @end def
 
+@def functionPrototypes
+  @#
+  @super
+  @#
+inline bool _isBigEndian();
+  @#
+@end def
+
+@def functionImplementations
+  @#
+  @super
+  @#
+inline bool _isBigEndian()
+{
+  static const int i = 1;
+  return *(char*)&i == 0;
+}
+  @#
+@end def
