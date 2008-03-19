@@ -34,7 +34,7 @@
   </vector>
   
   <sequence driver="mpi-multi-path" paths="102400">
-    <integrate algorithm="ARK89" interval="10" steps="1000" tolerance="1e-8">
+    <integrate algorithm="RK9" interval="10" steps="1000" tolerance="1e-8">
       <samples>100</samples>
       <operators noises="n">
         <integration_vectors>main</integration_vectors>

@@ -12,7 +12,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 from xpdeint.ScriptElement import ScriptElement
 from xpdeint.ParserException import ParserException
 
-import xpdeint.RegularExpressionStrings
+from xpdeint import RegularExpressionStrings
 import re
 
 class _Operator (ScriptElement):

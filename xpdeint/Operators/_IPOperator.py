@@ -11,7 +11,7 @@ from xpdeint.Operators.Operator import Operator
 from xpdeint.ParserException import ParserException, parserWarning
 
 import re
-import xpdeint.RegularExpressionStrings
+from xpdeint import RegularExpressionStrings
 
 class _IPOperator(Operator):
   evaluateOperatorFunctionArguments = [('int', '_exponent')]

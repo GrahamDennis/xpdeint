@@ -15,7 +15,7 @@ from xpdeint.Vectors.VectorInitialisation import VectorInitialisation
 from xpdeint.ParserException import ParserException
 
 import re
-import xpdeint.RegularExpressionStrings
+from xpdeint import RegularExpressionStrings
 
 class _DeltaAOperator (Operator):
   evaluateOperatorFunctionArguments = [('double', '_step')]

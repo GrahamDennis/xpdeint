@@ -13,7 +13,7 @@ from xpdeint.ParserException import ParserException, parserWarning
 from xpdeint.Vectors.ComputedVector import ComputedVector
 
 import re
-import xpdeint.RegularExpressionStrings
+from xpdeint import RegularExpressionStrings
 
 class _EXOperator(Operator):
   evaluateOperatorFunctionArguments = []
