@@ -22,6 +22,14 @@
 
 * Make sure that all the things that Andy has been doing to enable various simulation
   parameters can be controlled at simulation run time can be done in xpdeint.
+    - Implemented for the "interval" attribute of <integrate>
+    - It should be pretty easy to generalise the method in xpdeint. We just throw less
+      exceptions. :)
+    - Uses the new XMDS_Regex (inside XMDS2Parser.py) class as a simple way to check if strings
+      are C-strings. I'm not sure if there is a better/existing way to do this.
+    - XMDS_Regex - should we extend it to allow for more checks? e.g. C-expressions, whitespace...
+    - In a perfect world, we should also check if the interval variable is positive just before
+      the integration block.
 
 * Rewrite parser so that it isn't so long. (Ask Gabriel McManus)
 

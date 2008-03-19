@@ -76,6 +76,20 @@ from Features.FourierTransformFFTW3Threads import FourierTransformFFTW3Threads
 # and verifying that it isn't sampling a temporary vector that it didn't create (or is a child of the creator).
 
 
+class XMDS_Regex:
+  """"This class does some regular expression parsing for us, allowing us to make simple queries of a string.
+  
+  Currently implemented methods:
+    isCVar(string) = true if string is a single C style variable, false otherwise."""
+  def __init__(self):
+    self._reCVar = re.compile(r"\s*[a-zA-Z_]\w*\s*")
+  
+  def isCVar(self,string_in):
+    string_match = self._reCVar.match(string_in)
+    if string_match:
+      return (len(string_in) == string_match.end())
+
+
 class XMDS2Parser(ScriptParser):
   @staticmethod
   def canParseXMLDocument(xmlDocument):
@@ -932,15 +946,27 @@ class XMDS2Parser(ScriptParser):
       raise ParserException(integrateElement, "Integrator needs 'interval' attribute.")
     
     intervalString = integrateElement.getAttribute('interval')
+    # Now check if the interval is a valid number or variable
     try:
-      interval = float(intervalString)
-      if interval <= 0.0:
+      interval = float(intervalString) # Is it a simple number?
+      if interval <= 0.0:              # Was the number positive?
         raise ParserException(integrateElement, "Interval must be positive.")
     except ValueError, err:
-      raise ParserException(integrateElement, "Could not understand interval '%(intervalString)s' "
-                                              "as a number." % locals())
+      my_regex = XMDS_Regex()  # TODO: We probably want a larger scope instance somewhere     
+      if my_regex.isCVar(intervalString):  # Could the interval possibly be a C variable?
+        # TODO: If this is the case then the generated C-code should have a check to make sure this
+        # variable is positive. This check should be just before the integration loop as we don't know
+        # when the user may initialize the variable.
+        #
+        # Also: I'm not sure how much feedback the user should recieve... is there a verbose option or something?
+        print "COMMENT: Interval set to C variable '" + intervalString + "'"
+      else:
+        # The user may prefer a C expression like "0.5*total_time" or something, but this is currently not allowed
+        raise ParserException(integrateElement, "Could not understand interval '%(intervalString)s' "
+                                              "as a number or a valid C variable." % locals())
     
     integratorTemplate.interval = intervalString
+
     if not integrateElement.hasAttribute('steps'):
       raise ParserException(integrateElement, "Integrator needs a 'steps' attribute.")
       
