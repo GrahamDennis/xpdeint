@@ -30,7 +30,9 @@ setup(name="xpdeint",
       # Project requires Cheetah for all of the templates
       install_requires = ['Cheetah>=2.0.1'],
       
-      include_package_data = False,
+      package_data = {
+        '': ['dSFMT*.[ch]', 'examples/*.xmds']
+      },
       
       # We aren't zip safe because we will require access to
       # *.c and *.h files inside the distributed egg
