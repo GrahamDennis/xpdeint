@@ -426,7 +426,6 @@ ${dimension.type} ${dimension.name} = _${field.name}_min_${dimension.name};
     @end if
     @#
   @end if
-#define _N${dimension.name} _${field.name}_lattice_${dimension.name}
 
   @set $dict = {'dimension': $dimension, 'field': $field, 'vectors': $vectors}
 ${insertCodeForFeatures('openLoopForDimensionInFieldInSpaceBegin', $featureOrdering, $dict)}@slurp
@@ -631,7 +630,6 @@ _${vector.id}_ncomponents;
 #undef ${dimension.name}
     @end if
   @end if
-#undef _N${dimension.name}
 }
   @#
 @end def

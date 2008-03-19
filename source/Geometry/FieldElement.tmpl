@@ -1,0 +1,48 @@
+@*
+FieldElement.tmpl
+
+Created by Graham Dennis on 2007-08-28.
+Copyright (c) 2007 __MyCompanyName__. All rights reserved.
+*@
+@extends _FieldElement
+@*
+
+  Description of template
+*@
+@def description: field $name
+
+@*
+  Defines needed at the start of the simulation
+*@
+@def defines
+  @#
+  @super
+  @#
+  @set $prefix = c'_${name}'
+#define ${prefix}_ndims ${len($dimensions)}
+
+  @for $dimension in $dimensions
+${dimension.definesWithPrefix($prefix)}@slurp
+
+  @end for
+#define ${prefix}_full_kspace_mask  ${spaceMask} // @slurp
+  @set $separator = ''
+  @for $dimension in $geometry.dimensions
+${separator}${dimension.name}: ${($spaceMask >> $geometry.dimensions.index($dimension)) & 1}@slurp
+    @set $separator = ', '
+  @end for
+  
+  @# Child defines will go here
+@end def
+
+@*
+  Globals needed at the start of the simulation
+*@
+@def globals
+  @#
+  @super
+  @#
+const long _${name}_size = $pointsInDimensionsWithIndices($range($len($dimensions)));
+  @# Child globals will go here
+@end def
+

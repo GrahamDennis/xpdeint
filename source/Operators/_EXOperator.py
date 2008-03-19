@@ -10,7 +10,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 from Operator import Operator
 from ParserException import ParserException, parserWarning
 
-from ComputedVector import ComputedVector
+from .Vectors.ComputedVector import ComputedVector
 
 import re
 import RegularExpressionStrings

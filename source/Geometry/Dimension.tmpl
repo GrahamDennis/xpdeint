@@ -1,0 +1,17 @@
+@*
+Dimension.tmpl
+
+Created by Graham Dennis on 2008-03-19.
+Copyright (c) 2008 __MyCompanyName__. All rights reserved.
+*@
+@extends _Dimension
+
+@attr $type = 'none'
+
+@def definesWithPrefix($prefix)
+  @#
+#define ${prefix}_lattice_${name}  $lattice
+#define ${prefix}_min_${name}  (($type)$minimum)
+#define ${prefix}_max_${name}  (($type)$maximum)
+  @#
+@end def

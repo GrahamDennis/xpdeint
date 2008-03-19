@@ -8,9 +8,9 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
 from Operator import Operator
-from FieldElement import FieldElement
-from VectorElement import VectorElement
-from VectorInitialisation import VectorInitialisation
+from .Geometry.FieldElement import FieldElement
+from .Vectors.VectorElement import VectorElement
+from .Vectors.VectorInitialisation import VectorInitialisation
 
 from ParserException import ParserException
 

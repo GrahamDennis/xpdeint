@@ -11,7 +11,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 
 from VectorElement import VectorElement
 
-from FieldElement import FieldElement
+from .Geometry.FieldElement import FieldElement
 
 class _ComputedVector (VectorElement):
   isComputed = True

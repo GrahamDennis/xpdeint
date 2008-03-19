@@ -40,10 +40,10 @@
       <operators>
         <integration_vectors>main</integration_vectors>
         <![CDATA[
-        long j_minus_one = (j-1) % _Nj;
+        long j_minus_one = (j-1) % _lattice_j;
         if (j_minus_one < 0)
-          j_minus_one += _Nj;
-        long j_plus_one  = (j+1) % _Nj;
+          j_minus_one += _lattice_j;
+        long j_plus_one  = (j+1) % _lattice_j;
         dx_dt[j] = x[j]*(x[j_minus_one] - x[j_plus_one]);
         ]]>
       </operators>

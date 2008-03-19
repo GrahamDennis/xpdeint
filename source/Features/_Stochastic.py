@@ -8,9 +8,9 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
 from _Feature import _Feature
-from VectorElement import VectorElement
-from VectorInitialisationFromCDATA import VectorInitialisationFromCDATA
-from VectorInitialisationFromXSIL import VectorInitialisationFromXSIL
+from .Vectors.VectorElement import VectorElement
+from .Vectors.VectorInitialisationFromCDATA import VectorInitialisationFromCDATA
+from .Vectors.VectorInitialisationFromXSIL import VectorInitialisationFromXSIL
 from .Operators.DeltaAOperator import DeltaAOperator
 from .Segments.Integrators.FixedStep import FixedStep as FixedStepIntegrator
 from .Segments.Integrators.AdaptiveStep import AdaptiveStep as AdaptiveStepIntegrator

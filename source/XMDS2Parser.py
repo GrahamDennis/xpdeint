@@ -17,15 +17,16 @@ import RegularExpressionStrings
 from _ScriptElement import _ScriptElement
 
 from SimulationElement import SimulationElement as SimulationElementTemplate
-from GeometryElement import GeometryElement as GeometryElementTemplate
-from FieldElement import FieldElement as FieldElementTemplate
-from Dimension import Dimension
+from Geometry.GeometryElement import GeometryElement as GeometryElementTemplate
+from Geometry.FieldElement import FieldElement as FieldElementTemplate
+from Geometry.DoubleDimension import DoubleDimension
+from Geometry.IntegerDimension import IntegerDimension
 
-from VectorElement import VectorElement as VectorElementTemplate
-from ComputedVector import ComputedVector as ComputedVectorTemplate
-from VectorInitialisation import VectorInitialisation as VectorInitialisationZeroTemplate
-from VectorInitialisationFromCDATA import VectorInitialisationFromCDATA as VectorInitialisationFromCDATATemplate
-from VectorInitialisationFromXSIL import VectorInitialisationFromXSIL as VectorInitialisationFromXSILTemplate
+from Vectors.VectorElement import VectorElement as VectorElementTemplate
+from Vectors.ComputedVector import ComputedVector as ComputedVectorTemplate
+from Vectors.VectorInitialisation import VectorInitialisation as VectorInitialisationZeroTemplate
+from Vectors.VectorInitialisationFromCDATA import VectorInitialisationFromCDATA as VectorInitialisationFromCDATATemplate
+from Vectors.VectorInitialisationFromXSIL import VectorInitialisationFromXSIL as VectorInitialisationFromXSILTemplate
 
 
 from Segments.TopLevelSequenceElement import TopLevelSequenceElement as TopLevelSequenceElementTemplate
@@ -352,7 +353,7 @@ class XMDS2Parser(ScriptParser):
     propagationDimensionName = propagationDimensionElement.innerText()
     self.globalNameSpace['globalPropagationDimension'] = propagationDimensionName
     
-    geometryTemplate.dimensions = [Dimension(name = propagationDimensionName, transverse = False)]
+    geometryTemplate.dimensions = [DoubleDimension(name = propagationDimensionName, transverse = False)]
     
     ## Now grab and parse all of the transverse dimensions
     
@@ -398,8 +399,8 @@ class XMDS2Parser(ScriptParser):
         
         minimumString, maximumString = self.domainPairFromString(domainString, float, dimensionElement)
         
-        geometryTemplate.dimensions.append(Dimension(name = dimensionName, transverse = True, lattice = int(latticeString),
-                                                     minimum = minimumString, maximum = maximumString))
+        geometryTemplate.dimensions.append(DoubleDimension(name = dimensionName, transverse = True, lattice = int(latticeString),
+                                                           minimum = minimumString, maximum = maximumString))
       
       # We have just finished looping over the normal dimensions in the transverse_dimensions element.
       # Now we need to grab any 'integer_valued' tags and parse those.
@@ -502,8 +503,8 @@ class XMDS2Parser(ScriptParser):
       else:
         lattice = maximumValue - minimumValue + 1
       
-      dimensionList.append(Dimension(name = dimensionName, transverse = True, type = 'long', lattice = lattice,
-                                     minimum = minimumString, maximum = maximumString))
+      dimensionList.append(IntegerDimension(name = dimensionName, transverse = True, lattice = lattice,
+                                            minimum = minimumString, maximum = maximumString))
     
     if not dimensionElement.hasAttribute('kind') or dimensionElement.getAttribute('kind').strip().lower() == 'last':
       geometryTemplate.dimensions.extend(dimensionList)
@@ -1391,10 +1392,10 @@ class XMDS2Parser(ScriptParser):
           sampleCount = 1
       
       momentGroupTemplate.sampleSpace = 0
-      momentGroupTemplate.dimensions = [Dimension(name = self.globalNameSpace['globalPropagationDimension'],
-                                                  transverse = False,
-                                                  lattice = sampleCount,
-                                                  override = momentGroupTemplate)]
+      momentGroupTemplate.dimensions = [DoubleDimension(name = self.globalNameSpace['globalPropagationDimension'],
+                                                        transverse = False,
+                                                        lattice = sampleCount,
+                                                        override = momentGroupTemplate)]
       
       dimensionElements = samplingElement.getChildElementsByTagName('dimension', optional=True)
       
