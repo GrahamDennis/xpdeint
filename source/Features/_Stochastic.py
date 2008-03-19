@@ -7,15 +7,15 @@ Created by Graham Dennis on 2008-01-13.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
-from _Feature import _Feature
-from .Vectors.VectorElement import VectorElement
-from .Vectors.VectorInitialisationFromCDATA import VectorInitialisationFromCDATA
-from .Vectors.VectorInitialisationFromXSIL import VectorInitialisationFromXSIL
-from .Operators.DeltaAOperator import DeltaAOperator
-from .Segments.Integrators.FixedStep import FixedStep as FixedStepIntegrator
-from .Segments.Integrators.AdaptiveStep import AdaptiveStep as AdaptiveStepIntegrator
+from xpdeint.Features._Feature import _Feature
+from xpdeint.Vectors.VectorElement import VectorElement
+from xpdeint.Vectors.VectorInitialisationFromCDATA import VectorInitialisationFromCDATA
+from xpdeint.Vectors.VectorInitialisationFromXSIL import VectorInitialisationFromXSIL
+from xpdeint.Operators.DeltaAOperator import DeltaAOperator
+from xpdeint.Segments.Integrators.FixedStep import FixedStep as FixedStepIntegrator
+from xpdeint.Segments.Integrators.AdaptiveStep import AdaptiveStep as AdaptiveStepIntegrator
 
-from ParserException import ParserException
+from xpdeint.ParserException import ParserException
 
 class _Stochastic (_Feature):
   @property

@@ -7,11 +7,11 @@ Created by Graham Dennis on 2008-02-20.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
-from Operator import Operator
-from ParserException import ParserException, parserWarning
+from xpdeint.Operators.Operator import Operator
+from xpdeint.ParserException import ParserException, parserWarning
 
 import re
-import RegularExpressionStrings
+import xpdeint.RegularExpressionStrings
 
 class _IPOperator(Operator):
   evaluateOperatorFunctionArguments = [('int', '_exponent')]

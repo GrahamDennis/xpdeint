@@ -9,10 +9,10 @@ Created by Graham Dennis on 2007-10-17.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 """
 
-from ScriptElement import ScriptElement
+from xpdeint.ScriptElement import ScriptElement
 
-import RegularExpressionStrings
-from ParserException import ParserException
+import xpdeint.RegularExpressionStrings
+from xpdeint.ParserException import ParserException
 
 class _FieldElement (ScriptElement):
   def __init__(self, *args, **KWs):

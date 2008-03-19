@@ -7,15 +7,15 @@ Created by Graham Dennis on 2008-01-01.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
-from Operator import Operator
-from .Geometry.FieldElement import FieldElement
-from .Vectors.VectorElement import VectorElement
-from .Vectors.VectorInitialisation import VectorInitialisation
+from xpdeint.Operators.Operator import Operator
+from xpdeint.Geometry.FieldElement import FieldElement
+from xpdeint.Vectors.VectorElement import VectorElement
+from xpdeint.Vectors.VectorInitialisation import VectorInitialisation
 
-from ParserException import ParserException
+from xpdeint.ParserException import ParserException
 
 import re
-import RegularExpressionStrings
+import xpdeint.RegularExpressionStrings
 
 class _DeltaAOperator (Operator):
   evaluateOperatorFunctionArguments = [('double', '_step')]

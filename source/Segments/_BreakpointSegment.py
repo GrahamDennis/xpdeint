@@ -7,7 +7,7 @@ Created by Graham Dennis on 2008-03-15.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
-from _Segment import _Segment
+from xpdeint.Segments._Segment import _Segment
 
 class _BreakpointSegment (_Segment):
   def __init__(self, *args, **KWs):

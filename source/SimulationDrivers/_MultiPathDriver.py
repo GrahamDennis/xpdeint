@@ -7,10 +7,10 @@ Created by Graham Dennis on 2008-02-02.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
-from SimulationDriver import SimulationDriver
+from xpdeint.SimulationDrivers.SimulationDriver import SimulationDriver
 
-from .Vectors.VectorElement import VectorElement
-from .Vectors.VectorInitialisation import VectorInitialisation
+from xpdeint.Vectors.VectorElement import VectorElement
+from xpdeint.Vectors.VectorInitialisation import VectorInitialisation
 
 class _MultiPathDriver (SimulationDriver):
   logLevelsBeingLogged = "_PATH_LOG_LEVEL|_SIMULATION_LOG_LEVEL|_WARNING_LOG_LEVEL|_ERROR_LOG_LEVEL"

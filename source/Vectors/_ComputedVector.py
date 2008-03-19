@@ -9,9 +9,9 @@ Created by Graham Dennis on 2008-03-12.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
-from VectorElement import VectorElement
+from xpdeint.Vectors.VectorElement import VectorElement
 
-from .Geometry.FieldElement import FieldElement
+from xpdeint.Geometry.FieldElement import FieldElement
 
 class _ComputedVector (VectorElement):
   isComputed = True

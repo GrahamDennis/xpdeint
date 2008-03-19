@@ -7,7 +7,7 @@ Created by Graham Dennis on 2008-02-01.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
-from ScriptElement import ScriptElement
+from xpdeint.ScriptElement import ScriptElement
 
 class _SimulationDriver (ScriptElement):
   logLevelsBeingLogged = "_ALL_LOG_LEVELS"

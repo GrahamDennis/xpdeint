@@ -7,11 +7,11 @@ Created by Graham Dennis on 2008-01-01.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
-from Operator import Operator
-from .Geometry.FieldElement import FieldElement
+from xpdeint.Operators.Operator import Operator
+from xpdeint.Geometry.FieldElement import FieldElement
 
-import RegularExpressionStrings
-from .ParserException import ParserException
+from xpdeint import RegularExpressionStrings
+from xpdeint.ParserException import ParserException
 
 class _FilterOperator (Operator):
   evaluateOperatorFunctionArguments = []

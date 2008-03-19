@@ -9,8 +9,8 @@ Created by Graham Dennis on 2007-10-18.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 """
 
-from Geometry.FieldElement import FieldElement
-from ParserException import ParserException
+from xpdeint.Geometry.FieldElement import FieldElement
+from xpdeint.ParserException import ParserException
 
 class _MomentGroupElement (FieldElement):
   def __init__(self, number, *args, **KWs):
