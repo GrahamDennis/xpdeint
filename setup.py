@@ -22,7 +22,7 @@ setup(name="xpdeint",
                   'xpdeint.Features.Noises.MKL',
                   'xpdeint.Features.Noises.POSIX',
                   ],
-      package_dir = {'xpdeint': 'source'},
+      
       scripts = ['bin/xpdeint'],
       
       exclude_package_data = {'': ['README', 'TODO']},
