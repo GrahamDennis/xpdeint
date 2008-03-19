@@ -33,5 +33,5 @@ clean:
 
 # check examples compile
 check:
-	@for i in ../examples/*.xmds; do \
-	echo $$i; ./parser2.py $$i; done
+	@for i in examples/*.xmds; do \
+	echo $$i; xpdeint $$i; done

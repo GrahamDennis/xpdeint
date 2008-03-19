@@ -16,7 +16,7 @@ from xpdeint.IndentFilter import IndentFilter
 from xpdeint.ParserException import ParserException
 
 import re
-import xpdeint.RegularExpressionStrings
+from xpdeint import RegularExpressionStrings
 
 class _ScriptElement (Template):
   argumentsToTemplateConstructors = {}
