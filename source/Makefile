@@ -1,7 +1,7 @@
 templates = $(wildcard *.tmpl)
 cheetah_settings = directiveStartToken="@",commentStartToken="@\#",multiLineCommentStartToken="@*",multiLineCommentEndToken="*@"
 
-SUBDIRS = SimulationDrivers Segments Operators Features
+SUBDIRS = SimulationDrivers Geometry Vectors Segments Operators Features
 
 .PHONY: all compile clean check
 

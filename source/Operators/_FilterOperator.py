@@ -8,7 +8,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
 from Operator import Operator
-from FieldElement import FieldElement
+from .Geometry.FieldElement import FieldElement
 
 import RegularExpressionStrings
 from .ParserException import ParserException

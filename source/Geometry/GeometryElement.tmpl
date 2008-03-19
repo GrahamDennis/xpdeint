@@ -15,7 +15,10 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 
 @def defines
   @#
-${definesForDimensionsWithPrefix(filter(lambda x: x.transverse, $dimensions), '')}@slurp
+  @for $dimension in filter(lambda x: x.transverse, $dimensions)
+${dimension.definesWithPrefix('')}@slurp
+
+  @end for
   @#
 @end def
 
