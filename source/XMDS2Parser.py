@@ -8,68 +8,68 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 """
 
 import re
-from ScriptParser import ScriptParser
-from ParserException import ParserException, parserWarning
-from ParsedEntity import ParsedEntity
+from xpdeint.ScriptParser import ScriptParser
+from xpdeint.ParserException import ParserException, parserWarning
+from xpdeint.ParsedEntity import ParsedEntity
 from xml.dom import minidom
-import RegularExpressionStrings
+from xpdeint import RegularExpressionStrings
 
-from _ScriptElement import _ScriptElement
+from xpdeint._ScriptElement import _ScriptElement
 
-from SimulationElement import SimulationElement as SimulationElementTemplate
-from Geometry.GeometryElement import GeometryElement as GeometryElementTemplate
-from Geometry.FieldElement import FieldElement as FieldElementTemplate
-from Geometry.DoubleDimension import DoubleDimension
-from Geometry.IntegerDimension import IntegerDimension
+from xpdeint.SimulationElement import SimulationElement as SimulationElementTemplate
+from xpdeint.Geometry.GeometryElement import GeometryElement as GeometryElementTemplate
+from xpdeint.Geometry.FieldElement import FieldElement as FieldElementTemplate
+from xpdeint.Geometry.DoubleDimension import DoubleDimension
+from xpdeint.Geometry.IntegerDimension import IntegerDimension
 
-from Vectors.VectorElement import VectorElement as VectorElementTemplate
-from Vectors.ComputedVector import ComputedVector as ComputedVectorTemplate
-from Vectors.VectorInitialisation import VectorInitialisation as VectorInitialisationZeroTemplate
-from Vectors.VectorInitialisationFromCDATA import VectorInitialisationFromCDATA as VectorInitialisationFromCDATATemplate
-from Vectors.VectorInitialisationFromXSIL import VectorInitialisationFromXSIL as VectorInitialisationFromXSILTemplate
-
-
-from Segments.TopLevelSequenceElement import TopLevelSequenceElement as TopLevelSequenceElementTemplate
-from SimulationDrivers.DefaultDriver import DefaultDriver as DefaultDriverTemplate
-from SimulationDrivers.MultiPathDriver import MultiPathDriver as MultiPathDriverTemplate
-from SimulationDrivers.MPIMultiPathDriver import MPIMultiPathDriver as MPIMultiPathDriverTemplate
-
-from Segments import Integrators
-from Segments.FilterSegment import FilterSegment as FilterSegmentTemplate
-from Segments.BreakpointSegment import BreakpointSegment as BreakpointSegmentTemplate
-from Segments.SequenceSegment import SequenceSegment as SequenceSegmentTemplate
-
-from Operators.OperatorContainer import OperatorContainer as OperatorContainerTemplate
-
-from Operators.DeltaAOperator import DeltaAOperator as DeltaAOperatorTemplate
-from Operators.ConstantIPOperator import ConstantIPOperator as ConstantIPOperatorTemplate
-from Operators.AdaptiveStepIPOperator import AdaptiveStepIPOperator as AdaptiveStepIPOperatorTemplate
-from Operators.ConstantEXOperator import ConstantEXOperator as ConstantEXOperatorTemplate
-from Operators.NonConstantEXOperator import NonConstantEXOperator as NonConstantEXOperatorTemplate
-from Operators.FilterOperator import FilterOperator as FilterOperatorTemplate
-from Operators.CrossPropagationOperator import CrossPropagationOperator as CrossPropagationOperatorTemplate
-from Operators.FunctionsOperator import FunctionsOperator as FunctionsOperatorTemplate
+from xpdeint.Vectors.VectorElement import VectorElement as VectorElementTemplate
+from xpdeint.Vectors.ComputedVector import ComputedVector as ComputedVectorTemplate
+from xpdeint.Vectors.VectorInitialisation import VectorInitialisation as VectorInitialisationZeroTemplate
+from xpdeint.Vectors.VectorInitialisationFromCDATA import VectorInitialisationFromCDATA as VectorInitialisationFromCDATATemplate
+from xpdeint.Vectors.VectorInitialisationFromXSIL import VectorInitialisationFromXSIL as VectorInitialisationFromXSILTemplate
 
 
-from Features.BinaryOutput import BinaryOutput as BinaryOutputTemplate
-from Features.AsciiOutput import AsciiOutput as AsciiOutputTemplate
-from MomentGroupElement import MomentGroupElement as MomentGroupTemplate
+from xpdeint.Segments.TopLevelSequenceElement import TopLevelSequenceElement as TopLevelSequenceElementTemplate
+from xpdeint.SimulationDrivers.DefaultDriver import DefaultDriver as DefaultDriverTemplate
+from xpdeint.SimulationDrivers.MultiPathDriver import MultiPathDriver as MultiPathDriverTemplate
+from xpdeint.SimulationDrivers.MPIMultiPathDriver import MPIMultiPathDriver as MPIMultiPathDriverTemplate
 
-import Features
+from xpdeint.Segments import Integrators
+from xpdeint.Segments.FilterSegment import FilterSegment as FilterSegmentTemplate
+from xpdeint.Segments.BreakpointSegment import BreakpointSegment as BreakpointSegmentTemplate
+from xpdeint.Segments.SequenceSegment import SequenceSegment as SequenceSegmentTemplate
 
-from Features.Noises.POSIX.GaussianPOSIXNoise import GaussianPOSIXNoise
-from Features.Noises.POSIX.UniformPOSIXNoise import UniformPOSIXNoise
-from Features.Noises.POSIX.PoissonianPOSIXNoise import PoissonianPOSIXNoise
-from Features.Noises.MKL.GaussianMKLNoise import GaussianMKLNoise
-from Features.Noises.MKL.UniformMKLNoise import UniformMKLNoise
-from Features.Noises.DSFMT.GaussianDSFMTNoise import GaussianDSFMTNoise
-from Features.Noises.DSFMT.UniformDSFMTNoise import UniformDSFMTNoise
-from Features.Noises.DSFMT.PoissonianDSFMTNoise import PoissonianDSFMTNoise
+from xpdeint.Operators.OperatorContainer import OperatorContainer as OperatorContainerTemplate
 
-from Features.FourierTransformNone import FourierTransformNone
-from Features.FourierTransformFFTW2 import FourierTransformFFTW2
-from Features.FourierTransformFFTW3 import FourierTransformFFTW3
-from Features.FourierTransformFFTW3Threads import FourierTransformFFTW3Threads
+from xpdeint.Operators.DeltaAOperator import DeltaAOperator as DeltaAOperatorTemplate
+from xpdeint.Operators.ConstantIPOperator import ConstantIPOperator as ConstantIPOperatorTemplate
+from xpdeint.Operators.AdaptiveStepIPOperator import AdaptiveStepIPOperator as AdaptiveStepIPOperatorTemplate
+from xpdeint.Operators.ConstantEXOperator import ConstantEXOperator as ConstantEXOperatorTemplate
+from xpdeint.Operators.NonConstantEXOperator import NonConstantEXOperator as NonConstantEXOperatorTemplate
+from xpdeint.Operators.FilterOperator import FilterOperator as FilterOperatorTemplate
+from xpdeint.Operators.CrossPropagationOperator import CrossPropagationOperator as CrossPropagationOperatorTemplate
+from xpdeint.Operators.FunctionsOperator import FunctionsOperator as FunctionsOperatorTemplate
+
+
+from xpdeint.Features.BinaryOutput import BinaryOutput as BinaryOutputTemplate
+from xpdeint.Features.AsciiOutput import AsciiOutput as AsciiOutputTemplate
+from xpdeint.MomentGroupElement import MomentGroupElement as MomentGroupTemplate
+
+from xpdeint import Features
+
+from xpdeint.Features.Noises.POSIX.GaussianPOSIXNoise import GaussianPOSIXNoise
+from xpdeint.Features.Noises.POSIX.UniformPOSIXNoise import UniformPOSIXNoise
+from xpdeint.Features.Noises.POSIX.PoissonianPOSIXNoise import PoissonianPOSIXNoise
+from xpdeint.Features.Noises.MKL.GaussianMKLNoise import GaussianMKLNoise
+from xpdeint.Features.Noises.MKL.UniformMKLNoise import UniformMKLNoise
+from xpdeint.Features.Noises.DSFMT.GaussianDSFMTNoise import GaussianDSFMTNoise
+from xpdeint.Features.Noises.DSFMT.UniformDSFMTNoise import UniformDSFMTNoise
+from xpdeint.Features.Noises.DSFMT.PoissonianDSFMTNoise import PoissonianDSFMTNoise
+
+from xpdeint.Features.FourierTransformNone import FourierTransformNone
+from xpdeint.Features.FourierTransformFFTW2 import FourierTransformFFTW2
+from xpdeint.Features.FourierTransformFFTW3 import FourierTransformFFTW3
+from xpdeint.Features.FourierTransformFFTW3Threads import FourierTransformFFTW3Threads
 
 # TODO: Must check that we are never sampling a temporary vector when it doesn't exist.
 # The way to do this is after the template tree has been built to iterate over all elements that can sample

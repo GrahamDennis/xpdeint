@@ -12,11 +12,11 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 import sys
 
 from Cheetah.Template import Template
-from IndentFilter import IndentFilter
-from ParserException import ParserException
+from xpdeint.IndentFilter import IndentFilter
+from xpdeint.ParserException import ParserException
 
 import re
-import RegularExpressionStrings
+import xpdeint.RegularExpressionStrings
 
 class _ScriptElement (Template):
   argumentsToTemplateConstructors = {}

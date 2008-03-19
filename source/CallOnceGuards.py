@@ -8,7 +8,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 """
 
 from functools import wraps
-from _ScriptElement import _ScriptElement
+from xpdeint._ScriptElement import _ScriptElement
 
 
 def callOnceGuard(f):

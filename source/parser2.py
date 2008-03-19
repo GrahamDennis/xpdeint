@@ -22,23 +22,23 @@ if sys.platform == 'darwin':
 
 
 # Import the parser stuff
-from ParserException import ParserException
-from XMDS2Parser import XMDS2Parser
+from xpdeint.ParserException import ParserException
+from xpdeint.XMDS2Parser import XMDS2Parser
 
 # Import the top level template
-from Simulation import Simulation as SimulationTemplate
+from xpdeint.Simulation import Simulation as SimulationTemplate
 
 # Import the IndentFilter. The IndentFilter is the magic filter
 # that when used correctly makes the generated source correctly
 # indented. See the comments in IndentFilter.py for more info.
-from IndentFilter import IndentFilter
+from xpdeint.IndentFilter import IndentFilter
 
 # Import the root class for all templates
-from _ScriptElement import _ScriptElement
+from xpdeint._ScriptElement import _ScriptElement
 
 # The help message printed when --help is used as an argument
 help_message = '''
-usage: parser2 [options] fileToBeParsed
+usage: xpdeint [options] fileToBeParsed
 
 Options and arguments:
 -h          : Print this message (also --help)

@@ -7,13 +7,13 @@ Created by Graham Dennis on 2008-02-21.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
-from Operator import Operator
-from ParserException import ParserException, parserWarning
+from xpdeint.Operators.Operator import Operator
+from xpdeint.ParserException import ParserException, parserWarning
 
-from .Vectors.ComputedVector import ComputedVector
+from xpdeint.Vectors.ComputedVector import ComputedVector
 
 import re
-import RegularExpressionStrings
+import xpdeint.RegularExpressionStrings
 
 class _EXOperator(Operator):
   evaluateOperatorFunctionArguments = []

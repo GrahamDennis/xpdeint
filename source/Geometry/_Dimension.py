@@ -7,7 +7,8 @@ Created by Graham Dennis on 2008-02-02.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
-from ScriptElement import ScriptElement
+from xpdeint.ScriptElement import ScriptElement
+
 class _Dimension(ScriptElement):
   def __init__(self, name, transverse, **KWs):
     self.name = name

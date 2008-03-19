@@ -7,7 +7,7 @@ Created by Graham Dennis on 2008-03-01.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
-from Integrator import Integrator
+from xpdeint.Segments.Integrators.Integrator import Integrator
 
 class _FixedStep (Integrator):
   # Is this integrator capable of doing cross-propagation integration?

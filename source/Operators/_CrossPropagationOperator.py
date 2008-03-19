@@ -7,12 +7,12 @@ Created by Graham Dennis on 2008-03-01.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
-from Operator import Operator
+from xpdeint.Operators.Operator import Operator
 
-from .Geometry.FieldElement import FieldElement
-from .Vectors.VectorElement import VectorElement
+from xpdeint.Geometry.FieldElement import FieldElement
+from xpdeint.Vectors.VectorElement import VectorElement
 
-from ParserException import ParserException
+from xpdeint.ParserException import ParserException
 
 class _CrossPropagationOperator (Operator):
   operatorKind = Operator.OtherOperatorKind

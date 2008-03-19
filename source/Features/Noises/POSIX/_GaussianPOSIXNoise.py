@@ -7,8 +7,8 @@ Created by Graham Dennis on 2008-03-06.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
-from POSIXNoise import POSIXNoise
-from ..GaussianBoxMuellerNoiseMethod import GaussianBoxMuellerNoiseMethod
+from xpdeint.Features.Noises.POSIX.POSIXNoise import POSIXNoise
+from xpdeint.Features.Noises.GaussianBoxMuellerNoiseMethod import GaussianBoxMuellerNoiseMethod
 
 class _GaussianPOSIXNoise(POSIXNoise, GaussianBoxMuellerNoiseMethod):
   # Because generated Cheetah templates directly call their superclass' __init__ function

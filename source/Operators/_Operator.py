@@ -9,10 +9,10 @@ Created by Graham Dennis on 2007-10-18.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 """
 
-from .ScriptElement import ScriptElement
-from ParserException import ParserException
+from xpdeint.ScriptElement import ScriptElement
+from xpdeint.ParserException import ParserException
 
-import RegularExpressionStrings
+import xpdeint.RegularExpressionStrings
 import re
 
 class _Operator (ScriptElement):

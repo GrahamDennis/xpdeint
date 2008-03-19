@@ -7,10 +7,10 @@ Created by Graham Dennis on 2008-03-09.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
-from .ScriptElement import ScriptElement
+from xpdeint.ScriptElement import ScriptElement
 
-from _Operator import _Operator
-from .ParserException import ParserException
+from xpdeint.Operators._Operator import _Operator
+from xpdeint.ParserException import ParserException
 
 class _OperatorContainer(ScriptElement):
   def __init__(self, *args, **KWs):

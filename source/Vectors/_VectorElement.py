@@ -9,8 +9,8 @@ Created by Graham Dennis on 2007-10-17.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 """
 
-from ScriptElement import ScriptElement
-from VectorInitialisation import VectorInitialisation
+from xpdeint.ScriptElement import ScriptElement
+from xpdeint.Vectors.VectorInitialisation import VectorInitialisation
 
 class _VectorElement (ScriptElement):
   isComputed = False

@@ -9,7 +9,7 @@ Created by Graham Dennis on 2007-10-18.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 """
 
-from .ScriptElement import ScriptElement
+from xpdeint.ScriptElement import ScriptElement
 
 class _Segment (ScriptElement):
   def __init__(self, *args, **KWs):
