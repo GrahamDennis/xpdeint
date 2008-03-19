@@ -1,4 +1,4 @@
-SOURCE = $(wildcard ../source/*py)
+SOURCE = $(wildcard ../xpdeint/*py)
 
 default: html
 
