@@ -161,10 +161,15 @@ class XMDS2Parser(ScriptParser):
     parseSimpleFeature('bing', Features.Bing.Bing)
     parseSimpleFeature('openmp', Features.OpenMP.OpenMP)
     
-    argvFeatureElement, argvFeature = parseSimpleFeature('argv', Features.Argv.Argv)
+    argvFeatureElement = featuresParentElement.getChildElementByTagName('argv', optional=True)
     
     if argvFeatureElement:
+      argvFeature = Features.Argv.Argv(**self.argumentsToTemplateConstructors)
+      argvFeature.xmlElement = argvFeatureElement
+      
       argElements = argvFeatureElement.getChildElementsByTagName('arg')
+      
+      argvFeature.postArgumentsCode = argvFeatureElement.cdataContents()
       
       argList = []
       # Note that "h" is already taken as the "help" option 

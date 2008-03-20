@@ -6,7 +6,7 @@ Copyright (c) 2008 Mattias Johnsson. All rights reserved.
 *@
 @extends xpdeint.Features._Feature
 
-@def description: argv
+@def description: Command line argument processing
 @attr featureName = 'Argv'
 
 @def includes
@@ -21,7 +21,6 @@ Copyright (c) 2008 Mattias Johnsson. All rights reserved.
   @#
   @super
   @#
-// *********** Command line argument global variables *********
   @for $argument in $argList
     @if $argument.type == "string"
 $argument.type $argument.name = "$argument.defaultValue";
@@ -31,6 +30,38 @@ $argument.type $argument.name = $argument.defaultValue;
   @end for
   @#
 @end def
+
+@def functionPrototypes
+  @#
+  @super
+  @#
+void _print_usage();
+  @#
+@end def
+
+@def functionImplementations
+  @#
+  @super
+  @#
+void _print_usage()
+{
+  // This function does not return.
+  _LOG(_ERROR_LOG_LEVEL, "Usage: $simulationName@slurp
+@for $argument in $argList
+ -$argument.shortName < $argument.type >@slurp
+@end for
+\n\n"
+                         "Details:\n"
+                         "Option\t\tType\t\tDefault value\n"
+@for $argument in $argList
+                         "-$argument.shortName, --$argument.name\t$argument.type \t\t$argument.defaultValue\n"
+@end for
+                         );
+  // Simulation will have exited due to _LOG
+}
+  @#
+@end def
+
 
 @def mainBegin($dict)
 // *********** Parse the command line for arguments, and set  *********
@@ -53,22 +84,12 @@ $argument.shortName:@slurp
   @end for
 ", long_options, &option_index);
   
-  if (resp == -1) {
+  if (resp == -1)
     break;
-  }
+  
   switch (resp) {
     case 'h':
-      printf("Usage: $simulationName @slurp
-  @for $argument in $argList
--$argument.shortName < $argument.type > @slurp
-  @end for
-\n\n");
-      printf("Details:\n");
-      printf("Option\t\tType\t\tDefault value\n");
-  @for $argument in $argList
-      printf("-$argument.shortName, --$argument.name\t$argument.type \t\t$argument.defaultValue \n");
-  @end for
-      exit(0);
+      _print_usage(); // This causes the simulation to exit
   @for $argument in $argList
       
     case '$argument.shortName':
@@ -83,23 +104,19 @@ $argument.shortName:@slurp
   @end for
       
     default:
-      exit(10);
-    }
+      _LOG(_ERROR_LOG_LEVEL, "Internal error in processing arguments.\n")
   }
-  
-  if (optind < argc) {
-    printf("Usage: $simulationName @slurp
-      @for $argument in $argList
--$argument.shortName < $argument.type > @slurp
-      @end for
-\n\n");
-    printf("Details:\n");
-    printf("Option\t\tType\t\tDefault value\n");
-  @for $argument in $argList
-    printf("-$argument.shortName, --$argument.name\t$argument.type \t\t$argument.defaultValue \n");
-  @end for
-    exit(0);
-  }
+}
+
+if (optind < argc)
+  _print_usage(); // This causes the simulation to exit.
+
+  @if $postArgumentsCode
+// ******** Argument post-processing code *******
+$postArgumentsCode
+// **********************************************
+
+  @end if
 @end def
 
 @def xsilOutputInfo($dict)
