@@ -12,12 +12,12 @@
     <bing />
     <fftw version="none" />
     <!-- That's right, this script breaks the shackles with FFTW! -->
-    <argv>
-      <arg name="lambda" type="double" default_value="100.0" />
+    <arguments>
+      <argument name="lambda" type="double" default_value="100.0" />
       <![CDATA[
         _LOG(_SIMULATION_LOG_LEVEL, "lambda is %e\n", lambda);
       ]]>
-    </argv>
+    </arguments>
   </features>
   
   <geometry>

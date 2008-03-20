@@ -72,7 +72,7 @@ fprintf($fp, "Script compiled with xpdeint version ${xmds.versionString} (${xmds
 fprintf($fp, "See http://www.xmds.org for more information.\n");
   @end filter
 
-  @set $featureOrderingXSILInfo = ['Argv', 'Stochastic']
+  @set $featureOrderingXSILInfo = ['Arguments', 'Stochastic']
 ${insertCodeForFeatures('xsilOutputInfo', $featureOrderingXSILInfo, $dict)}@slurp
 fprintf($fp, "</info>\n");
   @#

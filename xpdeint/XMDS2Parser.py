@@ -76,20 +76,6 @@ from xpdeint.Features.FourierTransformFFTW3Threads import FourierTransformFFTW3T
 # and verifying that it isn't sampling a temporary vector that it didn't create (or is a child of the creator).
 
 
-class XMDS_Regex:
-  """"This class does some regular expression parsing for us, allowing us to make simple queries of a string.
-  
-  Currently implemented methods:
-    isCVar(string) = true if string is a single C style variable, false otherwise."""
-  def __init__(self):
-    self._reCVar = re.compile(r"\s*[a-zA-Z_]\w*\s*")
-  
-  def isCVar(self,string_in):
-    string_match = self._reCVar.match(string_in)
-    if string_match:
-      return (len(string_in) == string_match.end())
-
-
 class XMDS2Parser(ScriptParser):
   @staticmethod
   def canParseXMLDocument(xmlDocument):
@@ -161,24 +147,39 @@ class XMDS2Parser(ScriptParser):
     parseSimpleFeature('bing', Features.Bing.Bing)
     parseSimpleFeature('openmp', Features.OpenMP.OpenMP)
     
-    argvFeatureElement = featuresParentElement.getChildElementByTagName('argv', optional=True)
     
-    if argvFeatureElement:
-      argvFeature = Features.Argv.Argv(**self.argumentsToTemplateConstructors)
-      argvFeature.xmlElement = argvFeatureElement
+    validationFeatureElement = featuresParentElement.getChildElementByTagName('validation', optional=True)
+    if validationFeatureElement and validationFeatureElement.hasAttribute('kind'):
+      kindString = validationFeatureElement.getAttribute('kind').strip().lower()
       
-      argElements = argvFeatureElement.getChildElementsByTagName('arg')
+      if kindString in ('run-time', 'none'):
+        validationFeature = Features.Validation.Validation(runValidationChecks = kindString == 'run-time',
+                                                           **self.argumentsToTemplateConstructors)
+      elif kindString == 'compile-time':
+        pass
+      else:
+        raise ParserException(validationFeatureElement, "The 'kind' attribute of the <validation> tag must be one of\n"
+                                                        "'compile-time', 'run-time' or 'none'.")
       
-      argvFeature.postArgumentsCode = argvFeatureElement.cdataContents()
+    
+    argumentsFeatureElement = featuresParentElement.getChildElementByTagName('arguments', optional=True)
+    
+    if argumentsFeatureElement:
+      argumentsFeature = Features.Arguments.Arguments(**self.argumentsToTemplateConstructors)
+      argumentsFeature.xmlElement = argumentsFeatureElement
       
-      argList = []
+      argumentElements = argumentsFeatureElement.getChildElementsByTagName('argument')
+      
+      argumentsFeature.postArgumentsCode = argumentsFeatureElement.cdataContents()
+      
+      argumentList = []
       # Note that "h" is already taken as the "help" option 
       shortOptionNames = set(['h'])
       
-      for argElement in argElements:
-        name = argElement.getAttribute('name').strip()
-        type = argElement.getAttribute('type').strip().lower()
-        defaultValue = argElement.getAttribute('default_value').strip()
+      for argumentElement in argumentElements:
+        name = argumentElement.getAttribute('name').strip()
+        type = argumentElement.getAttribute('type').strip().lower()
+        defaultValue = argumentElement.getAttribute('default_value').strip()
         
         # Determine the short name (i.e. single character) of the full option name
         shortName = ""
@@ -189,25 +190,25 @@ class XMDS2Parser(ScriptParser):
             break
         
         if shortName == "":
-          raise ParserException(argElement, "Unable to find a short (single character) name for command line option")        
+          raise ParserException(argumentElement, "Unable to find a short (single character) name for command line option")        
         
         if type == 'real':
           type = 'double'
         
         if not type in ('int', 'long', 'double', 'string'):
-          raise ParserException(argElement, "Invalid type name '%(type)s'.\n"
-                                            "Valid options are 'int', 'long', 'double' or 'string'." % locals())
+          raise ParserException(argumentElement, "Invalid type name '%(type)s'.\n"
+                                                 "Valid options are 'int', 'long', 'double' or 'string'." % locals())
         
-        argAttributeDictionary = dict()
+        argumentAttributeDictionary = dict()
         
-        argAttributeDictionary['name'] = name
-        argAttributeDictionary['shortName'] = shortName
-        argAttributeDictionary['type'] = type
-        argAttributeDictionary['defaultValue'] = defaultValue
+        argumentAttributeDictionary['name'] = name
+        argumentAttributeDictionary['shortName'] = shortName
+        argumentAttributeDictionary['type'] = type
+        argumentAttributeDictionary['defaultValue'] = defaultValue
         
-        argList.append(argAttributeDictionary)
+        argumentList.append(argumentAttributeDictionary)
       
-      argvFeature.argList = argList
+      argumentsFeature.argumentList = argumentList
     
     
     globalsElement = featuresParentElement.getChildElementByTagName('globals', optional=True)
@@ -957,18 +958,22 @@ class XMDS2Parser(ScriptParser):
       if interval <= 0.0:              # Was the number positive?
         raise ParserException(integrateElement, "Interval must be positive.")
     except ValueError, err:
-      my_regex = XMDS_Regex()  # TODO: We probably want a larger scope instance somewhere     
-      if my_regex.isCVar(intervalString):  # Could the interval possibly be a C variable?
-        # TODO: If this is the case then the generated C-code should have a check to make sure this
-        # variable is positive. This check should be just before the integration loop as we don't know
-        # when the user may initialize the variable.
-        #
-        # Also: I'm not sure how much feedback the user should recieve... is there a verbose option or something?
-        print "COMMENT: Interval set to C variable '" + intervalString + "'"
+      # We could just barf now, but it could be valid code, and there's no way we can know.
+      # But we only accept code for this value when we have a validation element with a 
+      # run-time kind of validation check
+      if 'Validation' in self.globalNameSpace['features']:
+        validationFeature = self.globalNameSpace['features']['Validation']
+        segmentNumber = integratorTemplate.segmentNumber
+        validationFeature.validationChecks.append("""
+        if (%(intervalString)s <= 0.0)
+          _LOG(_ERROR_LOG_LEVEL, "ERROR: The interval for segment %(segmentNumber)i is not positive!\\n"
+                                 "Interval = %%e\\n", %(intervalString)s);
+        """ % locals())
+        parserWarning(integrateElement, "Attempting to use expression '%(intervalString)s' for the interval "
+                                        "for segment %(segmentNumber)i" % locals())
       else:
-        # The user may prefer a C expression like "0.5*total_time" or something, but this is currently not allowed
         raise ParserException(integrateElement, "Could not understand interval '%(intervalString)s' "
-                                              "as a number or a valid C variable." % locals())
+                                                "as a number." % locals())
     
     integratorTemplate.interval = intervalString
 
