@@ -21,8 +21,8 @@
     <prop_dim> t </prop_dim>
   </geometry>
   
-  <vector name="main" type="complex">
-    <components>
+  <vector name="main">
+    <components type="double">
       y yDot
     </components>
     <initialisation>

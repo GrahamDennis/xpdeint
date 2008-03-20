@@ -22,8 +22,8 @@
     </transverse_dimensions>
   </geometry>
   
-  <vector name="main" type="complex" initial_space="x y">
-    <components>
+  <vector name="main" initial_space="x y">
+    <components type="complex">
       phi
     </components>
     <initialisation>
