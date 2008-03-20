@@ -15,11 +15,26 @@ Build instructions:
 
 2. Install Cheetah version 2.0.1 or later. If you have the setuptools python
    package installed, then you can simply type 'easy_install Cheetah'.
+
+   If you want to install in your home directory, then it is more complex:
+   a) First create the path ~/lib/python2.5/site-packages (assuming you installed python version 2.5) and ~/bin
+      Add "export PYTHONPATH=~/lib/python2.5/site-packages:$PYTHONPATH" and "export PATH=~/bin:$PATH" (if necessary)
+      to your .bashrc file (and run ". ~/.bashrc")
+
+   b) If necessary install setuptools, by downloading it's egg and type
+      "sh ./setuptools-0.6c8-py2.5.egg --prefix=/home/ferris" (depending on the version of setuptools) 
+
+   c) Then type "easy_install --prefix=~ Cheetah"
+      (If you have a proxy first download the cheetah .tar.gz file and from its directory type:
+      "easy_install -f . --prefix=~ Cheetah")
+
    Mac OS X: Install setuptools by downloading http://peak.telecommunity.com/dist/ez_setup.py
        Execute via 'python ez_setup.py'.
 
 3. Install xpdeint into your python path by running (in the xpdeint/ directory):
    sudo ./setup.py develop
+   
+   If you want to install it into your home directory, type "./setup.py develop --prefix=~"
 
 4. Cheetah templates (*.tmpl) are compiled into python, to do this, run 'make' in the
    xpdeint/xpdeint/ directory.
