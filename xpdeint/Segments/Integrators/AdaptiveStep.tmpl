@@ -234,12 +234,6 @@ ${insertCodeForFeatures('createToleranceVariable', featureOrdering)}@slurp
   @#
 void _segment${segmentNumber}()
 {
-  if (${interval} <= 0) {
-    printf("ERROR: The interval is not positive!\n");
-    printf("Interval = %e\n",${interval});
-    printf("Exiting...\n");
-    exit(1);
-  }
   double _step = ${interval}/(double)${stepCount};
   double _min_step = _step;
   double _max_step = _step;

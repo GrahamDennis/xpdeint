@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
-  <name>lorenz_argv</name>
+  <name>lorenz_arguments</name>
   <author>Mattias Johnsson</author>
   <description>
     First script to test command line argument passing.
@@ -9,20 +9,19 @@
   </description>
   
   <features>
-    <argv>
-      <arg name="sigma" type="double" default_value="10.0" />
-      <arg name="b"     type="double" default_value="2.67" />
-      <arg name="r"     type="double" default_value="28.0" />
-      <arg name="time_arg" type="double" default_value="100.0" />
-      <arg name="outputFilename" type="string" default_value="myFilename" />
-    </argv>
+    <arguments>
+      <argument name="sigma" type="double" default_value="10.0" />
+      <argument name="b"     type="double" default_value="2.67" />
+      <argument name="r"     type="double" default_value="28.0" />
+      <argument name="time_arg" type="double" default_value="100.0" />
+      <argument name="outputFilename" type="string" default_value="myFilename" />
+    </arguments>
     <benchmark />
     <error_check />
     <bing />
     <fftw version="none" />
     <!-- That's right, this script breaks the shackles with FFTW! -->
-    <globals>
-    </globals>
+    <validation kind="run-time" />
   </features>
   
   <geometry>
@@ -41,7 +40,7 @@
   </vector>
   
   <sequence>
-    <integrate algorithm="ARK89" interval="time_arg" steps="25000" tolerance="1e-7">
+    <integrate algorithm="ARK89" interval="1.0*time_arg" steps="25000" tolerance="1e-7">
       <samples>10</samples>
       <operators>
         <integration_vectors>main</integration_vectors>

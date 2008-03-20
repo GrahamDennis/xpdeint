@@ -49,8 +49,8 @@ int main(int argc, char **argv)
   @*
     And now insert the code for the features that apply in the main function
   *@
-  @# Note that Bing, and Argv commute
-  @set $featureOrdering = ['Bing', 'Argv', 'FourierTransform', 'Benchmark', 'Output']
+  @# Note that 'Bing', and 'Arguments' commute
+  @set $featureOrdering = ['Bing', 'Arguments', 'Validation', 'FourierTransform', 'Benchmark', 'Output']
 ${insertCodeForFeatures('mainBegin', $featureOrdering)}@slurp
 
 @# This needs to be extracted into a function so that it can be indented further if necessary
