@@ -56,6 +56,12 @@ This function returns the code that will create a _step variable,
 including any modifications necessary due to the ErrorCheck feature.
 *@
   @#
+if (${interval} <= 0) {
+  printf("ERROR: The interval is not positive!\n");
+  printf("Interval = %e\n",${interval});
+  printf("Exiting...\n");
+  exit(1);
+}
 double _step = ${step};
 double _noiseStep = ${step};
   @#
