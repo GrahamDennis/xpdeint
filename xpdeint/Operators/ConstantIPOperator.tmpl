@@ -26,7 +26,7 @@ ${integrator.createStepVariable}@slurp
   @# We expect the integrator to have defined '_step'
   @#
 // ************** Operator code *****************
-${operatorDefinitionCode}
+${operatorDefinitionCode, fixupWhitespace=True}
 // **********************************************
   @# Loop over the propagation step fractions
   @for $fractionIndex, $propagationStepFraction in enumerate($integrator.ipPropagationStepFractions)
