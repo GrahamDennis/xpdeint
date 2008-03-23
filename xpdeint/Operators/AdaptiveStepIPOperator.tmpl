@@ -54,7 +54,7 @@ const double _propagationStepFraction = ${integrator.ipPropagationStepFractions[
   @# We expect the integrator to have defined '_step'
   @#
 // ************** Operator code *****************
-${operatorDefinitionCode}
+${operatorDefinitionCode, fixupWhitespace=True}
 // **********************************************
 
   @# Loop over each operator component

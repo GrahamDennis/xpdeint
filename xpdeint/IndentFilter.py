@@ -40,9 +40,13 @@ class IndentFilter(Filter):
     
     Additionally, the option ``extraIndent=n`` can be passed which increases
     the indent by ``n`` spaces.
+    
+    Also, whitespace can be 'fixed-up' for the variable replacement by passing
+    ``fixupWhitespace=True``. This option causes the overall indent level of the
+    replacement string to be reduced to zero.
     """
     # Quickly check for the case where we have nothing to do
-    if not (kw.get('autoIndent') or kw.get('extraIndent')):
+    if not (kw.get('autoIndent') or kw.get('extraIndent') or kw.get('fixupWhitespace')):
       return super(IndentFilter, self).filter(val, **kw)
     trans = None
     indentString = ''
@@ -57,6 +61,36 @@ class IndentFilter(Filter):
     # If the replacement string is just space, just use an empty string instead.
     if replacementString == None or replacementString.isspace():
       replacementString = ''
+    
+    if kw.get('fixupWhitespace', False):
+      lines = replacementString.splitlines()
+      indentationLevels = []
+      for line in lines:
+        if not line or line.isspace():
+          # If the line is just space (or empty), then it won't contribute
+          # to determining the overall indent level
+          continue
+        # Strip leading whitespace
+        strippedLine = line.lstrip()
+        # The difference in the lengths is our indentation level
+        indentationLevels.append(len(line) - len(strippedLine))
+      
+      # Our overall indentation level is the minimum of the indentation levels
+      indentationLevel = min(indentationLevels)
+      indentation = ' '*indentationLevel
+      newLines = []
+      # Strip the leading whitespace
+      for line in lines:
+        newLine = None
+        if not line.startswith(indentation):
+          # If the line doesn't start with this amount of indentation, then
+          # just add an empty line
+          newLine = '\n'
+        else:
+          newLine = line[indentationLevel:]
+        newLines.append(newLine)
+      # Now set the replacement string
+      replacementString = '\n'.join(newLines)
     
     if kw.get('autoIndent'):
       # Grab the transaction object from our caller's frame. Yay introspection.

@@ -137,7 +137,7 @@ void _${name}_sample()
 @def insideSamplingLoops
   @#
 // *************** Sampling code ****************
-$samplingCode
+${samplingCode, fixupWhitespace=True}
 // **********************************************
   @#
 @end def
@@ -196,7 +196,7 @@ ${insertCodeForFeatures('insideMomentGroupProcessingNoProcessingCodeLoop', $feat
 @def insideProcessingLoops
   @#
 // ************** Processing code ***************
-$processingCode
+${processingCode, fixupWhitespace=True}
 // **********************************************
 
   @set $featureOrdering = ['Driver']
