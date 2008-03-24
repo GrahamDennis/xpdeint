@@ -25,14 +25,6 @@
     - Implemented for the "interval" attribute of <integrate>
     - It should be pretty easy to generalise the method in xpdeint. We just throw less
       exceptions. :)
-    - Uses the new XMDS_Regex (inside XMDS2Parser.py) class as a simple way to check if strings
-      are C-strings. I'm not sure if there is a better/existing way to do this.
-    - XMDS_Regex - should we extend it to allow for more checks? e.g. C-expressions, whitespace...
-    - We now check if interval is positive at the start of the integration block. This is done
-      always, regardless if it was a numerical value or not. In a perfect world, we would only
-      perform this check if interval was non-numerical. Does someone know how we can use the
-      templates to have an @if block depending on whether the python expression float(${interval})
-      raises an exception? This is the way it is implemented in XMDS2Parser.py...
 
 * Rewrite parser so that it isn't so long. (Ask Gabriel McManus)
 

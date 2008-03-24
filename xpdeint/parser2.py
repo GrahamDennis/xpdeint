@@ -12,6 +12,7 @@ import getopt
 from xml.dom import minidom
 from xml.dom import expatbuilder
 import subprocess
+from pkg_resources import resource_filename
 
 # Hack for Leopard so it doesn't import the web rendering
 # framework WebKit when Cheetah tries to import the Python
@@ -392,7 +393,11 @@ def main(argv=None):
   myfile.close()
   
   
-  from Preferences import CC,CFLAGS
+  from Preferences import CC, CFLAGS
+  
+  pathToIncludeDirectory = resource_filename(__name__, 'includes')
+  
+  CFLAGS += ' -I"%(pathToIncludeDirectory)s"' % locals()
   
   # Now let the templates add anything they need to CFLAGS
   templateCFLAGS = ['']

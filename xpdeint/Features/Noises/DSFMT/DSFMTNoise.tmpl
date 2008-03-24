@@ -18,7 +18,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 Return the options that need to be added to ``CFLAG``.
 *@
   @#
--msse2 -finline-functions -fno-strict-aliasing --param max-inline-insns-single=1800 -DDSFMT_MEXP=19937 -DHAVE_SSE2 dSFMT.c@slurp
+-msse2 -finline-functions -fno-strict-aliasing --param max-inline-insns-single=1800 -DDSFMT_MEXP=19937 -DHAVE_SSE2@slurp
   @#
 @end def
 
@@ -31,7 +31,8 @@ Return the options that need to be added to ``CFLAG``.
   @super
   @#
 #define DSFMT_DO_NOT_USE_OLD_NAMES
-#include "dSFMT.h"
+#include <dSFMT.h>
+#include <dSFMT.c>
   @#
 @end def
 
