@@ -18,6 +18,5 @@ extern bool initialiseFieldFromXSILFile(const char *filename,
    unsigned long *nDataComponents, unsigned long **inputLattice,
    int **componentIndicesPtr);
 
-
-
 #endif // xpdeint_h
+
