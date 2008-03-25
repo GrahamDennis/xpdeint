@@ -22,9 +22,13 @@
 
 * Make sure that all the things that Andy has been doing to enable various simulation
   parameters can be controlled at simulation run time can be done in xpdeint.
-    - Implemented for the "interval" attribute of <integrate>
-    - It should be pretty easy to generalise the method in xpdeint. We just throw less
-      exceptions. :)
+    - Implemented: <integrate "interval">, <noise "mean-rate"> (for Poissonian)
+    - High priority: <noise "seed">, <dimension "domain"> (both currently in xmds-1)
+    - Challenging: <dimension "lattice"> in geometries and samples (and for integer dimensions)
+                   <integrate "steps"> and <samples>
+    - Weird/low-priority: Number of cycles
+                          Tolerence and cut-off for adaptive algorithms
+    - Any requests?
 
 * Rewrite parser so that it isn't so long. (Ask Gabriel McManus)
 
