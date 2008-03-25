@@ -235,6 +235,7 @@ ${insertCodeForFeatures('createToleranceVariable', featureOrdering)}@slurp
 void _segment${segmentNumber}()
 {
   double _step = ${interval}/(double)${stepCount};
+  double _old_step = _step;
   double _min_step = _step;
   double _max_step = _step;
   unsigned long _attempted_steps = 0;
@@ -311,8 +312,16 @@ void _segment${segmentNumber}()
           _max_step = _step;
         if (!_break_next && _step < _min_step)
           _min_step = _step;
-        
-        _step *= 0.92 * pow(fabs(_tolerance/_error), ${successfulStepExponent});
+        if (_error < 0.5*_tolerance) {
+          double _scalingFactor = 0.92 * pow(fabs(_tolerance/_error), ${successfulStepExponent});
+          if (_scalingFactor < 1.0/5.0)
+            _scalingFactor = 1.0/5.0;
+          if (_scalingFactor > 5.0)
+            _scalingFactor = 5.0;
+          
+          _old_step = _step;
+          _step *= _scalingFactor;
+        }
         _discard = false;
       } else {
         ${insertCodeForFeatures('adaptiveStepFailed', $featureOrderingForToleranceChecking), autoIndent=True}@slurp
@@ -323,7 +332,14 @@ void _segment${segmentNumber}()
   @end for
         _segment${segmentNumber}_ip_evolve(-1);
         
-        _step *= 0.92 * pow(fabs(_tolerance/_error), ${unsuccessfulStepExponent});
+        double _scalingFactor = 0.92 * pow(fabs(_tolerance/_error), ${unsuccessfulStepExponent});
+        if (_scalingFactor < 1.0/5.0)
+          _scalingFactor = 1.0/5.0;
+        if (_scalingFactor > 5.0)
+          _scalingFactor = 5.0;
+        
+        _old_step = _step;
+        _step *= _scalingFactor;
         _discard = true;
         _break_next = false;
         _unsuccessful_steps++;
