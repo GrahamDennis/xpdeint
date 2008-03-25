@@ -583,8 +583,8 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
         raise ParserException(dimensionElement, "Integer dimension %(dimensionName)s has non-integer domain "
                                                 "(%(minimumString)s, %(maximumString)s)" % locals())
      
-     if minimumValue >= maximumValue:
-       raise(ParserException(dimensionElement, "Integer dimension %(dimensionName)s must have end greater "
+      if minimumValue >= maximumValue:
+        raise ParserException(dimensionElement, "Integer dimension %(dimensionName)s must have end greater "
                                                 "than start. Domain = (%(minimumString)s, %(maximumString)s)" % locals())
       
       # If we have a lattice attribute, check that it agrees with the domain
