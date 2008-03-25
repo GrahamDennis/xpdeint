@@ -1,3 +1,8 @@
+? Possible bug in ARK45 algorithm - if I halve both domains in diffusion.xmds then the
+  simulation stalls. This is strange because there is no algorithmic error in that
+  simulation - it is solved exactly by IP propagation. ARK89 does not appear to have 
+  the same limitations.
+
 * Complete Stochastics support
   * Test
   * Add the GNU scientific library as another source for noises
@@ -22,15 +27,13 @@
 
 * Make sure that all the things that Andy has been doing to enable various simulation
   parameters can be controlled at simulation run time can be done in xpdeint.
-    - The user may want to process their globals based on command-line arguments before 
-      run-time validation/etc. So I suggest a CDATA section in <arguments> to allow for
-      some arbitrary code to be placed just after argument processing and just before the
-      validation code.
     - Implemented: <integrate "interval">, <noise "mean-rate"> (for Poissonian), <noise "seed">
                    and <dimension "domain"> for transverse dimensions. Same as xmds-1?
+                   Pre-processing of arguments works and the example diffusion_arguments.xmds 
+                   shows how this can work.
     - High priority: <dimension "domain"> for integer dimensions. May not be simple as lattice
                      and domain are linked. Why do integer dimensions accept both lattice and domain??
-    - Challenging: <dimension "lattice"> in geometries and samples (and for integer dimensions)
+    - Challenging: <dimension "lattice"> in geometries, and samples (and for integer dimensions)
                    <integrate "steps"> and <samples>
     - Weird/low-priority: Number of cycles
                           Tolerence and cut-off for adaptive algorithms
