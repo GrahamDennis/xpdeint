@@ -113,7 +113,7 @@ if (optind < argc)
 
   @if $postArgumentsCode
 // ******** Argument post-processing code *******
-$postArgumentsCode
+${postArgumentsCode, fixupWhitespace=True}
 // **********************************************
 
   @end if

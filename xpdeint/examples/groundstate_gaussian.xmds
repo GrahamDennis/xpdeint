@@ -85,6 +85,9 @@
         ]]>
       </operators>
     </integrate>
+    <breakpoint filename="groundstate_gaussian_break.xsil">
+      <dependencies>wavefunction potential</dependencies>
+    </breakpoint>
   </sequence>
   <output format="binary">
     <group>
