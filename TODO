@@ -27,7 +27,9 @@
       some arbitrary code to be placed just after argument processing and just before the
       validation code.
     - Implemented: <integrate "interval">, <noise "mean-rate"> (for Poissonian), <noise "seed">
-    - High priority: <dimension "domain"> (currently in xmds-1)
+                   and <dimension "domain"> for transverse dimensions. Same as xmds-1?
+    - High priority: <dimension "domain"> for integer dimensions. May not be simple as lattice
+                     and domain are linked. Why do integer dimensions accept both lattice and domain??
     - Challenging: <dimension "lattice"> in geometries and samples (and for integer dimensions)
                    <integrate "steps"> and <samples>
     - Weird/low-priority: Number of cycles

@@ -84,6 +84,23 @@ class XMDS2Parser(ScriptParser):
       return False
     return True
   
+  def domainPairFromString(self, domainString, element):
+    """
+    Parse a string of the form ``(someNumber1, someNumber2)`` and return the two
+    strings corresponding to the numbers ``someNumber1`` and ``someNumber2`` 
+    """
+    
+    regex = re.compile(RegularExpressionStrings.domainPair)
+    result = regex.match(domainString)
+    if not result:
+      raise ParserException(element, "Could not understand '%(domainString)s' as a domain"
+                                     " of the form ( +/-someNumber, +/-someNumber)" % locals())
+    
+    minimumString = result.group(1)
+    maximumString = result.group(2)
+    
+    return minimumString, maximumString
+  
   def parseXMLDocument(self, xmlDocument, globalNameSpace, filterClass):
     self.argumentsToTemplateConstructors = {'searchList':[globalNameSpace], 'filter': filterClass}
     self.globalNameSpace = globalNameSpace
@@ -258,7 +275,7 @@ class XMDS2Parser(ScriptParser):
               parserWarning(noiseElement, "Attempting to use expression '%(meanRateString)s' for the Poissonian mean-rate "
                                               "for noise %(prefix)s" % locals())
             else:
-              raise ParserException(noiseElement, "Unable to understand '%(meanRateString)s' as a positive real value." % locals())
+              raise ParserException(noiseElement, "Unable to understand '%(meanRateString)s' as a positive real value.\nUse the feature <validation/> to allow for arbitrary code." % locals())
           noiseAttributeDictionary['noiseMeanRate'] = meanRateString
         elif kind in ('gaussian-mkl'):
           noiseClass = GaussianMKLNoise
@@ -302,7 +319,7 @@ class XMDS2Parser(ScriptParser):
                 parserWarning(noiseElement, "Attempting to use expression '%(seedString)s' for a seed for "
                                             "noise %(prefix)s" % locals())
               else:
-                raise ParserException(noiseElement, "Unable to understand seed '%(seedString)s' as a positive integer ." % locals())
+                raise ParserException(noiseElement, "Unable to understand seed '%(seedString)s' as a positive integer.\nUse the feature <validation/> to allow for arbitrary code." % locals())
           
           noise.seedArray = seedStringList
         
@@ -448,7 +465,29 @@ class XMDS2Parser(ScriptParser):
         ## Grab the domain strings
         domainString = parseAttribute('domain')
         
-        minimumString, maximumString = self.domainPairFromString(domainString, float, dimensionElement)
+        ## Returns two strings for the end points
+        minimumString, maximumString = self.domainPairFromString(domainString, dimensionElement)
+        
+        ## Now we try make some sense of them
+        try:
+          minimumFloat = float(minimumString)
+          maximumFloat = float(maximumString)
+        except ValueError, err: # If not floats then we check the validation feature.
+          if 'Validation' in self.globalNameSpace['features']:
+            validationFeature = self.globalNameSpace['features']['Validation']
+            validationFeature.validationChecks.append("""
+            if (%(minimumString)s >= %(maximumString)s)
+              _LOG(_ERROR_LOG_LEVEL, "ERROR: The end point of the dimension '%(maximumString)s' must be "
+                                     "greater than the start point."
+                                     "Start = %%e, End = %%e\\n", %(minimumString)s,%(maximumString)s);""" % locals())
+            parserWarning(dimensionElement, "Attempting to use domain (%(minimumString)s, %(maximumString)s) for dimension %(dimensionName)s" % locals())
+          else:
+            raise ParserException(dimensionElement, """Could not understand domain (%(minimumString)s, %(maximumString)s) as numbers.
+Use feature <validation/> to allow for arbitrary code.""" % locals() )
+        else: # In this case we were given numbers and should check that they in the correct order here
+          if minimumFloat >= maximumFloat:
+            raise ParserException(dimensionElement, "The end point of the dimension, '%(maximumString)s', must be "
+                                           "greater than the start point, '%(minimumString)s'." % locals())
         
         geometryTemplate.dimensions.append(DoubleDimension(name = dimensionName, transverse = True, lattice = int(latticeString),
                                                            minimum = minimumString, maximum = maximumString))
@@ -535,10 +574,18 @@ class XMDS2Parser(ScriptParser):
       
       domainString = dimensionElement.getAttribute('domain').strip()
       
-      minimumString, maximumString = self.domainPairFromString(domainString, int, dimensionElement)
-      # We are guaranteed that these can be transformed into int's
-      minimumValue = int(minimumString)
-      maximumValue = int(maximumString)
+      minimumString, maximumString = self.domainPairFromString(domainString, dimensionElement)
+      # We are not guaranteed that these can be transformed into int's
+      try:
+        minimumValue = int(minimumString)
+        maximumValue = int(maximumString)
+      except ValueErr, err:
+        raise ParserException(dimensionElement, "Integer dimension %(dimensionName)s has non-integer domain "
+                                                "(%(minimumString)s, %(maximumString)s)" % locals())
+     
+     if minimumValue >= maximumValue:
+       raise(ParserException(dimensionElement, "Integer dimension %(dimensionName)s must have end greater "
+                                                "than start. Domain = (%(minimumString)s, %(maximumString)s)" % locals())
       
       # If we have a lattice attribute, check that it agrees with the domain
       if dimensionElement.hasAttribute('lattice'):
@@ -1003,7 +1050,7 @@ class XMDS2Parser(ScriptParser):
                                         "for segment %(segmentNumber)i" % locals())
       else:
         raise ParserException(integrateElement, "Could not understand interval '%(intervalString)s' "
-                                                "as a number." % locals())
+                                                "as a number.\nUse the feature <validation/> to allow for arbitrary code." % locals())
     
     integratorTemplate.interval = intervalString
 
