@@ -223,6 +223,7 @@ class XMDS2Parser(ScriptParser):
       noiseElements = stochasticFeatureElement.getChildElementsByTagName('noise')
       stochasticFeature.noises = []
       for noiseElement in noiseElements:
+        prefix = noiseElement.getAttribute('prefix').strip()
         kind = noiseElement.getAttribute('kind').strip().lower()
         noiseClass = None
         noiseAttributeDictionary = dict()
@@ -241,9 +242,24 @@ class XMDS2Parser(ScriptParser):
           
           meanRateString = noiseElement.getAttribute('mean-rate')
           try:
-            meanRate = float(meanRateString)
+            meanRate = float(meanRateString) # Is it a simple number?
+            if meanRate < 0.0:               # Was the number positive?
+              raise ParserException(noiseElement, "Mean-rate for Poissonian noises must be positive.")
           except ValueError, err:
-            raise ParserException(noiseElement, "Unable to understand '%(meanRateString)s' as a real value." % locals())
+            # We could just barf now, but it could be valid code, and there's no way we can know.
+            # But we only accept code for this value when we have a validation element with a 
+            # run-time kind of validation check
+            if 'Validation' in self.globalNameSpace['features']:
+              validationFeature = self.globalNameSpace['features']['Validation']
+              validationFeature.validationChecks.append("""
+              if (%(meanRateString)s < 0.0)
+                _LOG(_ERROR_LOG_LEVEL, "ERROR: The mean-rate for Poissonian noise %(prefix)s is not positive!\\n"
+                                       "Mean-rate = %%e\\n", %(meanRateString)s);
+              """ % locals())
+              parserWarning(noiseElement, "Attempting to use expression '%(meanRateString)s' for the Poissonian mean-rate "
+                                              "for noise %(prefix)s" % locals())
+            else:
+              raise ParserException(noiseElement, "Unable to understand '%(meanRateString)s' as a positive real value." % locals())
           noiseAttributeDictionary['noiseMeanRate'] = meanRateString
         elif kind in ('gaussian-mkl'):
           noiseClass = GaussianMKLNoise
@@ -259,7 +275,6 @@ class XMDS2Parser(ScriptParser):
         
         self.applyAttributeDictionaryToObject(noiseAttributeDictionary, noise)
         
-        prefix = noiseElement.getAttribute('prefix').strip()
         noise.prefix = prefix
         
         noiseCountString = noiseElement.getAttribute('num').strip()
@@ -273,7 +288,7 @@ class XMDS2Parser(ScriptParser):
         noise.seedArray = []
         if noiseElement.hasAttribute('seed'):
           seedString = noiseElement.getAttribute('seed').strip()
-          noise.seedArray = RegularExpressionStrings.integersInString(seedString)
+          noise.seedArray = RegularExpressionStrings.integersInString(seedString) # TODO: allow C-variable strings here if validation feature exists.
         
         stochasticFeature.noises.append(noise)
     
