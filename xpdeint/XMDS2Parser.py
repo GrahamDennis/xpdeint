@@ -478,7 +478,7 @@ class XMDS2Parser(ScriptParser):
             validationFeature.validationChecks.append("""
             if (%(minimumString)s >= %(maximumString)s)
               _LOG(_ERROR_LOG_LEVEL, "ERROR: The end point of the dimension '%(maximumString)s' must be "
-                                     "greater than the start point."
+                                     "greater than the start point.\\n"
                                      "Start = %%e, End = %%e\\n", %(minimumString)s,%(maximumString)s);""" % locals())
             parserWarning(dimensionElement, "Attempting to use domain (%(minimumString)s, %(maximumString)s) for dimension %(dimensionName)s" % locals())
           else:
