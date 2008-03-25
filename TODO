@@ -22,8 +22,12 @@
 
 * Make sure that all the things that Andy has been doing to enable various simulation
   parameters can be controlled at simulation run time can be done in xpdeint.
-    - Implemented: <integrate "interval">, <noise "mean-rate"> (for Poissonian)
-    - High priority: <noise "seed">, <dimension "domain"> (both currently in xmds-1)
+    - The user may want to process their globals based on command-line arguments before 
+      run-time validation/etc. So I suggest a CDATA section in <arguments> to allow for
+      some arbitrary code to be placed just after argument processing and just before the
+      validation code.
+    - Implemented: <integrate "interval">, <noise "mean-rate"> (for Poissonian), <noise "seed">
+    - High priority: <dimension "domain"> (currently in xmds-1)
     - Challenging: <dimension "lattice"> in geometries and samples (and for integer dimensions)
                    <integrate "steps"> and <samples>
     - Weird/low-priority: Number of cycles
