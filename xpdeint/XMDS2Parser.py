@@ -254,8 +254,7 @@ class XMDS2Parser(ScriptParser):
               validationFeature.validationChecks.append("""
               if (%(meanRateString)s < 0.0)
                 _LOG(_ERROR_LOG_LEVEL, "ERROR: The mean-rate for Poissonian noise %(prefix)s is not positive!\\n"
-                                       "Mean-rate = %%e\\n", %(meanRateString)s);
-              """ % locals())
+                                       "Mean-rate = %%e\\n", %(meanRateString)s);""" % locals())
               parserWarning(noiseElement, "Attempting to use expression '%(meanRateString)s' for the Poissonian mean-rate "
                                               "for noise %(prefix)s" % locals())
             else:
@@ -287,8 +286,25 @@ class XMDS2Parser(ScriptParser):
         
         noise.seedArray = []
         if noiseElement.hasAttribute('seed'):
-          seedString = noiseElement.getAttribute('seed').strip()
-          noise.seedArray = RegularExpressionStrings.integersInString(seedString) # TODO: allow C-variable strings here if validation feature exists.
+          seedStringList = noiseElement.getAttribute('seed').split()
+          for seedString in seedStringList:
+            try:
+              seedInt = int(seedString)
+              if seedInt < 0:
+                raise ParserException(noiseElement, "Seeds must be positive integers." % locals())
+            except ValueError, err:
+              if 'Validation' in self.globalNameSpace['features']:
+                validationFeature = self.globalNameSpace['features']['Validation']
+                validationFeature.validationChecks.append("""
+                if (%(seedString)s < 0.0)
+                  _LOG(_ERROR_LOG_LEVEL, "ERROR: The seed for random noise %(prefix)s is not positive!\\n"
+                  "Seed = %%d\\n", %(seedString)s);""" % locals())
+                parserWarning(noiseElement, "Attempting to use expression '%(seedString)s' for a seed for "
+                                            "noise %(prefix)s" % locals())
+              else:
+                raise ParserException(noiseElement, "Unable to understand seed '%(seedString)s' as a positive integer ." % locals())
+          
+          noise.seedArray = seedStringList
         
         stochasticFeature.noises.append(noise)
     
@@ -982,8 +998,7 @@ class XMDS2Parser(ScriptParser):
         validationFeature.validationChecks.append("""
         if (%(intervalString)s <= 0.0)
           _LOG(_ERROR_LOG_LEVEL, "ERROR: The interval for segment %(segmentNumber)i is not positive!\\n"
-                                 "Interval = %%e\\n", %(intervalString)s);
-        """ % locals())
+                                 "Interval = %%e\\n", %(intervalString)s);""" % locals())
         parserWarning(integrateElement, "Attempting to use expression '%(intervalString)s' for the interval "
                                         "for segment %(segmentNumber)i" % locals())
       else:
