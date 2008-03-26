@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
   <name>diffusion_arguments</name>
-  <author>Graham Dennis</author>
+  <author>Andy Ferris</author>
   <description>
     Simple one-dimensional diffusion with a pointless second dimension thrown in for fun.
     Uses arguments and argument preprocessing. Essentially the simulation "looks" the

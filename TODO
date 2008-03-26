@@ -1,8 +1,3 @@
-? Possible bug in ARK45 algorithm - if I halve both domains in diffusion.xmds then the
-  simulation stalls. This is strange because there is no algorithmic error in that
-  simulation - it is solved exactly by IP propagation. ARK89 does not appear to have 
-  the same limitations.
-
 * Complete Stochastics support
   * Test
   * Add the GNU scientific library as another source for noises
