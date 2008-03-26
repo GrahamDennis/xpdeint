@@ -332,11 +332,6 @@ def main(argv=None):
     # allows all templates to check that all of their settings are sane, and raise an exception if
     # there is a problem.
     #
-    # FIXME: While this works, I don't believe it is the best design
-    # Instead of having these somewhat arbitrary 'scriptElements', they should all be set
-    # as children of the SimulationElement, and the SimulationElement should be set as a child of
-    # the Simulation.
-    # FIXME: Actually, I'm not so fond of the Simulation / SimulationElement distinction. They should be combined.
     
     # Loop over a copy because we may create templates during iteration
     for template in globalNameSpace['templates'].copy():
