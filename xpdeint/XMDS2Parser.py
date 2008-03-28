@@ -990,7 +990,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     if integrateElement.hasAttribute('home_space'):
       attributeValue = integrateElement.getAttribute('home_space').strip().lower()
       if attributeValue == 'k':
-        integratorTemplate.homeSpace = globalNameSpace['geometry'].spaceMask
+        integratorTemplate.homeSpace = self.globalNameSpace['geometry'].spaceMask
       elif attributeValue == 'x':
         integratorTemplate.homeSpace = 0
       else:
