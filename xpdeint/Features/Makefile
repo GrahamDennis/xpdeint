@@ -1,5 +1,7 @@
 templates = $(wildcard *.tmpl)
 
+include ../CheetahTemplateOptions.mk
+
 SUBDIRS = Noises
 
 .PHONY: all compile clean
