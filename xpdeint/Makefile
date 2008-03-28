@@ -1,5 +1,5 @@
 templates = $(wildcard *.tmpl)
-cheetah_settings = directiveStartToken="@",commentStartToken="@\#",multiLineCommentStartToken="@*",multiLineCommentEndToken="*@"
+include CheetahTemplateOptions.mk
 
 SUBDIRS = SimulationDrivers Geometry Vectors Segments Operators Features
 

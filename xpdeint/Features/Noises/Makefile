@@ -1,5 +1,7 @@
 templates = $(wildcard *.tmpl)
 
+include ../../CheetahTemplateOptions.mk
+
 SUBDIRS = POSIX MKL DSFMT
 
 .PHONY: all compile clean

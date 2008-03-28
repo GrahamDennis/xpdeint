@@ -1,5 +1,7 @@
 templates = $(wildcard *.tmpl)
 
+include ../../../CheetahTemplateOptions.mk
+
 .PHONY: all compile
 
 all: compile
