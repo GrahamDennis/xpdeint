@@ -96,3 +96,11 @@ ${o.finalise}@slurp
   @end for
   @#
 @end def
+
+@def writeOutBegin($dict)
+  @#
+// If we aren't rank 0, then we don't want to write anything.
+if (_rank != 0)
+  return;
+  @#
+@end def
