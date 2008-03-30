@@ -143,7 +143,7 @@ ${loadWisdom}@slurp
       @set $allocatedTemporaryVector = True
 
 // allocate an array so we can create plans for those vectors that we have not allocated yet
-complex* _temporary_vector = (complex*) xmds_malloc(sizeof(complex) * _${maxVector.field.name}_size * _${maxVector.id}_ncomponents);
+complex* _temporary_vector = (complex*) xmds_malloc(sizeof(complex) * _${maxVector.field.name}_alloc_size * _${maxVector.id}_ncomponents);
     @else
       @# The maximum managed vector is larger than the maximum temporary vector, so there's no point in allocating an array
       @set $allocatedTemporaryVector = False

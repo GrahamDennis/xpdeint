@@ -50,6 +50,7 @@
       </operators>
     </integrate>
   </sequence>
+  
   <output format="binary" filename="diffusion.xsil">
     <group>
       <sampling initial_sample="yes">

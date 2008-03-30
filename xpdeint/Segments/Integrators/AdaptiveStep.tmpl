@@ -119,7 +119,6 @@ double _segment${segmentNumber}_setup_sampling(bool* _next_sample_flag, long* _n
 double _segment${segmentNumber}_${vector.id}_timestep_error(${vector.type}* _checkfield)
 {
   double _error = 1e-24;
-  double _result[_${vector.id}_ncomponents];
   double _temp_error = 0.0;
   double _temp_mod = 0.0;
   
@@ -128,14 +127,13 @@ double _segment${segmentNumber}_${vector.id}_timestep_error(${vector.type}* _che
   // Find the peak value for each component of the field
   double _peak[_${vector.id}_ncomponents];
   
-  for (long _i0 = 0; _i0 < _${vector.id}_ncomponents; _i0++) {
+  for (long _i0 = 0; _i0 < _${vector.id}_ncomponents; _i0++)
     _peak[_i0] = 0.0;
-    _result[_i0] = 0.0;
-  }
-
+  
   {
     ${loopOverVectorsWithInnerContent([vector], $insideFindPeakLoops(vector)), autoIndent=True}@slurp
   }
+  ${insertCodeForFeatures('findMax', ['Driver'], {'variable': '_peak', 'count': c'_${vector.id}_ncomponents'}), autoIndent=True}@slurp
   
   for (long _i0 = 0; _i0 < _${vector.id}_ncomponents; _i0++) {
     if (!isfinite(_peak[_i0]))
@@ -148,6 +146,7 @@ double _segment${segmentNumber}_${vector.id}_timestep_error(${vector.type}* _che
   {
     ${loopOverVectorsWithInnerContent([vector], $insideFindMaxErrorLoops(vector)), autoIndent=True}@slurp
   }
+  ${insertCodeForFeatures('findMax', ['Driver'], {'variable': '&_error', 'count': '1'}), autoIndent=True}@slurp
   
   return _error;
 }

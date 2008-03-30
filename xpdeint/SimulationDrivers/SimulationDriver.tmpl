@@ -8,10 +8,19 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 
 @def description: Unnamed Simulation Driver
 
+@def fieldDefines($dict)
+  @#
+  @set $field = dict['caller']
+  @#
+
+#define _${field.name}_alloc_size _${field.name}_size
+#define _${field.name}_current_size _${field.name}_size
+  @#
+@end def
 
 @def functionImplementations
   @#
-  @slurp
+  @super
   @#
 ${topLevelSegmentFunctionImplementation}@slurp
 
@@ -20,8 +29,19 @@ ${topLevelSegmentFunctionImplementation}@slurp
 
 @def topLevelSegmentFunctionImplementation
   @#
-  @# A subclass must implement this function
-  @assert False
+void _segment0()
+{
+  @#
+  @# And now insert the code for the features that apply in the top level sequence
+  @set $featureOrdering = ['ErrorCheck', 'Stochastic']
+  @set $dict = {'extraIndent': 0}
+  ${insertCodeForFeatures('topLevelSequenceBegin', featureOrdering, dict), autoIndent=True}@slurp
+  @set $extraIndent = dict['extraIndent']
+
+  ${topLevelSequence.topLevelSequenceInnerContent, autoIndent=True, extraIndent=extraIndent}@slurp
+  @#
+  ${insertCodeForFeaturesInReverseOrder('topLevelSequenceEnd', featureOrdering, dict), autoIndent=True}@slurp
+}
   @#
 @end def
 

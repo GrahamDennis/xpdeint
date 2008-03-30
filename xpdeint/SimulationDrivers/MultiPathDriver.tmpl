@@ -16,6 +16,16 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
   @#
 @end def
 
+@def globals
+  @#
+  @super
+  @#
+// Arrays for standard deviation of moment group results
+  @for mg in $momentGroups
+double* _${mg.outputField.name}_sd;
+  @end for
+@end def
+
 @def topLevelSegmentFunctionImplementation
   @#
 void _segment0()
@@ -73,7 +83,7 @@ The return value is the template string that will be added to the processing loo
 *@
   @#
   @set $momentGroup = dict['caller']
-_active_${momentGroup.outputField.name}_processed_sd[\${index}] += _active_\${vector.id}[\${index}] * _active_\${vector.id}[\${index}];@slurp
+_${momentGroup.outputField.name}_sd[\${index}] += _active_\${vector.id}[\${index}] * _active_\${vector.id}[\${index}];@slurp
   @#
 @end def
 
@@ -94,54 +104,46 @@ The passed dictionary `dict` has the following keys:
     
     Each of these dictionaries has the following keys:
     
-    - ``name``: The name of the variable sampled
+    - ``vector``: The vector describing the type, field and number of components
     - ``arrayName``: The name of the array that this variable is in. e.g. ``_mg0_processed``
-    - ``componentNumber``: The component number of this variable.
+    - ``components``: The actual name of the components being written.
 
 The return value is the template string that will be 
 *@
   @#
   @set $momentGroup = dict['caller']
   @set $dependentVariables = dict['dependentVariables']
+  @set $fieldName = $momentGroup.outputField.name
   @# 
   @# First we need to modify the variable names that will be written, and add our own.
   @# We need to change all processed vector components from 'someName' to 'mean_someName'
   @# and add a variable called 'sd_someName'
   @#
   @set $processedVector = $momentGroup.processedVector
-  @set $otherArrayNames = set()
+  @set $otherArrayNames = set([variable['arrayName'] for variable in $dependentVariables[1:]])
   @#
-  @# Iterate over a copy because we want to modify the list
-  @for dependentVariable in dependentVariables[:]
-    @if not dependentVariable['name'] in processedVector.components
-      @silent otherArrayNames.add(dependentVariable['arrayName'])
-      @continue
-    @end if
-    @#
-    @set $sdVariable = dependentVariable.copy()
-    @#
-    @# Modify the original
-    @silent dependentVariable['name'] = 'mean_' + dependentVariable['name']
-    @#
-    @# Modify the sd version
-    @silent sdVariable['name'] = 'sd_' + sdVariable['name']
-    @silent sdVariable['arrayName'] += '_sd'
-    @#
-    @# Add the sd variable
-    @silent dependentVariables.append(sdVariable)
-  @end for
+  @# Modify the original variable names to have a 'mean_' prefix.
+  @set $processedVectorVariable = dependentVariables[0]
+  @set processedVectorVariable['components'] = ['mean_' + componentName for componentName in processedVectorVariable['components']]
+  @#
+  @set $newVariableDict = {'vector': processedVector,
+                           'arrayName': c'_${fieldName}_sd',
+                           'components': ['sd_' + componentName for componentName in processedVector.components]
+                          }
+  @silent dependentVariables.append(newVariableDict)
+  @#
 // Calculate the mean
-_active_\${vector.id}[\${index}] /= (double) _n_paths;
+_${fieldName}_sd[\${index}] /= (double) _n_paths;
 
 // Calculate the standard error
-_active_\${vector.id}_sd[\${index}] /= (double) _n_paths;
-_active_\${vector.id}_sd[\${index}] -= _active_\${vector.id}[\${index}] * _active_\${vector.id}[\${index}];
-if (_active_\${vector.id}_sd[\${index}] > 0.0) // UNVECTORISABLE
-  _active_\${vector.id}_sd[\${index}] = sqrt(_active_\${vector.id}_sd[\${index}] / _n_paths);
+_${fieldName}_sd[\${index}] /= (double) _n_paths;
+_${fieldName}_sd[\${index}] -= _active_\${vector.id}[\${index}] * _active_\${vector.id}[\${index}];
+if (_${fieldName}_sd[\${index}] > 0.0) // UNVECTORISABLE
+  _${fieldName}_sd[\${index}] = sqrt(_${fieldName}_sd[\${index}] / _n_paths);
 else
-  _active_\${vector.id}_sd[\${index}] = 0.0;
+  _${fieldName}_sd[\${index}] = 0.0;
   @#
-  @if len($otherArrayNames)
+  @if len(otherArrayNames)
 
 // Calculate other means
     @for arrayName in $otherArrayNames

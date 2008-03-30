@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <name>kubo_integer_dimensions_mpi</name>
+  <author>Graham Dennis</author>
+  <description>
+    Example Kubo oscillator simulation
+  </description>
+  
+  <features>
+    <benchmark />
+    <error_check />
+    <bing />
+    <stochastic>
+      <noise kind="gaussian" prefix="n" num="1" seed="157 9348 234"/>
+      <!-- If there is no seed attribute then seeds will be chosen randomly at run-time -->
+    </stochastic>
+  </features>
+  
+  <geometry>
+    <prop_dim> t </prop_dim>
+    <transverse_dimensions>
+      <integer_valued>
+        <dimension name="j" lattice="10240" domain="(1, 10240)" />
+      </integer_valued>
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="main">
+    <components type="complex">
+      z
+    </components>
+    <initialisation noises="">
+      <![CDATA[
+        if (_i0 == 1)
+          _LOG(_WARNING_LOG_LEVEL, "_j_local_lattice_j: %li, _j_local_offset_j: %li\n", _j_local_lattice_j, _j_local_offset_j);
+        z = 1.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="ARK89" interval="10" steps="1000" tolerance="1e-8">
+      <samples>500 10</samples>
+      <operators noises="n">
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+          dz_dt[j] = i*z*n_1;
+        ]]>
+      </operators>
+    </integrate>
+    <breakpoint filename="kubo_integer_dimensions_mpi_break.xsil">
+      <dependencies>main</dependencies>
+    </breakpoint>
+  </sequence>
+  
+  <output format="ascii">
+    <group>
+      <sampling initial_sample="yes">
+        <dimension name="j" lattice="0" />
+        <moments>zR zI</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          zR = z.re/_lattice_j;
+          zI = z.im/_lattice_j;
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling initial_sample="yes">
+        <dimension name="j" />
+        <moments>zR zI</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          zR = z.re;
+          zI = z.im;
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>

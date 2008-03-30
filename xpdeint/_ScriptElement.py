@@ -72,6 +72,7 @@ class _ScriptElement (Template):
     # Create the entry in the callOnceGuards
     _ScriptElement._callOncePerInstanceGuards[self] = set()
     
+    self._driver = None
   
   @property
   def parent(self):
@@ -426,6 +427,15 @@ class _ScriptElement (Template):
         if canOptimiseIntegerValuedDimensions:
           replacementString = componentName
         else:
+          # It would be illegal to try and access any distributed dimensions nonlocally, so we need to check for this.
+          for dim in vector.field.dimensions:
+            simulationDriver = self.getVar('features')['Driver']
+            if dim.name in simulationDriver.distributedDimensionNames and dim.name in integerValuedDimensionNames:
+              if not integerValuedDimensionsMatch.group(dim.name).strip() == dim.name:
+                dimName = dim.name
+                raise ParserException(self.xmlElement, "It is illegal to access the dimension '%(dimName)s' nonlocally because it is being distributed with MPI.\n"
+                                                       "Try not using MPI or changing the order of your dimensions." % locals())
+          
           argumentsString = ', '.join([integerValuedDimensionsMatch.group(dimName).strip() for dimName in integerValuedDimensionNames])
           
           replacementString = '_%(componentName)s(%(argumentsString)s)' % locals()
@@ -507,5 +517,4 @@ class _ScriptElement (Template):
     for operatorContainer in operatorContainers:
       result.update(operatorContainer.operatorDependencies)
     return result
-  
   

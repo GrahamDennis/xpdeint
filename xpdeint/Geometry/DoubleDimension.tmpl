@@ -14,6 +14,8 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
   @#
 #define ${prefix}_d${name}  (($maximum - $minimum)/(${type})${prefix}_lattice_${name})
 #define ${prefix}_dk${name} (2.0*M_PI/($maximum - $minimum))
+#define ${prefix}_local_lattice_k${name} ${prefix}_lattice_${name}
+#define ${prefix}_local_offset_k${name} 0
 #define ${prefix}_min_k${name} (-(${prefix}_lattice_${name}/2) * ${prefix}_dk${name})
 #define ${prefix}_max_k${name} ((${prefix}_lattice_${name} - 1)/2) * ${prefix}_dk${name}
   @#

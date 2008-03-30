@@ -18,6 +18,8 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   @super
   @#
 void _write_output();
+FILE* _write_xsil_header(char* _filename);
+void _write_xsil_footer(FILE* fp);
   @#
 @end def
 @*
@@ -28,64 +30,148 @@ void _write_output();
   @#
   @super
   @#
+${writeOutFunctionImplementation}@slurp
+
+${writeXSILHeaderFunctionImplementation}@slurp
+
+${writeXSILFooterFunctionImplementation}@slurp
+  @#
+@end def
+
+@def writeOutFunctionImplementation
 void _write_output()
 {
-  @set $featureOrderingWriteOutput = ['Driver']
-  ${insertCodeForFeatures('writeOutBegin', $featureOrderingWriteOutput), autoIndent=True}@slurp
   _LOG(_SIMULATION_LOG_LEVEL, "Generating output for ${simulationName}\n");
   
-  FILE* _outfile = fopen("${filename}.xsil", "w");
-  
-  if (!_outfile)
-    // _LOG will cause the simulation to exit
-    _LOG(_ERROR_LOG_LEVEL, "Unable to open output file ${filename}.xsil\n"
-                           "Exiting.\n");
-  
-  @set dict = {'fp': '_outfile'}
-  ${xsilHeader(dict), autoIndent=True}@slurp
+  FILE* _outfile = _write_xsil_header("${filename}.xsil");
   
   @for $momentGroup in $momentGroups
   _${momentGroup.name}_write_out(_outfile);
   @end for
   
-  ${xsilFooter(dict), autoIndent=True}@slurp
-  
-  fclose(_outfile);
-  ${insertCodeForFeaturesInReverseOrder('writeOutEnd', $featureOrderingWriteOutput), autoIndent=True}@slurp
+  _write_xsil_footer(_outfile);
 }
-  @#
 @end def
 
-@def xsilHeader($dict)
-  @#
-  @set $fp = dict['fp']
+@def writeXSILHeaderFunctionImplementation
+// In addition to writing the XSIL header, this file actually opens
+// the file '_filename' for writing and returns the file pointer.
+FILE* _write_xsil_header(char* _filename)
+{
+  FILE* fp = NULL;
+  @set $featureOrdering = ['Driver']
+  ${insertCodeForFeatures('writeXSILHeaderBegin', featureOrdering), autoIndent=True}@slurp
+  
+  fp = fopen(_filename, "w");
+
+  if (fp == NULL)
+    // _LOG will cause the simulation to exit
+    _LOG(_ERROR_LOG_LEVEL, "Unable to open output file '%s'.\n"
+                           "Exiting.\n", _filename);
+
   @# Find the end tag in a case-insensitive way
   @set $indexForEndTag = $inputScript.lower().rfind('</simulation>')
   @set $xsilOutputHeader = $inputScript[0:$indexForEndTag]
   @filter $PrintfSafeFilter
     @for $line in $xsilOutputHeader.splitlines()
-fprintf($fp, "${line}\n");
+  fprintf(fp, "${line}\n");
     @end for
 
-fprintf($fp, "\n<info>\n");
-fprintf($fp, "Script compiled with xpdeint version ${xmds.versionString} (${xmds.subversionRevision})\n");
-fprintf($fp, "See http://www.xmds.org for more information.\n");
+  fprintf(fp, "\n<info>\n");
+  fprintf(fp, "Script compiled with xpdeint version ${xmds.versionString} (${xmds.subversionRevision})\n");
+  fprintf(fp, "See http://www.xmds.org for more information.\n");
   @end filter
-
+  @#
   @set $featureOrderingXSILInfo = ['Arguments', 'Stochastic']
-${insertCodeForFeatures('xsilOutputInfo', $featureOrderingXSILInfo, $dict)}@slurp
-fprintf($fp, "</info>\n");
+  ${insertCodeForFeatures('xsilOutputInfo', $featureOrderingXSILInfo, {'fp': 'fp'}), autoIndent=True}@slurp
+  fprintf(fp, "</info>\n");
+  
+  ${insertCodeForFeaturesInReverseOrder('writeXSILHeaderEnd', featureOrdering), autoIndent=True}@slurp
+  
+  return fp;
+}
+@end def
+
+@def writeXSILFooterFunctionImplementation
+  @#
+// In addition to writing the footer (if 'fp' is not NULL)
+// this function closes the fp file pointer.
+void _write_xsil_footer(FILE* fp)
+{
+  if (fp) {
+    fprintf(fp, "</simulation>\n");
+    
+    fclose(fp);
+  }
+}
   @#
 @end def
 
-@def xsilFooter($dict)
+@def writeOutFunctionImplementationBegin($dict)
+  @#
+  @set $fp = dict['fp']
+  @set $xsilElementName = dict['xsilElementName']
+  @set $field = dict['field']
+  @set $space = dict['space']
+  @set $numIndependentVariables = len($field.dimensions)
+  @#
+  @set $dependentVariables = dict['dependentVariables']
+  @set $componentCount = 0
+  @for $variable in $dependentVariables
+    @set $componentCount += len($variable.vector.components)
+    @if $variable.vector.type == 'complex'
+      @set $componentCount += len($variable.vector.components)
+    @end if
+  @end for
+  @#
+if ($fp) {
+  fprintf($fp, "\n");
+  fprintf($fp, "<XSIL Name=\"${xsilElementName}\">\n");
+  fprintf($fp, "  <Param Name=\"n_independent\">${numIndependentVariables}</Param>\n");
+  fprintf($fp, "  <Array Name=\"variables\" Type=\"Text\">\n");
+  fprintf($fp, "    <Dim>${numIndependentVariables + componentCount}</Dim>\n");
+  fprintf($fp, "    <Stream><Metalink Format=\"Text\" Delimiter=\" \\n\"/>\n");
+  fprintf($fp, "@slurp
+  @# First loop over the dimensions (the independent variables)
+  @for $dimension in $field.dimensions
+${dimensionNameForSpace($dimension, $space)} @slurp
+  @end for
+  @#
+  @# Now loop over the dependent variables
+  @for $variable in $dependentVariables
+    @for $componentName in $variable.components
+      @if $variable.vector.type == 'double'
+${componentName} @slurp
+      @else
+${componentName}R ${componentName}I @slurp
+      @end if
+    @end for
+  @end for
+\n");
+  fprintf($fp, "    </Stream>\n");
+  fprintf($fp, "  </Array>\n");
+  fprintf($fp, "  <Array Name=\"data\" Type=\"double\">\n");
+  @#
+  @# Now loop over the dimensions
+  @for $dimension in $field.dimensions
+  fprintf($fp, "    <Dim>%li</Dim>\n", _${field.name}_lattice_${dimension.name});
+  @end for
+  @# Now the variables dimension
+  fprintf($fp, "    <Dim>${numIndependentVariables + componentCount}</Dim>\n");
+}
+  @#
+@end def
+
+@def writeOutFunctionImplementationEnd($dict)
   @#
   @set $fp = dict['fp']
   @#
-fprintf($fp, "</simulation>\n");
+if ($fp) {
+  fprintf($fp, "  </Array>\n");
+  fprintf($fp, "</XSIL>\n");
+}
   @#
 @end def
-
 
 @def mainEnd($dict)
 

@@ -139,9 +139,11 @@ void _segment${segmentNumber}()
     @for $reducedVector, $vector in $vectorMap.iteritems()
       @set $indices = range(0, len(vector.field.dimensions))
       @if vector.field.hasDimensionName($propagationDimension)
-        @silent indices.remove(vector.field.indexOfDimensionName($propagationDimension))
+        @set $indices = range(vector.field.indexOfDimensionName($propagationDimension) + 1, len(vector.field.dimensions))
+        @silent innerLoopTemplate.skipSize = $propagationDirection + $vector.field.localPointsInDimensionsWithIndicesInSpace($indices, $homeSpace)
+      @elif hasattr(innerLoopTemplate, 'skipSize')
+        @del innerLoopTemplate.skipSize
       @end if
-      @silent innerLoopTemplate.skipSize = $propagationDirection + $vector.field.pointsInDimensionsWithIndices($indices)
       @silent innerLoopTemplate.reducedVector = reducedVector
       @silent innerLoopTemplate.vector = vector
 for (long _icomp = 0; _icomp < _${vector.id}_ncomponents; _icomp++) {

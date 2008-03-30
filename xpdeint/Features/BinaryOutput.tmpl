@@ -2,27 +2,51 @@
 BinaryOutput.tmpl
 
 Created by Graham Dennis on 2007-09-20.
-Copyright (c) 2007 __MyCompanyName__. All rights reserved.
+Copyright (c) 2007-2008 __MyCompanyName__. All rights reserved.
 *@
 @extends xpdeint.Features.OutputFeature
 
 @def description: binary output
 
-@*
-  Write out the data in binary format
-*@
 @def writeOutFunctionImplementationBody($dict)
-  @# The function prototype in which this code is going is:
-  @#  void _mgN_write_out(FILE* _outfile)
-  @# And this code is being automatically indented.
   @#
-  @set $momentGroup = $dict.momentGroup
-  @set $dependentVariables = $dict.dependentVariables
-  @set $outputType = "double"
-  @if $precision == "single"
-    @set $outputType = "float"
-  @end if
+${writeOutFunctionImplementationBegin(dict)}@slurp
 
+  @if not 'datFilename' in dict:
+    @set caller = dict['caller']
+    @set dict['datFilename'] = c'"${filename}_${caller.name}.dat"'
+  @end if
+  @#
+  @set $featureOrdering = ['Driver']
+  @set $featureDict = dict.copy()
+  @set $featureDict['extraIndent'] = 0
+${insertCodeForFeatures('binaryWriteOutBegin', featureOrdering, featureDict)}@slurp
+  @set $extraIndent = featureDict['extraIndent']
+
+${writeOutFunctionContents(dict), extraIndent=extraIndent}@slurp
+
+${insertCodeForFeaturesInReverseOrder('binaryWriteOutEnd', featureOrdering, featureDict)}@slurp
+
+${writeOutFunctionImplementationEnd(dict)}@slurp
+  @#
+@end def
+
+@def writeOutFunctionContents($dict)
+  @#
+  @set $fp = dict['fp']
+  @set $datFilename = dict['datFilename']
+  @set $field = dict['field']
+  @set $space = dict['space']
+  @set $dependentVariables = dict['dependentVariables']
+  @set $componentCount = 0
+  @for $variable in $dependentVariables
+    @set $componentCount += len($variable.vector.components)
+    @if $variable.vector.type == 'complex'
+      @set $componentCount += len($variable.vector.components)
+    @end if
+  @end for
+  @set dict['componentCount'] = componentCount
+  @#
 const char *encoding = NULL;
 if (_isBigEndian())
   encoding = "BigEndian";
@@ -30,75 +54,138 @@ else
   encoding = "LittleEndian";
 
 const char *unsignedLongType = NULL;
-if (sizeof(unsigned long)==4)
+if (sizeof(unsigned long) == 4)
   unsignedLongType = "uint32";
-else if (sizeof(unsigned long)==8)
+else if (sizeof(unsigned long) == 8)
   unsignedLongType = "uint64";
 else
   unsignedLongType = "ulong";
-  
-fprintf(_outfile, "    <Stream><Metalink Format=\"Binary\" UnsignedLong=\"%s\""
-                  " precision=\"${precision}\" Type=\"Remote\" Encoding=\"%s\"/>\n", unsignedLongType, encoding);
-fprintf(_outfile, "${filename}_mg${momentGroup.number}.dat\n");
 
-FILE* binaryFile;
-if ((binaryFile = fopen("${filename}_mg${momentGroup.number}.dat", "wb")) == NULL)
+fprintf($fp, "    <Stream><Metalink Format=\"Binary\" UnsignedLong=\"%s\" precision=\"double\" Type=\"Remote\" Encoding=\"%s\"/>\n",
+        unsignedLongType, encoding);
+fprintf($fp, "%s\n", ${datFilename});
+
+FILE* fpBinary;
+if ((fpBinary = fopen(${datFilename}, "wb")) == NULL)
   // _LOG will cause the simulation to exit
-  _LOG(_ERROR_LOG_LEVEL, "Unable top open output file ${filename}_mg${momentGroup.number}.dat\n"
-                         "Chucking a spack...\n");
+  _LOG(_ERROR_LOG_LEVEL, "Unable top open output file %s\n"
+                         "Chucking a spack...\n", ${datFilename});
 
-  @set $variableNumber = 0
-  @# Loop over the dimensions creating the output arrays
-  @for $dimension in $momentGroup.outputField.dimensions
-unsigned long _outVarLen${variableNumber} = _${momentGroup.outputField.name}_lattice_${dimension.name};
-${outputType}* _outVar${variableNumber} = (${outputType}*) malloc(sizeof(${outputType}) * _outVarLen${variableNumber}); // ${dimensionNameForSpace($dimension, $momentGroup.outputSpace)}
-    @set $variableNumber += 1
-  @end for
-  
-  @# Loop over the dependent variables creating the output arrays
-  @for $variable in $dependentVariables
-unsigned long _outVarLen${variableNumber} = _${momentGroup.outputField.name}_size;
-${outputType}* _outVar${variableNumber} = (${outputType}*) malloc(sizeof($outputType) * _outVarLen${variableNumber}); // ${variable.name}
-    @set $variableNumber += 1
-  @end for
+unsigned long dataSize;
+off_t fieldOffset = 0;
+double coordinate;
 
-unsigned long _variableIndex = 0;
-
-$loopOverFieldInSpaceWithVectorsAndInnerContent($momentGroup.outputField, $momentGroup.outputSpace, $momentGroup.outputField.vectors, $insideOutputLoops($momentGroup, $dependentVariables), $kspaceAscendingOrder=True)@slurp
-  @# Loop over all of the variables
-  @for $i in range($variableNumber)
-
-fwrite(&_outVarLen${i}, sizeof(unsigned long), 1, binaryFile);
-fwrite(_outVar${i}, sizeof(${outputType}), _outVarLen${i}, binaryFile);
-free(_outVar${i});
-  @end for
-
-fclose(binaryFile);
-
-fprintf(_outfile, "    </Stream>\n");
-  @#
-@end def
-
-@def insideOutputLoops($momentGroup, $dependentVariables)
-  @#
-  @set $variableNumber = 0
-  @# Loop over the dimensions
-  @for $dimension in $momentGroup.outputField.dimensions
-    @set $dimensionNumber = $momentGroup.outputField.indexOfDimension($dimension)
-    @if $dimensionIsInFourierSpace($dimension, $momentGroup.outputSpace)
-_outVar${variableNumber}[_j${dimensionNumber} + (_${momentGroup.outputField.name}_lattice_${dimension.name})/2] = k${dimension.name};
+  @for $dim in $field.dimensions
+dataSize = _${field.name}_lattice_${dim.name};
+fwrite(&dataSize, sizeof(unsigned long), 1, fpBinary);
+    @if $dim in $field.dimensionOverrides
+fwrite(_${dim.override.name}_${dim.name}, sizeof(double), _${field.name}_lattice_${dim.name}, fpBinary);
     @else
-_outVar${variableNumber}[_i${dimensionNumber}] = ${dimension.name};
+coordinate = _${field.name}_min_${dimensionNameForSpace($dim, $space)};
+      @if $dimensionIsInFourierSpace($dim, $space)
+        @# k-space
+        @set $start = c'-(_${field.name}_lattice_${dim.name})/2'
+        @set $stop = c'(_${field.name}_lattice_${dim.name}+1)/2'
+      @else
+        @set $start = '0'
+        @set $stop = c'_${field.name}_lattice_${dim.name}'
+      @end if
+for (long _i0 = ${start}; _i0 < ${stop}; _i0++, coordinate += _${field.name}_d${dimensionNameForSpace($dim, $space)})
+  fwrite(&coordinate, sizeof(double), 1, fpBinary);
     @end if
-    @set $variableNumber += 1
+fieldOffset += sizeof(unsigned long) + sizeof(double) * _${field.name}_lattice_${dim.name};
+
   @end for
-  @#
-  @# Loop over the dependent variables
-  @for $variable in $dependentVariables
-_outVar${variableNumber}[_variableIndex] = ${variable.arrayName}[_${momentGroup.outputField.name}_processed_index_pointer + ${variable.componentNumber}]; // ${variable.name}
-    @set $variableNumber += 1
+off_t vectorFieldSize = _${field.name}_size * sizeof(double) + sizeof(unsigned long);
+dataSize = _${field.name}_size;
+
+  @for i in range(componentCount)
+fseeko(fpBinary, fieldOffset + $i * vectorFieldSize, SEEK_SET);
+fwrite(&dataSize, sizeof(unsigned long), 1, fpBinary);
+
   @end for
-  
-_variableIndex++;
+
+  @# This is where all of the magic MPI code goes
+  @set $featureOrdering = ['Driver']
+  @set $featureDict = dict.copy()
+  @set $featureDict['extraIndent'] = 0
+${insertCodeForFeatures('binaryWriteOutWriteDataBegin', $featureOrdering, featureDict)}@slurp
+  @set $extraIndent = featureDict['extraIndent']
+
+${writeData(dict), extraIndent=extraIndent}@slurp
+
+  @# This is where the rest of the magic MPI code goes
+${insertCodeForFeaturesInReverseOrder('binaryWriteOutWriteDataEnd', $featureOrdering, featureDict)}@slurp
+
+fclose(fpBinary);
+fprintf($fp, "    </Stream>\n");
   @#
 @end def
+
+
+@def writeData($dict)
+  @#
+  @set $field = dict['field']
+  @set $space = dict['space']
+  @set $dependentVariables = dict['dependentVariables']
+  @#
+  @set variablesInEarlierVectors = 0
+  @for $variable in $dependentVariables
+    @set $componentNameSizePrefix = ''
+    @if $variable.vector.type == 'complex'
+      @set $componentNameSizePrefix = '2 * '
+    @end if
+// loop over components of vector '${variable.vector.id}' (array '${variable.arrayName}')
+for (unsigned int _component = 0; _component < ${componentNameSizePrefix}_${variable.vector.id}_ncomponents; _component++) {
+  off_t _outputfield_index_pointer, _outputfield_old_index_pointer;
+  _outputfield_index_pointer = -42; // Just so that we always seek the first time
+
+    @set $innerContent = $innerLoopsForVariable($variable, variablesInEarlierVectors, dict)
+    @set $vectors = [$variable.vector]
+  ${loopOverFieldInSpaceWithVectorsAndInnerContent($field, $space, $vectors, $innerContent, vectorsNotNeedingDefines=vectors), autoIndent=True}@slurp
+} // end loop over components of vector '${variable.vector.id}' (array '${variable.arrayName}')
+    @set $variablesInEarlierVectors += $variable.vector.nComponents
+    @if $variable.vector.type == 'complex'
+      @set $variablesInEarlierVectors += $variable.vector.nComponents
+    @end if
+  @end for
+
+  @#
+@end def
+
+@def innerLoopsForVariable($variable, $variablesInEarlierVectors, $dict)
+  @#
+  @set $field = dict['field']
+  @set $space = dict['space']
+  @#
+_outputfield_old_index_pointer = _outputfield_index_pointer;
+_outputfield_index_pointer = 0;
+
+// Calculate the output field index pointer
+  @for $dim in $field.dimensions
+    @if $dim in $field.dimensionOverrides
+_outputfield_index_pointer += _i${field.indexOfDimension(dim)}@slurp
+    @else if $dimensionIsInFourierSpace($dim, $space)
+_outputfield_index_pointer += (lround(k${dim.name}/_${field.name}_dk${dim.name}) + _${field.name}_lattice_${dim.name}/2)@slurp
+    @else
+_outputfield_index_pointer += lround((${dim.name} - _${field.name}_min_${dim.name})/_${field.name}_d${dim.name})@slurp
+    @end if
+ * ${field.pointsInDimensionsWithIndices(range(field.indexOfDimension(dim)+1, len(field.dimensions)))};
+  @end for
+
+if (_outputfield_index_pointer != _outputfield_old_index_pointer + 1)
+  fseeko(fpBinary, fieldOffset + _outputfield_index_pointer * sizeof(double) + (${variablesInEarlierVectors} + _component) * vectorFieldSize + sizeof(unsigned long), SEEK_SET);
+
+  @if $variable.vector.type == 'double'
+fwrite(&${variable.arrayName}[_${variable.vector.id}_index_pointer + _component], sizeof(double), 1, fpBinary);
+  @else
+if (_component & 1)
+  fwrite(&${variable.arrayName}[_${variable.vector.id}_index_pointer + _component/2].im, sizeof(double), 1, fpBinary);
+else
+  fwrite(&${variable.arrayName}[_${variable.vector.id}_index_pointer + _component/2].re, sizeof(double), 1, fpBinary);
+  @end if
+  @#
+@end def
+
+
+

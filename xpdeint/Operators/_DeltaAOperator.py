@@ -176,6 +176,16 @@ class _DeltaAOperator (Operator):
         # Turn the set of dimension names into a list of dimensions
         dimensionsNeedingReordering = [self.field.dimensionWithName(dimName) for dimName in dimensionNamesNeedingReordering]
         
+        for dimension in dimensionsNeedingReordering:
+          simulationDriver = self.getVar('features')['Driver']
+          if dimension.name in simulationDriver.distributedDimensionNames:
+            # If any of the dimensions needing reordering are distributed, then we simply can't do it as they will be accessed
+            # nonlocally, and the user will probably be intending to access data that is stored on other ranks.
+            dimensionName = dimension.name
+            raise ParserException(self.xmlElement, 
+                                    "The dimension '%(dimensionName)s' cannot be accessed nonlocally because it is being distributed with MPI.\n"
+                                    "Try turning off MPI or re-ordering the dimensions in the <geometry> element." % locals())
+        
         # Sort these dimensions in canonical order
         geometryTemplate = self.getVar('geometry')
         sortFunction = lambda x, y: cmp(geometryTemplate.indexOfDimension(x), geometryTemplate.indexOfDimension(y))

@@ -19,6 +19,8 @@
 * Add the ability to distribute stochastic simulations using MPI with the scheduling method
 
 * Deterministic/distributed MPI
+  * Needs testing.
+  * For 'double' dimensions too.
 
 * Make sure that all the things that Andy has been doing to enable various simulation
   parameters can be controlled at simulation run time can be done in xpdeint.

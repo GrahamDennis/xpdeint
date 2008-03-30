@@ -81,17 +81,18 @@ for (_half_step = false; ; _half_step = true)
   @#
   @set $momentGroup = dict['caller']
   @set $dependentVariables = dict['dependentVariables']
+  @set $fieldName = $momentGroup.outputField.name
   @#
-  @# So our job is to create _error versions of all of the variables in the momentGroup's outputField.
-  @for $componentNumber, $componentName in enumerate($momentGroup.processedVector.components)
-    @# Add the dependent variable to the dependent variable list
-    @set $newVariableDict = {'name': c'error_${componentName}', 'arrayName': c'_${momentGroup.outputField.name}_fullstep', 'componentNumber': $componentNumber}
-    @silent $dependentVariables.append($newVariableDict)
-  @end for
+  @# So our job is to create 'error_' versions of all of the variables in the momentGroup's outputField.
+  @set $newVariableDict = {'vector': $momentGroup.processedVector,
+                           'arrayName': c'_${fieldName}_fullstep',
+                           'components': ['error_' + component for component in $momentGroup.processedVector.components],
+                          }
+  @silent dependentVariables.append(newVariableDict)
   @#
   @# Now return the template that will be used to create the error vector
 // Copy the error into the fullstep array
-_\${vector.field.name}_fullstep[\$index] = _\${vector.field.name}_fullstep[\$index] - _\${vector.field.name}_halfstep[\$index];
+_${fieldName}_fullstep[\$index] = _${fieldName}_fullstep[\$index] - _${fieldName}_halfstep[\$index];
   @#
 @end def
 
@@ -117,7 +118,7 @@ if (_half_step)
   @set $noiseVector = $dict['noiseVector']
   @set $field = $dict['field']
 if (!_half_step) {
-  _make_${noise.prefix}_noises(_${field.name}_var, _${noiseVector.id}2, _${field.name}_size * _${noiseVector.id}_ncomponents);
+  _make_${noise.prefix}_noises(_${field.name}_var, _${noiseVector.id}2, _${field.name}_alloc_size * _${noiseVector.id}_ncomponents);
   ${loopOverVectorsWithInnerContentTemplate([$noiseVector],
 """_${vector.id}[$index] = 0.5*(_${vector.id}[$index] + _${vector.id}2[$index]);
 """), autoIndent=True}@slurp

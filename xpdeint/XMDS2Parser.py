@@ -33,6 +33,7 @@ from xpdeint.Segments.TopLevelSequenceElement import TopLevelSequenceElement as 
 from xpdeint.SimulationDrivers.DefaultDriver import DefaultDriver as DefaultDriverTemplate
 from xpdeint.SimulationDrivers.MultiPathDriver import MultiPathDriver as MultiPathDriverTemplate
 from xpdeint.SimulationDrivers.MPIMultiPathDriver import MPIMultiPathDriver as MPIMultiPathDriverTemplate
+from xpdeint.SimulationDrivers.IntegerDistributedMPIDriver import IntegerDistributedMPIDriver as IntegerDistributedMPIDriverTemplate
 
 from xpdeint.Segments import Integrators
 from xpdeint.Segments.FilterSegment import FilterSegment as FilterSegmentTemplate
@@ -880,6 +881,14 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
           driverAttributeDictionary['pathCount'] = pathCount
         elif driverName == 'none':
           pass
+        elif driverName == 'distributed-mpi':
+          transverseDimensions = filter(lambda x: x.transverse, self.globalNameSpace['geometry'].dimensions)
+          if not transverseDimensions:
+            raise ParserException(simulationElement, "The distributed-mpi driver requires transverse dimensions to be able to be used.")
+          if transverseDimensions[0].type == 'long':
+            driverClass = IntegerDistributedMPIDriverTemplate
+          else:
+            raise ParserException(simulationElement, "Currently the distributed-mpi driver only supports distributed integer-valued dimensions.")
         else:
           raise UnknownDriverException()
       except UnknownDriverException, err:
@@ -1479,6 +1488,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     outputTemplate = outputTemplateClass(**self.argumentsToTemplateConstructors)
     outputTemplate.precision = 'double'
     outputTemplate.filename = filename
+    outputTemplate.xmlElement = outputElement
     
     momentGroupElements = outputElement.getChildElementsByTagName('group')
     for momentGroupNumber, momentGroupElement in enumerate(momentGroupElements):

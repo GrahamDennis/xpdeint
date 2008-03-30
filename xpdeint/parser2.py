@@ -364,8 +364,11 @@ def main(argv=None):
   # error string that should be presented to the user.
   except ParserException, err:  
     # Print the error to the user
-    lineNumber = err.element.getUserData('lineNumber')
-    columnNumber = err.element.getUserData('columnNumber')
+    lineNumber = -1
+    columnNumber = -1
+    if err.element:
+      lineNumber = err.element.getUserData('lineNumber')
+      columnNumber = err.element.getUserData('columnNumber')
     print >> sys.stderr, "Error: " + err.msg
     print >> sys.stderr, "    At line %(lineNumber)i, column %(columnNumber)i." % locals()
     print >> sys.stderr, "    In element: " + err.element.userUnderstandableXPath()

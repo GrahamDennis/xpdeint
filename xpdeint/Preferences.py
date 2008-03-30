@@ -10,4 +10,4 @@ CFLAGS="-O3 -ffast-math -funroll-all-loops -fomit-frame-pointer -lxmds"
 MPICC="mpic++"
 MPICFLAGS="-O3 -ffast-math -funroll-all-loops -fomit-frame-pointer  -lxmds -lfftw_mpi -lfftw"
 
-versionString = '0.2 "Watch how easily we change notation..."'
+versionString = '0.3 "MPI? What\'s MPI?"'

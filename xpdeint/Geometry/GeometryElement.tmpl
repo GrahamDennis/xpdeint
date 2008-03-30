@@ -2,11 +2,11 @@
 GeometryElement.tmpl
 
 Created by Graham Dennis on 2007-08-28.
-Copyright (c) 2007 __MyCompanyName__. All rights reserved.
+Copyright (c) 2007-2008 __MyCompanyName__. All rights reserved.
 *@
-@extends xpdeint.Geometry.FieldElement
-@*
+@extends xpdeint.Geometry._FieldElement
 
+@*
   Description of template
 *@
 @def description: Geometry
@@ -15,19 +15,12 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 
 @def defines
   @#
+  @super
+  @#
   @for $dimension in filter(lambda x: x.transverse, $dimensions)
 ${dimension.definesWithPrefix('')}@slurp
 
   @end for
-  @#
-@end def
-
-
-@*
-  Globals needed at the start of the simulation
-*@
-@def globals
-  @#
   @#
 @end def
 

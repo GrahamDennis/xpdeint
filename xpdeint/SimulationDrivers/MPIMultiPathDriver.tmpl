@@ -4,33 +4,9 @@ MPIMultiPathDriver.tmpl
 Created by Graham Dennis on 2008-02-25.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 *@
-@extends xpdeint.SimulationDrivers.MultiPathDriver
+@extends xpdeint.SimulationDrivers._MPIMultiPathDriver
 
 @def description: MPI Multipath Simulation Driver
-
-@def compiler
-  @#
-  @return "mpic++"
-  @#
-@end def
-
-
-@def includes
-  @#
-  @super
-  @#
-#include <mpi.h>
-  @#
-@end def
-
-@def globals
-  @#
-  @super
-  @#
-int _rank, _size;
-  @#
-@end def
-
 
 @def mainRoutine
   @#
@@ -82,10 +58,10 @@ void _segment0()
       @for arrayName in arrayNames
   
   if (_rank == 0)
-    MPI_Reduce(MPI_IN_PLACE, $arrayName, ${sizePrefix}_${vector.field.name}_size * _${vector.id}_ncomponents,
+    MPI_Reduce(MPI_IN_PLACE, $arrayName, ${sizePrefix}_${vector.field.name}_current_size * _${vector.id}_ncomponents,
                MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
   else
-    MPI_Reduce($arrayName, NULL, ${sizePrefix}_${vector.field.name}_size * _${vector.id}_ncomponents,
+    MPI_Reduce($arrayName, NULL, ${sizePrefix}_${vector.field.name}_current_size * _${vector.id}_ncomponents,
                MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
       @end for
     @end for
@@ -93,14 +69,6 @@ void _segment0()
 }
   @#
 @end def
-
-@def writeOutBegin($dict)
-  @#
-if (_rank != 0)
-  return;
-  @#
-@end def
-
 
 @def topLevelSegmentPathLoop
   @#
@@ -126,31 +94,5 @@ for (long _i0 = _rank; _i0 < _n_paths; _i0 += _size) {
   @for o in $objectsNeedingInitialisation
 ${o.finalise}@slurp
   @end for
-  @#
-@end def
-
-@def logFunctionBegin($dict)
-  @#
-  @# Insert code at the start of the _LOG function
-  @#
-if ((_rank == 0) || (logLevel & ~_SIMULATION_LOG_LEVEL)) { \
-  if (logLevel & ~_SIMULATION_LOG_LEVEL) \
-    printf("Rank[%i]: ", _rank); \
-  @set $dict['extraIndent'] += 2
-  @#
-@end def
-
-@def logFunctionEnd($dict)
-  @#
-  @set $dict['extraIndent'] -= 2
-} \
-if (logLevel & _ERROR_LOG_LEVEL) \
-  MPI_Abort(MPI_COMM_WORLD, 1); \
-  @#
-@end def
-
-@def seedOffset($dict)
-  @#
- + _rank@slurp
   @#
 @end def
