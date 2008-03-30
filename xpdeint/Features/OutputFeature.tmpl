@@ -43,6 +43,9 @@ void _write_output()
 {
   _LOG(_SIMULATION_LOG_LEVEL, "Generating output for ${simulationName}\n");
   
+  @set $featureOrdering = ['Driver']
+  ${insertCodeForFeatures('writeOutBegin', featureOrdering), autoIndent=True}@slurp
+  
   FILE* _outfile = _write_xsil_header("${filename}.xsil");
   
   @for $momentGroup in $momentGroups
@@ -50,6 +53,8 @@ void _write_output()
   @end for
   
   _write_xsil_footer(_outfile);
+  
+  ${insertCodeForFeaturesInReverseOrder('writeOutEnd', featureOrdering), autoIndent=True}@slurp
 }
 @end def
 
@@ -63,12 +68,12 @@ FILE* _write_xsil_header(char* _filename)
   ${insertCodeForFeatures('writeXSILHeaderBegin', featureOrdering), autoIndent=True}@slurp
   
   fp = fopen(_filename, "w");
-
+  
   if (fp == NULL)
     // _LOG will cause the simulation to exit
     _LOG(_ERROR_LOG_LEVEL, "Unable to open output file '%s'.\n"
                            "Exiting.\n", _filename);
-
+  
   @# Find the end tag in a case-insensitive way
   @set $indexForEndTag = $inputScript.lower().rfind('</simulation>')
   @set $xsilOutputHeader = $inputScript[0:$indexForEndTag]
@@ -76,7 +81,7 @@ FILE* _write_xsil_header(char* _filename)
     @for $line in $xsilOutputHeader.splitlines()
   fprintf(fp, "${line}\n");
     @end for
-
+  
   fprintf(fp, "\n<info>\n");
   fprintf(fp, "Script compiled with xpdeint version ${xmds.versionString} (${xmds.subversionRevision})\n");
   fprintf(fp, "See http://www.xmds.org for more information.\n");
