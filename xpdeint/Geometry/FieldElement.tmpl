@@ -5,8 +5,8 @@ Created by Graham Dennis on 2007-08-28.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *@
 @extends xpdeint.Geometry._FieldElement
-@*
 
+@*
   Description of template
 *@
 @def description: field $name
@@ -31,7 +31,8 @@ ${dimension.definesWithPrefix($prefix)}@slurp
 ${separator}${dimension.name}: ${($spaceMask >> $geometry.dimensions.index($dimension)) & 1}@slurp
     @set $separator = ', '
   @end for
-  
+
+${insertCodeForFeatures('fieldDefines', ['Driver'])}@slurp
   @# Child defines will go here
 @end def
 
@@ -42,7 +43,10 @@ ${separator}${dimension.name}: ${($spaceMask >> $geometry.dimensions.index($dime
   @#
   @super
   @#
-const long _${name}_size = $pointsInDimensionsWithIndices($range($len($dimensions)));
+  @set $prefix = c'_${name}'
+  @#
+const ptrdiff_t ${prefix}_size = (ptrdiff_t)${pointsInDimensionsWithIndices(range(len($dimensions)))};
+${insertCodeForFeatures('fieldGlobals', ['Driver'])}@slurp
   @# Child globals will go here
 @end def
 

@@ -139,7 +139,7 @@ to be performed in the same way on a range of vectors in possibly different fiel
     @silent $templateVariables['vector'] = $vector
 ${insertCodeForFeatures('loopOverVectorsWithInnerContentTemplateBegin', $loopFeatureOrdering, $dict)}@slurp
     @capture loopString
-for (long _i0 = 0; _i0 < ${loopCountPrefix}_${vector.field.name}_size * _${vector.id}_ncomponents; _i0++) {
+for (long _i0 = 0; _i0 < ${loopCountPrefix}_${vector.field.name}_current_size * _${vector.id}_ncomponents; _i0++) {
   ${innerLoopTemplate, autoIndent=True}@slurp
 }
     @end capture
@@ -183,7 +183,7 @@ unsigned long _${vector.id}_index_pointer = 0;
   @end for
   @set $dict = {'vectors': $vectors}
 ${insertCodeForFeatures('loopOverVectorsWithInnerContentBegin', $featureOrdering, $dict)}@slurp
-for (long _i0 = 0; _i0 < _${field.name}_size; _i0++) {
+for (long _i0 = 0; _i0 < _${field.name}_current_size; _i0++) {
   ${insertCodeForFeaturesInReverseOrder('loopOverVectorsWithInnerContentEnd', $featureOrdering, $dict), autoIndent=True}@slurp
   @#
   ${innerContent, autoIndent=True}@slurp
@@ -249,6 +249,15 @@ Optional arguments:
   @set postDimensionLoopClosingCode = postDimensionLoopClosingCode or {}
   @set vectorsNotNeedingDefines = vectorsNotNeedingDefines or set()
   @#
+  @set $featureOrdering = ['Driver']
+  @set $featuresDict = { 'field': field,
+                         'space': space,
+                         'vectors': vectors,
+                         'indexOverrides': indexOverrides,
+                         'vectorOverrides': vectorOverrides,
+                       }
+${insertCodeForFeatures('loopOverFieldInSpaceWithVectorsAndInnerContentBegin', featureOrdering, featuresDict)}@slurp
+  @#
   @# Some vectors will need to have their index pointers set explicitly.
   @# These will be those which belong to fields with different dimensions.
   @set $vectorsRequiringExplictIndexPointers = filter(lambda x: x.field != field and x.field.dimensions != field.dimensions, vectors)
@@ -290,8 +299,8 @@ unsigned long _${vector.id}_index_pointer = 0;
               @set $offsetDueToLooping = c' - _i${field.indexOfDimension($integerDimension)}'
             @end if
             @set $vectorFieldDimensionIndex = $vector.field.indexOfDimension($integerDimension)
-    + (${integerDimension.name} - _${vector.field.name}_min_${integerDimension.name}${offsetDueToLooping}) \
-      * ${vector.field.pointsInDimensionsWithIndices(range($vectorFieldDimensionIndex + 1, len($vector.field.dimensions)))} \
+    + (${integerDimension.name} - _${vector.field.name}_min_${integerDimension.name} - _${vector.field.name}_local_offset_${integerDimension.name}${offsetDueToLooping}) \
+      * ${vector.field.localPointsInDimensionsWithIndicesInSpace(range($vectorFieldDimensionIndex + 1, len($vector.field.dimensions)), $space)} \
       * _${vector.id}_ncomponents \
           @end for
           @#
@@ -376,6 +385,28 @@ ${incrementIndexPointersForVectorsWithFieldAndSpaceAndLastLoopDimension($vectors
 ${closeLoopForDimensionInFieldInSpace($dimension, $field, $space, $kspaceAscendingOrder), extraIndent=$indentLevel}@slurp
     @end if
     @#
+    @# Write any code for multiplying any integrated vectors by the
+    @# appropriate volume element.
+    @#
+    @for $vector in $vectorOverrides
+      @# Determine which dimensions are being integrated over (if any)
+      @# These are the ones that are in $field, but not in the vector's field
+      @set $dimensionsIntegratedOver = filter(lambda x: not vector.field.hasDimension(x), $field.dimensions)
+      @if not $dimensionsIntegratedOver
+        @continue
+      @end if
+      @#
+      @# Loop over the components in each vector
+      @for $componentNumber, $componentName in enumerate($vector.components)
+        @set $volumeElements = []
+        @for $dimension in $dimensionsIntegratedOver
+          @silent volumeElements.append(c'_${field.name}_d${dimensionNameForSpace($dimension, $space)}')
+        @end for
+_active_${vector.id}[_${vector.id}_index_pointer + ${componentNumber}] *= ${' * '.join(volumeElements)};
+      @end for
+
+    @end for
+    @#
     @if $dimension.name in $postDimensionLoopClosingCode
 ${postDimensionLoopClosingCode[$dimension.name], extraIndent=$indentLevel}@slurp
     @end if
@@ -395,6 +426,8 @@ ${postDimensionLoopClosingCode[$dimension.name], extraIndent=$indentLevel}@slurp
     @end for
   @end for
   @#
+${insertCodeForFeaturesInReverseOrder('loopOverFieldInSpaceWithVectorsAndInnerContentEnd', featureOrdering, featuresDict)}@slurp
+  @#
 @end def
 
 
@@ -409,9 +442,16 @@ ${postDimensionLoopClosingCode[$dimension.name], extraIndent=$indentLevel}@slurp
     @if not $kspaceAscendingOrder
       @# If we are looping in memory order
 ${dimension.type} k${dimension.name} = 0.0;
+if (_${field.name}_local_offset_k${dimension.name}) {
+  k${dimension.name} += _${field.name}_local_offset_k${dimension.name} * _${field.name}_dk${dimension.name};
+  ${wrapKSpaceCoordinateForDimensionInField($dimension, $field), autoIndent=True}@slurp
+}
     @else
       @# We are looping in ascending order
-      ${dimension.type} k${dimension.name} = _${field.name}_min_k${dimension.name};
+${dimension.type} k${dimension.name} = _${field.name}_min_k${dimension.name};
+#ifndef _${field.name}_local_offset_k${dimension.name}
+  #error "Cannot loop in k-space ascending order when the dimension is split with MPI"
+#endif
     @end if
 #define dk${dimension.name} _${field.name}_dk${dimension.name}
   @else
@@ -420,6 +460,9 @@ ${dimension.type} k${dimension.name} = 0.0;
     @# Do things slightly differently if we have a dimension override for this dimension
     @if not $dimension in $field.dimensionOverrides
 ${dimension.type} ${dimension.name} = _${field.name}_min_${dimension.name};
+if (_${field.name}_local_offset_${dimension.name})
+  ${dimension.name} += _${field.name}_local_offset_${dimension.name} * _${field.name}_d${dimension.name};
+
 #define d${dimension.name} _${field.name}_d${dimension.name}
     @else
 #define ${dimension.name} _${dimension.override.name}_${dimension.name}[_i${fieldDimensionNumber}]
@@ -428,10 +471,9 @@ ${dimension.type} ${dimension.name} = _${field.name}_min_${dimension.name};
   @end if
 
   @set $dict = {'dimension': $dimension, 'field': $field, 'vectors': $vectors}
-${insertCodeForFeatures('openLoopForDimensionInFieldInSpaceBegin', $featureOrdering, $dict)}@slurp
   @if not ($kspaceAscendingOrder and $dimensionIsInFourierSpace($dimension, $space))
     @# Standard behaviour
-for (long _i${fieldDimensionNumber} = 0; _i${fieldDimensionNumber} < _${field.name}_lattice_${dimension.name}; _i${fieldDimensionNumber}++) {
+for (long _i${fieldDimensionNumber} = 0; _i${fieldDimensionNumber} < _${field.name}_local_lattice_${dimensionNameForSpace($dimension, $space)}; _i${fieldDimensionNumber}++) {
   @else
     @# Non-standard behaviour: this dimension is in kspace and we are asked to loop over it in ascending order
 for (long _j${fieldDimensionNumber} = -(_${field.name}_lattice_${dimension.name}/2); _j${fieldDimensionNumber} < (_${field.name}_lattice_${dimension.name} + 1)/2; _j${fieldDimensionNumber}++) {
@@ -458,7 +500,7 @@ unsigned long _i${fieldDimensionNumber} = ${indexOverrides[$dimension.name][$fie
   @# and those vectors with the same dimensions
   @for $vector in filter(lambda x: x.field == field or x.field.dimensions == field.dimensions, vectors)
 _${vector.id}_index_pointer += _i${fieldDimensionNumber}@slurp
- * ${field.pointsInDimensionsWithIndices(range($fieldDimensionNumber + 1, len($field.dimensions)))};
+ * ${field.localPointsInDimensionsWithIndicesInSpace(range($fieldDimensionNumber + 1, len($field.dimensions)), space)};
   @end for
 
   @#
@@ -501,12 +543,14 @@ _${vector.id}_index_pointer = ( 0@slurp
           @# This dimension is in fourier space
           @assert $dimension.lattice >= $fieldDimension.lattice
   + ( _i${fieldDimensionNumber} + (signbit(k${dimension.name}) ? (_${vector.field.name}_lattice_${dimension.name} - _${field.name}_lattice_${dimension.name}) : 0 ))
-      * $vector.field.pointsInDimensionsWithIndices(range($vectorDimensionNumber + 1, len($vector.field.dimensions)))@slurp
+      * $vector.field.localPointsInDimensionsWithIndicesInSpace(range($vectorDimensionNumber + 1, len($vector.field.dimensions)), $space)@slurp
         @else
           @# This dimension isn't in fourier space
           @assert ($dimension.lattice % $fieldDimension.lattice) == 0
-  + _i${fieldDimensionNumber} * (_${vector.field.name}_lattice_${dimension.name}/_${field.name}_lattice_${dimension.name})@slurp
- * $vector.field.pointsInDimensionsWithIndices(range($vectorDimensionNumber + 1, len($vector.field.dimensions)))@slurp
+  + ( (_i${fieldDimensionNumber} + _${field.name}_local_offset_${dimension.name})
+      * (_${vector.field.name}_lattice_${dimension.name}/_${field.name}_lattice_${dimension.name})
+      - _${vector.field.name}_local_offset_${dimension.name})
+    * $vector.field.localPointsInDimensionsWithIndicesInSpace(range($vectorDimensionNumber + 1, len($vector.field.dimensions)), space)@slurp
         @end if
       @else
         @# Now, consider when $field doesn't contain this dimension. If this dimension has an index override, then
@@ -517,7 +561,7 @@ _${vector.id}_index_pointer = ( 0@slurp
           @# Check that we actually have an entry for this vector's field
           @assert $indexOverrides[$dimension.name].has_key($vector.field)
   + ${indexOverrides[$dimension.name][$vector.field]}@slurp
- * $vector.field.pointsInDimensionsWithIndices(range($vectorDimensionNumber + 1, len($vector.field.dimensions)))@slurp
+ * $vector.field.localPointsInDimensionsWithIndicesInSpace(range($vectorDimensionNumber + 1, len($vector.field.dimensions)), space)@slurp
         @else
           @# We don't have an index override for this dimension.
           @# What happens in this case depends on whether or not the vector
@@ -532,7 +576,7 @@ _${vector.id}_index_pointer = ( 0@slurp
           @else
             @# This dimension isn't in fourier space
   + (_${vector.field.name}_lattice_${dimension.name}/2)@slurp
- * $vector.field.pointsInDimensionsWithIndices(range($vectorDimensionNumber + 1, len($vector.field.dimensions)))@slurp
+ * $vector.field.localPointsInDimensionsWithIndicesInSpace(range($vectorDimensionNumber + 1, len($vector.field.dimensions)), space)@slurp
           @end if
         @end if
       @end if
@@ -555,18 +599,7 @@ _${vector.id}_index_pointer = ( 0@slurp
     @#
     @# Loop over the components in each vector
     @for $componentNumber, $componentName in enumerate($vector.components)
-_active_${vector.id}[_${vector.id}_index_pointer + ${componentNumber}] += ${componentName}@slurp  
-      @# Loop over the dimensions
-      @for $dimension in $dimensionsIntegratedOver
-        @if $dimensionIsInFourierSpace($dimension, $space)
-          @# This dimension is in fourier space
- * _${field.name}_dk${dimension.name}@slurp
-        @else
-          @# This dimension is not in fourier space
- * _${field.name}_d${dimension.name}@slurp
-        @end if
-      @end for
-;
+_active_${vector.id}[_${vector.id}_index_pointer + ${componentNumber}] += ${componentName};
     @end for
   @end for
   @#
@@ -592,12 +625,11 @@ _active_${vector.id}[_${vector.id}_index_pointer + ${componentNumber}] += ${comp
     @# We need to know the last loop dimension because we could be looping over the second last dimension and not the last
     @# because the last was overridden by an indexOverride. Hence the step may not be _stuff_ncomponents,
     @# but _stuff_latticeN * _stuff_ncomponents (etc.)
-    @# Currently, I can't see why indexOverrides would be used for dimensions at the end (or in the middle), but hey,
-    @# I better make sure it works.
+    @# This is needed for cross-propagation when cross-propagating along the last dimension.
 _${vector.id}_index_pointer += @slurp
     @# If the lastLoopDimension isn't the last dimension of the field, we need to multiply by a stride
     @if $lastLoopDimension != $field.dimensions[len($field.dimensions)-1]
-$field.pointsInDimensionsWithIndices(range($field.indexOfDimension($lastLoopDimension)+1,len($field.dimensions))) * @slurp
+$field.localPointsInDimensionsWithIndicesInSpace(range($field.indexOfDimension($lastLoopDimension)+1,len($field.dimensions)), space) * @slurp
     @end if
 _${vector.id}_ncomponents;
   @end for

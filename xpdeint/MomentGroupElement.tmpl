@@ -212,58 +212,42 @@ $insertCodeForFeatures('insideMomentGroupProcessingLoop', $featureOrdering)@slur
 void _${name}_write_out(FILE* _outfile)
 {
   @#
-  @set $numIndependentVariables = len($outputField.dimensions)
   @set $arrayName = c'_active_${outputField.name}_processed'
   @set $outputFieldVectorComponents = $anyObject($outputField.vectors).components
-  @set $dependentVariables = map(lambda x: {'name': x, 'arrayName': arrayName, 'componentNumber': outputFieldVectorComponents.index(x)},
-                                 outputFieldVectorComponents)
+  @set $dependentVariables = [{'vector': $processedVector,
+                               'arrayName': c'_active_${processedVector.id}',
+                               'components': $processedVector.components}]
   @#
+  @# Note that Driver must be last
   @set $featureOrdering = ['ErrorCheck', 'Driver']
   @set $dict = {'momentGroup': self, 'dependentVariables': $dependentVariables}
   @set $result = $insertCodeForFeatures('writeOutFunctionImplementationBegin', $featureOrdering, $dict)
   @set $dependentVariables = $dict.dependentVariables
+  @set $componentCount = 0
+  @for $variable in $dependentVariables
+    @set $componentCount += len($variable.vector.components)
+    @# Technically, all these variables must be of type double...
+    @if $variable.vector.type == 'complex'
+      @set $componentCount += len($variable.vector.components)
+    @end if
+  @end for
   @#
   @# The features can return Cheetah template code suitable for passing to loopOverVectorsWithInnerContentTemplate
   @# in order to create their data. If any have, then we should actually create that loop and run that code.
   @if $result
   ${loopOverVectorsWithInnerContentTemplate([$processedVector], $result), autoIndent=True}@slurp
   @end if
-
-  fprintf(_outfile, "\n");
-  fprintf(_outfile, "<XSIL Name=\"moment_group_${number + 1}\">\n");
-  fprintf(_outfile, "  <Param Name=\"n_independent\">${numIndependentVariables}</Param>\n");
-  fprintf(_outfile, "  <Array Name=\"variables\" Type=\"Text\">\n");
-  fprintf(_outfile, "    <Dim>${numIndependentVariables + len($dependentVariables)}</Dim>\n");
-  fprintf(_outfile, "    <Stream><Metalink Format=\"Text\" Delimiter=\" \\n\"/>\n");
-  fprintf(_outfile, "@slurp
-  @# First loop over the dimensions (the independent variables)
-  @for $dimension in $outputField.dimensions
-${dimensionNameForSpace($dimension, $outputSpace)} @slurp
-  @end for
-  @#
-  @# Now loop over the dependent variables
-  @for $dependentVariable in $dependentVariables
-${dependentVariable.name} @slurp
-  @end for
-\n");
-  fprintf(_outfile, "    </Stream>\n");
-  fprintf(_outfile, "  </Array>\n");
-  fprintf(_outfile, "  <Array Name=\"data\" Type=\"double\">\n");
-  @#
-  @# Now loop over the dimensions
-  @for $dimension in $outputField.dimensions
-  fprintf(_outfile, "    <Dim>${dimension.lattice}</Dim>\n");
-  @end for
-  @# Now the variables dimension
-  fprintf(_outfile, "    <Dim>${numIndependentVariables + len($dependentVariables)}</Dim>\n");
-
+  
   // The meat of the function goes here
   @set $featureOrdering = ['Output']
-  @set $dict = {'momentGroup': self, 'dependentVariables': $dependentVariables}
+  @set $dict = {'field': $outputField,
+                'space': $outputSpace,
+                'fp': '_outfile',
+                'dependentVariables': $dependentVariables,
+                'xsilElementName': c'moment_group_${number + 1}',
+                }
   ${insertCodeForFeatures('writeOutFunctionImplementationBody', $featureOrdering, $dict), autoIndent=True}@slurp
-
-  fprintf(_outfile, "  </Array>\n");
-  fprintf(_outfile, "</XSIL>\n");
+  
 }
   @#
 @end def

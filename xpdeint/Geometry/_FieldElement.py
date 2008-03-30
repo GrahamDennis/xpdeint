@@ -120,6 +120,22 @@ class _FieldElement (ScriptElement):
     
     return ''.join(result)
   
+  # Return a string which is the number of points in the dimensions corresponding to the passed indices
+  def localPointsInDimensionsWithIndicesInSpace(self, indices, space):
+    if len(indices) == 0:
+      return '1'
+    
+    result = []
+    separator = ''
+    for dimensionIndex in indices:
+      assert dimensionIndex < len(self.dimensions)
+      # Only put a multiply sign in for everything after the first dimension
+      result.append(separator)
+      separator = ' * '
+      result.extend(['_', self.name, self.getVar('features')['Driver'].localLatticeForDimensionInSpace(self.dimensions[dimensionIndex], space)])
+    
+    return ''.join(result)
+
   @property
   def pointsInDimensionsNumerically(self):
     points = 1
@@ -153,8 +169,7 @@ class _FieldElement (ScriptElement):
   
   # Dimension overrides
   def dimensionOverrides(self):
-    # We would use our hasattr here, but Dimension classes aren't currently templates
-    return filter(lambda x: hasattr(x, 'override'), self.dimensions)
+    return filter(lambda x: x.hasattr('override'), self.dimensions)
   
   # Initialise field
   def initialise(self):

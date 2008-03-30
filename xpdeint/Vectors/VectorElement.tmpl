@@ -118,10 +118,10 @@ _${field.name}_${name}_initialise();
 *@
 @def allocate
 
-_${field.name}_${name} = ($type*) xmds_malloc(sizeof($type) * _${field.name}_size * _${field.name}_${name}_ncomponents);
+_${field.name}_${name} = ($type*) xmds_malloc(sizeof($type) * _${field.name}_alloc_size * _${field.name}_${name}_ncomponents);
 _active_${field.name}_${name} = _${field.name}_${name};
   @for aliasName in $aliases
-$aliasName = ($type*) xmds_malloc(sizeof($type) * _${field.name}_size * _${field.name}_${name}_ncomponents); // alias for _${id}
+$aliasName = ($type*) xmds_malloc(sizeof($type) * _${field.name}_alloc_size * _${field.name}_${name}_ncomponents); // alias for _${id}
   @end for
 @end def
 

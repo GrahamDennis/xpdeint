@@ -1,0 +1,208 @@
+@*
+DistributedMPIDriver.tmpl
+
+Created by Graham Dennis on 2008-03-28.
+Copyright (c) 2008 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.SimulationDrivers._DistributedMPIDriver
+
+@def description: Distributed MPI Simulation Driver
+
+@def mainRoutine
+  @#
+int main(int argc, char **argv)
+{
+  MPI_Init(&argc, &argv);
+  MPI_Comm_size(MPI_COMM_WORLD, &_size);
+  MPI_Comm_rank(MPI_COMM_WORLD, &_rank);
+  
+  ${setLocalLatticeAndOffsetVariables, autoIndent=True}@slurp
+  
+  @for $field in $fields
+  ${field.allocate, autoIndent=True}@slurp
+    @if $field.isOutputField
+  ${field.initialise, autoIndent=True}@slurp
+    @end if
+  @end for
+  
+  ${mainRoutineInnerContent, autoIndent=True}@slurp
+  
+  MPI_Finalize();
+  
+  return 0;
+}
+  @#
+@end def
+
+@def loopOverFieldInSpaceWithVectorsAndInnerContentEnd($dict)
+  @#
+  @set $vectorOverrides = dict['vectorOverrides']
+  @set $indexOverrides = dict['indexOverrides']
+  @set $field = dict['field']
+  @set $space = dict['space']
+  @set $mpiDimension = $mpiDimensionForSpace($space)
+  @#
+  @for $vector in $vectorOverrides
+    @set $dimensionsIntegratedOver = filter(lambda x: not vector.field.hasDimension(x), $field.dimensions)
+    @if not $mpiDimension in $dimensionsIntegratedOver
+      @# If we aren't integrating over the MPI dimension, then everything is as usual.
+      @continue
+    @end if
+    @# We did integrate over the MPI dimension, so we need to run MPI_Allreduce to combine the results.
+    @set $arrayName = c'_active_${vector.id}'
+    @set $size = c'_${vector.field.name}_current_size * _${vector.id}_ncomponents'
+    @if $vector.type == 'complex'
+      @set $size = '2 * ' + size
+    @end if
+    @#
+    @# If we have any dimension overrides, then we don't want to add up the entire field
+    @for $dimName in indexOverrides.iterkeys()
+      @if vector.field.hasDimensionName(dimName) and vector.field in indexOverrides[dimName]
+        @set $indexOverride = indexOverrides[dimName][vector.field]
+        @set $indices = range(vector.field.indexOfDimensionName(dimName) + 1, len(vector.field.dimensions))
+        @set $arrayName = arrayName + c' + ${indexOverride} * ${vector.field.pointsInDimensionsWithIndices(indices)} * _${vector.id}_ncomponents'
+        @set $size = size + c' / _${vector.field.name}_lattice_${dimName}'
+      @end if
+    @end for
+MPI_Allreduce(MPI_IN_PLACE, $arrayName, $size,
+              MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  @end for
+  @#
+@end def
+
+@def findMax($dict)
+  @#
+  @set $variable = dict['variable']
+  @set $count = dict['count']
+MPI_Allreduce(MPI_IN_PLACE, $variable, $count, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+  @#
+@end def
+
+
+@def binaryWriteOutBegin($dict)
+  @#
+// Only write to file if we are rank 0, as we cannot assume
+// that the nodes have equal access to the filesystem
+if (_rank == 0) {
+  @set $dict['extraIndent'] += 2
+  @#
+@end def
+
+@def binaryWriteOutEnd($dict)
+  @#
+  @set $field = dict['field']
+  @set $dependentVariables = dict['dependentVariables']
+  @#
+  @set $dict['extraIndent'] -= 2
+  @#
+}
+  @set $distributedDimensionNamesInUse = [dimName for dimName in $distributedDimensionNames if field.hasDimensionName(dimName)]
+  @if not $distributedDimensionNamesInUse
+    @stop
+  @end if
+else {
+  // We are some other rank that isn't 0, so we need to send our data to rank 0.
+  @for $mpiDimensionName in $distributedDimensionNames
+  MPI_Ssend(&_${field.name}_local_lattice_${mpiDimensionName}, sizeof(ptrdiff_t), MPI_BYTE, 0, 0, MPI_COMM_WORLD);
+  MPI_Ssend(&_${field.name}_local_offset_${mpiDimensionName}, sizeof(ptrdiff_t), MPI_BYTE, 0, 0, MPI_COMM_WORLD);
+  @end for
+  MPI_Ssend(&_${field.name}_current_size, sizeof(ptrdiff_t), MPI_BYTE, 0, 0, MPI_COMM_WORLD);
+  
+  @for $variable in $dependentVariables
+    @set $sizePrefix = ''
+    @if $variable.vector.type == 'complex'
+      @set $sizePrefix = '2 * '
+    @end if
+  MPI_Ssend(${variable.arrayName}, ${sizePrefix}_${field.name}_current_size * _${variable.vector.id}_ncomponents, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+  @end for
+}
+
+MPI_Barrier(MPI_COMM_WORLD);
+  @#
+@end def
+
+@def binaryWriteOutWriteDataBegin($dict)
+  @#
+  @set $field = dict['field']
+  @set $dependentVariables = dict['dependentVariables']
+  @#
+  @set $distributedDimensionNamesInUse = [dimName for dimName in $distributedDimensionNames if field.hasDimensionName(dimName)]
+  @if not $distributedDimensionNamesInUse
+    @return ''
+  @end if
+  @#
+  @for $mpiDimensionName in $distributedDimensionNamesInUse
+ptrdiff_t _my_${field.name}_local_lattice_${mpiDimensionName} = _${field.name}_local_lattice_${mpiDimensionName};
+ptrdiff_t _my_${field.name}_local_offset_${mpiDimensionName} = _${field.name}_local_offset_${mpiDimensionName};
+  @end for
+ptrdiff_t _my_${field.name}_current_size = _${field.name}_current_size;
+
+@for $variable in $dependentVariables
+${variable.vector.type}* _local${variable.arrayName};
+${variable.vector.type}* _backup${variable.arrayName} = ${variable.arrayName};
+@end for
+
+for (long _dataForRank = 0; _dataForRank < _size; _dataForRank++) {
+  @for $mpiDimensionName in $distributedDimensionNamesInUse
+  ptrdiff_t _${field.name}_local_lattice_${mpiDimensionName};
+  ptrdiff_t _${field.name}_local_offset_${mpiDimensionName};
+  @end for
+  ptrdiff_t _${field.name}_current_size;
+  
+  if (_dataForRank == 0) {
+  @for $mpiDimensionName in $distributedDimensionNamesInUse
+    _${field.name}_local_lattice_${mpiDimensionName} = _my_${field.name}_local_lattice_${mpiDimensionName};
+    _${field.name}_local_offset_${mpiDimensionName} = _my_${field.name}_local_offset_${mpiDimensionName};
+  @end for
+    _${field.name}_current_size = _my_${field.name}_current_size;
+  
+  } else {
+    MPI_Status status;
+  @for $mpiDimensionName in $distributedDimensionNamesInUse
+    MPI_Recv(&_${field.name}_local_lattice_${mpiDimensionName}, sizeof(ptrdiff_t), MPI_BYTE, _dataForRank, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+    MPI_Recv(&_${field.name}_local_offset_${mpiDimensionName}, sizeof(ptrdiff_t), MPI_BYTE, _dataForRank, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+  @end for
+    MPI_Recv(&_${field.name}_current_size, sizeof(ptrdiff_t), MPI_BYTE, _dataForRank, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+    
+    // Now allocate the space needed locally, and receive the entire buffer
+  @for $variable in $dependentVariables
+    _local${variable.arrayName} = (${variable.vector.type}*) xmds_malloc(sizeof(${variable.vector.type}) * _${field.name}_current_size * _${variable.vector.id}_ncomponents);
+    @set $sizePrefix = ''
+    @if $variable.vector.type == 'complex'
+      @set $sizePrefix = '2 * '
+    @end if
+    @#
+    MPI_Recv(_local${variable.arrayName}, ${sizePrefix}_${field.name}_current_size * _${variable.vector.id}_ncomponents,
+             MPI_DOUBLE, _dataForRank, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+   ${variable.arrayName} = _local${variable.arrayName};
+   
+  @end for
+  }
+  @set $dict['extraIndent'] += 2
+  @#
+@end def
+
+@def binaryWriteOutWriteDataEnd($dict)
+  @#
+  @set $field = dict['field']
+  @set $dict['extraIndent'] -= 2
+  @set $dependentVariables = dict['dependentVariables']
+  @#
+  @set $distributedDimensionNamesInUse = [dimName for dimName in $distributedDimensionNames if field.hasDimensionName(dimName)]
+  @if not $distributedDimensionNamesInUse
+    @return ''
+  @end if
+  @#
+  
+  if (_dataForRank != 0) {
+  @for $variable in $dependentVariables
+    xmds_free(_local${variable.arrayName});
+  @end for
+  }
+} // End looping over ranks
+@for $vector in $dependentVariables
+${variable.arrayName} = _backup${variable.arrayName};
+@end for
+
+  @#
+@end def

@@ -81,7 +81,7 @@ double _var = 1.0@slurp
 
   @for noise in noisesNeeded
     @set $noiseVector = noise.noiseVectorForField(caller.vector.field)
-_make_${noise.prefix}_noises(_var, _${noiseVector.id}, _${caller.vector.field.name}_size * _${noiseVector.id}_ncomponents);
+_make_${noise.prefix}_noises(_var, _${noiseVector.id}, _${caller.vector.field.name}_current_size * _${noiseVector.id}_ncomponents);
   @end for
   @#
 @end def
@@ -150,11 +150,11 @@ _active_${noiseVector.id} = _${noiseVector.id};
   @for (noise, field) in self.noisesAndFieldsForIntegrator(integrator)
     @set $noiseVector = noise.noiseVectorForField(field)
 
-_make_${noise.prefix}_noises(_${field.name}_var, _${noiseVector.id}, _${field.name}_size * _${noiseVector.id}_ncomponents);
+_make_${noise.prefix}_noises(_${field.name}_var, _${noiseVector.id}, _${field.name}_current_size * _${noiseVector.id}_ncomponents);
     @#
     @if 'ErrorCheck' in $features
 if (!_half_step) {
-  _make_${noise.prefix}_noises(_${field.name}_var, _${noiseVector.id}2, _${field.name}_size * _${noiseVector.id}_ncomponents);
+  _make_${noise.prefix}_noises(_${field.name}_var, _${noiseVector.id}2, _${field.name}_current_size * _${noiseVector.id}_ncomponents);
   ${loopOverVectorsWithInnerContentTemplate([$noiseVector],
 """_${vector.id}[$index] = 0.5*(_${vector.id}[$index] + _${vector.id}2[$index]);
 """), autoIndent=True}@slurp
@@ -180,8 +180,8 @@ if (_noise_list.empty()) {
   @for (noise, field) in $noisesAndFieldsForIntegrator(integrator)
    @set $noiseVector = noise.noiseVectorForField(field)
   
-  _active_${noiseVector.id} = (double*) xmds_malloc(sizeof(double) * _${field.name}_size * _${noiseVector.id}_ncomponents);
-  _make_${noise.prefix}_noises(_${field.name}_var/_step, _active_${noiseVector.id}, _${field.name}_size * _${noiseVector.id}_ncomponents);
+  _active_${noiseVector.id} = (double*) xmds_malloc(sizeof(double) * _${field.name}_alloc_size * _${noiseVector.id}_ncomponents);
+  _make_${noise.prefix}_noises(_${field.name}_var/_step, _active_${noiseVector.id}, _${field.name}_current_size * _${noiseVector.id}_ncomponents);
   _active_node->_${noiseVector.id} = _active_${noiseVector.id};
   @end for
 } else if (_step*(1.0 + _EPSILON) < _noise_list.begin()->_step) {
@@ -244,10 +244,10 @@ code, not in the template itself.
   @# First allocate the new noise vector
 // Split a gaussian noise
 
-_active_${noiseVector.id} = (${noiseVector.type}*) xmds_malloc(sizeof(${noiseVector.type}) * _${field.name}_size * _${noiseVector.id}_ncomponents);
+_active_${noiseVector.id} = (${noiseVector.type}*) xmds_malloc(sizeof(${noiseVector.type}) * _${field.name}_alloc_size * _${noiseVector.id}_ncomponents);
   @# Then generate a new noise of the appropriate variance
 _make_${noise.prefix}_noises(_${field.name}_var * (_old_smallest_step - _step)/(_step * _old_smallest_step), 
-    _active_${noiseVector.id}, _${field.name}_size * _${noiseVector.id}_ncomponents);
+    _active_${noiseVector.id}, _${field.name}_current_size * _${noiseVector.id}_ncomponents);
 
   @# Then add the old noise.
   @# When adding the old noise, the first step is to get a pointer to the old noise itself.
@@ -276,11 +276,11 @@ code, not in the template itself.
   @#
 // Split a poissonian noise
 
-_active_${noiseVector.id} = (${noiseVector.type}*) xmds_malloc(sizeof(${noiseVector.type}) * _${field.name}_size * _${noiseVector.id}_ncomponents);
+_active_${noiseVector.id} = (${noiseVector.type}*) xmds_malloc(sizeof(${noiseVector.type}) * _${field.name}_alloc_size * _${noiseVector.id}_ncomponents);
 
 ${noiseVector.type}* const _old_${noiseVector.id} = _noise_list.begin()->_${noiseVector.id};
 
-_split_${noise.prefix}_noises(_${field.name}_var / _step, _${field.name}_var / _old_smallest_step, _active_${noiseVector.id}, _old_${noiseVector.id}, _${field.name}_size * _${noiseVector.id}_ncomponents);
+_split_${noise.prefix}_noises(_${field.name}_var / _step, _${field.name}_var / _old_smallest_step, _active_${noiseVector.id}, _old_${noiseVector.id}, _${field.name}_current_size * _${noiseVector.id}_ncomponents);
 
   @#
 @end def

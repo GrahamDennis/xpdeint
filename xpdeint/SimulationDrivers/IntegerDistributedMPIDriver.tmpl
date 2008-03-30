@@ -1,0 +1,100 @@
+@*
+DistributedMPIDriver.tmpl
+
+Created by Graham Dennis on 2008-03-29.
+Copyright (c) 2008 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.SimulationDrivers._IntegerDistributedMPIDriver
+
+@def description: Simulation Driver (Distributed with MPI along an integer-valued dimension)
+
+@# It's not clear to me that this is the best way of doing this.
+@# The other option is to simply do it in the defines and globals
+@# of the driver itself and not via a feature call.
+
+@def globals
+  @#
+  @super
+  @#
+#undef _local_lattice_${mpiDimension.name}
+#undef _local_offset_${mpiDimension.name}
+
+ptrdiff_t _local_lattice_${mpiDimension.name} = 0;
+ptrdiff_t _local_offset_${mpiDimension.name} = 0;
+  @#
+@end def
+
+@def fieldDefines($dict)
+  @#
+  @set $field = dict['caller']
+  @#
+  @if not field.hasDimension($mpiDimension)
+    @# If the field doesn't have the MPI dimension, then everything is as normal
+    @super($dict)
+    @stop
+  @end if
+  @#
+
+#define _${field.name}_current_size _${field.name}_alloc_size
+  @#
+@end def
+
+@def fieldGlobals($dict)
+  @#
+  @set $field = dict['caller']
+  @#
+  @if not field.hasDimension($mpiDimension)
+    @# If the field doesn't have the MPI dimension, then everything is as normal
+    @return ''
+  @end if
+  @#
+#undef _${field.name}_local_lattice_${mpiDimension.name}
+#undef _${field.name}_local_offset_${mpiDimension.name}
+
+ptrdiff_t _${field.name}_local_lattice_${mpiDimension.name} = 0;
+ptrdiff_t _${field.name}_local_offset_${mpiDimension.name} = 0;
+ptrdiff_t _${field.name}_alloc_size = 0;
+  @#
+@end def
+
+@def setLocalLatticeAndOffsetVariables
+  @#
+// First work out the local lattice and offset for the geometry
+  @set $mpiDimName = $mpiDimension.name
+// Set the block size for most ranks to lattice/processors rounded up
+ptrdiff_t _block_size = (_lattice_${mpiDimName}-1)/_size + 1;
+_local_offset_${mpiDimName} = _rank * _block_size;
+if (_rank != _size - 1)
+  _local_lattice_${mpiDimName} = _block_size;
+else {
+  // The last rank takes up everything else
+  // this should be less than or equal to _block_size
+  _local_lattice_${mpiDimName} = _lattice_${mpiDimName} - _block_size * (_size - 1);
+}
+
+  @for $field in $fields
+    @if field.name == 'geometry' or not field.hasDimension($mpiDimension)
+      @continue
+    @end if
+    @set dimension = field.dimensionWithName(mpiDimName)
+    @# Set the local_lattice and local_offset variables based on the
+    @# values for the geometry's version of these variables
+// Set the local_lattice and local_offset variables for the '${field.name}' field.
+ptrdiff_t _${field.name}_skip_size = _lattice_${mpiDimName}/_${field.name}_lattice_${mpiDimName};
+if (_rank == 0) {
+  _${field.name}_local_offset_${mpiDimName} = 0;
+  _${field.name}_local_lattice_${mpiDimName} = (_local_lattice_${mpiDimName}-1)/_${field.name}_skip_size + 1;
+} else {
+  _${field.name}_local_offset_${mpiDimName} = (_local_offset_${mpiDimName}-1)/_${field.name}_skip_size + 1;
+  _${field.name}_local_lattice_${mpiDimName} = (_local_offset_${mpiDimName} + _local_lattice_${mpiDimName} - 1)/_${field.name}_skip_size
+                                         + 1 - _${field.name}_local_offset_${mpiDimName};
+}
+
+    @# Now set the alloc_size variable for the field
+    @set $indices = range(0, len(field.dimensions))
+    @silent indices.remove(field.indexOfDimensionName($mpiDimName))
+_${field.name}_alloc_size = _${field.name}_local_lattice_${mpiDimName} * ${field.pointsInDimensionsWithIndices($indices)};
+
+  @end for
+  @#
+@end def

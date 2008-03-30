@@ -16,24 +16,46 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   @#  void _mgN_write_out(FILE* _outfile)
   @# And this code is being automatically indented.
   @#
-  @set $momentGroup = $dict.momentGroup
+  @set $fp = dict['fp']
+  @set $field = dict['field']
+  @set $space = dict['space']
+  @#
+${writeOutFunctionImplementationBegin(dict)}@slurp
+  
   @set $dependentVariables = $dict.dependentVariables
-fprintf(_outfile, "    <Stream><Metalink Format=\"Text\" Delimiter=\" \\n\"/>\n");
+fprintf($fp, "    <Stream><Metalink Format=\"Text\" Delimiter=\" \\n\"/>\n");
 
-$loopOverFieldInSpaceWithVectorsAndInnerContent($momentGroup.outputField, $momentGroup.outputSpace, $momentGroup.outputField.vectors, $insideOutputLoops($momentGroup, $dependentVariables), $kspaceAscendingOrder=True)@slurp
+  @set $vectors = set([variable['vector'] for variable in dependentVariables])
+$loopOverFieldInSpaceWithVectorsAndInnerContent(field, space, vectors, $insideOutputLoops(dict), $kspaceAscendingOrder=True, vectorsNotNeedingDefines=vectors)@slurp
 
-fprintf(_outfile, "    </Stream>\n");
+fprintf($fp, "    </Stream>\n");
+
+${writeOutFunctionImplementationEnd(dict)}@slurp
   @#
 @end def
 
-@def insideOutputLoops($momentGroup, $dependentVariables)
+@def insideOutputLoops(dict)
   @#
-  @set $variableCount = len($momentGroup.outputField.dimensions) + len($dependentVariables)
+  @set $fp = dict['fp']
+  @set $dependentVariables = dict['dependentVariables']
+  @set $field = dict['field']
+  @set $space = dict['space']
+  @#
+  @set $componentCount = 0
+  @for $variable in $dependentVariables
+    @set $componentCount += len($variable.vector.components)
+    @if $variable.vector.type == 'complex'
+      @set $componentCount += len($variable.vector.components)
+    @end if
+  @end for
+  @#
+  @set dict['componentCount'] = componentCount
+  @set $variableCount = len($field.dimensions) + componentCount
   @set $precisionPrefix = '.12'
   @if $precision == 'single'
     @set $precisionPrefix = ''
   @end if
-fprintf(_outfile, "@slurp
+fprintf($fp, "@slurp
   @# Loop over the variables that we're writing out
   @for $variableNumber in range($variableCount)
     @if $variableNumber != 0
@@ -45,13 +67,19 @@ fprintf(_outfile, "@slurp
   @end for
 \n"@slurp
   @#
-  @for $dimension in $momentGroup.outputField.dimensions
-, ${dimensionNameForSpace($dimension, $momentGroup.outputSpace)}@slurp
+  @for $dimension in $field.dimensions
+, (double)${dimensionNameForSpace($dimension, $space)}@slurp
   @end for
   @#
   @# Now loop over the (dependent) variables
   @for $variable in $dependentVariables
-, ${variable.arrayName}[_${momentGroup.outputField.name}_processed_index_pointer + ${variable.componentNumber}]@slurp
+    @for $componentNumber, $component in enumerate($variable.components)
+      @if $variable.vector.type == 'double'
+, ${variable.arrayName}[_${variable.vector.id}_index_pointer + ${componentNumber}]@slurp
+      @else
+, ${variable.arrayName}[_${variable.vector.id}_index_pointer + ${componentNumber}].re, ${variable.arrayName}[_${variable.vector.id}_index_pointer + ${componentNumber}].im@slurp
+      @end if
+    @end for
   @end for
 );
   @#

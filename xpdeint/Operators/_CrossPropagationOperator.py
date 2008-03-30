@@ -144,6 +144,11 @@ class _CrossPropagationOperator (Operator):
   def preflight(self):
     super(_CrossPropagationOperator, self).preflight()
     
+    # Check that we aren't distributed with MPI along our intended integration dimension
+    driver = self.getVar('features')['Driver']
+    if self.propagationDimension in driver.distributedDimensionNames:
+      raise ParserException(self.xmlElement, "Cannot cross-propagate along a dimension distributed with MPI.")
+    
     # Create the dependency map and integration vector map for the cross propagation integrator
     # Note that they are reversed as they are reducedVector --> fullVector maps, not
     # fullVector --> reducedVector maps as we constructed above.

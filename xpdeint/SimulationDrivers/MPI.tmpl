@@ -1,0 +1,64 @@
+@*
+MPI.tmpl
+
+Created by Graham Dennis on 2008-03-28.
+Copyright (c) 2008 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.ScriptElement
+
+@def compiler
+  @#
+  @return "mpic++"
+  @#
+@end def
+
+
+@def includes
+  @#
+  @super
+  @#
+#include <mpi.h>
+  @#
+@end def
+
+@def globals
+  @#
+  @super
+  @#
+int _rank, _size;
+  @#
+@end def
+
+@def logFunctionBegin($dict)
+  @#
+  @# Insert code at the start of the _LOG function
+  @#
+if ((_rank == 0) || (logLevel & ~(_SIMULATION_LOG_LEVEL | _SEGMENT_LOG_LEVEL | _SAMPLE_LOG_LEVEL))) { \
+  if (logLevel & ~(_SIMULATION_LOG_LEVEL | _SEGMENT_LOG_LEVEL | _SAMPLE_LOG_LEVEL)) \
+    printf("Rank[%i]: ", _rank); \
+  @set $dict['extraIndent'] += 2
+  @#
+@end def
+
+@def logFunctionEnd($dict)
+  @#
+  @set $dict['extraIndent'] -= 2
+} \
+if (logLevel & _ERROR_LOG_LEVEL) \
+  MPI_Abort(MPI_COMM_WORLD, 1); \
+  @#
+@end def
+
+@def seedOffset($dict)
+  @#
+ + _rank@slurp
+  @#
+@end def
+
+@def writeXSILHeaderBegin($dict)
+  @#
+// Only let rank 0 do the writing to disk
+if (_rank != 0)
+  return NULL;
+  @#
+@end def

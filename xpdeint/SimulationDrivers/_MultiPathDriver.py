@@ -19,12 +19,7 @@ class _MultiPathDriver (SimulationDriver):
     super(_MultiPathDriver, self).preflight()
     
     for mg in self.getVar('momentGroups'):
-      sdVector = VectorElement(name = 'processed_sd', field = mg.outputField,
-                               **self.argumentsToTemplateConstructors)
-      sdVector.type = 'double'
-      sdVector.needsInitialisation = True
-      sdVector.nComponents = mg.processedVector.nComponents
-      mg.outputField.managedVectors.add(sdVector)
+      mg.processedVector.aliases.add('_%s_sd' % mg.outputField.name)
     
   
   def rawVectorNeedsToBeAllocated(self, dict):
