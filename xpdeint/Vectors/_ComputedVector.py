@@ -54,7 +54,8 @@ class _ComputedVector (VectorElement):
   def bindNamedVectors(self):
     super(VectorElement, self).bindNamedVectors()
     
-    self.dependencies.update(self.vectorsFromEntity(self.dependenciesEntity))
+    if self.dependenciesEntity:
+      self.dependencies.update(self.vectorsFromEntity(self.dependenciesEntity))
     
     # This code must be here and not in preflight because _Stochastic needs to be able
     # to work out our noiseField, and that occurs in preflight. As we don't know what
