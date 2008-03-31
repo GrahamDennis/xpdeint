@@ -893,7 +893,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
           raise UnknownDriverException()
       except UnknownDriverException, err:
         raise ParserException(topLevelSequenceElement, "Unknown driver type '%(driverName)s'. "
-                                                       "The options are 'none' (default), 'multi-path' or 'mpi-multi-path'." % locals())
+                                                       "The options are 'none' (default), 'multi-path', 'mpi-multi-path' or 'distributed-mpi'." % locals())
       
       if driverClass == MultiPathDriverTemplate:
         kindString = None
@@ -990,9 +990,11 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       integratorTemplateClass = Integrators.ARK45.ARK45
     elif algorithmString == 'ARK89':
       integratorTemplateClass = Integrators.ARK89.ARK89
+    elif algorithmString == 'SI':
+      integratorTemplateClass = Integrators.SI.SI
     else:
       raise ParserException(integrateElement, "Unknown algorithm '%(algorithmString)s'. "
-                                              "Options are 'RK4', 'RK9', 'ARK45' or 'ARK89'." % locals())
+                                              "Options are 'SI', 'RK4', 'RK9', 'ARK45' or 'ARK89'." % locals())
     
     integratorTemplate = integratorTemplateClass(**self.argumentsToTemplateConstructors)
     
