@@ -59,15 +59,16 @@ void _${id}_evaluate()
   @set $setOfVectorsToLoopOver = $dependencies.copy()
   @silent $setOfVectorsToLoopOver.add(self)
   @set $featureOrdering = ['Stochastic']
+  @set $featureDict = {'field': $loopingField, 'space': $evaluationSpace}
   @#
   @set $vectorOverrides = []
   @if $integratingComponents
     @silent vectorOverrides.append(self)
   @end if
   @#
-  ${insertCodeForFeatures('computedVectorEvaluationBegin', $featureOrdering), autoIndent=True}@slurp
+  ${insertCodeForFeatures('computedVectorEvaluationBegin', $featureOrdering, featureDict), autoIndent=True}@slurp
   ${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $evaluationSpace, $setOfVectorsToLoopOver, $insideEvaluationLoops, vectorOverrides=vectorOverrides), autoIndent=True}@slurp
-  ${insertCodeForFeaturesInReverseOrder('computedVectorEvaluationEnd', $featureOrdering), autoIndent=True}@slurp
+  ${insertCodeForFeaturesInReverseOrder('computedVectorEvaluationEnd', $featureOrdering, featureDict), autoIndent=True}@slurp
   @#
   @if $needsFourierTransforms
   

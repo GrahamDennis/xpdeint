@@ -355,7 +355,7 @@ class _ScriptElement (Template):
     result = []
     for vector in vectors:
       if not (vector.initialSpace) == (space & vector.field.spaceMask):
-        if not vector.type == "complex":
+        if not vector.type == "complex" and not vector.transformFree:
           raise ParserException(self.xmlElement,
                   "Cannot satisfy dependence on vector '%s' because it is not "
                   "of type complex, and needs to be fourier transformed." % vector.name)

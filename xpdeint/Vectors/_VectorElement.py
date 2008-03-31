@@ -15,7 +15,7 @@ from xpdeint.Vectors.VectorInitialisation import VectorInitialisation
 class _VectorElement (ScriptElement):
   isComputed = False
   
-  def __init__(self, name, field, *args, **KWs):
+  def __init__(self, name, field, transformFree = False, *args, **KWs):
     ScriptElement.__init__(self, *args, **KWs)
     self.name = name
     self.field = field
@@ -28,6 +28,7 @@ class _VectorElement (ScriptElement):
     self.type = 'complex'
     self.aliases = set()
     self.spacesNeeded = set()
+    self.transformFree = transformFree
     
     # Set default initialisation to be the zero initialisation template
     self.initialiser = VectorInitialisation(*args, **KWs)
@@ -35,6 +36,8 @@ class _VectorElement (ScriptElement):
   
   @property
   def needsFourierTransforms(self):
+    if self.transformFree:
+      return False
     return len(self.spacesNeeded) > 1
   
   @property

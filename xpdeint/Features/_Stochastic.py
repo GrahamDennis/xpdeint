@@ -9,6 +9,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 
 from xpdeint.Features._Feature import _Feature
 from xpdeint.Vectors.VectorElement import VectorElement
+from xpdeint.Vectors.ComputedVector import ComputedVector
 from xpdeint.Vectors.VectorInitialisationFromCDATA import VectorInitialisationFromCDATA
 from xpdeint.Vectors.VectorInitialisationFromXSIL import VectorInitialisationFromXSIL
 from xpdeint.Operators.DeltaAOperator import DeltaAOperator
@@ -57,7 +58,7 @@ class _Stochastic (_Feature):
     # Note that someone (maybe this class) needs to replace the named noises in
     # these classes (as read by the parser) with the actual noise objects
     
-    classesThatCanUseNoises = (VectorInitialisationFromCDATA, VectorInitialisationFromXSIL, DeltaAOperator)
+    classesThatCanUseNoises = (VectorInitialisationFromCDATA, VectorInitialisationFromXSIL, ComputedVector, DeltaAOperator)
     
     objectsThatMightUseNoises = [o for o in self.getVar('templates') if isinstance(o, classesThatCanUseNoises)]
     
@@ -74,9 +75,16 @@ class _Stochastic (_Feature):
           noises.append(noiseNameMap[noiseName])
       
       o.noises = noises
-      if not o.field in fieldToNoisesMap:
-        fieldToNoisesMap[o.field] = set()
-      fieldToNoisesMap[o.field].update(o.noises)
+      
+      noiseField = None
+      if o.hasattr('noiseField'):
+        noiseField = o.noiseField
+      else:
+        noiseField = o.field
+      
+      if not noiseField in fieldToNoisesMap:
+        fieldToNoisesMap[noiseField] = set()
+      fieldToNoisesMap[noiseField].update(o.noises)
     
     for field, noises in fieldToNoisesMap.iteritems():
       for noise in noises:
@@ -84,6 +92,7 @@ class _Stochastic (_Feature):
           noise.noiseVectors = dict()
         
         noiseVector = VectorElement(name = '%s_noises' % noise.prefix, field = field,
+                                    transformFree = True, # This attribute says that this vector is always in the right field.
                                     **self.argumentsToTemplateConstructors)
         noiseVector.type = 'double'
         noiseVector.needsInitialisation = False
@@ -95,7 +104,7 @@ class _Stochastic (_Feature):
     for o in objectsThatMightUseNoises:
       # Add to the dependencies for this object the noise vectors corresponding to the noises
       # that this object wants to use
-      o.dependencies.update([noise.noiseVectorForField(o.field) for noise in o.noises])
+      o.dependencies.update([noise.noiseVectorForField(noiseField) for noise in o.noises])
     
     
     # For each adaptive step integrator, we need to make sure that the noises being used are

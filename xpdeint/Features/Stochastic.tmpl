@@ -64,7 +64,22 @@ ${noise.initialiseSeeds}@slurp
 
 @def vectorInitialisationBegin($dict)
   @#
+${generateNoisesForVector($dict)}@slurp
+  @#
+@end def
+
+@def computedVectorEvaluationBegin($dict)
+  @#
+${generateNoisesForVector($dict)}@slurp
+  @#
+@end def
+
+@def generateNoisesForVector($dict)
+  @#
   @set $caller = dict['caller']
+  @set $field = dict['field']
+  @set $space = dict['space']
+  @#
   @set $noisesNeeded = $noises[:]
   @if caller.hasattr('noises')
     @set $noisesNeeded = caller.noises[:]
@@ -74,14 +89,14 @@ ${noise.initialiseSeeds}@slurp
   @end if
 
 double _var = 1.0@slurp
-  @if len([dim for dim in caller.vector.field.dimensions if dim.type == 'double'])
- / $caller.vector.field.volumeElementInSpace($caller.vector.initialSpace)@slurp
+  @if len([dim for dim in field.dimensions if dim.type == 'double'])
+ / $field.volumeElementInSpace($space)@slurp
   @end if
 ;
 
   @for noise in noisesNeeded
-    @set $noiseVector = noise.noiseVectorForField(caller.vector.field)
-_make_${noise.prefix}_noises(_var, _${noiseVector.id}, _${caller.vector.field.name}_current_size * _${noiseVector.id}_ncomponents);
+    @set $noiseVector = noise.noiseVectorForField(field)
+_make_${noise.prefix}_noises(_var, _${noiseVector.id}, _${field.name}_current_size * _${noiseVector.id}_ncomponents);
   @end for
   @#
 @end def
