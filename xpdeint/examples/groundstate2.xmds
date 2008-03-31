@@ -84,10 +84,12 @@
       Ncalc
     </components>
     <dependencies fourier_space="y">wavefunction</dependencies>
-    <![CDATA[
-      // Calculate the current normalisation of the wave function.
-      Ncalc = mod2(phi);
-    ]]>
+    <evaluation>
+      <![CDATA[
+        // Calculate the current normalisation of the wave function.
+        Ncalc = mod2(phi);
+      ]]>
+    </evaluation>
   </computed_vector>
   
   <sequence>

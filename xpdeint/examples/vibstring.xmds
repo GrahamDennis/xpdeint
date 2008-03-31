@@ -47,9 +47,11 @@
       <computed_vector name="moment_creator" dimensions="" type="double">
         <components>moment</components>
         <dependencies fourier_space="kx"> main </dependencies>
-        <![CDATA[
-          moment = mod2(u);
-        ]]>
+        <evaluation>
+          <![CDATA[
+            moment = mod2(u);
+          ]]>
+        </evaluation>
       </computed_vector>
       <operators>
         <operator kind="ex" constant="yes">
