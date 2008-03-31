@@ -840,7 +840,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       
       vectorTemplate.components.append(componentName)
     
-    vectorTemplate.dependenciesEntity = self.parseDependencies(computedVectorElement)
+    vectorTemplate.dependenciesEntity = self.parseDependencies(computedVectorElement, optional=True)
     
     vectorTemplate.evaluationCode = computedVectorElement.cdataContents()
     
