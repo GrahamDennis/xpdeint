@@ -802,6 +802,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     # One way or another, we now have our fieldTemplate
     # So we can now construct the computed vector template
     vectorTemplate = ComputedVectorTemplate(name = vectorName, field = fieldTemplate,
+                                            xmlElement = computedVectorElement,
                                             **self.argumentsToTemplateConstructors)
     
     self.globalNameSpace['vectors'].append(vectorTemplate)

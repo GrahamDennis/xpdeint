@@ -18,12 +18,13 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 @def initialiseVector
   @#
   @set $featureOrdering = ['Stochastic']
+  @set $featureDict = {'field': $vector.field, 'space': $vector.initialSpace}
   @#
   @set $vectorsToLoopOver = set([$vector])
   @silent $vectorsToLoopOver.update($dependencies)
-$insertCodeForFeatures('vectorInitialisationBegin', $featureOrdering)@slurp
+$insertCodeForFeatures('vectorInitialisationBegin', $featureOrdering, featureDict)@slurp
 $loopOverFieldInSpaceWithVectorsAndInnerContent($vector.field, $vector.initialSpace, $vectorsToLoopOver, $insideInitialisationLoops)@slurp
-$insertCodeForFeaturesInReverseOrder('vectorInitialisationEnd', $featureOrdering)@slurp
+$insertCodeForFeaturesInReverseOrder('vectorInitialisationEnd', $featureOrdering, featureDict)@slurp
   @#
 @end def
 

@@ -371,7 +371,10 @@ def main(argv=None):
       columnNumber = err.element.getUserData('columnNumber')
     print >> sys.stderr, "Error: " + err.msg
     print >> sys.stderr, "    At line %(lineNumber)i, column %(columnNumber)i." % locals()
-    print >> sys.stderr, "    In element: " + err.element.userUnderstandableXPath()
+    if err.element:
+      print >> sys.stderr, "    In element: " + err.element.userUnderstandableXPath()
+    else:
+      print >> sys.stderr, "    Unknown element. Please report this error to xmds-devel@lists.sourceforge.net"
     print >> sys.stderr, "For a complete traceback, pass -v on the command line."
     
     # If we have the verbose option on, then in addition to the path to the XML element

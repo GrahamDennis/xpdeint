@@ -26,6 +26,10 @@ class _ComputedVector (VectorElement):
     self._evaluationSpace = 0
     self.evaluationCode = ''
   
+  @property
+  def noiseField(self):
+    return self.loopingField
+  
   def _getEvaluationSpace(self):
     return self._evaluationSpace
   
@@ -52,14 +56,20 @@ class _ComputedVector (VectorElement):
     
     self.dependencies.update(self.vectorsFromEntity(self.dependenciesEntity))
     
-  def preflight(self):
-    super(VectorElement, self).preflight()
-    
-    loopingDimensionNames = set()
+    # This code must be here and not in preflight because _Stochastic needs to be able
+    # to work out our noiseField, and that occurs in preflight. As we don't know what
+    # order the templates' preflight functions will be called in, we have to put this in
+    # bindNamedVectors to make sure that loopingField exists before the preflight stage.
+    loopingDimensionNames = set([dim.name for dim in self.field.dimensions])
     for dependency in self.dependencies:
       loopingDimensionNames.update([dim.name for dim in dependency.field.dimensions])
     
     self.loopingField = FieldElement.sortedFieldWithDimensionNames(loopingDimensionNames)
+    
+
+    
+  def preflight(self):
+    super(VectorElement, self).preflight()
     
     if self.dependenciesEntity and self.dependenciesEntity.xmlElement.hasAttribute('fourier_space'):
       dependenciesXMLElement = self.dependenciesEntity.xmlElement
