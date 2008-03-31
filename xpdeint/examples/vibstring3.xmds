@@ -59,9 +59,11 @@
     <dependencies fourier_space="kx ky">integrated_u main</dependencies>
     <!-- If the moments are of type 'double', then all dimensions that aren't integrated
          must be evaluated in 'x' space. -->
-    <![CDATA[
-      moment = mod2(u);
-    ]]>
+    <evaluation>
+      <![CDATA[
+        moment = mod2(u);
+      ]]>
+    </evaluation>
   </computed_vector>
   
   <sequence>
@@ -73,9 +75,11 @@
         <dependencies fourier_space="kx ky">integrated_u main</dependencies>
         <!-- If the moments are of type 'double', then all dimensions that aren't integrated
              must be evaluated in 'x' space. -->
-        <![CDATA[
-          sparemoment = mod2(u);
-        ]]>
+        <evaluation>
+          <![CDATA[
+            sparemoment = mod2(u);
+          ]]>
+        </evaluation>
       </computed_vector>
       
       <operators dimensions="x y">
@@ -119,9 +123,11 @@
           <dependencies fourier_space="kx ky">integrated_u main</dependencies>
           <!-- If the moments are of type 'double', then all dimensions that aren't integrated
                must be evaluated in 'x' space. -->
-          <![CDATA[
-            sparemomentagain = mod2(u);
-          ]]>
+          <evaluation>
+            <![CDATA[
+              sparemomentagain = mod2(u);
+            ]]>
+          </evaluation>
         </computed_vector>
         <operator kind="ex" constant="yes">
           <operator_names>L</operator_names>

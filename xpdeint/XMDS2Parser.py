@@ -842,9 +842,11 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     
     vectorTemplate.dependenciesEntity = self.parseDependencies(computedVectorElement, optional=True)
     
-    vectorTemplate.evaluationCode = computedVectorElement.cdataContents()
+    evaluationElement = computedVectorElement.getChildElementByTagName('evaluation')
     
-    # self.parseNoisesAttribute(computedVectorElement, vectorTemplate)
+    vectorTemplate.evaluationCode = evaluationElement.cdataContents()
+    
+    self.parseNoisesAttribute(evaluationElement, vectorTemplate)
     
     if not type(parentTemplate) == SimulationElementTemplate:
       fieldTemplate.temporaryVectors.add(vectorTemplate)
