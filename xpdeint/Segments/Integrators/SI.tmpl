@@ -53,6 +53,10 @@ _segment${segmentNumber}_ip_evolve(+1);
 
 ${propagationDimension} += _step/2.0;
 
+  @if $cross
+${updateDependenciesForNextStep}@slurp
+  @end if
+
   @#
 @end def
 
