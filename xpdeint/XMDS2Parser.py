@@ -669,8 +669,8 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     componentsElement = vectorElement.getChildElementByTagName('components')
     
     typeString = None
-    if componentsElement.hasAttribute('type'):
-      typeString = componentsElement.getAttribute('type').lower()
+    if vectorElement.hasAttribute('type'):
+      typeString = vectorElement.getAttribute('type').lower()
     
     if typeString in (None, 'complex'):
       vectorTemplate.type = 'complex'
@@ -810,8 +810,8 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     componentsElement = computedVectorElement.getChildElementByTagName('components')
     
     typeString = None
-    if componentsElement.hasAttribute('type'):
-      typeString = componentsElement.getAttribute('type').lower()
+    if computedVectorElement.hasAttribute('type'):
+      typeString = computedVectorElement.getAttribute('type').lower()
     
     if typeString in (None, 'complex'):
       vectorTemplate.type = 'complex'

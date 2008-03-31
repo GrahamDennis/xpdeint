@@ -22,8 +22,8 @@
     <prop_dim> t </prop_dim>
   </geometry>
   
-  <vector name="main">
-    <components type="complex">
+  <vector name="main" type="complex">
+    <components>
       z
     </components>
     <initialisation noises="">

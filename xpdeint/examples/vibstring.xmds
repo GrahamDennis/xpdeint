@@ -29,8 +29,8 @@
     </transverse_dimensions>
   </geometry>
   
-  <vector name="main" initial_space="x">
-    <components type="complex">
+  <vector name="main" initial_space="x" type="complex">
+    <components>
       u uDot
     </components>
     <initialisation>
@@ -44,8 +44,8 @@
   <sequence>
     <integrate algorithm="RK4" interval="2e-3" steps="100">
       <samples>50</samples>
-      <computed_vector name="moment_creator" dimensions="">
-        <components type="double">moment</components>
+      <computed_vector name="moment_creator" dimensions="" type="double">
+        <components>moment</components>
         <dependencies fourier_space="kx"> main </dependencies>
         <![CDATA[
           moment = mod2(u);

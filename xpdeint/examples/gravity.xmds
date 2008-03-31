@@ -29,8 +29,8 @@
     </transverse_dimensions>
   </geometry>
   
-  <vector name="motion">
-    <components type="double">
+  <vector name="motion" type="double">
+    <components>
       x y vx vy
     </components>
     <initialisation noises="p">
@@ -43,8 +43,8 @@
     </initialisation>
   </vector>
   
-  <vector name="mass">
-    <components type="double">
+  <vector name="mass" type="double">
+    <components>
       m
     </components>
     <initialisation noises="q">

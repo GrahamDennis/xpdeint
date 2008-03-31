@@ -66,9 +66,7 @@ class _ComputedVector (VectorElement):
       loopingDimensionNames.update([dim.name for dim in dependency.field.dimensions])
     
     self.loopingField = FieldElement.sortedFieldWithDimensionNames(loopingDimensionNames)
-    
-
-    
+  
   def preflight(self):
     super(VectorElement, self).preflight()
     

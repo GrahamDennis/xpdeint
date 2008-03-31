@@ -21,8 +21,8 @@
     </transverse_dimensions>
   </geometry>
   
-  <vector name="potential" initial_space="y">
-    <components type="complex">
+  <vector name="potential" initial_space="y" type="complex">
+    <components>
       V1
     </components>
     <initialisation>
@@ -35,8 +35,8 @@
     </initialisation>
   </vector>
   
-  <vector name="wavefunction" initial_space="y">
-    <components type="complex">
+  <vector name="wavefunction" initial_space="y" type="complex">
+    <components>
       phi
     </components>
     <initialisation>
@@ -48,8 +48,8 @@
     </initialisation>
   </vector>
   
-  <computed_vector name="normalisation" dimensions="">
-    <components type="double">
+  <computed_vector name="normalisation" dimensions="" type="double">
+    <components>
       Ncalc
     </components>
     <dependencies fourier_space="y">wavefunction</dependencies>
