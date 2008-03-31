@@ -76,6 +76,8 @@ class _Stochastic (_Feature):
       
       o.noises = noises
       
+      # The field in which the noises need to be evaluated will be the object's 'noiseField'
+      # attribute if it exists, otherwise, we'll use the 'field' attribute.
       noiseField = None
       if o.hasattr('noiseField'):
         noiseField = o.noiseField
