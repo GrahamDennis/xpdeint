@@ -133,7 +133,7 @@ The return value is the template string that will be
   @silent dependentVariables.append(newVariableDict)
   @#
 // Calculate the mean
-_${fieldName}_sd[\${index}] /= (double) _n_paths;
+_active_\${vector.id}[\${index}] /= (double) _n_paths;
 
 // Calculate the standard error
 _${fieldName}_sd[\${index}] /= (double) _n_paths;
