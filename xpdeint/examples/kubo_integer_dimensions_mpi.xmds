@@ -38,11 +38,21 @@
     </initialisation>
   </vector>
   
-  <sequence>
+  <computed_vector name="0d_noise" dimensions="">
+    <components type="double">noise</components>
+    <evaluation>
+      <![CDATA[
+        noise = n_1;
+      ]]>
+    </evaluation>
+  </computed_vector>
+  
+  <sequence driver="distributed-mpi">
     <integrate algorithm="ARK89" interval="10" steps="1000" tolerance="1e-8">
       <samples>500 10</samples>
       <operators noises="n">
         <integration_vectors>main</integration_vectors>
+        <dependencies>0d_noise</dependencies>
         <![CDATA[
           dz_dt[j] = i*z*n_1;
         ]]>
@@ -53,12 +63,12 @@
     </breakpoint>
   </sequence>
   
-  <output format="ascii">
+  <output format="binary">
     <group>
       <sampling initial_sample="yes">
         <dimension name="j" lattice="0" />
         <moments>zR zI</moments>
-        <dependencies>main</dependencies>
+        <dependencies>main 0d_noise</dependencies>
         <![CDATA[
           zR = z.re/_lattice_j;
           zI = z.im/_lattice_j;

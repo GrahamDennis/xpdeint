@@ -23,21 +23,37 @@ class _Stochastic (_Feature):
   def children(self):
     return self.noises
   
-  def noisesAndFieldsForIntegrator(self, integrator):
-    result = []
-    
-    for field in integrator.integrationFields:
-      deltaAOperatorList = [oc.deltaAOperator for oc in integrator.operatorContainers if oc.field == field]
-      assert len(deltaAOperatorList) == 1
-      deltaAOperator = deltaAOperatorList[0]
-      
-      noisesNeeded = self.noises[:]
+  def integratorNeedsNoises(self, integrator):
+    for deltaAOperator in [oc.deltaAOperator for oc in integrator.operatorContainers]:
       if deltaAOperator.hasattr('noises'):
-        noisesNeeded = deltaAOperator.noises[:]
-      
-      result.extend([(noise, field) for noise in noisesNeeded])
+        if deltaAOperator.noises:
+          return True
+      elif self.noises:
+        return True
     
-    return result
+    return False
+  
+  def noisesForFieldInIntegrator(self, field, integrator):
+    assert field in integrator.integrationFields
+    
+    deltaAOperatorList = [oc.deltaAOperator for oc in integrator.operatorContainers if oc.field == field]
+    assert len(deltaAOperatorList) == 1
+    deltaAOperator = deltaAOperatorList[0]
+    
+    noisesNeeded = self.noises[:]
+    if deltaAOperator.hasattr('noises'):
+      noisesNeeded = deltaAOperator.noises[:]
+    
+    return noisesNeeded
+  
+  def deltaAOperatorSpaceForFieldInIntegrator(self, field, integrator):
+    assert field in integrator.integrationFields
+    
+    deltaAOperatorList = [oc.deltaAOperator for oc in integrator.operatorContainers if oc.field == field]
+    assert len(deltaAOperatorList) == 1
+    deltaAOperator = deltaAOperatorList[0]
+    
+    return deltaAOperator.operatorSpace
   
   def xsilOutputInfo(self, dict):
     return self.implementationsForChildren('xsilOutputInfo', dict)

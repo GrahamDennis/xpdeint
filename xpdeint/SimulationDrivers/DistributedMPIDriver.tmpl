@@ -200,9 +200,62 @@ for (long _dataForRank = 0; _dataForRank < _size; _dataForRank++) {
   @end for
   }
 } // End looping over ranks
-@for $vector in $dependentVariables
+  @for $vector in $dependentVariables
 ${variable.arrayName} = _backup${variable.arrayName};
-@end for
+  @end for
 
   @#
 @end def
+
+
+@def generateNoisesBegin($dict)
+  @#
+  @set $field = dict['field']
+  @set $space = dict['space']
+  @set $noises = dict['noises']
+  @#
+  @if $field.hasDimension($mpiDimensionForSpace(space))
+    @# If the field has the MPI dimension, then the noise
+    @# will need to vary along the MPI dimension, so all is
+    @# OK.
+    @return ''
+  @end if
+  @#
+  @# This means that the noise field doesn't contain the MPI dimension.
+  @# As a result, the noise vector should be identical
+if (_rank == 0) {
+  // This noise doesn't contain the MPI dimension ('${mpiDimensionForSpace($space).name}'), so we should
+  // make sure the noise is the same on all ranks
+  @set $dict['extraIndent'] += 2
+  @#
+@end def
+
+@def generateNoisesEnd($dict)
+  @#
+  @set $field = dict['field']
+  @set $space = dict['space']
+  @set $noises = dict['noises']
+  @#
+  @if $field.hasDimension($mpiDimensionForSpace(space))
+    @# If the field has the MPI dimension, then the noise
+    @# will need to vary along the MPI dimension, so all is
+    @# OK.
+    @return ''
+  @end if
+  @#
+}
+// Broadcast the noises to other nodes
+  @for $noise in $noises
+    @set $noiseVector = noise.noiseVectorForField(field)
+    @set $sizePrefix = ''
+    @if noiseVector.type == 'complex'
+      @set $sizePrefix = '2 * '
+    @end if
+MPI_Bcast(_active_${noiseVector.id}, ${sizePrefix}_${field.name}_current_size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  @end for
+
+  @set $dict['extraIndent'] -= 2
+  @#
+@end def
+
+
