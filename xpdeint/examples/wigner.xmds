@@ -56,8 +56,8 @@
     </transverse_dimensions>
   </geometry>
   
-  <vector name="main" initial_space="x y">
-    <components type="complex">
+  <vector name="main" initial_space="x y" type="complex">
+    <components>
       W
     </components>
     <initialisation>
@@ -67,8 +67,8 @@
     </initialisation>
   </vector>
   
-  <vector name="dampConstants" initial_space="x y">
-    <components type="double">damping</components>
+  <vector name="dampConstants" initial_space="x y" type="double">
+    <components>damping</components>
     <initialisation>
       <![CDATA[
       double r = sqrt(x*x + y*y);

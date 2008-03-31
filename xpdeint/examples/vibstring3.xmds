@@ -37,8 +37,8 @@
     </transverse_dimensions>
   </geometry>
   
-  <vector name="main" dimensions="x y" initial_space="x ky">
-    <components type="complex">
+  <vector name="main" dimensions="x y" initial_space="x ky" type="complex">
+    <components>
       u uDot
     </components>
     <initialisation>
@@ -49,13 +49,13 @@
     </initialisation>
   </vector>
   
-  <vector name="integrated_u" dimensions="">
-    <components type="complex">
+  <vector name="integrated_u" dimensions="" type="complex">
+    <components>
       mom
     </components>
   </vector>
-  <computed_vector name="filter1" dimensions="">
-    <components type="complex">moment</components>
+  <computed_vector name="filter1" dimensions="" type="complex">
+    <components>moment</components>
     <dependencies fourier_space="kx ky">integrated_u main</dependencies>
     <!-- If the moments are of type 'double', then all dimensions that aren't integrated
          must be evaluated in 'x' space. -->
@@ -68,8 +68,8 @@
     <integrate algorithm="RK9" interval="2e-3" steps="100">
       <samples>50 50</samples>
       
-      <computed_vector name="filter2" dimensions="">
-        <components type="complex">sparemoment</components>
+      <computed_vector name="filter2" dimensions="" type="complex">
+        <components>sparemoment</components>
         <dependencies fourier_space="kx ky">integrated_u main</dependencies>
         <!-- If the moments are of type 'double', then all dimensions that aren't integrated
              must be evaluated in 'x' space. -->
@@ -114,8 +114,8 @@
   <output format="binary" filename="vibstring3.xsil">
     <group>
       <sampling initial_sample="yes">
-        <computed_vector name="filter3" dimensions="">
-          <components type="complex">sparemomentagain</components>
+        <computed_vector name="filter3" dimensions="" type="complex">
+          <components>sparemomentagain</components>
           <dependencies fourier_space="kx ky">integrated_u main</dependencies>
           <!-- If the moments are of type 'double', then all dimensions that aren't integrated
                must be evaluated in 'x' space. -->

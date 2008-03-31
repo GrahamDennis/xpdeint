@@ -81,6 +81,7 @@ class _EXOperator(Operator):
             
             # We have to call preflight on the filter operator in case it has some preflight to do
             # as it won't be called by parser2.py
+            specialTargetsVector.bindNamedVectors()
             specialTargetsVector.preflight()
           
           if not target in specialTargets:

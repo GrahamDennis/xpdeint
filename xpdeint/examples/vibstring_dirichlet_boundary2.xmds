@@ -31,8 +31,8 @@
     </transverse_dimensions>
   </geometry>
   
-  <vector name="main" initial_space="x">
-    <components type="complex">
+  <vector name="main" initial_space="x" type="complex">
+    <components>
       u uDot
     </components>
     <initialisation kind="xsil">
@@ -40,8 +40,8 @@
     </initialisation>
   </vector>
   
-  <vector name="boundary" initial_space="x">
-    <components type="double">
+  <vector name="boundary" initial_space="x" type="double">
+    <components>
       bc
     </components>
     <initialisation>

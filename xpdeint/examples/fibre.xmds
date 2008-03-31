@@ -32,8 +32,8 @@
     </transverse_dimensions>
   </geometry>
   
-  <vector name="main" initial_space="x">
-    <components type="complex">phi</components>
+  <vector name="main" initial_space="x" type="complex">
+    <components>phi</components>
     <initialisation no_noises="true">
       <![CDATA[
         phi = 0.0;

@@ -27,8 +27,8 @@
     </transverse_dimensions>
   </geometry>
   
-  <vector name="main">
-    <components type="complex">
+  <vector name="main" type="complex">
+    <components>
       z
     </components>
     <initialisation noises="">

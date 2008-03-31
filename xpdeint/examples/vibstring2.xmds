@@ -37,8 +37,8 @@
     </transverse_dimensions>
   </geometry>
   
-  <vector name="main" dimensions="x y" initial_space="x y">
-    <components type="complex">
+  <vector name="main" dimensions="x y" initial_space="x y" type="complex">
+    <components>
       u uDot
     </components>
     <initialisation>
@@ -49,13 +49,13 @@
     </initialisation>
   </vector>
   
-  <vector name="integrated_u" dimensions="">
-    <components type="complex">
+  <vector name="integrated_u" dimensions="" type="complex">
+    <components>
       mom
     </components>
   </vector>
-  <computed_vector name="filter1" dimensions="">
-    <components type="complex">moment</components>
+  <computed_vector name="filter1" dimensions="" type="complex">
+    <components>moment</components>
     <dependencies>integrated_u main</dependencies>
     <![CDATA[
       moment = mod2(u);
