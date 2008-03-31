@@ -85,19 +85,29 @@ ${generateNoisesForVector($dict)}@slurp
     @set $noisesNeeded = caller.noises[:]
   @end if
   @if len($noisesNeeded) == 0
-    @return
+    @return ''
   @end if
-
+  @#
+  @set $featureOrdering = ['Driver']
+  @set $featureDict = {'field': field, 'space': space, 'noises': noisesNeeded, 'extraIndent': 0}
+${insertCodeForFeatures('generateNoisesBegin', featureOrdering, featureDict)}@slurp
+  @set $extraIndent = featureDict['extraIndent']
+  @#
+  @capture result
 double _var = 1.0@slurp
-  @if len([dim for dim in field.dimensions if dim.type == 'double'])
+    @if len([dim for dim in field.dimensions if dim.type == 'double'])
  / $field.volumeElementInSpace($space)@slurp
-  @end if
+    @end if
 ;
 
-  @for noise in noisesNeeded
-    @set $noiseVector = noise.noiseVectorForField(field)
+    @for noise in noisesNeeded
+      @set $noiseVector = noise.noiseVectorForField(field)
 _make_${noise.prefix}_noises(_var, _${noiseVector.id}, _${field.name}_current_size * _${noiseVector.id}_ncomponents);
-  @end for
+    @end for
+
+  @end capture
+${result, extraIndent=extraIndent}@slurp
+${insertCodeForFeaturesInReverseOrder('generateNoisesEnd', featureOrdering, featureDict)}@slurp
   @#
 @end def
 
@@ -105,14 +115,16 @@ _make_${noise.prefix}_noises(_var, _${noiseVector.id}, _${field.name}_current_si
   @#
   @set $integrator = dict['caller']
   @#
-  @if not self.noisesAndFieldsForIntegrator(integrator)
-    @return
+  @if not $integratorNeedsNoises(integrator)
+    @return ''
   @end if
   @#
   @for field in integrator.integrationFields
+    @set $space = $deltaAOperatorSpaceForFieldInIntegrator(field, integrator)
+    @#
 const double _${field.name}_var = 1.0/(@slurp
     @if len($field.dimensions)
-$field.volumeElementInSpace(0) * @slurp
+$field.volumeElementInSpace($space) * @slurp
     @end if
 _noiseStep);
   @end for
@@ -123,14 +135,16 @@ _noiseStep);
   @#
   @set $integrator = dict['caller']
   @#
-  @if not self.noisesAndFieldsForIntegrator(integrator)
-    @return
+  @if not $integratorNeedsNoises(integrator)
+    @return ''
   @end if
   @#
   @for field in integrator.integrationFields
+    @set $space = $deltaAOperatorSpaceForFieldInIntegrator(field, integrator)
+    @#
 const double _${field.name}_var = 1.0@slurp
     @if len([dim for dim in field.dimensions if dim.type == 'double'])
-/ $field.volumeElementInSpace(0)@slurp
+/ $field.volumeElementInSpace($space)@slurp
     @end if
 ;
   @end for
@@ -144,13 +158,15 @@ list<_dtdWstore>::iterator _active_node;
   @#
   @set $integrator = dict['caller']
   @#
-  @if not self.noisesAndFieldsForIntegrator(integrator)
-    @return
+  @if not $integratorNeedsNoises(integrator)
+    @return ''
   @end if
   @#
-  @for (noise, field) in self.noisesAndFieldsForIntegrator(integrator)
-    @set $noiseVector = noise.noiseVectorForField(field)
+  @for field in $integrator.integrationFields
+    @for noise in $noisesForFieldInIntegrator(field, integrator)
+      @set $noiseVector = noise.noiseVectorForField(field)
 _active_${noiseVector.id} = _${noiseVector.id};
+    @end for
   @end for
 @end def
 
@@ -158,23 +174,36 @@ _active_${noiseVector.id} = _${noiseVector.id};
   @#
   @set $integrator = dict['caller']
   @#
-  @if not self.noisesAndFieldsForIntegrator(integrator)
-    @return
+  @if not $integratorNeedsNoises(integrator)
+    @return ''
   @end if
   @#
-  @for (noise, field) in self.noisesAndFieldsForIntegrator(integrator)
-    @set $noiseVector = noise.noiseVectorForField(field)
+  @set $featureOrdering = ['Driver']
+  @for field in $integrator.integrationFields
+    @set $noises = $noisesForFieldInIntegrator(field, integrator)
+    @set $space = $deltaAOperatorSpaceForFieldInIntegrator(field, integrator)
+    @set $featureDict = {'field': field, 'space': space, 'noises': noises, 'extraIndent': 0}
+${insertCodeForFeatures('generateNoisesBegin', featureOrdering, featureDict)}@slurp
+    @set $extraIndent = featureDict['extraIndent']
+    @#
+    @capture result
+      @for noise in noises
+        @set $noiseVector = noise.noiseVectorForField(field)
 
 _make_${noise.prefix}_noises(_${field.name}_var, _${noiseVector.id}, _${field.name}_current_size * _${noiseVector.id}_ncomponents);
-    @#
-    @if 'ErrorCheck' in $features
+        @#
+        @if 'ErrorCheck' in $features
 if (!_half_step) {
   _make_${noise.prefix}_noises(_${field.name}_var, _${noiseVector.id}2, _${field.name}_current_size * _${noiseVector.id}_ncomponents);
   ${loopOverVectorsWithInnerContentTemplate([$noiseVector],
 """_${vector.id}[$index] = 0.5*(_${vector.id}[$index] + _${vector.id}2[$index]);
 """), autoIndent=True}@slurp
 }
-    @end if
+        @end if
+      @end for
+    @end capture
+${result, extraIndent=extraIndent}@slurp
+${insertCodeForFeatures('generateNoisesEnd', featureOrdering, featureDict)}@slurp
   @end for
   @#
 @end def
@@ -183,8 +212,8 @@ if (!_half_step) {
   @#
   @set $integrator = dict['caller']
   @#
-  @if not self.noisesAndFieldsForIntegrator(integrator)
-    @return
+  @if not $integratorNeedsNoises(integrator)
+    @return ''
   @end if
   @#
 if (_noise_list.empty()) { 
@@ -192,12 +221,29 @@ if (_noise_list.empty()) {
   _noise_list.push_front(_dtdWstore()); 
   _active_node = _noise_list.begin(); 
   _active_node->_step = _step; 
-  @for (noise, field) in $noisesAndFieldsForIntegrator(integrator)
-   @set $noiseVector = noise.noiseVectorForField(field)
+  @for field in $integrator.integrationFields
+    @set $noises = $noisesForFieldInIntegrator(field, integrator)
   
-  _active_${noiseVector.id} = (double*) xmds_malloc(sizeof(double) * _${field.name}_alloc_size * _${noiseVector.id}_ncomponents);
-  _make_${noise.prefix}_noises(_${field.name}_var/_step, _active_${noiseVector.id}, _${field.name}_current_size * _${noiseVector.id}_ncomponents);
+    @for noise in noises
+      @set $noiseVector = noise.noiseVectorForField(field)
+  _active_${noiseVector.id} = (${noiseVector.type}*) xmds_malloc(sizeof(${noiseVector.type}) * _${field.name}_alloc_size * _${noiseVector.id}_ncomponents);
   _active_node->_${noiseVector.id} = _active_${noiseVector.id};
+    @end for
+  
+    @set $space = $deltaAOperatorSpaceForFieldInIntegrator(field, integrator)
+    @set $featureOrdering = ['Driver']
+    @set $featureDict = {'field': field, 'space': space, 'noises': noises, 'extraIndent': 0}
+  ${insertCodeForFeatures('generateNoisesBegin', featureOrdering, featureDict), autoIndent=True}@slurp
+    @set $extraIndent = featureDict['extraIndent']
+    @#
+    @capture result
+      @for noise in noises
+        @set $noiseVector = noise.noiseVectorForField(field)
+_make_${noise.prefix}_noises(_${field.name}_var/_step, _active_${noiseVector.id}, _${field.name}_current_size * _${noiseVector.id}_ncomponents);
+      @end for
+    @end capture
+  ${result, autoIndent=True, extraIndent=extraIndent}@slurp
+  ${insertCodeForFeatures('generateNoisesEnd', featureOrdering, featureDict), autoIndent=True}@slurp
   @end for
 } else if (_step*(1.0 + _EPSILON) < _noise_list.begin()->_step) {
   // Create new smallest time step
@@ -211,21 +257,41 @@ if (_noise_list.empty()) {
   if (_step > 0.5*_old_smallest_step*(1.0 + _EPSILON))
     _step = 0.5*_old_smallest_step;
   
-  @for noise, field in $noisesAndFieldsForIntegrator(integrator)
-    @set $noiseVector = noise.noiseVectorForField(field)
-    @if $noise.noiseDistribution == 'gaussian'
-  ${breakGaussianNoiseInField($noise, $field), autoIndent=True}@slurp
-    @elif $noise.noiseDistribution == 'poissonian'
-  ${breakPoissonianNoiseInField($noise, $field), autoIndent=True}@slurp
-    @end if
+  @for field in integrator.integrationFields
+    @set $noises = $noisesForFieldInIntegrator(field, integrator)
+    @for noise in noises
+      @set $noiseVector = noise.noiseVectorForField(field)
+  _active_${noiseVector.id} = (${noiseVector.type}*) xmds_malloc(sizeof(${noiseVector.type}) * _${field.name}_alloc_size * _${noiseVector.id}_ncomponents);
+    @end for
+  
+    @set $space = $deltaAOperatorSpaceForFieldInIntegrator(field, integrator)
+    @set $featureOrdering = ['Driver']
+    @set $featureDict = {'field': field, 'space': space, 'noises': noises, 'extraIndent': 0}
+  ${insertCodeForFeatures('generateNoisesBegin', featureOrdering, featureDict), autoIndent=True}@slurp
+    @set $extraIndent = featureDict['extraIndent']
+    @#
+    @capture result
+      @for noise in noises
+        @if noise.noiseDistribution == 'gaussian'
+${breakGaussianNoiseInField(noise, field)}@slurp
+        @elif noise.noiseDistribution == 'poissonian'
+${breakPoissonianNoiseInField(noise, field)}@slurp
+        @end if
+      @end for
+    @end capture
+  ${result, autoIndent=True, extraIndent=extraIndent}@slurp
+  ${insertCodeForFeaturesInReverseOrder('generateNoisesEnd', featureOrdering, featureDict), autoIndent=True}@slurp
   @end for
+  @#
   
   _noise_list.push_front(_dtdWstore());
   _active_node = _noise_list.begin();
   _active_node->_step = _step;
-  @for noise, field in $noisesAndFieldsForIntegrator(integrator)
-    @set $noiseVector = noise.noiseVectorForField(field)
+  @for field in integrator.integrationFields
+    @for noise in $noisesForFieldInIntegrator(field, integrator)
+      @set $noiseVector = noise.noiseVectorForField(field)
   _active_node->_${noiseVector.id} = _active_${noiseVector.id};
+    @end for
   @end for
 } else {
   // Use step already attempted
@@ -234,9 +300,11 @@ if (_noise_list.empty()) {
   
   _active_node--;
   _step = _active_node->_step;
-  @for noise, field in $noisesAndFieldsForIntegrator(integrator)
-    @set $noiseVector = noise.noiseVectorForField(field)
+  @for field in integrator.integrationFields
+    @for noise in $noisesForFieldInIntegrator(field, integrator)
+      @set $noiseVector = noise.noiseVectorForField(field)
   _active_${noiseVector.id} = _active_node->_${noiseVector.id};
+    @end for
   @end for
   
   if (_break_next && fabs(${propagationDimension} - _${propagationDimension}_ini + _step - _${propagationDimension}_break_next) > _step*_EPSILON)
@@ -259,7 +327,6 @@ code, not in the template itself.
   @# First allocate the new noise vector
 // Split a gaussian noise
 
-_active_${noiseVector.id} = (${noiseVector.type}*) xmds_malloc(sizeof(${noiseVector.type}) * _${field.name}_alloc_size * _${noiseVector.id}_ncomponents);
   @# Then generate a new noise of the appropriate variance
 _make_${noise.prefix}_noises(_${field.name}_var * (_old_smallest_step - _step)/(_step * _old_smallest_step), 
     _active_${noiseVector.id}, _${field.name}_current_size * _${noiseVector.id}_ncomponents);
@@ -291,8 +358,6 @@ code, not in the template itself.
   @#
 // Split a poissonian noise
 
-_active_${noiseVector.id} = (${noiseVector.type}*) xmds_malloc(sizeof(${noiseVector.type}) * _${field.name}_alloc_size * _${noiseVector.id}_ncomponents);
-
 ${noiseVector.type}* const _old_${noiseVector.id} = _noise_list.begin()->_${noiseVector.id};
 
 _split_${noise.prefix}_noises(_${field.name}_var / _step, _${field.name}_var / _old_smallest_step, _active_${noiseVector.id}, _old_${noiseVector.id}, _${field.name}_current_size * _${noiseVector.id}_ncomponents);
@@ -304,8 +369,8 @@ _split_${noise.prefix}_noises(_${field.name}_var / _step, _${field.name}_var / _
   @#
   @set $integrator = dict['caller']
   @#
-  @if not self.noisesAndFieldsForIntegrator(integrator)
-    @return
+  @if not $integratorNeedsNoises(integrator)
+    @return ''
   @end if
   @#
 
@@ -318,12 +383,14 @@ else {
     _temp_iter->_step -= _step;
     double _temp_step = _temp_iter->_step;
     
-  @for noise, field in $noisesAndFieldsForIntegrator(integrator)
-    @set $noiseVector = noise.noiseVectorForField(field)
+  @for field in integrator.integrationFields
+    @for noise in $noisesForFieldInIntegrator(field, integrator)
+      @set $noiseVector = noise.noiseVectorForField(field)
     ${noiseVector.type}* _temp_${noiseVector.id} = _temp_iter->_${noiseVector.id};
     ${loopOverVectorsWithInnerContentTemplate([$noiseVector],
 """_temp_${vector.id}[$index] = (_temp_${vector.id}[$index]*(_temp_step + _step) - _active_${vector.id}[$index]*_step)/_temp_step;
 """), autoIndent=True}@slurp
+    @end for
   @end for
   }
   

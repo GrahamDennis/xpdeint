@@ -112,20 +112,6 @@ if (_half_step)
   _tolerance /= 16.0;
 @end def
 
-@def makeNoisesForFixedStep($dict)
-  @#
-  @set $noise = $dict['noise']
-  @set $noiseVector = $dict['noiseVector']
-  @set $field = $dict['field']
-if (!_half_step) {
-  _make_${noise.prefix}_noises(_${field.name}_var, _${noiseVector.id}2, _${field.name}_alloc_size * _${noiseVector.id}_ncomponents);
-  ${loopOverVectorsWithInnerContentTemplate([$noiseVector],
-"""_${vector.id}[$index] = 0.5*(_${vector.id}[$index] + _${vector.id}2[$index]);
-"""), autoIndent=True}@slurp
-}
-  @#
-@end def
-
 @def integrateFixedStepInnerLoopBegin($dict)
   @#
 
