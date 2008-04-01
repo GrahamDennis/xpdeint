@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <name>sine_cross</name>
+  <author>Graham Dennis</author>
+  <description>
+    Sine cross-propagation validity tests.
+    
+    The 'u' variable checks for errors caused by poorly interpolating
+    dependencies. The 'v' variable checks for errors just in the
+    cross-propagation algorithm. You can choose the cross-propagation
+    algorithm to be either 'SI' or 'RK4'.
+  </description>
+  
+  <features>
+    <benchmark />
+    <bing />
+    <fftw version="none" />
+    <!-- That's right, this script breaks the shackles with FFTW! -->
+  </features>
+  
+  <geometry>
+    <prop_dim> z </prop_dim>
+    <transverse_dimensions>
+      <dimension name="t" lattice="1024"  domain="(0, 10)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="main" type="complex">
+    <components>
+      foo
+    </components>
+    <initialisation>
+      <![CDATA[
+      foo = 0.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <vector name="constants" type="double">
+    <components>sine</components>
+    <initialisation>
+      <![CDATA[
+        sine = sin(t);
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <vector name="cross" type="complex">
+    <components>u v</components>
+    <![CDATA[
+      u = -1.0;
+      v = 1.0;
+    ]]>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="ARK45" interval="1" steps="2">
+      <samples>1</samples>
+      <operators>
+        <operator kind="cross_propagation" algorithm="SI" propagation_dimension="t">
+          <integration_vectors>cross</integration_vectors>
+          <dependencies>constants</dependencies>
+          <boundary_condition kind="left">
+            <![CDATA[
+              u = -1.0;
+              v = 1.0;
+            ]]>
+          </boundary_condition>
+          <![CDATA[
+            du_dt = sine;
+            dv_dt = i*v;
+          ]]>
+        </operator>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+        dfoo_dz = 0.0;
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  
+  <output format="ascii" filename="sine_cross.xsil">
+    <group>
+      <sampling initial_sample="no">
+        <dimension name="t" />
+        <moments>error_u error_v</moments>
+        <dependencies>cross</dependencies>
+        <![CDATA[
+          error_u = mod(u - (-cos(t)));
+          error_v = mod(v - pcomplex(1.0, t));
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>

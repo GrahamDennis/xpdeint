@@ -996,9 +996,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       integratorTemplateClass = Integrators.ARK89.ARK89
     elif algorithmString == 'SI':
       integratorTemplateClass = Integrators.SI.SI
-      if not integrateElement.hasAttribute('iterations'):
-        algorithmSpecificOptionsDict['iterations'] = 3
-      else:
+      if integrateElement.hasAttribute('iterations'):
         algorithmSpecificOptionsDict['iterations'] = RegularExpressionStrings.integerInString(integrateElement.getAttribute('iterations'))
         if algorithmSpecificOptionsDict['iterations']<1:
           raise ParserException(integrateElement, "Iterations element must be 1 or greater (default 3).")
@@ -1075,7 +1073,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
                                                 "as a number.\nUse the feature <validation/> to allow for arbitrary code." % locals())
     
     integratorTemplate.interval = intervalString
-
+    
     if not integrateElement.hasAttribute('steps'):
       raise ParserException(integrateElement, "Integrator needs a 'steps' attribute.")
       
@@ -1087,7 +1085,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     
     steps = int(stepsString)
     integratorTemplate.stepCount = steps
-      
+    
     samplesElement = integrateElement.getChildElementByTagName('samples')
     samplesString = samplesElement.innerText()
     
@@ -1392,15 +1390,26 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     
     crossIntegratorClass = None
     
+    algorithmSpecificOptionsDict = {}
+    
     if algorithmString == 'RK4':
       crossIntegratorClass = Integrators.RK4.RK4
+    elif algorithmString == 'SI':
+      crossIntegratorClass = Integrators.SI.SI
+      if operatorElement.hasAttribute('iterations'):
+        algorithmSpecificOptionsDict['iterations'] = RegularExpressionStrings.integerInString(operatorElement.getAttribute('iterations'))
+        if algorithmSpecificOptionsDict['iterations']<1:
+          raise ParserException(operatorElement, "Iterations element must be 1 or greater (default 3).")
+      
     else:
       raise ParserException(operatorElement, "Unknown cross-propagation algorithm '%(algorithmString)s'.\n"
-                                             "Currently, the only option is 'RK4'." % locals())
+                                             "The options are 'SI' or 'RK4'." % locals())
     
     crossIntegratorTemplate = crossIntegratorClass(xmlElement = operatorElement,
                                                    **self.argumentsToTemplateConstructors)
     crossIntegratorTemplate.cross = True
+    
+    self.applyAttributeDictionaryToObject(algorithmSpecificOptionsDict, crossIntegratorTemplate)
     
     if not operatorElement.hasAttribute('propagation_dimension'):
       raise ParserException(operatorElement, "Missing 'propagation_dimension' attribute.")
