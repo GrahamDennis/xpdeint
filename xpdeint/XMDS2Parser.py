@@ -983,6 +983,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       raise ParserException(integrateElement, "Integration element must have an 'algorithm' attribute.")
     
     integratorTemplateClass = None
+    algorithmSpecificOptionsDict = dict()
     
     algorithmString = integrateElement.getAttribute('algorithm')
     if algorithmString == 'RK4':
@@ -995,11 +996,18 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       integratorTemplateClass = Integrators.ARK89.ARK89
     elif algorithmString == 'SI':
       integratorTemplateClass = Integrators.SI.SI
+      if not integrateElement.hasAttribute('iterations'):
+        algorithmSpecificOptionsDict['iterations'] = 3
+      else:
+        algorithmSpecificOptionsDict['iterations'] = RegularExpressionStrings.integerInString(integrateElement.getAttribute('iterations'))
+        if algorithmSpecificOptionsDict['iterations']<1:
+          raise ParserException(integrateElement, "Iterations element must be 1 or greater (default 3).")
     else:
       raise ParserException(integrateElement, "Unknown algorithm '%(algorithmString)s'. "
                                               "Options are 'SI', 'RK4', 'RK9', 'ARK45' or 'ARK89'." % locals())
     
     integratorTemplate = integratorTemplateClass(**self.argumentsToTemplateConstructors)
+    self.applyAttributeDictionaryToObject(algorithmSpecificOptionsDict, integratorTemplate)      
     
     if integrateElement.hasAttribute('home_space'):
       attributeValue = integrateElement.getAttribute('home_space').strip().lower()

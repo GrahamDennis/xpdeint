@@ -14,7 +14,7 @@
     <fftw version="3" />
     <!-- <openmp /> -->
     <stochastic>
-      <noise kind="gaussian-dsfmt" prefix="n" num="2"/>
+      <noise kind="gaussian" prefix="n" num="2"/>
       <!-- If there is no seed attribute then seeds will be chosen randomly at run-time -->
     </stochastic>
     <globals>
@@ -41,11 +41,11 @@
     </initialisation>
   </vector>
   
-  <sequence driver="multi-path" paths="100">
-    <integrate algorithm="RK4" interval="2.5" steps="5000" tolerance="1e-6">
+  <sequence driver="mpi-multi-path" paths="50">
+    <integrate algorithm="SI" iterations="3" interval="2.5" steps="200000" tolerance="1e-6">
       <samples>50</samples>
       <operators>
-        <operator kind="ip" constant="yes">
+        <operator kind="ex" constant="yes">
           <operator_names>L</operator_names>
           <![CDATA[
             L = -i*kx*kx;

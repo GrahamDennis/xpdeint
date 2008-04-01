@@ -33,7 +33,7 @@ _oldCopy_${vector.id}[$index] = _${vector.id}[$index];
 @end for
 
 // _segment1_x_propagate(_step);
-for (int _iteration=0; _iteration<3-1; _iteration++) {
+for (int _iteration=0; _iteration<${iterations}-1; _iteration++) {
   _segment${segmentNumber}_calculate_delta_a(_step/2);
 
   ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
