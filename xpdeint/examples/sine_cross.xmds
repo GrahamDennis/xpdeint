@@ -21,7 +21,7 @@
   <geometry>
     <prop_dim> z </prop_dim>
     <transverse_dimensions>
-      <dimension name="t" lattice="1024"  domain="(0, 10)" />
+      <dimension name="t" lattice="128"  domain="(0, 10)" />
     </transverse_dimensions>
   </geometry>
   
@@ -37,10 +37,10 @@
   </vector>
   
   <vector name="constants" type="double">
-    <components>sine</components>
+    <components>cosine</components>
     <initialisation>
       <![CDATA[
-        sine = sin(t);
+        cosine = cos(t);
       ]]>
     </initialisation>
   </vector>
@@ -48,7 +48,7 @@
   <vector name="cross" type="complex">
     <components>u v</components>
     <![CDATA[
-      u = -1.0;
+      u = 0.0;
       v = 1.0;
     ]]>
   </vector>
@@ -57,17 +57,17 @@
     <integrate algorithm="RK9" interval="1" steps="2">
       <samples>1</samples>
       <operators>
-        <operator kind="cross_propagation" algorithm="SI" propagation_dimension="t">
+        <operator kind="cross_propagation" algorithm="RK4" propagation_dimension="t">
           <integration_vectors>cross</integration_vectors>
           <dependencies>constants</dependencies>
           <boundary_condition kind="left">
             <![CDATA[
-              u = -1.0;
+              u = 0.0;
               v = 1.0;
             ]]>
           </boundary_condition>
           <![CDATA[
-            du_dt = sine;
+            du_dt = cosine;
             dv_dt = i*v;
           ]]>
         </operator>
@@ -86,7 +86,7 @@
         <moments>error_u error_v</moments>
         <dependencies>cross</dependencies>
         <![CDATA[
-          error_u = mod(u - (-cos(t)));
+          error_u = mod(u - sin(t));
           error_v = mod(v - pcomplex(1.0, t));
         ]]>
       </sampling>
