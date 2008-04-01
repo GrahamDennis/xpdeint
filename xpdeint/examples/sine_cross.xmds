@@ -54,7 +54,7 @@
   </vector>
   
   <sequence>
-    <integrate algorithm="ARK45" interval="1" steps="2">
+    <integrate algorithm="RK9" interval="1" steps="2">
       <samples>1</samples>
       <operators>
         <operator kind="cross_propagation" algorithm="SI" propagation_dimension="t">
