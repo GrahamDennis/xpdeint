@@ -298,11 +298,9 @@ class _DeltaAOperator (Operator):
             deltaAVector.initialiser = VectorInitialisation(**self.argumentsToTemplateConstructors)
             deltaAVector.initialiser.vector = deltaAVector
         
-        escape = RegularExpressionStrings.escapeStringForRegularExpression
-        
         # Replace the derivative string with one accessed using only indices corresponding to dimensions in
         # the delta a field.
-        self.propagationCode = re.sub(escape(componentName) + escape(match.group('integerValuedDimensions')),
+        self.propagationCode = re.sub(re.escape(componentName) + re.escape(match.group('integerValuedDimensions')),
                                       componentName + integerValuedDimensionsString,
                                       self.propagationCode, count=1)
       

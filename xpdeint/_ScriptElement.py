@@ -440,10 +440,8 @@ class _ScriptElement (Template):
           
           replacementString = '_%(componentName)s(%(argumentsString)s)' % locals()
         
-        escape = RegularExpressionStrings.escapeStringForRegularExpression
-        
         # Create a regular expression to replace the phi[j] string with the appropriate string
-        operatorCodeReplacementRegex = re.compile(r'\b' + escape(componentName) + escape(match.group('integerValuedDimensions')))
+        operatorCodeReplacementRegex = re.compile(r'\b' + re.escape(componentName) + re.escape(match.group('integerValuedDimensions')))
         
         code = operatorCodeReplacementRegex.sub(replacementString, code, count = 1)
     
