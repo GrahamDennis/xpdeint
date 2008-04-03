@@ -57,7 +57,7 @@
     <integrate algorithm="RK9" interval="1" steps="2">
       <samples>1</samples>
       <operators>
-        <operator kind="cross_propagation" algorithm="RK4" propagation_dimension="t">
+        <operator kind="cross_propagation" algorithm="SI" propagation_dimension="t">
           <integration_vectors>cross</integration_vectors>
           <dependencies>constants</dependencies>
           <boundary_condition kind="left">

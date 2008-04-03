@@ -29,35 +29,58 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 _oldCopy_${vector.id}[$index] = _${vector.id}[$index];
 """)}@slurp
 
-@for $vector in $integrationVectors
-  _active_${vector.id} = _${vector.id};
-@end for
+  @for $vector in $integrationVectors
+_active_${vector.id} = _${vector.id};
+  @end for
+
+  @if $cross
+// Interpolate dependencies to the half-step
+${interpolateDependencies}@slurp
+  @end if
 
 // _segment1_x_propagate(_step);
-for (int _iteration=0; _iteration<${iterations}-1; _iteration++) {
-  _segment${segmentNumber}_calculate_delta_a(_step/2);
-
+for (int _iteration = 0; _iteration < ${iterations}; _iteration++) {
+  if (_iteration < ${iterations} - 1)
+    _segment${segmentNumber}_calculate_delta_a(_step/2.0);
+  else
+    _segment${segmentNumber}_calculate_delta_a(_step);
+  
+  ${transformVectorsToSpace($integrationVectors, $homeSpace), autoIndent=True}@slurp
+  
   ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
   """// a = oldCopy + a
   _${vector.id}[$index] += _oldCopy_${vector.id}[$index];
-  """)}@slurp
+  """, autoIndent=True)}@slurp
 }
-
-_segment${segmentNumber}_calculate_delta_a(_step);
-
-${loopOverVectorsWithInnerContentTemplate($integrationVectors,
-"""// a = oldCopy + a
-_${vector.id}[$index] += _oldCopy_${vector.id}[$index];
-""")}@slurp
 
 _segment${segmentNumber}_ip_evolve(+1);
 
 ${propagationDimension} += _step/2.0;
 
-  @if $cross
-${updateDependenciesForNextStep}@slurp
-  @end if
-
   @#
 @end def
 
+@def interpolateDependencies
+  @#
+  @# Insert code to interpolate the dependency vectors onto the half-step point.
+  @# 
+  @if $propagationDirection == '+'
+    @set $indexOverrideValue = '_istep'
+  @else
+    @set $integrationDimensionNumber = $parent.field.indexOfDimensionName($propagationDimension)
+    @set $indexOverrideValue = c'(_${parent.field.name}_lattice${integrationDimensionNumber} - _istep - 1)'
+  @end if
+  @#
+  @# Create the index overrides dictionary. We only need to override the propagation dimension.
+  @set $indexOverrides = {$propagationDimension: dict([(v.field, indexOverrideValue) for v in $parent.dependencies])}
+  @#
+  @set $setOfVectorsToLoopOver = $dependencies.copy()
+  @silent setOfVectorsToLoopOver.update($parent.dependencies)
+${reducedFieldCopy($dependencyMap, 
+"""
+_active_${reducedVector.id}[_${reducedVector.id}_index_pointer + ${componentIndex}] = \\
+    0.5*(_active_${vector.id}[_${vector.id}_index_pointer + ${componentIndex}]
+       + _active_${vector.id}[_${vector.id}_index_pointer + ${componentIndex} + ${skipSize} * _${vector.id}_ncomponents]);
+""")}@slurp
+  @#
+@end def
