@@ -107,10 +107,8 @@ class _IPOperator(Operator):
         # Obviously the user could hide this from us, but if we can check the most
         # common case that frequently goes wrong, then we should.
         
-        escape = RegularExpressionStrings.escapeStringForRegularExpression
-        
-        sanityRegex = re.compile(r'\bd(' + RegularExpressionStrings.symbol + r')_d' + escape(self.propagationDimension)
-                                 + r'.*' + escape(operatorName) + r'\[' + escape(target) + r'\]')
+        sanityRegex = re.compile(r'\bd(' + RegularExpressionStrings.symbol + r')_d' + re.escape(self.propagationDimension)
+                                 + r'.*' + re.escape(operatorName) + r'\[' + re.escape(target) + r'\]')
         
         sanityResult = sanityRegex.findall(self.parent.sharedCode)
         
@@ -132,7 +130,7 @@ class _IPOperator(Operator):
                                   % locals())
         
         # Create a regular expression to replace the L[x] string with 0.0
-        operatorCodeReplacementRegex = re.compile(r'\b' + escape(operatorName) + r'\[\s*' + escape(target) + r'\s*\]')
+        operatorCodeReplacementRegex = re.compile(r'\b' + re.escape(operatorName) + r'\[\s*' + re.escape(target) + r'\s*\]')
         
         replacementCode = operatorCodeReplacementRegex.sub('0.0', self.parent.sharedCode, count = 1)
         

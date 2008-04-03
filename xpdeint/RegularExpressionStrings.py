@@ -123,20 +123,6 @@ def componentWithIntegerValuedDimensionsWithComponentAndField(componentName, fie
 
 
 
-def escapeStringForRegularExpression(s):
-  s = s.replace("\\", "\\\\")   # Escape single backslashes
-  s = s.replace(".", "\\.")     # Escape the 'dot'
-  s = s.replace("^", "\\^")     # Escape the caret
-  s = s.replace("*", "\\*")
-  s = s.replace("?", "\\?")
-  s = s.replace("{", "\\{")
-  s = s.replace("}", "\\}")
-  s = s.replace("(", "\\(")
-  s = s.replace(")", "\\)")
-  s = s.replace("[", "\\[")
-  s = s.replace("]", "\\]")
-  return s
-
 def symbolsInString(string):
   """
   Return a list of all symbols in `string`.

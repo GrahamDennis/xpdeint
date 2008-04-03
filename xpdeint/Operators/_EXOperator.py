@@ -126,10 +126,8 @@ class _EXOperator(Operator):
           
           replacementString += integerValuedDimensionsString
         
-        escape = RegularExpressionStrings.escapeStringForRegularExpression
-        
         # Create a regular expression to replace the L[x] string with the appropriate string
-        operatorCodeReplacementRegex = re.compile(r'\b' + escape(operatorName) + r'\[\s*' + escape(target) + r'\s*\]')
+        operatorCodeReplacementRegex = re.compile(r'\b' + re.escape(operatorName) + r'\[\s*' + re.escape(target) + r'\s*\]')
         
         replacementCode = operatorCodeReplacementRegex.sub(replacementString, self.parent.sharedCode, count = 1)
         
