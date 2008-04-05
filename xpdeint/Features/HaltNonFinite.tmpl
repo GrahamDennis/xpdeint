@@ -1,0 +1,46 @@
+@*
+HaltNonFinite.tmpl
+
+Created by Graham Dennis on 2008-05-04.
+Copyright (c) 2008 __MyCompanyName__. All rights reserved.
+Based on code originally written by Gabriel McManus
+*@
+@extends xpdeint.Features._Feature
+
+@def description: Halt simulation on non-finite results
+@attr featureName = 'HaltNonFinite'
+
+@def postSingleStep($dict)
+  @#
+  @set $integrator = dict['caller']
+// Check if a component of any integration vector is non-finite
+// no need to check all components since they will be quickly mixed
+  @#
+if (@slurp
+  @set $separator = ''
+  @for integrationVector in integrator.integrationVectors
+    @set $suffix = ''
+    @if integrationVector.type == 'complex'
+      @# Check the real component
+      @set $suffix = '.re'
+    @end if
+${separator}!isfinite(_active_${integrationVector.id}[0]${suffix})@slurp
+    @set $separator = ' || '
+  @end for
+) {
+  // One of the integration vectors has gone non-finite.
+  // Sample any moment groups that have pending samples,
+  // then leave the integrator.
+  @for mg in $momentGroups
+    @for dim in mg.dimensionOverrides
+  if (_${mg.name}_sample_index_${dim.name} < _${mg.outputField.name}_lattice_${dim.name})
+    _${mg.name}_sample();
+    @end for
+  @end for
+  
+  _LOG(_WARNING_LOG_LEVEL, "WARNING: halt_non_finite: Integration halted.\n"
+                           "         Non-finite number in integration vector in segment ${integrator.segmentNumber}.\n");
+  goto _SEGMENT${integrator.segmentNumber}_END;
+}
+  @#
+@end def

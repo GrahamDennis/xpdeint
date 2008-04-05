@@ -370,6 +370,7 @@ void _segment${segmentNumber}()
   }
   @end if
   
+  ${localFinalise, autoIndent=True}@slurp
   ${finalise, autoIndent=True}@slurp
   @#
   ${insertCodeForFeaturesInReverseOrder('integrateAdaptiveStepEnd', featureOrderingOuter), autoIndent=True}@slurp

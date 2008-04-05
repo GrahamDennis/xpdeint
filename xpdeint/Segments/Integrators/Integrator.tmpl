@@ -128,6 +128,10 @@ ${operatorContainer.evaluateOperators}@slurp
 
 @def postSingleStep
   @#
+  @set $featureOrdering = ['HaltNonFinite']
+  @#
+${insertCodeForFeatures('postSingleStep', featureOrdering)}@slurp
+  @#
   @set allDependencies = $operatorDependenciesForOperatorContainers($stepEndOperatorContainers)
 ${evaluateComputedVectors($allDependencies)}@slurp
   @#
@@ -202,6 +206,16 @@ we need to set up pointers in the integrator to the appropriate arrays.
 ${vector.type}* _${arrayName}_${vector.id} = _${name}_${arrayName}_${vector.id};
     @end for
   @end for  
+  @#
+@end def
+
+@def localFinalise
+@*doc:
+Because the finalisation for the integrator could be in a different function,
+we need to be able to insert code at the end of the integrator as well.
+*@
+  @#
+_SEGMENT${segmentNumber}_END:
   @#
 @end def
 
