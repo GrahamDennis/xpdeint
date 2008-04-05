@@ -79,6 +79,7 @@
       </operators>
     </integrate>
   </sequence>
+  
   <output format="binary">
     <group>
       <sampling initial_sample="yes">

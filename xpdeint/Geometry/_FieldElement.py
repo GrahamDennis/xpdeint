@@ -168,6 +168,7 @@ class _FieldElement (ScriptElement):
     return result
   
   # Dimension overrides
+  @property
   def dimensionOverrides(self):
     return filter(lambda x: x.hasattr('override'), self.dimensions)
   

@@ -76,7 +76,6 @@ void _segment${segmentNumber}()
   ${insertCodeForFeatures('integrateFixedStepBegin', featureOrderingOuter), autoIndent=True}@slurp
   
   ${initialise, autoIndent=True}@slurp
-  
   ${localInitialise, autoIndent=True}@slurp
   
   for (long _istep = 0; _istep < ${stepCount}; _istep++) {
@@ -100,7 +99,8 @@ void _segment${segmentNumber}()
   @#
     ${insertCodeForFeaturesInReverseOrder('integrateFixedStepInnerLoopEnd', featureOrderingInner, dict), autoIndent=True}@slurp
   }
-
+  
+  ${localFinalise, autoIndent=True}@slurp
   ${finalise, autoIndent=True}@slurp
   
   ${insertCodeForFeaturesInReverseOrder('integrateFixedStepEnd', featureOrderingOuter), autoIndent=True}@slurp
