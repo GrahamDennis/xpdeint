@@ -237,8 +237,8 @@ void _segment${segmentNumber}()
   double _old_step = _step;
   double _min_step = _step;
   double _max_step = _step;
-  unsigned long _attempted_steps = 0;
-  unsigned long _unsuccessful_steps = 0;
+  long _attempted_steps = 0;
+  long _unsuccessful_steps = 0;
   
   ${createToleranceVariable, autoIndent=True}@slurp
   @# Insert code for features
@@ -271,17 +271,12 @@ void _segment${segmentNumber}()
     _step = _${propagationDimension}_break_next - ${propagationDimension} + _${propagationDimension}_ini;
   }
   
-  @if self.hasattr('maxIterations') and $maxIterations
-  long _step_counter = 0;
-  long _max_steps = $maxIterations;
-  @end if
-  
   ${initialise, autoIndent=True}@slurp
   
   ${localInitialise, autoIndent=True}@slurp
   
   do {
-  @set $featureOrderingOuterLoop = ['Output', 'ErrorCheck']
+  @set $featureOrderingOuterLoop = ['MaxIterations', 'Output', 'ErrorCheck']
     ${insertCodeForFeatures('integrateAdaptiveStepOuterLoopBegin', featureOrderingOuterLoop), autoIndent=True}@slurp
     
     ${preSingleStep, autoIndent=True}@slurp
@@ -343,37 +338,19 @@ void _segment${segmentNumber}()
         _break_next = false;
         _unsuccessful_steps++;
       }
-  @if self.hasattr('maxIterations') and $maxIterations
-      
-      _step_counter++;
-      if (_step_counter >= _max_steps) {
-        _discard = false;
-        _break_next = true;
-        _next_sample_flag[${momentGroupCount + 1}] = true;
-      }
-  @end if
-    
     } while (_discard);
     ${postSingleStep, autoIndent=True}@slurp
     
     ${insertCodeForFeaturesInReverseOrder('integrateAdaptiveStepOuterLoopEnd', featureOrderingOuterLoop), autoIndent=True}@slurp
   } while (!_next_sample_flag[${momentGroupCount + 1}]);
   
-  _LOG(_SEGMENT_LOG_LEVEL, "Segment ${segmentNumber}: minimum timestep: %e maximum timestep: %e\n", _min_step, _max_step);
-  _LOG(_SEGMENT_LOG_LEVEL, "  Attempted %lu steps, %.2f%% steps failed.\n", _attempted_steps, (100.0*_unsuccessful_steps)/_attempted_steps);
-  @if self.hasattr('maxIterations') and $maxIterations
-  
-  if (_step_counter >= _max_steps) {
-    _LOG(_WARNING_LOG_LEVEL, "\nReached %l iterations, exiting at ${propagationDimension} = %e\n"
-                             "Last error: %e\n"
-                             "Last planned timestep: %e\n\n", _max_steps, ${propagationDimension}, _error, _step);
-  }
-  @end if
-  
   ${localFinalise, autoIndent=True}@slurp
   ${finalise, autoIndent=True}@slurp
   @#
   ${insertCodeForFeaturesInReverseOrder('integrateAdaptiveStepEnd', featureOrderingOuter), autoIndent=True}@slurp
+  
+  _LOG(_SEGMENT_LOG_LEVEL, "Segment ${segmentNumber}: minimum timestep: %e maximum timestep: %e\n", _min_step, _max_step);
+  _LOG(_SEGMENT_LOG_LEVEL, "  Attempted %li steps, %.2f%% steps failed.\n", _attempted_steps, (100.0*_unsuccessful_steps)/_attempted_steps);
 }
   @#
 @end def

@@ -8,6 +8,7 @@ import Bing
 import ErrorCheck
 import Globals
 import HaltNonFinite
+import MaxIterations
 import OpenMP
 import Stochastic
 import Validation

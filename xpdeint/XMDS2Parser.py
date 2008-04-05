@@ -394,6 +394,10 @@ class XMDS2Parser(ScriptParser):
     
     self.applyAttributeDictionaryToObject(fftAttributeDictionary, fourierTransform)
   
+  def parseFeatureAttributes(self, someElement, someTemplate):
+    self.parseNoisesAttribute(someElement, someTemplate)
+    self.parseMaxIterationsAttribute(someElement, someTemplate)
+  
   def parseNoisesAttribute(self, someElement, someTemplate):
     if not (someElement.hasAttribute('noises') or someElement.hasAttribute('no_noises')):
       return
@@ -408,6 +412,29 @@ class XMDS2Parser(ScriptParser):
     if someElement.hasAttribute('no_noises'):
       if someElement.getAttribute('no_noises').strip().lower() in ('yes', 'true'):
         someTemplate.noisesEntity = ParsedEntity(someElement, [])
+  
+  def parseMaxIterationsAttribute(self, someElement, someTemplate):
+    if not isinstance(someTemplate, Integrators.AdaptiveStep.AdaptiveStep):
+      return
+    
+    if not someElement.hasAttribute('max_iterations'):
+      return
+    
+    maxIterationsString = someElement.getAttribute('max_iterations').strip()
+    try:
+      maxIterations = int(maxIterationsString)
+      if not maxIterations >= 1:
+        raise ParserException(someElement, "max_iterations value must be a positive integer.")
+    except ValueError, err:
+      raise ParserException(someElement, "Unable to understand '%(maxIterationsString)s' as an integer for 'max_iterations'.")
+    
+    if not 'MaxIterations' in self.globalNameSpace['features']:
+      maxIterationsFeature = Features.MaxIterations.MaxIterations(**self.argumentsToTemplateConstructors)
+      maxIterationsFeature.maxIterationsDict = {}
+    else:
+      maxIterationsFeature = self.globalNameSpace['features']['MaxIterations']
+    
+    maxIterationsFeature.maxIterationsDict[someTemplate] = maxIterations
   
   def parseGeometryElement(self, simulationElement):
     geometryElement = simulationElement.getChildElementByTagName('geometry')
@@ -752,7 +779,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       initialisationTemplate.vector = vectorTemplate
       vectorTemplate.initialiser = initialisationTemplate
       
-      self.parseNoisesAttribute(initialisationElement, initialisationTemplate)
+      self.parseFeatureAttributes(initialisationElement, initialisationTemplate)
     
     return vectorTemplate
   
@@ -847,7 +874,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     
     vectorTemplate.evaluationCode = evaluationElement.cdataContents()
     
-    self.parseNoisesAttribute(evaluationElement, vectorTemplate)
+    self.parseFeatureAttributes(evaluationElement, vectorTemplate)
     
     if not type(parentTemplate) == SimulationElementTemplate:
       fieldTemplate.temporaryVectors.add(vectorTemplate)
@@ -1107,6 +1134,8 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     
     self.parseFiltersElements(integrateElement, integratorTemplate)
     
+    self.parseFeatureAttributes(integrateElement, integratorTemplate)
+    
     return integratorTemplate
   
   def parseFiltersElements(self, integrateElement, integratorTemplate):
@@ -1209,7 +1238,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     
     deltaAOperatorTemplate.propagationCode = operatorsElement.cdataContents()
     
-    self.parseNoisesAttribute(operatorsElement, deltaAOperatorTemplate)
+    self.parseFeatureAttributes(operatorsElement, deltaAOperatorTemplate)
     
     deltaAOperatorTemplate.dependenciesEntity = self.parseDependencies(operatorsElement, optional=True)
     
@@ -1473,7 +1502,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     deltaAOperatorTemplate.xmlElement = operatorElement
     deltaAOperatorTemplate.propagationCode = operatorElement.cdataContents()
     
-    self.parseNoisesAttribute(operatorElement, deltaAOperatorTemplate)
+    self.parseFeatureAttributes(operatorElement, deltaAOperatorTemplate)
     
     operatorTemplate.crossPropagationIntegrator = crossIntegratorTemplate
     operatorTemplate.crossPropagationIntegratorDeltaAOperator = deltaAOperatorTemplate

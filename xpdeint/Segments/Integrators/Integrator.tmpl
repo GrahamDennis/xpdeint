@@ -215,7 +215,7 @@ Because the finalisation for the integrator could be in a different function,
 we need to be able to insert code at the end of the integrator as well.
 *@
   @#
-_SEGMENT${segmentNumber}_END:
+_SEGMENT${segmentNumber}_END:;
   @#
 @end def
 
@@ -225,5 +225,22 @@ This method writes the code to transform all of the integration vectors
 back to the 'home space' of the integrator.
 *@
 ${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
+  @#
+@end def
+
+@def earlyTerminationCode
+@*doc:
+This method writes code that should be executed if the integrator needs
+to be terminated early
+*@
+  @#
+  @for mg in $momentGroups
+    @for dim in mg.dimensionOverrides
+if (_${mg.name}_sample_index_${dim.name} < _${mg.outputField.name}_lattice_${dim.name})
+  _${mg.name}_sample();
+    @end for
+  @end for
+
+goto _SEGMENT${segmentNumber}_END;
   @#
 @end def
