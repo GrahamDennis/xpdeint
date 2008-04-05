@@ -43,7 +43,7 @@
   </features>
   
   <geometry>
-    <prop_dim> t </prop_dim>
+    <propagation_dimension> t </propagation_dimension>
     <transverse_dimensions>
       <dimension name="x" lattice="32"  domain="(minx, maxx)" />
       <dimension name="y" lattice="128" domain="(miny, maxy)" />

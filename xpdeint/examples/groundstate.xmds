@@ -33,7 +33,7 @@
   </features>
   
   <geometry>
-    <prop_dim> t </prop_dim>
+    <propagation_dimension> t </propagation_dimension>
     <transverse_dimensions>
       <dimension name="y" lattice="1024"  domain="(-2.0e-5, 2.0e-5)" />
     </transverse_dimensions>
