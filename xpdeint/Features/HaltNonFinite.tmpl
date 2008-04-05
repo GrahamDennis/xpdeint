@@ -31,16 +31,10 @@ ${separator}!isfinite(_active_${integrationVector.id}[0]${suffix})@slurp
   // One of the integration vectors has gone non-finite.
   // Sample any moment groups that have pending samples,
   // then leave the integrator.
-  @for mg in $momentGroups
-    @for dim in mg.dimensionOverrides
-  if (_${mg.name}_sample_index_${dim.name} < _${mg.outputField.name}_lattice_${dim.name})
-    _${mg.name}_sample();
-    @end for
-  @end for
-  
   _LOG(_WARNING_LOG_LEVEL, "WARNING: halt_non_finite: Integration halted.\n"
                            "         Non-finite number in integration vector in segment ${integrator.segmentNumber}.\n");
-  goto _SEGMENT${integrator.segmentNumber}_END;
+  
+  ${integrator.earlyTerminationCode, autoIndent=True}@slurp
 }
   @#
 @end def
