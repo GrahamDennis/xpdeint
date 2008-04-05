@@ -20,7 +20,7 @@
   </features>
   
   <geometry>
-    <prop_dim> z </prop_dim>
+    <propagation_dimension> z </propagation_dimension>
     <transverse_dimensions>
       <dimension name="t" lattice="10000"  domain="(-10, 15)" />
     </transverse_dimensions>

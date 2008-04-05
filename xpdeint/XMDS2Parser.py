@@ -415,9 +415,9 @@ class XMDS2Parser(ScriptParser):
     
     ## First grab the propagation dimension name
     
-    propagationDimensionElement = geometryElement.getChildElementByTagName('prop_dim')
+    propagationDimensionElement = geometryElement.getChildElementByTagName('propagation_dimension')
     if len(propagationDimensionElement.innerText()) == 0:
-      raise ParserException(propagationDimensionElement, "The prop_dim element must not be empty")
+      raise ParserException(propagationDimensionElement, "The propagation_dimension element must not be empty")
     
     propagationDimensionName = propagationDimensionElement.innerText()
     self.globalNameSpace['globalPropagationDimension'] = propagationDimensionName

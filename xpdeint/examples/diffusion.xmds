@@ -15,7 +15,7 @@
   </features>
   
   <geometry>
-    <prop_dim> t </prop_dim>
+    <propagation_dimension> t </propagation_dimension>
     <transverse_dimensions>
       <dimension name="x" lattice="32"  domain="(-10.0, 10.0)" />
       <dimension name="y" lattice="128" domain="(-1.0, 1.0)" />

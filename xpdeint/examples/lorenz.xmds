@@ -22,7 +22,7 @@
   </features>
   
   <geometry>
-    <prop_dim> t </prop_dim>
+    <propagation_dimension> t </propagation_dimension>
   </geometry>
   
   <vector name="main" type="double">

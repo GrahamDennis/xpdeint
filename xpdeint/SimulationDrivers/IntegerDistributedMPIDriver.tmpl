@@ -1,5 +1,5 @@
 @*
-DistributedMPIDriver.tmpl
+IntegerDistributedMPIDriver.tmpl
 
 Created by Graham Dennis on 2008-03-29.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
@@ -7,10 +7,6 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 @extends xpdeint.SimulationDrivers._IntegerDistributedMPIDriver
 
 @def description: Simulation Driver (Distributed with MPI along an integer-valued dimension)
-
-@# It's not clear to me that this is the best way of doing this.
-@# The other option is to simply do it in the defines and globals
-@# of the driver itself and not via a feature call.
 
 @def globals
   @#

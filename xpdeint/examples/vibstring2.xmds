@@ -23,7 +23,7 @@
   </features>
   
   <geometry>
-    <prop_dim> t </prop_dim>
+    <propagation_dimension> t </propagation_dimension>
     <transverse_dimensions>
       <integer_valued kind="first">
         <dimension name="u" lattice="2"  domain="(0, 1)" />
