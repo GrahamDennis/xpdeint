@@ -1,0 +1,33 @@
+@*
+MaxIterations.tmpl
+
+Created by Graham Dennis on 2008-05-04.
+Copyright (c) 2008 __MyCompanyName__. All rights reserved.
+Based on code originally written by Gabriel McManus
+*@
+@extends xpdeint.Features._Feature
+
+@def description: Restrict the maximum number of iterations for an adaptive integrator
+@attr featureName = 'MaxIterations'
+
+@def integrateAdaptiveStepOuterLoopEnd($dict)
+  @#
+  @set $integrator = dict['caller']
+  @#
+  @# If we don't have a maximum number of iterations for this integrator
+  @# then we don't have any code to insert
+  @if not integrator in $maxIterationsDict
+    @return ''
+  @end if
+  @#
+
+if (_attempted_steps >= ${maxIterationsDict[integrator]}) {
+  _LOG(_WARNING_LOG_LEVEL, "Reached ${maxIterationsDict[integrator]} iterations, exiting at ${integrator.propagationDimension} = %e\n"
+                           "Last error: %e\n"
+                           "Last planned timestep: %e\n\n", ${integrator.propagationDimension}, _error, _step);
+  
+  ${integrator.earlyTerminationCode, autoIndent=True}@slurp
+}
+  @#
+@end def
+
