@@ -12,9 +12,6 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
   @#
   @super
   @#
-#undef _local_lattice_${mpiDimension.name}
-#undef _local_offset_${mpiDimension.name}
-
 ptrdiff_t _local_lattice_${mpiDimension.name} = 0;
 ptrdiff_t _local_offset_${mpiDimension.name} = 0;
   @#
@@ -44,9 +41,6 @@ ptrdiff_t _local_offset_${mpiDimension.name} = 0;
     @return ''
   @end if
   @#
-#undef _${field.name}_local_lattice_${mpiDimension.name}
-#undef _${field.name}_local_offset_${mpiDimension.name}
-
 ptrdiff_t _${field.name}_local_lattice_${mpiDimension.name} = 0;
 ptrdiff_t _${field.name}_local_offset_${mpiDimension.name} = 0;
 ptrdiff_t _${field.name}_alloc_size = 0;

@@ -23,4 +23,21 @@ class _IntegerDistributedMPIDriver (DistributedMPIDriver):
   def mpiDimensionForSpace(self, space):
     return self.mpiDimension
   
+  def mayHaveLocalOffsetForDimensionInFieldInSpace(self, dimension, field, space):
+    if dimension.name == self.mpiDimension.name:
+      return True
+    else:
+      return False
+  
+  def localOffsetForDimensionInFieldInSpace(self, dimension, field, space):
+    if not dimension.name == self.mpiDimension.name:
+      return "0"
+    return ''.join(['_', field.name, '_local_offset_', self.dimensionNameForSpace(dimension, space)])
+  
+  def localLatticeForDimensionInFieldInSpace(self, dimension, field, space):
+    if not dimension.name == self.mpiDimension.name:
+      return ''.join(['_', field.name, '_lattice_', self.dimensionNameForSpace(dimension, space)])
+    return ''.join(['_', field.name, '_local_lattice_', self.dimensionNameForSpace(dimension, space)])
+  
+  
 

@@ -299,7 +299,7 @@ unsigned long _${vector.id}_index_pointer = 0;
               @set $offsetDueToLooping = c' - _i${field.indexOfDimension($integerDimension)}'
             @end if
             @set $vectorFieldDimensionIndex = $vector.field.indexOfDimension($integerDimension)
-    + (${integerDimension.name} - _${vector.field.name}_min_${integerDimension.name} - _${vector.field.name}_local_offset_${integerDimension.name}${offsetDueToLooping}) \
+    + (${integerDimension.name} - _${vector.field.name}_min_${integerDimension.name} - ${localOffsetForDimensionInFieldInSpace(integerDimension, vector.field, space)}${offsetDueToLooping}) \
       * ${vector.field.localPointsInDimensionsWithIndicesInSpace(range($vectorFieldDimensionIndex + 1, len($vector.field.dimensions)), $space)} \
       * _${vector.id}_ncomponents \
           @end for
@@ -442,16 +442,18 @@ ${insertCodeForFeaturesInReverseOrder('loopOverFieldInSpaceWithVectorsAndInnerCo
     @if not $kspaceAscendingOrder
       @# If we are looping in memory order
 ${dimension.type} k${dimension.name} = 0.0;
-if (_${field.name}_local_offset_k${dimension.name}) {
-  k${dimension.name} += _${field.name}_local_offset_k${dimension.name} * _${field.name}_dk${dimension.name};
-  ${wrapKSpaceCoordinateForDimensionInField($dimension, $field), autoIndent=True}@slurp
+      @if $mayHaveLocalOffsetForDimensionInFieldInSpace(dimension, field, space)
+if (${localOffsetForDimensionInFieldInSpace(dimension, field, space)}) {
+  k${dimension.name} += ${localOffsetForDimensionInFieldInSpace(dimension, field, space)} * _${field.name}_dk${dimension.name};
+  ${wrapKSpaceCoordinateForDimensionInField(dimension, field), autoIndent=True}@slurp
 }
+      @end if
     @else
       @# We are looping in ascending order
 ${dimension.type} k${dimension.name} = _${field.name}_min_k${dimension.name};
-#ifndef _${field.name}_local_offset_k${dimension.name}
-  #error "Cannot loop in k-space ascending order when the dimension is split with MPI"
-#endif
+      @if $mayHaveLocalOffsetForDimensionInFieldInSpace(dimension, field, space)
+#error "Cannot loop in k-space ascending order when the dimension is split with MPI (this error shouldn't be hit, please report it to xmds-devel@lists.sourceforge.net)"
+      @end if
     @end if
 #define dk${dimension.name} _${field.name}_dk${dimension.name}
   @else
@@ -460,8 +462,10 @@ ${dimension.type} k${dimension.name} = _${field.name}_min_k${dimension.name};
     @# Do things slightly differently if we have a dimension override for this dimension
     @if not $dimension in $field.dimensionOverrides
 ${dimension.type} ${dimension.name} = _${field.name}_min_${dimension.name};
-if (_${field.name}_local_offset_${dimension.name})
-  ${dimension.name} += _${field.name}_local_offset_${dimension.name} * _${field.name}_d${dimension.name};
+      @if $mayHaveLocalOffsetForDimensionInFieldInSpace(dimension, field, space)
+if (${localOffsetForDimensionInFieldInSpace(dimension, field, space)})
+  ${dimension.name} += ${localOffsetForDimensionInFieldInSpace(dimension, field, space)} * _${field.name}_d${dimension.name};
+      @end if
 
 #define d${dimension.name} _${field.name}_d${dimension.name}
     @else
@@ -473,7 +477,7 @@ if (_${field.name}_local_offset_${dimension.name})
   @set $dict = {'dimension': $dimension, 'field': $field, 'vectors': $vectors}
   @if not ($kspaceAscendingOrder and $dimensionIsInFourierSpace($dimension, $space))
     @# Standard behaviour
-for (long _i${fieldDimensionNumber} = 0; _i${fieldDimensionNumber} < _${field.name}_local_lattice_${dimensionNameForSpace($dimension, $space)}; _i${fieldDimensionNumber}++) {
+for (long _i${fieldDimensionNumber} = 0; _i${fieldDimensionNumber} < ${localLatticeForDimensionInFieldInSpace(dimension, field, space)}; _i${fieldDimensionNumber}++) {
   @else
     @# Non-standard behaviour: this dimension is in kspace and we are asked to loop over it in ascending order
 for (long _j${fieldDimensionNumber} = -(_${field.name}_lattice_${dimension.name}/2); _j${fieldDimensionNumber} < (_${field.name}_lattice_${dimension.name} + 1)/2; _j${fieldDimensionNumber}++) {
@@ -547,9 +551,9 @@ _${vector.id}_index_pointer = ( 0@slurp
         @else
           @# This dimension isn't in fourier space
           @assert ($dimension.lattice % $fieldDimension.lattice) == 0
-  + ( (_i${fieldDimensionNumber} + _${field.name}_local_offset_${dimension.name})
+  + ( (_i${fieldDimensionNumber} + ${localOffsetForDimensionInFieldInSpace(dimension, field, space)})
       * (_${vector.field.name}_lattice_${dimension.name}/_${field.name}_lattice_${dimension.name})
-      - _${vector.field.name}_local_offset_${dimension.name})
+      - ${localOffsetForDimensionInFieldInSpace(dimension, vector.field, space)})
     * $vector.field.localPointsInDimensionsWithIndicesInSpace(range($vectorDimensionNumber + 1, len($vector.field.dimensions)), space)@slurp
         @end if
       @else
