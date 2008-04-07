@@ -68,6 +68,7 @@
 * Shift the output code into its own directory and make the ASCII and Binary output type classes not inherit from _Feature. These need to be separate
   things that either are delegated to or are inherited from themselves. The better option is probably delegation in a similar manner to how Vectors
   delegate initialisation to a VectorInitialisation instance.
+  The point of this is to make the output format of a breakpoint independent of the output format for the whole simulation.
 
 * Write some automated tests. The idea would be that you would execute this and a selected set of simulation scripts would be compiled, executed, and
   their results checked against previous results (with a tolerance). This would be in addition to making sure that all the example scripts compile.
