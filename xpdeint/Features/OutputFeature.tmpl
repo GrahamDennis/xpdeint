@@ -18,7 +18,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   @super
   @#
 void _write_output();
-FILE* _write_xsil_header(char* _filename);
+FILE* _write_xsil_header(const char* _filename);
 void _write_xsil_footer(FILE* fp);
   @#
 @end def
@@ -61,7 +61,7 @@ void _write_output()
 @def writeXSILHeaderFunctionImplementation
 // In addition to writing the XSIL header, this file actually opens
 // the file '_filename' for writing and returns the file pointer.
-FILE* _write_xsil_header(char* _filename)
+FILE* _write_xsil_header(const char* _filename)
 {
   FILE* fp = NULL;
   @set $featureOrdering = ['Driver']
