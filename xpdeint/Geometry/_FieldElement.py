@@ -132,7 +132,7 @@ class _FieldElement (ScriptElement):
       # Only put a multiply sign in for everything after the first dimension
       result.append(separator)
       separator = ' * '
-      result.extend(['_', self.name, self.getVar('features')['Driver'].localLatticeForDimensionInSpace(self.dimensions[dimensionIndex], space)])
+      result.append(self.localLatticeForDimensionInFieldInSpace(self.dimensions[dimensionIndex], self, space))
     
     return ''.join(result)
 
@@ -171,6 +171,10 @@ class _FieldElement (ScriptElement):
   @property
   def dimensionOverrides(self):
     return filter(lambda x: x.hasattr('override'), self.dimensions)
+  
+  @property
+  def transverseDimensions(self):
+    return filter(lambda x: x.transverse, self.dimensions)
   
   # Initialise field
   def initialise(self):

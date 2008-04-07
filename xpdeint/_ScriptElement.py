@@ -516,3 +516,19 @@ class _ScriptElement (Template):
       result.update(operatorContainer.operatorDependencies)
     return result
   
+  def mayHaveLocalOffsetForDimensionInFieldInSpace(self, field, dimension, space):
+    if not self._driver:
+      self._driver = self.getVar('features')['Driver']
+    return self._driver.mayHaveLocalOffsetForDimensionInFieldInSpace(field, dimension, space)
+  
+  def localOffsetForDimensionInFieldInSpace(self, field, dimension, space):
+    if not self._driver:
+      self._driver = self.getVar('features')['Driver']
+    return self._driver.localOffsetForDimensionInFieldInSpace(field, dimension, space)
+  
+  def localLatticeForDimensionInFieldInSpace(self, field, dimension, space):
+    if not self._driver:
+      self._driver = self.getVar('features')['Driver']
+    return self._driver.localLatticeForDimensionInFieldInSpace(field, dimension, space)
+    
+  

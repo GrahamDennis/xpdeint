@@ -20,6 +20,12 @@ class _SimulationDriver (ScriptElement):
     self.getVar('scriptElements').insert(1, self)
     self.distributedDimensionNames = []
   
-  def localLatticeForDimensionInSpace(self, dimension, space):
-    return '_local_lattice_' + dimension.name
+  def mayHaveLocalOffsetForDimensionInFieldInSpace(self, dimension, field, space):
+    return False
+  
+  def localOffsetForDimensionInFieldInSpace(self, dimension, field, space):
+    return "0"
+  
+  def localLatticeForDimensionInFieldInSpace(self, dimension, field, space):
+    return ''.join(['_', field.name, '_lattice_', self.dimensionNameForSpace(dimension, space)])
   
