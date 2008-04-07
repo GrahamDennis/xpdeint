@@ -48,9 +48,9 @@ for (int _iteration = 0; _iteration < ${iterations}; _iteration++) {
   ${transformVectorsToSpace($integrationVectors, $homeSpace), autoIndent=True}@slurp
   
   ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
-  """// a = oldCopy + a
-  _${vector.id}[$index] += _oldCopy_${vector.id}[$index];
-  """, autoIndent=True)}@slurp
+"""// a = oldCopy + a
+_${vector.id}[$index] += _oldCopy_${vector.id}[$index];
+"""), autoIndent=True}@slurp
 }
 
 _segment${segmentNumber}_ip_evolve(+1);
