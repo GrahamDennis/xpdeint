@@ -165,7 +165,7 @@ class XMDS2Parser(ScriptParser):
     parseSimpleFeature('bing', Features.Bing.Bing)
     parseSimpleFeature('openmp', Features.OpenMP.OpenMP)
     parseSimpleFeature('halt_non_finite', Features.HaltNonFinite.HaltNonFinite)
-    parseSimpleFeature('simulation_debugging', Features.SimulationDebugging.SimulationDebugging)
+    parseSimpleFeature('diagnostics', Features.Diagnostics.Diagnostics)
     
     
     validationFeatureElement = featuresParentElement.getChildElementByTagName('validation', optional=True)
