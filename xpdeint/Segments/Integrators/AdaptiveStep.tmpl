@@ -122,7 +122,7 @@ double _segment${segmentNumber}_${vector.id}_timestep_error(${vector.type}* _che
   double _temp_error = 0.0;
   double _temp_mod = 0.0;
   
-  @set $featureOrdering = ['SimulationDebugging']
+  @set $featureOrdering = ['Diagnostics']
   @set $dict = {'vector': vector}
   ${insertCodeForFeatures('timestepErrorBegin', featureOrdering, {'vector': vector}), autoIndent=True}@slurp
   
@@ -217,7 +217,7 @@ _temp_error = ${modErrorFunction}(_${vector.id}[_${vector.id}_index_pointer + _i
 if (_error < _temp_error)
   _error = _temp_error;
   @#
-${insertCodeForFeatures('updateMaximumError', ['SimulationDebugging'], {'vector': vector})}@slurp
+${insertCodeForFeatures('updateMaximumError', ['Diagnostics'], {'vector': vector})}@slurp
   @#
 @end def
 
@@ -314,7 +314,7 @@ void _segment${segmentNumber}()
       
       _attempted_steps++;
       
-  @set $featureOrderingForToleranceChecking = ['SimulationDebugging', 'Stochastic']
+  @set $featureOrderingForToleranceChecking = ['Diagnostics', 'Stochastic']
       if (_error < _tolerance) {
         ${insertCodeForFeatures('adaptiveStepSucceeded', $featureOrderingForToleranceChecking), autoIndent=True}@slurp
         if (_step > _max_step)

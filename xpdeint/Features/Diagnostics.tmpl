@@ -1,18 +1,18 @@
 @*
-SimulationDebug.tmpl
+Diagnostics.tmpl
 
 Created by Graham Dennis on 2008-04-08.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 *@
 @extends xpdeint.Features._Feature
 
-@def description: Simulation debugging
-@attr featureName = 'SimulationDebugging'
+@def description: Simulation diagnostics
+@attr featureName = 'Diagnostics'
 
 @# As more gets added to this we are going to want a way of turning parts of this on and off
-@# The way I think this should be done in the future is to have a _DEBUG_LOG function that instead
+@# The way I think this should be done in the future is to have a _DIAGNOSTIC_LOG function that instead
 @# of a log level includes a 'log location' string or the like, then the user can pass a list of
-@# log locations to the simulation debug function, and those 'log locations' are turned on.
+@# log locations to the diagnostics feature, and those 'log locations' are turned on.
 
 @def timestepErrorBegin($dict)
   @#
