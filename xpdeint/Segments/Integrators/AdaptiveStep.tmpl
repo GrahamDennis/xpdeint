@@ -122,31 +122,44 @@ double _segment${segmentNumber}_${vector.id}_timestep_error(${vector.type}* _che
   double _temp_error = 0.0;
   double _temp_mod = 0.0;
   
+  @set $featureOrdering = ['SimulationDebugging']
+  @set $dict = {'vector': vector}
+  ${insertCodeForFeatures('timestepErrorBegin', featureOrdering, {'vector': vector}), autoIndent=True}@slurp
+  
   @if len($vector.field.dimensions) > 0
     @# FIXME: We need to have the capacity to have both a peak cutoff and an absolute cutoff
   // Find the peak value for each component of the field
-  double _peak[_${vector.id}_ncomponents];
+  double _cutoff[_${vector.id}_ncomponents];
   
   for (long _i0 = 0; _i0 < _${vector.id}_ncomponents; _i0++)
-    _peak[_i0] = 0.0;
+    _cutoff[_i0] = 0.0;
   
   {
     ${loopOverVectorsWithInnerContent([vector], $insideFindPeakLoops(vector)), autoIndent=True}@slurp
   }
-  ${insertCodeForFeatures('findMax', ['Driver'], {'variable': '_peak', 'count': c'_${vector.id}_ncomponents'}), autoIndent=True}@slurp
+  ${insertCodeForFeatures('findMax', ['Driver'], {'variable': '_cutoff', 'count': c'_${vector.id}_ncomponents'}), autoIndent=True}@slurp
   
   for (long _i0 = 0; _i0 < _${vector.id}_ncomponents; _i0++) {
-    if (!isfinite(_peak[_i0]))
+    if (!isfinite(_cutoff[_i0]))
       // Return an error two times the tolerance in this case because the timestep must be reduced.
       return 2.0*${tolerance};
-    _peak[_i0] *= ${cutoff};
+    _cutoff[_i0] *= ${cutoff};
   }
   @end if
   
+  @# Code for absolute cutoff should go here and modify
+  @# the _cutoff variables
+  @#
+  @# @for $absoluteCutoff in $absoluteCutoffs
+  @# // absolute cutoff for component '$absoluteCutoff.name'
+  @# if (_cutoff[${absoluteCutoff.componentIndex}])
+  @# @end for
+  @#
   {
     ${loopOverVectorsWithInnerContent([vector], $insideFindMaxErrorLoops(vector)), autoIndent=True}@slurp
   }
   ${insertCodeForFeatures('findMax', ['Driver'], {'variable': '&_error', 'count': '1'}), autoIndent=True}@slurp
+  ${insertCodeForFeaturesInReverseOrder('timestepErrorEnd', featureOrdering, dict), autoIndent=True}@slurp
   
   return _error;
 }
@@ -164,9 +177,9 @@ for (long _i1 = 0; _i1 < _${vector.id}_ncomponents; _i1++) {
   @end if
   _temp_mod = ${modFunction}(_${vector.id}[_${vector.id}_index_pointer + _i1]);
   if (!isfinite(_temp_mod))
-    _peak[_i1] = INFINITY;
-  else if (_peak[_i1] < _temp_mod)
-    _peak[_i1] = _temp_mod;
+    _cutoff[_i1] = INFINITY;
+  else if (_cutoff[_i1] < _temp_mod)
+    _cutoff[_i1] = _temp_mod;
 }
   @#
 @end def
@@ -181,7 +194,7 @@ for (long  _i1 = 0; _i1 < _${vector.id}_ncomponents; _i1++) {
     @set $modCutoffFunction = 'fabs'
   @end if
   @if len($vector.field.dimensions) > 0
-  if (${modCutoffFunction}(_${vector.id}[_${vector.id}_index_pointer + _i1]) > _peak[_i1]) {
+  if (${modCutoffFunction}(_${vector.id}[_${vector.id}_index_pointer + _i1]) > _cutoff[_i1]) {
     ${updateMaximumError($vector), autoIndent=True}@slurp
   }
   @else
@@ -203,6 +216,8 @@ _temp_error = ${modErrorFunction}(_${vector.id}[_${vector.id}_index_pointer + _i
 
 if (_error < _temp_error)
   _error = _temp_error;
+  @#
+${insertCodeForFeatures('updateMaximumError', ['SimulationDebugging'], {'vector': vector})}@slurp
   @#
 @end def
 
@@ -299,7 +314,7 @@ void _segment${segmentNumber}()
       
       _attempted_steps++;
       
-  @set $featureOrderingForToleranceChecking = ['Stochastic']
+  @set $featureOrderingForToleranceChecking = ['SimulationDebugging', 'Stochastic']
       if (_error < _tolerance) {
         ${insertCodeForFeatures('adaptiveStepSucceeded', $featureOrderingForToleranceChecking), autoIndent=True}@slurp
         if (_step > _max_step)
