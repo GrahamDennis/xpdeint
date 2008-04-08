@@ -1,0 +1,52 @@
+@*
+SimulationDebug.tmpl
+
+Created by Graham Dennis on 2008-04-08.
+Copyright (c) 2008 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.Features._Feature
+
+@def description: Simulation debugging
+@attr featureName = 'SimulationDebugging'
+
+@# As more gets added to this we are going to want a way of turning parts of this on and off
+@# The way I think this should be done in the future is to have a _DEBUG_LOG function that instead
+@# of a log level includes a 'log location' string or the like, then the user can pass a list of
+@# log locations to the simulation debug function, and those 'log locations' are turned on.
+
+@def timestepErrorBegin($dict)
+  @#
+  @set $vector = dict['vector']
+  @#
+double _component_errors[_${vector.id}_ncomponents];
+for (long _i0 = 0; _i0 < _${vector.id}_ncomponents; _i0++)
+  _component_errors[_i0] = 0.0;
+  @#
+@end def
+
+@def timestepErrorEnd($dict)
+  @#
+  @set $vector = dict['vector']
+  @set $integrator = dict['caller']
+  @#
+${insertCodeForFeatures('findMax', ['Driver'], {'variable': '_component_errors', 'count': c'_${vector.id}_ncomponents'})}@slurp
+if (_error > $integrator.tolerance)
+  _LOG(_WARNING_LOG_LEVEL, "${', '.join([componentName + '_error: %e' for componentName in vector.components])}\n",
+                           ${', '.join([c'_component_errors[${componentIndex}]' for componentIndex in range(len(vector.components))])});
+  @#
+@end def
+
+@def updateMaximumError($dict)
+  @#
+if (_temp_error > _component_errors[_i1])
+  _component_errors[_i1] = _temp_error;
+  @#
+@end def
+
+@def adaptiveStepFailed($dict)
+  @#
+  @set $integrator = dict['caller']
+  @#
+_LOG(_WARNING_LOG_LEVEL, "Step size %e failed, ${integrator.propagationDimension} = %e, error = %e\n", _step, ${integrator.propagationDimension}, _error);
+  @#
+@end def
