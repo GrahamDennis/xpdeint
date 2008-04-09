@@ -510,10 +510,10 @@ class _ScriptElement (Template):
     computedVectors = [v for v in vectors if v.isComputed]
     return orderedDependenciesForVectors(computedVectors)
   
-  def operatorDependenciesForOperatorContainers(self, operatorContainers):
+  def computedVectorsNeedingPrecalculationForOperatorContainers(self, operatorContainers):
     result = set()
     for operatorContainer in operatorContainers:
-      result.update(operatorContainer.operatorDependencies)
+      result.update(operatorContainer.computedVectorsNeedingPrecalculation)
     return result
   
   def mayHaveLocalOffsetForDimensionInFieldInSpace(self, field, dimension, space):

@@ -17,3 +17,16 @@ ${operatorDefinitionCode, fixupWhitespace=True}
 // **********************************************
   @#
 @end def
+
+
+@def evaluateOperatorFunctionContents
+@*doc:
+  This function overrides the Operator implementation of this to ensure that
+  all required computed vectors are evaluated at the start of the filter.
+*@
+  @#
+${evaluateComputedVectors($dependencies)}@slurp
+  @#
+  @super
+  @#
+@end def

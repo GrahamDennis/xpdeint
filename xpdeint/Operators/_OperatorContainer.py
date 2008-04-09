@@ -78,11 +78,10 @@ class _OperatorContainer(ScriptElement):
     return self.operators
   
   @property
-  def operatorDependencies(self):
+  def computedVectorsNeedingPrecalculation(self):
     result = set()
     for operator in self.operators:
-      result.update(operator.dependencies)
-      result.update(operator.targetVectors)
+      result.update(operator.computedVectorsNeedingPrecalculation)
     return result
   
   def addOperator(self, op):

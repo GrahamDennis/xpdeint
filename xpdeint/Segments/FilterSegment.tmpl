@@ -31,8 +31,7 @@ void _segment${segmentNumber}();
   @#
 void _segment${segmentNumber}()
 {
-  @set allDependencies = $operatorDependenciesForOperatorContainers($operatorContainers)
-  ${evaluateComputedVectors($allDependencies), autoIndent=True}@slurp
+  ${evaluateComputedVectors($computedVectorsNeedingPrecalculationForOperatorContainers($operatorContainers)), autoIndent=True}@slurp
   @#
   @for $operatorContainer in $operatorContainers
   

@@ -82,6 +82,10 @@ class _Operator (ScriptElement):
   def evaluateOperatorFunctionArgumentString(self):
     return ', '.join([pair[0] + ' ' + pair[1] for pair in self.evaluateOperatorFunctionArguments])
   
+  @property
+  def computedVectorsNeedingPrecalculation(self):
+    return filter(lambda x: x.isComputed, self.dependencies)
+  
   def _getOperatorSpace(self):
     if not self.hasattr('_operatorSpace'):
       return self.defaultOperatorSpace
