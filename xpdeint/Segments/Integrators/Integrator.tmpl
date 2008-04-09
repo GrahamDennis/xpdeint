@@ -79,8 +79,7 @@ ${blankLineSeparator}@slurp
 inline void _segment${segmentNumber}_calculate_delta_a(double _step)
 {
   @# First evaluate any computed vector that any of our operators may depend on
-  @set allDependencies = $operatorDependenciesForOperatorContainers($intraStepOperatorContainers)
-  ${evaluateComputedVectors($allDependencies), autoIndent=True}@slurp
+  ${evaluateComputedVectors($computedVectorsNeedingPrecalculationForOperatorContainers($intraStepOperatorContainers)), autoIndent=True}@slurp
   @#
   @# Then loop over operators that come before the delta A operators in the order in which
   @# they appear in the xmds script.
@@ -116,8 +115,7 @@ inline void _segment${segmentNumber}_calculate_delta_a(double _step)
 
 @def preSingleStep
   @#
-  @set allDependencies = $operatorDependenciesForOperatorContainers($stepStartOperatorContainers)
-${evaluateComputedVectors($allDependencies)}@slurp
+${evaluateComputedVectors($computedVectorsNeedingPrecalculationForOperatorContainers($stepStartOperatorContainers))}@slurp
   @#
   @for $operatorContainer in $stepStartOperatorContainers
   
@@ -132,8 +130,7 @@ ${operatorContainer.evaluateOperators}@slurp
   @#
 ${insertCodeForFeatures('postSingleStep', featureOrdering)}@slurp
   @#
-  @set allDependencies = $operatorDependenciesForOperatorContainers($stepEndOperatorContainers)
-${evaluateComputedVectors($allDependencies)}@slurp
+${evaluateComputedVectors($computedVectorsNeedingPrecalculationForOperatorContainers($stepEndOperatorContainers))}@slurp
   @#
   @for $operatorContainer in $stepEndOperatorContainers
   

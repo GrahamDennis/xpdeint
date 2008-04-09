@@ -22,6 +22,11 @@ class _FilterOperator (Operator):
   def defaultOperatorSpace(self):
     return 0
   
+  @property
+  def computedVectorsNeedingPrecalculation(self):
+    return []
+  
+  
   def preflight(self):
     super(_FilterOperator, self).preflight()
     
