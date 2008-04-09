@@ -38,6 +38,10 @@ class _CrossPropagationOperator (Operator):
     self.reducedField = None
   
   
+  @property
+  def operatorSpace(self):
+    return 0
+  
   def _getCrossPropagationIntegrator(self):
     return self._crossPropagationIntegrator
   
