@@ -1462,8 +1462,6 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
                                              "Cross-propagators can only integrate along normal dimensions." % locals())
     
     fieldPropagationDimensionIndex = fullField.indexOfDimension(propagationDimension)
-    # Set the step
-    crossIntegratorTemplate.step = ''.join(['_', fullField.name, '_d', propagationDimensionName])
     # Set the stepCount -- this is the lattice for this dimension minus 1 because we know the value at the starting boundary
     crossIntegratorTemplate.stepCount = ''.join(['(_', fullField.name, '_lattice_', propagationDimensionName, ' - 1)'])
     
@@ -1480,6 +1478,10 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       operatorTemplate.propagationDirection = '-'
     else:
       raise ParserException(boundaryConditionElement, "Unknown boundary condition kind '%(kindString)s'. Options are 'left' or 'right'." % locals())
+    
+    # Set the step
+    crossIntegratorTemplate.step = ''.join([operatorTemplate.propagationDirection, '_', fullField.name, '_d', propagationDimensionName])
+    
     
     operatorTemplate.boundaryConditionDependenciesEntity = self.parseDependencies(boundaryConditionElement, optional=True)
     
