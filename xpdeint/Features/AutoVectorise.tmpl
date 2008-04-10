@@ -9,6 +9,15 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 @def description: Auto-vectorisation
 @attr $featureName = 'AutoVectorise'
 
+@def cflags
+@*doc:
+Return the options that need to be added to ``CFLAG``.
+*@
+  @#
+-ftree-vectorize@slurp
+  @#
+@end def
+
 @def defines
   @#
   @super
