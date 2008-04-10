@@ -75,7 +75,7 @@ snprintf(_baseFilename, 100, "%li", _breakpointAutoNameCounter);
     @if baseFilename.endswith('.xsil')
       @set baseFilename = baseFilename[0:-5]
     @end if
-char *_baseFilename = "$baseFilename";
+const char *_baseFilename = "$baseFilename";
   @end if
   
 char *_xsilFilename = (char*)malloc(200);
