@@ -44,7 +44,12 @@ _${name}_initialise_cross_propagation();
 
     @set $integrationDimension = $parent.field.dimensionWithName($propagationDimension)
     @# FIXME: This variable is only available inside the integrator... what about the delta a operator?
-${integrationDimension.type} ${integrationDimension.name} = _${parent.field.name}_min_${propagationDimension};
+    @if $propagationDirection == '+'
+      @set $dimensionSide = 'min'
+    @else
+      @set $dimensionSide = 'max'
+    @end if
+${integrationDimension.type} ${integrationDimension.name} = _${parent.field.name}_${dimensionSide}_${propagationDimension};
   @end if
   @#
 @end def
