@@ -23,7 +23,7 @@ Return the options that need to be added to ``CFLAG``.
   @super
   @#
 
-#define _MAKE_DBL_VARIABLE(x) double* __restrict__ x ## _dbl = (double*) x
+#define _MAKE_DBL_VARIABLE(x) double* const __restrict__ x ## _dbl = (double*) x
 #define _DBL(x) (x ## _dbl)
   @#
 @end def
