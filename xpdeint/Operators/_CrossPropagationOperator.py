@@ -18,6 +18,8 @@ class _CrossPropagationOperator (Operator):
   operatorKind = Operator.OtherOperatorKind
   evaluateOperatorFunctionArguments = []
   
+  fieldMap = {}
+  
   def __init__(self, *args, **KWs):
     Operator.__init__(self, *args, **KWs)
     
@@ -34,7 +36,6 @@ class _CrossPropagationOperator (Operator):
     self.integrationVectors = set()
     self.dependencyMap = {}
     self.integrationVectorMap = {}
-    self.fieldMap = {}
     self.reducedField = None
   
   
@@ -80,14 +81,18 @@ class _CrossPropagationOperator (Operator):
     # We have to create the vector element
     reducedField = self.reducedDimensionFieldForField(fullVector.field)
     
-    reducedVector = VectorElement(name = fullVector.name, field = reducedField,
-                                  **self.argumentsToTemplateConstructors)
-    
-    reducedVector.type = fullVector.type
-    reducedVector.components = fullVector.components
-    reducedVector.needsInitialisation = False
-    reducedField.temporaryVectors.add(reducedVector)
-    self._children.append(reducedVector)
+    vectorsWithSameName = filter(lambda v: v.name == fullVector.name, reducedField.vectors)
+    if vectorsWithSameName:
+      reducedVector = vectorsWithSameName[0]
+    else:
+      reducedVector = VectorElement(name = fullVector.name, field = reducedField,
+                                    **self.argumentsToTemplateConstructors)
+      
+      reducedVector.type = fullVector.type
+      reducedVector.components = fullVector.components
+      reducedVector.needsInitialisation = False
+      reducedField.temporaryVectors.add(reducedVector)
+      self._children.append(reducedVector)
     
     return reducedVector
   
