@@ -18,7 +18,15 @@ class _CrossPropagationOperator (Operator):
   operatorKind = Operator.OtherOperatorKind
   evaluateOperatorFunctionArguments = []
   
-  fieldMap = {}
+  # This is a class attribute and not an instance attribute to prevent two
+  # cross-propagation operators trying to create the same reduced field
+  # and then creating the same reduced vectors, but in these different
+  # fields (but with the same names)
+  # By having a sharedFieldMap, two cross-propagators with the same cross-propagation
+  # dimension can share the same fieldMap variable.
+  # sharedFieldMap is a map from propagation dimension name to a dictionary that can
+  # be used as the fieldMap variable for an instance
+  sharedFieldMap = {}
   
   def __init__(self, *args, **KWs):
     Operator.__init__(self, *args, **KWs)
@@ -37,11 +45,29 @@ class _CrossPropagationOperator (Operator):
     self.dependencyMap = {}
     self.integrationVectorMap = {}
     self.reducedField = None
+    self._fieldMap = None
   
   
   @property
   def operatorSpace(self):
     return 0
+  
+  @property
+  def fieldMap(self):
+    """
+    Return the field map for this cross-propagator.
+    
+    The fieldMap is a map from full fields to reduced cross-propagation fields that do not have the
+    cross-propagation dimension. The fieldMap instances are shared between cross-propagators that have
+    the same cross-propagation dimension.
+    """
+    if not self._fieldMap:
+      if not self.propagationDimension in self.sharedFieldMap:
+        self._fieldMap = self.sharedFieldMap[self.propagationDimension] = {}
+      else:
+        self._fieldMap = self.sharedFieldMap[self.propagationDimension]
+    
+    return self._fieldMap
   
   def _getCrossPropagationIntegrator(self):
     return self._crossPropagationIntegrator
