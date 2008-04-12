@@ -107,12 +107,8 @@ else {
   ptrdiff_t _local_field_size = ${sizeOfFieldInSpace(field, space)};
   MPI_Ssend(&_local_field_size, sizeof(ptrdiff_t), MPI_BYTE, 0, 0, MPI_COMM_WORLD);
   
-  @# Make sure we only send a given array once
-  @set $arraysAlreadySent = set()
+  @# Note that a variable corresponds to an array with given component names
   @for $variable in $dependentVariables
-    @if $variable.arrayName in arraysAlreadySent
-      @continue
-    @end if
   MPI_Ssend(${variable.arrayName}, ${sizeOfVectorInSpaceInReals($variable.vector, space)}, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
   @end for
 }
@@ -166,13 +162,7 @@ for (long _dataForRank = 0; _dataForRank < _size; _dataForRank++) {
     
     
     // Now allocate the space needed locally, and receive the entire buffer
-  @# Make sure we only send a given array once
-  @set $arraysAlreadySent = set()
   @for $variable in $dependentVariables
-    @if $variable.arrayName in arraysAlreadySent
-      @continue
-    @end if
-    @#
     @set $sizePrefix = ''
     @if $variable.vector.type == 'complex'
       @set $sizePrefix = '2 * '
