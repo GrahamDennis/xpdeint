@@ -49,9 +49,9 @@ unsigned long _exponentIndex = (abs(_exponent) - 1) * $len($operatorComponents);
 
   @end if
 if (_exponent > 0) {
-  ${loopOverVectorsWithInnerContent($setOfVectorsToLoopOver, $insideEvaluateOperatorLoops('*')), autoIndent=True}@slurp
+  ${loopOverVectorsInSpaceWithInnerContent($setOfVectorsToLoopOver, $operatorSpace, $insideEvaluateOperatorLoops('*')), autoIndent=True}@slurp
 } else {
-  ${loopOverVectorsWithInnerContent($setOfVectorsToLoopOver, $insideEvaluateOperatorLoops('/')), autoIndent=True}@slurp
+  ${loopOverVectorsInSpaceWithInnerContent($setOfVectorsToLoopOver, $operatorSpace, $insideEvaluateOperatorLoops('/')), autoIndent=True}@slurp
 }
   @#
 @end def

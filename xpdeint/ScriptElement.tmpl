@@ -34,7 +34,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
       feature (if it is turned on), or the code modified to make most compilers' auto-vectorisation
       features vectorise the code (if the auto-vectorisation feature is turned on).
       
-  2.  `loopOverVectorsWithInnerContent`: This one is slightly more complex than the previous type,
+  2.  `loopOverVectorsInSpaceWithInnerContent`: This one is slightly more complex than the previous type,
       and so has slightly different restrictions. This loop construct is for the occasions where you want
       to do the same operation at each point, but possibly different operations to different components.
       An additional restriction for this loop construct is that all of the vectors must be in the same
@@ -139,7 +139,7 @@ to be performed in the same way on a range of vectors in possibly different fiel
     @silent $templateVariables['vector'] = $vector
 ${insertCodeForFeatures('loopOverVectorsWithInnerContentTemplateBegin', $loopFeatureOrdering, $dict)}@slurp
     @capture loopString
-for (long _i0 = 0; _i0 < ${loopCountPrefix}_${vector.field.name}_current_size * _${vector.id}_ncomponents; _i0++) {
+for (long _i0 = 0; _i0 < ${loopCountPrefix}${sizeOfVector(vector)}; _i0++) {
   ${innerLoopTemplate, autoIndent=True}@slurp
 }
     @end capture
@@ -148,7 +148,7 @@ ${insertCodeForFeaturesInReverseOrder('loopOverVectorsWithInnerContentTemplateEn
   @end for
 @end def
 
-@def loopOverVectorsWithInnerContent($vectors, $innerContent)
+@def loopOverVectorsInSpaceWithInnerContent($vectors, $space, $innerContent)
 @*doc:
 Insert code to loop over vectors in a single field.
 Unlike the previous function, this function loops over a single field
@@ -183,7 +183,7 @@ unsigned long _${vector.id}_index_pointer = 0;
   @end for
   @set $dict = {'vectors': $vectors}
 ${insertCodeForFeatures('loopOverVectorsWithInnerContentBegin', $featureOrdering, $dict)}@slurp
-for (long _i0 = 0; _i0 < _${field.name}_current_size; _i0++) {
+for (long _i0 = 0; _i0 < ${sizeOfFieldInSpace(field, space)}; _i0++) {
   ${insertCodeForFeaturesInReverseOrder('loopOverVectorsWithInnerContentEnd', $featureOrdering, $dict), autoIndent=True}@slurp
   @#
   ${innerContent, autoIndent=True}@slurp

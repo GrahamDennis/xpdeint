@@ -74,9 +74,9 @@ unsigned long _exponentIndex = _${id}_exponent_offset_map[abs(_exponent) - 1] * 
 
   @end if
 if (_exponent > 0) {
-  ${loopOverVectorsWithInnerContent($setOfVectorsToLoopOver, $insideEvaluateOperatorLoops('*')), autoIndent=True}@slurp
+  ${loopOverVectorsInSpaceWithInnerContent($setOfVectorsToLoopOver, $operatorSpace, $insideEvaluateOperatorLoops('*')), autoIndent=True}@slurp
 } else {
-  ${loopOverVectorsWithInnerContent($setOfVectorsToLoopOver, $insideEvaluateOperatorLoops('/')), autoIndent=True}@slurp
+  ${loopOverVectorsInSpaceWithInnerContent($setOfVectorsToLoopOver, $operatorSpace, $insideEvaluateOperatorLoops('/')), autoIndent=True}@slurp
 }
   @#
 @end def

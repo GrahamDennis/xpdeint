@@ -102,7 +102,7 @@ double _var = 1.0@slurp
 
     @for noise in noisesNeeded
       @set $noiseVector = noise.noiseVectorForField(field)
-_make_${noise.prefix}_noises(_var, _${noiseVector.id}, _${field.name}_current_size * _${noiseVector.id}_ncomponents);
+_make_${noise.prefix}_noises(_var, _${noiseVector.id}, ${sizeOfVectorInSpace(noiseVector, space)});
     @end for
 
   @end capture
@@ -190,11 +190,11 @@ ${insertCodeForFeatures('generateNoisesBegin', featureOrdering, featureDict)}@sl
       @for noise in noises
         @set $noiseVector = noise.noiseVectorForField(field)
 
-_make_${noise.prefix}_noises(_${field.name}_var, _${noiseVector.id}, _${field.name}_current_size * _${noiseVector.id}_ncomponents);
+_make_${noise.prefix}_noises(_${field.name}_var, _${noiseVector.id}, ${sizeOfVectorInSpace(noiseVector, integrator.homeSpace)});
         @#
         @if 'ErrorCheck' in $features
 if (!_half_step) {
-  _make_${noise.prefix}_noises(_${field.name}_var, _${noiseVector.id}2, _${field.name}_current_size * _${noiseVector.id}_ncomponents);
+  _make_${noise.prefix}_noises(_${field.name}_var, _${noiseVector.id}2, ${sizeOfVectorInSpace(noiseVector, integrator.homeSpace)});
   ${loopOverVectorsWithInnerContentTemplate([$noiseVector],
 """_${vector.id}[$index] = 0.5*(_${vector.id}[$index] + _${vector.id}2[$index]);
 """), autoIndent=True}@slurp
@@ -211,6 +211,7 @@ ${insertCodeForFeatures('generateNoisesEnd', featureOrdering, featureDict)}@slur
 @def integrateAdaptiveStepInnerLoopBegin(dict)
   @#
   @set $integrator = dict['caller']
+  @set $space = integrator.homeSpace
   @#
   @if not $integratorNeedsNoises(integrator)
     @return ''
@@ -226,7 +227,7 @@ if (_noise_list.empty()) {
   
     @for noise in noises
       @set $noiseVector = noise.noiseVectorForField(field)
-  _active_${noiseVector.id} = (${noiseVector.type}*) xmds_malloc(sizeof(${noiseVector.type}) * _${field.name}_alloc_size * _${noiseVector.id}_ncomponents);
+  _active_${noiseVector.id} = (${noiseVector.type}*) xmds_malloc(sizeof(${noiseVector.type}) * ${allocSizeOfVector(noiseVector)});
   _active_node->_${noiseVector.id} = _active_${noiseVector.id};
     @end for
   
@@ -239,7 +240,7 @@ if (_noise_list.empty()) {
     @capture result
       @for noise in noises
         @set $noiseVector = noise.noiseVectorForField(field)
-_make_${noise.prefix}_noises(_${field.name}_var/_step, _active_${noiseVector.id}, _${field.name}_current_size * _${noiseVector.id}_ncomponents);
+_make_${noise.prefix}_noises(_${field.name}_var/_step, _active_${noiseVector.id}, ${sizeOfVectorInSpace(noiseVector, space)});
       @end for
     @end capture
   ${result, autoIndent=True, extraIndent=extraIndent}@slurp
@@ -261,7 +262,7 @@ _make_${noise.prefix}_noises(_${field.name}_var/_step, _active_${noiseVector.id}
     @set $noises = $noisesForFieldInIntegrator(field, integrator)
     @for noise in noises
       @set $noiseVector = noise.noiseVectorForField(field)
-  _active_${noiseVector.id} = (${noiseVector.type}*) xmds_malloc(sizeof(${noiseVector.type}) * _${field.name}_alloc_size * _${noiseVector.id}_ncomponents);
+  _active_${noiseVector.id} = (${noiseVector.type}*) xmds_malloc(sizeof(${noiseVector.type}) * ${allocSizeOfVector(noiseVector)});
     @end for
   
     @set $space = $deltaAOperatorSpaceForFieldInIntegrator(field, integrator)
@@ -273,9 +274,9 @@ _make_${noise.prefix}_noises(_${field.name}_var/_step, _active_${noiseVector.id}
     @capture result
       @for noise in noises
         @if noise.noiseDistribution == 'gaussian'
-${breakGaussianNoiseInField(noise, field)}@slurp
+${breakGaussianNoiseInFieldInSpace(noise, field, space)}@slurp
         @elif noise.noiseDistribution == 'poissonian'
-${breakPoissonianNoiseInField(noise, field)}@slurp
+${breakPoissonianNoiseInFieldInSpace(noise, field, space)}@slurp
         @end if
       @end for
     @end capture
@@ -314,7 +315,7 @@ ${breakPoissonianNoiseInField(noise, field)}@slurp
   @#
 @end def
 
-@def breakGaussianNoiseInField($noise, $field)
+@def breakGaussianNoiseInFieldInSpace($noise, $field, $space)
 @*doc:
 Return the code to generate a new smaller gaussian noise from a previous noise.
 
@@ -329,7 +330,7 @@ code, not in the template itself.
 
   @# Then generate a new noise of the appropriate variance
 _make_${noise.prefix}_noises(_${field.name}_var * (_old_smallest_step - _step)/(_step * _old_smallest_step), 
-    _active_${noiseVector.id}, _${field.name}_current_size * _${noiseVector.id}_ncomponents);
+    _active_${noiseVector.id}, ${sizeOfVectorInSpace(noiseVector, space)});
 
   @# Then add the old noise.
   @# When adding the old noise, the first step is to get a pointer to the old noise itself.
@@ -346,7 +347,7 @@ ${loopOverVectorsWithInnerContentTemplate([$noiseVector],
   @#
 @end def
 
-@def breakPoissonianNoiseInField($noise, $field)
+@def breakPoissonianNoiseInFieldInSpace($noise, $field, $space)
 @*doc:
 Return the code to generate a new smaller poissonian noise from a previous noise.
 
@@ -360,7 +361,7 @@ code, not in the template itself.
 
 ${noiseVector.type}* const _old_${noiseVector.id} = _noise_list.begin()->_${noiseVector.id};
 
-_split_${noise.prefix}_noises(_${field.name}_var / _step, _${field.name}_var / _old_smallest_step, _active_${noiseVector.id}, _old_${noiseVector.id}, _${field.name}_current_size * _${noiseVector.id}_ncomponents);
+_split_${noise.prefix}_noises(_${field.name}_var / _step, _${field.name}_var / _old_smallest_step, _active_${noiseVector.id}, _old_${noiseVector.id}, ${sizeOfVectorInSpace(noiseVector, space)});
 
   @#
 @end def

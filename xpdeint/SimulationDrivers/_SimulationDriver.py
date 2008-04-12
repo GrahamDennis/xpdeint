@@ -29,3 +29,13 @@ class _SimulationDriver (ScriptElement):
   def localLatticeForDimensionInFieldInSpace(self, dimension, field, space):
     return ''.join(['_', field.name, '_lattice_', self.dimensionNameForSpace(dimension, space)])
   
+  def sizeOfFieldInSpace(self, field, space):
+    """Return a name of a variable the value of which is the size of `field` in `space`."""
+    return self.allocSizeOfField(field)
+  
+  def allocSizeOfField(self, field):
+    return ''.join(['_', field.name, '_size'])
+  
+  def sizeOfVector(self, vector):
+    return self.sizeOfVectorInSpace(vector, None)
+  

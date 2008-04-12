@@ -25,3 +25,8 @@ class _DistributedMPIDriver (SimulationDriver, MPI):
     if not isinstance(outputFeature, BinaryOutput):
       raise ParserException(outputFeature.xmlElement, "The 'ascii' output format cannot be used with the 'distributed-mpi' driver.")
   
+  def allocSizeOfField(self, field):
+    if not self.fieldIsDistributed(field):
+      return super(_DistributedMPIDriver, self).allocSizeOfField(field)
+    return ''.join(['_', field.name, '_alloc_size'])
+  
