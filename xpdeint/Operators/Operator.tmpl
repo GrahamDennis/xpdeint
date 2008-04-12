@@ -152,7 +152,7 @@ _${resultVector.id}_space = $operatorSpace;
   @#
   @if $operatorVector
     @# If we have an operator vector, then there is no user code in this loop
-${loopOverVectorsWithInnerContent($setOfVectorsToLoopOver, $insideEvaluateOperatorLoops)}@slurp
+${loopOverVectorsInSpaceWithInnerContent($setOfVectorsToLoopOver, $operatorSpace, $insideEvaluateOperatorLoops)}@slurp
   @else
     @# If we don't have an operator vector, then we will be looping over user code.
     @#

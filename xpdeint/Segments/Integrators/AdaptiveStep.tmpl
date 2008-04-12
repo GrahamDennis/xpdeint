@@ -135,7 +135,7 @@ double _segment${segmentNumber}_${vector.id}_timestep_error(${vector.type}* _che
     _cutoff[_i0] = 0.0;
   
   {
-    ${loopOverVectorsWithInnerContent([vector], $insideFindPeakLoops(vector)), autoIndent=True}@slurp
+    ${loopOverVectorsInSpaceWithInnerContent([vector], $homeSpace, $insideFindPeakLoops(vector)), autoIndent=True}@slurp
   }
   ${insertCodeForFeatures('findMax', ['Driver'], {'variable': '_cutoff', 'count': c'_${vector.id}_ncomponents'}), autoIndent=True}@slurp
   
@@ -156,7 +156,7 @@ double _segment${segmentNumber}_${vector.id}_timestep_error(${vector.type}* _che
   @# @end for
   @#
   {
-    ${loopOverVectorsWithInnerContent([vector], $insideFindMaxErrorLoops(vector)), autoIndent=True}@slurp
+    ${loopOverVectorsInSpaceWithInnerContent([vector], $homeSpace, $insideFindMaxErrorLoops(vector)), autoIndent=True}@slurp
   }
   ${insertCodeForFeatures('findMax', ['Driver'], {'variable': '&_error', 'count': '1'}), autoIndent=True}@slurp
   ${insertCodeForFeaturesInReverseOrder('timestepErrorEnd', featureOrdering, dict), autoIndent=True}@slurp

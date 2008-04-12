@@ -8,16 +8,6 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 
 @def description: Unnamed Simulation Driver
 
-@def fieldDefines($dict)
-  @#
-  @set $field = dict['caller']
-  @#
-
-#define _${field.name}_alloc_size _${field.name}_size
-#define _${field.name}_current_size _${field.name}_size
-  @#
-@end def
-
 @def functionImplementations
   @#
   @super

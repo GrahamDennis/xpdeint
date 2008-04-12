@@ -12,23 +12,14 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
   @#
   @super
   @#
-ptrdiff_t _local_lattice_${mpiDimension.name} = 0;
-ptrdiff_t _local_offset_${mpiDimension.name} = 0;
+${dimensionGlobalsWithPrefix('')}@slurp
   @#
 @end def
 
-@def fieldDefines($dict)
+@def dimensionGlobalsWithPrefix($prefix)
   @#
-  @set $field = dict['caller']
-  @#
-  @if not field.hasDimension($mpiDimension)
-    @# If the field doesn't have the MPI dimension, then everything is as normal
-    @super($dict)
-    @stop
-  @end if
-  @#
-
-#define _${field.name}_current_size _${field.name}_alloc_size
+ptrdiff_t ${prefix}_local_lattice_${mpiDimension.name} = 0;
+ptrdiff_t ${prefix}_local_offset_${mpiDimension.name} = 0;
   @#
 @end def
 
@@ -36,13 +27,12 @@ ptrdiff_t _local_offset_${mpiDimension.name} = 0;
   @#
   @set $field = dict['caller']
   @#
-  @if not field.hasDimension($mpiDimension)
+  @if not $fieldIsDistributed(field)
     @# If the field doesn't have the MPI dimension, then everything is as normal
     @return ''
   @end if
   @#
-ptrdiff_t _${field.name}_local_lattice_${mpiDimension.name} = 0;
-ptrdiff_t _${field.name}_local_offset_${mpiDimension.name} = 0;
+${dimensionGlobalsWithPrefix(c'_${field.name}')}@slurp
 ptrdiff_t _${field.name}_alloc_size = 0;
   @#
 @end def
@@ -63,10 +53,9 @@ else {
 }
 
   @for $field in $fields
-    @if field.name == 'geometry' or not field.hasDimension($mpiDimension)
+    @if field.name == 'geometry' or not $fieldIsDistributed(field)
       @continue
     @end if
-    @set dimension = field.dimensionWithName(mpiDimName)
     @# Set the local_lattice and local_offset variables based on the
     @# values for the geometry's version of these variables
 // Set the local_lattice and local_offset variables for the '${field.name}' field.

@@ -154,7 +154,7 @@ example we are looping over this segment, or we are running multiple paths).
     @# Loop over the variables that need to be created
     @for $arrayName in $extraIntegrationArrayNames
 _${name}_${arrayName}_${vector.id} = @slurp
-(${vector.type}*) xmds_malloc(sizeof(${vector.type}) * _${vector.field.name}_alloc_size * _${vector.id}_ncomponents);
+(${vector.type}*) xmds_malloc(sizeof(${vector.type}) * ${allocSizeOfVector(vector)});
     @end for
   @end for
   @#

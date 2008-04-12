@@ -50,10 +50,7 @@ int main(int argc, char **argv)
     @end if
     @# We did integrate over the MPI dimension, so we need to run MPI_Allreduce to combine the results.
     @set $arrayName = c'_active_${vector.id}'
-    @set $size = c'_${vector.field.name}_current_size * _${vector.id}_ncomponents'
-    @if $vector.type == 'complex'
-      @set $size = '2 * ' + size
-    @end if
+    @set $size = $sizeOfVectorInSpaceInReals(vector, space)
     @#
     @# If we have any dimension overrides, then we don't want to add up the entire field
     @for $dimName in indexOverrides.iterkeys()
@@ -91,6 +88,7 @@ if (_rank == 0) {
 @def binaryWriteOutEnd($dict)
   @#
   @set $field = dict['field']
+  @set $space = dict['space']
   @set $dependentVariables = dict['dependentVariables']
   @#
   @set $dict['extraIndent'] -= 2
@@ -106,14 +104,16 @@ else {
   MPI_Ssend(&_${field.name}_local_lattice_${mpiDimensionName}, sizeof(ptrdiff_t), MPI_BYTE, 0, 0, MPI_COMM_WORLD);
   MPI_Ssend(&_${field.name}_local_offset_${mpiDimensionName}, sizeof(ptrdiff_t), MPI_BYTE, 0, 0, MPI_COMM_WORLD);
   @end for
-  MPI_Ssend(&_${field.name}_current_size, sizeof(ptrdiff_t), MPI_BYTE, 0, 0, MPI_COMM_WORLD);
+  ptrdiff_t _local_field_size = ${sizeOfFieldInSpace(field, space)};
+  MPI_Ssend(&_local_field_size, sizeof(ptrdiff_t), MPI_BYTE, 0, 0, MPI_COMM_WORLD);
   
+  @# Make sure we only send a given array once
+  @set $arraysAlreadySent = set()
   @for $variable in $dependentVariables
-    @set $sizePrefix = ''
-    @if $variable.vector.type == 'complex'
-      @set $sizePrefix = '2 * '
+    @if $variable.arrayName in arraysAlreadySent
+      @continue
     @end if
-  MPI_Ssend(${variable.arrayName}, ${sizePrefix}_${field.name}_current_size * _${variable.vector.id}_ncomponents, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+  MPI_Ssend(${variable.arrayName}, ${sizeOfVectorInSpaceInReals($variable.vector, space)}, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
   @end for
 }
 
@@ -124,6 +124,7 @@ MPI_Barrier(MPI_COMM_WORLD);
 @def binaryWriteOutWriteDataBegin($dict)
   @#
   @set $field = dict['field']
+  @set $space = dict['space']
   @set $dependentVariables = dict['dependentVariables']
   @#
   @set $distributedDimensionNamesInUse = [dimName for dimName in $distributedDimensionNames if field.hasDimensionName(dimName)]
@@ -135,7 +136,7 @@ MPI_Barrier(MPI_COMM_WORLD);
 ptrdiff_t _my_${field.name}_local_lattice_${mpiDimensionName} = _${field.name}_local_lattice_${mpiDimensionName};
 ptrdiff_t _my_${field.name}_local_offset_${mpiDimensionName} = _${field.name}_local_offset_${mpiDimensionName};
   @end for
-ptrdiff_t _my_${field.name}_current_size = _${field.name}_current_size;
+  @#
 
 @for $variable in $dependentVariables
 ${variable.vector.type}* _local${variable.arrayName};
@@ -147,14 +148,13 @@ for (long _dataForRank = 0; _dataForRank < _size; _dataForRank++) {
   ptrdiff_t _${field.name}_local_lattice_${mpiDimensionName};
   ptrdiff_t _${field.name}_local_offset_${mpiDimensionName};
   @end for
-  ptrdiff_t _${field.name}_current_size;
+  ptrdiff_t _local_field_size;
   
   if (_dataForRank == 0) {
   @for $mpiDimensionName in $distributedDimensionNamesInUse
     _${field.name}_local_lattice_${mpiDimensionName} = _my_${field.name}_local_lattice_${mpiDimensionName};
     _${field.name}_local_offset_${mpiDimensionName} = _my_${field.name}_local_offset_${mpiDimensionName};
   @end for
-    _${field.name}_current_size = _my_${field.name}_current_size;
   
   } else {
     MPI_Status status;
@@ -162,20 +162,26 @@ for (long _dataForRank = 0; _dataForRank < _size; _dataForRank++) {
     MPI_Recv(&_${field.name}_local_lattice_${mpiDimensionName}, sizeof(ptrdiff_t), MPI_BYTE, _dataForRank, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
     MPI_Recv(&_${field.name}_local_offset_${mpiDimensionName}, sizeof(ptrdiff_t), MPI_BYTE, _dataForRank, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
   @end for
-    MPI_Recv(&_${field.name}_current_size, sizeof(ptrdiff_t), MPI_BYTE, _dataForRank, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+    MPI_Recv(&_local_field_size, sizeof(ptrdiff_t), MPI_BYTE, _dataForRank, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+    
     
     // Now allocate the space needed locally, and receive the entire buffer
+  @# Make sure we only send a given array once
+  @set $arraysAlreadySent = set()
   @for $variable in $dependentVariables
-    _local${variable.arrayName} = (${variable.vector.type}*) xmds_malloc(sizeof(${variable.vector.type}) * _${field.name}_current_size * _${variable.vector.id}_ncomponents);
+    @if $variable.arrayName in arraysAlreadySent
+      @continue
+    @end if
+    @#
     @set $sizePrefix = ''
     @if $variable.vector.type == 'complex'
       @set $sizePrefix = '2 * '
     @end if
-    @#
-    MPI_Recv(_local${variable.arrayName}, ${sizePrefix}_${field.name}_current_size * _${variable.vector.id}_ncomponents,
+    _local${variable.arrayName} = (${variable.vector.type}*) xmds_malloc(sizeof(${variable.vector.type}) * _local_field_size * _${variable.vector.id}_ncomponents);
+    MPI_Recv(_local${variable.arrayName}, ${sizePrefix}_local_field_size * _${variable.vector.id}_ncomponents,
              MPI_DOUBLE, _dataForRank, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-   ${variable.arrayName} = _local${variable.arrayName};
-   
+    ${variable.arrayName} = _local${variable.arrayName};
+    
   @end for
   }
   @set $dict['extraIndent'] += 2
@@ -247,11 +253,7 @@ if (_rank == 0) {
 // Broadcast the noises to other nodes
   @for $noise in $noises
     @set $noiseVector = noise.noiseVectorForField(field)
-    @set $sizePrefix = ''
-    @if noiseVector.type == 'complex'
-      @set $sizePrefix = '2 * '
-    @end if
-MPI_Bcast(_active_${noiseVector.id}, ${sizePrefix}_${field.name}_current_size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+MPI_Bcast(_active_${noiseVector.id}, ${sizeOfVectorInSpaceInReals(noiseVector, space)}, MPI_DOUBLE, 0, MPI_COMM_WORLD);
   @end for
 
   @set $dict['extraIndent'] -= 2

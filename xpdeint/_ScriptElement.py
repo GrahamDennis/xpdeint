@@ -30,6 +30,15 @@ class _ScriptElement (Template):
     for instanceGuardSet in _ScriptElement._callOncePerInstanceGuards.itervalues():
       instanceGuardSet.clear()
   
+  __driver = None
+  
+  @property
+  def _driver(self):
+    if not _ScriptElement.__driver:
+      _ScriptElement.__driver = self.getVar('features')['Driver']
+    return _ScriptElement.__driver
+  
+  
   _ScriptElement_haveCalledInit = False
   
   def __init__(self, *args, **KWs):
@@ -71,8 +80,6 @@ class _ScriptElement (Template):
     
     # Create the entry in the callOnceGuards
     _ScriptElement._callOncePerInstanceGuards[self] = set()
-    
-    self._driver = None
   
   @property
   def parent(self):
@@ -517,18 +524,33 @@ class _ScriptElement (Template):
     return result
   
   def mayHaveLocalOffsetForDimensionInFieldInSpace(self, field, dimension, space):
-    if not self._driver:
-      self._driver = self.getVar('features')['Driver']
     return self._driver.mayHaveLocalOffsetForDimensionInFieldInSpace(field, dimension, space)
   
   def localOffsetForDimensionInFieldInSpace(self, field, dimension, space):
-    if not self._driver:
-      self._driver = self.getVar('features')['Driver']
     return self._driver.localOffsetForDimensionInFieldInSpace(field, dimension, space)
   
   def localLatticeForDimensionInFieldInSpace(self, field, dimension, space):
-    if not self._driver:
-      self._driver = self.getVar('features')['Driver']
     return self._driver.localLatticeForDimensionInFieldInSpace(field, dimension, space)
-    
+  
+  def sizeOfVectorInSpace(self, vector, space):
+    return ''.join([self.sizeOfFieldInSpace(vector.field, space), ' * _', vector.id, '_ncomponents'])
+  
+  def sizeOfVectorInSpaceInReals(self, vector, space):
+    if vector.type == 'double':
+      return self.sizeOfVectorInSpace(vector, space)
+    else:
+      return '2 * ' + self.sizeOfVectorInSpace(vector, space)
+  
+  def allocSizeOfVector(self, vector):
+    return ''.join([self.allocSizeOfField(vector.field), ' * _', vector.id, '_ncomponents'])
+  
+  def allocSizeOfField(self, field):
+    return self._driver.allocSizeOfField(field)
+  
+  def sizeOfVector(self, vector):
+    return self._driver.sizeOfVector(vector)
+  
+  def sizeOfFieldInSpace(self, field, space):
+    """Return a name of a variable the value of which is the size of `field` in `space`."""
+    return self._driver.sizeOfFieldInSpace(field, space)
   
