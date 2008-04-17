@@ -24,7 +24,7 @@ class _Stochastic (_Feature):
     return self.noises
   
   def integratorNeedsNoises(self, integrator):
-    for deltaAOperator in [oc.deltaAOperator for oc in integrator.operatorContainers]:
+    for deltaAOperator in [oc.deltaAOperator for oc in integrator.operatorContainers if oc.deltaAOperator]:
       if deltaAOperator.hasattr('noises'):
         if deltaAOperator.noises:
           return True
