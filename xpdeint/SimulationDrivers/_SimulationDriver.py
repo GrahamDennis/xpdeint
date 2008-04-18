@@ -21,6 +21,11 @@ class _SimulationDriver (ScriptElement):
     self.distributedDimensionNames = []
   
   def mayHaveLocalOffsetForDimensionInFieldInSpace(self, dimension, field, space):
+    """
+    Returns `True` if `dimension` could have a local offset.
+    
+    This should only be true for dimensions that are distributed with MPI.
+    """
     return False
   
   def localOffsetForDimensionInFieldInSpace(self, dimension, field, space):
@@ -34,6 +39,10 @@ class _SimulationDriver (ScriptElement):
     return self.allocSizeOfField(field)
   
   def allocSizeOfField(self, field):
+    """
+    Return a name of a variable to be used as the number of lattice points for `field`
+    to be used when allocating vectors in `field`.
+    """
     return ''.join(['_', field.name, '_size'])
   
   def sizeOfVector(self, vector):
