@@ -26,6 +26,14 @@ class _ScriptElement (Template):
   
   @classmethod
   def resetGuards(cls):
+    """
+    Reset the flags used by the `CallOnceGuards` function decorators to ensure that
+    various functions are only called once.
+    
+    Calling these functions causes all of these flags to be reset to `False` causing
+    the functions protected by the `CallOnceGuards` function decorators to be able
+    to be called again.
+    """
     _ScriptElement._callOnceGuards.clear()
     for instanceGuardSet in _ScriptElement._callOncePerInstanceGuards.itervalues():
       instanceGuardSet.clear()
@@ -34,6 +42,10 @@ class _ScriptElement (Template):
   
   @property
   def _driver(self):
+    """
+    Return the simulation driver, but cache the result in a variable shared between
+    all `_ScriptElement` instances.
+    """
     if not _ScriptElement.__driver:
       _ScriptElement.__driver = self.getVar('features')['Driver']
     return _ScriptElement.__driver
@@ -83,6 +95,13 @@ class _ScriptElement (Template):
   
   @property
   def parent(self):
+    """
+    Return the parent template of this template. Note that the return value may be `None`.
+    
+    The parent of the template is defined as the template that has this template as a member
+    of the `children` attribute of that instance. Should multiple templates meet this requirement
+    an exception will be raised.
+    """
     if self._parent:
       return self._parent
     
@@ -99,6 +118,12 @@ class _ScriptElement (Template):
   
   @property
   def id(self):
+    """
+    Return a string that should uniquely identify this object.
+    
+    The string returned will be appropriate for use as a `C` variable name and
+    will begin with and underscore.
+    """
     result = []
     currentObject = self
     while currentObject:
@@ -109,6 +134,15 @@ class _ScriptElement (Template):
     return '_'.join(result)
   
   def _getPropagationDimension(self):
+    """
+    Return the name of the current propagation dimension for this template. Note that this
+    does not need to be the same as the propagation dimension for the entire simulation because
+    cross-propagation works by using a standard integrator, but by setting a different propagation
+    dimension.
+    
+    This function is used in the creation of the `propagationDimension` property.
+    """
+    
     if self._propagationDimension:
       return self._propagationDimension
     
@@ -124,13 +158,22 @@ class _ScriptElement (Template):
   del _getPropagationDimension, _setPropagationDimension
   
   def _getPropagationDirection(self):
+    """
+    Return a string representing the sign of the direction of propagation. This string will
+    either be '+' or '-'. Note that usually this will be '+', however it will be '-' for
+    cross-propagators that have a 'right' boundary condition.
+    
+    This method is used in the creation of the `propagationDirection` property.
+    """
     if self._propagationDirection:
       return self._propagationDirection
     
     if self.parent:
-      return self.parent.propagationDirection
+      self._propagationDirection = self.parent.propagationDirection
+    else:
+      self._propagationDirection = '+'
     
-    return '+'
+    return self._propagationDirection
   
   def _setPropagationDirection(self, value):
     self._propagationDirection = value
@@ -139,6 +182,12 @@ class _ScriptElement (Template):
   del _getPropagationDirection, _setPropagationDirection
   
   def hasattr(self, attrName):
+    """
+    Helper method to return whether or not the instance has the attribute `attrName`.
+    The difference between this method and the Python `hasattr` function is that this one
+    will raise an exception if the attribute `attrName` does exist but accessing it would
+    cause an exception to be raised.
+    """
     try:
       getattr(self, attrName)
     except AttributeError, err:
@@ -149,7 +198,13 @@ class _ScriptElement (Template):
       return True
   
   def valueForKeyPath(self, keyPath):
-    """Return the value for a dotted-name lookup of `keyPath` anchored at `self`."""
+    """
+    Return the value for a dotted-name lookup of `keyPath` antichored at `self`.
+    
+    This is similar to the KVC methods in Objective-C, however its use is appropriate in Python.
+    Evaluating the `keyPath` 'foo.bar.baz' returns the object that would be returned by evaluating
+    the string (in Python) self.foo.bar.baz
+    """
     attrNames = keyPath.split('.')
     try:
       currentObject = self
@@ -218,6 +273,25 @@ class _ScriptElement (Template):
   
   # Insert code for a list of features by calling a named function
   def insertCodeForFeatures(self, functionName, featureList, dict = None, reverse = False):
+    """
+    This function is at the core of the 'Feature' system used by xpdeint. Its design is kinda
+    like aspect-oriented programming in that the idea is to separate code that is logically separate
+    but required in a large number of places. The idea behind this system is the creation of a 
+    number of named 'insertion points' in the generated C++ code where features can insert code
+    if they need to. Usually these insertion points come in pairs called 'someFunctionNameBegin'
+    and 'someFunctionNameEnd' that are at balanced points in the code.
+    
+    The 'Feature' system diverges from the usual Aspect-Oriented programming approach in that when
+    you specify the insertion point, you also specify the features that you want to be able to insert
+    code at that point and the order in which they should be able to insert code. This allows for a
+    sensible balancing of the inserted code such that when code from multiple features is inserted
+    at a 'someFunctionBegin' insertion point, by calling the `insertCodeForFeaturesInReverseOrder`
+    method at the 'someFunctionEnd' insertion point, the code necessary for these features at this
+    insertion point is inserted in the opposite order than for 'someFunctionBegin'.
+    
+    The optional `dict` argument can be used to pass additional variables to the features. The 
+    `reverse` argument should not be used, it is used internally by `insertCodeForFeaturesInReverseOrder`.
+    """
     featureDictionary = self.getVar('features')
     
     if not dict:
@@ -274,8 +348,8 @@ class _ScriptElement (Template):
     
     return self.insertCodeForFeatures(functionName, reversedFeatureList, dict, reverse=True)
   
-  # Is the dimension in fourier space?
   def dimensionIsInFourierSpace(self, dimension, space):
+    """Return `True` if `dimension` is in fourier space in `space`."""
     geometryDimensionNumber = self.getVar('geometry').indexOfDimension(dimension)
     if space & (1 << geometryDimensionNumber):
       # This dimension is in fourier space
@@ -286,6 +360,11 @@ class _ScriptElement (Template):
   
   # Return the name of the dimension considering the current space
   def dimensionNameForSpace(self, dimension, space):
+    """
+    Return the name for `dimension` in `space`. If the dimension is in fourier
+    space, then the dimension name is kDimensionName if the dimension's normal name
+    is 'DimensionName'.
+    """
     if self.dimensionIsInFourierSpace(dimension, space):
       return 'k' + dimension.name
     else:
@@ -293,6 +372,10 @@ class _ScriptElement (Template):
   
   # Insert contents of function for self, classes and children
   def implementationsForFunctionName(self, functionName, *args, **KWs):
+    """
+    Helper function to call the function `functionName` for this instance, its
+    class and its children and return the combined result as a string.
+    """
     result = []
     blankLineSeparator = ''
     staticFunctionName = 'static_' + functionName
@@ -332,12 +415,26 @@ class _ScriptElement (Template):
     return ''.join(result)
   
   def bindNamedVectors(self):
+    """
+    Part of the 'preflight' system. Once templates have been parsed, a template should
+    implement this method if it needs to bind the name of a vector to the actual vector
+    object itself and check if it even exists.
+    """
     pass
   
   def preflight(self):
+    """
+    Part of the 'preflight' system. This function is guaranteed to be called after `bindNamedVectors`
+    has been called on all templates. This is where other post-parsing code goes before the simulation
+    is converted to a C++ source file.
+    """
     pass
   
   def vectorsFromEntity(self, entity):
+    """
+    Given the `ParsedEntity` `entity`, return the set of vectors corresponding to the list of names
+    in the value of the XML element contained by the entity.
+    """
     vectors = set()
     vectorDictionary = dict([(vector.name, vector) for vector in self.getVar('vectors')])
     
@@ -374,6 +471,10 @@ class _ScriptElement (Template):
   
   
   def remove(self):
+    """
+    Remove the template from various global lists that it may have got itself into. This method
+    should be called if a template is no longer needed and should be deleted.
+    """
     self.getVar('templates').discard(self)
     scriptElements = self.getVar('scriptElements')
     
@@ -384,6 +485,16 @@ class _ScriptElement (Template):
     
   
   def fixupComponentsWithIntegerValuedDimensions(self, vectors, code):
+    """
+    In user code, the user may refer to parts of a vector nonlocally in integer-valued dimensions.
+    This code translates variables accessed with the ``phi[j-3, k+5, l/2][p*p, q, r]`` notation to a form
+    that can be used in the C++ source file. The form currently used is ``_phi(j-3, k+5, l/2, p*p, q, r)``
+    and this is defined as a macro by the appropriate `ScriptElement` looping function.
+    
+    This function makes an optimisation where if all integer-valued dimensions are accessed locally,
+    the ``phi[j, k, l][p, q, r]`` notation is replaced with the string ``phi`` which is a faster
+    way of accessing the local value than through using the ``_phi(...)`` macro.
+    """
     if self.getVar('geometry').integerValuedDimensions:
       components = set()
       
@@ -455,6 +566,10 @@ class _ScriptElement (Template):
     return code
   
   def templateObjectFromStringWithTemplateVariables(self, templateString, templateVars):
+    """
+    Return a Cheetah template object (using the appropriate settings) for `templateString`
+    with the dictionary `templateVars` as variables available in the template.
+    """
     settings = {'directiveStartToken': '@',
                 'commentStartToken': '@#',
                 'multiLineCommentStartToken': '@*',
@@ -518,12 +633,20 @@ class _ScriptElement (Template):
     return orderedDependenciesForVectors(computedVectors)
   
   def computedVectorsNeedingPrecalculationForOperatorContainers(self, operatorContainers):
+    """
+    Return a set of computed vectors that `operatorContainers` need to be precomputed
+    before executing the operator containers.
+    """
     result = set()
     for operatorContainer in operatorContainers:
       result.update(operatorContainer.computedVectorsNeedingPrecalculation)
     return result
   
   def mayHaveLocalOffsetForDimensionInFieldInSpace(self, field, dimension, space):
+    """
+    Return `True` if this dimension may have a local offset. This should only be true
+    when `dimension` is being distributed with MPI.
+    """
     return self._driver.mayHaveLocalOffsetForDimensionInFieldInSpace(field, dimension, space)
   
   def localOffsetForDimensionInFieldInSpace(self, field, dimension, space):
