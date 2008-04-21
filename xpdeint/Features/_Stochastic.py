@@ -94,11 +94,10 @@ class _Stochastic (_Feature):
       
       # The field in which the noises need to be evaluated will be the object's 'noiseField'
       # attribute if it exists, otherwise, we'll use the 'field' attribute.
-      noiseField = None
-      if o.hasattr('noiseField'):
-        noiseField = o.noiseField
-      else:
-        noiseField = o.field
+      
+      # The noiseField attribute is needed by ComputedVectors because they may exist in one field
+      # but may be constructed from a larger field and so need the noise in that larger field.
+      noiseField = o.noiseField
       
       if not noiseField in fieldToNoisesMap:
         fieldToNoisesMap[noiseField] = set()
@@ -122,7 +121,7 @@ class _Stochastic (_Feature):
     for o in objectsThatMightUseNoises:
       # Add to the dependencies for this object the noise vectors corresponding to the noises
       # that this object wants to use
-      o.dependencies.update([noise.noiseVectorForField(noiseField) for noise in o.noises])
+      o.dependencies.update([noise.noiseVectorForField(o.noiseField) for noise in o.noises])
     
     
     # For each adaptive step integrator, we need to make sure that the noises being used are

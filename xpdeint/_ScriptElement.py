@@ -133,6 +133,14 @@ class _ScriptElement (Template):
     result.reverse()
     return '_'.join(result)
   
+  @property
+  def noiseField(self):
+    """
+    The field that noises should be evaluated in for this object.
+    This defaults to `field`, but can be overridden by subclasses.
+    """
+    return self.field
+  
   def _getPropagationDimension(self):
     """
     Return the name of the current propagation dimension for this template. Note that this
