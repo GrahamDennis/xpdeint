@@ -54,7 +54,7 @@ void _${id}_evaluate()
   
   @end if
   @#
-  ${transformVectorsToSpace($dependencies, $initialSpace), autoIndent=True}@slurp
+  ${transformVectorsToSpace($dependencies, $evaluationSpace), autoIndent=True}@slurp
   
   @set $setOfVectorsToLoopOver = $dependencies.copy()
   @silent $setOfVectorsToLoopOver.add(self)
