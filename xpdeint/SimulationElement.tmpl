@@ -29,7 +29,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 
   @set $featureOrdering = ['Driver']
 #define _LOG(logLevel, ...) \
-  do { \
+  ({ \
     if (logLevel & _LOG_LEVELS_BEING_LOGGED) { \
   @set $dict = {'extraIndent': 0}
       ${insertCodeForFeatures('logFunctionBegin', $featureOrdering, $dict), autoIndent=True}@slurp
@@ -39,7 +39,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
       if (logLevel & _ERROR_LOG_LEVEL) \
         exit(1); \
     } \
-  } while (0)
+  })
 
 #ifndef INFINITY
 #define INFINITY HUGE_VAL
@@ -49,6 +49,11 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 #ifndef isfinite
 #define isfinite(x) ((x) - (x) == 0)
 #endif
+
+#define MAX(a, b) \
+  ({ typeof(a) _a = (a); \
+     typeof(b) _b = (b); \
+     _a > _b ? _a : _b; })
 
   @#
 @end def
