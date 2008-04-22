@@ -385,28 +385,6 @@ ${incrementIndexPointersForVectorsWithFieldAndSpaceAndLastLoopDimension($vectors
 ${closeLoopForDimensionInFieldInSpace($dimension, $field, $space, $kspaceAscendingOrder), extraIndent=$indentLevel}@slurp
     @end if
     @#
-    @# Write any code for multiplying any integrated vectors by the
-    @# appropriate volume element.
-    @#
-    @for $vector in $vectorOverrides
-      @# Determine which dimensions are being integrated over (if any)
-      @# These are the ones that are in $field, but not in the vector's field
-      @set $dimensionsIntegratedOver = filter(lambda x: not vector.field.hasDimension(x), $field.dimensions)
-      @if not $dimensionsIntegratedOver
-        @continue
-      @end if
-      @#
-      @# Loop over the components in each vector
-      @for $componentNumber, $componentName in enumerate($vector.components)
-        @set $volumeElements = []
-        @for $dimension in $dimensionsIntegratedOver
-          @silent volumeElements.append(c'_${field.name}_d${dimensionNameForSpace($dimension, $space)}')
-        @end for
-_active_${vector.id}[_${vector.id}_index_pointer + ${componentNumber}] *= ${' * '.join(volumeElements)};
-      @end for
-
-    @end for
-    @#
     @if $dimension.name in $postDimensionLoopClosingCode
 ${postDimensionLoopClosingCode[$dimension.name], extraIndent=$indentLevel}@slurp
     @end if
@@ -603,7 +581,12 @@ _${vector.id}_index_pointer = ( 0@slurp
     @#
     @# Loop over the components in each vector
     @for $componentNumber, $componentName in enumerate($vector.components)
-_active_${vector.id}[_${vector.id}_index_pointer + ${componentNumber}] += ${componentName};
+_active_${vector.id}[_${vector.id}_index_pointer + ${componentNumber}] += ${componentName}@slurp
+      @# Loop over the dimensions
+      @for $dimension in $dimensionsIntegratedOver
+ * _${field.name}_d${dimensionNameForSpace(dimension, space)}@slurp
+      @end for
+;
     @end for
   @end for
   @#
