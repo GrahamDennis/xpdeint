@@ -94,18 +94,20 @@ if (_rank == 0) {
   @set $dict['extraIndent'] -= 2
   @#
 }
-  @set $distributedDimensionNamesInUse = [dimName for dimName in $distributedDimensionNames if field.hasDimensionName(dimName)]
-  @if not $distributedDimensionNamesInUse
+  @if not all([field.hasDimensionName(dimName) for dimName in $distributedDimensionNames])
+    @# If we don't have all the MPI dimensions, then the data will be local.
     @stop
   @end if
 else {
   // We are some other rank that isn't 0, so we need to send our data to rank 0.
-  @for $mpiDimensionName in $distributedDimensionNames
-  MPI_Ssend(&_${field.name}_local_lattice_${mpiDimensionName}, sizeof(ptrdiff_t), MPI_BYTE, 0, 0, MPI_COMM_WORLD);
-  MPI_Ssend(&_${field.name}_local_offset_${mpiDimensionName}, sizeof(ptrdiff_t), MPI_BYTE, 0, 0, MPI_COMM_WORLD);
+  ptrdiff_t _sending_var;
+  
+  @for $suffix in $geometryVariableSuffixesToBeShadowed
+  _sending_var = _${field.name}${suffix};
+  MPI_Ssend(&_sending_var, sizeof(ptrdiff_t), MPI_BYTE, 0, 0, MPI_COMM_WORLD);
   @end for
-  ptrdiff_t _local_field_size = ${sizeOfFieldInSpace(field, space)};
-  MPI_Ssend(&_local_field_size, sizeof(ptrdiff_t), MPI_BYTE, 0, 0, MPI_COMM_WORLD);
+  _sending_var = ${sizeOfFieldInSpace(field, space)};
+  MPI_Ssend(&_sending_var, sizeof(ptrdiff_t), MPI_BYTE, 0, 0, MPI_COMM_WORLD);
   
   @# Note that a variable corresponds to an array with given component names
   @for $variable in $dependentVariables
@@ -123,14 +125,13 @@ MPI_Barrier(MPI_COMM_WORLD);
   @set $space = dict['space']
   @set $dependentVariables = dict['dependentVariables']
   @#
-  @set $distributedDimensionNamesInUse = [dimName for dimName in $distributedDimensionNames if field.hasDimensionName(dimName)]
-  @if not $distributedDimensionNamesInUse
+  @if not all([field.hasDimensionName(dimName) for dimName in $distributedDimensionNames])
+    @# If we don't have all the MPI dimensions, then the data will be local.
     @return ''
   @end if
   @#
-  @for $mpiDimensionName in $distributedDimensionNamesInUse
-ptrdiff_t _my_${field.name}_local_lattice_${mpiDimensionName} = _${field.name}_local_lattice_${mpiDimensionName};
-ptrdiff_t _my_${field.name}_local_offset_${mpiDimensionName} = _${field.name}_local_offset_${mpiDimensionName};
+  @for $suffix in $geometryVariableSuffixesToBeShadowed
+ptrdiff_t _my_${field.name}${suffix} = _${field.name}${suffix};
   @end for
   @#
 
@@ -140,23 +141,20 @@ ${variable.vector.type}* _backup${variable.arrayName} = ${variable.arrayName};
 @end for
 
 for (long _dataForRank = 0; _dataForRank < _size; _dataForRank++) {
-  @for $mpiDimensionName in $distributedDimensionNamesInUse
-  ptrdiff_t _${field.name}_local_lattice_${mpiDimensionName};
-  ptrdiff_t _${field.name}_local_offset_${mpiDimensionName};
+  @for $suffix in $geometryVariableSuffixesToBeShadowed
+  ptrdiff_t _${field.name}${suffix};
   @end for
   ptrdiff_t _local_field_size;
   
   if (_dataForRank == 0) {
-  @for $mpiDimensionName in $distributedDimensionNamesInUse
-    _${field.name}_local_lattice_${mpiDimensionName} = _my_${field.name}_local_lattice_${mpiDimensionName};
-    _${field.name}_local_offset_${mpiDimensionName} = _my_${field.name}_local_offset_${mpiDimensionName};
+  @for $suffix in $geometryVariableSuffixesToBeShadowed
+    _${field.name}${suffix} = _my_${field.name}${suffix};
   @end for
   
   } else {
     MPI_Status status;
-  @for $mpiDimensionName in $distributedDimensionNamesInUse
-    MPI_Recv(&_${field.name}_local_lattice_${mpiDimensionName}, sizeof(ptrdiff_t), MPI_BYTE, _dataForRank, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-    MPI_Recv(&_${field.name}_local_offset_${mpiDimensionName}, sizeof(ptrdiff_t), MPI_BYTE, _dataForRank, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+  @for $suffix in $geometryVariableSuffixesToBeShadowed
+    MPI_Recv(&_${field.name}${suffix}, sizeof(ptrdiff_t), MPI_BYTE, _dataForRank, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
   @end for
     MPI_Recv(&_local_field_size, sizeof(ptrdiff_t), MPI_BYTE, _dataForRank, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
     

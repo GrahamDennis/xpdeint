@@ -20,6 +20,10 @@ class _IntegerDistributedMPIDriver (DistributedMPIDriver):
     assert isinstance(self.mpiDimension, xpdeint.Geometry.IntegerDimension.IntegerDimension)
     self.distributedDimensionNames.append(self.mpiDimension.name)
   
+  @property
+  def geometryVariableSuffixesToBeShadowed(self):
+    return ['_local_lattice_' + self.mpiDimension.name, '_local_offset_' + self.mpiDimension.name]
+  
   def mpiDimensionForSpace(self, space):
     return self.mpiDimension
   
