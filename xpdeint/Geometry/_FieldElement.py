@@ -189,7 +189,8 @@ class _FieldElement (ScriptElement):
     return self.implementationsForChildren('free')
   
   def volumeElementInSpace(self, space):
-    assert len(filter(lambda x: x.fourier, self.dimensions)) > 0
+    if not any([d.fourier for d in self.dimensions]):
+      return '1.0'
     result = []
     separator = ''
     result.append('(')
