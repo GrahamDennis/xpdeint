@@ -82,9 +82,8 @@ class IndentFilter(Filter):
       # Strip the leading whitespace
       for line in lines:
         newLine = None
-        if not line.startswith(indentation):
-          # If the line doesn't start with this amount of indentation, then
-          # just add an empty line
+        if line.isspace():
+          # If the line is empty, just add an empty line
           newLine = '\n'
         else:
           newLine = line[indentationLevel:]
