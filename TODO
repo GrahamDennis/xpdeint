@@ -70,6 +70,8 @@
   delegate initialisation to a VectorInitialisation instance.
   The point of this is to make the output format of a breakpoint independent of the output format for the whole simulation.
 
+* Fix XSIL import to not depend on libxmds, or do something equivalent.
+
 * Write some automated tests. The idea would be that you would execute this and a selected set of simulation scripts would be compiled, executed, and
   their results checked against previous results (with a tolerance). This would be in addition to making sure that all the example scripts compile.
 
