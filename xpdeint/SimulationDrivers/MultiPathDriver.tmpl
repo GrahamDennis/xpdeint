@@ -117,7 +117,7 @@ The return value is the template string that will be
   @# 
   @# First we need to modify the variable names that will be written, and add our own.
   @# We need to change all processed vector components from 'someName' to 'mean_someName'
-  @# and add a variable called 'sd_someName'
+  @# and add a variable called 'stderr_someName'
   @#
   @set $processedVector = $momentGroup.processedVector
   @set $otherArrayNames = set([variable['arrayName'] for variable in $dependentVariables[1:]])
@@ -128,7 +128,7 @@ The return value is the template string that will be
   @#
   @set $newVariableDict = {'vector': processedVector,
                            'arrayName': c'_${fieldName}_sd',
-                           'components': ['sd_' + componentName for componentName in processedVector.components]
+                           'components': ['stderr_' + componentName for componentName in processedVector.components]
                           }
   @silent dependentVariables.append(newVariableDict)
   @#
