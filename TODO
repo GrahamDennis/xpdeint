@@ -77,3 +77,7 @@
 
 * It is quite possible that the dimension coordinate variables when looping over a dimension with fewer points than the geometry in k-space will not
   be correct. This needs to be checked, and fixed if necessary.
+
+* Add a 'moment group 0' which contains simulation constants. This moment group would be zero-d and would contain various constants depending on the
+  exact simulation. Constants that should be included are: the final value of the propagation dimension, any passed-in arguments, the number of paths
+  (if appropriate), and anything else appropriate.
