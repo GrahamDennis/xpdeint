@@ -6,6 +6,12 @@
     Example Kubo oscillator simulation
   </description>
   
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+  </geometry>
+  
+  <driver name="mpi-multi-path" paths="102400" />
+  
   <features>
     <benchmark />
     <!-- <error_check /> -->
@@ -18,10 +24,6 @@
     </stochastic>
   </features>
   
-  <geometry>
-    <propagation_dimension> t </propagation_dimension>
-  </geometry>
-  
   <vector name="main" type="complex">
     <components>
       z
@@ -33,7 +35,7 @@
     </initialisation>
   </vector>
   
-  <sequence driver="mpi-multi-path" paths="102400">
+  <sequence>
     <integrate algorithm="RK9" interval="10" steps="1000" tolerance="1e-8">
       <samples>100</samples>
       <operators noises="n">
