@@ -121,9 +121,11 @@ class XMDS2Parser(ScriptParser):
     
     simulationElementTemplate = SimulationElementTemplate(**self.argumentsToTemplateConstructors)
     
-    self.parseFeatures(simulationElement)
-    
     self.parseGeometryElement(simulationElement)
+    
+    self.parseDriverElement(simulationElement)
+    
+    self.parseFeatures(simulationElement)
     
     self.parseVectorElements(simulationElement)
     
@@ -143,6 +145,66 @@ class XMDS2Parser(ScriptParser):
     else:
       return None
     
+  
+  def parseDriverElement(self, simulationElement):
+    driverClass = DefaultDriverTemplate
+    
+    driverAttributeDictionary = dict()
+    
+    driverElement = simulationElement.getChildElementByTagName('driver', optional=True)
+    if driverElement:
+    
+      driverName = driverElement.getAttribute('name').strip().lower()
+    
+      class UnknownDriverException(Exception):
+        pass
+    
+      try:
+        if 'multi-path' in driverName:
+          if driverName == 'multi-path':
+            driverClass = MultiPathDriverTemplate
+          elif driverName == 'mpi-multi-path':
+            driverClass = MPIMultiPathDriverTemplate
+          else:
+            raise UnknownDriverException()
+        
+          if not driverElement.hasAttribute('paths'):
+            raise ParserException(driverElement, "Missing 'paths' attribute for multi-path driver.")
+          pathCount = RegularExpressionStrings.integerInString(driverElement.getAttribute('paths'))
+          driverAttributeDictionary['pathCount'] = pathCount
+        elif driverName == 'none':
+          pass
+        elif driverName == 'distributed-mpi':
+          transverseDimensions = filter(lambda x: x.transverse, self.globalNameSpace['geometry'].dimensions)
+          if not transverseDimensions:
+            raise ParserException(driverElement, "The distributed-mpi driver requires transverse dimensions to be able to be used.")
+          if transverseDimensions[0].type == 'long':
+            driverClass = IntegerDistributedMPIDriverTemplate
+          else:
+            raise ParserException(driverElement, "Currently the distributed-mpi driver only supports distributed integer-valued dimensions.")
+        else:
+          raise UnknownDriverException()
+      except UnknownDriverException, err:
+        raise ParserException(driverElement, "Unknown driver type '%(driverName)s'. "
+                                             "The options are 'none' (default), 'multi-path', 'mpi-multi-path' or 'distributed-mpi'." % locals())
+    
+      if driverClass == MultiPathDriverTemplate:
+        kindString = None
+        if driverElement.hasAttribute('kind'):
+          kindString = driverElement.getAttribute('kind').strip().lower()
+        if kindString in (None, 'single'):
+          pass
+        elif kindString == 'mpi':
+          driverClass = MPIMultiPathDriverTemplate
+        else:
+          raise ParserException(driverElement,
+                                "Unknown multi-path kind '%(kindString)s'. "
+                                "The options are 'single' (default), or 'mpi'." % locals())
+    
+    simulationDriver = driverClass(**self.argumentsToTemplateConstructors)
+    self.applyAttributeDictionaryToObject(driverAttributeDictionary, simulationDriver)
+    return simulationDriver
+  
   
   def parseFeatures(self, simulationElement):
     featuresParentElement = simulationElement.getChildElementByTagName('features', optional=True)
@@ -888,68 +950,9 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
   def parseTopLevelSequenceElement(self, simulationElement):
     topLevelSequenceElement = simulationElement.getChildElementByTagName('sequence')
     
-    driverClass = DefaultDriverTemplate
-    
-    driverAttributeDictionary = dict()
-    
-    if topLevelSequenceElement.hasAttribute('driver'):
-      driverName = topLevelSequenceElement.getAttribute('driver').strip().lower()
-      
-      class UnknownDriverException(Exception):
-        pass
-      
-      try:
-        if 'multi-path' in driverName:
-          if driverName == 'multi-path':
-            driverClass = MultiPathDriverTemplate
-          elif driverName == 'mpi-multi-path':
-            driverClass = MPIMultiPathDriverTemplate
-          else:
-            raise UnknownDriverException()
-          
-          if not topLevelSequenceElement.hasAttribute('paths'):
-            raise ParserException(topLevelSequenceElement, "Missing 'paths' attribute for multi-path driver.")
-          pathCount = RegularExpressionStrings.integerInString(topLevelSequenceElement.getAttribute('paths'))
-          driverAttributeDictionary['pathCount'] = pathCount
-        elif driverName == 'none':
-          pass
-        elif driverName == 'distributed-mpi':
-          transverseDimensions = filter(lambda x: x.transverse, self.globalNameSpace['geometry'].dimensions)
-          if not transverseDimensions:
-            raise ParserException(simulationElement, "The distributed-mpi driver requires transverse dimensions to be able to be used.")
-          if transverseDimensions[0].type == 'long':
-            driverClass = IntegerDistributedMPIDriverTemplate
-          else:
-            raise ParserException(simulationElement, "Currently the distributed-mpi driver only supports distributed integer-valued dimensions.")
-        else:
-          raise UnknownDriverException()
-      except UnknownDriverException, err:
-        raise ParserException(topLevelSequenceElement, "Unknown driver type '%(driverName)s'. "
-                                                       "The options are 'none' (default), 'multi-path', 'mpi-multi-path' or 'distributed-mpi'." % locals())
-      
-      if driverClass == MultiPathDriverTemplate:
-        kindString = None
-        if topLevelSequenceElement.hasAttribute('kind'):
-          kindString = topLevelSequenceElement.getAttribute('kind').strip().lower()
-        if kindString in (None, 'single'):
-          pass
-        elif kindString == 'mpi':
-          driverClass = MPIMultiPathDriverTemplate
-        else:
-          raise ParserException(topLevelSequenceElement,
-                                "Unknown multi-path kind '%(kindString)s'. "
-                                "The options are 'single' (default), or 'mpi'." % locals())
-    
-    
-    
-    simulationDriver = driverClass(**self.argumentsToTemplateConstructors)
-    self.applyAttributeDictionaryToObject(driverAttributeDictionary, simulationDriver)
-    
     topLevelSequenceElementTemplate = TopLevelSequenceElementTemplate(**self.argumentsToTemplateConstructors)
     
     self.parseSequenceElement(topLevelSequenceElement, topLevelSequenceElementTemplate)
-    
-    return simulationDriver
   
   def parseSequenceElement(self, sequenceElement, sequenceTemplate):
     if sequenceElement.hasAttribute('cycles'):
@@ -1699,7 +1702,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
         for operatorElement in operatorElements:
           kindString = operatorElement.getAttribute('kind').strip().lower()
           if not kindString in ('functions'): # FIXME: EX would be good here too, but we would need to work out the field...
-            raise ParserException(operatorElement, "Unrecognised operator kind '%(kindString)s'."
+            raise ParserException(operatorElement, "Unrecognised operator kind '%(kindString)s'. "
                                                    "The only valid operator kind in sampling elements is 'functions' (at the moment)." % locals())
           operatorTemplate = self.parseOperatorElement(operatorElement, operatorContainer)
       

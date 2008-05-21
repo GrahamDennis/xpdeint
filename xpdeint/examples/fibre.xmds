@@ -6,6 +6,15 @@
     Example fibre noise simulation
   </description>
   
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="x" lattice="64"  domain="(-5, 5)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <driver name="mpi-multi-path" paths="50" />
+  
   <features>
     <auto_vectorise />
     <benchmark />
@@ -25,13 +34,6 @@
     </globals>
   </features>
   
-  <geometry>
-    <propagation_dimension> t </propagation_dimension>
-    <transverse_dimensions>
-      <dimension name="x" lattice="64"  domain="(-5, 5)" />
-    </transverse_dimensions>
-  </geometry>
-  
   <vector name="main" initial_space="x" type="complex">
     <components>phi</components>
     <initialisation no_noises="true">
@@ -41,7 +43,7 @@
     </initialisation>
   </vector>
   
-  <sequence driver="mpi-multi-path" paths="50">
+  <sequence>
     <integrate algorithm="SI" iterations="3" interval="2.5" steps="200000" tolerance="1e-6">
       <samples>50</samples>
       <operators>
