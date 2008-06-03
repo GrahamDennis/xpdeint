@@ -453,14 +453,29 @@ class _ScriptElement (Template):
       currObject = currObject.parent
     
     for vectorName in entity.value:
-      if not vectorName in vectorDictionary:
+      vector = None
+      if self.parent:
+        vector = self.parent.vectorForVectorName(vectorName, vectorDictionary)
+      
+      if vector:
+        pass
+      elif not vectorName in vectorDictionary:
         raise ParserException(entity.xmlElement, "Unknown vector '%(vectorName)s'." % locals())
-      vector = vectorDictionary[vectorName]
+      else:
+        vector = vectorDictionary[vectorName]
+      
       if not (vector.parent == vector.field or vector.parent in ancestors):
         raise ParserException(entity.xmlElement, "Cannot access vector '%(vectorName)s' here. It is not available in this scope." % locals())
       vectors.add(vector)
     return vectors
-    
+  
+  def vectorForVectorName(self, vectorName, vectorDictionary):
+    """
+    Function that can be used by a template to override the mapping of vector names to vectors for children
+    """
+    if self.parent:
+      return self.parent.vectorForVectorName(vectorName, vectorDictionary)
+  
   
   def transformVectorsToSpace(self, vectors, space):
     """Transform vectors `vectors` to space `space`."""

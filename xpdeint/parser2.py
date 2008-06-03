@@ -325,7 +325,7 @@ def main(argv=None):
     simulationTemplate = SimulationTemplate(searchList=[globalNameSpace], filter=filterClass)
     # Now get the parser to do the complex job of mapping the XML classes onto our
     # templates.
-    simulationTemplate.simulation = parser.parseXMLDocument(xmlDocument, globalNameSpace, filterClass)
+    parser.parseXMLDocument(xmlDocument, globalNameSpace, filterClass)
     
     # Now run preflight stage
     # Preflight is the stage which maps vector names, etc to the actual vectors themselves. It also
@@ -334,11 +334,11 @@ def main(argv=None):
     #
     
     # Loop over a copy because we may create templates during iteration
-    for template in globalNameSpace['templates'].copy():
-      template.bindNamedVectors()
+    for template in globalNameSpace['scriptElements'][:]:
+      template.implementationsForFunctionName('bindNamedVectors')
     
-    for template in globalNameSpace['templates'].copy():
-      template.preflight()
+    for template in globalNameSpace['scriptElements'][:]:
+      template.implementationsForFunctionName('preflight')
     
     # Preflight is done
     

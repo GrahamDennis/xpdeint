@@ -122,6 +122,15 @@ class _CrossPropagationOperator (Operator):
     
     return reducedVector
   
+  def vectorForVectorName(self, vectorName, vectorDictionary):
+    """
+    This method allows us to override the mapping of vector names to vectors for our children.
+    This way we can replace the full vectors specified by the user with their reduced equivalents.
+    """
+    if not vectorName in vectorDictionary:
+      return self.parent.vectorForVectorName(vectorName, vectorDictionary)
+    return self.reducedDimensionVectorForVector(vectorDictionary[vectorName])
+  
   def bindNamedVectors(self):
     super(_CrossPropagationOperator, self).bindNamedVectors()
     

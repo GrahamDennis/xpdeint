@@ -121,11 +121,11 @@ class XMDS2Parser(ScriptParser):
     
     simulationElementTemplate = SimulationElementTemplate(**self.argumentsToTemplateConstructors)
     
+    self.parseFeatures(simulationElement)
+    
     self.parseGeometryElement(simulationElement)
     
     self.parseDriverElement(simulationElement)
-    
-    self.parseFeatures(simulationElement)
     
     self.parseVectorElements(simulationElement)
     
@@ -1503,16 +1503,11 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     crossIntegratorTemplate.intraStepOperatorContainers.append(operatorContainer)
     
     # Now we can construct the delta a operator for the cross-propagation integrator
-    deltaAOperatorTemplate = DeltaAOperatorTemplate(parent = operatorContainer,
-                                                    **self.argumentsToTemplateConstructors)
-    deltaAOperatorTemplate.xmlElement = operatorElement
-    deltaAOperatorTemplate.propagationCode = operatorElement.cdataContents()
-    
-    self.parseFeatureAttributes(operatorElement, deltaAOperatorTemplate)
+    # When we parse our operator elements (if we have any), the delta a operator will also be constructed
+    self.parseOperatorElements(operatorElement, operatorContainer, crossIntegratorTemplate)
     
     operatorTemplate.crossPropagationIntegrator = crossIntegratorTemplate
-    operatorTemplate.crossPropagationIntegratorDeltaAOperator = deltaAOperatorTemplate
-    
+    operatorTemplate.crossPropagationIntegratorDeltaAOperator = operatorContainer.deltaAOperator
   
   
   def parseOutputElement(self, simulationElement):
