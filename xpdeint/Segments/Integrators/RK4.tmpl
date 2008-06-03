@@ -8,6 +8,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 
 @def description: segment $segmentNumber (RK4 Integrator)
 @attr $ipPropagationStepFractions = ['0.5']
+@attr $nonconstantIPFields = 1
 @attr $extraIntegrationArrayNames = ['akfield', 'aifield']
 @attr $isCrossCapable = True
 
@@ -22,6 +23,8 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """// a_k = a
 _akfield_${vector.id}[$index] = _${vector.id}[$index];
 """)}@slurp
+
+_segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 1, 0);
 
 // a = D[a]
 _segment${segmentNumber}_ip_evolve(+1);
