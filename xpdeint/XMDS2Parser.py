@@ -44,7 +44,7 @@ from xpdeint.Operators.OperatorContainer import OperatorContainer as OperatorCon
 
 from xpdeint.Operators.DeltaAOperator import DeltaAOperator as DeltaAOperatorTemplate
 from xpdeint.Operators.ConstantIPOperator import ConstantIPOperator as ConstantIPOperatorTemplate
-from xpdeint.Operators.AdaptiveStepIPOperator import AdaptiveStepIPOperator as AdaptiveStepIPOperatorTemplate
+from xpdeint.Operators.NonConstantIPOperator import NonConstantIPOperator as NonConstantIPOperatorTemplate
 from xpdeint.Operators.ConstantEXOperator import ConstantEXOperator as ConstantEXOperatorTemplate
 from xpdeint.Operators.NonConstantEXOperator import NonConstantEXOperator as NonConstantEXOperatorTemplate
 from xpdeint.Operators.FilterOperator import FilterOperator as FilterOperatorTemplate
@@ -1272,18 +1272,18 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     operatorTemplateClass = None
     
     if kindString == 'ip':
-      if not constantString:
-        raise ParserException(operatorElement, "Missing 'constant' attribute.")
-        
-      if not constantString == 'yes':
-        raise ParserException(operatorElement, "There isn't a non-constant IP operator.")
-      
       integratorTemplate = operatorContainer.parent
       
-      if not isinstance(integratorTemplate, Integrators.AdaptiveStep.AdaptiveStep):
+      if isinstance(integratorTemplate, Integrators.FixedStep.FixedStep) and not constantString:
+        raise ParserException(operatorElement, "Missing 'constant' attribute.")
+      elif isinstance(integratorTemplate, Integrators.AdaptiveStep.AdaptiveStep):
+        operatorTemplateClass = NonConstantIPOperatorTemplate
+      elif constantString == 'yes':
         operatorTemplateClass = ConstantIPOperatorTemplate
+      elif constantString == 'no':
+        operatorTemplateClass = NonConstantIPOperatorTemplate
       else:
-        operatorTemplateClass = AdaptiveStepIPOperatorTemplate
+        raise ParserException(operatorElement, "The 'constant' attribute must be either 'yes' or 'no'.")
       
       parserMethod = self.parseIPOperatorElement
     elif kindString == 'ex':
@@ -1353,7 +1353,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     operatorContainer = operatorTemplate.parent
     integratorTemplate = operatorContainer.parent
     
-    if not isinstance(operatorTemplate, AdaptiveStepIPOperatorTemplate):
+    if not isinstance(operatorTemplate, NonConstantIPOperatorTemplate):
       operatorVectorTemplate.nComponents = len(integratorTemplate.ipPropagationStepFractions) * len(operatorNames)
     else:
       operatorVectorTemplate.nComponents = integratorTemplate.nonconstantIPFields * len(operatorNames)

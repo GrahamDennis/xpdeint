@@ -12,6 +12,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
     '0.477941176470588', '0.771575563871365', '0.456396464100663', '0.356643356643357',
     '0.517482517482518', '0.931818181818182', '0.749391727493917', '0.332632840343994',
     '0.144927536231884', '0.102040816326531' ]
+@attr $nonconstantIPFields = 1
 @attr $extraIntegrationArrayNames = \
   [ 'akafield', 'akbfield', 'akcfield', 'akdfield', 'akefield',
     'akffield', 'akgfield', 'akhfield', 'akifield', 'akjfield' ]
@@ -166,6 +167,8 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 _active_${vector.id} = _${vector.id};
   @end for
 
+_segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 1, 0);
+
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(+1);
 ${goToHomeSpace}@slurp
@@ -193,6 +196,8 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 _active_${vector.id} = _akbfield_${vector.id};
   @end for
 
+_segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 2, 0);
+
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(-2);
 
@@ -214,6 +219,8 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
   @for $vector in $integrationVectors
 _active_${vector.id} = _akcfield_${vector.id};
   @end for
+
+_segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 3, 0);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(-3);
@@ -237,6 +244,8 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
   @for $vector in $integrationVectors
 _active_${vector.id} = _akdfield_${vector.id};
   @end for
+
+_segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 4, 0);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(-4);
@@ -262,6 +271,8 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 _active_${vector.id} = _akefield_${vector.id};
   @end for
 
+_segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 5, 0);
+
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(-5);
 
@@ -284,6 +295,8 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
   @for $vector in $integrationVectors
 _active_${vector.id} = _akifield_${vector.id};
   @end for
+
+_segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 6, 0);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(-6);
@@ -309,6 +322,8 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 _active_${vector.id} = _akjfield_${vector.id};
   @end for
 
+_segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 7, 0);
+
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(-7);
 
@@ -331,6 +346,8 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
   @for $vector in $integrationVectors
 _active_${vector.id} = _akbfield_${vector.id};
   @end for
+
+_segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 8, 0);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(-8);
@@ -356,6 +373,8 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 _active_${vector.id} = _akcfield_${vector.id};
   @end for
 
+_segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 9, 0);
+
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(-9);
 
@@ -379,6 +398,8 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
   @for $vector in $integrationVectors
 _active_${vector.id} = _akdfield_${vector.id};
   @end for
+
+_segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 10, 0);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(-10);
@@ -405,6 +426,8 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 _active_${vector.id} = _akefield_${vector.id};
   @end for
 
+_segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 11, 0);
+
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(-11);
 
@@ -429,6 +452,8 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
   @for $vector in $integrationVectors
 _active_${vector.id} = _akffield_${vector.id};
   @end for
+
+_segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 12, 0);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(-12);
@@ -456,6 +481,8 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 _active_${vector.id} = _akgfield_${vector.id};
   @end for
 
+_segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 13, 0);
+
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(-13);
 
@@ -481,6 +508,8 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
   @for $vector in $integrationVectors
 _active_${vector.id} = _akhfield_${vector.id};
   @end for
+
+_segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 14, 0);
 
 // a_i = D(a_2*dt)[y1]
 _segment${segmentNumber}_ip_evolve(-14);

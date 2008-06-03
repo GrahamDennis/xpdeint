@@ -7,6 +7,8 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 @extends xpdeint.Segments.Integrators._Integrator
 @from xpdeint.CallOnceGuards import callOncePerInstanceGuard
 
+@from xpdeint.Operators.NonConstantIPOperator import NonConstantIPOperator
+
 @def description: segment $segmentNumber (Unnamed Integrator)
 
 @*
@@ -35,6 +37,7 @@ ${vector.type}* _${name}_${arrayName}_${vector.id};
 void _segment${segmentNumber}();
 inline void _segment${segmentNumber}_calculate_delta_a(double _step);
 inline void _segment${segmentNumber}_ip_evolve(int _exponent);
+inline void _segment${segmentNumber}_calculate_nonconstant_ip_fields(double _step, int _exponent, int _arrayIndex);
 
   @#
 @end def
@@ -53,6 +56,9 @@ ${ipEvolveFunctionImplementation}@slurp
   @#
 
 ${segmentFunctionImplementation}@slurp
+  @#
+
+${nonConstantIPFieldsFunctionImplementation}@slurp
   @#
 
   @#
@@ -136,6 +142,23 @@ ${evaluateComputedVectors($computedVectorsNeedingPrecalculationForOperatorContai
   
 ${operatorContainer.evaluateOperators}@slurp
   @end for
+  @#
+@end def
+
+
+@def nonConstantIPFieldsFunctionImplementation
+  @#
+inline void _segment${segmentNumber}_calculate_nonconstant_ip_fields(double _step, int _exponent, int _arrayIndex)
+{
+  @for operatorContainer in $operatorContainers
+    @for operator in operatorContainer.ipOperators
+      @if not isinstance(operator, NonConstantIPOperator)
+        @continue
+      @end if
+  _${operator.parent.id}_calculate_${operator.name}_field(_step, _exponent, _arrayIndex);
+    @end for
+  @end for
+}
   @#
 @end def
 
