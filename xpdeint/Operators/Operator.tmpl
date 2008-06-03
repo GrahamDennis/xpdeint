@@ -110,7 +110,7 @@ ${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $operatorSpace, 
   @# any dependencies, and the vector containing the result of this
   @# operator evaluation
   @#
-  @set $setOfVectorsToLoopOver = $dependencies.copy()
+  @set $setOfVectorsToLoopOver = set()
   @silent $setOfVectorsToLoopOver.update($targetVectors)
 ${transformVectorsToSpace($setOfVectorsToLoopOver, $operatorSpace)}@slurp
   @#
@@ -119,6 +119,8 @@ ${transformVectorsToSpace($setOfVectorsToLoopOver, $operatorSpace)}@slurp
     @# If we have an operator vector, we will need to loop over it
     @silent $setOfVectorsToLoopOver.add($operatorVector)
   @else
+    @# If we don't have an operator vector, then we will need our dependencies here
+    @silent $setOfVectorsToLoopOver.update($dependencies)
     @# If we don't have an operator vector, then we need to create
     @# the component variables so that the user can set them inside
     @# the loop
