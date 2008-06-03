@@ -454,19 +454,22 @@ class _ScriptElement (Template):
     
     for vectorName in entity.value:
       vector = None
+      replacementVector = None
       if self.parent:
-        vector = self.parent.vectorForVectorName(vectorName, vectorDictionary)
+        replacementVector = self.parent.vectorForVectorName(vectorName, vectorDictionary)
       
-      if vector:
-        pass
-      elif not vectorName in vectorDictionary:
+      if not vectorName in vectorDictionary:
         raise ParserException(entity.xmlElement, "Unknown vector '%(vectorName)s'." % locals())
       else:
         vector = vectorDictionary[vectorName]
       
       if not (vector.parent == vector.field or vector.parent in ancestors):
         raise ParserException(entity.xmlElement, "Cannot access vector '%(vectorName)s' here. It is not available in this scope." % locals())
-      vectors.add(vector)
+      
+      if replacementVector:
+        vectors.add(replacementVector)
+      else:
+        vectors.add(vector)
     return vectors
   
   def vectorForVectorName(self, vectorName, vectorDictionary):
