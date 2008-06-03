@@ -7,8 +7,10 @@
     
     The 'u' variable checks for errors caused by poorly interpolating
     dependencies. The 'v' variable checks for errors just in the
-    cross-propagation algorithm. You can choose the cross-propagation
-    algorithm to be either 'SI' or 'RK4'.
+    cross-propagation algorithm. The 'w' variable checks for errors due
+    to IP cross-propagation (should be the smallest). The 'x' variable checks
+    for errors due to EX cross-propagation, they should be the same as 'v'.
+    You can choose the cross-propagation algorithm to be either 'SI' or 'RK4'.
   </description>
   
   <features>
@@ -46,10 +48,12 @@
   </vector>
   
   <vector name="cross" type="complex">
-    <components>u v</components>
+    <components>u v w x</components>
     <![CDATA[
       u = 0.0;
       v = 1.0;
+      w = 1.0;
+      x = 1.0;
     ]]>
   </vector>
   
@@ -64,11 +68,30 @@
             <![CDATA[
               u = 0.0;
               v = 1.0;
+              w = 1.0;
+              x = 1.0;
             ]]>
           </boundary_condition>
+          
+          <operator kind="ip" constant="yes">
+            <operator_names>L</operator_names>
+            <![CDATA[
+              L = i;
+            ]]>
+          </operator>
+          
+          <operator kind="ex" constant="yes">
+            <operator_names>M</operator_names>
+            <![CDATA[
+              M = i;
+            ]]>
+          </operator>
+          
           <![CDATA[
             du_dt = cosine;
             dv_dt = i*v;
+            dw_dt = L[w]; // this one is pretty much exact
+            dx_dt = M[x];
           ]]>
         </operator>
         <integration_vectors>main</integration_vectors>
@@ -83,11 +106,13 @@
     <group>
       <sampling initial_sample="no">
         <dimension name="t" />
-        <moments>error_u error_v</moments>
+        <moments>error_u error_v error_w error_x</moments>
         <dependencies>cross</dependencies>
         <![CDATA[
           error_u = mod(u - sin(t));
           error_v = mod(v - pcomplex(1.0, t));
+          error_w = mod(w - pcomplex(1.0, t));
+          error_x = mod(x - pcomplex(1.0, t));
         ]]>
       </sampling>
     </group>
