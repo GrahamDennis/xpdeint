@@ -344,7 +344,7 @@ ${dimension.type} ${dimension.name} = _${fieldWithDimension.name}_min_${dimensio
   @#
   @# loop over the dimensions opening the loops
   @set $lastLoopDimension = None
-  @for $dimension in $field.dimensions
+  @for $dimension in $orderedDimensionsForFieldInSpace(field, space)
     @#
     @if not $indexOverrides.has_key($dimension.name)
       @# If there isn't an indexOverride for this dimension, then open a loop
@@ -374,10 +374,10 @@ ${incrementIndexPointersForVectorsWithFieldAndSpaceAndLastLoopDimension($vectors
   @end if
   @#
   @# loop over the dimensions (in reverse order) closing the loops
-  @set $reversedFieldDimensions = $field.dimensions[:]
-  @silent $reversedFieldDimensions.reverse()
+  @set $reversedLoopingDimensions = $orderedDimensionsForFieldInSpace(field, space)
+  @silent $reversedLoopingDimensions.reverse()
   @#
-  @for $dimension in $reversedFieldDimensions
+  @for $dimension in $reversedLoopingDimensions
     @#
     @# If there isn't an indexOverride for this dimension, then reduce the indent and close the loop
     @if not $indexOverrides.has_key($dimension.name)
@@ -495,6 +495,7 @@ _${vector.id}_index_pointer += _i${fieldDimensionNumber}@slurp
   @if len($vectors) == 0
     @return
   @end if
+  @#
   @# For the vectors that are not in the field $field, set their index pointers
 // Set index pointers explicitly for (some) vectors
   @for $vector in $vectors
@@ -525,14 +526,14 @@ _${vector.id}_index_pointer = ( 0@slurp
           @# This dimension is in fourier space
           @assert $dimension.lattice >= $fieldDimension.lattice
   + ( _i${fieldDimensionNumber} + (signbit(k${dimension.name}) ? (_${vector.field.name}_lattice_${dimension.name} - _${field.name}_lattice_${dimension.name}) : 0 ))
-      * $vector.field.localPointsInDimensionsWithIndicesInSpace(range($vectorDimensionNumber + 1, len($vector.field.dimensions)), $space)@slurp
+      * $vector.field.localPointsInDimensionsAfterDimensionInSpace(dimension, space)@slurp
         @else
           @# This dimension isn't in fourier space
           @assert ($dimension.lattice % $fieldDimension.lattice) == 0
   + ( (_i${fieldDimensionNumber} + ${localOffsetForDimensionInFieldInSpace(dimension, field, space)})
       * (_${vector.field.name}_lattice_${dimension.name}/_${field.name}_lattice_${dimension.name})
       - ${localOffsetForDimensionInFieldInSpace(dimension, vector.field, space)})
-    * $vector.field.localPointsInDimensionsWithIndicesInSpace(range($vectorDimensionNumber + 1, len($vector.field.dimensions)), space)@slurp
+    * $vector.field.localPointsInDimensionsAfterDimensionInSpace(dimension, space)@slurp
         @end if
       @else
         @# Now, consider when $field doesn't contain this dimension. If this dimension has an index override, then
@@ -543,7 +544,7 @@ _${vector.id}_index_pointer = ( 0@slurp
           @# Check that we actually have an entry for this vector's field
           @assert $indexOverrides[$dimension.name].has_key($vector.field)
   + ${indexOverrides[$dimension.name][$vector.field]}@slurp
- * $vector.field.localPointsInDimensionsWithIndicesInSpace(range($vectorDimensionNumber + 1, len($vector.field.dimensions)), space)@slurp
+ * $vector.field.localPointsInDimensionsAfterDimensionInSpace(dimension, space)@slurp
         @else
           @# We don't have an index override for this dimension.
           @# What happens in this case depends on whether or not the vector
@@ -558,7 +559,7 @@ _${vector.id}_index_pointer = ( 0@slurp
           @else
             @# This dimension isn't in fourier space
   + (_${vector.field.name}_lattice_${dimension.name}/2)@slurp
- * $vector.field.localPointsInDimensionsWithIndicesInSpace(range($vectorDimensionNumber + 1, len($vector.field.dimensions)), space)@slurp
+ * $vector.field.localPointsInDimensionsAfterDimensionInSpace(dimension, space)@slurp
           @end if
         @end if
       @end if
@@ -613,12 +614,7 @@ _active_${vector.id}[_${vector.id}_index_pointer + ${componentNumber}] += ${comp
     @# because the last was overridden by an indexOverride. Hence the step may not be _stuff_ncomponents,
     @# but _stuff_latticeN * _stuff_ncomponents (etc.)
     @# This is needed for cross-propagation when cross-propagating along the last dimension.
-_${vector.id}_index_pointer += @slurp
-    @# If the lastLoopDimension isn't the last dimension of the field, we need to multiply by a stride
-    @if $lastLoopDimension != $field.dimensions[len($field.dimensions)-1]
-$field.localPointsInDimensionsWithIndicesInSpace(range($field.indexOfDimension($lastLoopDimension)+1,len($field.dimensions)), space) * @slurp
-    @end if
-_${vector.id}_ncomponents;
+_${vector.id}_index_pointer += $field.localPointsInDimensionsAfterDimensionInSpace(lastLoopDimension, space) * _${vector.id}_ncomponents;
   @end for
 
   @#

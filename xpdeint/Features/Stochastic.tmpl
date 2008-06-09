@@ -85,7 +85,7 @@ ${generateNoisesForVector($dict)}@slurp
     @set $noisesNeeded = caller.noises[:]
   @end if
   @if len($noisesNeeded) == 0
-    @return ''
+    @return
   @end if
   @#
   @set $featureOrdering = ['Driver']
@@ -116,7 +116,7 @@ ${insertCodeForFeaturesInReverseOrder('generateNoisesEnd', featureOrdering, feat
   @set $integrator = dict['caller']
   @#
   @if not $integratorNeedsNoises(integrator)
-    @return ''
+    @return
   @end if
   @#
   @for field in integrator.integrationFields
@@ -136,7 +136,7 @@ _noiseStep);
   @set $integrator = dict['caller']
   @#
   @if not $integratorNeedsNoises(integrator)
-    @return ''
+    @return
   @end if
   @#
   @for field in integrator.integrationFields
@@ -159,7 +159,7 @@ list<_dtdWstore>::iterator _active_node;
   @set $integrator = dict['caller']
   @#
   @if not $integratorNeedsNoises(integrator)
-    @return ''
+    @return
   @end if
   @#
   @for field in $integrator.integrationFields
@@ -175,7 +175,7 @@ _active_${noiseVector.id} = _${noiseVector.id};
   @set $integrator = dict['caller']
   @#
   @if not $integratorNeedsNoises(integrator)
-    @return ''
+    @return
   @end if
   @#
   @set $featureOrdering = ['Driver']
@@ -214,7 +214,7 @@ ${insertCodeForFeatures('generateNoisesEnd', featureOrdering, featureDict)}@slur
   @set $space = integrator.homeSpace
   @#
   @if not $integratorNeedsNoises(integrator)
-    @return ''
+    @return
   @end if
   @#
 if (_noise_list.empty()) { 
@@ -371,7 +371,7 @@ _split_${noise.prefix}_noises(_${field.name}_var / _step, _${field.name}_var / _
   @set $integrator = dict['caller']
   @#
   @if not $integratorNeedsNoises(integrator)
-    @return ''
+    @return
   @end if
   @#
 

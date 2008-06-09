@@ -10,4 +10,4 @@ CFLAGS="-O3 -ffast-math -fno-unsafe-math-optimizations -funroll-all-loops -fomit
 MPICC="mpic++"
 MPICFLAGS="-O3 -ffast-math -fno-unsafe-math-optimizations -funroll-all-loops -fomit-frame-pointer  -lxmds -lfftw_mpi -lfftw"
 
-versionString = '0.3 "MPI? What\'s MPI?"'
+versionString = '0.4 "Soylent Green is Purple!"'

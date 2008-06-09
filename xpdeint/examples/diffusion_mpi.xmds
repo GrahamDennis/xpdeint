@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
-  <name>diffusion</name>
+  <name>diffusion_mpi</name>
   <author>Graham Dennis</author>
   <description>
     Simple one-dimensional diffusion with a pointless second dimension thrown in for fun
@@ -8,19 +8,21 @@
   
   <features>
     <benchmark />
-    <error_check />
+    <!-- <error_check /> -->
     <bing />
-    <fftw version="3" plan="exhaustive" />
+    <fftw version="3" plan="measure" />
     <openmp />
   </features>
   
   <geometry>
     <propagation_dimension> t </propagation_dimension>
     <transverse_dimensions>
-      <dimension name="x" lattice="32"  domain="(-10.0, 10.0)" />
       <dimension name="y" lattice="128" domain="(-1.0, 1.0)" />
+      <dimension name="x" lattice="256"  domain="(-10.0, 10.0)" />
     </transverse_dimensions>
   </geometry>
+  
+  <driver name="distributed-mpi" />
   
   <vector name="main" initial_space="x y" type="complex">
     <components>
@@ -35,7 +37,7 @@
   
   <sequence>
     <integrate algorithm="ARK45" interval="10.0" steps="2400" tolerance="1e-5">
-      <samples>24</samples>
+      <samples>24 4</samples>
       <operators>
         <operator kind="ip" constant="yes" fourier_space="x ky">
           <operator_names>L</operator_names>
@@ -51,13 +53,26 @@
     </integrate>
   </sequence>
   
-  <output format="binary" filename="diffusion.xsil">
+  <output format="binary">
     <group>
       <sampling initial_sample="yes">
         <!-- Any dimension not mentioned is assumed to be in real space and its middle element will be sampled -->
         <!-- Note that dimensions can be in any order. Not that I can think of a reason why you would want to do that -->
         <dimension name="x" lattice="0" fourier_space="x" />
-        <dimension name="y" lattice="128" fourier_space="y" />
+        <dimension name="y" fourier_space="y" />
+        <moments>dens</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          dens = mod2(phi);
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling initial_sample="yes">
+        <!-- Any dimension not mentioned is assumed to be in real space and its middle element will be sampled -->
+        <!-- Note that dimensions can be in any order. Not that I can think of a reason why you would want to do that -->
+        <dimension name="x" fourier_space="x" />
+        <dimension name="y" fourier_space="y" />
         <moments>dens</moments>
         <dependencies>main</dependencies>
         <![CDATA[

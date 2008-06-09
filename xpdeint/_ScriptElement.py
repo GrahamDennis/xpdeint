@@ -668,18 +668,18 @@ class _ScriptElement (Template):
       result.update(operatorContainer.computedVectorsNeedingPrecalculation)
     return result
   
-  def mayHaveLocalOffsetForDimensionInFieldInSpace(self, field, dimension, space):
+  def mayHaveLocalOffsetForDimensionInFieldInSpace(self, dimension, field, space):
     """
     Return `True` if this dimension may have a local offset. This should only be true
     when `dimension` is being distributed with MPI.
     """
-    return self._driver.mayHaveLocalOffsetForDimensionInFieldInSpace(field, dimension, space)
+    return self._driver.mayHaveLocalOffsetForDimensionInFieldInSpace(dimension, field, space)
   
-  def localOffsetForDimensionInFieldInSpace(self, field, dimension, space):
-    return self._driver.localOffsetForDimensionInFieldInSpace(field, dimension, space)
+  def localOffsetForDimensionInFieldInSpace(self, dimension, field, space):
+    return self._driver.localOffsetForDimensionInFieldInSpace(dimension, field, space)
   
-  def localLatticeForDimensionInFieldInSpace(self, field, dimension, space):
-    return self._driver.localLatticeForDimensionInFieldInSpace(field, dimension, space)
+  def localLatticeForDimensionInFieldInSpace(self, dimension, field, space):
+    return self._driver.localLatticeForDimensionInFieldInSpace(dimension, field, space)
   
   def sizeOfVectorInSpace(self, vector, space):
     return ''.join([self.sizeOfFieldInSpace(vector.field, space), ' * _', vector.id, '_ncomponents'])
@@ -702,4 +702,8 @@ class _ScriptElement (Template):
   def sizeOfFieldInSpace(self, field, space):
     """Return a name of a variable the value of which is the size of `field` in `space`."""
     return self._driver.sizeOfFieldInSpace(field, space)
+  
+  def orderedDimensionsForFieldInSpace(self, field, space):
+    """Return a list of the dimensions for field in the order in which they should be looped over"""
+    return self._driver.orderedDimensionsForFieldInSpace(field, space)
   

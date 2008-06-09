@@ -16,13 +16,6 @@ int main(int argc, char **argv)
   MPI_Comm_size(MPI_COMM_WORLD, &_size);
   MPI_Comm_rank(MPI_COMM_WORLD, &_rank);
   
-  @for $field in $fields
-  ${field.allocate, autoIndent=True}@slurp
-    @if $field.isOutputField
-  ${field.initialise, autoIndent=True}@slurp
-    @end if
-  @end for
-  
   ${mainRoutineInnerContent, autoIndent=True}@slurp
   
   MPI_Finalize();

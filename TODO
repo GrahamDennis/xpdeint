@@ -20,7 +20,7 @@
 
 * Deterministic/distributed MPI
   * Needs testing.
-  * For 'double' dimensions too.
+  * Implement sub-sampling k-space and check sub-sampling for x-space
 
 * Make sure that all the things that Andy has been doing to enable various simulation
   parameters can be controlled at simulation run time can be done in xpdeint.
@@ -81,3 +81,7 @@
 * Add a 'moment group 0' which contains simulation constants. This moment group would be zero-d and would contain various constants depending on the
   exact simulation. Constants that should be included are: the final value of the propagation dimension, any passed-in arguments, the number of paths
   (if appropriate), and anything else appropriate.
+
+* Add support for moment post-processing. This is only necessary for multi-path simulations where a temporal fourier transform needs to be averaged.
+  Currently you can probably get around this limitation by using cross-propagation for the integration. I *think* you can have noises in cross-propagation
+  integrators.
