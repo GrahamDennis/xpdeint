@@ -135,7 +135,15 @@ class _FieldElement (ScriptElement):
       result.append(self.localLatticeForDimensionInFieldInSpace(self.dimensions[dimensionIndex], self, space))
     
     return ''.join(result)
-
+  
+  def localPointsInDimensionsAfterDimensionInSpace(self, dimension, space):
+    assert self.hasDimension(dimension)
+    orderedDimensions = self.orderedDimensionsForFieldInSpace(self, space)
+    # Grab everything after dimension
+    orderedDimensions = orderedDimensions[(orderedDimensions.index(dimension)+1):]
+    indices = [self.dimensions.index(dim) for dim in orderedDimensions]
+    return self.localPointsInDimensionsWithIndicesInSpace(indices, space)
+  
   @property
   def pointsInDimensionsNumerically(self):
     points = 1

@@ -27,9 +27,9 @@ ptrdiff_t ${prefix}_local_offset_${mpiDimension.name} = 0;
   @#
   @set $field = dict['caller']
   @#
-  @if not $fieldIsDistributed(field)
+  @if not $isFieldDistributed(field)
     @# If the field doesn't have the MPI dimension, then everything is as normal
-    @return ''
+    @return
   @end if
   @#
 ${dimensionGlobalsWithPrefix(c'_${field.name}')}@slurp
@@ -53,7 +53,7 @@ else {
 }
 
   @for $field in $fields
-    @if field.name == 'geometry' or not $fieldIsDistributed(field)
+    @if field.name == 'geometry' or not $isFieldDistributed(field)
       @continue
     @end if
     @# Set the local_lattice and local_offset variables based on the

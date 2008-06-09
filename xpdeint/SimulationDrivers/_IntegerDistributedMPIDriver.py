@@ -33,16 +33,16 @@ class _IntegerDistributedMPIDriver (DistributedMPIDriver):
     else:
       return False
   
-  def fieldIsDistributed(self, field):
+  def isFieldDistributed(self, field):
     return field.hasDimension(self.mpiDimension)
   
   def localOffsetForDimensionInFieldInSpace(self, dimension, field, space):
-    if not dimension.name == self.mpiDimension.name:
+    if not (self.isFieldDistributed(field) and self.mayHaveLocalOffsetForDimensionInFieldInSpace(dimension, field, space)):
       return "0"
     return ''.join(['_', field.name, '_local_offset_', self.dimensionNameForSpace(dimension, space)])
   
   def localLatticeForDimensionInFieldInSpace(self, dimension, field, space):
-    if not dimension.name == self.mpiDimension.name:
+    if not (self.isFieldDistributed(field) and self.mayHaveLocalOffsetForDimensionInFieldInSpace(dimension, field, space)):
       return ''.join(['_', field.name, '_lattice_', self.dimensionNameForSpace(dimension, space)])
     return ''.join(['_', field.name, '_local_lattice_', self.dimensionNameForSpace(dimension, space)])
   

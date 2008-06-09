@@ -18,13 +18,6 @@ int main(int argc, char **argv)
   
   ${setLocalLatticeAndOffsetVariables, autoIndent=True}@slurp
   
-  @for $field in $fields
-  ${field.allocate, autoIndent=True}@slurp
-    @if $field.isOutputField
-  ${field.initialise, autoIndent=True}@slurp
-    @end if
-  @end for
-  
   ${mainRoutineInnerContent, autoIndent=True}@slurp
   
   MPI_Finalize();
@@ -127,7 +120,7 @@ MPI_Barrier(MPI_COMM_WORLD);
   @#
   @if not all([field.hasDimensionName(dimName) for dimName in $distributedDimensionNames])
     @# If we don't have all the MPI dimensions, then the data will be local.
-    @return ''
+    @return
   @end if
   @#
   @for $suffix in $geometryVariableSuffixesToBeShadowed
@@ -182,9 +175,9 @@ for (long _dataForRank = 0; _dataForRank < _size; _dataForRank++) {
   @set $dict['extraIndent'] -= 2
   @set $dependentVariables = dict['dependentVariables']
   @#
-  @set $distributedDimensionNamesInUse = [dimName for dimName in $distributedDimensionNames if field.hasDimensionName(dimName)]
-  @if not $distributedDimensionNamesInUse
-    @return ''
+  @if not all([field.hasDimensionName(dimName) for dimName in $distributedDimensionNames])
+    @# If we don't have all the MPI dimensions, then the data will be local.
+    @return
   @end if
   @#
   
@@ -212,7 +205,7 @@ ${variable.arrayName} = _backup${variable.arrayName};
     @# If the field has the MPI dimension, then the noise
     @# will need to vary along the MPI dimension, so all is
     @# OK.
-    @return ''
+    @return
   @end if
   @#
   @# This means that the noise field doesn't contain the MPI dimension.
@@ -234,7 +227,7 @@ if (_rank == 0) {
     @# If the field has the MPI dimension, then the noise
     @# will need to vary along the MPI dimension, so all is
     @# OK.
-    @return ''
+    @return
   @end if
   @#
 }

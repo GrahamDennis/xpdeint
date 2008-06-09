@@ -48,3 +48,8 @@ class _SimulationDriver (ScriptElement):
   def sizeOfVector(self, vector):
     return self.sizeOfVectorInSpace(vector, None)
   
+  def orderedDimensionsForFieldInSpace(self, field, space):
+    """Return a list of the dimensions for field in the order in which they should be looped over"""
+    return field.dimensions[:]
+  
+  

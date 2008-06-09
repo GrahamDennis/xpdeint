@@ -40,13 +40,6 @@ void _segment0()
   @#
 int main(int argc, char **argv)
 {
-  @for $field in $fields
-  ${field.allocate, autoIndent=True}@slurp
-    @if $field.isOutputField
-  ${field.initialise, autoIndent=True}@slurp
-    @end if
-  @end for
-  
   ${mainRoutineInnerContent, autoIndent=True}@slurp
   
   return 0;
@@ -56,6 +49,13 @@ int main(int argc, char **argv)
 
 @def mainRoutineInnerContent
   @#
+  @for $field in $fields
+${field.allocate}@slurp
+    @if $field.isOutputField
+${field.initialise}@slurp
+    @end if
+  @end for
+
   @*
     And now insert the code for the features that apply in the main function
   *@

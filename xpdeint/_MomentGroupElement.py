@@ -15,6 +15,7 @@ from xpdeint.ParserException import ParserException
 class _MomentGroupElement (FieldElement):
   def __init__(self, number, *args, **KWs):
     self.number = number
+    self.name = 'mg' + str(self.number)
     
     FieldElement.__init__(self, *args, **KWs)
     
@@ -30,11 +31,6 @@ class _MomentGroupElement (FieldElement):
     result.update(self.computedVectors)
     result.update(self.operatorContainers)
     return result
-  
-  # The name of the moment group (used for the vector names, etc)
-  @property
-  def name(self):
-    return 'mg' + str(self.number)
   
   # Do we actually need to allocate the moment group vector?
   # We may not need to allocate the raw vector if there is no

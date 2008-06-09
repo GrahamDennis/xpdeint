@@ -19,15 +19,12 @@ class _Segment (ScriptElement):
     self._childSegments = []
     self.parentSegment = None
     self.localCycles = 1
+    self.name = 'segment' + str(self.segmentNumber)
     
     scriptElements = self.getVar('scriptElements')
     
     if not self in scriptElements:
       scriptElements.append(self)
-  
-  @property
-  def name(self):
-    return 'segment' + str(self.segmentNumber)
   
   @property
   def childSegments(self):

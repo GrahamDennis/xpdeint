@@ -1,0 +1,235 @@
+@*
+DoubleDistributedMPIDriver.tmpl
+
+Created by Graham Dennis on 2008-04-05.
+Copyright (c) 2008 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.SimulationDrivers._DoubleDistributedMPIDriver
+
+@def description: Simulation Driver (Distributed with MPI along a double-valued dimension)
+
+@def globals
+  @#
+  @super
+  @#
+ptrdiff_t _unswapped_block_size = 0;
+ptrdiff_t _swapped_block_size = 0;
+
+${dimensionGlobalsWithPrefix('')}@slurp
+  @#
+@end def
+
+@def dimensionGlobalsWithPrefix($prefix)
+  @#
+#undef ${prefix}_local_lattice_${firstMPIDimension.name}
+#undef ${prefix}_local_offset_${firstMPIDimension.name}
+#undef ${prefix}_local_lattice_k${firstMPIDimension.name}
+#undef ${prefix}_local_offset_k${firstMPIDimension.name}
+
+ptrdiff_t ${prefix}_local_unswapped_lattice_${firstMPIDimension.name} = 0;
+ptrdiff_t ${prefix}_local_unswapped_offset_${firstMPIDimension.name} = 0;
+// no swapped version of those because '${firstMPIDimension.name}' will always be unswapped.
+  @# The following two lines set _local_unswapped_lattice_k... and its offset to be references to the 
+  @# non-fourier space versions of these variables. Its effect is that the fourier-space variables will
+  @# automatically take the same value as the non-fourier space variables above.
+ptrdiff_t &${prefix}_local_unswapped_lattice_k${firstMPIDimension.name} = ${prefix}_local_unswapped_lattice_${firstMPIDimension.name};
+ptrdiff_t &${prefix}_local_unswapped_offset_k${firstMPIDimension.name} = ${prefix}_local_unswapped_offset_${firstMPIDimension.name};
+// when 'k${firstMPIDimension.name}' is swapped, it will always exist in full.
+const ptrdiff_t ${prefix}_local_swapped_lattice_k${firstMPIDimension.name} = _lattice_k${firstMPIDimension.name};
+const ptrdiff_t ${prefix}_local_swapped_offset_k${firstMPIDimension.name} = 0;
+
+#undef ${prefix}_local_lattice_${secondMPIDimension.name}
+#undef ${prefix}_local_offset_${secondMPIDimension.name}
+#undef ${prefix}_local_lattice_k${secondMPIDimension.name}
+#undef ${prefix}_local_offset_k${secondMPIDimension.name}
+
+// '${secondMPIDimension.name}' is always unswapped, and will always exist in full
+const ptrdiff_t ${prefix}_local_unswapped_lattice_${secondMPIDimension.name} = _lattice_${secondMPIDimension.name};
+const ptrdiff_t ${prefix}_local_unswapped_offset_${secondMPIDimension.name} = 0;
+// when unswapped 'k${secondMPIDimension.name}' will be the full grid
+const ptrdiff_t ${prefix}_local_unswapped_lattice_k${secondMPIDimension.name} = _lattice_k${secondMPIDimension.name};
+const ptrdiff_t ${prefix}_local_unswapped_offset_k${secondMPIDimension.name} = 0;
+ptrdiff_t ${prefix}_local_swapped_lattice_k${secondMPIDimension.name} = 0;
+ptrdiff_t ${prefix}_local_swapped_offset_k${secondMPIDimension.name} = 0;
+  @#
+@end def
+
+
+@def fieldDefines($dict)
+  @#
+  @set $field = dict['caller']
+  @#
+  @if not $isFieldDistributed(field)
+    @# If the field doesn't have both MPI dimensions then everything is as normal
+    @super($dict)
+    @stop
+  @end if
+  @#
+  @#
+@end def
+
+@def fieldGlobals($dict)
+  @#
+  @set $field = dict['caller']
+  @#
+  @if not $isFieldDistributed(field)
+    @# If the field doesn't have both MPI dimensions then everything is as normal
+    @return
+  @end if
+  @#
+${dimensionGlobalsWithPrefix(c'_${field.name}')}@slurp
+
+ptrdiff_t _${field.name}_alloc_size = 0;
+  @#
+@end def
+
+@def setLocalLatticeAndOffsetVariables
+  @#
+// First work out the local lattice and offset for the geometry
+  @set $firstMPIDimName = $firstMPIDimension.name
+  @set $secondMPIDimName = $secondMPIDimension.name
+  @set $transverseDimensions = $geometry.transverseDimensions
+  @set $doubleDimensions = filter(lambda d: d.type == 'double', transverseDimensions)
+  @set $integerDimensions = filter(lambda d: d.type == 'long', transverseDimensions)
+  @#
+ptrdiff_t _sizes[] = {${', '.join([c'_lattice_${dim.name}' for dim in doubleDimensions])}};
+  @set $howManyTerms = ['((ptrdiff_t)1)']
+  @silent howManyTerms.extend([c'_lattice_${dim.name}' for dim in integerDimensions])
+ptrdiff_t _howmany = ${' * '.join(howManyTerms)};
+ptrdiff_t _local_alloc_size;
+
+_local_alloc_size = fftw_mpi_local_size_many_transposed(${len(doubleDimensions)}, _sizes, _howmany,
+                                                        FFTW_MPI_DEFAULT_BLOCK, FFTW_MPI_DEFAULT_BLOCK, MPI_COMM_WORLD,
+                                                        &_local_unswapped_lattice_${firstMPIDimName}, &_local_unswapped_offset_${firstMPIDimName},
+                                                        &_local_swapped_lattice_k${secondMPIDimName}, &_local_swapped_offset_k${secondMPIDimName});
+
+
+if (_rank == 0) {
+  _unswapped_block_size = _local_unswapped_lattice_${firstMPIDimName};
+  _swapped_block_size = _local_swapped_lattice_k${secondMPIDimName};
+}
+MPI_Bcast(&_unswapped_block_size, sizeof(ptrdiff_t), MPI_BYTE, 0, MPI_COMM_WORLD);
+MPI_Bcast(&_swapped_block_size, sizeof(ptrdiff_t), MPI_BYTE, 0, MPI_COMM_WORLD);
+
+  @# If we have more than two dimensions, then work out the alloc size for MPI fourier transforms
+  @# Just over the first two dimensions. These transforms would be done only for partial transforms.
+  @# I believe that this alloc size should be less than or equal to the one above, but for safety
+  @# we work out the size required for these transforms too.
+  @#
+  @if len(doubleDimensions) > 2
+// Consider partial MPI transforms over the first two dimensions
+ptrdiff_t _partial_transform_local_alloc_size;
+ptrdiff_t _partial_local_unswapped_lattice_${firstMPIDimName}, _partial_local_unswapped_offset_${firstMPIDimName};
+ptrdiff_t _partial_local_swapped_lattice_k${secondMPIDimName}, _partial_local_swapped_offset_k${secondMPIDimName};
+ptrdiff_t _partial_transform_howmany = _howmany${''.join(c' * _lattice_${dim.name}' for dim in doubleDimensions[2:])};
+_partial_transform_local_alloc_size = fftw_mpi_local_size_many_transposed(2, _sizes, _partial_transform_howmany,
+                                                                          _unswapped_block_size, _swapped_block_size, MPI_COMM_WORLD,
+                                                                          &_partial_local_unswapped_lattice_${firstMPIDimName},
+                                                                          &_partial_local_unswapped_offset_${firstMPIDimName},
+                                                                          &_partial_local_swapped_lattice_k${secondMPIDimName},
+                                                                          &_partial_local_swapped_offset_k${secondMPIDimName});
+
+// The local partial lattices and offsets must be the same as the ones for the complete transform or this
+// method won't work.
+if (_partial_local_unswapped_lattice_${firstMPIDimName} != _local_unswapped_lattice_${firstMPIDimName}
+    || _partial_local_unswapped_offset_${firstMPIDimName} != _local_unswapped_offset_${firstMPIDimName}
+    || _partial_local_swapped_lattice_k${secondMPIDimName} != _local_swapped_lattice_k${secondMPIDimName}
+    || _partial_local_swapped_offset_k${secondMPIDimName} != _local_swapped_offset_k${secondMPIDimName}) {
+  _LOG(_ERROR_LOG_LEVEL, "Partial transform lattice/offset values aren't the same as the values for the full transform.\n"
+                         "Please report this error and the script that caused it to xmds-devel@lists.sourceforge.net\n"
+                         "Number of nodes: %i\n"
+                         "_local_unswapped_lattice_${firstMPIDimName}: %ti\n"
+                         "_local_unswapped_offset_${firstMPIDimName}: %ti\n"
+                         "_partial_local_unswapped_lattice_${firstMPIDimName}: %ti\n"
+                         "_partial_local_unswapped_offset_${firstMPIDimName}: %ti\n"
+                         "_local_swapped_lattice_k${secondMPIDimName}: %ti\n"
+                         "_local_swapped_offset_k${secondMPIDimName}: %ti\n"
+                         "_partial_local_swapped_lattice_k${secondMPIDimName}: %ti\n"
+                         "_partial_local_swapped_offset_k${secondMPIDimName}: %ti\n",
+                         _size, _local_unswapped_lattice_${firstMPIDimName}, _local_unswapped_offset_${firstMPIDimName},
+                         _partial_local_unswapped_lattice_${firstMPIDimName}, _partial_local_unswapped_offset_${firstMPIDimName},
+                         _local_swapped_lattice_k${secondMPIDimName}, _local_swapped_offset_k${secondMPIDimName},
+                         _partial_local_swapped_lattice_k${secondMPIDimName}, _local_swapped_offset_k${secondMPIDimName});
+}
+
+_local_alloc_size = MAX(_local_alloc_size, _partial_transform_local_alloc_size);
+
+_partial_transform_local_alloc_size = fftw_mpi_local_size_many(2, _sizes, _partial_transform_howmany,
+                                                                          _unswapped_block_size, MPI_COMM_WORLD,
+                                                                          &_partial_local_unswapped_lattice_${firstMPIDimName},
+                                                                          &_partial_local_unswapped_offset_${firstMPIDimName});
+
+// The local partial lattices and offsets must be the same as the ones for the complete transform or this
+// method won't work.
+if (_partial_local_unswapped_lattice_${firstMPIDimName} != _local_unswapped_lattice_${firstMPIDimName}
+    || _partial_local_unswapped_offset_${firstMPIDimName} != _local_unswapped_offset_${firstMPIDimName}) {
+  _LOG(_ERROR_LOG_LEVEL, "Partial untransposing transform lattice/offset values aren't the same as the values for the full transform.\n"
+                         "Please report this error and the script that caused it to xmds-devel@lists.sourceforge.net\n"
+                         "Number of nodes: %i\n"
+                         "_local_unswapped_lattice_${firstMPIDimName}: %ti\n"
+                         "_local_unswapped_offset_${firstMPIDimName}: %ti\n"
+                         "_partial_local_unswapped_lattice_${firstMPIDimName}: %ti\n"
+                         "_partial_local_unswapped_offset_${firstMPIDimName}: %ti\n",
+                         _size, _local_unswapped_lattice_${firstMPIDimName}, _local_unswapped_offset_${firstMPIDimName},
+                         _partial_local_unswapped_lattice_${firstMPIDimName}, _partial_local_unswapped_offset_${firstMPIDimName});
+}
+
+_local_alloc_size = MAX(_local_alloc_size, _partial_transform_local_alloc_size);
+  @end if
+
+
+  @for $field in $fields
+    @if field.name == 'geometry' or not $isFieldDistributed(field)
+      @continue
+    @end if
+    @#
+    @# Set the local_lattice and local_offset variables based on the
+    @# values for the geometry's version of these variables
+// Set the local_(un)swapped_lattice and local_(un)swapped_offset variables for the '${field.name}' field.
+    @if field.dimensionWithName(firstMPIDimName) == $firstMPIDimension and field.dimensionWithName(secondMPIDimName) == $secondMPIDimension
+      @# The field has the same structure for these dimensions as the geometry.
+_${field.name}_local_unswapped_offset_${firstMPIDimName}  = _local_unswapped_offset_${firstMPIDimName};
+_${field.name}_local_unswapped_lattice_${firstMPIDimName} = _local_unswapped_lattice_${firstMPIDimName};
+_${field.name}_local_swapped_offset_k${secondMPIDimName}  = _local_swapped_offset_k${secondMPIDimName};
+_${field.name}_local_swapped_lattice_k${secondMPIDimName} = _local_swapped_lattice_k${secondMPIDimName};
+
+      @# Now set the alloc_size variable for the field
+      @set $fieldIndices = range(0, len(field.dimensions))
+      @silent fieldIndices.remove(field.indexOfDimensionName(firstMPIDimName))
+      @silent fieldIndices.remove(field.indexOfDimensionName(secondMPIDimName))
+      @set $geometryIndices = range(1, len($geometry.dimensions))
+      @silent geometryIndices.remove($geometry.indexOfDimensionName(firstMPIDimName))
+      @silent geometryIndices.remove($geometry.indexOfDimensionName(secondMPIDimName))
+_${field.name}_alloc_size = _local_alloc_size * ${field.pointsInDimensionsWithIndices(fieldIndices)} / (${geometry.pointsInDimensionsWithIndices(geometryIndices)});
+    @else
+      @# The field has different structure to the geometry, so we need to work out our local offsets and lattice sizes.
+      @#
+      @# FIXME: We assert that the second MPI dimension is the same as the geometry's version because I'm not convinced that the
+      @# Non-MPI looping code is entirely correct in this case, so there's little point in attempting to get the MPI case
+      @# right.
+      @assert field.dimensionWithName(secondMPIDimName) == $secondMPIDimension
+      @#
+ptrdiff_t _${field.name}_unswapped_skip_size = _lattice_${firstMPIDimName}/_${field.name}_lattice_${firstMPIDimName};
+if (_rank == 0) {
+  _${field.name}_local_unswapped_offset_${firstMPIDimName}  = 0;
+  _${field.name}_local_unswapped_lattice_${firstMPIDimName} = (_local_unswapped_lattice_${firstMPIDimName}-1)/_${field.name}_unswapped_skip_size + 1;
+} else {
+  _${field.name}_local_unswapped_offset_${firstMPIDimName}  = (_local_unswapped_offset_${firstMPIDimName}-1)/_${field.name}_unswapped_skip_size + 1;
+  _${field.name}_local_unswapped_lattice_${firstMPIDimName} = (_local_unswapped_offset_${firstMPIDimName} + _local_unswapped_lattice_${firstMPIDimName} - 1)/_${field.name}_unswapped_skip_size
+                                                              + 1 - _${field.name}_local_unswapped_offset_${firstMPIDimName};
+}
+_${field.name}_local_swapped_offset_k${secondMPIDimension}  = _local_swapped_offset_k${secondMPIDimension};
+_${field.name}_local_swapped_lattice_k${secondMPIDimension} = _local_swapped_lattice_k${secondMPIDimension};
+
+      @# Now set the alloc_size variable for the field
+      @set $indices = range(0, len(field.dimensions))
+      @silent indices.remove(field.indexOfDimensionName(firstMPIDimName))
+_${field.name}_alloc_size = _${field.name}_local_unswapped_lattice_${firstMPIDimName} * ${field.pointsInDimensionsWithIndices(indices)};
+      @set $indices = range(0, len(field.dimensions))
+      @silent indices.remove(field.indexOfDimensionName(secondMPIDimName))
+_${field.name}_alloc_size = MAX(_${field.name}_local_swapped_lattice_k${secondMPIDimName} * ${field.pointsInDimensionsWithIndices(indices)});
+    @end if
+
+  @end for
+  @#
+@end def

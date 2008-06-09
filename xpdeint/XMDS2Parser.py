@@ -34,6 +34,7 @@ from xpdeint.SimulationDrivers.DefaultDriver import DefaultDriver as DefaultDriv
 from xpdeint.SimulationDrivers.MultiPathDriver import MultiPathDriver as MultiPathDriverTemplate
 from xpdeint.SimulationDrivers.MPIMultiPathDriver import MPIMultiPathDriver as MPIMultiPathDriverTemplate
 from xpdeint.SimulationDrivers.IntegerDistributedMPIDriver import IntegerDistributedMPIDriver as IntegerDistributedMPIDriverTemplate
+from xpdeint.SimulationDrivers.DoubleDistributedMPIDriver import DoubleDistributedMPIDriver as DoubleDistributedMPIDriverTemplate
 
 from xpdeint.Segments import Integrators
 from xpdeint.Segments.FilterSegment import FilterSegment as FilterSegmentTemplate
@@ -180,8 +181,10 @@ class XMDS2Parser(ScriptParser):
             raise ParserException(driverElement, "The distributed-mpi driver requires transverse dimensions to be able to be used.")
           if transverseDimensions[0].type == 'long':
             driverClass = IntegerDistributedMPIDriverTemplate
+          elif len(transverseDimensions) < 2 or transverseDimensions[1].type != 'double':
+            raise ParserException(driverElement, "At least two 'double' dimensions are required to use the distributed-mpi driver with 'double' dimensions.")
           else:
-            raise ParserException(driverElement, "Currently the distributed-mpi driver only supports distributed integer-valued dimensions.")
+            driverClass = DoubleDistributedMPIDriverTemplate
         else:
           raise UnknownDriverException()
       except UnknownDriverException, err:
@@ -201,7 +204,7 @@ class XMDS2Parser(ScriptParser):
                                 "Unknown multi-path kind '%(kindString)s'. "
                                 "The options are 'single' (default), or 'mpi'." % locals())
     
-    simulationDriver = driverClass(**self.argumentsToTemplateConstructors)
+    simulationDriver = driverClass(xmlElement = driverElement, **self.argumentsToTemplateConstructors)
     self.applyAttributeDictionaryToObject(driverAttributeDictionary, simulationDriver)
     return simulationDriver
   
@@ -378,7 +381,7 @@ class XMDS2Parser(ScriptParser):
               if 'Validation' in self.globalNameSpace['features']:
                 validationFeature = self.globalNameSpace['features']['Validation']
                 validationFeature.validationChecks.append("""
-                if (%(seedString)s < 0.0)
+                if (%(seedString)s < 0)
                   _LOG(_ERROR_LOG_LEVEL, "ERROR: The seed for random noise %(prefix)s is not positive!\\n"
                   "Seed = %%d\\n", %(seedString)s);""" % locals())
                 parserWarning(noiseElement, "Attempting to use expression '%(seedString)s' for a seed for "

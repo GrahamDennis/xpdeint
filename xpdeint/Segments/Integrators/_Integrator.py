@@ -57,10 +57,6 @@ class _Integrator (_Segment):
     return result
   
   @property
-  def name(self):
-    return "".join(['segment', str(self.segmentNumber)])
-  
-  @property
   def integrationFields(self):
     return set([v.field for v in self.integrationVectors])
   

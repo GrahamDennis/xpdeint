@@ -63,27 +63,56 @@ Return the string defining the globals needed by FFTW3.
 typedef pair<unsigned long, unsigned long> _spaces_pair;
 
 // Less than operator needed by the C++ map class
-struct _spaces_pair_less_than {
+struct _spaces_pair_less_than
+{
   bool operator()(const _spaces_pair& _x, const _spaces_pair& _y) const {
     return (_x.first < _y.first) || ((_x.first == _y.first) && (_x.second < _y.second));
   }
 };
 
+enum _transform_type {
+  _LOCAL_TRANSFORM,
+  _MPI_TRANSFORM
+};
+
 // Structure to hold the fourier transform plans for an arbitrary change of space
-struct _space_transform {
+struct _space_transform
+{
   fftw_plan _forward_plan;
   fftw_plan _backward_plan;
   double _c;
+  enum _transform_type _type;
   
   _space_transform() {
     _c = 1.0;
     _forward_plan = _backward_plan = NULL;
+    _type = _LOCAL_TRANSFORM;
   }
   
-  _space_transform(fftw_plan _f_plan, fftw_plan _b_plan, double _c_in) {
+  _space_transform(fftw_plan _f_plan, fftw_plan _b_plan, double _c_in, enum _transform_type _type_in = _LOCAL_TRANSFORM) {
     _c = _c_in;
     _forward_plan = _f_plan;
     _backward_plan = _b_plan;
+    _type = _type_in;
+  }
+  
+  _space_transform(const _space_transform& _s) {
+    _c = _s._c;
+    _forward_plan = _s._forward_plan;
+    _backward_plan = _s._backward_plan;
+    _type = _s._type;
+  }
+  
+  void destroy()
+  {
+    if (_forward_plan) {
+      fftw_destroy_plan(_forward_plan);
+      _forward_plan = NULL;
+    }
+    if (_backward_plan) {
+      fftw_destroy_plan(_backward_plan);
+      _backward_plan = NULL;
+    }
   }
 };
 
@@ -93,26 +122,31 @@ typedef map<_spaces_pair, _space_transform, _spaces_pair_less_than> _plan_map;
   @for $field in $fields
     @# only loop over those vectors that need fourier transforms
     @for $vector in filter(lambda x: x.needsFourierTransforms, $field.vectors)
-fftw_plan _${vector.id}_forward_plan = NULL;
-fftw_plan _${vector.id}_backward_plan = NULL;
-_plan_map _${vector.id}_plan_map;
+${planGlobalsForVector(vector)}@slurp
     @end for
   @end for
 @end def
 
+@def planGlobalsForVector($vector)
+  @#
+fftw_plan _${vector.id}_forward_plan = NULL;
+fftw_plan _${vector.id}_backward_plan = NULL;
+_plan_map _${vector.id}_plan_map;
+  @#
+@end def
+
 @# do the (forward/backward) transform for the vector
 @def fullFFTForVector($vector, $type)
-fftw_execute_dft(_${vector.field.name}_${vector.name}_${type}_plan, reinterpret_cast<fftw_complex*>(_active_${vector.field.name}_${vector.name}),
-                 reinterpret_cast<fftw_complex*>(_active_${vector.field.name}_${vector.name}));
+${executeGuruPlanForVector(c'_${vector.id}_${type}_plan', vector)}@slurp
 @end def
 
 
 @def mainBegin($dict)
+// load wisdom and create plans for fft
+${loadWisdom}@slurp
 
 _LOG(_SIMULATION_LOG_LEVEL, "Making FFTW plans\n");
 
-// load wisdom and create plans for fft
-${loadWisdom}@slurp
   @#
   @# Some of the vectors that we need to create plans for may be temporary vectors,
   @# and hence will not be allocated yet.
@@ -270,21 +304,24 @@ for (int _from_space_index = 0; _from_space_index < ${numberOfSpacesNeeded}; _fr
   
 // destroy plans and save wisdom
   @for field in $fields
-    @# only loop over those vectors that need fourier transforms
-    @for vector in filter(lambda x: x.needsFourierTransforms, field.vectors)
-fftw_destroy_plan(_${vector.id}_forward_plan);
-fftw_destroy_plan(_${vector.id}_backward_plan);
-for (_plan_map::iterator _it = _${vector.id}_plan_map.begin(); _it != _${vector.id}_plan_map.end(); _it++) {
-  if (_it->second._forward_plan)
-    fftw_destroy_plan(_it->second._forward_plan);
-  if (_it->second._backward_plan)
-    fftw_destroy_plan(_it->second._backward_plan);
-}
-_${vector.id}_plan_map.clear();
-    @end for
+${destroyPlansForField(field)}@slurp
   @end for
 
 fftw_cleanup();
+  @#
+@end def
+
+@def destroyPlansForField($field)
+  @#
+  @# only loop over those vectors that need fourier transforms
+  @for vector in filter(lambda x: x.needsFourierTransforms, field.vectors)
+fftw_destroy_plan(_${vector.id}_forward_plan);
+fftw_destroy_plan(_${vector.id}_backward_plan);
+for (_plan_map::iterator _it = _${vector.id}_plan_map.begin(); _it != _${vector.id}_plan_map.end(); _it++)
+  _it->second.destroy();
+_${vector.id}_plan_map.clear();
+  @end for
+
   @#
 @end def
 
@@ -301,35 +338,33 @@ in one plan. This means that an arbitrary change of space can be achieved with a
 *@
   @#
 // Mixed transform stuff
-else {
-  fftw_plan _forward_plan = NULL;
-  fftw_plan _backward_plan = NULL;
+fftw_plan _forward_plan = NULL;
+fftw_plan _backward_plan = NULL;
+
+// If we have not already created the plan, we must exit as we should have already made it.
+if (_${vector.id}_plan_map.count(_spaces_pair(_${vector.id}_space, _newSpace)) == 0) {
+  _LOG(_ERROR_LOG_LEVEL, "Error: We should have plans for every required transform, but it seems we don't for this transform.\n"
+                         "       The transform is for the vector '${vector.id}' from space %li to space %li\n.",
+                         _${vector.id}_space, _newSpace);
+  // _LOG will cause the simulation to exit
+} else {
+  // We have already generated this plan, so just grab it
+  _space_transform& _transform = _${vector.id}_plan_map[_spaces_pair(_${vector.id}_space, _newSpace)];
   
-  // If we have not already created the plan, we are going to have to make one.
-  if (_${vector.id}_plan_map.count(_spaces_pair(_${vector.id}_space, _newSpace)) == 0) {
-    _LOG(_ERROR_LOG_LEVEL, "Error: We should have plans for every possible transform, but it seems we don't for this transform.\n"
-                           "       The transform is for the vector '${vector.id}' from space %li to space %li\n.",
-                           _${vector.id}_space, _newSpace);
-    // _LOG will cause the simulation to exit
-  } else {
-    // We have already generated this plan, so just grab it
-    _space_transform& _transform = _${vector.id}_plan_map[_spaces_pair(_${vector.id}_space, _newSpace)];
-    
-    _forward_plan = _transform._forward_plan;
-    _backward_plan = _transform._backward_plan;
-    _c = _transform._c;
-  }
-  
-  // If we have a forward plan, run it
-  if (_forward_plan) {
-    ${executeGuruPlanForVector('_forward_plan', $vector), autoIndent=True}@slurp
-  }
-  // If we have a backward plan, run it
-  if (_backward_plan) {
-    ${executeGuruPlanForVector('_backward_plan', $vector), autoIndent=True}@slurp
-  }
-  
+  _forward_plan = _transform._forward_plan;
+  _backward_plan = _transform._backward_plan;
+  _c = _transform._c;
 }
+
+// If we have a forward plan, run it
+if (_forward_plan) {
+  ${executeGuruPlanForVector('_forward_plan', $vector), autoIndent=True}@slurp
+}
+// If we have a backward plan, run it
+if (_backward_plan) {
+  ${executeGuruPlanForVector('_backward_plan', $vector), autoIndent=True}@slurp
+}
+
   @#
 @end def
 
