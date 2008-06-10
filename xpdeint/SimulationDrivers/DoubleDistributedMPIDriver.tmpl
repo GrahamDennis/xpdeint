@@ -212,7 +212,7 @@ _${field.name}_alloc_size = _local_alloc_size * ${field.pointsInDimensionsWithIn
 ptrdiff_t _${field.name}_unswapped_skip_size = _lattice_${firstMPIDimName}/_${field.name}_lattice_${firstMPIDimName};
 if (_rank == 0) {
   _${field.name}_local_unswapped_offset_${firstMPIDimName}  = 0;
-  _${field.name}_local_unswapped_lattice_${firstMPIDimName} = (_local_unswapped_lattice_${firstMPIDimName}-1)/_${field.name}_unswapped_skip_size + 1;
+  _${field.name}_loal_unswapped_lattice_${firstMPIDimName} = (_local_unswapped_lattice_${firstMPIDimName}-1)/_${field.name}_unswapped_skip_size + 1;
 } else {
   _${field.name}_local_unswapped_offset_${firstMPIDimName}  = (_local_unswapped_offset_${firstMPIDimName}-1)/_${field.name}_unswapped_skip_size + 1;
   _${field.name}_local_unswapped_lattice_${firstMPIDimName} = (_local_unswapped_offset_${firstMPIDimName} + _local_unswapped_lattice_${firstMPIDimName} - 1)/_${field.name}_unswapped_skip_size

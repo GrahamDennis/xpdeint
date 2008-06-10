@@ -36,9 +36,9 @@ int main(int argc, char **argv)
   @set $mpiDimension = $mpiDimensionForSpace($space)
   @#
   @for $vector in $vectorOverrides
-    @set $dimensionsIntegratedOver = filter(lambda x: not vector.field.hasDimension(x), $field.dimensions)
-    @if not $mpiDimension in $dimensionsIntegratedOver
-      @# If we aren't integrating over the MPI dimension, then everything is as usual.
+    @set $dimensionsIntegratedOver = set([d.name for d in field.dimensions if vector.field.hasDimension(d)])
+    @if not dimensionsIntegratedOver.intersection($distributedDimensionNames)
+      @# If we aren't integrating over an MPI dimension, then everything is as usual.
       @continue
     @end if
     @# We did integrate over the MPI dimension, so we need to run MPI_Allreduce to combine the results.
@@ -49,8 +49,8 @@ int main(int argc, char **argv)
     @for $dimName in indexOverrides.iterkeys()
       @if vector.field.hasDimensionName(dimName) and vector.field in indexOverrides[dimName]
         @set $indexOverride = indexOverrides[dimName][vector.field]
-        @set $indices = range(vector.field.indexOfDimensionName(dimName) + 1, len(vector.field.dimensions))
-        @set $arrayName = arrayName + c' + ${indexOverride} * ${vector.field.pointsInDimensionsWithIndices(indices)} * _${vector.id}_ncomponents'
+        @set $vectorDim = vector.field.dimensionWithName(dimName)
+        @set $arrayName = arrayName + c' + ${indexOverride} * ${vector.field.localPointsInDimensionsAfterDimensionInSpace(vectorDim, space)} * _${vector.id}_ncomponents'
         @set $size = size + c' / _${vector.field.name}_lattice_${dimName}'
       @end if
     @end for
