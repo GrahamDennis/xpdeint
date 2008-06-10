@@ -38,8 +38,6 @@ _plan_map _${vector.id}_unswapped_plan_map;
 _plan_map _${vector.id}_swapped_plan_map;
 _space_transform _${vector.id}_partial_2d_forward;
 _space_transform _${vector.id}_partial_2d_backward;
-_space_transform _${vector.id}_partial_2d_untransposing_forward;
-_space_transform _${vector.id}_partial_2d_untransposing_backward;
 _space_transform _${vector.id}_partial_unswapped_forward;
 _space_transform _${vector.id}_partial_unswapped_backward;
 _space_transform _${vector.id}_partial_swapped_forward;
@@ -133,16 +131,6 @@ if (!_forward_plan)
 _c = ${'*'.join([c'_${vector.field.name}_d${dimName}' for dimName in $_driver.distributedDimensionNames])} / (2.0 * M_PI);
 _${vector.id}_partial_2d_forward = _space_transform(_forward_plan, NULL, _c, _MPI_TRANSFORM);
 
-_forward_plan  = fftw_mpi_plan_many_dft(2, _fft_sizes, _howmany, _unswapped_block_size, _unswapped_block_size,
-                                        reinterpret_cast<fftw_complex*>($arrayName),
-                                        reinterpret_cast<fftw_complex*>($arrayName),
-                                        MPI_COMM_WORLD, FFTW_FORWARD, ${planType});
-
-if (!_forward_plan)
-  _LOG(_ERROR_LOG_LEVEL, "Unable to create partial 2D untransposing forward plan for vector ${vector.id}\n");
-
-_${vector.id}_partial_2d_untransposing_forward = _space_transform(_forward_plan, NULL, _c, _MPI_TRANSFORM);
-
 _backward_plan = fftw_mpi_plan_many_dft(2, _fft_sizes, _howmany, _swapped_block_size, _unswapped_block_size,
                                         reinterpret_cast<fftw_complex*>($arrayName),
                                         reinterpret_cast<fftw_complex*>($arrayName),
@@ -153,37 +141,24 @@ if (!_backward_plan)
 _c = ${'*'.join([c'_${vector.field.name}_dk${dimName}' for dimName in $_driver.distributedDimensionNames])} / (2.0 * M_PI);
 _${vector.id}_partial_2d_backward = _space_transform(NULL, _backward_plan, _c, _MPI_TRANSFORM);
 
-_backward_plan = fftw_mpi_plan_many_dft(2, _fft_sizes, _howmany, _unswapped_block_size, _unswapped_block_size,
-                                        reinterpret_cast<fftw_complex*>($arrayName),
-                                        reinterpret_cast<fftw_complex*>($arrayName),
-                                        MPI_COMM_WORLD, FFTW_BACKWARD, ${planType});
-if (!_backward_plan)
-  _LOG(_ERROR_LOG_LEVEL, "Unable to create partial 2D untransposing backward plan for vector ${vector.id}\n");
-
-_c = ${'*'.join([c'_${vector.field.name}_dk${dimName}' for dimName in $_driver.distributedDimensionNames])} / (2.0 * M_PI);
-_${vector.id}_partial_2d_untransposing_backward = _space_transform(NULL, _backward_plan, _c, _MPI_TRANSFORM);
-
-// 1a(ii). Create plans for the untransposing 2D forward and reverse transforms.
-
-
 // 1b. Create plans for the 2D transpose operations.
 _forward_plan  = fftw_mpi_plan_many_transpose(_${vector.field.name}_lattice_${firstMPIDimName},
                                               _${vector.field.name}_lattice_${secondMPIDimName},
                                               _howmany*2, _unswapped_block_size, _swapped_block_size,
                                               reinterpret_cast<double*>($arrayName),
                                               reinterpret_cast<double*>($arrayName),
-                                              MPI_COMM_WORLD, ${planType} | FFTW_MPI_TRANSPOSED_OUT);
+                                              MPI_COMM_WORLD, ${planType});
 if (!_forward_plan)
   _LOG(_ERROR_LOG_LEVEL, "Unable to create partial transpose plan for vector ${vector.id}\n");
 
 _${vector.id}_partial_transpose = _space_transform(_forward_plan, NULL, 1.0, _MPI_TRANSFORM);
 
-_backward_plan = fftw_mpi_plan_many_transpose(_${vector.field.name}_lattice_${firstMPIDimName},
-                                              _${vector.field.name}_lattice_${secondMPIDimName},
-                                              _howmany*2, _unswapped_block_size, _swapped_block_size,
+_backward_plan = fftw_mpi_plan_many_transpose(_${vector.field.name}_lattice_${secondMPIDimName},
+                                              _${vector.field.name}_lattice_${firstMPIDimName},
+                                              _howmany*2, _swapped_block_size, _unswapped_block_size,
                                               reinterpret_cast<double*>($arrayName),
                                               reinterpret_cast<double*>($arrayName),
-                                              MPI_COMM_WORLD, ${planType} | FFTW_MPI_TRANSPOSED_IN);
+                                              MPI_COMM_WORLD, ${planType});
 if (!_backward_plan)
   _LOG(_ERROR_LOG_LEVEL, "Unable to create partial untranspose plan for vector ${vector.id}\n");
 
@@ -391,7 +366,6 @@ fftw_destroy_plan(_${vector.id}_backward_plan);
     @if $vectorNeedsPartialTransforms(vector)
     
 _${vector.id}_partial_2d_forward.destroy();               _${vector.id}_partial_2d_backward.destroy();
-_${vector.id}_partial_2d_untransposing_forward.destroy(); _${vector.id}_partial_2d_untransposing_backward.destroy();
 _${vector.id}_partial_unswapped_forward.destroy();        _${vector.id}_partial_unswapped_backward.destroy();
 _${vector.id}_partial_swapped_forward.destroy();          _${vector.id}_partial_swapped_backward.destroy();
 _${vector.id}_partial_transpose.destroy();                _${vector.id}_partial_untranspose.destroy();
@@ -420,10 +394,6 @@ transpose operations. To see an illustration of the transforms needed to link an
 spaces for the first two dimensions with either being swapped or unswapped see the file
 'FFTW3MPI Design.pdf' in the doc/ directory of the repository. Doing things this way should
 make mixed-space transforms about as fast as they can be with MPI.
-Update: I would do it the fast way with the transpose operations, but they don't seem to be doing
-anything. As a result, although the plans are still calculated, nothing is done with them. The operations
-for the various transforms between spaces are commented out below. The uncommented versions make use
-of untransposing fft's. Not the fastest method, but at least it works.
 
 If you can reduce the number of transforms needed in a given dimension, then doing that for the
 first dimension will yield the greatest speedup.
@@ -457,68 +427,48 @@ else if (_2d_oldspace == 4 && _2d_newspace == 0)
   _transforms[_transform_index++] = &_${vector.id}_partial_unswapped_backward;
 // Case 5: 01 -> 11
 else if (_2d_oldspace == 4 && _2d_newspace == 6) {
-  // _transforms[_transform_index++] = &_${vector.id}_partial_transpose;
-  // _transforms[_transform_index++] = &_${vector.id}_partial_swapped_forward;
-  _transforms[_transform_index++] = &_${vector.id}_partial_unswapped_backward;
-  _transforms[_transform_index++] = &_${vector.id}_partial_2d_forward;
+  _transforms[_transform_index++] = &_${vector.id}_partial_transpose;
+  _transforms[_transform_index++] = &_${vector.id}_partial_swapped_forward;
 }
 // Case 6: 11 -> 01
 else if (_2d_oldspace == 6 && _2d_newspace == 4) {
-  // _transforms[_transform_index++] = &_${vector.id}_partial_swapped_backward;
-  // _transforms[_transform_index++] = &_${vector.id}_partial_untranspose;
-  _transforms[_transform_index++] = &_${vector.id}_partial_2d_backward;
-  _transforms[_transform_index++] = &_${vector.id}_partial_unswapped_forward;
+  _transforms[_transform_index++] = &_${vector.id}_partial_swapped_backward;
+  _transforms[_transform_index++] = &_${vector.id}_partial_untranspose;
 }
 // Case 7: 10 -> 11
 else if (_2d_oldspace == 2 && _2d_newspace == 6) {
-  // _transforms[_transform_index++] = &_${vector.id}_partial_unswapped_forward;
-  // _transforms[_transform_index++] = &_${vector.id}_partial_transpose;
   _transforms[_transform_index++] = &_${vector.id}_partial_unswapped_forward;
-  _transforms[_transform_index++] = &_${vector.id}_partial_2d_untransposing_backward;
-  _transforms[_transform_index++] = &_${vector.id}_partial_2d_forward;
+  _transforms[_transform_index++] = &_${vector.id}_partial_transpose;
 }
 // Case 8: 11 -> 10
 else if (_2d_oldspace == 6 && _2d_newspace == 2) {
-  // _transforms[_transform_index++] = &_${vector.id}_partial_untranspose;
-  // _transforms[_transform_index++] = &_${vector.id}_partial_unswapped_backward;
-  _transforms[_transform_index++] = &_${vector.id}_partial_2d_backward;
-  _transforms[_transform_index++] = &_${vector.id}_partial_2d_untransposing_forward;
+  _transforms[_transform_index++] = &_${vector.id}_partial_untranspose;
   _transforms[_transform_index++] = &_${vector.id}_partial_unswapped_backward;
 }
 // Case 9: 00 -> 10
 else if (_2d_oldspace == 0 && _2d_newspace == 2) {
-  // _transforms[_transform_index++] = &_${vector.id}_partial_transpose;
-  // _transforms[_transform_index++] = &_${vector.id}_partial_swapped_forward;
-  // _transforms[_transform_index++] = &_${vector.id}_partial_untranspose;
-  _transforms[_transform_index++] = &_${vector.id}_partial_2d_untransposing_forward;
-  _transforms[_transform_index++] = &_${vector.id}_partial_unswapped_backward;
+  _transforms[_transform_index++] = &_${vector.id}_partial_transpose;
+  _transforms[_transform_index++] = &_${vector.id}_partial_swapped_forward;
+  _transforms[_transform_index++] = &_${vector.id}_partial_untranspose;
 }
 // Case 10: 10 -> 00
 else if (_2d_oldspace == 2 && _2d_newspace == 0) {
-  // _transforms[_transform_index++] = &_${vector.id}_partial_transpose;
-  // _transforms[_transform_index++] = &_${vector.id}_partial_swapped_backward;
-  // _transforms[_transform_index++] = &_${vector.id}_partial_untranspose;
-  _transforms[_transform_index++] = &_${vector.id}_partial_unswapped_forward;
-  _transforms[_transform_index++] = &_${vector.id}_partial_2d_untransposing_backward;
+  _transforms[_transform_index++] = &_${vector.id}_partial_transpose;
+  _transforms[_transform_index++] = &_${vector.id}_partial_swapped_backward;
+  _transforms[_transform_index++] = &_${vector.id}_partial_untranspose;
 }
 // Case 11: 01 -> 10
 else if (_2d_oldspace == 4 && _2d_newspace == 2) {
-  // _transforms[_transform_index++] = &_${vector.id}_partial_unswapped_backward;
-  // _transforms[_transform_index++] = &_${vector.id}_partial_transpose;
-  // _transforms[_transform_index++] = &_${vector.id}_partial_swapped_forward;
-  // _transforms[_transform_index++] = &_${vector.id}_partial_untranspose;
   _transforms[_transform_index++] = &_${vector.id}_partial_unswapped_backward;
-  _transforms[_transform_index++] = &_${vector.id}_partial_2d_untransposing_forward;
-  _transforms[_transform_index++] = &_${vector.id}_partial_unswapped_backward;
+  _transforms[_transform_index++] = &_${vector.id}_partial_transpose;
+  _transforms[_transform_index++] = &_${vector.id}_partial_swapped_forward;
+  _transforms[_transform_index++] = &_${vector.id}_partial_untranspose;
 }
 // Case 12: 10 -> 01
 else if (_2d_oldspace == 2 && _2d_newspace == 4) {
-  // _transforms[_transform_index++] = &_${vector.id}_partial_transpose;
-  // _transforms[_transform_index++] = &_${vector.id}_partial_swapped_backward;
-  // _transforms[_transform_index++] = &_${vector.id}_partial_untranspose;
-  // _transforms[_transform_index++] = &_${vector.id}_partial_unswapped_forward;
-  _transforms[_transform_index++] = &_${vector.id}_partial_unswapped_forward;
-  _transforms[_transform_index++] = &_${vector.id}_partial_2d_untransposing_backward;
+  _transforms[_transform_index++] = &_${vector.id}_partial_transpose;
+  _transforms[_transform_index++] = &_${vector.id}_partial_swapped_backward;
+  _transforms[_transform_index++] = &_${vector.id}_partial_untranspose;
   _transforms[_transform_index++] = &_${vector.id}_partial_unswapped_forward;
 }
 else
