@@ -69,8 +69,8 @@ class _EXOperator(Operator):
                                                   **self.argumentsToTemplateConstructors)
             
             self.field.temporaryVectors.add(specialTargetsVector)
-            integrator = self.parent.parent
-            integrator.computedVectors.add(specialTargetsVector)
+            self._children.append(specialTargetsVector)
+            self.dependencies.add(specialTargetsVector)
             
             # When constructing the 'special targets' vector it may depend on anything the parent code (usually delta a operator) depends on
             specialTargetsVector.dependencies = self.parent.dependencies.copy()

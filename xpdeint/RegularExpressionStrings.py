@@ -98,7 +98,7 @@ def componentWithIntegerValuedDimensions(components):
               + '(?:' + threeLevelsMatchedSquareBrackets + ')?)?'
 
 
-def componentWithIntegerValuedDimensionsWithComponentAndField(componentName, field):
+def integerValuedDimensionsForComponentInField(componentName, field):
   """
   Return a regular expression string used for extracting the arguments to the integer-valued dimensions
   for a given component in a known field.

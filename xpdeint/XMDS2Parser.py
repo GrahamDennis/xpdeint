@@ -1699,10 +1699,12 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
         momentGroupTemplate.operatorContainers.append(operatorContainer)
         for operatorElement in operatorElements:
           kindString = operatorElement.getAttribute('kind').strip().lower()
-          if not kindString in ('functions'): # FIXME: EX would be good here too, but we would need to work out the field...
+          if not kindString in ('functions', 'ex'):
             raise ParserException(operatorElement, "Unrecognised operator kind '%(kindString)s'. "
-                                                   "The only valid operator kind in sampling elements is 'functions' (at the moment)." % locals())
+                                                   "The only valid operator kinds in sampling elements are 'functions' and 'ex'." % locals())
           operatorTemplate = self.parseOperatorElement(operatorElement, operatorContainer)
+          if isinstance(operatorTemplate, ConstantEXOperatorTemplate):
+            raise ParserException(operatorElement, "You cannot have a constant EX operator in moment group sampling. Try constant=\"no\".")
       
       
       
