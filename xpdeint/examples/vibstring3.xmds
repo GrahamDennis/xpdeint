@@ -37,7 +37,7 @@
     </transverse_dimensions>
   </geometry>
   
-  <vector name="main" dimensions="x y" initial_space="x ky" type="complex">
+  <vector name="main" dimensions="x y" initial_space="x y" type="complex">
     <components>
       u uDot
     </components>
@@ -129,7 +129,7 @@
             ]]>
           </evaluation>
         </computed_vector>
-        <operator kind="ex" constant="yes">
+        <operator kind="ex" constant="no">
           <operator_names>L</operator_names>
           <![CDATA[
             L = -T*kx*kx/mu;

@@ -40,21 +40,9 @@ class _IPOperator(Operator):
       
       targetComponentNamesUsed = set()
       
-      # FIXME: In order to reduce the number of regular expressions that need to be maintained,
-      # this code should use RegularExpressionStrings.componentWithIntegerValuedDimensions
-      # and RegularExpressionStrings.componentWithIntegerValuedDimensionsWithComponentAndVector
+      targetRegex = re.compile(r'\s*' + RegularExpressionStrings.componentWithIntegerValuedDimensions(legalTargetComponentNames) + r'\s*$',
+                               re.VERBOSE)
       
-      integerValuedDimensionsRegexString = ''
-      integerValuedDimensions = field.integerValuedDimensions
-      for listOfIntegerValuedDimensions in integerValuedDimensions:
-        integerValuedDimensionsRegexString += r'\[\s*' + r'\s*,\s*'.join([dim.name for dim in listOfIntegerValuedDimensions]) + r'\s*\]'
-      
-      # We need to construct a regular expression that the targets must match.
-      # The expression is of the form:
-      # (component1|component2)(?:\[\s*j\s*,\s*k\s*\])?
-      # i.e. should match anything of the form
-      # component1 or component2[ j, k ]
-      targetRegex = re.compile('(?P<componentName>' + '|'.join(legalTargetComponentNames) + ')(?:' + integerValuedDimensionsRegexString + ')?')
       
       for operatorName, target in operatorTargetPairs:
         operatorNamesUsed.add(operatorName)
@@ -73,7 +61,7 @@ class _IPOperator(Operator):
         if not match:
           raise ParserException(self.xmlElement,
                                 "IP operators can only act on components of integration vectors.\n"
-                                "The '%(componentName)s' operator acting on '%(target)s' doesn't seem to be of the right form\n"
+                                "The '%(operatorName)s' operator acting on '%(target)s' doesn't seem to be of the right form\n"
                                 "or '%(target)s' isn't in one of the integration vectors."
                                 % locals())
         
@@ -92,7 +80,25 @@ class _IPOperator(Operator):
         tempVectorList = [v for v in integrationVectors if componentName in v.components]
         assert len(tempVectorList) == 1
         targetVector = tempVectorList[0]
-                
+        
+        # Now we have the vector, we can check that it doesn't have integer-valued dimensions specified
+        # with values of anything other than the appropriate dimensions
+        integerValuedDimensionsRegex = re.compile(r'\s*' + RegularExpressionStrings.integerValuedDimensionsForComponentInField(componentName, field) + r'\s*$',
+                                                  re.VERBOSE)
+        
+        integerValuedDimensionsMatch = integerValuedDimensionsRegex.match(target)
+        
+        if integerValuedDimensionsMatch:
+          # If we got a match, then we have integer-valued dimensions, and we need to check them.
+          integerValuedDimensions = field.integerValuedDimensions
+          for listOfIntegerValuedDimensions in integerValuedDimensions:
+            if not match.group(dim.name).strip() == dim.name:
+              raise ParserException(self.xmlElement,
+                                    "IP operators can only act on every value of an integer-valued dimension.\n"
+                                    "The problem was caused by the '%(operatorName)s' operator acting on '%(target)s'.\n"
+                                    "EX operators do not have this restriction."
+                                    % locals())
+        
         # We have our match, now we need to create the operatorComponents dictionary
         if not operatorName in self.operatorComponents:
           self.operatorComponents[operatorName] = {targetVector: [componentName]}

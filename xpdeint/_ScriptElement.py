@@ -544,7 +544,7 @@ class _ScriptElement (Template):
         assert len(tempVectors) == 1
         
         vector = tempVectors[0]
-        regex = re.compile(RegularExpressionStrings.componentWithIntegerValuedDimensionsWithComponentAndField(componentName, vector.field),
+        regex = re.compile(RegularExpressionStrings.integerValuedDimensionsForComponentInField(componentName, vector.field),
                            re.VERBOSE)
         
         integerValuedDimensionsMatch = regex.search(code)

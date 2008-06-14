@@ -141,7 +141,7 @@ class _DeltaAOperator (Operator):
           # Or it is a derivative, and so the vector we should use is the one for the original component
           vector = derivativeMap[componentName]
         
-        regex = re.compile(RegularExpressionStrings.componentWithIntegerValuedDimensionsWithComponentAndField('', vector.field),
+        regex = re.compile(RegularExpressionStrings.integerValuedDimensionsForComponentInField('', vector.field),
                            re.VERBOSE)
         
         integerValuedDimensionsMatch = regex.search(match.group('integerValuedDimensions'))
@@ -271,7 +271,7 @@ class _DeltaAOperator (Operator):
         
         integrationVector = derivativeMap[componentName]
         
-        regex = re.compile(RegularExpressionStrings.componentWithIntegerValuedDimensionsWithComponentAndField('', integrationVector.field),
+        regex = re.compile(RegularExpressionStrings.integerValuedDimensionsForComponentInField('', integrationVector.field),
                            re.VERBOSE)
         
         integerValuedDimensionsMatch = regex.search(match.group('integerValuedDimensions'))

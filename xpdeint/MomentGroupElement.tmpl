@@ -84,12 +84,12 @@ void _${name}_sample()
   @# of our operators depends on
   @set $computedVectorDependencies = $dependencies.copy()
   @silent computedVectorDependencies.update($computedVectorsNeedingPrecalculationForOperatorContainers($operatorContainers))
-  ${evaluateComputedVectors(computedVectorDependencies)}@slurp
+  ${evaluateComputedVectors(computedVectorDependencies), autoIndent=True}@slurp
   @#
   @# Execute any operatorContainers
   @for $operatorContainer in $operatorContainers
   
-  ${operatorContainer.evaluateOperators}@slurp
+  ${operatorContainer.evaluateOperators, autoIndent=True}@slurp
   @end for
   
   @# If we have a sampling field, then we should sample with that
