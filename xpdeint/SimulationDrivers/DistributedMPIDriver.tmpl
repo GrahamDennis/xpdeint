@@ -36,7 +36,7 @@ int main(int argc, char **argv)
   @set $mpiDimension = $mpiDimensionForSpace($space)
   @#
   @for $vector in $vectorOverrides
-    @set $dimensionsIntegratedOver = set([d.name for d in field.dimensions if vector.field.hasDimension(d)])
+    @set $dimensionsIntegratedOver = set([d.name for d in field.dimensions if not vector.field.hasDimension(d)])
     @if not dimensionsIntegratedOver.intersection($distributedDimensionNames)
       @# If we aren't integrating over an MPI dimension, then everything is as usual.
       @continue
