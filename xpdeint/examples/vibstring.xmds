@@ -43,7 +43,7 @@
   
   <sequence>
     <integrate algorithm="RK4" interval="2e-3" steps="100">
-      <samples>50</samples>
+      <samples>50 50</samples>
       <computed_vector name="moment_creator" dimensions="" type="double">
         <components>moment</components>
         <dependencies fourier_space="kx"> main </dependencies>
@@ -82,6 +82,17 @@
         <dependencies>main</dependencies>
         <![CDATA[
           amp = u;
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling initial_sample="no">
+        <dimension name="x" lattice="50" fourier_space="yes" />
+        <moments>amp</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          amp = u.re;
+        
         ]]>
       </sampling>
     </group>

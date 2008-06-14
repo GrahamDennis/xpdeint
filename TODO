@@ -75,9 +75,6 @@
 * Write some automated tests. The idea would be that you would execute this and a selected set of simulation scripts would be compiled, executed, and
   their results checked against previous results (with a tolerance). This would be in addition to making sure that all the example scripts compile.
 
-* It is quite possible that the dimension coordinate variables when looping over a dimension with fewer points than the geometry in k-space will not
-  be correct. This needs to be checked, and fixed if necessary.
-
 * Add a 'moment group 0' which contains simulation constants. This moment group would be zero-d and would contain various constants depending on the
   exact simulation. Constants that should be included are: the final value of the propagation dimension, any passed-in arguments, the number of paths
   (if appropriate), and anything else appropriate.
