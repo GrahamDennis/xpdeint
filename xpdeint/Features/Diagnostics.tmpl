@@ -31,8 +31,13 @@ for (long _i0 = 0; _i0 < _${vector.id}_ncomponents; _i0++)
   @#
 ${insertCodeForFeatures('findMax', ['Driver'], {'variable': '_component_errors', 'count': c'_${vector.id}_ncomponents'})}@slurp
 if (_error > $integrator.tolerance)
+  @if len($vector.field.dimensions)
   _LOG(_WARNING_LOG_LEVEL, "${', '.join([componentName + '_error: %.1e (cutoff: %.1e)' for componentName in vector.components])}\n",
                            ${', '.join([c'_component_errors[${componentIndex}], _cutoff[${componentIndex}]' for componentIndex in range(len(vector.components))])});
+  @else
+  _LOG(_WARNING_LOG_LEVEL, "${', '.join([componentName + '_error: %.1e (size: %.1e)' for componentName in vector.components])}\n",
+                           ${', '.join([c'_component_errors[${componentIndex}], mod(_active_${vector.id}[${componentIndex}])' for componentIndex in range(len(vector.components))])});
+  @end if
   @#
 @end def
 
