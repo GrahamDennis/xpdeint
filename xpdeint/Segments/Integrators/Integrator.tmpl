@@ -254,7 +254,11 @@ This method writes code that should be executed if the integrator needs
 to be terminated early
 *@
   @#
-  @for mg in $momentGroups
+  @for mg, sampleCount in zip($momentGroups, $samples)
+    @if not $sampleCount
+      @continue
+    @end if
+    @#
     @for dim in mg.dimensionOverrides
 if (_${mg.name}_sample_index_${dim.name} < _${mg.outputField.name}_lattice_${dim.name})
   _${mg.name}_sample();
