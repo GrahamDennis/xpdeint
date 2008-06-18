@@ -46,8 +46,8 @@
       <samples>50 50</samples>
       <computed_vector name="moment_creator" dimensions="" type="double">
         <components>moment</components>
-        <dependencies fourier_space="kx"> main </dependencies>
         <evaluation>
+          <dependencies fourier_space="kx"> main </dependencies>
           <![CDATA[
             moment = mod2(u);
           ]]>

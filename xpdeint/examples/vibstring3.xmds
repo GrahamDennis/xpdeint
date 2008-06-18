@@ -56,10 +56,10 @@
   </vector>
   <computed_vector name="filter1" dimensions="" type="complex">
     <components>moment</components>
-    <dependencies fourier_space="kx ky">integrated_u main</dependencies>
     <!-- If the moments are of type 'double', then all dimensions that aren't integrated
          must be evaluated in 'x' space. -->
     <evaluation>
+      <dependencies fourier_space="kx ky">integrated_u main</dependencies>
       <![CDATA[
         moment = mod2(u);
       ]]>
@@ -72,10 +72,10 @@
       
       <computed_vector name="filter2" dimensions="" type="complex">
         <components>sparemoment</components>
-        <dependencies fourier_space="kx ky">integrated_u main</dependencies>
         <!-- If the moments are of type 'double', then all dimensions that aren't integrated
              must be evaluated in 'x' space. -->
         <evaluation>
+          <dependencies fourier_space="kx ky">integrated_u main</dependencies>
           <![CDATA[
             sparemoment = mod2(u);
           ]]>
@@ -120,10 +120,10 @@
       <sampling initial_sample="yes">
         <computed_vector name="filter3" dimensions="" type="complex">
           <components>sparemomentagain</components>
-          <dependencies fourier_space="kx ky">integrated_u main</dependencies>
           <!-- If the moments are of type 'double', then all dimensions that aren't integrated
                must be evaluated in 'x' space. -->
           <evaluation>
+            <dependencies fourier_space="kx ky">integrated_u main</dependencies>
             <![CDATA[
               sparemomentagain = mod2(u);
             ]]>

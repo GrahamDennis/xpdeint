@@ -56,8 +56,8 @@
   </vector>
   <computed_vector name="filter1" dimensions="" type="complex">
     <components>moment</components>
-    <dependencies>integrated_u main</dependencies>
     <evaluation>
+      <dependencies>integrated_u main</dependencies>
       <![CDATA[
         moment = mod2(u);
       ]]>
