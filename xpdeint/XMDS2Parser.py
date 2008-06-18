@@ -934,11 +934,11 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       
       vectorTemplate.components.append(componentName)
     
-    vectorTemplate.dependenciesEntity = self.parseDependencies(computedVectorElement, optional=True)
-    
     evaluationElement = computedVectorElement.getChildElementByTagName('evaluation')
     
     vectorTemplate.evaluationCode = evaluationElement.cdataContents()
+    
+    vectorTemplate.dependenciesEntity = self.parseDependencies(evaluationElement, optional=True)
     
     self.parseFeatureAttributes(evaluationElement, vectorTemplate)
     

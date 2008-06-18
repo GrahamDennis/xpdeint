@@ -52,8 +52,8 @@
     <components>
       Ncalc
     </components>
-    <dependencies fourier_space="y">wavefunction</dependencies>
     <evaluation>
+      <dependencies fourier_space="y">wavefunction</dependencies>
       <![CDATA[
         // Calculate the current normalisation of the wave function.
         Ncalc = mod2(phi);

@@ -59,8 +59,8 @@
     <components>
       Ncalc
     </components>
-    <dependencies fourier_space="y">wavefunction</dependencies>
     <evaluation>
+      <dependencies fourier_space="y">wavefunction</dependencies>
       <![CDATA[
         // Calculate the current normalisation of the wave function.
         Ncalc = mod2(phi1);
@@ -70,8 +70,8 @@
   
   <computed_vector name="groundstate_overlap" dimensions="" type="complex">
     <components>overlap</components>
-    <dependencies>groundstate wavefunction</dependencies>
     <evaluation>
+      <dependencies>groundstate wavefunction</dependencies>
       <![CDATA[
         overlap = phi1*conj(phi);
       ]]>
