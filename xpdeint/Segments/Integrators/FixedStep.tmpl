@@ -179,9 +179,15 @@ void _${name}_initialise_cross_propagation()
   @#
   @set $combinedLoopVectorMap = $integrationVectorMap.copy()
   @silent combinedLoopVectorMap.update($dependencyMap)
+  @#
+  @set $vectorsNeedingTransforms = set(combinedLoopVectorMap.keys())
+  @silent vectorsNeedingTransforms.update(combinedLoopVectorMap.values())
+  @silent vectorsNeedingTransforms.update($parent.boundaryConditionDependencies)
+  ${transformVectorsToSpace(vectorsNeedingTransforms, $homeSpace), autoIndent=True}@slurp
+  
   // Copy the initial value of the cross-propagation integration vectors and dependencies into our local arrays
   {
-    ${reducedFieldCopy($combinedLoopVectorMap,
+    ${reducedFieldCopy(combinedLoopVectorMap,
 """_active_${reducedVector.id}[_${reducedVector.id}_index_pointer + ${componentIndex}] = _active_${vector.id}[_${vector.id}_index_pointer + ${componentIndex}];
 """, positiveIndexOverride = $positiveIndexOverride, negativeIndexOverride = $negativeIndexOverride), autoIndent=True}@slurp
   }
