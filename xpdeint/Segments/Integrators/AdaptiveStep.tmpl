@@ -123,6 +123,11 @@ double _segment${segmentNumber}_${vector.id}_timestep_error(${vector.type}* _che
       // Return an error two times the tolerance in this case because the timestep must be reduced.
       return 2.0*${tolerance};
     _cutoff[_i0] *= ${cutoff};
+    @if $vector.type == 'complex'
+      @# multiply again because we are using mod2 for our complex vector and the cutoff should be interpreted in terms of
+      @# the absolute magnitude of the variables, not the mod-square
+    _cutoff[_i0] *= ${cutoff};
+    @end if
   }
   @end if
   
