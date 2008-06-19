@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <command_line>mpirun -n 2 ./kubo_integer_dimensions_mpi</command_line>
+    <xsil_file name="kubo_integer_dimensions_mpi.xsil" expected="kubo_integer_dimensions_mpi_expected.xsil" />
+    <xsil_file name="kubo_integer_dimensions_mpi_break.xsil" expected="kubo_integer_dimensions_mpi_break_expected.xsil" />
+  </testing>
+  
+  <name>kubo_integer_dimensions_mpi</name>
+  <author>Graham Dennis</author>
+  <description>
+    Example Kubo oscillator simulation
+  </description>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <integer_valued>
+        <dimension name="j" lattice="1024" domain="(1, 1024)" />
+      </integer_valued>
+    </transverse_dimensions>
+  </geometry>
+  
+  <driver name="distributed-mpi" />
+  
+  <features>
+    <benchmark />
+    <error_check />
+    <bing />
+    <stochastic>
+      <noise kind="gaussian" prefix="n" num="1" seed="157 9348 234"/>
+      <!-- If there is no seed attribute then seeds will be chosen randomly at run-time -->
+    </stochastic>
+  </features>
+  
+  <vector name="main">
+    <components type="complex">
+      z
+    </components>
+    <initialisation noises="">
+      <![CDATA[
+        z = 1.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <computed_vector name="0d_noise" dimensions="">
+    <components type="double">noise</components>
+    <evaluation>
+      <![CDATA[
+        noise = n_1;
+      ]]>
+    </evaluation>
+  </computed_vector>
+  
+  <sequence>
+    <integrate algorithm="ARK89" interval="10" steps="1000" tolerance="1e-8">
+      <samples>500 10</samples>
+      <operators noises="n">
+        <integration_vectors>main</integration_vectors>
+        <dependencies>0d_noise</dependencies>
+        <![CDATA[
+          dz_dt[j] = i*z*n_1;
+        ]]>
+      </operators>
+    </integrate>
+    <breakpoint filename="kubo_integer_dimensions_mpi_break.xsil">
+      <dependencies>main</dependencies>
+    </breakpoint>
+  </sequence>
+  
+  <output format="binary">
+    <group>
+      <sampling initial_sample="yes">
+        <dimension name="j" lattice="0" />
+        <moments>zR zI</moments>
+        <dependencies>main 0d_noise</dependencies>
+        <![CDATA[
+          zR = z.re/_lattice_j;
+          zI = z.im/_lattice_j;
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling initial_sample="yes">
+        <dimension name="j" />
+        <moments>zR zI</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          zR = z.re;
+          zI = z.im;
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="integer_dimensions.xsil" expected="integer_dimensions_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+  </testing>
+  
+  <name>integer_dimensions</name>
+  <author>Graham Dennis</author>
+  <description>
+    xpdeint script to test integer dimensions.
+  </description>
+  
+  <features>
+    <benchmark />
+    <error_check />
+    <bing />
+    <fftw version="none" />
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <integer_valued>
+        <dimension name="j" lattice="5" domain="(0, 4)" />
+      </integer_valued>
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="main" type="complex">
+    <components>
+      x
+    </components>
+    <initialisation>
+      <![CDATA[
+      x[j] = 1.0e-3;
+      x[0] = 1.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="RK4" interval="60.0" steps="25000">
+      <samples>100</samples>
+      <operators>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+        long j_minus_one = (j-1) % _lattice_j;
+        if (j_minus_one < 0)
+          j_minus_one += _lattice_j;
+        long j_plus_one  = (j+1) % _lattice_j;
+        dx_dt[j] = x[j]*(x[j_minus_one] - x[j_plus_one]);
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  <output format="binary">
+    <group>
+      <sampling initial_sample="yes">
+        <dimension name="j" />
+        <moments>xR</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          xR = x;
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>

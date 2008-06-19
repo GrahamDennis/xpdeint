@@ -14,7 +14,7 @@
 
 * CDATA initialisation should be able to depend on other vectors
 
-* Add the ability to distribute stochastic simulations using OpenMP
+* Add the ability to distribute stochastic simulations using OpenMP. GD: Why?
 
 * Add the ability to distribute stochastic simulations using MPI with the scheduling method
 
@@ -30,6 +30,8 @@
                    shows how this can work.
     - High priority: <dimension "domain"> for integer dimensions. May not be simple as lattice
                      and domain are linked. Why do integer dimensions accept both lattice and domain??
+                     GD: For integer dimensions, lattice is optional and is used as a check for the values
+                         provided in 'domain'.
     - Challenging: <dimension "lattice"> in geometries, and samples (and for integer dimensions)
                    <integrate "steps"> and <samples>
     - Weird/low-priority: Number of cycles
@@ -57,7 +59,7 @@
 
 * Runtime-limiting support (as in xmds-1)
 
-* In adaptive integrators, the ability to set an absolute tolerance (per vector component) in addition to a relative tolerance
+* In adaptive integrators, the ability to set an absolute cutoff (per vector component) in addition to a relative cutoff
   for step-error calculations.
 
 * Check that all bug fixes to xmds-1 since September 1, 2007 have been added to xpdeint. In particular, I don't think the changes to the adaptive

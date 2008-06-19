@@ -35,7 +35,7 @@ class Usage(Exception):
 def array_approx_equal(array1, array2, absTol, relTol):
   """Return `True` if all of (`array1` - `array2`) <= `absTol` or (`array1` - `array2`) <= `relTol` * `array1`"""
   diff = array1-array2
-  return numpy.logical_or(numpy.abs(diff) <= relTol * array1, diff <= absTol).all()
+  return numpy.logical_or(numpy.logical_or(numpy.abs(diff) <= relTol * array1, diff <= absTol), numpy.isnan(diff)).all()
 
 
 def scriptTestingFunction(root, scriptName, tempPath, absPath, self):
@@ -95,12 +95,16 @@ def scriptTestingFunction(root, scriptName, tempPath, absPath, self):
   # Now we have compiled, we need to run the simulation
   
   # Allow command-line arguments to be specified for the simulation
-  argumentsString = ''
+  commandLineElement = testingElement.getChildElementByTagName('command_line', optional=True)
   argumentsElement = testingElement.getChildElementByTagName('arguments', optional=True)
+  commandLineString = './' + simulationName
+  if commandLineElement:
+    # The command line element overrides the prefix
+    commandLineString = commandLineElement.innerText().strip()
   if argumentsElement:
-    argumentsString = ' ' + argumentsElement.innerText().strip()
+    commandLineString += ' ' + argumentsElement.innerText().strip()
   
-  simulationProc = subprocess.Popen('./' + simulationName + argumentsString,
+  simulationProc = subprocess.Popen(commandLineString,
                                     shell=True,
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE,
@@ -115,8 +119,9 @@ def scriptTestingFunction(root, scriptName, tempPath, absPath, self):
   for xsilFileElement in xsilFileElements:
     sourceFile = xsilFileElement.getAttribute('name').strip()
     expectedResultsFile = xsilFileElement.getAttribute('expected').strip()
-    absoluteTolerance = None
-    relativeTolerance = None
+    # Defaults
+    absoluteTolerance = 0 
+    relativeTolerance = 1e-9
     
     if xsilFileElement.hasAttribute('absolute_tolerance'):
       absoluteTolerance = float(xsilFileElement.getAttribute('absolute_tolerance'))
