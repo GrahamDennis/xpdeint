@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="halt_non_finite.xsil" expected="halt_non_finite_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+  </testing>
+  
+  <name>halt_non_finite</name>
+  <author>Gabriel McManus</author>
+  <description>
+    An ODE with NaN derivatives.
+    Used to test the halt_non_finite feature.
+  </description>
+  
+  <features>
+    <benchmark />
+    <fftw version="none" />
+    <halt_non_finite />
+    <globals>
+      <![CDATA[
+      const double x0 = 1.0;
+      const double t0 = 1.0;
+      ]]>
+    </globals>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+  </geometry>
+  
+  <vector name="main" type="double">
+    <components> x </components>
+    <initialisation>
+      <![CDATA[
+      x = x0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="ARK45" interval="2" steps="10000" tolerance="1e-5">
+      <samples>200</samples>
+      <operators>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+          dx_dt = sqrt(t0 - t);
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  
+  <output format="binary">
+    <group>
+      <sampling initial_sample="yes">
+        <moments>xOut</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          xOut = x;
+        ]]>
+      </sampling>
+    </group>
+  </output>
+  
+</simulation>
