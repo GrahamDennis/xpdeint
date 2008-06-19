@@ -26,7 +26,25 @@ class XSILDataASCII(XSILData):
     self.parseDataString(dataString)
   
   def parseDataString(self, dataString):
-    assert False
+    lines = dataString.splitlines()
+    del dataString
+    varCount = len(self.independentVariables) + len(self.dependentVariables)
+    indepSize = reduce(int.__mul__, [indVar['length'] for indVar in self.independentVariables])
+    result = numpy.empty(indepSize*varCount)
+    for lineNum, line in enumerate(lines):
+      result[lineNum*varCount:((lineNum+1)*varCount)] = numpy.fromstring(line, numpy.float64, sep=' ')
+    assert len(result) == indepSize*varCount
+    
+    result = result.reshape(indepSize, varCount)
+    independentGeometry = []
+    
+    for varNum, ivar in enumerate(self.independentVariables):
+      independentGeometry.append(ivar['length'])
+      ivar['array'] = numpy.unique(result[:, varNum])
+      assert len(ivar['array']) == ivar['length']
+    for varNum, dvar in enumerate(self.dependentVariables):
+      a = result[:, varNum + len(self.independentVariables)]
+      dvar['array'] = a.reshape(*independentGeometry)
 
 
 class XSILDataBinary(XSILData):
@@ -53,20 +71,15 @@ class XSILDataBinary(XSILData):
     
     for independentVariable in self.independentVariables:
       size = numpy.fromfile(fd, dtype=ulongDType, count=1)
-      size.newbyteorder('=') # Convert to native datatype
       independentGeometry.append(size)
       assert size == independentVariable['length']
       a = numpy.fromfile(fd, dtype=floatDType, count=size)
-      a.newbyteorder('=') # Convert to native datatype
       independentVariable['array'] = a
     
     for dependentVariable in self.dependentVariables:
       size = numpy.fromfile(fd, dtype=ulongDType, count=1)
-      size.newbyteorder('=') # Convert to native datatype
       a = numpy.fromfile(fd, dtype=floatDType, count=size)
-      a.newbyteorder('=') # Convert to native datatype
-      a.reshape(*independentGeometry)
-      dependentVariable['array'] = a
+      dependentVariable['array'] = a.reshape(*independentGeometry)
     
 
 class XSILObject(object):
@@ -107,8 +120,10 @@ class XSILFile(object):
       variableNames = streamElement.innerText().strip().split(' ')
       assert len(variableNames) == nVariables
       
-      independentVariables = [{'name': name} for name in variableNames[0:nIndependentVariables]]
-      dependentVariables = [{'name': name} for name in variableNames[nIndependentVariables:]]
+      # We do str(name) here to convert unicode objects to str objects
+      # It seems that numpy doesn't like unicode strings.
+      independentVariables = [{'name': str(name)} for name in variableNames[0:nIndependentVariables]]
+      dependentVariables = [{'name': str(name)} for name in variableNames[nIndependentVariables:]]
       
       assert len(dependentVariables) == nDependentVariables
       
@@ -124,7 +139,7 @@ class XSILFile(object):
       streamElement = dataArrayElement.getChildElementByTagName('Stream')
       metalinkElement = streamElement.getChildElementByTagName('Metalink')
       format = metalinkElement.getAttribute('Format').strip()
-      assert format == 'Binary', "ASCII format output currently unsupported"
+      # assert format == 'Binary', "ASCII format output currently unsupported"
       
       dataObject = None
       
@@ -135,6 +150,8 @@ class XSILFile(object):
         relativePath = streamElement.innerText().strip()
         dataFileName = os.path.join(os.path.split(filename)[0], relativePath)
         dataObject = XSILDataBinary(independentVariables, dependentVariables, uLong, precision, encoding, dataFileName)
+      elif format == 'Text':
+        dataObject = XSILDataASCII(independentVariables, dependentVariables, streamElement.innerText().strip())
       
       self.xsilObjects.append(XSILObject(xsilName, dataObject))
     

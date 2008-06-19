@@ -117,8 +117,7 @@ class _CrossPropagationOperator (Operator):
       reducedVector.type = fullVector.type
       reducedVector.components = fullVector.components
       reducedVector.needsInitialisation = False
-      reducedField.temporaryVectors.add(reducedVector)
-      self._children.append(reducedVector)
+      reducedField.managedVectors.add(reducedVector)
     
     return reducedVector
   
