@@ -810,14 +810,14 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
         initialisationTemplate = vectorTemplate.initialiser
       elif kindString == 'xsil':
         initialisationTemplate = VectorInitialisationFromXSILTemplate(**self.argumentsToTemplateConstructors)
-        filenameElement = initialisationElement.getChildElementByTagName('filename')
         geometryMatchingMode = 'strict'
-        if filenameElement.hasAttribute('geometry_matching_mode'):
-          geometryMatchingMode = filenameElement.getAttribute('geometry_matching_mode').strip().lower()
+        if initialisationElement.hasAttribute('geometry_matching_mode'):
+          geometryMatchingMode = initialisationElement.getAttribute('geometry_matching_mode').strip().lower()
           if not geometryMatchingMode in ('strict', 'loose'):
-            raise ParserException(filenameElement, "The geometry matching mode for XSIL import must either be 'strict' or 'loose'.")
+            raise ParserException(initialisationElement, "The geometry matching mode for XSIL import must either be 'strict' or 'loose'.")
         initialisationTemplate.geometryMatchingMode = geometryMatchingMode
         
+        filenameElement = initialisationElement.getChildElementByTagName('filename')
         momentGroupName = 'NULL'
         if filenameElement.hasAttribute('moment_group'):
           momentGroupName = 'moment_group_' + filenameElement.getAttribute('moment_group').strip()
