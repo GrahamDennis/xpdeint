@@ -178,12 +178,12 @@ def scriptTestingFunction(root, scriptName, tempPath, absPath, self):
           # These are the coordinates, we just specify a constant absolute and relative tolerance.
           # No-one should need to change these
           self.assert_(array_approx_equal(v1['array'], v2['array'], 1e-7, 1e-6),
-                      "Coordinate '%s' in moment group %i didn't pass tolerance criteria." % (v1['name'], mgNum+1))
+                      "Coordinate '%s' in moment group %i of file '%s' didn't pass tolerance criteria." % (v1['name'], mgNum+1, sourceFile))
         
         for v1, v2 in zip(o1.dependentVariables, o2.dependentVariables):
           self.assert_(v1['name'] == v2['name'])
           self.assert_(array_approx_equal(v1['array'], v2['array'], currentAbsoluteTolerance, currentRelativeTolerance),
-                       "Dependent variable '%s' in moment group %i failed to pass tolerance criteria." % (v1['name'], mgNum+1))
+                       "Dependent variable '%s' in moment group %i of file '%s' failed to pass tolerance criteria." % (v1['name'], mgNum+1, sourceFile))
   
   # Test has succeeded, so save our checksum for the source file and copy the source file
   file(checksumFilePath, 'w').write(currentChecksum)
