@@ -147,7 +147,7 @@ def symbolInString(string):
   if len(results) > 1:
     raise ValueError('Too many symbols')
   elif len(results) == 0:
-    raise ValueError('No symbols found')
+    return None
   else:
     return results[0]
 

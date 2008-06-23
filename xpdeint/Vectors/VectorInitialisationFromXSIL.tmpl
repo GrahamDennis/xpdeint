@@ -265,6 +265,11 @@ else
   _inputfield_min_${dimension.name} = _inputData[${dimensionNumber}]._floatPtr[0];
   @end for
 
+  @if len($vector.field.dimensions)
+// Create inputfield index variables
+long ${', '.join([c'_inputfield_i${dimNum}' for dimNum in xrange(len($vector.field.dimensions))])};
+  @end if
+
 // Index pointer into the input array (new and old)
 off_t _inputfield_index_pointer, _inputfield_old_index_pointer;
 for (unsigned int _component = 0; _component < ${componentNameSizePrefix}_${vector.id}_ncomponents; _component++) {
@@ -322,7 +327,7 @@ _inputfield_index_pointer = 0;
 
   @for dimensionNumber, dimension in enumerate($vector.field.dimensions)
     @set $dimName = $dimensionNameForSpace(dimension, space)
-long _inputfield_i${dimensionNumber} = @slurp
+_inputfield_i${dimensionNumber} = @slurp
     @if $dimensionIsInFourierSpace(dimension, space)
 lround(${dimName}/_dimDelta[${dimensionNumber}]) + (_inputLattice[${dimensionNumber}]/2);
     @else

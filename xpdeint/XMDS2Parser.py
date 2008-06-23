@@ -734,6 +734,9 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       raise ParserException(vectorElement, "Each vector element must have a non-empty 'name' attribute")
     
     vectorName = vectorElement.getAttribute('name')
+    if not vectorName == RegularExpressionStrings.symbolInString(vectorName):
+      raise ParserException(vectorElement, "'%(vectorName)s' is not a valid name for a vector.\n"
+                                           "The name must not start with a number and can only contain letters, numbers and underscores." % locals())
     
     # Check that this vector name is unique
     for field in self.globalNameSpace['fields']:
@@ -1184,7 +1187,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     
     filterTemplate.operatorDefinitionCode = filterElement.cdataContents()
     
-    filterTemplate.dependenciesEntity = self.parseDependencies(filterElement)
+    filterTemplate.dependenciesEntity = self.parseDependencies(filterElement, optional=True)
     
     return filterTemplate
   
@@ -1546,7 +1549,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     outputTemplate.filename = filename
     outputTemplate.xmlElement = outputElement
     
-    momentGroupElements = outputElement.getChildElementsByTagName('group')
+    momentGroupElements = outputElement.getChildElementsByTagName('group', optional=True)
     for momentGroupNumber, momentGroupElement in enumerate(momentGroupElements):
       samplingElement = momentGroupElement.getChildElementByTagName('sampling')
       
