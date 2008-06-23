@@ -315,16 +315,18 @@ ${initialisationCode, fixupWhitespace=True}
 
 @def insideDataLoops
   @#
+  @set $space = $vector.initialSpace
 // Save the old initialisation pointer, and clear the new one
 _inputfield_old_index_pointer = _inputfield_index_pointer;
 _inputfield_index_pointer = 0;
 
   @for dimensionNumber, dimension in enumerate($vector.field.dimensions)
+    @set $dimName = $dimensionNameForSpace(dimension, space)
 long _inputfield_i${dimensionNumber} = @slurp
-    @if $dimensionIsInFourierSpace(dimension, $vector.initialSpace)
-lround(${dimension.name}/_dimDelta[${dimensionNumber}]) + (_inputLattice[${dimensionNumber}]/2);
+    @if $dimensionIsInFourierSpace(dimension, space)
+lround(${dimName}/_dimDelta[${dimensionNumber}]) + (_inputLattice[${dimensionNumber}]/2);
     @else
-lround((${dimension.name} - _inputfield_min_${dimension.name})/_dimDelta[${dimensionNumber}]);
+lround((${dimName} - _inputfield_min_${dimName})/_dimDelta[${dimensionNumber}]);
     @end if
 
 // Check if the input grid has this coordinate value
@@ -334,20 +336,20 @@ if (_inputfield_i${dimensionNumber} < 0 || _inputfield_i${dimensionNumber} >= _i
 
 // check that the input coordinate matches up with a field coordinate
 {
-  double _inputfield_${dimension.name};
+  double _inputfield_${dimName};
   if (_isPrecisionDouble)
-    _inputfield_${dimension.name} = _inputData[${dimensionNumber}]._doublePtr[_inputfield_i${dimensionNumber}];
+    _inputfield_${dimName} = _inputData[${dimensionNumber}]._doublePtr[_inputfield_i${dimensionNumber}];
   else
-    _inputfield_${dimension.name} = _inputData[${dimensionNumber}]._floatPtr[_inputfield_i${dimensionNumber}];
+    _inputfield_${dimName} = _inputData[${dimensionNumber}]._floatPtr[_inputfield_i${dimensionNumber}];
   
-  if (fabs(_inputfield_${dimension.name} - ${dimension.name}) > 0.1*_dimDelta[${dimensionNumber}])
+  if (fabs(_inputfield_${dimName} - ${dimName}) > 0.1*_dimDelta[${dimensionNumber}])
     // This only happens if your input field grid does not exactly match up with the simulation grid.
     // _LOG will cause the simulation to exit
-    _LOG(_ERROR_LOG_LEVEL, "The input field coordinate in the '$dimension.name' dimensiono does not match up with the field coordinate.\n"
-                           "_i${dimensionNumber}: %li, ${dimension.name}: %e, _inputfield_i${dimensionNumber}: %li, "
-                           "_inputfield_${dimension.name}: %e, d${dimension.name}: %e, diff/Delta: %e\n",
-                           _i${dimensionNumber}, ${dimension.name}, _inputfield_i${dimensionNumber},
-                           _inputfield_${dimension.name}, d${dimension.name}, fabs(_inputfield_${dimension.name} - ${dimension.name})/_dimDelta[$dimensionNumber]);
+    _LOG(_ERROR_LOG_LEVEL, "The input field coordinate in the '$dimName' dimension does not match up with the field coordinate.\n"
+                           "_i${dimensionNumber}: %li, ${dimName}: %e, _inputfield_i${dimensionNumber}: %li, "
+                           "_inputfield_${dimName}: %e, d${dimName}: %e, diff/Delta: %e\n",
+                           _i${dimensionNumber}, ${dimName}, _inputfield_i${dimensionNumber},
+                           _inputfield_${dimName}, d${dimName}, fabs(_inputfield_${dimName} - ${dimName})/_dimDelta[$dimensionNumber]);
 }
 
 _inputfield_index_pointer += _inputfield_i${dimensionNumber}${''.join([c' * _inputLattice[$i]' for i in range(dimensionNumber + 1, len($vector.field.dimensions))])};
