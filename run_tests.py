@@ -92,7 +92,20 @@ def scriptTestingFunction(root, scriptName, tempPath, absPath, self):
   
   self.assert_(returnCode == 0, "Failed to compile generated source.")
   
-  # Now we have compiled, we need to run the simulation
+  # Now we have compiled, we need to copy any input data needed and then run the simulation
+  inputXSILElements = testingElement.getChildElementsByTagName('input_xsil_file', optional=True)
+  
+  filesToCopy = []
+  
+  for inputXSILElement in inputXSILElements:
+    name = inputXSILElement.getAttribute('name').strip()
+    filesToCopy.append(name)
+    inputXSILFile = XSILFile(os.path.join(os.path.split(absPath)[0], name), loadData=False)
+    filesToCopy.extend([xsilObject.filename for xsilObject in inputXSILFile.xsilObjects if xsilObject.filename])
+  
+  for fileToCopy in filesToCopy:
+    sourceFile = os.path.join(os.path.split(absPath)[0], fileToCopy)
+    shutil.copy(sourceFile, testDir)
   
   # Allow command-line arguments to be specified for the simulation
   commandLineElement = testingElement.getChildElementByTagName('command_line', optional=True)

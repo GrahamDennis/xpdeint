@@ -83,15 +83,17 @@ class XSILDataBinary(XSILData):
     
 
 class XSILObject(object):
-  def __init__(self, name, dataObject):
+  def __init__(self, name, dataObject, filename = None):
     self.name = name
     self.dataObject = dataObject
-    self.independentVariables = dataObject.independentVariables
-    self.dependentVariables = dataObject.dependentVariables
+    if dataObject:
+      self.independentVariables = dataObject.independentVariables
+      self.dependentVariables = dataObject.dependentVariables
+    self.filename = filename
 
 
 class XSILFile(object):
-  def __init__(self, filename):
+  def __init__(self, filename, loadData=True):
     self.filename = filename
     self.xsilObjects = []
     
@@ -143,17 +145,21 @@ class XSILFile(object):
       
       dataObject = None
       
+      objectFilename = None
+      
       if format == 'Binary':
         uLong = metalinkElement.getAttribute('UnsignedLong').strip()
         precision = metalinkElement.getAttribute('precision').strip()
         encoding = metalinkElement.getAttribute('Encoding').strip()
-        relativePath = streamElement.innerText().strip()
-        dataFileName = os.path.join(os.path.split(filename)[0], relativePath)
-        dataObject = XSILDataBinary(independentVariables, dependentVariables, uLong, precision, encoding, dataFileName)
+        objectFilename = streamElement.innerText().strip()
+        dataFileName = os.path.join(os.path.split(filename)[0], objectFilename)
+        if loadData:
+          dataObject = XSILDataBinary(independentVariables, dependentVariables, uLong, precision, encoding, dataFileName)
       elif format == 'Text':
-        dataObject = XSILDataASCII(independentVariables, dependentVariables, streamElement.innerText().strip())
+        if loadData:
+          dataObject = XSILDataASCII(independentVariables, dependentVariables, streamElement.innerText().strip())
       
-      self.xsilObjects.append(XSILObject(xsilName, dataObject))
+      self.xsilObjects.append(XSILObject(xsilName, dataObject, objectFilename))
     
   
 
