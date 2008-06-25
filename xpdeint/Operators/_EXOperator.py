@@ -93,6 +93,7 @@ class _EXOperator(Operator):
           targetComponentName = 'target' + str(specialTargets.index(target))
           targetVector = specialTargetsVector
         else:
+          # We have a match for a component of a vector
           targetComponentName = match.group('componentName')
           
           # Now we need to get the vector corresponding to componentName
@@ -106,14 +107,16 @@ class _EXOperator(Operator):
         
         if not targetVector in self.operatorComponents[operatorName]:
           self.operatorComponents[operatorName][targetVector] = [targetComponentName]
-        else:
+        elif not targetComponentName in self.operatorComponents[operatorName][targetVector]:
           self.operatorComponents[operatorName][targetVector].append(targetComponentName)
+        
         
         # Set the replacement string for the L[x] operator
         replacementString = "_%(operatorName)s_%(targetComponentName)s" % locals()
           
-        # Add the appropriate component to the result vector
-        self.resultVector.components.append(replacementString)
+        # Add the appropriate component to the result vector if it's not already there
+        if not replacementString in self.resultVector.components:
+          self.resultVector.components.append(replacementString)
         
         if match and match.group('integerValuedDimensions'):
           # The target of the operator was a string of the form:
