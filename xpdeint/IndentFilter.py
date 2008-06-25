@@ -10,6 +10,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 from Cheetah.Filters import Filter
 
 import sys
+import textwrap
 
 class IndentFilter(Filter):
   def filter(self, val, **kw):
@@ -63,33 +64,7 @@ class IndentFilter(Filter):
       replacementString = ''
     
     if kw.get('fixupWhitespace', False):
-      lines = replacementString.splitlines()
-      indentationLevels = []
-      for line in lines:
-        if not line or line.isspace():
-          # If the line is just space (or empty), then it won't contribute
-          # to determining the overall indent level
-          continue
-        # Strip leading whitespace
-        strippedLine = line.lstrip()
-        # The difference in the lengths is our indentation level
-        indentationLevels.append(len(line) - len(strippedLine))
-      
-      # Our overall indentation level is the minimum of the indentation levels
-      indentationLevel = min(indentationLevels)
-      indentation = ' '*indentationLevel
-      newLines = []
-      # Strip the leading whitespace
-      for line in lines:
-        newLine = None
-        if line.isspace():
-          # If the line is empty, just add an empty line
-          newLine = '\n'
-        else:
-          newLine = line[indentationLevel:]
-        newLines.append(newLine)
-      # Now set the replacement string
-      replacementString = '\n'.join(newLines)
+      replacementString = textwrap.dedent(replacementString)
     
     if kw.get('autoIndent'):
       # Grab the transaction object from our caller's frame. Yay introspection.
