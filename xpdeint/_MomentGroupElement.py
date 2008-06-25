@@ -55,19 +55,15 @@ class _MomentGroupElement (FieldElement):
   def bindNamedVectors(self):
     super(_MomentGroupElement, self).bindNamedVectors()
     
-    dependencies = self.vectorsFromEntity(self.dependenciesEntity)
-    
     if self.hasattr('sampleField'):
       sampleSpaceMask = self.sampleField.spaceMask
     else:
       sampleSpaceMask = self.spaceMask
     
-    for dependency in dependencies:
+    for dependency in self.dependencies:
       if self.hasPostProcessing and dependency.type == 'complex':
         self.rawVector.type = 'complex'
       
-    
-    self.dependencies.update(dependencies)
   
 
 

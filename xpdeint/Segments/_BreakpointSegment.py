@@ -30,8 +30,6 @@ class _BreakpointSegment (_Segment):
   def bindNamedVectors(self):
     super(_Segment, self).bindNamedVectors()
     
-    self.dependencies.update(self.vectorsFromEntity(self.dependenciesEntity))
-    
     aVector = list(self.dependencies)[0]
     for vector in self.dependencies:
       if not vector.field.dimensions == aVector.field.dimensions:

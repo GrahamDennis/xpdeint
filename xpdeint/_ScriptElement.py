@@ -83,6 +83,7 @@ class _ScriptElement (Template):
     self._propagationDimension = None
     self._propagationDirection = None
     self.xmlElement = localKWs.get('xmlElement', None)
+    self.dependenciesEntity = None
     
     if self.hasattr('globalNameSpaceName'):
       globalNameSpace = KWs['searchList'][0]
@@ -428,7 +429,9 @@ class _ScriptElement (Template):
     implement this method if it needs to bind the name of a vector to the actual vector
     object itself and check if it even exists.
     """
-    pass
+    if self.dependenciesEntity:
+      self.dependencies.update(self.vectorsFromEntity(self.dependenciesEntity))
+    
   
   def preflight(self):
     """
