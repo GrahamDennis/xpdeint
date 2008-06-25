@@ -130,17 +130,13 @@ class _Operator (ScriptElement):
     super(_Operator, self).bindNamedVectors()
     
     if self.dependenciesEntity:
-      dependencies = self.vectorsFromEntity(self.dependenciesEntity)
-      
-      for dependency in dependencies:
+      for dependency in self.dependencies:
         if self.vectorsMustBeInSubsetsOfIntegrationField and not dependency.field.isSubsetOfField(self.field):
           raise ParserException(self.dependenciesEntity.xmlElement,
                   "Can't depend on a vector that is in a field that has dimensions that "
                   "aren't in this field (%s).\n"
                   "The vector causing this problem is '%s'." 
                   % (self.field.name, dependency.name))
-      
-      self.dependencies.update(dependencies)
     
     if self.resultVector:
       self.resultVector.spacesNeeded.add(self.operatorSpace)

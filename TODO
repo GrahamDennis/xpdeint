@@ -12,8 +12,6 @@
 
 * Add ASCII/binary vector initialisation options
 
-* CDATA initialisation should be able to depend on other vectors
-
 * Add the ability to distribute stochastic simulations using OpenMP. GD: Why?
 
 * Add the ability to distribute stochastic simulations using MPI with the scheduling method
@@ -73,9 +71,6 @@
   The point of this is to make the output format of a breakpoint independent of the output format for the whole simulation.
 
 * Fix XSIL import to not depend on libxmds, or do something equivalent.
-
-* Write some automated tests. The idea would be that you would execute this and a selected set of simulation scripts would be compiled, executed, and
-  their results checked against previous results (with a tolerance). This would be in addition to making sure that all the example scripts compile.
 
 * Add a 'moment group 0' which contains simulation constants. This moment group would be zero-d and would contain various constants depending on the
   exact simulation. Constants that should be included are: the final value of the propagation dimension, any passed-in arguments, the number of paths

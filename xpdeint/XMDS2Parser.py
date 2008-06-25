@@ -806,6 +806,8 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       
       if kindString in (None, 'code'):
         initialisationTemplate = VectorInitialisationFromCDATATemplate(**self.argumentsToTemplateConstructors)
+        initialisationTemplate.dependenciesEntity = self.parseDependencies(initialisationElement, optional=True)
+        
         if len(initialisationElement.cdataContents()) == 0:
           raise ParserException(initialisationElement, "Empty initialisation code in 'code' initialisation element.")
         initialisationTemplate.initialisationCode = initialisationElement.cdataContents()
