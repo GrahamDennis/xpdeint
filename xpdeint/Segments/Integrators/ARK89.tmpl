@@ -176,9 +176,7 @@ ${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
 
 // Step 1
 
-${loopOverVectorsWithInnerContentTemplate($integrationVectors,
-"""_akafield_${vector.id}[$index] = _${vector.id}[$index];
-""")}@slurp
+${copyVectors($integrationVectors, '_akafield')}@slurp
 
 _segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 1, 0);
 
@@ -571,9 +569,7 @@ ${goToHomeSpace}@slurp
 // Take full step
 
 // ai = a
-${loopOverVectorsWithInnerContentTemplate($integrationVectors,
-"""_initial_${vector.id}[$index] = _${vector.id}[$index];
-""")}@slurp
+${copyVectors($integrationVectors, '_initial')}@slurp
 
 // a = a + etc
 ${loopOverVectorsWithInnerContentTemplate($integrationVectors,

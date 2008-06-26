@@ -26,10 +26,7 @@ ${propagationDimension} += _step/2.0;
 
 ${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
 
-${loopOverVectorsWithInnerContentTemplate($integrationVectors,
-"""// oldCopy = a
-_oldCopy_${vector.id}[$index] = _${vector.id}[$index];
-""")}@slurp
+${copyVectors($integrationVectors, '_oldCopy')}@slurp
 
   @for $vector in $integrationVectors
 _active_${vector.id} = _${vector.id};

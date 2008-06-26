@@ -159,9 +159,7 @@ ${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
 
 ${propagationDimension} += _a[0]*_step;
 
-${loopOverVectorsWithInnerContentTemplate($integrationVectors,
-"""_akafield_${vector.id}[$index] = _${vector.id}[$index];
-""")}@slurp
+${copyVectors($integrationVectors, '_akafield')}@slurp
 
   @for $vector in $integrationVectors
 _active_${vector.id} = _${vector.id};

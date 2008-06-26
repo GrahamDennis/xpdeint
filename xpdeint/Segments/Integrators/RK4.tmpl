@@ -19,10 +19,8 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   @#
 ${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
 
-${loopOverVectorsWithInnerContentTemplate($integrationVectors,
-"""// a_k = a
-_akfield_${vector.id}[$index] = _${vector.id}[$index];
-""")}@slurp
+// a_k = a
+${copyVectors($integrationVectors, '_akfield')}@slurp
 
 _segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 1, 0);
 
@@ -30,10 +28,8 @@ _segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 1, 0);
 _segment${segmentNumber}_ip_evolve(+1);
 ${goToHomeSpace}@slurp
 
-${loopOverVectorsWithInnerContentTemplate($integrationVectors,
-"""// a_i = a
-_aifield_${vector.id}[$index] = _${vector.id}[$index];
-""")}@slurp
+// a_i = a
+${copyVectors($integrationVectors, '_aifield')}@slurp
 
   @for $vector in $integrationVectors
 _active_${vector.id} = _akfield_${vector.id};

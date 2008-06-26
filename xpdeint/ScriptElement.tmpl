@@ -669,3 +669,11 @@ _${vector.id}_evaluate();
   @#
 @end def
 
+@def copyVectors($vectors, $destPrefix, $srcPrefix = None)
+@#doc: Copy the contents of `vecSrc` into `vecDest`
+  @#
+  @for $vector in $vectors
+memcpy(${destPrefix}_${vector.id}, ${srcPrefix}_${vector.id}, sizeof(${vector.type}) * ${sizeOfVector(vector)});
+  @end for
+  @#
+@end def
