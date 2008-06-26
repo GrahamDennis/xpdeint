@@ -118,10 +118,8 @@ _g[6]=( -_b[6][1]*_c[4]+_b[6][4]*_c[1] )/_den;
   @#
 ${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
 
-${loopOverVectorsWithInnerContentTemplate($integrationVectors,
-"""// a_k = y1
-_akfield_${vector.id}[$index] = _${vector.id}[$index];
-""")}@slurp
+// a_k = y1
+${copyVectors($integrationVectors, '_akfield')}@slurp
 
 _segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 1, 0);
 
@@ -129,10 +127,11 @@ _segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 1, 0);
 _segment${segmentNumber}_ip_evolve(+1);
 ${goToHomeSpace}@slurp
 
-${loopOverVectorsWithInnerContentTemplate($integrationVectors,
-"""// a_i = y2 = y1
-_aifield_${vector.id}[$index] = _checkfield_${vector.id}[$index] = _${vector.id}[$index];
-""")}@slurp
+// y2 = y1
+${copyVectors($integrationVectors, '_checkfield')}@slurp
+
+// a_i = y1
+${copyVectors($integrationVectors, '_aifield')}@slurp
 
   @for $vector in $integrationVectors
 _active_${vector.id} = _akfield_${vector.id};
