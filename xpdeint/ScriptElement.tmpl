@@ -175,7 +175,7 @@ optimise in the future with vectorisation and OpenMP.
 ${blankLineSeparator}@slurp
     @set $blankLineSeparator = '\n'
     @#
-unsigned long _${vector.id}_index_pointer = 0;
+long _${vector.id}_index_pointer = 0;
     @#
     @for $componentNumber, $componentName in enumerate($vector.components)
 #define $componentName _active_${vector.id}[_${vector.id}_index_pointer + $componentNumber]
@@ -280,7 +280,7 @@ ${insertCodeForFeatures('loopOverFieldInSpaceWithVectorsAndInnerContentBegin', f
 ${blankLineSeparator}@slurp
     @set $blankLineSeparator = '\n'
     @#
-unsigned long _${vector.id}_index_pointer = 0;
+long _${vector.id}_index_pointer = 0;
     @if not $vector in $vectorOverrides and not $vector in $vectorsNotNeedingDefines
       @# If $vector isn't in $vectorOverrides, then we want to @define the vector's components
       @for $componentNumber, $componentName in enumerate($vector.components)
