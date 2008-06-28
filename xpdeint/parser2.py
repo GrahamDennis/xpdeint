@@ -6,13 +6,15 @@ parser2.py
 Created by Graham Dennis on 2008-01-03.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
-
+import os
 import sys
 import getopt
 from xml.dom import minidom
 import xpdeint.minidom_extras
 import subprocess
 from pkg_resources import resource_filename
+
+import imp
 
 # Hack for Leopard so it doesn't import the web rendering
 # framework WebKit when Cheetah tries to import the Python
@@ -65,10 +67,9 @@ class Usage(Exception):
   """
   def __init__(self, msg):
     self.msg = msg
-
+  
 
 def main(argv=None):
-  
   # Default to not being verbose with error messages
   # If verbose is true, then when an error occurs during parsing,
   # the Python backtrace will be shown in addition to the XML location
@@ -134,7 +135,7 @@ def main(argv=None):
   xmlDocument = minidom.parse(scriptName)
   
   # Set up the globalNameSpace with the appropriate variables
-  from Preferences import versionString 
+  from Preferences import versionString
   from Version import subversionRevisionString
   
   if noVersionInformation:
@@ -247,6 +248,28 @@ def main(argv=None):
   
   
   from Preferences import CC, CFLAGS
+  
+  prefs = {}
+  prefs['CC'] = CC
+  prefs['CFLAGS'] = CFLAGS
+  
+  # Load user preferences. This will be a file called
+  # "xpdeint_prefs.py" in ~/.xmds
+  preferencesSearchPath = os.path.join(os.environ['HOME'], '.xmds')
+  try:
+    fd, pathname, description = imp.find_module('xpdeint_prefs', [preferencesSearchPath])
+  except ImportError, err:
+    # We didn't find the preferences file, no problem.
+    pass
+  else:
+    # We did find the preferences file
+    user_prefs = imp.load_module('xpdeint_prefs', fd, pathname, description)
+    for prefName in ['CC', 'CFLAGS']:
+      if hasattr(user_prefs, prefName):
+        prefs[prefName] = getattr(user_prefs, prefName)
+  
+  CC = prefs['CC']
+  CFLAGS = prefs['CFLAGS']
   
   pathToIncludeDirectory = resource_filename(__name__, 'includes')
   
