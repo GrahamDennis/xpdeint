@@ -227,7 +227,7 @@ _${field.name}_local_swapped_lattice_k${secondMPIDimension} = _local_swapped_lat
 _${field.name}_alloc_size = _${field.name}_local_unswapped_lattice_${firstMPIDimName} * ${field.pointsInDimensionsWithIndices(indices)};
       @set $indices = range(0, len(field.dimensions))
       @silent indices.remove(field.indexOfDimensionName(secondMPIDimName))
-_${field.name}_alloc_size = MAX(_${field.name}_local_swapped_lattice_k${secondMPIDimName} * ${field.pointsInDimensionsWithIndices(indices)});
+_${field.name}_alloc_size = MAX(_${field.name}_alloc_size, _${field.name}_local_swapped_lattice_k${secondMPIDimName} * ${field.pointsInDimensionsWithIndices(indices)});
     @end if
 
   @end for
