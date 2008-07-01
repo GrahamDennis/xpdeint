@@ -44,7 +44,7 @@
   </vector>
   
   <sequence>
-    <integrate algorithm="SI" iterations="3" interval="2.5" steps="200000" tolerance="1e-6">
+    <integrate algorithm="ARK89" iterations="3" interval="2.5" steps="200000" tolerance="1e-6">
       <samples>50</samples>
       <operators>
         <operator kind="ex" constant="yes">
