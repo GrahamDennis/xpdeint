@@ -9,10 +9,10 @@
   For reading the preferences file, look into using the Python module
   ConfigParser. It seems to be part of the standard distribution.
   For a more complete list of options for this, see http://wiki.python.org/moin/ConfigParserShootout
+    Other ideas for later persual:
+      SCons (http://www.scons.org) / Cons / pkg-config
 
 * Add ASCII/binary vector initialisation options
-
-* Add the ability to distribute stochastic simulations using OpenMP. GD: Why?
 
 * Add the ability to distribute stochastic simulations using MPI with the scheduling method
 
@@ -33,7 +33,7 @@
     - Challenging: <dimension "lattice"> in geometries, and samples (and for integer dimensions)
                    <integrate "steps"> and <samples>
     - Weird/low-priority: Number of cycles
-                          Tolerence and cut-off for adaptive algorithms
+                          Tolerance and cut-off for adaptive algorithms
     - Any requests?
 
 * Rewrite parser so that it isn't so long. (Ask Gabriel McManus)
