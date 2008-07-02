@@ -98,7 +98,7 @@ extern "C++" {
     return z;
   }
 
-  //! Overloaded complex subtraction operator
+  //! Overloaded complex negation operator
   inline fftw_complex operator - (fftw_complex z) {
     z.im = -z.im;
     z.re = -z.re;
@@ -393,11 +393,9 @@ extern "C++" {
       return *this;
     }
 
-    //! Subtraction operator
-    inline complex& operator - () {
-      re = -re;
-      im = -im;
-      return *this;
+    //! Negation operator
+    inline complex operator - () {
+      return complex(-re, -im);
     }
 
     //! Assignment operator
