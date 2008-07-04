@@ -159,7 +159,7 @@ ${componentName}R ${componentName}I @slurp
   @#
   @# Now loop over the dimensions
   @for $dimension in $field.dimensions
-  fprintf($fp, "    <Dim>%li</Dim>\n", _${field.name}_lattice_${dimension.name});
+  fprintf($fp, "    <Dim>%i</Dim>\n", _${field.name}_lattice_${dimension.name});
   @end for
   @# Now the variables dimension
   fprintf($fp, "    <Dim>${numIndependentVariables + componentCount}</Dim>\n");

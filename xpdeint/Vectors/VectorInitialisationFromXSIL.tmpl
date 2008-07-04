@@ -196,6 +196,8 @@ for (int __i = 0; __i < _${vector.field.name}_ndims; __i++) {
       break;
     
   @end for
+    default:
+      _LOG(_ERROR_LOG_LEVEL, "Unexpected unsigned long size in input XSIL file. Was expecting '4' or '8', instead got '%i'\n", _unsignedLongSize);
   }
   
   // Read in the data (in either single or double precision)
@@ -203,14 +205,14 @@ for (int __i = 0; __i < _${vector.field.name}_ndims; __i++) {
     _inputData[__i]._doublePtr = new double[_sizeValue];
     fread(_inputData[__i]._doublePtr, sizeof(double), _sizeValue, _inputFile);
     if (!_dataEncodingIsNative) {
-      for (int __j = 0; __j < _sizeValue; __j++)
+      for (unsigned int __j = 0; __j < _sizeValue; __j++)
         _inputData[__i]._doublePtr[__j] = XMDSSwapDouble(_inputData[__i]._doublePtr[__j]);
     }
   } else {
     _inputData[__i]._floatPtr = new float[_sizeValue];
     fread(_inputData[__i]._floatPtr, sizeof(float), _sizeValue, _inputFile);
     if (!_dataEncodingIsNative) {
-      for (int __j = 0; __j < _sizeValue; __j++)
+      for (unsigned int __j = 0; __j < _sizeValue; __j++)
         _inputData[__i]._floatPtr[__j] = XMDSSwapFloat(_inputData[__i]._floatPtr[__j]);
     }
   }
