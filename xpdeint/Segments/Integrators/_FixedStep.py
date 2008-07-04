@@ -42,8 +42,25 @@ class _FixedStep (Integrator):
     
     # If we are cross-propagating, then ErrorCheck cannot simply subdivide the step.
     # And we don't want to sample anything for moment groups
+    
+    # GD: The reason that we disable auto-vectorisation is subtle, and I don't completely
+    # understand it myself. But after much fiddling, it seems that the last step in the 
+    # integrator where the results from the integration step are copied back into the main
+    # array does not sync with the last memory write in the step (as the last step with the
+    # auto-vectorisation feature would have been to a double*, so come time for the copy to
+    # a complex variable, the CPU/compiler sees fit to reorder the stores causing all hell
+    # to break loose). This isn't a particularly good explanation, but my understanding of
+    # this isn't particularly strong.
+    # 
+    # My evidence is that everything works fine if I turn off auto-vectorisation, and it also
+    # works fine if I have it on but have a printf before (but not after) the copy operation
+    # (inside the loop) to force a read from the memory that is going to be written to and so force
+    # the correct ordering between the two writes. It may be possible to turn on the
+    # auto-vectorisation feature if a memory barrier is added before the final copy step, but I
+    # don't know how to implement a cross-platform memory barrier, and I'm not about to find out.
+    
     if self.cross:
-      return ['ErrorCheck', 'Output']
+      return ['ErrorCheck', 'Output', 'AutoVectorise']
     else:
       return None
   
