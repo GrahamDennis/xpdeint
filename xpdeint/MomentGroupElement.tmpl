@@ -137,7 +137,7 @@ void _${name}_sample()
 @def insideSamplingLoops
   @#
 // *************** Sampling code ****************
-${samplingCode, fixupWhitespace=True}
+${insertUserCodeFromEntity($samplingCodeEntity)}@slurp
 // **********************************************
   @#
 @end def

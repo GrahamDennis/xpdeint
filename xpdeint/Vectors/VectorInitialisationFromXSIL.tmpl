@@ -309,12 +309,12 @@ for (unsigned int _component = 0; _component < _${vector.id}_ncomponents; _compo
   _active_${vector.id}[_${vector.id}_index_pointer + _component] = 0.0;
 
 // Stage 2 of initialisation
-  @if not $initialisationCode.isspace()
+  @if not $initialisationCodeEntity.value.isspace()
 // There is no stage 2.
   @else
 
 // ********** Initialisation code ***************
-${initialisationCode, fixupWhitespace=True}
+${insertUserCodeFromEntity($initialisationCodeEntity)}@slurp
 // **********************************************
   @end if
   @#

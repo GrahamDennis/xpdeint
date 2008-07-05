@@ -121,7 +121,7 @@ class _DeltaAOperator (Operator):
                    r'(?P<good>' + RegularExpressionStrings.componentWithIntegerValuedDimensions(components) + ')',
                    re.VERBOSE)
       
-      for match in componentsWithIntegerValuedDimensionsRegex.finditer(self.propagationCode):
+      for match in componentsWithIntegerValuedDimensionsRegex.finditer(self.propagationCodeEntity.value):
         # If we have a match for the 'bad' group, ignore it
         if match.group('bad'):
           continue
@@ -261,7 +261,7 @@ class _DeltaAOperator (Operator):
         re.compile(RegularExpressionStrings.componentWithIntegerValuedDimensions(derivativeMap.keys()),
                    re.VERBOSE)
       
-      originalCode = self.propagationCode
+      originalCode = self.propagationCodeEntity.value
       for match in derivativesWithIntegerValuedDimensionsRegex.finditer(originalCode):
         # If we don't have a match for integerValuedDimensions, then everything is OK
         if not match.group('integerValuedDimensions'):
@@ -300,9 +300,9 @@ class _DeltaAOperator (Operator):
         
         # Replace the derivative string with one accessed using only indices corresponding to dimensions in
         # the delta a field.
-        self.propagationCode = re.sub(re.escape(componentName) + re.escape(match.group('integerValuedDimensions')),
-                                      componentName + integerValuedDimensionsString,
-                                      self.propagationCode, count=1)
+        self.propagationCodeEntity.value = re.sub(re.escape(componentName) + re.escape(match.group('integerValuedDimensions')),
+                                              componentName + integerValuedDimensionsString,
+                                              self.propagationCodeEntity.value, count=1)
       
       
     

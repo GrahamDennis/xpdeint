@@ -12,7 +12,6 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 import sys
 
 from Cheetah.Template import Template
-from xpdeint.IndentFilter import IndentFilter
 from xpdeint.ParserException import ParserException
 
 import re
@@ -312,7 +311,7 @@ class _ScriptElement (Template):
       featureList = filter(lambda x: x not in bannedFeatures, featureList)
     
     result = []
-    indentFilter = IndentFilter()
+    filt = self._CHEETAH__currentFilter
     dict['featureList'] = featureList
     
     # Loop over the features that we should include
@@ -342,10 +341,10 @@ class _ScriptElement (Template):
       
       if not reverse:
         # If we're doing this in the forward order, then we use the initial indent as the indent for the result
-        result.append(indentFilter.filter(featureResult, extraIndent=extraIndent))
+        result.append(filt(featureResult, extraIndent=extraIndent))
       else:
         # If we're doing this in reverse order, then we use the final indent as the indent for the result
-        result.append(indentFilter.filter(featureResult, extraIndent=dict.get('extraIndent', 0)))
+        result.append(filt(featureResult, extraIndent=dict.get('extraIndent', 0)))
     
     return ''.join(result)
   

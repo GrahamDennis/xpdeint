@@ -86,6 +86,12 @@ def cdataContents(self):
       contents.append(child.data)
   return "".join(contents)
 
+def lineNumberForCDATASection(self):
+  for child in self.childNodes:
+    if child.nodeType == minidom.Node.CDATA_SECTION_NODE:
+      return child.getUserData('lineNumber')
+  raise ParserException(self, "Missing CDATA section.")
+
 def userUnderstandableXPath(self):
   """
   Return an XPath-like string (but more user-friendly) which allows the user to
@@ -124,7 +130,7 @@ from functools import wraps
 
 def concatenateFunctions(f1, f2):
   """
-  A function decorator to concatenate two functions.
+  Returns a function that calls two functions in turn.
   
   The function returned by this function first calls `f1`, and then
   `f2`, but returns the result of `f1`.
@@ -137,12 +143,21 @@ def concatenateFunctions(f1, f2):
   
   return wrapper
 
+def composeFunctions(f1, f2):
+  """
+  Returns a function that calls `f2`(`f1`(args)).
+  """
+  @wraps(f1)
+  def wrapper(*args, **KWs):
+    return f2(f1(*args, **KWs))
+  
+  return wrapper
 
-def setLineAndColumnHandlers(self):
+def setLineAndColumnHandlers(self, *argsOuter, **KWsOuter):
   """
   Set the line and column number handlers for an ExpatBuilder.
   """
-  def setLineAndColumnValues(*args, **KWs):
+  def setLineAndColumnValuesForElement(*args, **KWs):
     """
     Set the line and column numbers from the expat parser.
     This data is copied into the ``userData`` dictionary of the node.
@@ -153,7 +168,16 @@ def setLineAndColumnHandlers(self):
     self.curNode.setUserData('lineNumber', parser.CurrentLineNumber, None)
     self.curNode.setUserData('columnNumber', parser.CurrentColumnNumber, None)
   
-  self.start_element_handler = concatenateFunctions(self.start_element_handler, setLineAndColumnValues)
+  def getLineNumberForCDATASection(*args, **KWs):
+    parser = self._parser
+    self.curNode.ownerDocument.setUserData('_cdata_section_line_number_start', parser.CurrentLineNumber, None)
+  
+  self.start_element_handler = concatenateFunctions(self.start_element_handler, setLineAndColumnValuesForElement)
+  self.start_cdata_section_handler = concatenateFunctions(self.start_cdata_section_handler, getLineNumberForCDATASection)
+
+def setLineNumberForCDATASection(node):
+  node.setUserData('lineNumber', node.ownerDocument.getUserData('_cdata_section_line_number_start'), None)
+  return node
 
 
 def install_minidom_extras():
@@ -166,9 +190,11 @@ def install_minidom_extras():
   
   minidom.Element.getChildElementByTagName  = getChildElementByTagName
   minidom.Document.getChildElementByTagName = getChildElementByTagName
+  minidom.Document.createCDATASection = composeFunctions(minidom.Document.createCDATASection, setLineNumberForCDATASection)
   
   minidom.Element.innerText = innerText
   minidom.Element.cdataContents = cdataContents
+  minidom.Element.lineNumberForCDATASection = lineNumberForCDATASection
   minidom.Element.userUnderstandableXPath = userUnderstandableXPath
   
   # Add our setLineAndColumnHandlers function to the end of the 'reset' function of ExpatBuilder
@@ -176,7 +202,7 @@ def install_minidom_extras():
   # instance is created. This gets us line and column number information on our XML nodes as minidom
   # uses ExpatBuilder to do the parsing for it.
   # Note that 'reset' gets called during initialisation of the ExpatBuilder.
-  expatbuilder.ExpatBuilder.reset = concatenateFunctions(expatbuilder.ExpatBuilder.reset, setLineAndColumnHandlers)
+  expatbuilder.ExpatBuilder.install = concatenateFunctions(setLineAndColumnHandlers, expatbuilder.ExpatBuilder.install)
   
 
 install_minidom_extras()

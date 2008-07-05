@@ -17,7 +17,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   @# Note that we assume that all of the integration vectors have an operotor component defined for them.
 
 // ************** Operator code *****************
-${operatorDefinitionCode, fixupWhitespace=True}
+${insertUserCodeFromEntity($operatorDefinitionCodeEntity)}@slurp
 // **********************************************
 
   @for $operatorComponentNumber, ($operatorComponentName, $operatorComponentVectors) in enumerate($operatorComponents.iteritems())

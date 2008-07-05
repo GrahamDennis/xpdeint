@@ -80,7 +80,7 @@ void _${id}_evaluate()
 @def insideEvaluationLoops
   @#
 // ************* Evaluation code ****************
-${evaluationCode, fixupWhitespace=True}
+${insertUserCodeFromEntity($evaluationCodeEntity)}@slurp
 // **********************************************
   @#
 @end def

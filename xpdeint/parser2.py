@@ -46,7 +46,7 @@ usage: xpdeint [options] fileToBeParsed
 Options and arguments:
 -h          : Print this message (also --help)
 -o filename : This overrides the name of the output file to be generated (also --output)
--v          : Verbose mode (also --verbose)
+-d          : Debug mode (also --debug)
 -n          : Only generate a source file, don't compile (also --no-compile)
 '''
 
@@ -71,10 +71,10 @@ class Usage(Exception):
 
 def main(argv=None):
   # Default to not being verbose with error messages
-  # If verbose is true, then when an error occurs during parsing,
+  # If debug is true, then when an error occurs during parsing,
   # the Python backtrace will be shown in addition to the XML location
   # where the error occurred.
-  verbose = False
+  debug = False
   
   compileScript = True
   noVersionInformation = False
@@ -84,15 +84,15 @@ def main(argv=None):
     argv = sys.argv
   try:
     try:
-      opts, args = getopt.gnu_getopt(argv[1:], "hno:v", ["help", "no-compile", "output=", "verbose", "no-version"])
+      opts, args = getopt.gnu_getopt(argv[1:], "dhno:", ["debug", "help", "no-compile", "output=", "no-version"])
     except getopt.error, msg:
       raise Usage(msg)
     
     output=''
     # option processing
     for option, value in opts:
-      if option in ("-v", "--verbose"):
-        verbose = True
+      if option in ("-d", "--debug"):
+        debug = True
       if option in ("-h", "--help"):
         raise Usage(help_message)
       if option in ("-o", "--output"):
@@ -119,7 +119,7 @@ def main(argv=None):
     
   # globalNameSpace is a dictionary of variables that are available in all
   # templates
-  globalNameSpace = {}
+  globalNameSpace = {'scriptName': scriptName}
   
   
   # Open the script file
@@ -142,6 +142,7 @@ def main(argv=None):
     versionString = "VERSION_PLACEHOLDER"
     subversionRevisionString = "SUBVERSION_REVISION_PLACEHOLDER"
   
+  globalNameSpace['debug'] = debug
   globalNameSpace['xmlDocument'] = xmlDocument
   globalNameSpace['scriptElements'] = []
   globalNameSpace['features'] = {}
@@ -230,10 +231,10 @@ def main(argv=None):
       print >> sys.stderr, "    Unknown element. Please report this error to xmds-devel@lists.sourceforge.net"
     print >> sys.stderr, "For a complete traceback, pass -v on the command line."
     
-    # If we have the verbose option on, then in addition to the path to the XML element
+    # If we have the debug option on, then in addition to the path to the XML element
     # that triggered the exception, print a traceback showing the list of Python function
     # calls that led to the exception being hit.
-    if verbose:
+    if debug:
       raise
     
     return -1
@@ -242,8 +243,16 @@ def main(argv=None):
   
   if output == '':
     output = globalNameSpace['simulationName']
-  myfile = file(output + ".cc", "w")
-  print >> myfile, simulationTemplate
+  sourceFileName = output + '.cc'
+  myfile = file(sourceFileName, "w")
+  simulationContents = str(simulationTemplate)
+  if not debug:
+    lines = simulationContents.splitlines(True)
+    for lineNumber, line in enumerate(lines[:]):
+      if '_XPDEINT_CORRECT_MISSING_LINE_NUMBER_' in line:
+        lines[lineNumber] = line.replace('_XPDEINT_CORRECT_MISSING_LINE_NUMBER_', '%i "%s"' % (lineNumber+2, sourceFileName))
+    simulationContents = ''.join(lines)
+  print >> myfile, simulationContents
   myfile.close()
   
   
