@@ -24,7 +24,7 @@ class _ComputedVector (VectorElement):
     self.dependenciesEntity = None
     self._integratingComponents = True
     self._evaluationSpace = 0
-    self.evaluationCode = ''
+    self.evaluationCodeEntity = None
   
   @property
   def noiseField(self):

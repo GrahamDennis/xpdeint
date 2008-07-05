@@ -83,7 +83,7 @@ _${integrator.name}_${name}_copy_delta_a(_step${arguments});
 #define d${propagationDimension} _step
 
 // ************* Propagation code ***************
-${propagationCode, fixupWhitespace=True}
+${insertUserCodeFromEntity($propagationCodeEntity)}@slurp
 // **********************************************
 
 #undef d${propagationDimension}

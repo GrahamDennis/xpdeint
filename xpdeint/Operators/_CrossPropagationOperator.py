@@ -202,7 +202,7 @@ class _CrossPropagationOperator (Operator):
       dict([(reducedVector, fullVector) for (fullVector, reducedVector) in self.integrationVectorMap.iteritems()])
     
     # Copy the evolution code to the delta a operator
-    self.crossPropagationIntegratorDeltaAOperator.propagationCode = self.operatorDefinitionCode
+    self.crossPropagationIntegratorDeltaAOperator.propagationCodeEntity = self.operatorDefinitionCodeEntity
   
   
 

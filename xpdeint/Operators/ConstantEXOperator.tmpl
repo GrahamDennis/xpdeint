@@ -14,7 +14,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 @def insideCalculateOperatorFieldLoops
   @#
 // ************** Operator code *****************
-${operatorDefinitionCode, fixupWhitespace=True}
+${insertUserCodeFromEntity($operatorDefinitionCodeEntity)}@slurp
 // **********************************************
   @#
 @end def

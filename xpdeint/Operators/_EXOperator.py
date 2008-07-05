@@ -9,6 +9,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 
 from xpdeint.Operators.Operator import Operator
 from xpdeint.ParserException import ParserException, parserWarning
+from xpdeint.ParsedEntity import ParsedEntity
 
 from xpdeint.Vectors.ComputedVector import ComputedVector
 
@@ -76,7 +77,7 @@ class _EXOperator(Operator):
             specialTargetsVector.dependencies = self.parent.dependencies.copy()
             
             specialTargetsVector.evaluationSpace = self.parent.sharedCodeSpace
-            specialTargetsVector.evaluationCode = ''
+            specialTargetsVector.evaluationCodeEntity = ParsedEntity(None, '')
             specialTargetsVector.integratingComponents = False
             
             # We have to call preflight on the filter operator in case it has some preflight to do
@@ -88,7 +89,7 @@ class _EXOperator(Operator):
             specialTargets.append(target)
             targetComponentName = 'target' + str(specialTargets.index(target))
             specialTargetsVector.components.append(targetComponentName)
-            specialTargetsVector.evaluationCode += ''.join([targetComponentName, ' = ', target, ';\n'])
+            specialTargetsVector.evaluationCodeEntity.value += ''.join([targetComponentName, ' = ', target, ';\n'])
           
           targetComponentName = 'target' + str(specialTargets.index(target))
           targetVector = specialTargetsVector

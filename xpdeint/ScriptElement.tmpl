@@ -677,3 +677,23 @@ memcpy(${destPrefix}_${vector.id}, ${srcPrefix}_${vector.id}, sizeof(${vector.ty
   @end for
   @#
 @end def
+
+@def insertUserCodeFromEntity($entity)
+@*doc: 
+Insert the code string `code` into the source file adding
+#line compiler directives at the start and end so that any
+compiler errors are reported in terms of lines in the actual
+xmds script itself. The variable `xmlElement` is used to determine
+the line number from which the code came.
+*@
+  @#
+  @set $writeLineDirectives = not $debug and $entity.xmlElement
+  @if writeLineDirectives
+#line $entity.xmlElement.lineNumberForCDATASection "$scriptName"
+  @end if
+${entity.value, fixupWhitespace=True}
+  @if writeLineDirectives
+#line _XPDEINT_CORRECT_MISSING_LINE_NUMBER_
+  @end if
+  @#
+@end def

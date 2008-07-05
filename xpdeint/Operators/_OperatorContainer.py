@@ -33,7 +33,7 @@ class _OperatorContainer(ScriptElement):
     
     # These key paths are the 'paths' to the actual attributes for our
     # 'sharedCode', 'dependencies' and 'sharedCodeSpace' proxy properties
-    self.sharedCodeKeyPath = localKWs.get('sharedCodeKeyPath', 'deltaAOperator.propagationCode')
+    self.sharedCodeKeyPath = localKWs.get('sharedCodeKeyPath', 'deltaAOperator.propagationCodeEntity.value')
     self.dependenciesKeyPath = localKWs.get('dependenciesKeyPath', 'deltaAOperator.dependencies')
     self.sharedCodeSpaceKeyPath = localKWs.get('sharedCodeSpaceKeyPath', 'deltaAOperator.operatorSpace')
   

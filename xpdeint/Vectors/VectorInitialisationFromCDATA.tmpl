@@ -31,7 +31,7 @@ $insertCodeForFeaturesInReverseOrder('vectorInitialisationEnd', $featureOrdering
 @def insideInitialisationLoops
 
 // ********** Initialisation code ***************
-${initialisationCode, fixupWhitespace=True}
+${insertUserCodeFromEntity($initialisationCodeEntity)}@slurp
 // **********************************************
 
 @end def

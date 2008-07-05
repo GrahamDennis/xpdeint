@@ -255,7 +255,7 @@ class XMDS2Parser(ScriptParser):
       
       argumentElements = argumentsFeatureElement.getChildElementsByTagName('argument')
       
-      argumentsFeature.postArgumentsCode = argumentsFeatureElement.cdataContents()
+      argumentsFeature.postArgumentsCodeEntity = ParsedEntity(argumentsFeatureElement, argumentsFeatureElement.cdataContents())
       
       argumentList = []
       # Note that "h" is already taken as the "help" option 
@@ -299,7 +299,7 @@ class XMDS2Parser(ScriptParser):
     globalsElement = featuresParentElement.getChildElementByTagName('globals', optional=True)
     if globalsElement:
       globalsTemplate = Features.Globals.Globals(**self.argumentsToTemplateConstructors)
-      globalsTemplate.globalsCode = globalsElement.cdataContents()
+      globalsTemplate.globalsCodeEntity = ParsedEntity(globalsElement, globalsElement.cdataContents())
     
     stochasticFeatureElement, stochasticFeature = parseSimpleFeature('stochastic', Features.Stochastic.Stochastic)
     
@@ -805,16 +805,16 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
         kindString = initialisationElement.getAttribute('kind').lower()
       
       if kindString in (None, 'code'):
-        initialisationTemplate = VectorInitialisationFromCDATATemplate(**self.argumentsToTemplateConstructors)
+        initialisationTemplate = VectorInitialisationFromCDATATemplate(xmlElement=initialisationElement, **self.argumentsToTemplateConstructors)
         initialisationTemplate.dependenciesEntity = self.parseDependencies(initialisationElement, optional=True)
         
         if len(initialisationElement.cdataContents()) == 0:
           raise ParserException(initialisationElement, "Empty initialisation code in 'code' initialisation element.")
-        initialisationTemplate.initialisationCode = initialisationElement.cdataContents()
+        initialisationTemplate.initialisationCodeEntity = ParsedEntity(initialisationElement, initialisationElement.cdataContents())
       elif kindString == 'zero':
         initialisationTemplate = vectorTemplate.initialiser
       elif kindString == 'xsil':
-        initialisationTemplate = VectorInitialisationFromXSILTemplate(**self.argumentsToTemplateConstructors)
+        initialisationTemplate = VectorInitialisationFromXSILTemplate(xmlElement=initialisationElement, **self.argumentsToTemplateConstructors)
         geometryMatchingMode = 'strict'
         if initialisationElement.hasAttribute('geometry_matching_mode'):
           geometryMatchingMode = initialisationElement.getAttribute('geometry_matching_mode').strip().lower()
@@ -829,7 +829,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
         
         initialisationTemplate.momentGroupName = momentGroupName
         
-        initialisationTemplate.initialisationCode = initialisationElement.cdataContents()
+        initialisationTemplate.initialisationCodeEntity = ParsedEntity(initialisationElement, initialisationElement.cdataContents())
         
         filename = filenameElement.innerText()
         if filename.isspace():
@@ -940,8 +940,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       vectorTemplate.components.append(componentName)
     
     evaluationElement = computedVectorElement.getChildElementByTagName('evaluation')
-    
-    vectorTemplate.evaluationCode = evaluationElement.cdataContents()
+    vectorTemplate.evaluationCodeEntity = ParsedEntity(evaluationElement, evaluationElement.cdataContents())
     
     vectorTemplate.dependenciesEntity = self.parseDependencies(evaluationElement, optional=True)
     
@@ -1187,7 +1186,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
                                             xmlElement = filterElement,
                                             **self.argumentsToTemplateConstructors)
     
-    filterTemplate.operatorDefinitionCode = filterElement.cdataContents()
+    filterTemplate.operatorDefinitionCodeEntity = ParsedEntity(filterElement, filterElement.cdataContents())
     
     filterTemplate.dependenciesEntity = self.parseDependencies(filterElement, optional=True)
     
@@ -1248,7 +1247,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     deltaAOperatorTemplate = DeltaAOperatorTemplate(parent = operatorContainer, xmlElement = operatorsElement,
                                                     **self.argumentsToTemplateConstructors)
     
-    deltaAOperatorTemplate.propagationCode = operatorsElement.cdataContents()
+    deltaAOperatorTemplate.propagationCodeEntity = ParsedEntity(operatorsElement, operatorsElement.cdataContents())
     
     self.parseFeatureAttributes(operatorsElement, deltaAOperatorTemplate)
     
@@ -1319,7 +1318,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
                                              xmlElement = operatorElement,
                                              **self.argumentsToTemplateConstructors)
     
-    operatorTemplate.operatorDefinitionCode = operatorElement.cdataContents()
+    operatorTemplate.operatorDefinitionCodeEntity = ParsedEntity(operatorElement, operatorElement.cdataContents())
     
     operatorTemplate.dependenciesEntity = self.parseDependencies(operatorElement, optional=True)
     
@@ -1555,7 +1554,8 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     for momentGroupNumber, momentGroupElement in enumerate(momentGroupElements):
       samplingElement = momentGroupElement.getChildElementByTagName('sampling')
       
-      momentGroupTemplate = MomentGroupTemplate(number = momentGroupNumber, **self.argumentsToTemplateConstructors)
+      momentGroupTemplate = MomentGroupTemplate(number = momentGroupNumber, xmlElement = momentGroupElement,
+                                                **self.argumentsToTemplateConstructors)
       
       samplingFieldTemplate = FieldElementTemplate(name = momentGroupTemplate.name + "_sampling",
                                                    **self.argumentsToTemplateConstructors)
@@ -1680,11 +1680,11 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       
       momentGroupTemplate.dependenciesEntity = self.parseDependencies(samplingElement)
       
-      samplingCode = samplingElement.cdataContents()
-      if not samplingCode:
+      samplingCodeEntity = ParsedEntity(samplingElement, samplingElement.cdataContents())
+      if not samplingCodeEntity.value:
         raise ParserException(samplingElement, "The CDATA section for the sampling code must not be empty.")
       
-      momentGroupTemplate.samplingCode = samplingCode
+      momentGroupTemplate.samplingCodeEntity = samplingCodeEntity
       momentGroupTemplate.outputSpace = momentGroupTemplate.sampleSpace & momentGroupTemplate.spaceMask
       
       operatorContainer = self.parseFilterElements(samplingElement, optional=True)
@@ -1696,7 +1696,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
         operatorContainer = OperatorContainerTemplate(field = samplingFieldTemplate,
                                                       # Point the proxies for the shared code etc at
                                                       # the moment group object's sampling code, the sampling space, etc.
-                                                      sharedCodeKeyPath = 'parent.samplingCode',
+                                                      sharedCodeKeyPath = 'parent.samplingCodeEntity.value',
                                                       sharedCodeSpaceKeyPath = 'parent.sampleSpace',
                                                       dependenciesKeyPath = 'parent.dependencies',
                                                       **self.argumentsToTemplateConstructors)
