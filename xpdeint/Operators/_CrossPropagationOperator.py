@@ -103,6 +103,11 @@ class _CrossPropagationOperator (Operator):
       return self.dependencyMap[fullVector]
     if fullVector in self.integrationVectorMap:
       return self.integrationVectorMap[fullVector]
+    # If the vector belongs to a field that lacks the cross-propagation field
+    # then we can just use the original field and we don't need a reduced dimension
+    # version of this vector.
+    if not fullVector.field.hasDimensionName(self.propagationDimension):
+      return fullVector
     
     # We have to create the vector element
     reducedField = self.reducedDimensionFieldForField(fullVector.field)
@@ -136,7 +141,9 @@ class _CrossPropagationOperator (Operator):
     # Our named dependencies will already have been taken care of thanks to _Operator.bindNamedVectors()
     for vector in self.dependencies:
       reducedVector = self.reducedDimensionVectorForVector(vector)
-      self.dependencyMap[vector] = reducedVector
+      # If the reducedVector is the same as the vector, then it doesn't belong in the dependency map
+      if not reducedVector == vector:
+        self.dependencyMap[vector] = reducedVector
     
     reducedDependencies = set(self.dependencyMap.values())
     # Add the reduced dependencies to the various parts of the cross-propagation integrator

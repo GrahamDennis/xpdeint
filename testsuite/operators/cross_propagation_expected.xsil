@@ -50,6 +50,15 @@
     </initialisation>
   </vector>
   
+  <vector name="zerodConstants" type="double">
+    <components>bar</components>
+    <initialisation>
+      <![CDATA[
+        bar = M_PI;
+      ]]>
+    </initialisation>
+  </vector>
+  
   <vector name="cross" type="complex">
     <components>u v w x</components>
     <![CDATA[
@@ -66,7 +75,7 @@
       <operators>
         <operator kind="cross_propagation" algorithm="SI" propagation_dimension="t">
           <integration_vectors>cross</integration_vectors>
-          <dependencies>constants</dependencies>
+          <dependencies>constants zerodConstants</dependencies>
           <boundary_condition kind="left">
             <![CDATA[
               u = 0.0;
@@ -89,7 +98,6 @@
               M = i;
             ]]>
           </operator>
-          
           <![CDATA[
             du_dt = cosine;
             dv_dt = i*v;
