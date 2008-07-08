@@ -225,11 +225,11 @@ def main(argv=None):
       columnNumber = err.element.getUserData('columnNumber')
     print >> sys.stderr, "Error: " + err.msg
     print >> sys.stderr, "    At line %(lineNumber)i, column %(columnNumber)i." % locals()
-    if err.element:
-      print >> sys.stderr, "    In element: " + err.element.userUnderstandableXPath()
-    else:
-      print >> sys.stderr, "    Unknown element. Please report this error to xmds-devel@lists.sourceforge.net"
-    print >> sys.stderr, "For a complete traceback, pass -v on the command line."
+    if debug:
+      if err.element:
+        print >> sys.stderr, "    In element: " + err.element.userUnderstandableXPath()
+      else:
+        print >> sys.stderr, "    Unknown element. Please report this error to xmds-devel@lists.sourceforge.net"
     
     # If we have the debug option on, then in addition to the path to the XML element
     # that triggered the exception, print a traceback showing the list of Python function

@@ -24,11 +24,12 @@ class _EXOperator(Operator):
   def preflight(self):
     super(Operator, self).preflight()
     
+    operatorNamesUsed = set()
+    operatorNames = set(self.operatorNames)
+    
     operatorTargetPairs = self.targetComponentsForOperatorsInString(self.operatorNames, self.parent.sharedCode)
     
     if operatorTargetPairs:
-      operatorNamesUsed = set()
-      operatorNames = set(self.operatorNames)
       
       parentDependencies = self.parent.dependencies
       
@@ -138,13 +139,13 @@ class _EXOperator(Operator):
         self.parent.sharedCode = replacementCode
       
       
-      # If any operator names weren't used in the code, issue a warning
-      unusedOperatorNames = operatorNames.difference(operatorNamesUsed)
-      if unusedOperatorNames:
-        unusedOperatorNamesString = ', '.join(unusedOperatorNames)
-        parserWarning(self.xmlElement,
-                      "The following operator names weren't used: %(unusedOperatorNamesString)s" % locals())
-      
+    # If any operator names weren't used in the code, issue a warning
+    unusedOperatorNames = operatorNames.difference(operatorNamesUsed)
+    if unusedOperatorNames:
+      unusedOperatorNamesString = ', '.join(unusedOperatorNames)
+      raise ParserException(self.xmlElement,
+                            "The following EX operator names were declared but not used: %(unusedOperatorNamesString)s" % locals())
+    
     
     # Add the result vector to the shared dependencies for the operator container
     # These dependencies are just the delta a dependencies, so this is just adding
