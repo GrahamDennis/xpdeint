@@ -31,7 +31,7 @@ bzero(_${id}_exponent_offset_map, sizeof(_${id}_exponent_offset_map));
   @#
 @end def
 
-@def calculateOperatorFieldFunctionContents
+@def calculateOperatorFieldFunctionContents($function)
   @#
   @if len($integrator.ipPropagationStepFractions) > 1
 static const double _propagationStepFractions[] = {
@@ -45,7 +45,7 @@ _${id}_exponent_offset_map[abs(_exponent) - 1] = _arrayIndex;
 const double _propagationStepFraction = ${integrator.ipPropagationStepFractions[0]};
   @end if
 
-  @super
+  @super(function)
   @#
 @end def
 

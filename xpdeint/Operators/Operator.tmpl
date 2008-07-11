@@ -8,52 +8,6 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 
 @from xpdeint.Vectors.VectorElement import VectorElement
 
-@def functionPrototypes
-  @#
-  @super
-  @#
-  @if $operatorVector
-void _${parent.id}_calculate_${name}_field($calculateOperatorFieldFunctionArgumentString);
-  @end if
-void _${parent.id}_evaluate_${name}(${evaluateOperatorFunctionArgumentString});
-  @#
-@end def
-
-@def functionImplementations
-  @#
-  @super
-  @#
-  @if $operatorVector
-      
-${calculateOperatorFieldFunctionImplementation}@slurp
-  @end if
-
-${evaluateOperatorFunctionImplementation}@slurp
-
-  @#
-@end def
-
-@def calculateOperatorFieldFunctionImplementation
-  @#
-// ${description}
-void _${parent.id}_calculate_${name}_field(${calculateOperatorFieldFunctionArgumentString})
-{
-  ${calculateOperatorFieldFunctionContents, autoIndent=True}@slurp
-}
-  @#
-@end def
-
-@def evaluateOperatorFunctionImplementation
-  @#
-// ${description}
-void _${parent.id}_evaluate_${name}(${evaluateOperatorFunctionArgumentString})
-{
-  ${evaluateOperatorFunctionContents, autoIndent=True}@slurp
-}
-  @#
-@end def
-
-
 @def insideEvaluateOperatorLoops
   @#
   @# Content must be provided by a subclass
@@ -87,7 +41,7 @@ ${vector.free}@slurp
   @#
 @end def
 
-@def calculateOperatorFieldFunctionContents
+@def calculateOperatorFieldFunctionContents($function)
   @#
   @for $operatorComponentName in $operatorComponents.iterkeys()
 complex $operatorComponentName;
@@ -103,7 +57,7 @@ ${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $operatorSpace, 
 
 @attr $evaluateOperatorFunctionArgument = 'double _step'
 
-@def evaluateOperatorFunctionContents
+@def evaluateOperatorFunctionContents($function)
   @#
   @# We need to loop over the operator vector (if we have one),
   @# all of the vectors to which we are applying any of our operators,

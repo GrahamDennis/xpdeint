@@ -210,6 +210,10 @@ class _CrossPropagationOperator (Operator):
     
     # Copy the evolution code to the delta a operator
     self.crossPropagationIntegratorDeltaAOperator.propagationCodeEntity = self.operatorDefinitionCodeEntity
+    
+    # Allow the cross propagation dimension variable to exist in the delta a operator.
+    self.crossPropagationIntegrator.functions['deltaA'].args.append(('double', self.propagationDimension)) # Add it to the calculate_delta_a function
+    self.crossPropagationIntegratorDeltaAOperator.functions['evaluate'].args.append(('double', self.propagationDimension)) # Add it to the delta a operator
   
   
 

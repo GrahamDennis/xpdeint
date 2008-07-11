@@ -15,17 +15,18 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 @*
   Single integration step (RK4)
 *@
-@def singleIntegrationStep
+@def singleIntegrationStep($function)
   @#
+  @set $arguments = {'_step': '_step', $propagationDimension: $propagationDimension}
 ${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
 
 // a_k = a
 ${copyVectors($integrationVectors, '_akfield')}@slurp
 
-_segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 1, 0);
+${functions['nonconstantIPFields'].call(arguments, _exponent = 1, _arrayIndex = 0, parentFunction=function)}
 
 // a = D[a]
-_segment${segmentNumber}_ip_evolve(+1);
+${functions['ipEvolve'].call(arguments, _exponent = +1, parentFunction=function)}
 ${goToHomeSpace}@slurp
 
 // a_i = a
@@ -36,10 +37,10 @@ _active_${vector.id} = _akfield_${vector.id};
   @end for
   
 // a_k = G[a_k, t]
-_segment${segmentNumber}_calculate_delta_a(_step);
+${functions['deltaA'].call(arguments, parentFunction=function)}
 
 // a_k = D[a_k]
-_segment${segmentNumber}_ip_evolve(+1);
+${functions['ipEvolve'].call(arguments, _exponent = +1, parentFunction=function)}
 ${goToHomeSpace}@slurp
 
 ${loopOverVectorsWithInnerContentTemplate($integrationVectors, 
@@ -56,7 +57,7 @@ ${interpolateDependencies}@slurp
   @end if
 
 // a_k = G[a_k, t + h/2]
-_segment${segmentNumber}_calculate_delta_a(_step);
+${functions['deltaA'].call(arguments, parentFunction=function)}
 ${goToHomeSpace}@slurp
 
 ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
@@ -67,7 +68,7 @@ _akfield_${vector.id}[$index] = _aifield_${vector.id}[$index] + _akfield_${vecto
 """)}@slurp
 
 // a_k = G[a_k, t + h/2]
-_segment${segmentNumber}_calculate_delta_a(_step);
+${functions['deltaA'].call(arguments, parentFunction=function)}
 ${goToHomeSpace}@slurp
 
 ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
@@ -78,7 +79,7 @@ _akfield_${vector.id}[$index] = _aifield_${vector.id}[$index] + _akfield_${vecto
 """)}@slurp
 
 // a_k = D[a_k]
-_segment${segmentNumber}_ip_evolve(+1);
+${functions['ipEvolve'].call(arguments, _exponent = +1, parentFunction=function)}
 
 ${propagationDimension} += _step/2.0;
   @if $cross
@@ -87,7 +88,7 @@ ${updateDependenciesForNextStep}@slurp
   @end if
 
 // a_k = G[a_k, t + h]
-_segment${segmentNumber}_calculate_delta_a(_step);
+${functions['deltaA'].call(arguments, parentFunction=function)}
 ${goToHomeSpace}@slurp
 
   @for $vector in $integrationVectors
@@ -95,7 +96,7 @@ _active_${vector.id} = _${vector.id};
   @end for
 
 // a_k = D[a_k]
-_segment${segmentNumber}_ip_evolve(+1);
+${functions['ipEvolve'].call(arguments, _exponent = +1, parentFunction=function)}
 ${goToHomeSpace}@slurp
 
 ${loopOverVectorsWithInnerContentTemplate($integrationVectors, 

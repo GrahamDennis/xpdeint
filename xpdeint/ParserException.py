@@ -20,5 +20,5 @@ def parserWarning(element, msg):
   columnNumber = element.getUserData('columnNumber')
   print >> sys.stderr, "Warning: " + msg
   print >> sys.stderr, "    At line %(lineNumber)i, column %(columnNumber)i" % locals()
-  print >> sys.stderr, "    In element: " + element.userUnderstandableXPath()
+  # print >> sys.stderr, "    In element: " + element.userUnderstandableXPath()
 

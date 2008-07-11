@@ -7,8 +7,6 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 @extends xpdeint.Segments.Integrators._Integrator
 @from xpdeint.CallOnceGuards import callOncePerInstanceGuard
 
-@from xpdeint.Operators.NonConstantIPOperator import NonConstantIPOperator
-
 @def description: segment $segmentNumber (Unnamed Integrator)
 
 @*
@@ -27,72 +25,17 @@ ${vector.type}* _${name}_${arrayName}_${vector.id};
   @#
 @end def
 
-@*
-  Function prototypes
-*@
-@def functionPrototypes
+@def deltaAFunctionBody($function)
   @#
-  @super
-  @#
-void _segment${segmentNumber}();
-inline void _segment${segmentNumber}_calculate_delta_a(double _step);
-inline void _segment${segmentNumber}_ip_evolve(int _exponent);
-inline void _segment${segmentNumber}_calculate_nonconstant_ip_fields(double _step, int _exponent, int _arrayIndex);
-
-  @#
-@end def
-
-@*
-  Function implementations
-*@
-@def functionImplementations
-  @#
-  @super
-  @#
-${deltaAFunctionImplementation}@slurp
-
-  @#
-${ipEvolveFunctionImplementation}@slurp
-  @#
-
-${segmentFunctionImplementation}@slurp
-  @#
-
-${nonConstantIPFieldsFunctionImplementation}@slurp
-  @#
-
-  @#
-@end def
-
-@def ipEvolveFunctionImplementation
-  @#
-inline void _segment${segmentNumber}_ip_evolve(int _exponent)
-{
-  @set $blankLineSeparator = ''
-  @#
-  @for $operatorContainer in $operatorContainers
-${blankLineSeparator}@slurp
-  ${operatorContainer.evaluateIPOperators(arguments = {'_exponent': '_exponent'}), autoIndent=True}@slurp
-    @set $blankLineSeparator = '\n'
-  @end for
-  @#  
-}
-  @#
-@end def
-
-@def deltaAFunctionImplementation
-  @#
-inline void _segment${segmentNumber}_calculate_delta_a(double _step)
-{
   @# First evaluate any computed vector that any of our operators may depend on
-  ${evaluateComputedVectors($computedVectorsNeedingPrecalculationForOperatorContainers($intraStepOperatorContainers)), autoIndent=True}@slurp
+${evaluateComputedVectors($computedVectorsNeedingPrecalculationForOperatorContainers($intraStepOperatorContainers))}@slurp
   @#
   @# Then loop over operators that come before the delta A operators in the order in which
   @# they appear in the xmds script.
   @#
   @for $operatorContainer in $intraStepOperatorContainers
-  
-  ${operatorContainer.evaluatePreDeltaAOperators(arguments = {'_step': '_step'}), autoIndent=True}@slurp
+
+${operatorContainer.evaluatePreDeltaAOperators(parentFunction = function)}@slurp
   @end for
   @#
   @# Now loop over delta A operators
@@ -100,22 +43,21 @@ inline void _segment${segmentNumber}_calculate_delta_a(double _step)
   @# this particular order
   @for $operatorContainer in $intraStepOperatorContainersInFieldDescendingOrder
     @# Blank line for formatting
-  
-  ${operatorContainer.evaluateDeltaAOperator(arguments = {'_step': '_step'}), autoIndent=True}@slurp
+
+${operatorContainer.evaluateDeltaAOperator(parentFunction = function)}@slurp
   @end for
   @#
   @# Lastly, loop over the operators that come after the delta a operators in the order in
   @# which they appear in the xmds script.
   @#
   @for $operatorContainer in $intraStepOperatorContainers
-    @set $result = $operatorContainer.evaluatePostDeltaAOperators(arguments = {'_step': '_step'})
+    @set $result = $operatorContainer.evaluatePostDeltaAOperators(parentFunction = function)
     @if not result.isspace()
     @# Blank line for formatting
-  
-  ${result, autoIndent=True}@slurp
+
+${result}@slurp
     @end if
   @end for
-}
   @#
 @end def
 
@@ -124,7 +66,7 @@ inline void _segment${segmentNumber}_calculate_delta_a(double _step)
 ${evaluateComputedVectors($computedVectorsNeedingPrecalculationForOperatorContainers($stepStartOperatorContainers))}@slurp
   @#
   @for $operatorContainer in $stepStartOperatorContainers
-  
+
 ${operatorContainer.evaluateOperators}@slurp
   @end for
   @#
@@ -139,29 +81,11 @@ ${insertCodeForFeatures('postSingleStep', featureOrdering)}@slurp
 ${evaluateComputedVectors($computedVectorsNeedingPrecalculationForOperatorContainers($stepEndOperatorContainers))}@slurp
   @#
   @for $operatorContainer in $stepEndOperatorContainers
-  
+
 ${operatorContainer.evaluateOperators}@slurp
   @end for
   @#
 @end def
-
-
-@def nonConstantIPFieldsFunctionImplementation
-  @#
-inline void _segment${segmentNumber}_calculate_nonconstant_ip_fields(double _step, int _exponent, int _arrayIndex)
-{
-  @for operatorContainer in $operatorContainers
-    @for operator in operatorContainer.ipOperators
-      @if not isinstance(operator, NonConstantIPOperator)
-        @continue
-      @end if
-  _${operator.parent.id}_calculate_${operator.name}_field(_step, _exponent, _arrayIndex);
-    @end for
-  @end for
-}
-  @#
-@end def
-
 
 @@callOncePerInstanceGuard
 @def initialise

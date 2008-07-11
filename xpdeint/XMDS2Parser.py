@@ -1447,6 +1447,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
                                              "The options are 'SI' or 'RK4'." % locals())
     
     crossIntegratorTemplate = crossIntegratorClass(xmlElement = operatorElement,
+                                                   parent = operatorTemplate,
                                                    **self.argumentsToTemplateConstructors)
     crossIntegratorTemplate.cross = True
     

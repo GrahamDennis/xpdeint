@@ -13,32 +13,15 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 @def description: segment $segmentNumber (Filter)
 
 @*
-  Function prototypes
-*@
-@def functionPrototypes
-  @#
-  @super
-  @#
-void _segment${segmentNumber}();
-@end def
-
-@*
   Function implementations
 *@
-@def functionImplementations
-  @#
-  @super
-  @#
-void _segment${segmentNumber}()
-{
-  ${evaluateComputedVectors($computedVectorsNeedingPrecalculationForOperatorContainers($operatorContainers)), autoIndent=True}@slurp
+@def segmentFunctionBody($function)
+${evaluateComputedVectors($computedVectorsNeedingPrecalculationForOperatorContainers($operatorContainers))}@slurp
   @#
   @for $operatorContainer in $operatorContainers
-  
-  ${operatorContainer.evaluateOperators, autoIndent=True}@slurp
-  @end for
-}
 
+${operatorContainer.evaluateOperators(parentFunction = function)}@slurp
+  @end for
   @#
 @end def
 

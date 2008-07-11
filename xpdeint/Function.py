@@ -1,0 +1,95 @@
+#!/usr/bin/env python
+# encoding: utf-8
+"""
+Function.py
+
+Created by Graham Dennis on 2008-07-10.
+Copyright (c) 2008 __MyCompanyName__. All rights reserved.
+
+The idea behind Function objects is that they wrap C functions that will be in
+the generated source file that will need to be flexible in terms of what
+arguments they have. This way, one object can add function arguments to the
+functions 'belonging' to other objects without the second object needing to be
+involved.
+
+An example of an application of this is passing the cross-propagation dimension
+variable to delta-a operators in the cross-propagation integrator. As the
+cross-propagation integrator is a normal integrator, it wouldn't normally need
+to pass the propagation dimension variable to the delta a operator as the
+propagation dimension value is stored in a global variable. With the function
+objects, the cross-propagation operator just needs to add additional arguments
+to the cross-propagation delta-a calculation function and the delta-a operator
+and these variables are then passed through these functions.
+
+In a similar way other variables like cycle number of a looping segment could
+be passed to children if a use for that can be found. This behaviour was
+present in xmds-1, but hasn't been added to xpdeint as there hasn't been a need
+for it, and it isn't clear how this behaviour would work in the face of nested
+looping segments.
+"""
+
+class Function(object):
+  __slots__ = ['name', 'returnType', 'args', 'implementationTarget', 'implementationFunctionName']
+  def __init__(self, name, args, implementation, returnType = 'void'):
+    """
+    Initialise a `Function` object with C name `functionName`, arguments `args` and a
+    return type of `returnType`. The `implementation` argument is a 2-tuple of the form
+    ``(implementationTarget, implementationFunctionName)`` such that the body of the 
+    function is returned by the call ``implementationTarget.implementationFunctionName()``.
+    
+    The `args` argument is an array of 2-tuples of the form ``('argType', 'argName')``.
+    """
+    self.name = name
+    self.args = args[:]
+    self.implementationTarget, self.implementationFunctionName = implementation
+    self.returnType = returnType
+  
+  def _prototype(self):
+    """
+    Return as a string the C function prototype that can be used for both
+    function declaration and definition.
+    
+    For example, return ``void _segment3(int myInt)``.
+    """
+    argumentString = ', '.join([arg[0] + ' ' + arg[1] for arg in self.args])
+    return ''.join([self.returnType, ' ', self.name, '(', argumentString, ')'])
+  
+  def prototype(self):
+    """
+    Return as a string the C function prototype for this function.
+    
+    For example, return ``void _segment3(int myInt);\n``.
+    """
+    return self._prototype() + ';\n'
+  
+  def implementation(self):
+    """
+    Return as a string the C function implementation for this function.
+    """
+    implementationBodyString = getattr(self.implementationTarget, self.implementationFunctionName)(self)
+    result = []
+    if self.implementationTarget.hasattr('description'):
+      result.append('// ' + self.implementationTarget.description() + '\n')
+    result.extend([self._prototype(), '\n{\n'])
+    for line in implementationBodyString.splitlines(True):
+      result.extend(['  ', line])
+    result.append('}\n')
+    return ''.join(result)
+  
+  def call(self, arguments = None, parentFunction = None, **KWs):
+    """
+    Return as a string the C code to call this function with arguments `arguments`
+    and any keyword arguments.
+    """
+    availableArguments = {}
+    # The precendence for the arguments is KWs, arguments, parentFunction.
+    # So we add arguments to availableArguments in the opposite order.
+    if parentFunction:
+      availableArguments.update([(arg[1], arg[1]) for arg in parentFunction.args])
+    if arguments:
+      availableArguments.update(arguments)
+    if KWs:
+      availableArguments.update(KWs)
+    argumentString = ', '.join([str(availableArguments[arg[1]]) for arg in self.args])
+    return ''.join([self.name, '(', argumentString, ');'])
+  

@@ -15,6 +15,8 @@ from xpdeint.ParserException import ParserException
 from xpdeint import RegularExpressionStrings
 import re
 
+from xpdeint.Function import Function
+
 class _Operator (ScriptElement):
   # This is an ordered list of (type, argName) pairs
   evaluateOperatorFunctionArguments = []
@@ -28,9 +30,7 @@ class _Operator (ScriptElement):
   
   vectorsMustBeInSubsetsOfIntegrationField = True
   
-  calculateOperatorFieldFunctionArguments = ''
-  
-  def __init__(self, parent, *args, **KWs):
+  def __init__(self, *args, **KWs):
     ScriptElement.__init__(self, *args, **KWs)
     
     # Set default variables
@@ -39,12 +39,24 @@ class _Operator (ScriptElement):
     self.operatorVector = None
     self.resultVector = None
     self.operatorNumber = -1
-    self._parent = parent
     self._field = None
     self._children = []
     self._loopingField = None
     
+    parent = self.parent
     parent.addOperator(self)
+    evaluateOperatorFunctionName = ''.join(['_', parent.id, '_evaluate_', self.name])
+    evaluateOperatorFunction = Function(name = evaluateOperatorFunctionName,
+                                        args = self.evaluateOperatorFunctionArguments,
+                                        implementation = (self, 'evaluateOperatorFunctionContents'))
+    self.functions['evaluate'] = evaluateOperatorFunction
+    if hasattr(self, 'calculateOperatorFieldFunctionArguments'):
+      calculateOperatorFieldFunctionName = ''.join(['_', parent.id, '_calculate_', self.name, '_field'])
+      calculateOperatorFieldFunction = Function(name = calculateOperatorFieldFunctionName, 
+                                                args = self.calculateOperatorFieldFunctionArguments,
+                                                implementation = (self, 'calculateOperatorFieldFunctionContents'))
+      self.functions['calculateOperatorField'] = calculateOperatorFieldFunction
+    
   
   # The children
   @property

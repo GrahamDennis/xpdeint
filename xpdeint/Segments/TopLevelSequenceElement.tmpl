@@ -47,7 +47,7 @@ _mg${momentGroup.number}_sample_index_${propagationDimension} = 0;
 _mg${momentGroup.number}_sample();
   @end for
   @#
-${segmentImplementationInnerContents}@slurp
+${segmentFunctionBody(function=None)}@slurp
   @#
 
   @for $momentGroup in $momentGroups
