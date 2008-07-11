@@ -114,17 +114,18 @@ _g[6]=( -_b[6][1]*_c[4]+_b[6][4]*_c[1] )/_den;
 @*
   Single integration step (ARK45)
 *@
-@def singleIntegrationStep
+@def singleIntegrationStep($function)
   @#
+  @set $arguments = {'_step': '_step'}
 ${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
 
 // a_k = y1
 ${copyVectors($integrationVectors, '_akfield')}@slurp
 
-_segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 1, 0);
+${functions['nonconstantIPFields'].call(arguments, _exponent = 1, _arrayIndex = 0, parentFunction=function)}
 
 // a_i = D(a_2*dt)[y1]
-_segment${segmentNumber}_ip_evolve(+1);
+${functions['ipEvolve'].call(arguments, _exponent = +1, parentFunction=function)}
 ${goToHomeSpace}@slurp
 
 // y2 = y1
@@ -138,10 +139,10 @@ _active_${vector.id} = _akfield_${vector.id};
   @end for
 
 // a_k = G[a_k, t]
-_segment${segmentNumber}_calculate_delta_a(_step);
+${functions['deltaA'].call(arguments, parentFunction=function)}
 
 // a_i = D(a_2*dt)[a_k]
-_segment${segmentNumber}_ip_evolve(+1);
+${functions['ipEvolve'].call(arguments, _exponent = +1, parentFunction=function)}
 ${goToHomeSpace}@slurp
 
 ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
@@ -155,14 +156,14 @@ _akfield_${vector.id}[$index] = _aifield_${vector.id}[$index] + _b[2][1]*_akfiel
 
 ${propagationDimension} += _a[2] * _step;
 
-_segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 2, 1);
+${functions['nonconstantIPFields'].call(arguments, _exponent = 2, _arrayIndex = 1, parentFunction=function)}
 
-_segment${segmentNumber}_ip_evolve(-2);
+${functions['ipEvolve'].call(arguments, _exponent = -2, parentFunction=function)}
 
 // a_k = G[a_k, t + aa_2*dt]
-_segment${segmentNumber}_calculate_delta_a(_step);
+${functions['deltaA'].call(arguments, parentFunction=function)}
 
-_segment${segmentNumber}_ip_evolve(2);
+${functions['ipEvolve'].call(arguments, _exponent = +2, parentFunction=function)}
 ${goToHomeSpace}@slurp
 
 // c_2 == cs_2 == 0
@@ -177,16 +178,16 @@ ${propagationDimension} += _a[3] * _step;
 _active_${vector.id} = _ajfield_${vector.id};
   @end for
 
-_segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 3, 1);
+${functions['nonconstantIPFields'].call(arguments, _exponent = 3, _arrayIndex = 1, parentFunction=function)}
 
 // a_j = D((a_3 - a_2)*dt)[a_j]
-_segment${segmentNumber}_ip_evolve(-3);
+${functions['ipEvolve'].call(arguments, _exponent = -3, parentFunction=function)}
 
 // a_j = G[a_j, t + aa_3*dt]
-_segment${segmentNumber}_calculate_delta_a(_step);
+${functions['deltaA'].call(arguments, parentFunction=function)}
 
 // a_j = D(-(a_3 - a_2)*dt)[a_j]
-_segment${segmentNumber}_ip_evolve(+3);
+${functions['ipEvolve'].call(arguments, _exponent = +3, parentFunction=function)}
 ${goToHomeSpace}@slurp
 
 ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
@@ -204,16 +205,16 @@ ${propagationDimension} += _a[4] * _step;
 _active_${vector.id} = _alfield_${vector.id};
   @end for
 
-_segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 4, 1);
+${functions['nonconstantIPFields'].call(arguments, _exponent = 4, _arrayIndex = 1, parentFunction=function)}
 
 // a_l = D((a_4 - a_2)*dt)[a_l]
-_segment${segmentNumber}_ip_evolve(-4);
+${functions['ipEvolve'].call(arguments, _exponent = -4, parentFunction=function)}
 
 // a_l = G[a_l, t + aa_4*dt]
-_segment${segmentNumber}_calculate_delta_a(_step);
+${functions['deltaA'].call(arguments, parentFunction=function)}
 
 // a_l = D(-(a_4 - a_2)*dt)[a_l]
-_segment${segmentNumber}_ip_evolve(+4);
+${functions['ipEvolve'].call(arguments, _exponent = +4, parentFunction=function)}
 ${goToHomeSpace}@slurp
 
 ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
@@ -228,7 +229,7 @@ _alfield_${vector.id}[$index] = _f[1]*_aifield_${vector.id}[$index] + _f[2]*_${v
 ${propagationDimension} += _a[5] * _step;
 
 // a_l = G[a_l, t + aa_5*dt]
-_segment${segmentNumber}_calculate_delta_a(_step);
+${functions['deltaA'].call(arguments, parentFunction=function)}
 ${goToHomeSpace}@slurp
 
 // c_5 == 0
@@ -241,16 +242,16 @@ _alfield_${vector.id}[$index] = _g[1]*_aifield_${vector.id}[$index] + _g[2]*_akf
 
 ${propagationDimension} += _a[6] * _step;
 
-_segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 5, 1);
+${functions['nonconstantIPFields'].call(arguments, _exponent = 5, _arrayIndex = 1, parentFunction=function)}
 
 // a_l = D((a_6 - a_2)*dt)[a_l]
-_segment${segmentNumber}_ip_evolve(-5);
+${functions['ipEvolve'].call(arguments, _exponent = -5, parentFunction=function)}
 
 // a_l = G[a_l, t + aa_6*dt]
-_segment${segmentNumber}_calculate_delta_a(_step);
+${functions['deltaA'].call(arguments, parentFunction=function)}
 
 // a_l = D(-(a_6 - a_2)*dt)[a_l]
-_segment${segmentNumber}_ip_evolve(+5);
+${functions['ipEvolve'].call(arguments, _exponent = +5, parentFunction=function)}
 ${goToHomeSpace}@slurp
 
 // c_5 == 0

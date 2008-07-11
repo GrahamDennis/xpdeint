@@ -12,57 +12,32 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 *@
 @def description: segment $segmentNumber (Sequence)
 
-@*
-  Function prototypes
-*@
-@def functionPrototypes
-  @#
-  @super
-  @#
-void _segment${segmentNumber}();
-@end def
-
-@*
-  Function implementations
-*@
-@def functionImplementations
-  @#
-  @super
-  @#
-void _segment${segmentNumber}()
-{
-  ${segmentImplementationInnerContents, autoIndent=True}@slurp
-}
-
-  @#
-@end def
-
-@def segmentImplementationInnerContents
+@def segmentFunctionBody($function)
   @#
   @set $extraIndent = 0
   @if $localCycles > 1
 // Initialise child segments
-${initialise, autoIndent=True}@slurp
+${initialise}@slurp
 for (unsigned long _cycle = 0; _cycle < ${localCycles}; _cycle++) {
     @set $extraIndent = 2
   @end if
   @#
-${callChildSegments, autoIndent=True, extraIndent=extraIndent}@slurp
+${callChildSegments(function), extraIndent=extraIndent}@slurp
   @#
   @if $localCycles > 1
 }
     @set $extraIndent = 0
 // Finalise child segments
-${finalise, autoIndent=True}@slurp
+${finalise}@slurp
   @end if
   @#
 @end def
 
 
-@def callChildSegments
+@def callChildSegments($function)
   @#
   @for $segment in $childSegments
-_${segment.name}();
+${segment.functions['segment'].call(parentFunction=function)}
   @end for
   @#
 @end def

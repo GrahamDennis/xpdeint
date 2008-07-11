@@ -19,7 +19,7 @@ ${insertUserCodeFromEntity($operatorDefinitionCodeEntity)}@slurp
 @end def
 
 
-@def evaluateOperatorFunctionContents
+@def evaluateOperatorFunctionContents($function)
 @*doc:
   This function overrides the Operator implementation of this to ensure that
   all required computed vectors are evaluated at the start of the filter.
@@ -27,6 +27,6 @@ ${insertUserCodeFromEntity($operatorDefinitionCodeEntity)}@slurp
   @#
 ${evaluateComputedVectors($dependencies)}@slurp
   @#
-  @super
+  @super(function)
   @#
 @end def

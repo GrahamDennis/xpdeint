@@ -228,104 +228,83 @@ ${insertCodeForFeatures('createToleranceVariable', featureOrdering)}@slurp
   @#
 @end def
 
-@def segmentFunctionImplementation
+@def segmentFunctionBody($function)
   @#
-void _segment${segmentNumber}()
-{
-  double _step = ${interval}/(double)${stepCount};
-  double _old_step = _step;
-  double _min_step = _step;
-  double _max_step = _step;
-  long _attempted_steps = 0;
-  long _unsuccessful_steps = 0;
-  
-  ${createToleranceVariable, autoIndent=True}@slurp
+double _step = ${interval}/(double)${stepCount};
+double _old_step = _step;
+double _min_step = _step;
+double _max_step = _step;
+long _attempted_steps = 0;
+long _unsuccessful_steps = 0;
+
+${createToleranceVariable}@slurp
   @# Insert code for features
   @set $featureOrderingOuter = ['Stochastic']
-  ${insertCodeForFeatures('integrateAdaptiveStepBegin', featureOrderingOuter), autoIndent=True}@slurp
-  
-  double _error;
+${insertCodeForFeatures('integrateAdaptiveStepBegin', featureOrderingOuter)}@slurp
+
+double _error;
   @for $vector in $integrationVectors
-  double _${name}_${vector.id}_error;
+double _${name}_${vector.id}_error;
   @end for
-  
-  bool _discard = false;
-  bool _break_next = false;
-  
+
+bool _discard = false;
+bool _break_next = false;
+
   @set $momentGroupCount = len($momentGroups)
-  bool _next_sample_flag[${momentGroupCount + 2}];
-  for (long _i0 = 0; _i0 < ${momentGroupCount + 2}; _i0++)
-    _next_sample_flag[_i0] = false;
-  
-  long _next_sample_counter[$momentGroupCount];
-  for (long _i0 = 0; _i0 < $momentGroupCount; _i0++)
-    _next_sample_counter[_i0] = 1;
-  
-  const double _${propagationDimension}_ini = ${propagationDimension};
-  
-  double _${propagationDimension}_break_next = _${name}_setup_sampling(_next_sample_flag, _next_sample_counter);
-  
-  if ( $propagationDimension - _${propagationDimension}_ini + _step >= _${propagationDimension}_break_next) {
-    _break_next = true;
-    _step = _${propagationDimension}_break_next - ${propagationDimension} + _${propagationDimension}_ini;
-  }
-  
-  ${initialise, autoIndent=True}@slurp
-  
-  ${localInitialise, autoIndent=True}@slurp
-  
-  do {
+bool _next_sample_flag[${momentGroupCount + 2}];
+for (long _i0 = 0; _i0 < ${momentGroupCount + 2}; _i0++)
+  _next_sample_flag[_i0] = false;
+
+long _next_sample_counter[$momentGroupCount];
+for (long _i0 = 0; _i0 < $momentGroupCount; _i0++)
+  _next_sample_counter[_i0] = 1;
+
+const double _${propagationDimension}_ini = ${propagationDimension};
+
+double _${propagationDimension}_break_next = _${name}_setup_sampling(_next_sample_flag, _next_sample_counter);
+
+if ( $propagationDimension - _${propagationDimension}_ini + _step >= _${propagationDimension}_break_next) {
+  _break_next = true;
+  _step = _${propagationDimension}_break_next - ${propagationDimension} + _${propagationDimension}_ini;
+}
+
+${initialise}@slurp
+
+${localInitialise}@slurp
+
+do {
   @set $featureOrderingOuterLoop = ['MaxIterations', 'Output', 'ErrorCheck']
-    ${insertCodeForFeatures('integrateAdaptiveStepOuterLoopBegin', featureOrderingOuterLoop), autoIndent=True}@slurp
-    
-    ${preSingleStep, autoIndent=True}@slurp
-    do {
+  ${insertCodeForFeatures('integrateAdaptiveStepOuterLoopBegin', featureOrderingOuterLoop), autoIndent=True}@slurp
+  
+  ${preSingleStep, autoIndent=True}@slurp
+  do {
   @# Insert code for features
   @set $featureOrderingInnerLoop = ['Stochastic']
-      ${insertCodeForFeatures('integrateAdaptiveStepInnerLoopBegin', featureOrderingInnerLoop), autoIndent=True}@slurp
-      
-      ${singleIntegrationStep, autoIndent=True}@slurp
-      
-      ${insertCodeForFeaturesInReverseOrder('integrateAdaptiveStepInnerLoopEnd', featureOrderingInnerLoop), autoIndent=True}@slurp
-      
-      _error = 0.0;
+    ${insertCodeForFeatures('integrateAdaptiveStepInnerLoopBegin', featureOrderingInnerLoop), autoIndent=True}@slurp
+    
+    ${singleIntegrationStep(function), autoIndent=True}@slurp
+    
+    ${insertCodeForFeaturesInReverseOrder('integrateAdaptiveStepInnerLoopEnd', featureOrderingInnerLoop), autoIndent=True}@slurp
+    
+    _error = 0.0;
   @for $vector in $integrationVectors
-      
-      _${name}_${vector.id}_error = _${name}_${vector.id}_timestep_error(_${errorFieldName}_${vector.id});
-      if (_${name}_${vector.id}_error > _error)
-        _error = _${name}_${vector.id}_error;
+    
+    _${name}_${vector.id}_error = _${name}_${vector.id}_timestep_error(_${errorFieldName}_${vector.id});
+    if (_${name}_${vector.id}_error > _error)
+      _error = _${name}_${vector.id}_error;
   @end for
-      
-      _attempted_steps++;
-      
+    
+    _attempted_steps++;
+    
   @set $featureOrderingForToleranceChecking = ['Diagnostics', 'Stochastic']
-      if (_error < _tolerance) {
-        ${insertCodeForFeatures('adaptiveStepSucceeded', $featureOrderingForToleranceChecking), autoIndent=True}@slurp
-        if (_step > _max_step)
-          _max_step = _step;
-        if (!_break_next && _step < _min_step)
-          _min_step = _step;
-        if (_error < 0.5*_tolerance) {
-          double _scalingFactor = 0.92 * pow(fabs(_tolerance/_error), ${successfulStepExponent});
-          if (_scalingFactor < 1.0/5.0)
-            _scalingFactor = 1.0/5.0;
-          if (_scalingFactor > 5.0)
-            _scalingFactor = 5.0;
-          
-          _old_step = _step;
-          _step *= _scalingFactor;
-        }
-        _discard = false;
-      } else {
-        ${insertCodeForFeatures('adaptiveStepFailed', $featureOrderingForToleranceChecking), autoIndent=True}@slurp
-        t -= _step;
-  @for $vector in $integrationVectors
-        
-        _${name}_${vector.id}_reset(_${resetFieldName}_${vector.id});
-  @end for
-        _segment${segmentNumber}_ip_evolve(-1);
-        
-        double _scalingFactor = 0.92 * pow(fabs(_tolerance/_error), ${unsuccessfulStepExponent});
+    if (_error < _tolerance) {
+      ${insertCodeForFeatures('adaptiveStepSucceeded', $featureOrderingForToleranceChecking), autoIndent=True}@slurp
+      if (_step > _max_step)
+        _max_step = _step;
+      if (!_break_next && _step < _min_step)
+        _min_step = _step;
+      if (_error < 0.5*_tolerance) {
+        double _scalingFactor = 0.92 * pow(fabs(_tolerance/_error), ${successfulStepExponent});
         if (_scalingFactor < 1.0/5.0)
           _scalingFactor = 1.0/5.0;
         if (_scalingFactor > 5.0)
@@ -333,23 +312,41 @@ void _segment${segmentNumber}()
         
         _old_step = _step;
         _step *= _scalingFactor;
-        _discard = true;
-        _break_next = false;
-        _unsuccessful_steps++;
       }
-    } while (_discard);
-    ${postSingleStep, autoIndent=True}@slurp
-    
-    ${insertCodeForFeaturesInReverseOrder('integrateAdaptiveStepOuterLoopEnd', featureOrderingOuterLoop), autoIndent=True}@slurp
-  } while (!_next_sample_flag[${momentGroupCount + 1}]);
+      _discard = false;
+    } else {
+      ${insertCodeForFeatures('adaptiveStepFailed', $featureOrderingForToleranceChecking), autoIndent=True}@slurp
+      t -= _step;
+  @for $vector in $integrationVectors
+      
+      _${name}_${vector.id}_reset(_${resetFieldName}_${vector.id});
+  @end for
+      ${functions['ipEvolve'].call(_exponent = -1, parentFunction=function)}
+      
+      double _scalingFactor = 0.92 * pow(fabs(_tolerance/_error), ${unsuccessfulStepExponent});
+      if (_scalingFactor < 1.0/5.0)
+        _scalingFactor = 1.0/5.0;
+      if (_scalingFactor > 5.0)
+        _scalingFactor = 5.0;
+      
+      _old_step = _step;
+      _step *= _scalingFactor;
+      _discard = true;
+      _break_next = false;
+      _unsuccessful_steps++;
+    }
+  } while (_discard);
+  ${postSingleStep, autoIndent=True}@slurp
   
-  ${localFinalise, autoIndent=True}@slurp
-  ${finalise, autoIndent=True}@slurp
+  ${insertCodeForFeaturesInReverseOrder('integrateAdaptiveStepOuterLoopEnd', featureOrderingOuterLoop), autoIndent=True}@slurp
+} while (!_next_sample_flag[${momentGroupCount + 1}]);
+
+${localFinalise}@slurp
+${finalise}@slurp
   @#
-  ${insertCodeForFeaturesInReverseOrder('integrateAdaptiveStepEnd', featureOrderingOuter), autoIndent=True}@slurp
-  
-  _LOG(_SEGMENT_LOG_LEVEL, "Segment ${segmentNumber}: minimum timestep: %e maximum timestep: %e\n", _min_step, _max_step);
-  _LOG(_SEGMENT_LOG_LEVEL, "  Attempted %li steps, %.2f%% steps failed.\n", _attempted_steps, (100.0*_unsuccessful_steps)/_attempted_steps);
-}
+${insertCodeForFeaturesInReverseOrder('integrateAdaptiveStepEnd', featureOrderingOuter)}@slurp
+
+_LOG(_SEGMENT_LOG_LEVEL, "Segment ${segmentNumber}: minimum timestep: %e maximum timestep: %e\n", _min_step, _max_step);
+_LOG(_SEGMENT_LOG_LEVEL, "  Attempted %li steps, %.2f%% steps failed.\n", _attempted_steps, (100.0*_unsuccessful_steps)/_attempted_steps);
   @#
 @end def

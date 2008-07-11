@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 """
-_OperatorContainer.py
+OperatorContainer.py
 
 Created by Graham Dennis on 2008-03-09.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
@@ -12,7 +12,7 @@ from xpdeint.ScriptElement import ScriptElement
 from xpdeint.Operators._Operator import _Operator
 from xpdeint.ParserException import ParserException
 
-class _OperatorContainer(ScriptElement):
+class OperatorContainer(ScriptElement):
   def __init__(self, *args, **KWs):
     legalKWs = ['field', 'name', 'sharedCodeKeyPath', 'dependenciesKeyPath', 'sharedCodeSpaceKeyPath']
     localKWs = {}
@@ -99,29 +99,34 @@ class _OperatorContainer(ScriptElement):
     op.operatorNumber = len(self.operators) - 1
   
   
-  def evaluateIPOperators(self, arguments = None):
+  def evaluateIPOperators(self, arguments = None, parentFunction = None):
     arguments = arguments or {}
-    return self._evaluateOperatorsWithArgument(self.ipOperators, arguments)
+    return self.callOperatorFunctionWithArguments('evaluate', self.ipOperators, arguments, parentFunction)
   
-  def evaluatePreDeltaAOperators(self, arguments = None):
+  def evaluatePreDeltaAOperators(self, arguments = None, parentFunction = None):
     arguments = arguments or {}
-    return self._evaluateOperatorsWithArgument(self.preDeltaAOperators, arguments)
+    return self.callOperatorFunctionWithArguments('evaluate', self.preDeltaAOperators, arguments, parentFunction)
   
-  def evaluatePostDeltaAOperators(self, arguments = None):
+  def evaluatePostDeltaAOperators(self, arguments = None, parentFunction = None):
     arguments = arguments or {}
-    return self._evaluateOperatorsWithArgument(self.postDeltaAOperators, arguments)
+    return self.callOperatorFunctionWithArguments('evaluate', self.postDeltaAOperators, arguments, parentFunction)
   
-  def evaluateDeltaAOperator(self, arguments = None):
+  def evaluateDeltaAOperator(self, arguments = None, parentFunction = None):
     arguments = arguments or {}
     if self.deltaAOperator:
-      return self._evaluateOperatorsWithArgument([self.deltaAOperator], arguments)
+      return self.callOperatorFunctionWithArguments('evaluate', [self.deltaAOperator], arguments, parentFunction)
     else:
       return ''
   
-  def evaluateOperators(self, arguments = None):
+  def evaluateOperators(self, arguments = None, parentFunction = None):
     arguments = arguments or {}
     assert not self.postDeltaAOperators and not self.deltaAOperator and not self.ipOperators
-    return self._evaluateOperatorsWithArgument(self.preDeltaAOperators, arguments)
+    return self.callOperatorFunctionWithArguments('evaluate', self.preDeltaAOperators, arguments, parentFunction)
+  
+  @staticmethod
+  def callOperatorFunctionWithArguments(functionName, operators, arguments = None, parentFunction = None):
+    arguments = arguments or {}
+    return '\n'.join(['// ' + op.description() + '\n' + op.functions[functionName].call(arguments, parentFunction = parentFunction) + '\n' for op in operators])
   
   def initialise(self):
     return '\n'.join([op.initialise() for op in self.operators])
@@ -131,7 +136,7 @@ class _OperatorContainer(ScriptElement):
   
   
   def preflight(self):
-    super(_OperatorContainer, self).preflight()
+    super(OperatorContainer, self).preflight()
     
     if self.field and self.deltaAOperator:
       assert self.field == self.deltaAOperator.field

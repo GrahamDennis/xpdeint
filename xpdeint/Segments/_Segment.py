@@ -11,6 +11,8 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 
 from xpdeint.ScriptElement import ScriptElement
 
+from xpdeint.Function import Function
+
 class _Segment (ScriptElement):
   def __init__(self, *args, **KWs):
     ScriptElement.__init__(self, *args, **KWs)
@@ -25,6 +27,11 @@ class _Segment (ScriptElement):
     
     if not self in scriptElements:
       scriptElements.append(self)
+    
+    self.functions['segment'] = Function(name = '_segment' + str(self.segmentNumber),
+                                         args = [], 
+                                         implementation = (self, 'segmentFunctionBody'))
+    
   
   @property
   def childSegments(self):

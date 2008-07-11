@@ -62,7 +62,7 @@ class _ScriptElement (Template):
     
     self._ScriptElement_haveCalledInit = True
     
-    legalKWs = ['xmlElement']
+    legalKWs = ['xmlElement', 'parent']
     localKWs = {}
     for key in KWs.copy():
       if key in legalKWs:
@@ -78,11 +78,12 @@ class _ScriptElement (Template):
     if not hasattr(type(self), 'dependencies'):
       self.dependencies = set()
     
-    self._parent = None
+    self._parent = localKWs.get('parent', None)
     self._propagationDimension = None
     self._propagationDirection = None
     self.xmlElement = localKWs.get('xmlElement', None)
     self.dependenciesEntity = None
+    self.functions = {}
     
     if self.hasattr('globalNameSpaceName'):
       globalNameSpace = KWs['searchList'][0]
@@ -257,11 +258,15 @@ class _ScriptElement (Template):
   
   # Function prototypes
   def functionPrototypes(self):
-    pass
+    if not self.functions:
+      return
+    return ''.join([f.prototype() for f in self.functions.itervalues()])
   
   # Function implemenations
   def functionImplementations(self):
-    pass
+    if not self.functions:
+      return
+    return '\n\n'.join([f.implementation() for f in self.functions.itervalues()])
   
   # Define a whole bunch of static versions of these functions
   def static_includes(self):

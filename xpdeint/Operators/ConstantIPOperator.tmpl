@@ -9,12 +9,13 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 @extends xpdeint.Operators._IPOperator
 
 @def description: IP transverse derivative operator for field $field.name
+@attr $calculateOperatorFieldFunctionArguments = []
 
-@def calculateOperatorFieldFunctionContents
+@def calculateOperatorFieldFunctionContents($function)
   @#
 ${integrator.createStepVariable}@slurp
 
-  @super
+  @super(function)
   @#
 @end def
 

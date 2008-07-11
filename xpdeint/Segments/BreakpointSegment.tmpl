@@ -25,40 +25,21 @@ long _breakpointAutoNameCounter = 0;
 @end def
 
 @*
-  Function prototypes
-*@
-@def functionPrototypes
-  @#
-  @super
-  @#
-void _segment${segmentNumber}();
-  @#
-@end def
-
-@*
   Function implementations
 *@
-@def functionImplementations
-  @#
-  @super
-  @#
+@def segmentFunctionBody($function)
+${evaluateComputedVectors($dependencies)}@slurp
 
-void _segment${segmentNumber}()
-{
-  ${evaluateComputedVectors($dependencies), autoIndent=True}@slurp
-  
-  ${transformVectorsToSpace($dependencies, $breakpointSpace), autoIndent=True}@slurp
-  
+${transformVectorsToSpace($dependencies, $breakpointSpace)}@slurp
+
   @set $featureOrdering = ['Driver']
   @set $dict = {'extraIndent': 0}
-  ${insertCodeForFeatures('breakpointBegin', featureOrdering, dict), autoIndent=True}@slurp
+${insertCodeForFeatures('breakpointBegin', featureOrdering, dict)}@slurp
   @set $extraIndent = dict['extraIndent']
-  
-  ${breakpointFunctionContents, autoIndent=True, extraIndent=extraIndent}@slurp
-  
-  ${insertCodeForFeaturesInReverseOrder('breakpointEnd', $featureOrdering, dict), autoIndent=True}@slurp
-}
 
+${breakpointFunctionContents, extraIndent=extraIndent}@slurp
+
+${insertCodeForFeaturesInReverseOrder('breakpointEnd', $featureOrdering, dict)}@slurp
   @#
 @end def
 

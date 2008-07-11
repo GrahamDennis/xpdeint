@@ -16,11 +16,12 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 @*
   Single integration step (SI)
 *@
-@def singleIntegrationStep
+@def singleIntegrationStep($function)
   @#
-_segment${segmentNumber}_calculate_nonconstant_ip_fields(_step, 1, 0);
+  @set $arguments = {'_step': '_step', $propagationDimension: $propagationDimension}
+${functions['nonconstantIPFields'].call(arguments, _exponent = 1, _arrayIndex = 0, parentFunction=function)}
 
-_segment${segmentNumber}_ip_evolve(+1);
+${functions['ipEvolve'].call(arguments, _exponent = +1, parentFunction=function)}
 
 ${propagationDimension} += _step/2.0;
 
@@ -39,10 +40,11 @@ ${interpolateDependencies}@slurp
 
 // _segment1_x_propagate(_step);
 for (int _iteration = 0; _iteration < ${iterations}; _iteration++) {
-  if (_iteration < ${iterations} - 1)
-    _segment${segmentNumber}_calculate_delta_a(_step/2.0);
-  else
-    _segment${segmentNumber}_calculate_delta_a(_step);
+  if (_iteration < ${iterations} - 1) {
+    ${functions['deltaA'].call(arguments, _step = '_step/2.0', parentFunction=function), autoIndent=True}
+  } else {
+    ${functions['deltaA'].call(arguments, parentFunction=function), autoIndent=True}
+  }
   
   ${transformVectorsToSpace($integrationVectors, $homeSpace), autoIndent=True}@slurp
   
@@ -52,7 +54,7 @@ _${vector.id}[$index] += _oldCopy_${vector.id}[$index];
 """), autoIndent=True}@slurp
 }
 
-_segment${segmentNumber}_ip_evolve(+1);
+${functions['ipEvolve'].call(arguments, _exponent = +1, parentFunction=function)}
 
 ${propagationDimension} += _step/2.0;
 

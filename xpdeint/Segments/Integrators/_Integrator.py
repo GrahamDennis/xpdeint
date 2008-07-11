@@ -11,7 +11,9 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 
 from xpdeint.Segments._Segment import _Segment
 
+from xpdeint.Operators.NonConstantIPOperator import NonConstantIPOperator
 from xpdeint.ParserException import ParserException
+from xpdeint.Function import Function
 
 class _Integrator (_Segment):
   
@@ -30,6 +32,24 @@ class _Integrator (_Segment):
     self.intraStepOperatorContainers = []
     self.stepEndOperatorContainers = []
     self.computedVectors = set()
+    
+    functionNamePrefix = '_' + self.id
+    
+    self.functions['deltaA'] = Function(name = functionNamePrefix + '_calculate_delta_a',
+                                        args = [('double', '_step')], 
+                                        implementation = (self, 'deltaAFunctionBody'),
+                                        returnType = 'inline void')
+    
+    self.functions['ipEvolve'] = Function(name = functionNamePrefix + '_ip_evolve',
+                                          args = [('int', '_exponent')],
+                                          implementation = (self, 'ipEvolveFunctionBody'),
+                                          returnType = 'inline void')
+    
+    self.functions['nonconstantIPFields'] = Function(name = functionNamePrefix + '_calculate_nonconstant_ip_fields',
+                                                     args = [('double', '_step'), ('int', '_exponent'), ('int', '_arrayIndex')],
+                                                     implementation = (self, 'nonconstantIPFieldsFunctionBody'),
+                                                     returnType = 'inline void')
+    
   
   @property
   def children(self):
@@ -79,6 +99,18 @@ class _Integrator (_Segment):
     operatorContainers = self.intraStepOperatorContainers[:]
     operatorContainers.sort(lambda x, y: cmp(len(x.field.dimensions), len(y.field.dimensions)), reverse=True)
     return operatorContainers
+  
+  def ipEvolveFunctionBody(self, function):
+    return '\n'.join([oc.evaluateIPOperators(parentFunction = function) for oc in self.operatorContainers])
+  
+  def nonconstantIPFieldsFunctionBody(self, function):
+    result = []
+    for oc in self.operatorContainers:
+      nonconstantIPOperators = [op for op in oc.ipOperators if isinstance(op, NonConstantIPOperator)]
+      if nonconstantIPOperators:
+        result.append(oc.callOperatorFunctionWithArguments('calculateOperatorField', nonconstantIPOperators, parentFunction=function))
+    
+    return '\n'.join(result)
   
   def preflight(self):
     super(_Integrator, self).preflight()
