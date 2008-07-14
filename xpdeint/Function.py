@@ -29,19 +29,18 @@ looping segments.
 """
 
 class Function(object):
-  __slots__ = ['name', 'returnType', 'args', 'implementationTarget', 'implementationFunctionName']
+  __slots__ = ['name', 'returnType', 'args', 'implementationContents']
   def __init__(self, name, args, implementation, returnType = 'void'):
     """
     Initialise a `Function` object with C name `functionName`, arguments `args` and a
-    return type of `returnType`. The `implementation` argument is a 2-tuple of the form
-    ``(implementationTarget, implementationFunctionName)`` such that the body of the 
-    function is returned by the call ``implementationTarget.implementationFunctionName()``.
+    return type of `returnType`. The `implementation` argument must be a function that
+    returns the body of the C function.
     
     The `args` argument is an array of 2-tuples of the form ``('argType', 'argName')``.
     """
     self.name = name
     self.args = args[:]
-    self.implementationTarget, self.implementationFunctionName = implementation
+    self.implementationContents = implementation
     self.returnType = returnType
   
   def _prototype(self):
@@ -66,10 +65,10 @@ class Function(object):
     """
     Return as a string the C function implementation for this function.
     """
-    implementationBodyString = getattr(self.implementationTarget, self.implementationFunctionName)(self)
+    implementationBodyString = self.implementationContents(self)
     result = []
-    if self.implementationTarget.hasattr('description'):
-      result.append('// ' + self.implementationTarget.description() + '\n')
+    if self.implementationContents.im_self.hasattr('description'):
+      result.append('// ' + self.implementationContents.im_self.description() + '\n')
     result.extend([self._prototype(), '\n{\n'])
     for line in implementationBodyString.splitlines(True):
       result.extend(['  ', line])

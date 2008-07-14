@@ -37,17 +37,17 @@ class _Integrator (_Segment):
     
     self.functions['deltaA'] = Function(name = functionNamePrefix + '_calculate_delta_a',
                                         args = [('double', '_step')], 
-                                        implementation = (self, 'deltaAFunctionBody'),
+                                        implementation = self.deltaAFunctionBody,
                                         returnType = 'inline void')
     
     self.functions['ipEvolve'] = Function(name = functionNamePrefix + '_ip_evolve',
                                           args = [('int', '_exponent')],
-                                          implementation = (self, 'ipEvolveFunctionBody'),
+                                          implementation = self.ipEvolveFunctionBody,
                                           returnType = 'inline void')
     
     self.functions['nonconstantIPFields'] = Function(name = functionNamePrefix + '_calculate_nonconstant_ip_fields',
                                                      args = [('double', '_step'), ('int', '_exponent'), ('int', '_arrayIndex')],
-                                                     implementation = (self, 'nonconstantIPFieldsFunctionBody'),
+                                                     implementation = self.nonconstantIPFieldsFunctionBody,
                                                      returnType = 'inline void')
     
   
