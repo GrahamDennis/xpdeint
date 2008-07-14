@@ -30,7 +30,7 @@ class _Segment (ScriptElement):
     
     self.functions['segment'] = Function(name = '_segment' + str(self.segmentNumber),
                                          args = [], 
-                                         implementation = (self, 'segmentFunctionBody'))
+                                         implementation = self.segmentFunctionBody)
     
   
   @property
