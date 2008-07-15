@@ -62,6 +62,13 @@ class _FieldElement (ScriptElement):
     
     return bitMask
   
+  @property
+  def prefix(self):
+    if not self.name == 'geometry':
+      return '_' + self.name
+    else:
+      return ''
+  
   # Do we have the dimension?
   def hasDimension(self, dimension):
     return self.hasDimensionName(dimension.name)
@@ -116,7 +123,7 @@ class _FieldElement (ScriptElement):
       # Only put a multiply sign in for everything after the first dimension
       result.append(separator)
       separator = ' * '
-      result.extend(['_', self.name, '_lattice_', self.dimensions[dimensionIndex].name])
+      result.extend([self.prefix, '_lattice_', self.dimensions[dimensionIndex].name])
     
     return ''.join(result)
   
@@ -203,7 +210,7 @@ class _FieldElement (ScriptElement):
     separator = ''
     result.append('(')
     for dimension in filter(lambda x: x.fourier, self.dimensions):
-      result.extend([separator, '_', self.name, '_d', self.dimensionNameForSpace(dimension, space)])
+      result.extend([separator, self.prefix, '_d', self.dimensionNameForSpace(dimension, space)])
       separator = ' * '
     result.append(')')
     
