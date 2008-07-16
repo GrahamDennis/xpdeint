@@ -162,18 +162,18 @@ _LOG(_SIMULATION_LOG_LEVEL, "Making FFTW plans\n");
   @end for
   @if temporaryVectorsNeedingFourierTransforms
     @# We have vectors that need something to be allocated
-    @set $temporaryVectorSizes = [(vector, vector.field.pointsInDimensionsNumerically * vector.nComponents) for vector in temporaryVectorsNeedingFourierTransforms]
-    @set $managedVectorSizes = [(vector, vector.field.pointsInDimensionsNumerically * vector.nComponents) for vector in managedVectorsNeedingFourierTransforms]
-    @set $maxTemporaryVectorAndSize = max(temporaryVectorSizes, key=lambda x: x[1])
+    @set $temporaryVectorSizes = [(vector.field.pointsInDimensionsNumerically * vector.nComponents, vector) for vector in temporaryVectorsNeedingFourierTransforms]
+    @set $managedVectorSizes = [(vector.field.pointsInDimensionsNumerically * vector.nComponents, vector) for vector in managedVectorsNeedingFourierTransforms]
+    @set $maxTemporaryVectorAndSize = max(temporaryVectorSizes)
     @if managedVectorSizes
-      @set $maxManagedVectorAndSize = max(managedVectorSizes, key=lambda x: x[1])
+      @set $maxManagedVectorAndSize = max(managedVectorSizes)
     @else
-      @set $maxManagedVectorAndSize = (None, 0)
+      @set $maxManagedVectorAndSize = (0, None)
     @end if
     @#
     @# If the maximum temporary vector is bigger than the maximum managed vector, then we really do need to allocate an array
-    @if $maxTemporaryVectorAndSize[1] > $maxManagedVectorAndSize[1]
-      @set $maxVector = $maxTemporaryVectorAndSize[0]
+    @if $maxTemporaryVectorAndSize[0] > $maxManagedVectorAndSize[0]
+      @set $maxVector = $maxTemporaryVectorAndSize[1]
       @set $allocatedTemporaryVector = True
 
 // allocate an array so we can create plans for those vectors that we have not allocated yet
@@ -181,7 +181,7 @@ complex* _temporary_vector = (complex*) xmds_malloc(sizeof(complex) * ${allocSiz
     @else
       @# The maximum managed vector is larger than the maximum temporary vector, so there's no point in allocating an array
       @set $allocatedTemporaryVector = False
-      @set $maxVector = $maxManagedVectorAndSize[0]
+      @set $maxVector = $maxManagedVectorAndSize[1]
       
 // just use the _${maxVector.id} array for creating plans for those vectors that we have not allocated yet
 complex* _temporary_vector = _${maxVector.id};

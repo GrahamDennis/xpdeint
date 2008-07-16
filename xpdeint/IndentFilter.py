@@ -72,7 +72,7 @@ class IndentFilter(Filter):
       trans = callerFrame.f_locals['trans']
       del callerFrame
       
-      (everythingBeforeLastLine, sep, lastLine) = trans.response().getvalue().rpartition('\n')
+      everythingBeforeLastLine, lastLine = trans.response().getvalue().rsplit('\n', 1)
       
       # Only add the contents of the last line to the indent string if it is only whitespace
       if lastLine.isspace():

@@ -7,7 +7,7 @@ need at least version 2.0.1) to remove the fprintf nightmare in xmds.
 First, let's dive into the build instructions before we talk about features.
 
 Build instructions:
-1. Install python 2.5 or greater.
+1. Install python 2.4 or greater. (2.5 recommended)
    Mac OS X: The easiest way to do this is by downloading a .dmg from http://pythonmac.org/packages/.
    If you have Leopard (10.5) or later, then python 2.5 comes pre-installed.
 
