@@ -9,6 +9,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 import os
 import sys
 import getopt
+import xpdeint.Python24Support
 from xml.dom import minidom
 import xpdeint.minidom_extras
 import subprocess
@@ -20,8 +21,8 @@ import imp
 # framework WebKit when Cheetah tries to import the Python
 # web application framework WebKit
 if sys.platform == 'darwin':
-  import new
-  sys.modules['WebKit'] = new.module('WebKit')
+  module = type(sys)
+  sys.modules['WebKit'] = module('WebKit')
 
 
 # Import the parser stuff
