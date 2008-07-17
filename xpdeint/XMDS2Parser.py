@@ -1153,7 +1153,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     filtersElements = integrateElement.getChildElementsByTagName('filters', optional=True)
     
     for filtersElement in filtersElements:
-      filterOperatorContainer = self.parseFilterElements(filtersElement)
+      filterOperatorContainer = self.parseFilterElements(filtersElement, parent=integratorTemplate)
       
       whereString = None
       if filtersElement.hasAttribute('where'):
@@ -1168,11 +1168,12 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
                                               "Valid options are: 'step start' (default) or 'step end'." % locals())
     
   
-  def parseFilterElements(self, filtersElement, optional = False):
+  def parseFilterElements(self, filtersElement, parent, optional = False):
     filterElements = filtersElement.getChildElementsByTagName('filter', optional = optional)
     
     if filterElements:
-      operatorContainer = OperatorContainerTemplate(**self.argumentsToTemplateConstructors)
+      operatorContainer = OperatorContainerTemplate(parent = parent,
+                                                    **self.argumentsToTemplateConstructors)
     else:
       operatorContainer = None
     
@@ -1688,7 +1689,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       momentGroupTemplate.samplingCodeEntity = samplingCodeEntity
       momentGroupTemplate.outputSpace = momentGroupTemplate.sampleSpace & momentGroupTemplate.spaceMask
       
-      operatorContainer = self.parseFilterElements(samplingElement, optional=True)
+      operatorContainer = self.parseFilterElements(samplingElement, parent=momentGroupTemplate, optional=True)
       if operatorContainer:
         momentGroupTemplate.operatorContainers.append(operatorContainer)
       
