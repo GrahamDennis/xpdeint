@@ -13,6 +13,44 @@ from xpdeint.Operators._Operator import _Operator
 from xpdeint.ParserException import ParserException
 
 class OperatorContainer(ScriptElement):
+  """
+  The `OperatorContainer` is, as the name suggests, a container for operators.
+  The idea is that there are many places where you want to be able to have a set
+  of operators and you want to be execute all of them without worrying too much
+  about what operators they are. 
+  
+  Similarly, some operators depend on a common (or 'shared') code block to determine
+  their behaviour (e.g. IP and EX). The `OperatorContainer` abstracts exactly where
+  this shared code block is and what its dependencies are so the operators don't need
+  to know whether they are being used in an integrator or in moment group sampling,
+  all they care about is that the `OperatorContainer` has been configured correctly.
+  
+  Configuring an OperatorContainer amounts to setting the `sharedCodeKeyPath`, 
+  `dependenciesKeyPath` and `sharedCodeSpaceKeyPath` variables in the initialiser
+  for `OperatorContainer`. `sharedCodeKeyPath` is a string that is a dotted-name
+  lookup specifier for the string that is the 'shared' code block for this operator
+  container. For example, in the case of an integrator, the 'shared' code block is the
+  integration code ``'dphi_dt = L[phi] + V*phi; // etc.'`` In an integrator, this
+  shared code belongs to the delta-a operator of the operator container. The 
+  `sharedCodeSpaceKeyPath` is simply the space in which the 'shared' code block is
+  evaluated, and `dependenciesKeyPath` is the key path to the dependencies that will
+  be available when the shared code is evaluated. These three variables configure
+  the three proxy variables on the `OperatorContainer`, `sharedCode`,
+  `dependencies` and `sharedCodeSpace`. Proxies are used to refer to the actual variables
+  instead of accessing them directly to enable write access to, for example, the shared code
+  object (as is needed by the IP operator).
+  
+  When executing operators in an `OperatorContainer` it is important to first to ensure
+  that all necessary computed vectors have been evaluated (and in the correct order).
+  To help with this, OperatorContainer returns a set of all of the computed vectors
+  on which operators in this `OperatorContainer` depend through the 
+  `computedVectorsNeedingPrecalculation` method.
+  
+  Do write the code that will actually evaluate the operators, just call one of the ``evaluate*``
+  functions. If you need to call another function on the operators other than ``evaluate``,
+  (currently the only other function is ``calculateOperatorField``) then you would use the
+  ``callOperatorFunctionWithArguments`` method.
+  """
   def __init__(self, *args, **KWs):
     legalKWs = ['field', 'name', 'sharedCodeKeyPath', 'dependenciesKeyPath', 'sharedCodeSpaceKeyPath']
     localKWs = {}

@@ -5,30 +5,31 @@ Function.py
 
 Created by Graham Dennis on 2008-07-10.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
-
-The idea behind Function objects is that they wrap C functions that will be in
-the generated source file that will need to be flexible in terms of what
-arguments they have. This way, one object can add function arguments to the
-functions 'belonging' to other objects without the second object needing to be
-involved.
-
-An example of an application of this is passing the cross-propagation dimension
-variable to delta-a operators in the cross-propagation integrator. As the
-cross-propagation integrator is a normal integrator, it wouldn't normally need
-to pass the propagation dimension variable to the delta a operator as the
-propagation dimension value is stored in a global variable. With the function
-objects, the cross-propagation operator just needs to add additional arguments
-to the cross-propagation delta-a calculation function and the delta-a operator
-and these variables are then passed through these functions.
-
-In a similar way other variables like cycle number of a looping segment could
-be passed to children if a use for that can be found. This behaviour was
-present in xmds-1, but hasn't been added to xpdeint as there hasn't been a need
-for it, and it isn't clear how this behaviour would work in the face of nested
-looping segments.
 """
 
 class Function(object):
+  """
+  The idea behind Function objects is that they wrap C functions that will be in
+  the generated source file that will need to be flexible in terms of what
+  arguments they have. This way, one object can add function arguments to the
+  functions 'belonging' to other objects without the second object needing to be
+  involved.
+
+  An example of an application of this is passing the cross-propagation dimension
+  variable to delta-a operators in the cross-propagation integrator. As the
+  cross-propagation integrator is a normal integrator, it wouldn't normally need
+  to pass the propagation dimension variable to the delta a operator as the
+  propagation dimension value is stored in a global variable. With the function
+  objects, the cross-propagation operator just needs to add additional arguments
+  to the cross-propagation delta-a calculation function and the delta-a operator
+  and these variables are then passed through these functions.
+
+  In a similar way other variables like cycle number of a looping segment could
+  be passed to children if a use for that can be found. This behaviour was
+  present in xmds-1, but hasn't been added to xpdeint as there hasn't been a need
+  for it, and it isn't clear how this behaviour would work in the face of nested
+  looping segments.
+  """
   __slots__ = ['name', 'returnType', 'args', 'implementationContents']
   def __init__(self, name, args, implementation, returnType = 'void'):
     """
