@@ -79,3 +79,6 @@
 * Add support for moment post-processing. This is only necessary for multi-path simulations where a temporal fourier transform needs to be averaged.
   Currently you can probably get around this limitation by using cross-propagation for the integration. I *think* you can have noises in cross-propagation
   integrators.
+
+* Rewrite bindNamedVectors/preflight/parent system. It's all a mess. The parent object should be set explicitly during initialisation, not found implicitly
+  and bindNamedVectors/preflight should probably change to something like 'localPreflight'/'nonLocalPreflight'.
