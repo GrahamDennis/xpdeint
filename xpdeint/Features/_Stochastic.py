@@ -12,6 +12,7 @@ from xpdeint.Vectors.VectorElement import VectorElement
 from xpdeint.Vectors.ComputedVector import ComputedVector
 from xpdeint.Vectors.VectorInitialisationFromCDATA import VectorInitialisationFromCDATA
 from xpdeint.Vectors.VectorInitialisationFromXSIL import VectorInitialisationFromXSIL
+from xpdeint.Operators.FilterOperator import FilterOperator
 from xpdeint.Operators.DeltaAOperator import DeltaAOperator
 from xpdeint.Segments.Integrators.FixedStep import FixedStep as FixedStepIntegrator
 from xpdeint.Segments.Integrators.AdaptiveStep import AdaptiveStep as AdaptiveStepIntegrator
@@ -74,7 +75,7 @@ class _Stochastic (_Feature):
     # Note that someone (maybe this class) needs to replace the named noises in
     # these classes (as read by the parser) with the actual noise objects
     
-    classesThatCanUseNoises = (VectorInitialisationFromCDATA, VectorInitialisationFromXSIL, ComputedVector, DeltaAOperator)
+    classesThatCanUseNoises = (VectorInitialisationFromCDATA, VectorInitialisationFromXSIL, ComputedVector, FilterOperator, DeltaAOperator)
     
     objectsThatMightUseNoises = [o for o in self.getVar('templates') if isinstance(o, classesThatCanUseNoises)]
     
@@ -98,6 +99,7 @@ class _Stochastic (_Feature):
       # The noiseField attribute is needed by ComputedVectors because they may exist in one field
       # but may be constructed from a larger field and so need the noise in that larger field.
       noiseField = o.noiseField
+      assert noiseField
       
       if not noiseField in fieldToNoisesMap:
         fieldToNoisesMap[noiseField] = set()

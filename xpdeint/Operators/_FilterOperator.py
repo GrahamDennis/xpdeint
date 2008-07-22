@@ -27,18 +27,18 @@ class _FilterOperator (Operator):
     return []
   
   
-  def preflight(self):
-    super(_FilterOperator, self).preflight()
+  def bindNamedVectors(self):
+    super(_FilterOperator, self).bindNamedVectors()
     
     dimensionNames = set()
     for dependency in self.dependencies:
       dimensionNames.update([dim.name for dim in dependency.field.dimensions])
     
-    self.loopingField = FieldElement.sortedFieldWithDimensionNames(dimensionNames)
+    self.field = FieldElement.sortedFieldWithDimensionNames(dimensionNames)
     
     if self.dependenciesEntity and self.dependenciesEntity.xmlElement.hasAttribute('fourier_space'):
-       self.operatorSpace = self.loopingField.spaceFromString(self.dependenciesEntity.xmlElement.getAttribute('fourier_space'),
-                                                              xmlElement = self.dependenciesEntity.xmlElement)
+       self.operatorSpace = self.field.spaceFromString(self.dependenciesEntity.xmlElement.getAttribute('fourier_space'),
+                                                       xmlElement = self.dependenciesEntity.xmlElement)
   
   
 
