@@ -48,13 +48,15 @@ class _Operator (ScriptElement):
     evaluateOperatorFunctionName = ''.join(['_', parent.id, '_evaluate_', self.name])
     evaluateOperatorFunction = Function(name = evaluateOperatorFunctionName,
                                         args = self.evaluateOperatorFunctionArguments,
-                                        implementation = self.evaluateOperatorFunctionContents)
+                                        implementation = self.evaluateOperatorFunctionContents,
+                                        description = self.description())
     self.functions['evaluate'] = evaluateOperatorFunction
     if hasattr(self, 'calculateOperatorFieldFunctionArguments'):
       calculateOperatorFieldFunctionName = ''.join(['_', parent.id, '_calculate_', self.name, '_field'])
       calculateOperatorFieldFunction = Function(name = calculateOperatorFieldFunctionName, 
                                                 args = self.calculateOperatorFieldFunctionArguments,
-                                                implementation = self.calculateOperatorFieldFunctionContents)
+                                                implementation = self.calculateOperatorFieldFunctionContents,
+                                                description = self.description())
       self.functions['calculateOperatorField'] = calculateOperatorFieldFunction
     
   

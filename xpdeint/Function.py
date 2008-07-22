@@ -30,8 +30,8 @@ class Function(object):
   for it, and it isn't clear how this behaviour would work in the face of nested
   looping segments.
   """
-  __slots__ = ['name', 'returnType', 'args', 'implementationContents']
-  def __init__(self, name, args, implementation, returnType = 'void'):
+  __slots__ = ['name', 'returnType', 'args', 'description', 'implementationContents']
+  def __init__(self, name, args, implementation, description = None, returnType = 'void'):
     """
     Initialise a `Function` object with C name `functionName`, arguments `args` and a
     return type of `returnType`. The `implementation` argument must be a function that
@@ -43,6 +43,7 @@ class Function(object):
     self.args = args[:]
     self.implementationContents = implementation
     self.returnType = returnType
+    self.description = description
   
   def _prototype(self):
     """
@@ -68,8 +69,8 @@ class Function(object):
     """
     implementationBodyString = self.implementationContents(self)
     result = []
-    if self.implementationContents.im_self.hasattr('description'):
-      result.append('// ' + self.implementationContents.im_self.description() + '\n')
+    if self.description:
+      result.append('// ' + self.description + '\n')
     result.extend([self._prototype(), '\n{\n'])
     for line in implementationBodyString.splitlines(True):
       result.extend(['  ', line])
