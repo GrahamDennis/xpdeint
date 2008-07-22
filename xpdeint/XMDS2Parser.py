@@ -1497,7 +1497,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     
     operatorTemplate.boundaryConditionDependenciesEntity = self.parseDependencies(boundaryConditionElement, optional=True)
     
-    operatorTemplate.boundaryConditionCode = boundaryConditionElement.cdataContents()
+    operatorTemplate.boundaryConditionCodeEntity = ParsedEntity(boundaryConditionElement, boundaryConditionElement.cdataContents())
     
     integrationVectorsElement = operatorElement.getChildElementByTagName('integration_vectors')
     integrationVectorNames = RegularExpressionStrings.symbolsInString(integrationVectorsElement.innerText())

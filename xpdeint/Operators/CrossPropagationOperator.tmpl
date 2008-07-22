@@ -29,3 +29,11 @@ ${crossPropagationIntegrator.initialise}@slurp
 ${crossPropagationIntegrator.finalise}@slurp
   @#
 @end def
+
+@def boundaryConditionCode
+  @#
+// ********** Boundary condition code ***********
+${insertUserCodeFromEntity($boundaryConditionCodeEntity)}@slurp
+// **********************************************
+  @#
+@end def

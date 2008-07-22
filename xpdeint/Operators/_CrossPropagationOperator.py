@@ -39,7 +39,7 @@ class _CrossPropagationOperator (Operator):
     self.crossPropagationIntegratorDeltaAOperator = None
     self.boundaryConditionDependenciesEntity = None
     self.boundaryConditionDependencies = set()
-    self.boundaryConditionCode = None
+    self.boundaryConditionCodeEntity = None
     self.integrationVectorsEntity = None
     self.integrationVectors = set()
     self.dependencyMap = {}
