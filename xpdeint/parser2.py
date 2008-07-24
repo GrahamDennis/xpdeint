@@ -10,6 +10,7 @@ import os
 import sys
 import getopt
 import xpdeint.Python24Support
+import xml
 from xml.dom import minidom
 import xpdeint.minidom_extras
 import subprocess
@@ -124,7 +125,12 @@ def main(argv=None):
   
   
   # Open the script file
-  scriptFile = file(scriptName)
+  try:
+    scriptFile = file(scriptName)
+  except Exception, err:
+    print >> sys.stderr, "Exception raised while trying to read xmds script:", err
+    return
+  
   # Read the contents of the file
   globalNameSpace['inputScript'] = scriptFile.read()
   # Close the file
@@ -133,7 +139,14 @@ def main(argv=None):
   
   # Parse the XML input script into a set of XML
   # classes
-  xmlDocument = minidom.parse(scriptName)
+  try:
+    xmlDocument = minidom.parse(scriptName)
+  except xml.parsers.expat.ExpatError, err:
+    print >> sys.stderr, "Parser error:", err
+    return
+  except Exception, err:
+    print >> sys.stderr, "Exception raised during parsing xmds script:", err
+    return
   
   # Set up the globalNameSpace with the appropriate variables
   from Preferences import versionString
@@ -225,7 +238,8 @@ def main(argv=None):
       lineNumber = err.element.getUserData('lineNumber')
       columnNumber = err.element.getUserData('columnNumber')
     print >> sys.stderr, "Error: " + err.msg
-    print >> sys.stderr, "    At line %(lineNumber)i, column %(columnNumber)i." % locals()
+    if lineNumber and lineNumber > 0:
+      print >> sys.stderr, "    At line %(lineNumber)i, column %(columnNumber)i." % locals()
     if debug:
       if err.element:
         print >> sys.stderr, "    In element: " + err.element.userUnderstandableXPath()
