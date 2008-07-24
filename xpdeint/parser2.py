@@ -26,7 +26,7 @@ if sys.platform == 'darwin':
 
 
 # Import the parser stuff
-from xpdeint.ParserException import ParserException
+from xpdeint.ParserException import ParserException, parserWarning
 from xpdeint.XMDS2Parser import XMDS2Parser
 
 # Import the top level template
@@ -239,6 +239,25 @@ def main(argv=None):
       raise
     
     return -1
+  
+  # Attempt to import lxml and run the script through
+  # the schema
+  try:
+    from lxml import etree
+  except ImportError, err:
+    pass
+  else:
+    # Parse the schema
+    relaxng_doc = etree.parse(resource_filename(__name__, 'support/xpdeint.rng'))
+    relaxng = etree.RelaxNG(relaxng_doc)
+    # Parse the script
+    script_doc = etree.fromstring(globalNameSpace['inputScript'])
+    if not relaxng.validate(script_doc):
+      # Validation failed
+      error = relaxng.error_log.last_error
+      parserWarning((error.line, error.column), error.message)
+      # print error, error.domain_name, error.type_name, error.message, dir(error)
+  
   
   # Now actually write the simulation to disk.
   

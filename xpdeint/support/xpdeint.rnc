@@ -1,0 +1,275 @@
+start = Simulation
+Simulation = element simulation {
+    attribute xmds-version { "2" },
+    (   
+        element name { text }
+        | element author { text }
+        | element description { text }
+        | Testing
+        | Features
+        | Geometry
+        | Driver
+        | Vector
+        | ComputedVector
+        | Sequence
+        | Output
+    )+
+}
+
+Testing = element testing {
+    ( 
+        XSILFile,
+        InputXSILFile
+    )+
+}
+
+XSILFile = element xsil_file {
+    attribute name { text }
+    , attribute expected { text }
+    , attribute absolute_tolerance { text }?
+    , attribute relative_tolerance { text }?
+}
+
+InputXSILFile = element input_xsil_file {
+    attribute name { text }
+}
+
+# Features
+Features = element features {
+    (
+        element auto_vectorise  { Bool | empty }
+        | element benchmark       { Bool | empty }
+        | element bing            { Bool | empty }
+        | element diagnostics     { Bool | empty }
+        | element error_check     { Bool | empty }
+        | element halt_non_finite { Bool | empty }
+        | element openmp          { Bool | empty }
+        | Arguments
+        | element globals { text }
+        | element validation { 
+              attribute kind { text }
+              , empty
+          }
+        | Stochastic
+        | FFTW
+    )+
+}
+
+Bool = "yes" | "no"
+
+Arguments = element arguments {
+    Argument+
+    , text?
+}
+
+Argument = element argument {
+    attribute name { text }
+    , attribute type { text }
+    , attribute default_value { text }
+    , empty
+}
+
+Stochastic = element stochastic {
+    Noise+
+}
+
+Noise = element noise {
+    attribute kind { text }
+    , attribute mean-rate { text }? # Only used by poissonian noises
+    , attribute prefix { text }
+    , attribute num { text }
+    , attribute seed { text }?
+}
+
+NoiseAttributes = 
+    (   
+        attribute noises { text }
+        | attribute no_noises { text }
+    )?
+
+FFTW = element fftw {
+    attribute version { text }
+    , attribute plan { text }?
+    , attribute threads { text }?
+    , empty
+}
+
+# Geometry
+Geometry = element geometry {
+    element propagation_dimension { text }
+    , element transverse_dimensions {
+        ( Dimension | IntegerValuedDimensions )+
+    }?
+}
+
+Dimension = element dimension {
+    attribute name { text }
+    , attribute lattice { text }
+    , attribute domain { text }
+    , empty
+}
+
+IntegerValuedDimensions = element integer_valued {
+    attribute kind { text }?
+    , IntegerValuedDimension+
+}
+
+IntegerValuedDimension = element dimension {
+    attribute name { text }
+    , attribute lattice { text }?
+    , attribute domain { text }
+    , empty
+}
+
+# Driver
+Driver = element driver {
+    attribute name { text }
+    , attribute kind { text }?
+    , attribute paths { text }?
+    , empty
+}
+
+# Vector stuff
+VectorCommon = 
+    attribute name { text }
+    , attribute dimensions { text }?
+    , attribute initial_space { text }?
+    , attribute type { text }?
+    , element components { text }
+
+
+Dependencies = element dependencies {
+    attribute fourier_space { text }?
+    , text
+}
+
+Vector = element vector {
+    VectorCommon
+    , element initialisation {
+        attribute kind { text }?
+        , NoiseAttributes
+        , element filename { 
+            attribute moment_group { text }?
+            , attribute geometry_matching_mode { text }?
+            , text
+        }?
+        , Dependencies?
+        , text
+    }?
+}
+
+ComputedVector = element computed_vector {
+    VectorCommon
+    , element evaluation {
+        NoiseAttributes
+        , Dependencies?
+        , text
+    }
+}
+
+# Sequence
+Sequence = element sequence {
+    attribute cycles { text }?
+    , (   Integrate 
+        | Filter
+        | Breakpoint
+        | Sequence
+      )+
+}
+
+Integrate = element integrate {
+    attribute algorithm { text }
+    , attribute interval { text }
+    , attribute steps { text }
+    , attribute tolerance { text }?
+    , attribute iterations { text }?
+    , (
+        element samples { text }
+        | Filters
+        | ComputedVector
+        | Operators
+      )+
+}
+
+Filters = element filters {
+    attribute where { text }?
+    , Filter+
+}
+
+Operators = element operators {
+    attribute dimensions { text }?
+    , NoiseAttributes
+    , (
+        IPEXOperator
+        | FunctionsOperator
+        | CrossPropagationOperator
+        | element integration_vectors { text }
+        | Dependencies
+        | text
+      )+
+}
+
+IPEXOperator = element operator {
+    attribute kind { "ip" | "ex" }
+    , attribute constant { Bool }
+    , attribute fourier_space { text }?
+    , element operator_names { text }
+    , text
+}
+
+FunctionsOperator = element operator {
+    attribute kind { "functions" }
+    , text
+}
+
+CrossPropagationOperator = element operator {
+    attribute kind { "cross_propagation" }
+    , attribute algorithm { text }
+    , attribute propagation_dimension { text }
+    , ( 
+        element integration_vectors { text }
+        | Dependencies
+        | element boundary_condition {
+            attribute kind { text }
+            , Dependencies?
+            , text
+        }
+        | IPEXOperator
+        | FunctionsOperator
+        | text
+      )+
+}
+
+Filter = element filter {
+    Dependencies
+    , text
+}
+
+Breakpoint = element breakpoint {
+    attribute filename { text }?
+    , Dependencies
+}
+
+Output = element output {
+    attribute format { text }?
+    , attribute filename { text }?
+    , element group {
+        element sampling {
+            attribute initial_sample { Bool }
+            , (
+                ComputedVector
+                | IPEXOperator
+                | FunctionsOperator
+                | element dimension {
+                    attribute name { text }
+                    , attribute lattice { text }?
+                    , attribute fourier_space { text }?
+                    , empty
+                }
+                | element moments { text }
+                | Dependencies
+                | text
+            )+
+        }
+    }*
+}
