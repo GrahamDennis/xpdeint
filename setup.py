@@ -31,7 +31,7 @@ setup(name="xpdeint",
       install_requires = ['Cheetah>=2.0.1'],
       
       package_data = {
-        '': ['includes/*.c', 'includes/*.h', 'includes/*.cc', 'examples/*.xmds']
+        '': ['includes/*.c', 'includes/*.h', 'includes/*.cc', 'examples/*.xmds', 'support/xpdeint.rng']
       },
       
       # We aren't zip safe because we will require access to

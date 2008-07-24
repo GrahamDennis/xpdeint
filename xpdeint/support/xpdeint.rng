@@ -1,0 +1,487 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+  <start>
+    <ref name="Simulation"/>
+  </start>
+  <define name="Simulation">
+    <element name="simulation">
+      <attribute name="xmds-version">
+        <value>2</value>
+      </attribute>
+      <oneOrMore>
+        <choice>
+          <element name="name">
+            <text/>
+          </element>
+          <element name="author">
+            <text/>
+          </element>
+          <element name="description">
+            <text/>
+          </element>
+          <ref name="Testing"/>
+          <ref name="Features"/>
+          <ref name="Geometry"/>
+          <ref name="Driver"/>
+          <ref name="Vector"/>
+          <ref name="ComputedVector"/>
+          <ref name="Sequence"/>
+          <ref name="Output"/>
+        </choice>
+      </oneOrMore>
+    </element>
+  </define>
+  <define name="Testing">
+    <element name="testing">
+      <oneOrMore>
+        <ref name="XSILFile"/>
+        <ref name="InputXSILFile"/>
+      </oneOrMore>
+    </element>
+  </define>
+  <define name="XSILFile">
+    <element name="xsil_file">
+      <attribute name="name"/>
+      <attribute name="expected"/>
+      <optional>
+        <attribute name="absolute_tolerance"/>
+      </optional>
+      <optional>
+        <attribute name="relative_tolerance"/>
+      </optional>
+    </element>
+  </define>
+  <define name="InputXSILFile">
+    <element name="input_xsil_file">
+      <attribute name="name"/>
+    </element>
+  </define>
+  <!-- Features -->
+  <define name="Features">
+    <element name="features">
+      <oneOrMore>
+        <choice>
+          <element name="auto_vectorise">
+            <choice>
+              <ref name="Bool"/>
+              <empty/>
+            </choice>
+          </element>
+          <element name="benchmark">
+            <choice>
+              <ref name="Bool"/>
+              <empty/>
+            </choice>
+          </element>
+          <element name="bing">
+            <choice>
+              <ref name="Bool"/>
+              <empty/>
+            </choice>
+          </element>
+          <element name="diagnostics">
+            <choice>
+              <ref name="Bool"/>
+              <empty/>
+            </choice>
+          </element>
+          <element name="error_check">
+            <choice>
+              <ref name="Bool"/>
+              <empty/>
+            </choice>
+          </element>
+          <element name="halt_non_finite">
+            <choice>
+              <ref name="Bool"/>
+              <empty/>
+            </choice>
+          </element>
+          <element name="openmp">
+            <choice>
+              <ref name="Bool"/>
+              <empty/>
+            </choice>
+          </element>
+          <ref name="Arguments"/>
+          <element name="globals">
+            <text/>
+          </element>
+          <element name="validation">
+            <attribute name="kind"/>
+            <empty/>
+          </element>
+          <ref name="Stochastic"/>
+          <ref name="FFTW"/>
+        </choice>
+      </oneOrMore>
+    </element>
+  </define>
+  <define name="Bool">
+    <choice>
+      <value>yes</value>
+      <value>no</value>
+    </choice>
+  </define>
+  <define name="Arguments">
+    <element name="arguments">
+      <oneOrMore>
+        <ref name="Argument"/>
+      </oneOrMore>
+      <optional>
+        <text/>
+      </optional>
+    </element>
+  </define>
+  <define name="Argument">
+    <element name="argument">
+      <attribute name="name"/>
+      <attribute name="type"/>
+      <attribute name="default_value"/>
+      <empty/>
+    </element>
+  </define>
+  <define name="Stochastic">
+    <element name="stochastic">
+      <oneOrMore>
+        <ref name="Noise"/>
+      </oneOrMore>
+    </element>
+  </define>
+  <define name="Noise">
+    <element name="noise">
+      <attribute name="kind"/>
+      <optional>
+        <attribute name="mean-rate"/>
+      </optional>
+      <!-- Only used by poissonian noises -->
+      <attribute name="prefix"/>
+      <attribute name="num"/>
+      <optional>
+        <attribute name="seed"/>
+      </optional>
+    </element>
+  </define>
+  <define name="NoiseAttributes">
+    <optional>
+      <choice>
+        <attribute name="noises"/>
+        <attribute name="no_noises"/>
+      </choice>
+    </optional>
+  </define>
+  <define name="FFTW">
+    <element name="fftw">
+      <attribute name="version"/>
+      <optional>
+        <attribute name="plan"/>
+      </optional>
+      <optional>
+        <attribute name="threads"/>
+      </optional>
+      <empty/>
+    </element>
+  </define>
+  <!-- Geometry -->
+  <define name="Geometry">
+    <element name="geometry">
+      <element name="propagation_dimension">
+        <text/>
+      </element>
+      <optional>
+        <element name="transverse_dimensions">
+          <oneOrMore>
+            <choice>
+              <ref name="Dimension"/>
+              <ref name="IntegerValuedDimensions"/>
+            </choice>
+          </oneOrMore>
+        </element>
+      </optional>
+    </element>
+  </define>
+  <define name="Dimension">
+    <element name="dimension">
+      <attribute name="name"/>
+      <attribute name="lattice"/>
+      <attribute name="domain"/>
+      <empty/>
+    </element>
+  </define>
+  <define name="IntegerValuedDimensions">
+    <element name="integer_valued">
+      <optional>
+        <attribute name="kind"/>
+      </optional>
+      <oneOrMore>
+        <ref name="IntegerValuedDimension"/>
+      </oneOrMore>
+    </element>
+  </define>
+  <define name="IntegerValuedDimension">
+    <element name="dimension">
+      <attribute name="name"/>
+      <optional>
+        <attribute name="lattice"/>
+      </optional>
+      <attribute name="domain"/>
+      <empty/>
+    </element>
+  </define>
+  <!-- Driver -->
+  <define name="Driver">
+    <element name="driver">
+      <attribute name="name"/>
+      <optional>
+        <attribute name="kind"/>
+      </optional>
+      <optional>
+        <attribute name="paths"/>
+      </optional>
+      <empty/>
+    </element>
+  </define>
+  <!-- Vector stuff -->
+  <define name="VectorCommon">
+    <attribute name="name"/>
+    <optional>
+      <attribute name="dimensions"/>
+    </optional>
+    <optional>
+      <attribute name="initial_space"/>
+    </optional>
+    <optional>
+      <attribute name="type"/>
+    </optional>
+    <element name="components">
+      <text/>
+    </element>
+  </define>
+  <define name="Dependencies">
+    <element name="dependencies">
+      <optional>
+        <attribute name="fourier_space"/>
+      </optional>
+      <text/>
+    </element>
+  </define>
+  <define name="Vector">
+    <element name="vector">
+      <ref name="VectorCommon"/>
+      <optional>
+        <element name="initialisation">
+          <optional>
+            <attribute name="kind"/>
+          </optional>
+          <ref name="NoiseAttributes"/>
+          <optional>
+            <element name="filename">
+              <optional>
+                <attribute name="moment_group"/>
+              </optional>
+              <optional>
+                <attribute name="geometry_matching_mode"/>
+              </optional>
+              <text/>
+            </element>
+          </optional>
+          <optional>
+            <ref name="Dependencies"/>
+          </optional>
+          <text/>
+        </element>
+      </optional>
+    </element>
+  </define>
+  <define name="ComputedVector">
+    <element name="computed_vector">
+      <ref name="VectorCommon"/>
+      <element name="evaluation">
+        <ref name="NoiseAttributes"/>
+        <optional>
+          <ref name="Dependencies"/>
+        </optional>
+        <text/>
+      </element>
+    </element>
+  </define>
+  <!-- Sequence -->
+  <define name="Sequence">
+    <element name="sequence">
+      <optional>
+        <attribute name="cycles"/>
+      </optional>
+      <oneOrMore>
+        <choice>
+          <ref name="Integrate"/>
+          <ref name="Filter"/>
+          <ref name="Breakpoint"/>
+          <ref name="Sequence"/>
+        </choice>
+      </oneOrMore>
+    </element>
+  </define>
+  <define name="Integrate">
+    <element name="integrate">
+      <attribute name="algorithm"/>
+      <attribute name="interval"/>
+      <attribute name="steps"/>
+      <optional>
+        <attribute name="tolerance"/>
+      </optional>
+      <optional>
+        <attribute name="iterations"/>
+      </optional>
+      <oneOrMore>
+        <choice>
+          <element name="samples">
+            <text/>
+          </element>
+          <ref name="Filters"/>
+          <ref name="ComputedVector"/>
+          <ref name="Operators"/>
+        </choice>
+      </oneOrMore>
+    </element>
+  </define>
+  <define name="Filters">
+    <element name="filters">
+      <optional>
+        <attribute name="where"/>
+      </optional>
+      <oneOrMore>
+        <ref name="Filter"/>
+      </oneOrMore>
+    </element>
+  </define>
+  <define name="Operators">
+    <element name="operators">
+      <optional>
+        <attribute name="dimensions"/>
+      </optional>
+      <ref name="NoiseAttributes"/>
+      <oneOrMore>
+        <choice>
+          <ref name="IPEXOperator"/>
+          <ref name="FunctionsOperator"/>
+          <ref name="CrossPropagationOperator"/>
+          <element name="integration_vectors">
+            <text/>
+          </element>
+          <ref name="Dependencies"/>
+          <text/>
+        </choice>
+      </oneOrMore>
+    </element>
+  </define>
+  <define name="IPEXOperator">
+    <element name="operator">
+      <attribute name="kind">
+        <choice>
+          <value>ip</value>
+          <value>ex</value>
+        </choice>
+      </attribute>
+      <attribute name="constant">
+        <ref name="Bool"/>
+      </attribute>
+      <optional>
+        <attribute name="fourier_space"/>
+      </optional>
+      <element name="operator_names">
+        <text/>
+      </element>
+      <text/>
+    </element>
+  </define>
+  <define name="FunctionsOperator">
+    <element name="operator">
+      <attribute name="kind">
+        <value>functions</value>
+      </attribute>
+      <text/>
+    </element>
+  </define>
+  <define name="CrossPropagationOperator">
+    <element name="operator">
+      <attribute name="kind">
+        <value>cross_propagation</value>
+      </attribute>
+      <attribute name="algorithm"/>
+      <attribute name="propagation_dimension"/>
+      <oneOrMore>
+        <choice>
+          <element name="integration_vectors">
+            <text/>
+          </element>
+          <ref name="Dependencies"/>
+          <element name="boundary_condition">
+            <attribute name="kind"/>
+            <optional>
+              <ref name="Dependencies"/>
+            </optional>
+            <text/>
+          </element>
+          <ref name="IPEXOperator"/>
+          <ref name="FunctionsOperator"/>
+          <text/>
+        </choice>
+      </oneOrMore>
+    </element>
+  </define>
+  <define name="Filter">
+    <element name="filter">
+      <ref name="Dependencies"/>
+      <text/>
+    </element>
+  </define>
+  <define name="Breakpoint">
+    <element name="breakpoint">
+      <optional>
+        <attribute name="filename"/>
+      </optional>
+      <ref name="Dependencies"/>
+    </element>
+  </define>
+  <define name="Output">
+    <element name="output">
+      <optional>
+        <attribute name="format"/>
+      </optional>
+      <optional>
+        <attribute name="filename"/>
+      </optional>
+      <zeroOrMore>
+        <element name="group">
+          <element name="sampling">
+            <attribute name="initial_sample">
+              <ref name="Bool"/>
+            </attribute>
+            <oneOrMore>
+              <choice>
+                <ref name="ComputedVector"/>
+                <ref name="IPEXOperator"/>
+                <ref name="FunctionsOperator"/>
+                <element name="dimension">
+                  <attribute name="name"/>
+                  <optional>
+                    <attribute name="lattice"/>
+                  </optional>
+                  <optional>
+                    <attribute name="fourier_space"/>
+                  </optional>
+                  <empty/>
+                </element>
+                <element name="moments">
+                  <text/>
+                </element>
+                <ref name="Dependencies"/>
+                <text/>
+              </choice>
+            </oneOrMore>
+          </element>
+        </element>
+      </zeroOrMore>
+    </element>
+  </define>
+</grammar>

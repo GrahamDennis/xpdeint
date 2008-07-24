@@ -27,8 +27,8 @@
     </stochastic>
   </features>
   
-  <vector name="main">
-    <components type="complex">
+  <vector name="main" type="complex">
+    <components>
       z
     </components>
     <initialisation noises="">
@@ -40,8 +40,8 @@
     </initialisation>
   </vector>
   
-  <computed_vector name="0d_noise" dimensions="">
-    <components type="double">noise</components>
+  <computed_vector name="0d_noise" dimensions="" type="double">
+    <components>noise</components>
     <evaluation>
       <![CDATA[
         noise = n_1;

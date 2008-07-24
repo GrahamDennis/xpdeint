@@ -61,7 +61,6 @@
   
   <sequence>
     <integrate algorithm="ARK89" interval="10.0" steps="10000" tolerance="1e-8">
-      <absolute_tolerance>1.0e-14</absolute_tolerance>
       <samples>500 500</samples>
       <filters>
         <filter>
