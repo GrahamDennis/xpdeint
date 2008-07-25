@@ -163,12 +163,10 @@
     </element>
   </define>
   <define name="NoiseAttributes">
-    <optional>
-      <choice>
-        <attribute name="noises"/>
-        <attribute name="no_noises"/>
-      </choice>
-    </optional>
+    <choice>
+      <attribute name="noises"/>
+      <attribute name="no_noises"/>
+    </choice>
   </define>
   <define name="FFTW">
     <element name="fftw">
@@ -273,7 +271,9 @@
           <optional>
             <attribute name="kind"/>
           </optional>
-          <ref name="NoiseAttributes"/>
+          <optional>
+            <ref name="NoiseAttributes"/>
+          </optional>
           <optional>
             <element name="filename">
               <optional>
@@ -297,7 +297,9 @@
     <element name="computed_vector">
       <ref name="VectorCommon"/>
       <element name="evaluation">
-        <ref name="NoiseAttributes"/>
+        <optional>
+          <ref name="NoiseAttributes"/>
+        </optional>
         <optional>
           <ref name="Dependencies"/>
         </optional>
@@ -332,6 +334,9 @@
       <optional>
         <attribute name="iterations"/>
       </optional>
+      <optional>
+        <attribute name="cutoff"/>
+      </optional>
       <oneOrMore>
         <choice>
           <element name="samples">
@@ -359,7 +364,9 @@
       <optional>
         <attribute name="dimensions"/>
       </optional>
-      <ref name="NoiseAttributes"/>
+      <optional>
+        <ref name="NoiseAttributes"/>
+      </optional>
       <oneOrMore>
         <choice>
           <ref name="IPEXOperator"/>
@@ -391,6 +398,9 @@
       <element name="operator_names">
         <text/>
       </element>
+      <optional>
+        <ref name="Dependencies"/>
+      </optional>
       <text/>
     </element>
   </define>

@@ -85,7 +85,7 @@ NoiseAttributes =
     (   
         attribute noises { text }
         | attribute no_noises { text }
-    )?
+    )
 
 FFTW = element fftw {
     attribute version { text }
@@ -147,7 +147,7 @@ Vector = element vector {
     VectorCommon
     , element initialisation {
         attribute kind { text }?
-        , NoiseAttributes
+        , NoiseAttributes?
         , element filename { 
             attribute moment_group { text }?
             , attribute geometry_matching_mode { text }?
@@ -161,7 +161,7 @@ Vector = element vector {
 ComputedVector = element computed_vector {
     VectorCommon
     , element evaluation {
-        NoiseAttributes
+        NoiseAttributes?
         , Dependencies?
         , text
     }
@@ -183,6 +183,7 @@ Integrate = element integrate {
     , attribute steps { text }
     , attribute tolerance { text }?
     , attribute iterations { text }?
+    , attribute cutoff { text }?
     , (
         element samples { text }
         | Filters
@@ -198,7 +199,7 @@ Filters = element filters {
 
 Operators = element operators {
     attribute dimensions { text }?
-    , NoiseAttributes
+    , NoiseAttributes?
     , (
         IPEXOperator
         | FunctionsOperator
@@ -214,6 +215,7 @@ IPEXOperator = element operator {
     , attribute constant { Bool }
     , attribute fourier_space { text }?
     , element operator_names { text }
+    , Dependencies?
     , text
 }
 

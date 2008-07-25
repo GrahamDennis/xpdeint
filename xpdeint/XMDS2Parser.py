@@ -340,8 +340,6 @@ class XMDS2Parser(ScriptParser):
               if (%(meanRateString)s < 0.0)
                 _LOG(_ERROR_LOG_LEVEL, "ERROR: The mean-rate for Poissonian noise %(prefix)s is not positive!\\n"
                                        "Mean-rate = %%e\\n", %(meanRateString)s);""" % locals())
-              parserWarning(noiseElement, "Attempting to use expression '%(meanRateString)s' for the Poissonian mean-rate "
-                                              "for noise %(prefix)s" % locals())
             else:
               raise ParserException(noiseElement, "Unable to understand '%(meanRateString)s' as a positive real value.\nUse the feature <validation/> to allow for arbitrary code." % locals())
           noiseAttributeDictionary['noiseMeanRate'] = meanRateString
@@ -384,8 +382,6 @@ class XMDS2Parser(ScriptParser):
                 if (%(seedString)s < 0)
                   _LOG(_ERROR_LOG_LEVEL, "ERROR: The seed for random noise %(prefix)s is not positive!\\n"
                   "Seed = %%d\\n", %(seedString)s);""" % locals())
-                parserWarning(noiseElement, "Attempting to use expression '%(seedString)s' for a seed for "
-                                            "noise %(prefix)s" % locals())
               else:
                 raise ParserException(noiseElement, "Unable to understand seed '%(seedString)s' as a positive integer.\nUse the feature <validation/> to allow for arbitrary code." % locals())
           
@@ -575,7 +571,6 @@ class XMDS2Parser(ScriptParser):
               _LOG(_ERROR_LOG_LEVEL, "ERROR: The end point of the dimension '%(maximumString)s' must be "
                                      "greater than the start point.\\n"
                                      "Start = %%e, End = %%e\\n", %(minimumString)s,%(maximumString)s);""" % locals())
-            parserWarning(dimensionElement, "Attempting to use domain (%(minimumString)s, %(maximumString)s) for dimension %(dimensionName)s" % locals())
           else:
             raise ParserException(dimensionElement, """Could not understand domain (%(minimumString)s, %(maximumString)s) as numbers.
 Use feature <validation/> to allow for arbitrary code.""" % locals() )
@@ -1105,8 +1100,6 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
         if (%(intervalString)s <= 0.0)
           _LOG(_ERROR_LOG_LEVEL, "ERROR: The interval for segment %(segmentNumber)i is not positive!\\n"
                                  "Interval = %%e\\n", %(intervalString)s);""" % locals())
-        parserWarning(integrateElement, "Attempting to use expression '%(intervalString)s' for the interval "
-                                        "for segment %(segmentNumber)i" % locals())
       else:
         raise ParserException(integrateElement, "Could not understand interval '%(intervalString)s' "
                                                 "as a number.\nUse the feature <validation/> to allow for arbitrary code." % locals())
