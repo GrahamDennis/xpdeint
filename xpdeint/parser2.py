@@ -142,7 +142,7 @@ def main(argv=None):
   try:
     xmlDocument = minidom.parse(scriptName)
   except xml.parsers.expat.ExpatError, err:
-    print >> sys.stderr, "Parser error:", err
+    print >> sys.stderr, "XML Parser error:", err
     return
   except Exception, err:
     print >> sys.stderr, "Exception raised during parsing xmds script:", err
