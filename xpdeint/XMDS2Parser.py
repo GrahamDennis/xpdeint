@@ -69,7 +69,6 @@ from xpdeint.Features.Noises.DSFMT.UniformDSFMTNoise import UniformDSFMTNoise
 from xpdeint.Features.Noises.DSFMT.PoissonianDSFMTNoise import PoissonianDSFMTNoise
 
 from xpdeint.Features.FourierTransformNone import FourierTransformNone
-from xpdeint.Features.FourierTransformFFTW2 import FourierTransformFFTW2
 from xpdeint.Features.FourierTransformFFTW3 import FourierTransformFFTW3
 from xpdeint.Features.FourierTransformFFTW3Threads import FourierTransformFFTW3Threads
 
@@ -415,8 +414,6 @@ class XMDS2Parser(ScriptParser):
         fourierTransformClass = FourierTransformFFTW3
       elif fftwElement.getAttribute('version').strip() == '3':
         fourierTransformClass = FourierTransformFFTW3
-      elif fftwElement.getAttribute('version').strip() == '2':
-        fourierTransformClass = FourierTransformFFTW2
       elif fftwElement.getAttribute('version').strip().lower() == 'none':
         fourierTransformClass = FourierTransformNone
       else:
@@ -442,8 +439,6 @@ class XMDS2Parser(ScriptParser):
       if threadCount > 1:
         if fourierTransformClass == FourierTransformFFTW3:
           fourierTransformClass = FourierTransformFFTW3Threads
-        elif fourierTransformClass == FourierTransformFFTW2:
-          raise ParserException(fftwElement, "Can't use threads with FFTW2.")
         elif fourierTransformClass == FourierTransformNone:
           raise ParserException(fftwElement, "Can't use threads with no fourier transforms.")
         else:
