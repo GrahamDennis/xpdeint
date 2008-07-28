@@ -1,6 +1,5 @@
 * Complete Stochastics support
   * Test
-  * Add the GNU scientific library as another source for noises
 
 * Make the regular expressions for integer-valued dimensions not consider or modify strings which are
   in comments or in quotes (e.g. printf strings)
@@ -19,6 +18,7 @@
 * Deterministic/distributed MPI
   * Needs testing.
   * Implement sub-sampling k-space and check sub-sampling for x-space
+  * Implement sub-sampling the second MPI dimension
 
 * Make sure that all the things that Andy has been doing to enable various simulation
   parameters can be controlled at simulation run time can be done in xpdeint.
@@ -47,13 +47,7 @@
   project should be under GPL2 unless there is some compelling reason why it should be under
   something else.
 
-? FFTW2 support. FFTW3 support has been written and tested, and the basic code for FFTW2 is in
-  FourierTransformFFTW2.tmpl, however it hasn't been finished.  In fact, let's not and say we did.
-
 * Example library
-
-* Output:
-  ? Post-processing
 
 * Runtime-limiting support (as in xmds-1)
 
@@ -82,3 +76,9 @@
 
 * Rewrite bindNamedVectors/preflight/parent system. It's all a mess. The parent object should be set explicitly during initialisation, not found implicitly
   and bindNamedVectors/preflight should probably change to something like 'localPreflight'/'nonLocalPreflight'.
+
+* Add support for multiple transforms. Here we will want a transform multiplexer to combine the results of the (separable) transforms. The kinds of transforms
+  that should be considered should include:
+  - Discrete Cosine / Sine Transforms (for even/odd symmetric boundary conditions)
+  - General matrix transforms. For example, Hankel transforms (require non-uniform dimensions) 
+    and hermite-gaussian basis decomposition (may require non-square transforms).
