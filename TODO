@@ -90,11 +90,18 @@
   - M_PI/etc aren't defined by default in math.h. There is a define you can use to get them,
     however.
   - _LOG lines reutrn syntax errors. Do these use some modern C/C++, written poorly, is the VS 
-    compiler screwed, or is some Windows compatibility thing?
+    compiler screwed, or is some Windows compatibility thing? Either way, removing the brackets
+    before and after the braces fixes the problem.
   - erand48 is not defined on Windows. We'll need a replacement (or write a substitution function).
   - fseeko is a POSIX thing as well and is missing on Windows. If we need 64 bit offsets we 
     could substitute with fsetpos and _filelengthi64. If not, why don't we use fseek?
   - fftw3 has compiled windows DLL's which they claim are well optimised. We'll have to learn to 
     dynamically link with fftw3 (which apparently has wisdom issues).
+  Implementation notes:
   - I don't think a Windows distribution needs MPI/OpenMP support. Otherwise, I don't see why the
     things xmds does isn't easily portable...
+  - Works fine with NO features, defining M_PI, removing brackets around _LOG definition, removing
+    the POSIX headers, no fftw, and ASCII output. 
+  - Next priorities: getting fftw3 and random numbers working, and:
+  - I would suggest adding a <target> windows/posix </target> feature. Later we could configure a
+    default target when xpdeint is installed. Alternatively we could use a <windows/> feature?
