@@ -82,3 +82,19 @@
   - Discrete Cosine / Sine Transforms (for even/odd symmetric boundary conditions)
   - General matrix transforms. For example, Hankel transforms (require non-uniform dimensions) 
     and hermite-gaussian basis decomposition (may require non-square transforms).
+
+* Make xmds/xpdeint code compile on Windows. Currently it works in Cygwin but suffers from 
+  SERIOUS performance degradation. I've been trying to compile a simple script (modified 
+  kubo.xmds) using the MS Visual Studio 2005 Express compiler. The following are compile issues:
+  - Headers <unistd.h> <sys/time.h> and <stdint.h> don't exist on Windows.
+  - M_PI/etc aren't defined by default in math.h. There is a define you can use to get them,
+    however.
+  - _LOG lines reutrn syntax errors. Do these use some modern C/C++, written poorly, is the VS 
+    compiler screwed, or is some Windows compatibility thing?
+  - erand48 is not defined on Windows. We'll need a replacement (or write a substitution function).
+  - fseeko is a POSIX thing as well and is missing on Windows. If we need 64 bit offsets we 
+    could substitute with fsetpos and _filelengthi64. If not, why don't we use fseek?
+  - fftw3 has compiled windows DLL's which they claim are well optimised. We'll have to learn to 
+    dynamically link with fftw3 (which apparently has wisdom issues).
+  - I don't think a Windows distribution needs MPI/OpenMP support. Otherwise, I don't see why the
+    things xmds does isn't easily portable...
