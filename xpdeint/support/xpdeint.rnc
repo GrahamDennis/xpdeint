@@ -18,8 +18,8 @@ Simulation = element simulation {
 
 Testing = element testing {
     ( 
-        XSILFile,
-        InputXSILFile
+        XSILFile
+        | InputXSILFile
     )+
 }
 
@@ -201,30 +201,32 @@ Operators = element operators {
     attribute dimensions { text }?
     , NoiseAttributes?
     , (
-        IPEXOperator
-        | FunctionsOperator
-        | CrossPropagationOperator
+        Operator
         | element integration_vectors { text }
         | Dependencies
         | text
       )+
 }
 
-IPEXOperator = element operator {
+Operator = element operator {
+    IPEXOperatorContents
+    | FunctionsOperatorContents
+    | CrossPropagationOperatorContents
+}
+
+IPEXOperatorContents = 
     attribute kind { "ip" | "ex" }
     , attribute constant { Bool }
     , attribute fourier_space { text }?
     , element operator_names { text }
     , Dependencies?
     , text
-}
 
-FunctionsOperator = element operator {
+FunctionsOperatorContents = 
     attribute kind { "functions" }
     , text
-}
 
-CrossPropagationOperator = element operator {
+CrossPropagationOperatorContents = 
     attribute kind { "cross_propagation" }
     , attribute algorithm { text }
     , attribute propagation_dimension { text }
@@ -236,11 +238,9 @@ CrossPropagationOperator = element operator {
             , Dependencies?
             , text
         }
-        | IPEXOperator
-        | FunctionsOperator
+        | Operator
         | text
       )+
-}
 
 Filter = element filter {
     Dependencies
@@ -260,8 +260,7 @@ Output = element output {
             attribute initial_sample { Bool }
             , (
                 ComputedVector
-                | IPEXOperator
-                | FunctionsOperator
+                | Operator
                 | element dimension {
                     attribute name { text }
                     , attribute lattice { text }?

@@ -34,8 +34,10 @@
   <define name="Testing">
     <element name="testing">
       <oneOrMore>
-        <ref name="XSILFile"/>
-        <ref name="InputXSILFile"/>
+        <choice>
+          <ref name="XSILFile"/>
+          <ref name="InputXSILFile"/>
+        </choice>
       </oneOrMore>
     </element>
   </define>
@@ -369,9 +371,7 @@
       </optional>
       <oneOrMore>
         <choice>
-          <ref name="IPEXOperator"/>
-          <ref name="FunctionsOperator"/>
-          <ref name="CrossPropagationOperator"/>
+          <ref name="Operator"/>
           <element name="integration_vectors">
             <text/>
           </element>
@@ -381,63 +381,65 @@
       </oneOrMore>
     </element>
   </define>
-  <define name="IPEXOperator">
+  <define name="Operator">
     <element name="operator">
-      <attribute name="kind">
-        <choice>
-          <value>ip</value>
-          <value>ex</value>
-        </choice>
-      </attribute>
-      <attribute name="constant">
-        <ref name="Bool"/>
-      </attribute>
-      <optional>
-        <attribute name="fourier_space"/>
-      </optional>
-      <element name="operator_names">
-        <text/>
-      </element>
-      <optional>
+      <choice>
+        <ref name="IPEXOperatorContents"/>
+        <ref name="FunctionsOperatorContents"/>
+        <ref name="CrossPropagationOperatorContents"/>
+      </choice>
+    </element>
+  </define>
+  <define name="IPEXOperatorContents">
+    <attribute name="kind">
+      <choice>
+        <value>ip</value>
+        <value>ex</value>
+      </choice>
+    </attribute>
+    <attribute name="constant">
+      <ref name="Bool"/>
+    </attribute>
+    <optional>
+      <attribute name="fourier_space"/>
+    </optional>
+    <element name="operator_names">
+      <text/>
+    </element>
+    <optional>
+      <ref name="Dependencies"/>
+    </optional>
+    <text/>
+  </define>
+  <define name="FunctionsOperatorContents">
+    <attribute name="kind">
+      <value>functions</value>
+    </attribute>
+    <text/>
+  </define>
+  <define name="CrossPropagationOperatorContents">
+    <attribute name="kind">
+      <value>cross_propagation</value>
+    </attribute>
+    <attribute name="algorithm"/>
+    <attribute name="propagation_dimension"/>
+    <oneOrMore>
+      <choice>
+        <element name="integration_vectors">
+          <text/>
+        </element>
         <ref name="Dependencies"/>
-      </optional>
-      <text/>
-    </element>
-  </define>
-  <define name="FunctionsOperator">
-    <element name="operator">
-      <attribute name="kind">
-        <value>functions</value>
-      </attribute>
-      <text/>
-    </element>
-  </define>
-  <define name="CrossPropagationOperator">
-    <element name="operator">
-      <attribute name="kind">
-        <value>cross_propagation</value>
-      </attribute>
-      <attribute name="algorithm"/>
-      <attribute name="propagation_dimension"/>
-      <oneOrMore>
-        <choice>
-          <element name="integration_vectors">
-            <text/>
-          </element>
-          <ref name="Dependencies"/>
-          <element name="boundary_condition">
-            <attribute name="kind"/>
-            <optional>
-              <ref name="Dependencies"/>
-            </optional>
-            <text/>
-          </element>
-          <ref name="IPEXOperator"/>
-          <ref name="FunctionsOperator"/>
+        <element name="boundary_condition">
+          <attribute name="kind"/>
+          <optional>
+            <ref name="Dependencies"/>
+          </optional>
           <text/>
-        </choice>
-      </oneOrMore>
-    </element>
+        </element>
+        <ref name="Operator"/>
+        <text/>
+      </choice>
+    </oneOrMore>
   </define>
   <define name="Filter">
     <element name="filter">
@@ -470,8 +472,7 @@
             <oneOrMore>
               <choice>
                 <ref name="ComputedVector"/>
-                <ref name="IPEXOperator"/>
-                <ref name="FunctionsOperator"/>
+                <ref name="Operator"/>
                 <element name="dimension">
                   <attribute name="name"/>
                   <optional>
