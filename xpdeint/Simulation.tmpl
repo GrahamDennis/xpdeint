@@ -27,6 +27,10 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   #include <unistd.h>
   #include <sys/time.h>
   #include <stdint.h>
+#else
+  // Hacks for windows
+  // memset is more portable
+  #define bzero(b,len) (memset((b), '\0', (len)), (void) 0)
 #endif // WIN32
 #include <time.h>
 #include <list>
