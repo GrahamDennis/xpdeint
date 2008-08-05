@@ -23,7 +23,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 #include <fstream>
 #include <sstream>
 #include <cstdlib>
-#ifdef POSIX // These are POSIX headers
+#ifndef _MSC_VER // These are POSIX headers (i.e. non-windows)
   #include <unistd.h>
   #include <sys/time.h>
   #include <stdint.h>

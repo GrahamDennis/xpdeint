@@ -143,9 +143,9 @@ ${executeGuruPlanForVector(c'_${vector.id}_${type}_plan', vector)}@slurp
 
 @def mainBegin($dict)
 // load wisdom and create plans for fft
-#ifdef POSIX
+#ifndef _MSC_VER // Don't load wisdom on windows
 ${loadWisdom}@slurp
-#endif //POSIX
+#endif //_MSC_VER
 
 _LOG(_SIMULATION_LOG_LEVEL, "Making FFTW plans\n");
 
@@ -213,9 +213,9 @@ _temporary_vector = NULL;
 
 
   @end if
-#ifdef POSIX
+#ifdef _MSC_VER // don't save wisdom on Windows
 ${saveWisdom}@slurp
-#endif //POSIX
+#endif //_MSC_VER
 
 _LOG(_SIMULATION_LOG_LEVEL, "FFTW planning complete\n");
 @end def
