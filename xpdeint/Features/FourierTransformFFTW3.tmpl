@@ -143,7 +143,9 @@ ${executeGuruPlanForVector(c'_${vector.id}_${type}_plan', vector)}@slurp
 
 @def mainBegin($dict)
 // load wisdom and create plans for fft
+#ifdef POSIX
 ${loadWisdom}@slurp
+#endif //POSIX
 
 _LOG(_SIMULATION_LOG_LEVEL, "Making FFTW plans\n");
 
@@ -209,8 +211,11 @@ ${createGuruPlansForField(field)}@slurp
 xmds_free(_temporary_vector);
 _temporary_vector = NULL;
 
+
   @end if
+#ifdef POSIX
 ${saveWisdom}@slurp
+#endif //POSIX
 
 _LOG(_SIMULATION_LOG_LEVEL, "FFTW planning complete\n");
 @end def

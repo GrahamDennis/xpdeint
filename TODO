@@ -95,12 +95,15 @@
   - erand48 is not defined on Windows. dsfmt replacements work fine.
   - fseeko is a POSIX thing as well and is missing on Windows. To use 64 bit offsets we 
     could substitute with fsetpos and _filelengthi64. 
-  - fftw3 has compiled windows DLL's which they claim are well optimised. We'll have to learn to 
-    dynamically link with fftw3 (which apparently has wisdom issues).
+  - fftw3 has compiled windows DLL's which they claim are well optimised. Linking with them is
+    easy but we can't do wisdom. #ifdef POSIX removes wisdom from windows.
   Implementation notes:
   - I don't think a Windows distribution needs MPI/OpenMP support. Otherwise, I don't see why the
     things xmds does isn't easily portable...
-  - Now works fine with limited features, no fftw, and ASCII output. kubo is MUCH faster compiled
-    on MSVC++ than cygwin GCC.
+  - Now works fine with limited features, fftw without wisdom, and ASCII output. 
+  - kubo is MUCH faster compiled on MSVC++ than cygwin GCC
+  - diffusion_win works fine on windows.
+  - Cygwin users will now probably want to pass the -DPOSIX switch when compiling code. Why
+    doesn't cygwin define this by default? Could a *nix and Mac user check I didn't do this wrong?
   - Next priorities: getting fftw3 working and porting the benchmark code...
   - Investigate MinGW GCC 4.3 performance versus Visual Studio performance.
