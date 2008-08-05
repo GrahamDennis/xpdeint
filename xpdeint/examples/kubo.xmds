@@ -13,13 +13,13 @@
   <driver name="multi-path" paths="10240" />
   
   <features>
-    <benchmark />
+    
     <!-- <error_check /> -->
     <bing />
     <!-- <fftw version="3" /> -->
     <openmp />
     <stochastic>
-      <noise kind="gaussian" prefix="n" num="1"/>
+      <noise kind="gaussian-dsfmt" prefix="n" num="1"/>
       <!-- If there is no seed attribute then seeds will be chosen randomly at run-time -->
     </stochastic>
   </features>
@@ -46,7 +46,7 @@
       </operators>
     </integrate>
   </sequence>
-  <output format="binary" filename="kubo.xsil">
+  <output format="ascii" filename="kubo.xsil">
     <group>
       <sampling initial_sample="yes">
         <moments>zR zI</moments>

@@ -16,16 +16,19 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 // simulation includes
 
 #include <stdio.h>
+#define _USE_MATH_DEFINES // For Windows compatibility
 #include <math.h>
 #include <string.h>
 #include <string>
 #include <fstream>
 #include <sstream>
 #include <cstdlib>
-#include <unistd.h>
-#include <sys/time.h>
+#ifdef POSIX // These are POSIX headers
+  #include <unistd.h>
+  #include <sys/time.h>
+  #include <stdint.h>
+#endif // WIN32
 #include <time.h>
-#include <stdint.h>
 #include <list>
 #include <vector>
 
