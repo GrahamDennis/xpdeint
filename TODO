@@ -86,22 +86,21 @@
 * Make xmds/xpdeint code compile on Windows. Currently it works in Cygwin but suffers from 
   SERIOUS performance degradation. I've been trying to compile a simple script (modified 
   kubo.xmds) using the MS Visual Studio 2005 Express compiler. The following are compile issues:
-  - Headers <unistd.h> <sys/time.h> and <stdint.h> don't exist on Windows.
-  - M_PI/etc aren't defined by default in math.h. There is a define you can use to get them,
-    however.
-  - _LOG lines reutrn syntax errors. Do these use some modern C/C++, written poorly, is the VS 
-    compiler screwed, or is some Windows compatibility thing? Either way, removing the brackets
-    before and after the braces fixes the problem.
-  - erand48 is not defined on Windows. We'll need a replacement (or write a substitution function).
-  - fseeko is a POSIX thing as well and is missing on Windows. If we need 64 bit offsets we 
-    could substitute with fsetpos and _filelengthi64. If not, why don't we use fseek?
+  - Headers <unistd.h> <sys/time.h> and <stdint.h> don't exist on Windows. Fixed with #ifdef POSIX.
+      unistd.h - not sure when we use it... perhaps for pthreads?
+      sys/time.h - we'll need to replace gettimeofday() with getsystemtime() or similar. Affects benchmark,
+      stdint.h - seems to be C99 but not in Visual studio 2005... strange... used for what exactly?
+  - M_PI/etc aren't defined by default in math.h. Defining _USE_CONSTANTS fixes that.
+  - _LOG lines reutrn syntax errors. Fixed with Grahams patch
+  - erand48 is not defined on Windows. dsfmt replacements work fine.
+  - fseeko is a POSIX thing as well and is missing on Windows. To use 64 bit offsets we 
+    could substitute with fsetpos and _filelengthi64. 
   - fftw3 has compiled windows DLL's which they claim are well optimised. We'll have to learn to 
     dynamically link with fftw3 (which apparently has wisdom issues).
   Implementation notes:
   - I don't think a Windows distribution needs MPI/OpenMP support. Otherwise, I don't see why the
     things xmds does isn't easily portable...
-  - Works fine with NO features, defining M_PI, removing brackets around _LOG definition, removing
-    the POSIX headers, no fftw, and ASCII output. 
-  - Next priorities: getting fftw3 and random numbers working, and:
-  - I would suggest adding a <target> windows/posix </target> feature. Later we could configure a
-    default target when xpdeint is installed. Alternatively we could use a <windows/> feature?
+  - Now works fine with limited features, no fftw, and ASCII output. kubo is MUCH faster compiled
+    on MSVC++ than cygwin GCC.
+  - Next priorities: getting fftw3 working and porting the benchmark code...
+  - Investigate MinGW GCC 4.3 performance versus Visual Studio performance.
