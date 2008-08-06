@@ -51,12 +51,9 @@ ${operatorContainer.evaluateDeltaAOperator(parentFunction = function)}@slurp
   @# which they appear in the xmds script.
   @#
   @for $operatorContainer in $intraStepOperatorContainers
-    @set $result = $operatorContainer.evaluatePostDeltaAOperators(parentFunction = function)
-    @if not result.isspace()
     @# Blank line for formatting
 
-${result}@slurp
-    @end if
+${operatorContainer.evaluatePostDeltaAOperators(parentFunction = function)}@slurp
   @end for
   @#
 @end def

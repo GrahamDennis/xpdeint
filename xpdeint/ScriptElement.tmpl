@@ -606,7 +606,7 @@ _active_${vector.id}[_${vector.id}_index_pointer + ${componentNumber}] += ${comp
 // Increment index pointers for vectors in field $field.name (or having the same dimensions)
   @for $vector in $vectors
     @# We can only do this for vectors in $field
-	@# or that have the same dimensions
+    @# or that have the same dimensions
     @assert $vector.field == $field or $vector.field.dimensions == $field.dimensions
     @#
     @# Now we need to increment the vector

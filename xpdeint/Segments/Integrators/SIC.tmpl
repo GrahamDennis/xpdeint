@@ -1,0 +1,103 @@
+@*
+SIC.tmpl
+
+Created by Graham Dennis on 2008-08-06.
+Copyright (c) 2008 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.Segments.Integrators._SIC
+
+@def description: segment $segmentNumber (SI Integrator with integrated cross-propagation)
+@attr $ipPropagationStepFractions = ['0.5']
+@attr $nonconstantIPFields = 1
+@attr $extraIntegrationArrayNames = ['oldcopy']
+@attr $isCrossCapable = False
+@attr $iterations = 3
+
+@*
+  Single integration step (SIC)
+*@
+@def singleIntegrationStep($function)
+  @#
+  @set $arguments = {'_step': '_step', $propagationDimension: $propagationDimension}
+${functions['nonconstantIPFields'].call(arguments, _exponent = 1, _arrayIndex = 0, parentFunction=function)}
+
+${functions['ipEvolve'].call(arguments, _exponent = +1, parentFunction=function)}
+
+${propagationDimension} += _step/2.0;
+
+${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
+
+${copyVectors($integrationVectors, '_oldcopy')}@slurp
+
+  @for $vector in $integrationVectors
+_active_${vector.id} = _${vector.id};
+  @end for
+
+for (int _iteration = 0; _iteration < ${iterations}; _iteration++) {
+  if (_iteration < ${iterations} - 1) {
+    ${functions['leftDeltaA'].call(arguments, _step = '_step/2.0', parentFunction=function), autoIndent=True}
+    ${functions['rightDeltaA'].call(arguments, _step = '_step/2.0', parentFunction=function), autoIndent=True}
+  } else {
+    ${functions['deltaA'].call(arguments, parentFunction=function), autoIndent=True}
+    
+    ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
+"""// a = oldcopy + a
+_${vector.id}[$index] += _oldcopy_${vector.id}[$index];
+"""), autoIndent=True}@slurp
+  }
+  
+  ${transformVectorsToSpace($integrationVectors, $homeSpace), autoIndent=True}@slurp
+  
+  @# This now belongs in leftDeltaA/rightDeltaA/deltaA
+}
+
+${functions['ipEvolve'].call(arguments, _exponent = +1, parentFunction=function)}
+
+${propagationDimension} += _step/2.0;
+
+  @#
+@end def
+
+@def leftRightDeltaAFunctionBody($function, $replacementDeltaAOperator)
+  @#
+  @# First evaluate any computed vector that any of our operators may depend on
+${evaluateComputedVectors($computedVectorsNeedingPrecalculationForOperatorContainers($intraStepOperatorContainers))}@slurp
+  @#
+  @# Then loop over operators that come before the delta A operators in the order in which
+  @# they appear in the xmds script.
+  @#
+  @for $operatorContainer in $intraStepOperatorContainers
+
+${operatorContainer.evaluatePreDeltaAOperators(parentFunction = function)}@slurp
+  @end for
+  @#
+  @# Now loop over delta A operators
+  @# See the comment in _Integrator about why this needs to be done in
+  @# this particular order
+  @for $operatorContainer in $intraStepOperatorContainersInFieldDescendingOrder
+    @# Blank line for formatting
+
+    @if not operatorContainer == $operatorContainerToOverride
+${operatorContainer.evaluateDeltaAOperator(parentFunction = function)}@slurp
+    @else
+${replacementDeltaAOperator.functions['evaluate'].call(parentFunction = function)}@slurp
+    @end if
+  @end for
+  @#
+  @# Lastly, loop over the operators that come after the delta a operators in the order in
+  @# which they appear in the xmds script.
+  @#
+  @for $operatorContainer in $intraStepOperatorContainers
+    @# Blank line for formatting
+
+${operatorContainer.evaluatePostDeltaAOperators(parentFunction = function)}@slurp
+  @end for
+  @#
+
+${loopOverVectorsWithInnerContentTemplate($integrationVectors,
+"""// a = oldcopy + a
+_${vector.id}[$index] += _oldcopy_${vector.id}[$index];
+""")}@slurp
+  @#
+@end def
+
