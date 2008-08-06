@@ -38,7 +38,6 @@ _active_${vector.id} = _${vector.id};
 ${interpolateDependencies}@slurp
   @end if
 
-// _segment1_x_propagate(_step);
 for (int _iteration = 0; _iteration < ${iterations}; _iteration++) {
   if (_iteration < ${iterations} - 1) {
     ${functions['deltaA'].call(arguments, _step = '_step/2.0', parentFunction=function), autoIndent=True}
