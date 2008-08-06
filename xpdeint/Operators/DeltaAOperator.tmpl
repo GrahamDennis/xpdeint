@@ -45,7 +45,7 @@ d${componentName}_d${propagationDimension} = 0.0;
 #define d${propagationDimension} _step
 
 // ************* Propagation code ***************
-${insertUserCodeFromEntity($propagationCodeEntity)}@slurp
+${propagationCode}@slurp
 // **********************************************
 
 #undef d${propagationDimension}

@@ -18,6 +18,11 @@ import re
 from xpdeint import RegularExpressionStrings
 
 class _ScriptElement (Template):
+  class LoopingOrder(object):
+    MemoryOrder = 1
+    StrictlyAscendingOrder = 2
+    StrictlyDescendingOrder = 3
+  
   argumentsToTemplateConstructors = {}
   # Initialise the callOnceGuards to be empty
   _callOnceGuards = set()

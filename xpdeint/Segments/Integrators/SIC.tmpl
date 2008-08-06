@@ -40,15 +40,14 @@ for (int _iteration = 0; _iteration < ${iterations}; _iteration++) {
   } else {
     ${functions['deltaA'].call(arguments, parentFunction=function), autoIndent=True}
     
+    ${transformVectorsToSpace($integrationVectors, $homeSpace), autoIndent=True}@slurp
+
     ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """// a = oldcopy + a
 _${vector.id}[$index] += _oldcopy_${vector.id}[$index];
 """), autoIndent=True}@slurp
   }
   
-  ${transformVectorsToSpace($integrationVectors, $homeSpace), autoIndent=True}@slurp
-  
-  @# This now belongs in leftDeltaA/rightDeltaA/deltaA
 }
 
 ${functions['ipEvolve'].call(arguments, _exponent = +1, parentFunction=function)}
@@ -93,6 +92,8 @@ ${replacementDeltaAOperator.functions['evaluate'].call(parentFunction = function
 ${operatorContainer.evaluatePostDeltaAOperators(parentFunction = function)}@slurp
   @end for
   @#
+
+${transformVectorsToSpace($integrationVectors, $homeSpace), autoIndent=True}@slurp
 
 ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """// a = oldcopy + a
