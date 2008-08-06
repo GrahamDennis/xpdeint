@@ -1,0 +1,97 @@
+@*
+UniformDimensionRepresentation.tmpl
+
+Created by Graham Dennis on 2008-07-31.
+Copyright (c) 2008 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.Geometry._UniformDimensionRepresentation
+
+@def defines
+  @#
+  @super
+  @#
+#define ${minimum}     (($type)${_minimum})
+#define ${maximum}     (($type)${_maximum})
+#define ${stepSize}        (${stepSizeString})
+  @#
+@end def
+
+
+@def openLoopAscending
+  @#
+${type} ${name} = ${minimum};
+  @if $mayHaveLocalOffset
+if ($localOffset)
+  ${name} += ${localOffset} * ${stepSize};
+  @end if
+
+#define d${name} ${stepSize}
+
+for (long ${loopIndex} = 0; ${loopIndex} < ${localLattice}; ${loopIndex}++) {
+  @#
+@end def
+
+@def closeLoopAscending
+  @#
+  ${name} += ${stepSize};
+}
+#undef d${name}
+  @#
+@end def
+
+@def openLoopDescending
+  @#
+${type} ${name} = ${maximum};
+  @if $mayHaveLocalOffset
+if ($localOffset)
+  ${name} -= (${globalLattice}-(${localOffset} + ${localLattice})) * ${stepSize};
+  @end if
+
+#define d${name} ${stepSize}
+
+for (long ${loopIndex} = ${localLattice}-1; ${loopIndex} >= 0; ${loopIndex}--) {
+  ${name} -= ${stepSize};
+  @#
+@end def
+
+@def closeLoopDescending
+  @#
+}
+#undef d${name}
+  @#
+@end def
+
+@def localIndexFromIndexForDimensionRep($dimRep)
+  @# Check that our lattice is a multiple of the lattice on which we want the
+  @# index. In other words, that for every dimensionRep point, there is a corresponding
+  @# point in our lattice. We might be more dense though.
+  @assert $lattice % dimRep.lattice == 0
+  @#
+(${dimRep.loopIndex} + ${dimRep.localOffset}) * (${globalLattice}/${dimRep.globalLattice}) - ${localOffset}@slurp
+  @#
+@end def
+
+@def strictlyAscendingGlobalIndex
+  @#
+  @if not $mayHaveLocalOffset
+    @return $loopIndex
+  @else
+lround((${name} - ${minimum})/${stepSize})@slurp
+  @end if
+  @#
+@end def
+
+@def indexForSinglePointSample
+  @#
+  @# Take the middle point, which is in the middle of the array
+${globalLattice}/2@slurp
+  @#
+@end def
+
+@def createCoordinateVariableForSinglePointSample
+  @#
+${type} ${name} = ${minimum}@slurp
+   + (${globalLattice}/2) * ${stepSize};
+  @#
+@end def
+

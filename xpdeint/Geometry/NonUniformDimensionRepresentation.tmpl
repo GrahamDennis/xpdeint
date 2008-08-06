@@ -1,0 +1,50 @@
+@*
+NonUniformDimensionRepresentation.tmpl
+
+Created by Graham Dennis on 2008-07-30.
+Copyright (c) 2008 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.Geometry._NonUniformDimensionRepresentation
+
+@def defines
+  @#
+  @if $lattice
+    @super
+#define ${minimum}     (${arrayName}[0])
+#define ${maximum}     (${arrayName}[${globalLattice}-1])
+#define ${stepSize}        (${arrayName}[${loopIndex}+1]-${arrayName}[${loopIndex}])
+  @end if
+  @#
+@end def
+
+
+@def globals
+  @#
+  @if $lattice
+    @# We allocate an extra point so that evaluating ${stepSize} at the end of the grid
+    @# doesn't cause a SEGFAULT
+unsigned long ${index} = 0;
+${type}* ${arrayName} = (${type}*) xmds_malloc(sizeof(${type}) * (${globalLattice}+1));
+  @end if
+  @#
+@end def
+
+@def openLoopAscending
+  @#
+#define ${name} ${arrayName}[${loopIndex}]
+
+for (long ${loopIndex} = 0; ${loopIndex} < ${localLattice}; ${loopIndex}++) {
+@end def
+
+@def closeLoopAscending
+  @#
+}
+#undef ${name}
+  @#
+@end def
+
+@def strictlyAscendingGlobalIndex
+  @#
+${loopIndex} + ${localOffset}@slurp
+  @#
+@end def
