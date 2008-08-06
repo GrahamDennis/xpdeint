@@ -37,10 +37,10 @@ ${result}@slurp
     @# We only need to set the sample index for the propagation dimension
     @# and only if this moment group has the propagation dimension as one
     @# of its dimensions
-    @if not $momentGroup.hasDimensionName($propagationDimension)
+    @if not $momentGroup.outputField.hasDimensionName($propagationDimension)
       @continue
     @end if
-_mg${momentGroup.number}_sample_index_${propagationDimension} = 0;
+_${momentGroup.outputField.id}_index_${propagationDimension} = 0;
   @end for
   @#
   @for $momentGroup in $filter(lambda x: x.requiresInitialSample, $momentGroups)

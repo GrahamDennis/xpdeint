@@ -22,7 +22,7 @@ class _Segment (ScriptElement):
     self.parentSegment = None
     self.localCycles = 1
     self.name = 'segment' + str(self.segmentNumber)
-    
+    self._id = self.name # Override the id as the segments have unique numbering
     scriptElements = self.getVar('scriptElements')
     
     if not self in scriptElements:

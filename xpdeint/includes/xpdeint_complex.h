@@ -36,6 +36,17 @@ extern "C++" {
   } fftw_complex3;
 
 #define fftw_complex fftw_complex3
+
+#define xmds_malloc fftw_malloc
+#define xmds_free   fftw_free
+#else
+#define xmds_malloc malloc
+#define xmds_free   free
+
+typedef struct {
+  double re;
+  double im;
+} fftw_complex;
 #endif //FFTW3_H
 
   // **********************************************

@@ -9,7 +9,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 
 from xpdeint.SimulationDrivers.DistributedMPIDriver import DistributedMPIDriver
 
-import xpdeint.Geometry.IntegerDimension
+# import xpdeint.Geometry.IntegerDimension
 
 class _IntegerDistributedMPIDriver (DistributedMPIDriver):
   def __init__(self, *args, **KWs):

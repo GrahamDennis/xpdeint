@@ -61,12 +61,14 @@
   
   <vector name="cross" type="complex">
     <components>u v w x</components>
-    <![CDATA[
-      u = 0.0;
-      v = 1.0;
-      w = 1.0;
-      x = 1.0;
-    ]]>
+    <initialisation>
+      <![CDATA[
+        u = 0.0;
+        v = 1.0;
+        w = 1.0;
+        x = 1.0;
+      ]]>
+    </initialisation>
   </vector>
   
   <sequence>

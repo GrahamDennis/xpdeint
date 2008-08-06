@@ -5,6 +5,7 @@ Created by Graham Dennis on 2007-09-20.
 Copyright (c) 2007-2008 __MyCompanyName__. All rights reserved.
 *@
 @extends xpdeint.Features.OutputFeature
+@from xpdeint.Geometry.NonUniformDimensionRepresentation import NonUniformDimensionRepresentation
 
 @def description: binary output
 
@@ -76,24 +77,17 @@ off_t fieldOffset = 0;
 double coordinate;
 
   @for $dim in $field.dimensions
-dataSize = _${field.name}_lattice_${dim.name};
+    @set $dimRep = $dim.inSpace(space)
+dataSize = ${dimRep.globalLattice};
 fwrite(&dataSize, sizeof(unsigned long), 1, fpBinary);
-    @if $dim in $field.dimensionOverrides
-fwrite(_${dim.override.name}_${dim.name}, sizeof(double), _${field.name}_lattice_${dim.name}, fpBinary);
+    @if isinstance(dimRep, NonUniformDimensionRepresentation)
+fwrite(${dimRep.arrayName}, sizeof(double), dataSize, fpBinary);
     @else
-coordinate = _${field.name}_min_${dimensionNameForSpace($dim, $space)};
-      @if $dimensionIsInFourierSpace($dim, $space)
-        @# k-space
-        @set $start = c'-(_${field.name}_lattice_${dim.name})/2'
-        @set $stop = c'(_${field.name}_lattice_${dim.name}+1)/2'
-      @else
-        @set $start = '0'
-        @set $stop = c'_${field.name}_lattice_${dim.name}'
-      @end if
-for (long _i0 = ${start}; _i0 < ${stop}; _i0++, coordinate += _${field.name}_d${dimensionNameForSpace($dim, $space)})
+coordinate = ${dimRep.minimum};
+for (long _i0 = 0; _i0 < dataSize; _i0++, coordinate += ${dimRep.stepSize})
   fwrite(&coordinate, sizeof(double), 1, fpBinary);
     @end if
-fieldOffset += sizeof(unsigned long) + sizeof(double) * _${field.name}_lattice_${dim.name};
+fieldOffset += sizeof(unsigned long) + sizeof(double) * dataSize;
 
   @end for
 off_t vectorFieldSize = _${field.name}_size * sizeof(double) + sizeof(unsigned long);
@@ -163,13 +157,7 @@ _outputfield_index_pointer = 0;
 
 // Calculate the output field index pointer
   @for $dim in $field.dimensions
-    @if $dim in $field.dimensionOverrides
-_outputfield_index_pointer += _i${field.indexOfDimension(dim)}@slurp
-    @else if $dimensionIsInFourierSpace($dim, $space)
-_outputfield_index_pointer += (lround(k${dim.name}/_${field.name}_dk${dim.name}) + _${field.name}_lattice_${dim.name}/2)@slurp
-    @else
-_outputfield_index_pointer += lround((${dim.name} - _${field.name}_min_${dim.name})/_${field.name}_d${dim.name})@slurp
-    @end if
+_outputfield_index_pointer += ($dim.inSpace(space).strictlyAscendingGlobalIndex)@slurp
  * ${field.pointsInDimensionsWithIndices(range(field.indexOfDimension(dim)+1, len(field.dimensions)))};
   @end for
 

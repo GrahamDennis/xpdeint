@@ -49,7 +49,7 @@ _${name}_initialise_cross_propagation();
     @else
       @set $dimensionSide = 'max'
     @end if
-${integrationDimension.type} ${integrationDimension.name} = _${parent.field.name}_${dimensionSide}_${propagationDimension};
+${integrationDimension.inSpace(0).type} ${integrationDimension.inSpace(0).name} = _${parent.field.name}_${dimensionSide}_${propagationDimension};
   @end if
   @#
 @end def

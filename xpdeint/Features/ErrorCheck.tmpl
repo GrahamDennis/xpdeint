@@ -16,8 +16,6 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 bool _half_step;
   @for $momentGroup in $momentGroups
     @set $momentGroupOutputField = $momentGroup.outputField
-    @set $processedVectorList = filter(lambda x: x.name == 'processed', $momentGroupOutputField.vectors)
-    @assert len($processedVectorList) == 1
 
 // Arrays for full- and half-step moment group results
 double* _${momentGroupOutputField.name}_fullstep;
@@ -37,7 +35,7 @@ double* _${momentGroupOutputField.name}_halfstep;
   @for $momentGroup in $momentGroups
     @set $momentGroupOutputField = $momentGroup.outputField
 
-_${momentGroupOutputField.name}_fullstep = _${momentGroupOutputField.name}_processed;
+_${momentGroupOutputField.name}_fullstep = _${momentGroup.processedVector.id};
 // _${momentGroupOutputField.name}_halfstep has already been allocated
   @end for
 
@@ -49,7 +47,7 @@ for (_half_step = false; ; _half_step = true)
   @for $momentGroup in $momentGroups
     @set $momentGroupOutputField = $momentGroup.outputField
     
-    _active_${momentGroupOutputField.name}_processed = _${momentGroupOutputField.name}_fullstep;
+    _active_${momentGroup.processedVector.id} = _${momentGroupOutputField.name}_fullstep;
   @end for
   }
   else {
@@ -58,7 +56,7 @@ for (_half_step = false; ; _half_step = true)
   @for $momentGroup in $momentGroups
     @set $momentGroupOutputField = $momentGroup.outputField
 
-    _active_${momentGroupOutputField.name}_processed = _${momentGroupOutputField.name}_halfstep;
+    _active_${momentGroup.processedVector.id} = _${momentGroupOutputField.name}_halfstep;
   @end for
   }
   @silent $dict['extraIndent'] += 2

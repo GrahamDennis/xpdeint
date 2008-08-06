@@ -4,7 +4,7 @@ FourierTransform.tmpl
 Created by Graham Dennis on 2007-08-23.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *@
-@extends xpdeint.Features._Feature
+@extends xpdeint.Features._FourierTransform
 @def description: Abstract fourier transform
 @attr $featureName = 'FourierTransform'
 @attr $wisdomExtension = ''
@@ -15,26 +15,6 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   @#
 const double _inverse_sqrt_2pi = 1.0 / sqrt(2.0 * M_PI); 
   @#
-@end def
-
-@# do the full transform for the vector
-@def fullFFTForVector($vector, $type)
-@end def
-
-@# create a quick fourier transform plan for use by the mixed transform code
-@def createQuickPlanForVectorWithLatticeAndCount($vector, $lattice, $count, $type)
-@end def
-
-@# run a quick fourier transform plan for use by the mixed transform code
-@def runQuickFFTForVectorWithIndexAndLatticeAndCount($vector, $index, $lattice, $count, $type)
-@end def
-
-@# run a quick fourier transform
-@def runQuickFFTForVectorWithCount($vector, $count, $type)
-@end def
-
-@# destroy the quick plan
-@def destroyQuickPlan()
 @end def
 
 @def mainBegin(dict)
@@ -70,10 +50,9 @@ void _${vector.id}_go_space(unsigned long _newSpace)
     // Do a full forward transform
     ${fullFFTForVector($vector, 'forward'), autoIndent=True}@slurp
   @for $dimension in $vector.field.dimensions
-    @if $dimension.type != 'double'
+    @if dimension.transform != self
       @continue
     @end if
-    @set $dimensionNumber = $vector.field.indexOfDimension($dimension)
     _c *= _${vector.field.name}_d${dimension.name} * _inverse_sqrt_2pi;
   @end for
   } 
@@ -81,14 +60,13 @@ void _${vector.id}_go_space(unsigned long _newSpace)
     // Do a full reverse transform
     ${fullFFTForVector($vector, 'backward'), autoIndent=True}@slurp
   @for $dimension in $vector.field.dimensions
-    @if $dimension.type != 'double'
+    @if $dimension.transform != self
       @continue
     @end if
-    @set $dimensionNumber = $vector.field.indexOfDimension($dimension)
     _c *= _${vector.field.name}_dk${dimension.name} * _inverse_sqrt_2pi;
   @end for
   }
-  @if $len($vector.field.dimensions) > 1
+  @if len($vector.field.dimensions) > 1
     @# 
     @# This is the awful case of mixed transforms. It has been put in a separate function
     @# so that it can be overridden in the deterministic MPI case

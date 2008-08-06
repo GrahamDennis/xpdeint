@@ -62,12 +62,7 @@ class _ScriptElement (Template):
     
     self._ScriptElement_haveCalledInit = True
     
-    legalKWs = ['xmlElement', 'parent']
-    localKWs = {}
-    for key in KWs.copy():
-      if key in legalKWs:
-        localKWs[key] = KWs[key]
-        del KWs[key]
+    localKWs = self.extractLocalKWs(['xmlElement', 'parent'], KWs)
     
     Template.__init__(self, *args, **KWs)
     
@@ -84,6 +79,7 @@ class _ScriptElement (Template):
     self.xmlElement = localKWs.get('xmlElement', None)
     self.dependenciesEntity = None
     self.functions = {}
+    self._id = None
     
     if self.hasattr('globalNameSpaceName'):
       globalNameSpace = KWs['searchList'][0]
@@ -106,13 +102,13 @@ class _ScriptElement (Template):
     if self._parent:
       return self._parent
     
-    potentialParents = filter(lambda x: x.hasattr('children') and self in x.children, self.getVar('templates'))
+    potentialParents = filter(lambda x: x.hasattr('children') and id(self) in map(id, x.children), self.getVar('templates'))
     
     if not potentialParents:
       return None
     
     if len(potentialParents) > 1:
-      raise AssertionError("We seem to have more than one parent: " + ', '.join([repr(potentialParent) for potentialParent in potentialParents]))
+      raise AssertionError("We seem to have more than one parent: " + ', '.join([repr((potentialParent, potentialParent.id)) for potentialParent in potentialParents]))
     
     self._parent = potentialParents[0]
     return self._parent
@@ -125,14 +121,12 @@ class _ScriptElement (Template):
     The string returned will be appropriate for use as a `C` variable name and
     will begin with and underscore.
     """
-    result = []
-    currentObject = self
-    while currentObject:
-      if currentObject.hasattr('name') and currentObject.name:
-        result.append(currentObject.name)
-      currentObject = currentObject.parent
-    result.reverse()
-    return '_'.join(result)
+    if not self._id:
+      if not self.parent or not self.parent.id:
+        self._id = self.name
+      else:
+        self._id = '_'.join([self.parent.id, self.name])
+    return self._id
   
   @property
   def noiseField(self):
@@ -404,9 +398,11 @@ class _ScriptElement (Template):
     
     if self.hasattr('children'):
       for child in self.children:
-        result.append(blankLineSeparator)
-        blankLineSeparator = '\n'
-        result.append(child.implementationsForFunctionName(functionName, *args, **KWs))
+        childFunctionOutput = child.implementationsForFunctionName(functionName, *args, **KWs)
+        if childFunctionOutput and not childFunctionOutput.isspace():
+          result.append(blankLineSeparator)
+          blankLineSeparator = '\n'
+          result.append(childFunctionOutput)
     
     return ''.join(result)
   
@@ -516,6 +512,9 @@ class _ScriptElement (Template):
       while self in someIterable:
         someIterable.remove(self)
     
+    if self.hasattr('children'):
+      for child in self.children:
+        child.remove()
   
   def fixupComponentsWithIntegerValuedDimensions(self, vectors, code):
     """
@@ -713,4 +712,14 @@ class _ScriptElement (Template):
   def orderedDimensionsForFieldInSpace(self, field, space):
     """Return a list of the dimensions for field in the order in which they should be looped over"""
     return self._driver.orderedDimensionsForFieldInSpace(field, space)
+  
+  @staticmethod
+  def extractLocalKWs(legalKWs, KWs):
+    result = {}
+    for key in KWs.copy():
+      if key in legalKWs:
+        result[key] = KWs[key]
+        del KWs[key]
+    return result
+    
   

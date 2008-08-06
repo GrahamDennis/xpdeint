@@ -11,12 +11,7 @@ from xpdeint.Features._Feature import _Feature
 
 class _Validation (_Feature):
   def __init__(self, *args, **KWs):
-    legalKWs = ['runValidationChecks']
-    localKWs = {}
-    for key in KWs.copy():
-      if key in legalKWs:
-        localKWs[key] = KWs[key]
-        del KWs[key]
+    localKWs = self.extractLocalKWs(['runValidationChecks'], KWs)
     
     _Feature.__init__(self, *args, **KWs)
     

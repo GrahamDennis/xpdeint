@@ -55,7 +55,7 @@ using namespace std;
 @for $element in $scriptElements
   @# Prevent writing zero-length defines
   @set $result = $element.implementationsForFunctionName('defines')
-  @if $result
+  @if result and not result.isspace()
 
 // ********************************************************
 //   $element.description defines
@@ -71,7 +71,7 @@ $result@slurp
 @for $element in $scriptElements
   @# Prevent writing zero-length globals
   @set $result = $element.implementationsForFunctionName('globals')
-  @if $result
+  @if result and not result.isspace()
 
 // ********************************************************
 //   $element.description globals
@@ -87,7 +87,7 @@ $result@slurp
 @for $element in $scriptElements
   @# Prevent writing zero-length globals
   @set $result = $element.implementationsForFunctionName('functionPrototypes')
-  @if $result
+  @if result and not result.isspace()
 
 // ********************************************************
 //   $element.description function prototypes
@@ -103,7 +103,7 @@ $result@slurp
 @for $element in $scriptElements
   @# Prevent writing zero-length function implementations
   @set $result = $element.implementationsForFunctionName('functionImplementations')
-  @if $result
+  @if result and not result.isspace()
 
 // ********************************************************
 //   $element.description function implementations

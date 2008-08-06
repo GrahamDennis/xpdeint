@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <name>diffusion_dst</name>
+  <author>Graham Dennis</author>
+  <description>
+    Simple one-dimensional diffusion solved using a Discrete Sine Transform (odd boundary conditions at both ends)
+    Odd boundary conditions essentially mimics zero dirichlet boundary conditions for linear problems.
+  </description>
+  
+  <features>
+    <benchmark />
+    <error_check />
+    <bing />
+    <fftw version="3" plan="exhaustive" />
+    <openmp />
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="y" lattice="128" domain="(-1.0, 1.0)" transform="dst" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="main" initial_space="y" type="complex">
+    <components>
+      phi
+    </components>
+    <initialisation>
+      <![CDATA[
+        phi = exp(-3*y*y);
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="ARK45" interval="20.0" steps="2400" tolerance="1e-5">
+      <samples>48</samples>
+      <operators>
+        <operator kind="ip" constant="yes" fourier_space="ky">
+          <operator_names>L</operator_names>
+          <![CDATA[
+            L = -0.02*ky*ky;
+          ]]>
+        </operator>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+          dphi_dt = L[phi];
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  
+  <output format="binary">
+    <group>
+      <sampling initial_sample="yes">
+        <!-- Any dimension not mentioned is assumed to be in real space and its middle element will be sampled -->
+        <!-- Note that dimensions can be in any order. Not that I can think of a reason why you would want to do that -->
+        <dimension name="y" lattice="128" fourier_space="y" />
+        <moments>dens</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          dens = mod2(phi);
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>
