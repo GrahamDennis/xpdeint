@@ -15,23 +15,17 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 // ********************************************************
 // simulation includes
 
+#include <xpdeint_platform.h>
 #include <stdio.h>
-#define _USE_MATH_DEFINES // For Windows compatibility
 #include <math.h>
 #include <string.h>
 #include <string>
 #include <fstream>
 #include <sstream>
 #include <cstdlib>
-#ifndef _MSC_VER // These are POSIX headers (i.e. non-windows)
-  #include <unistd.h>
+#if CFG_OSAPI == CFG_OSAPI_POSIX // These are POSIX headers (i.e. non-windows)
   #include <sys/time.h>
-  #include <stdint.h>
-#else
-  // Hacks for windows
-  // memset is more portable
-  #define bzero(b,len) (memset((b), '\0', (len)), (void) 0)
-#endif // WIN32
+#endif // POSIX
 #include <time.h>
 #include <list>
 #include <vector>

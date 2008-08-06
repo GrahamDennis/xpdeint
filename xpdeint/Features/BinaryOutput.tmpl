@@ -49,10 +49,11 @@ ${writeOutFunctionImplementationEnd(dict)}@slurp
   @set dict['componentCount'] = componentCount
   @#
 const char *encoding = NULL;
-if (_isBigEndian())
+#if CFG_ENDIAN == CFG_ENDIAN_BIG
   encoding = "BigEndian";
-else
+#else
   encoding = "LittleEndian";
+#endif
 
 const char *unsignedLongType = NULL;
 if (sizeof(unsigned long) == 4)

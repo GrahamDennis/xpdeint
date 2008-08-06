@@ -201,7 +201,7 @@ for (long _i0 = 0; _i0 < ${sizeOfFieldInSpace(field, space)}; _i0++) {
 @end def
 
 @# FIXME: Extend this def over multiple lines once my patch to Cheetah gets accepted (and we bump the required version number)
-@def loopOverFieldInSpaceWithVectorsAndInnerContent($field, $space, $vectors, $innerLoopCode, $indexOverrides = None, $vectorOverrides = None, $kspaceAscendingOrder = False, $postDimensionLoopClosingCode = None, vectorsNotNeedingDefines = None)
+@def loopOverFieldInSpaceWithVectorsAndInnerContent($field, $space, $vectors, $innerLoopCode, $indexOverrides = None, $vectorOverrides = None, $loopingOrder = _ScriptElement.LoopingOrder.MemoryOrder, $postDimensionLoopClosingCode = None, vectorsNotNeedingDefines = None)
 @*doc:
 Insert code to loop over a fields points making available the given vectors
 Note that this code asserts that the field that will be iterated over is at
@@ -227,9 +227,10 @@ Optional arguments:
   - `vectorOverrides`: instead of causing the component names to be directly mapped to the arrays
     create variables for each component.
   
-  - `kspaceAscendingOrder`: If `True`, loop over kspace dimensions in strictly ascending order instead
-    of starting at 0, working up to the maximum value, and then doing the negative values in increasing
-    order.
+  - `loopingOrder`: One of the values of the `LoopingOrder` class. i.e. MemoryOrder, StrictlyAscendingOrder
+    or StrictlyDescendingOrder. For example, StrictlyAscendingOrder causes the loops over kspace dimensions
+    to be performed in strictly ascending order instead of starting at 0, working up to the maximum value,
+    and then doing the negative values in increasing order.
   
   - `postDimensionLoopClosingCode`: a dictionary containing code to be put in the loop structure after
     the loop for a given dimension has been closed. For example, if you want to insert code after the
@@ -260,12 +261,12 @@ ${insertCodeForFeatures('loopOverFieldInSpaceWithVectorsAndInnerContentBegin', f
   @#
   @# Some vectors will need to have their index pointers set explicitly.
   @# These will be those which belong to fields with different dimensions.
-  @set $vectorsRequiringExplictIndexPointers = filter(lambda x: x.field != field and x.field.dimensions != field.dimensions, vectors)
+  @set $vectorsRequiringExplictIndexPointers = set(filter(lambda x: x.field != field and x.field.dimensions != field.dimensions, vectors))
   @# 
-  @# If we have kspaceAscendingOrder, (and at least one dimension is in fourier space), then
-  @# the vectors in field $field will also need their index pointers set explicitly
-  @if $kspaceAscendingOrder and $space
-    @set $vectorsRequiringExplictIndexPointers = $vectors
+  @# If we have a loopingOrder other than MemoryOrder, then the vectors in
+  @# field $field will also need their index pointers set explicitly
+  @if $loopingOrder != $LoopingOrder.MemoryOrder
+    @silent vectorsRequiringExplictIndexPointers.update($vectors)
   @end if
   @#
   @# Now determine the vectors not requiring explicit index pointers
@@ -342,7 +343,7 @@ ${dimension.inSpace(space).createCoordinateVariableForSinglePointSample}@slurp
     @if not $indexOverrides.has_key($dimension.name)
       @# If there isn't an indexOverride for this dimension, then open a loop
       @set $lastLoopDimension = $dimension
-${dimension.inSpace(space).openLoop(strictlyAscendingOrder=kspaceAscendingOrder), extraIndent=indentLevel}@slurp
+${dimension.inSpace(space).openLoop(loopingOrder=loopingOrder), extraIndent=indentLevel}@slurp
       @set $indentLevel = $indentLevel + 2
     @else
       @# We have an indexOverride for this dimension. 
@@ -375,7 +376,7 @@ ${incrementIndexPointersForVectorsWithFieldAndSpaceAndLastLoopDimension($vectors
     @# If there isn't an indexOverride for this dimension, then reduce the indent and close the loop
     @if not $indexOverrides.has_key($dimension.name)
       @set $indentLevel = $indentLevel - 2
-${dimension.inSpace(space).closeLoop(strictlyAscendingOrder = kspaceAscendingOrder), extraIndent=indentLevel}@slurp
+${dimension.inSpace(space).closeLoop(loopingOrder=loopingOrder), extraIndent=indentLevel}@slurp
     @end if
     @#
     @if $dimension.name in $postDimensionLoopClosingCode

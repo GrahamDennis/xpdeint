@@ -46,7 +46,7 @@ inline void _split_${prefix}_noise(double _new_var, double _old_var, double* _ne
 inline void _split_${prefix}_noises(double _new_var, double _old_var, double* _new_noise_vector, double* _old_noise_vector, unsigned long _n)
 {
   for (long _i0 = 0; _i0 < _n; _i0++) { 
-    _new_noise_vector[_i0] = _new_var*_poisplit(_old_var/_new_var, lround(_old_noise_vector[_i0]/_old_var), ${generatorName});
+    _new_noise_vector[_i0] = _new_var*_poisplit(_old_var/_new_var, lrint(_old_noise_vector[_i0]/_old_var), ${generatorName});
   }
 
 }

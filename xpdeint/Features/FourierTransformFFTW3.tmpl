@@ -108,9 +108,9 @@ _plan_map _${vector.id}_plan_map;
 
 @def mainBegin($dict)
 // load wisdom and create plans for fft
-#ifndef _MSC_VER // Don't load wisdom on windows
+#if CFG_OSAPI == CFG_OSAPI_POSIX // Don't load wisdom on windows
 ${loadWisdom}@slurp
-#endif //_MSC_VER
+#endif // POSIX
 
 _LOG(_SIMULATION_LOG_LEVEL, "Making FFTW plans\n");
 
@@ -182,9 +182,9 @@ _temporary_vector = NULL;
 
 
   @end if
-#ifdef _MSC_VER // don't save wisdom on Windows
+#if CFG_OSAPI == CFG_OSAPI_POSIX // Don't load wisdom on windows
 ${saveWisdom}@slurp
-#endif //_MSC_VER
+#endif // POSIX
 
 _LOG(_SIMULATION_LOG_LEVEL, "FFTW planning complete\n");
 @end def

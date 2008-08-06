@@ -26,7 +26,7 @@ ${writeOutFunctionImplementationBegin(dict)}@slurp
 fprintf($fp, "    <Stream><Metalink Format=\"Text\" Delimiter=\" \\n\"/>\n");
 
   @set $vectors = set([variable['vector'] for variable in dependentVariables])
-$loopOverFieldInSpaceWithVectorsAndInnerContent(field, space, vectors, $insideOutputLoops(dict), $kspaceAscendingOrder=True, vectorsNotNeedingDefines=vectors)@slurp
+$loopOverFieldInSpaceWithVectorsAndInnerContent(field, space, vectors, $insideOutputLoops(dict), $loopingOrder=$LoopingOrder.StrictlyAscendingOrder, vectorsNotNeedingDefines=vectors)@slurp
 
 fprintf($fp, "    </Stream>\n");
 
