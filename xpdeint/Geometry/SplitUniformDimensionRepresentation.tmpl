@@ -1,0 +1,106 @@
+@*
+SplitUniformDimensionRepresentation.tmpl
+
+Created by Graham Dennis on 2008-07-31.
+Copyright (c) 2008 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.Geometry._SplitUniformDimensionRepresentation
+
+@def defines
+  @#
+  @super
+  @#
+#define ${stepSize}        (2.0*M_PI/($_range))
+#define ${minimum}     (-(${globalLattice}/2) * ${stepSize})
+#define ${maximum}     ((${globalLattice} - 1)/2 * ${stepSize})
+  @#
+@end def
+
+@def openLoopMemoryOrder
+  @#
+#define d${name} ${stepSize}
+$type $name = 0.0;
+  @if $mayHaveLocalOffset
+if ($localOffset) {
+  $name += $localOffset * ${stepSize};
+  ${wrapCoordinateVariable, autoIndent=True}@slurp
+}
+  @end if
+
+#define d${name} ${stepSize}
+
+for (long ${loopIndex} = 0; ${loopIndex} < ${localLattice}; ${loopIndex}++) {
+  @#
+@end def
+
+@def closeLoopMemoryOrder
+  @#
+  ${name} += ${stepSize};
+  ${wrapCoordinateVariable, autoIndent=True}@slurp
+}
+#undef d${name}
+  @#
+@end def
+
+@def openLoopAscending
+  @#
+$type $name = ${minimum};
+  @if $mayHaveLocalOffset
+#error "Cannot loop in k-space ascending order when the dimension is split with MPI (this error shouldn't be hit, please report it to xmds-devel@lists.sourceforge.net)"
+  @end if
+
+#define d${name} ${stepSize}
+
+for (long ${alternateLoopIndex} = -(${globalLattice}/2); ${alternateLoopIndex} < (${globalLattice} + 1)/2; ${alternateLoopIndex}++) {
+  long ${loopIndex} = ${alternateLoopIndex};
+  if (${loopIndex} < 0)
+    ${loopIndex} += ${globalLattice};
+  @#
+@end def
+
+@def closeLoopAscending
+  @#
+  ${name} += ${stepSize};
+}
+#undef d${name}
+  @#
+@end def
+
+@def wrapCoordinateVariable
+  @#
+if ( ${name} > ((${globalLattice} - 1)/2 + 0.1) * ${stepSize})
+  ${name} -= ${globalLattice} * ${stepSize};
+  @#
+@end def
+
+@def localIndexFromIndexForDimensionRep($dimRep)
+  @# Check that our lattice has more points than the other lattice
+  @assert $lattice >= dimRep.lattice
+  @#
+${dimRep.loopIndex} + (signbit(${dimRep.name}) ? (${globalLattice} - ${dimRep.globalLattice}) : 0)@slurp
+  @#
+@end def
+
+@def strictlyAscendingGlobalIndex
+  @#
+  @if not $mayHaveLocalOffset
+${loopIndex} + (signbit(${name}) ? -(${globalLattice}+1)/2 : ${globalLattice}/2)@slurp
+  @else
+lround(${name}/${stepSize}) + ${globalLattice}/2@slurp
+  @end if
+  @#
+@end def
+
+@def indexForSinglePointSample
+  @#
+  @# We want to sample the middle, as that is just the first point in memory, return 0
+  @# (Don't worry about multiplication by zero, any smart compiler will optimise that out)
+0@slurp
+  @#
+@end def
+
+@def createCoordinateVariableForSinglePointSample
+  @#
+  ${type} ${name} = 0.0;
+  @#
+@end def
