@@ -13,14 +13,3 @@ Copyright (c) 2007-2008 __MyCompanyName__. All rights reserved.
 @attr $name = "geometry"
 @attr $globalNameSpaceName = "geometry"
 
-@def defines
-  @#
-  @super
-  @#
-  @for $dimension in filter(lambda x: x.transverse, $dimensions)
-${dimension.definesWithPrefix('')}@slurp
-
-  @end for
-  @#
-@end def
-

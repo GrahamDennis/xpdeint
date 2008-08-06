@@ -19,8 +19,9 @@ from xpdeint._ScriptElement import _ScriptElement
 from xpdeint.SimulationElement import SimulationElement as SimulationElementTemplate
 from xpdeint.Geometry.GeometryElement import GeometryElement as GeometryElementTemplate
 from xpdeint.Geometry.FieldElement import FieldElement as FieldElementTemplate
-from xpdeint.Geometry.DoubleDimension import DoubleDimension
-from xpdeint.Geometry.IntegerDimension import IntegerDimension
+from xpdeint.Geometry._Dimension import _Dimension as Dimension
+from xpdeint.Geometry.UniformDimensionRepresentation import UniformDimensionRepresentation
+from xpdeint.Geometry.NonUniformDimensionRepresentation import NonUniformDimensionRepresentation
 
 from xpdeint.Vectors.VectorElement import VectorElement as VectorElementTemplate
 from xpdeint.Vectors.ComputedVector import ComputedVector as ComputedVectorTemplate
@@ -57,6 +58,8 @@ from xpdeint.Features.BinaryOutput import BinaryOutput as BinaryOutputTemplate
 from xpdeint.Features.AsciiOutput import AsciiOutput as AsciiOutputTemplate
 from xpdeint.MomentGroupElement import MomentGroupElement as MomentGroupTemplate
 
+from xpdeint.Features.NoTransform import NoTransform as NoTransform
+
 from xpdeint import Features
 
 from xpdeint.Features.Noises.POSIX.GaussianPOSIXNoise import GaussianPOSIXNoise
@@ -68,7 +71,6 @@ from xpdeint.Features.Noises.DSFMT.GaussianDSFMTNoise import GaussianDSFMTNoise
 from xpdeint.Features.Noises.DSFMT.UniformDSFMTNoise import UniformDSFMTNoise
 from xpdeint.Features.Noises.DSFMT.PoissonianDSFMTNoise import PoissonianDSFMTNoise
 
-from xpdeint.Features.FourierTransformNone import FourierTransformNone
 from xpdeint.Features.FourierTransformFFTW3 import FourierTransformFFTW3
 from xpdeint.Features.FourierTransformFFTW3Threads import FourierTransformFFTW3Threads
 
@@ -178,9 +180,9 @@ class XMDS2Parser(ScriptParser):
           transverseDimensions = filter(lambda x: x.transverse, self.globalNameSpace['geometry'].dimensions)
           if not transverseDimensions:
             raise ParserException(driverElement, "The distributed-mpi driver requires transverse dimensions to be able to be used.")
-          if transverseDimensions[0].type == 'long':
+          if not transverseDimensions[0].isTransformable:
             driverClass = IntegerDistributedMPIDriverTemplate
-          elif len(transverseDimensions) < 2 or transverseDimensions[1].type != 'double':
+          elif len(transverseDimensions) < 2 or not transverseDimensions[1].isTransformable:
             raise ParserException(driverElement, "At least two 'double' dimensions are required to use the distributed-mpi driver with 'double' dimensions.")
           else:
             driverClass = DoubleDistributedMPIDriverTemplate
@@ -395,7 +397,7 @@ class XMDS2Parser(ScriptParser):
     fftAttributeDictionary = dict()
     
     if not fftwElement:
-      fourierTransformClass = FourierTransformNone
+      fourierTransformClass = NoTransform
     else:
       threadCount = 1
       if fftwElement.hasAttribute('threads'):
@@ -415,9 +417,9 @@ class XMDS2Parser(ScriptParser):
       elif fftwElement.getAttribute('version').strip() == '3':
         fourierTransformClass = FourierTransformFFTW3
       elif fftwElement.getAttribute('version').strip().lower() == 'none':
-        fourierTransformClass = FourierTransformNone
+        fourierTransformClass = NoTransform
       else:
-        raise ParserException(fftwElement, "The version attribute must be one of 'None', '2', or '3'.")
+        raise ParserException(fftwElement, "The version attribute must be either 'none' or '3'.")
       
       planType = None
       if not fftwElement.hasAttribute('plan'):
@@ -439,7 +441,7 @@ class XMDS2Parser(ScriptParser):
       if threadCount > 1:
         if fourierTransformClass == FourierTransformFFTW3:
           fourierTransformClass = FourierTransformFFTW3Threads
-        elif fourierTransformClass == FourierTransformNone:
+        elif fourierTransformClass == NoTransform:
           raise ParserException(fftwElement, "Can't use threads with no fourier transforms.")
         else:
           # This shouldn't be reached because the fourierTransformClass should be one of the above options
@@ -506,8 +508,20 @@ class XMDS2Parser(ScriptParser):
     
     propagationDimensionName = propagationDimensionElement.innerText()
     self.globalNameSpace['globalPropagationDimension'] = propagationDimensionName
+    self.globalNameSpace['symbolNames'].add(propagationDimensionName)
     
-    geometryTemplate.dimensions = [DoubleDimension(name = propagationDimensionName, transverse = False)]
+    propagationDimension = Dimension(name = propagationDimensionName,
+                                     transverse = False,
+                                     transform = None,
+                                     parent = geometryTemplate,
+                                     **self.argumentsToTemplateConstructors)
+    
+    propagationDimension.representations.append(NonUniformDimensionRepresentation(name = propagationDimensionName,
+                                                                                  type = 'double',
+                                                                                  parent = propagationDimension,
+                                                                                  **self.argumentsToTemplateConstructors))
+    
+    geometryTemplate.dimensions = [propagationDimension]
     
     ## Now grab and parse all of the transverse dimensions
     
@@ -574,8 +588,30 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
             raise ParserException(dimensionElement, "The end point of the dimension, '%(maximumString)s', must be "
                                            "greater than the start point, '%(minimumString)s'." % locals())
         
-        geometryTemplate.dimensions.append(DoubleDimension(name = dimensionName, transverse = True, lattice = int(latticeString),
-                                                           minimum = minimumString, maximum = maximumString))
+        transform = None
+        transformName = 'none'
+        
+        if dimensionElement.hasAttribute('transform'):
+          transformName = dimensionElement.getAttribute('transform').strip()
+          if not transformName.lower() in self.globalNameSpace['transforms']:
+            raise ParserException(dimensionElement, "Unknown transform of type '%(transformName)s'." % locals())
+          transform = self.globalNameSpace['transforms'][transformName.lower()]
+        
+        if not transform:
+          # default to 'dft'
+          if 'dft' in self.globalNameSpace['transforms']:
+            transform = self.globalNameSpace['transforms']['dft']
+            transformName = 'dft'
+          elif 'none' in self.globalNameSpace['transforms']:
+            transform = self.globalNameSpace['transforms']['none']
+          else:
+            transform = NoTransform(**self.argumentsToTemplateConstructors)
+        
+        dim = transform.newDimension(name = dimensionName, lattice = int(latticeString),
+                                     minimum = minimumString, maximum = maximumString,
+                                     parent = geometryTemplate, transformName = transformName)
+        
+        geometryTemplate.dimensions.append(dim)
       
       # We have just finished looping over the normal dimensions in the transverse_dimensions element.
       # Now we need to grab any 'integer_valued' tags and parse those.
@@ -686,8 +722,16 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       else:
         lattice = maximumValue - minimumValue + 1
       
-      dimensionList.append(IntegerDimension(name = dimensionName, transverse = True, lattice = lattice,
-                                            minimum = minimumString, maximum = maximumString))
+      if 'none' in self.globalNameSpace['transforms']:
+        transform = self.globalNameSpace['transforms']['none']
+      else:
+        transform = NoTransform(**self.argumentsToTemplateConstructors)
+        
+      dim = transform.newDimension(name = dimensionName, lattice = lattice, type = 'long',
+                                   minimum = minimumString, maximum = maximumString,
+                                   parent = geometryTemplate, indexable = True, transformName = 'none')
+      
+      dimensionList.append(dim)
     
     if not dimensionElement.hasAttribute('kind') or dimensionElement.getAttribute('kind').strip().lower() == 'last':
       geometryTemplate.dimensions.extend(dimensionList)
@@ -979,7 +1023,8 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
         # Add it to the sequence element as a child segment
         sequenceTemplate.addSegment(filterSegmentTemplate)
         # Create an operator container to house the filter operator
-        operatorContainer = OperatorContainerTemplate(**self.argumentsToTemplateConstructors)
+        operatorContainer = OperatorContainerTemplate(parent = filterSegmentTemplate,
+                                                      **self.argumentsToTemplateConstructors)
         # Add the operator container to the filter segment
         filterSegmentTemplate.operatorContainers.append(operatorContainer)
         # parse the filter operator
@@ -1208,6 +1253,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
   
   def parseOperatorsElement(self, operatorsElement, integratorTemplate, fieldTemplate):
     operatorContainer = OperatorContainerTemplate(field = fieldTemplate, xmlElement = operatorsElement,
+                                                  parent = integratorTemplate,
                                                   **self.argumentsToTemplateConstructors)
     integratorTemplate.intraStepOperatorContainers.append(operatorContainer)
     
@@ -1457,7 +1503,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     
     propagationDimension = fullField.dimensionWithName(propagationDimensionName)
     
-    if propagationDimension.type != 'double':
+    if not isinstance(propagationDimension.representations[0], UniformDimensionRepresentation):
       raise ParserException(operatorElement, "Cannot integrate in the '%(propagationDimensionName)s' direction as it is an integer-valued dimension.\n"
                                              "Cross-propagators can only integrate along normal dimensions." % locals())
     
@@ -1496,6 +1542,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     operatorTemplate.reducedField = reducedField
     
     operatorContainer = OperatorContainerTemplate(field = reducedField,
+                                                  parent = crossIntegratorTemplate,
                                                   **self.argumentsToTemplateConstructors)
     crossIntegratorTemplate.intraStepOperatorContainers.append(operatorContainer)
     
@@ -1566,10 +1613,17 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
           sampleCount = 1
       
       momentGroupTemplate.sampleSpace = 0
-      momentGroupTemplate.dimensions = [DoubleDimension(name = self.globalNameSpace['globalPropagationDimension'],
-                                                        transverse = False,
-                                                        lattice = sampleCount,
-                                                        override = momentGroupTemplate)]
+      samplingDimension = Dimension(name = self.globalNameSpace['globalPropagationDimension'],
+                                    transverse = False,
+                                    parent = momentGroupTemplate.outputField,
+                                    **self.argumentsToTemplateConstructors)
+      samplingDimension.representations.append(NonUniformDimensionRepresentation(name = self.globalNameSpace['globalPropagationDimension'],
+                                                                                 type = 'double',
+                                                                                 lattice = sampleCount,
+                                                                                 parent = samplingDimension,
+                                                                                 **self.argumentsToTemplateConstructors))
+      
+      momentGroupTemplate.outputField.dimensions = [samplingDimension]
       
       dimensionElements = samplingElement.getChildElementsByTagName('dimension', optional=True)
       
@@ -1589,20 +1643,27 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
         dimension = geometryDimension.copy()
         
         fourierSpace = False
-        if dimensionElement.hasAttribute('fourier_space') and dimension.fourier:
+        if dimensionElement.hasAttribute('fourier_space') and dimension.isTransformable:
           spaceString = dimensionElement.getAttribute('fourier_space').strip().lower()
-          if spaceString in ('yes', 'k' + dimensionName):
+          fourierSpace = None
+          if spaceString == 'yes':
             fourierSpace = True
-          elif spaceString in ('no', dimensionName):
+          elif spaceString == 'no':
             fourierSpace = False
           else:
+            for idx, rep in enumerate(dimension.representations):
+              if spaceString == rep.name:
+                fourierSpace = bool(idx)
+          if fourierSpace == None:
             raise ParserException(dimensionElement, "fourier_space attribute for dimension '%s' must be 'yes' / '%s' or 'no' / '%s'"
-                                                    % (dimensionName, 'k' + dimensionName, dimensionName))
+                                                    % (dimensionName, dimension.representations[1].name, dimension.representations[0].name))
         
+        dimensionRepresentation = dimension.inSpace(0)
         if fourierSpace:
           momentGroupTemplate.sampleSpace |= 1 << geometryTemplate.indexOfDimensionName(dimensionName)
+          dimensionRepresentation = dimension.representations[1]
         
-        lattice = dimension.lattice
+        lattice = dimensionRepresentation.lattice
         
         if dimensionElement.hasAttribute('lattice'):
           latticeString = dimensionElement.getAttribute('lattice').strip()
@@ -1614,7 +1675,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
                     "Unable to interpret '%(latticeString)s' as an integer" % locals())
           
           lattice = int(latticeString)
-          geometryLattice = int(geometryDimension.lattice)
+          geometryLattice = int(geometryDimension.inSpace(momentGroupTemplate.sampleSpace).lattice)
           
           if lattice > geometryLattice:
             raise ParserException(dimensionElement, 
@@ -1629,29 +1690,41 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
           # is less than the total number of points, something that we have already checked.
           
         if lattice > 1:
-          dimension.lattice = lattice
-          momentGroupTemplate.dimensions.append(dimension)
+          if not dimensionRepresentation.lattice == lattice:
+            dimensionRepresentation.lattice = lattice
+            # Invalidate all other representations
+            for idx, rep in enumerate(dimension.representations[:]):
+              if rep != dimensionRepresentation:
+                rep.remove()
+                dimension.representations[idx] = None
+          
+          outputFieldDimension = dimension.copy()
+          dimension._parent = samplingFieldTemplate
           samplingFieldTemplate.dimensions.append(dimension)
+          
+          outputFieldDimension._parent = outputFieldTemplate
+          outputFieldTemplate.dimensions.append(outputFieldDimension)
         elif lattice == 1:
           # In this case, we don't want the dimension in either the moment group, or the sampling field
-          pass
+          dimension.remove()
+          del dimension
         elif lattice == 0:
           # In this case, the dimension only belongs to the sampling field because we are integrating over it.
           # Note that we previously set the lattice of the dimension to be the same as the number
           # of points in this dimension according to the geometry element.
+          
           samplingFieldTemplate.dimensions.append(dimension)
       
       samplingFieldTemplate.sortDimensions()
-      momentGroupTemplate.sortDimensions()
+      outputFieldTemplate.sortDimensions()
       
       # end looping over dimension elements.  
-      rawVectorTemplate = VectorElementTemplate(name = 'raw', field = momentGroupTemplate,
+      rawVectorTemplate = VectorElementTemplate(name = 'raw', field = momentGroupTemplate.outputField,
                                                 **self.argumentsToTemplateConstructors)
       rawVectorTemplate.type = 'double'
       rawVectorTemplate.initialSpace = momentGroupTemplate.sampleSpace
-      momentGroupTemplate.managedVectors.add(rawVectorTemplate)
+      momentGroupTemplate.outputField.managedVectors.add(rawVectorTemplate)
       momentGroupTemplate.rawVector = rawVectorTemplate
-      outputFieldTemplate.dimensions = momentGroupTemplate.dimensions
       
       momentsElement = samplingElement.getChildElementByTagName('moments')
       momentNames = RegularExpressionStrings.symbolsInString(momentsElement.innerText())
@@ -1675,7 +1748,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
         raise ParserException(samplingElement, "The CDATA section for the sampling code must not be empty.")
       
       momentGroupTemplate.samplingCodeEntity = samplingCodeEntity
-      momentGroupTemplate.outputSpace = momentGroupTemplate.sampleSpace & momentGroupTemplate.spaceMask
+      momentGroupTemplate.outputSpace = momentGroupTemplate.sampleSpace & momentGroupTemplate.outputField.spaceMask
       
       operatorContainer = self.parseFilterElements(samplingElement, parent=momentGroupTemplate, optional=True)
       if operatorContainer:
@@ -1689,6 +1762,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
                                                       sharedCodeKeyPath = 'parent.samplingCodeEntity.value',
                                                       sharedCodeSpaceKeyPath = 'parent.sampleSpace',
                                                       dependenciesKeyPath = 'parent.dependencies',
+                                                      parent = momentGroupTemplate,
                                                       **self.argumentsToTemplateConstructors)
         
         momentGroupTemplate.operatorContainers.append(operatorContainer)

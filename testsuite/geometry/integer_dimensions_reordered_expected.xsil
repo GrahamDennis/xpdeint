@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="integer_dimensions_reordered.xsil" expected="integer_dimensions_reordered_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+  </testing>
+  
+  <name>integer_dimensions_reordered</name>
+  <author>Graham Dennis</author>
+  <description>
+    xpdeint script to test integer dimensions.
+  </description>
+  
+  <features>
+    <benchmark />
+    <error_check />
+    <bing />
+    <fftw version="none" />
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <integer_valued>
+        <dimension name="j" lattice="5" domain="(0, 4)" />
+        <dimension name="k" lattice="7" domain="(-3, 3)" />
+      </integer_valued>
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="main" type="complex">
+    <components>
+      x
+    </components>
+    <initialisation>
+      <![CDATA[
+      x[j, k] = 1.0e-3;
+      x[0, k] = 1.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="RK4" interval="60.0" steps="25000">
+      <samples>100</samples>
+      <operators>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+        long j_minus_one = (j-1) % _lattice_j;
+        if (j_minus_one < 0)
+          j_minus_one += _lattice_j;
+        long j_plus_one  = (j+1) % _lattice_j;
+        dx_dt[j, k] = x[j, k]*(x[j_minus_one, k] - x[j_plus_one, k]);
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  <output format="binary">
+    <group>
+      <sampling initial_sample="yes">
+        <dimension name="j" />
+        <moments>xR</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          xR = x;
+        ]]>
+      </sampling>
+    </group>
+  </output>
+
+<info>
+Script compiled with xpdeint version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+See http://www.xmds.org for more information.
+</info>
+
+<XSIL Name="moment_group_1">
+  <Param Name="n_independent">2</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>4</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t j xR error_xR 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>101</Dim>
+    <Dim>5</Dim>
+    <Dim>4</Dim>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
+integer_dimensions_reordered_expected_mg0.dat
+    </Stream>
+  </Array>
+</XSIL>
+</simulation>

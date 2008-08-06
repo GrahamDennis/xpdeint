@@ -3,6 +3,7 @@
   <testing>
     <xsil_file name="breakpoints_xspace.xsil" expected="breakpoints_xspace_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
     <xsil_file name="breakpoints_kspace.xsil" expected="breakpoints_kspace_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="breakpoints_2d_xspace.xsil" expected="breakpoints_2d_xspace.xsil"  absolute_tolerance="1e-7" relative_tolerance="1e-5" />
     <xsil_file name="breakpoints_mixed_space1.xsil" expected="breakpoints_mixed_space1_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
     <xsil_file name="breakpoints_mixed_space2.xsil" expected="breakpoints_mixed_space2_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
   </testing>
@@ -51,6 +52,9 @@
     </breakpoint>
     <breakpoint filename="breakpoints_kspace.xsil">
       <dependencies fourier_space="kx">oned</dependencies>
+    </breakpoint>
+    <breakpoint filename="breakpoints_2d_xspace.xsil">
+      <dependencies fourier_space="x y">twod</dependencies>
     </breakpoint>
     <breakpoint filename="breakpoints_mixed_space1.xsil">
       <dependencies fourier_space="x ky">twod</dependencies>

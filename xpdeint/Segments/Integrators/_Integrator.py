@@ -134,6 +134,6 @@ class _Integrator (_Segment):
           raise ParserException(samplesElement, "Sample count does not evenly divide the number of steps")
         self.samples.append(sampleCount)
         
-        momentGroup.dimensionWithName(self.propagationDimension).lattice += sampleCount * self.totalCycles
+        momentGroup.outputField.dimensionWithName(self.propagationDimension).inSpace(0).lattice += sampleCount * self.totalCycles
       
   

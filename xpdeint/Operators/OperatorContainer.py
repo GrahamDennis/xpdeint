@@ -52,12 +52,7 @@ class OperatorContainer(ScriptElement):
   ``callOperatorFunctionWithArguments`` method.
   """
   def __init__(self, *args, **KWs):
-    legalKWs = ['field', 'name', 'sharedCodeKeyPath', 'dependenciesKeyPath', 'sharedCodeSpaceKeyPath']
-    localKWs = {}
-    for key in KWs.copy():
-      if key in legalKWs:
-        localKWs[key] = KWs[key]
-        del KWs[key]
+    localKWs = self.extractLocalKWs(['field', 'name', 'sharedCodeKeyPath', 'dependenciesKeyPath', 'sharedCodeSpaceKeyPath'], KWs)
     
     ScriptElement.__init__(self, *args, **KWs)
     

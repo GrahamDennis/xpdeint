@@ -119,11 +119,11 @@ double *_dimMin   = new double[_${vector.field.name}_ndims];
 unsigned long *_dimLattice = new unsigned long[_${vector.field.name}_ndims];
 
   @for dimensionNumber, dimension in enumerate($vector.field.dimensions)
-    @set $dimensionName = $dimensionNameForSpace(dimension, $vector.initialSpace)
-_dimNames[$dimensionNumber]   = "${dimensionNameForSpace(dimension, $vector.initialSpace)}";
-_dimDelta[$dimensionNumber]   = _${vector.field.name}_d${dimensionName};
-_dimMin[$dimensionNumber]     = _${vector.field.name}_min_${dimensionName};
-_dimLattice[$dimensionNumber] = _${vector.field.name}_lattice_${dimensionName};
+    @set $dimRep = dimension.inSpace($vector.initialSpace)
+_dimNames[$dimensionNumber]   = "${dimRep.name}";
+_dimDelta[$dimensionNumber]   = ${dimRep.stepSize};
+_dimMin[$dimensionNumber]     = ${dimRep.minimum};
+_dimLattice[$dimensionNumber] = ${dimRep.globalLattice};
 
   @end for
   @#
@@ -269,7 +269,7 @@ else
 
   @if len($vector.field.dimensions)
 // Create inputfield index variables
-long ${', '.join([c'_inputfield_i${dimNum}' for dimNum in xrange(len($vector.field.dimensions))])};
+long ${', '.join([c'_inputfield${dim.inSpace($vector.initialSpace).loopIndex}' for dim in $vector.field.dimensions])};
   @end if
 
 // Index pointer into the input array (new and old)
@@ -328,8 +328,10 @@ _inputfield_old_index_pointer = _inputfield_index_pointer;
 _inputfield_index_pointer = 0;
 
   @for dimensionNumber, dimension in enumerate($vector.field.dimensions)
-    @set $dimName = $dimensionNameForSpace(dimension, space)
-_inputfield_i${dimensionNumber} = @slurp
+    @set dimRep = dimension.inSpace(space)
+    @set dimName = dimRep.name
+_inputfield${dimRep.loopIndex} = @slurp
+    @# FIXME: Consider moving this to the dimension representations
     @if $dimensionIsInFourierSpace(dimension, space)
 lround(${dimName}/_dimDelta[${dimensionNumber}]) + (_inputLattice[${dimensionNumber}]/2);
     @else
@@ -337,7 +339,7 @@ lround((${dimName} - _inputfield_min_${dimName})/_dimDelta[${dimensionNumber}]);
     @end if
 
 // Check if the input grid has this coordinate value
-if (_inputfield_i${dimensionNumber} < 0 || _inputfield_i${dimensionNumber} >= _inputLattice[${dimensionNumber}])
+if (_inputfield${dimRep.loopIndex} < 0 || _inputfield${dimRep.loopIndex} >= _inputLattice[${dimensionNumber}])
   // The input grid doesn't cover this point.
   goto _ENDLOOP;
 
@@ -345,21 +347,21 @@ if (_inputfield_i${dimensionNumber} < 0 || _inputfield_i${dimensionNumber} >= _i
 {
   double _inputfield_${dimName};
   if (_isPrecisionDouble)
-    _inputfield_${dimName} = _inputData[${dimensionNumber}]._doublePtr[_inputfield_i${dimensionNumber}];
+    _inputfield_${dimName} = _inputData[${dimensionNumber}]._doublePtr[_inputfield${dimRep.loopIndex}];
   else
-    _inputfield_${dimName} = _inputData[${dimensionNumber}]._floatPtr[_inputfield_i${dimensionNumber}];
+    _inputfield_${dimName} = _inputData[${dimensionNumber}]._floatPtr[_inputfield${dimRep.loopIndex}];
   
   if (fabs(_inputfield_${dimName} - ${dimName}) > 0.1*_dimDelta[${dimensionNumber}])
     // This only happens if your input field grid does not exactly match up with the simulation grid.
     // _LOG will cause the simulation to exit
     _LOG(_ERROR_LOG_LEVEL, "The input field coordinate in the '$dimName' dimension does not match up with the field coordinate.\n"
-                           "_i${dimensionNumber}: %li, ${dimName}: %e, _inputfield_i${dimensionNumber}: %li, "
+                           "${dimRep.loopIndex}: %li, ${dimName}: %e, _inputfield${dimRep.loopIndex}: %li, "
                            "_inputfield_${dimName}: %e, d${dimName}: %e, diff/Delta: %e\n",
-                           _i${dimensionNumber}, ${dimName}, _inputfield_i${dimensionNumber},
+                           ${dimRep.loopIndex}, ${dimName}, _inputfield${dimRep.loopIndex},
                            _inputfield_${dimName}, d${dimName}, fabs(_inputfield_${dimName} - ${dimName})/_dimDelta[$dimensionNumber]);
 }
 
-_inputfield_index_pointer += _inputfield_i${dimensionNumber}${''.join([c' * _inputLattice[$i]' for i in range(dimensionNumber + 1, len($vector.field.dimensions))])};
+_inputfield_index_pointer += _inputfield${dimRep.loopIndex}${''.join([c' * _inputLattice[$i]' for i in range(dimensionNumber + 1, len($vector.field.dimensions))])};
 
   @end for
 

@@ -75,4 +75,27 @@
       </sampling>
     </group> -->
   </output>
+
+<info>
+Script compiled with xpdeint version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+See http://www.xmds.org for more information.
+</info>
+
+<XSIL Name="breakpoint">
+  <Param Name="n_independent">2</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>4</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+x y vR vI 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>100</Dim>
+    <Dim>256</Dim>
+    <Dim>4</Dim>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
+breakpoints_2d_xspace.dat
+    </Stream>
+  </Array>
+</XSIL>
 </simulation>

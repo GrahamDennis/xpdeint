@@ -6,6 +6,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *@
 @extends xpdeint.Segments.Integrators._Integrator
 @from xpdeint.CallOnceGuards import callOncePerInstanceGuard
+@from xpdeint.Geometry.NonUniformDimensionRepresentation import NonUniformDimensionRepresentation
 
 @def description: segment $segmentNumber (Unnamed Integrator)
 
@@ -180,8 +181,9 @@ to be terminated early
       @continue
     @end if
     @#
-    @for dim in mg.dimensionOverrides
-if (_${mg.name}_sample_index_${dim.name} < _${mg.outputField.name}_lattice_${dim.name})
+    @for dim in filter(lambda x: not x.transverse, mg.outputField.dimensions)
+      @set $dimRep = dim.inSpace(0)
+if (${dimRep.prefix}_index_${dimRep.name} < ${dimRep.globalLattice})
   _${mg.name}_sample();
     @end for
   @end for

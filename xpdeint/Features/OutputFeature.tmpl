@@ -139,7 +139,7 @@ if ($fp) {
   fprintf($fp, "@slurp
   @# First loop over the dimensions (the independent variables)
   @for $dimension in $field.dimensions
-${dimensionNameForSpace($dimension, $space)} @slurp
+${dimension.inSpace(space).name} @slurp
   @end for
   @#
   @# Now loop over the dependent variables
@@ -159,7 +159,7 @@ ${componentName}R ${componentName}I @slurp
   @#
   @# Now loop over the dimensions
   @for $dimension in $field.dimensions
-  fprintf($fp, "    <Dim>%i</Dim>\n", _${field.name}_lattice_${dimension.name});
+  fprintf($fp, "    <Dim>%i</Dim>\n", $dimension.inSpace(space).globalLattice);
   @end for
   @# Now the variables dimension
   fprintf($fp, "    <Dim>${numIndependentVariables + componentCount}</Dim>\n");

@@ -205,6 +205,9 @@
       <attribute name="name"/>
       <attribute name="lattice"/>
       <attribute name="domain"/>
+      <optional>
+        <attribute name="transform"/>
+      </optional>
       <empty/>
     </element>
   </define>

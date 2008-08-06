@@ -41,14 +41,14 @@
   <sequence>
     <filter>
       <![CDATA[
-        _mg0_sample();
+        ;
       ]]>
     </filter>
   </sequence>
   
   <output format="binary">
     <group>
-      <sampling initial_sample="no">
+      <sampling initial_sample="yes">
         <dimension name="x" lattice="50" fourier_space="no" />
         <moments>amp</moments>
         <dependencies>oned twod</dependencies>

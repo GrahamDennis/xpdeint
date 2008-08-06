@@ -122,11 +122,7 @@ ${insertCodeForFeaturesInReverseOrder('generateNoisesEnd', featureOrdering, feat
   @for field in integrator.integrationFields
     @set $space = $deltaAOperatorSpaceForFieldInIntegrator(field, integrator)
     @#
-const double _${field.name}_var = 1.0/(@slurp
-    @if any([dim.fourier for dim in field.dimensions])
-$field.volumeElementInSpace($space) * @slurp
-    @end if
-_noiseStep);
+const double _${field.name}_var = 1.0/($field.volumeElementInSpace($space) * _noiseStep);
   @end for
   @#
 @end def
@@ -142,11 +138,7 @@ _noiseStep);
   @for field in integrator.integrationFields
     @set $space = $deltaAOperatorSpaceForFieldInIntegrator(field, integrator)
     @#
-const double _${field.name}_var = 1.0@slurp
-    @if any([dim.fourier for dim in field.dimensions])
-/ $field.volumeElementInSpace($space)@slurp
-    @end if
-;
+const double _${field.name}_var = 1.0 / $field.volumeElementInSpace($space);
   @end for
 
 list<_dtdWstore> _noise_list;

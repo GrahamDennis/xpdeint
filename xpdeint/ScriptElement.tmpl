@@ -294,12 +294,13 @@ long _${vector.id}_index_pointer = 0;
 #define _${componentName}(${', '.join([dim.name for dim in integerValuedDimensions])}) \
   _active_${vector.id}[_${vector.id}_index_pointer + ${componentNumber} \
           @for $integerDimension in $integerValuedDimensions
+            @set $dimRep = integerDimension.inSpace(space)
             @set $offsetDueToLooping = ''
             @if $field.hasDimension($integerDimension)
-              @set $offsetDueToLooping = c' - _i${field.indexOfDimension($integerDimension)}'
+              @set $offsetDueToLooping = c' - ${dimRep.loopIndex}'
             @end if
             @set $vectorFieldDimensionIndex = $vector.field.indexOfDimension($integerDimension)
-    + (${integerDimension.name} - _${vector.field.name}_min_${integerDimension.name} - ${localOffsetForDimensionInFieldInSpace(integerDimension, vector.field, space)}${offsetDueToLooping}) \
+    + (${dimRep.name} - ${dimRep.minimum} - ${dimRep.localOffset}${offsetDueToLooping}) \
       * ${vector.field.localPointsInDimensionsWithIndicesInSpace(range($vectorFieldDimensionIndex + 1, len($vector.field.dimensions)), $space)} \
       * _${vector.id}_ncomponents \
           @end for
@@ -330,15 +331,7 @@ $vector.type $componentName;
       @continue
     @end if
 
-    @if $dimensionIsInFourierSpace($dimension, $space)
-      @# If the current dimension is in fourier space
-${dimension.type} k${dimension.name} = 0.0;
-    @else
-      @# If the dimension isn't in fourier space
-      @set $fieldWithDimension = $vectorsWithThisDimension[0].field
-${dimension.type} ${dimension.name} = _${fieldWithDimension.name}_min_${dimension.name}@slurp
- + (_${fieldWithDimension.name}_lattice_${dimension.name}/2) * _${fieldWithDimension.name}_d${dimension.name};
-    @end if
+${dimension.inSpace(space).createCoordinateVariableForSinglePointSample}@slurp
   @end for
 
   @#
@@ -349,7 +342,7 @@ ${dimension.type} ${dimension.name} = _${fieldWithDimension.name}_min_${dimensio
     @if not $indexOverrides.has_key($dimension.name)
       @# If there isn't an indexOverride for this dimension, then open a loop
       @set $lastLoopDimension = $dimension
-${openLoopForDimensionInFieldInSpace($dimension, $field, $space, $vectors, $kspaceAscendingOrder), extraIndent=$indentLevel}@slurp
+${dimension.inSpace(space).openLoop(strictlyAscendingOrder=kspaceAscendingOrder), extraIndent=indentLevel}@slurp
       @set $indentLevel = $indentLevel + 2
     @else
       @# We have an indexOverride for this dimension. 
@@ -382,7 +375,7 @@ ${incrementIndexPointersForVectorsWithFieldAndSpaceAndLastLoopDimension($vectors
     @# If there isn't an indexOverride for this dimension, then reduce the indent and close the loop
     @if not $indexOverrides.has_key($dimension.name)
       @set $indentLevel = $indentLevel - 2
-${closeLoopForDimensionInFieldInSpace($dimension, $field, $space, $kspaceAscendingOrder), extraIndent=$indentLevel}@slurp
+${dimension.inSpace(space).closeLoop(strictlyAscendingOrder = kspaceAscendingOrder), extraIndent=indentLevel}@slurp
     @end if
     @#
     @if $dimension.name in $postDimensionLoopClosingCode
@@ -409,65 +402,6 @@ ${insertCodeForFeaturesInReverseOrder('loopOverFieldInSpaceWithVectorsAndInnerCo
 @end def
 
 
-@def openLoopForDimensionInFieldInSpace($dimension, $field, $space, $vectors, $kspaceAscendingOrder)
-@#doc: Open loop for dimension `dimension` in field `field`.
-  @#
-  @set $fieldDimensionNumber = $field.indexOfDimension($dimension)
-  @set $featureOrdering = ['OpenMP']
-  @#
-  @if $dimensionIsInFourierSpace($dimension, $space)
-    @# If the current dimension is in fourier space
-    @if not $kspaceAscendingOrder
-      @# If we are looping in memory order
-${dimension.type} k${dimension.name} = 0.0;
-      @if $mayHaveLocalOffsetForDimensionInFieldInSpace(dimension, field, space)
-if (${localOffsetForDimensionInFieldInSpace(dimension, field, space)}) {
-  k${dimension.name} += ${localOffsetForDimensionInFieldInSpace(dimension, field, space)} * _${field.name}_dk${dimension.name};
-  ${wrapKSpaceCoordinateForDimensionInField(dimension, field), autoIndent=True}@slurp
-}
-      @end if
-    @else
-      @# We are looping in ascending order
-${dimension.type} k${dimension.name} = _${field.name}_min_k${dimension.name};
-      @if $mayHaveLocalOffsetForDimensionInFieldInSpace(dimension, field, space)
-#error "Cannot loop in k-space ascending order when the dimension is split with MPI (this error shouldn't be hit, please report it to xmds-devel@lists.sourceforge.net)"
-      @end if
-    @end if
-#define dk${dimension.name} _${field.name}_dk${dimension.name}
-  @else
-    @# If the current dimension is in x space
-    @#
-    @# Do things slightly differently if we have a dimension override for this dimension
-    @if not $dimension in $field.dimensionOverrides
-${dimension.type} ${dimension.name} = _${field.name}_min_${dimension.name};
-      @if $mayHaveLocalOffsetForDimensionInFieldInSpace(dimension, field, space)
-if (${localOffsetForDimensionInFieldInSpace(dimension, field, space)})
-  ${dimension.name} += ${localOffsetForDimensionInFieldInSpace(dimension, field, space)} * _${field.name}_d${dimension.name};
-      @end if
-
-#define d${dimension.name} _${field.name}_d${dimension.name}
-    @else
-#define ${dimension.name} _${dimension.override.name}_${dimension.name}[_i${fieldDimensionNumber}]
-    @end if
-    @#
-  @end if
-
-  @set $dict = {'dimension': $dimension, 'field': $field, 'vectors': $vectors}
-  @if not ($kspaceAscendingOrder and $dimensionIsInFourierSpace($dimension, $space))
-    @# Standard behaviour
-for (long _i${fieldDimensionNumber} = 0; _i${fieldDimensionNumber} < ${localLatticeForDimensionInFieldInSpace(dimension, field, space)}; _i${fieldDimensionNumber}++) {
-  @else
-    @# Non-standard behaviour: this dimension is in kspace and we are asked to loop over it in ascending order
-for (long _j${fieldDimensionNumber} = -(_${field.name}_lattice_${dimension.name}/2); _j${fieldDimensionNumber} < (_${field.name}_lattice_${dimension.name} + 1)/2; _j${fieldDimensionNumber}++) {
-  long _i${fieldDimensionNumber} = _j${fieldDimensionNumber};
-  if (_i${fieldDimensionNumber} < 0)
-    _i${fieldDimensionNumber} += _${field.name}_lattice_${dimension.name};
-  @end if
-  ${insertCodeForFeaturesInReverseOrder('openLoopForDimensionInFieldInSpaceEnd', $featureOrdering, $dict), autoIndent=True}@slurp
-  @#
-@end def
-
-
 @def prologueForOverriddenDimensionInFieldInSpaceWithVectors($dimension, $field, $space, $vectors, $indexOverrides)
 @#doc: Insert prologue for dimension $dimension when its index variable has been overridden
   @#
@@ -477,11 +411,11 @@ for (long _j${fieldDimensionNumber} = -(_${field.name}_lattice_${dimension.name}
   @# a value for this field
   @assert $indexOverrides[$dimension.name].has_key($field)
   @#
-unsigned long _i${fieldDimensionNumber} = ${indexOverrides[$dimension.name][$field]};
+unsigned long ${dimension.inSpace(space).loopIndex} = ${indexOverrides[$dimension.name][$field]};
   @# loop over the vectors in field $field, because we need to fix up their index pointers
   @# and those vectors with the same dimensions
   @for $vector in filter(lambda x: x.field == field or x.field.dimensions == field.dimensions, vectors)
-_${vector.id}_index_pointer += _i${fieldDimensionNumber}@slurp
+_${vector.id}_index_pointer += ${dimension.inSpace(space).loopIndex}@slurp
  * ${field.localPointsInDimensionsWithIndicesInSpace(range($fieldDimensionNumber + 1, len($field.dimensions)), space)};
   @end for
 
@@ -522,18 +456,15 @@ _${vector.id}_index_pointer = ( 0@slurp
         @set $fieldDimensionNumber = $field.indexOfDimension($dimension)
         @set $fieldDimension = $field.dimensions[$fieldDimensionNumber]
         @#
-        @if $dimensionIsInFourierSpace($dimension, $space)
-          @# This dimension is in fourier space
-          @assert $dimension.lattice >= $fieldDimension.lattice
-  + ( _i${fieldDimensionNumber} + (signbit(k${dimension.name}) ? (_${vector.field.name}_lattice_${dimension.name} - _${field.name}_lattice_${dimension.name}) : 0 ))
+        @# If the lattices are the same, then there is nothing special to be done for this dimension
+        @# We also require that there are neither dimension could have a local offset
+        @set $mayHaveLocalOffset = dimension.inSpace(space).mayHaveLocalOffset or fieldDimension.inSpace(space).mayHaveLocalOffset
+        @if $dimension.inSpace(space).lattice == $fieldDimension.inSpace(space).lattice and not mayHaveLocalOffset
+  + ( ${fieldDimension.inSpace(space).loopIndex} )
       * $vector.field.localPointsInDimensionsAfterDimensionInSpace(dimension, space)@slurp
         @else
-          @# This dimension isn't in fourier space
-          @assert ($dimension.lattice % $fieldDimension.lattice) == 0
-  + ( (_i${fieldDimensionNumber} + ${localOffsetForDimensionInFieldInSpace(dimension, field, space)})
-      * (_${vector.field.name}_lattice_${dimension.name}/_${field.name}_lattice_${dimension.name})
-      - ${localOffsetForDimensionInFieldInSpace(dimension, vector.field, space)})
-    * $vector.field.localPointsInDimensionsAfterDimensionInSpace(dimension, space)@slurp
+  + ( ${dimension.inSpace(space).localIndexFromIndexForDimensionRep(fieldDimension.inSpace(space))} )
+      * $vector.field.localPointsInDimensionsAfterDimensionInSpace(dimension, space)@slurp
         @end if
       @else
         @# Now, consider when $field doesn't contain this dimension. If this dimension has an index override, then
@@ -552,15 +483,9 @@ _${vector.id}_index_pointer = ( 0@slurp
           @# value at k=0 (the first element in this dimension). If it isn't in fourier
           @# space, then we want to take its element in the middle.
           @#
-          @if $dimensionIsInFourierSpace($dimension, $space)
-            @# This dimension is in fourier space, so there's nothing to do, because we want the value for k=0,
-            @# which is the first element
-            @pass
-          @else
-            @# This dimension isn't in fourier space
-  + (_${vector.field.name}_lattice_${dimension.name}/2)@slurp
+          @# Either way, this is handled by the dimension
+  + (${dimension.inSpace(space).indexForSinglePointSample})@slurp
  * $vector.field.localPointsInDimensionsAfterDimensionInSpace(dimension, space)@slurp
-          @end if
         @end if
       @end if
     @end for
@@ -585,7 +510,7 @@ _${vector.id}_index_pointer = ( 0@slurp
 _active_${vector.id}[_${vector.id}_index_pointer + ${componentNumber}] += ${componentName}@slurp
       @# Loop over the dimensions
       @for $dimension in $dimensionsIntegratedOver
- * _${field.name}_d${dimensionNameForSpace(dimension, space)}@slurp
+ * ${dimension.inSpace(space).stepSize}@slurp
       @end for
 ;
     @end for
@@ -617,46 +542,6 @@ _active_${vector.id}[_${vector.id}_index_pointer + ${componentNumber}] += ${comp
 _${vector.id}_index_pointer += $field.localPointsInDimensionsAfterDimensionInSpace(lastLoopDimension, space) * _${vector.id}_ncomponents;
   @end for
 
-  @#
-@end def
-
-
-@def closeLoopForDimensionInFieldInSpace($dimension, $field, $space, $kspaceAscendingOrder)
-@#doc: Close loop for dimension $dimension in field $field.
-  @#
-  @set $fieldDimensionNumber = $field.indexOfDimension($dimension)
-  @#
-  @if $dimensionIsInFourierSpace($dimension, $space)
-    @# If the current dimension is in fourier space
-  k${dimension.name} += _${field.name}_dk${dimension.name};
-  @if not $kspaceAscendingOrder
-    @# If we are looping in memory order, we may need to wrap
-  ${wrapKSpaceCoordinateForDimensionInField($dimension, $field), autoIndent=True}@slurp
-  @end if
-#undef dk${dimension.name}
-  @else
-    @# If the current dimension is in x space
-    @#
-    @# Do things slightly differently if this dimension is overridden
-    @if not $dimension in $field.dimensionOverrides
-  ${dimension.name} += _${field.name}_d${dimension.name};
-#undef d${dimension.name}
-    @else
-#undef ${dimension.name}
-    @end if
-  @end if
-}
-  @#
-@end def
-
-
-@def wrapKSpaceCoordinateForDimensionInField($dimension, $field)
-@#doc: Wrap kspace coordinate variable if necessary
-  @#
-  @set $dimensionNumber = $field.indexOfDimension($dimension)
-  @#
-if ( k${dimension.name} > ((_${field.name}_lattice_${dimension.name} - 1)/2 + 0.1) * _${field.name}_dk${dimension.name})
-  k${dimension.name} -= _${field.name}_lattice_${dimension.name} * _${field.name}_dk${dimension.name};
   @#
 @end def
 

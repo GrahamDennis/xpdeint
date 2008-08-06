@@ -11,7 +11,7 @@ from xpdeint.SimulationDrivers.DistributedMPIDriver import DistributedMPIDriver
 from xpdeint.Features.FourierTransformFFTW3 import FourierTransformFFTW3
 from xpdeint.Features.FourierTransformFFTW3MPI import FourierTransformFFTW3MPI
 
-import xpdeint.Geometry.DoubleDimension
+# import xpdeint.Geometry.DoubleDimension
 
 from xpdeint.ParserException import ParserException
 

@@ -106,6 +106,7 @@ Dimension = element dimension {
     attribute name { text }
     , attribute lattice { text }
     , attribute domain { text }
+    , attribute transform { text }?
     , empty
 }
 

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <name>vibstring_dct</name>
+  <author>Graham Dennis</author>
+  <description>
+    Vibrating string using a Discrete Cosine transform (i.e. even boundary conditions on both sides)
+  </description>
+  
+  <features>
+    <benchmark />
+    <error_check />
+    <bing />
+    <fftw version="3" plan="estimate" />
+    <openmp />
+    <globals>
+      <![CDATA[
+      const double T = 10.0;
+      const double mass = 1e-3;
+      const double length = 1.0;
+      const double mu = mass/length;
+      ]]>
+    </globals>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="x" lattice="50"  domain="(0.5, 1.0)" transform="dct"/>
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="main" initial_space="x" type="complex">
+    <components>
+      u uDot
+    </components>
+    <initialisation>
+      <![CDATA[
+        u = exp(-100.0*(x-0.5)*(x-0.5));
+        uDot = 0.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="RK4" interval="2e-3" steps="100">
+      <samples>50 50</samples>
+      <computed_vector name="moment_creator" dimensions="" type="double">
+        <components>moment</components>
+        <evaluation>
+          <dependencies fourier_space="kx"> main </dependencies>
+          <![CDATA[
+            moment = mod2(u);
+          ]]>
+        </evaluation>
+      </computed_vector>
+      <operators>
+        <operator kind="ex" constant="yes">
+          <operator_names>L</operator_names>
+          <![CDATA[
+            L = -T*kx*kx/mu;
+          ]]>
+        </operator>
+        <integration_vectors>main</integration_vectors>
+        <dependencies>moment_creator</dependencies>
+        <![CDATA[
+          du_dt = uDot;
+          duDot_dt = L[u];
+          moment;
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  <output format="binary" filename="vibstring_dct.xsil">
+    <group>
+      <sampling initial_sample="yes">
+        <!-- Any dimension not mentioned is assumed to be in real space and its middle element will be sampled -->
+        <!-- Note that this is different default behaviour to the filter operator. To integrate, put in a dimension -->
+        <!-- with zero lattice points. -->
+        <!-- Note that dimensions can be in any order. Not that I can think of a reason why you would want to do that -->
+        <dimension name="x" lattice="50" fourier_space="no" />
+        <moments>amp</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          amp = u;
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling initial_sample="no">
+        <dimension name="x" lattice="50" fourier_space="yes" />
+        <moments>amp</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          amp = u.re;
+        
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>

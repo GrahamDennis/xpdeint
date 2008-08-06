@@ -42,7 +42,9 @@ class _FieldElement (ScriptElement):
   
   @property
   def children(self):
-    return self.managedVectors.copy()
+    result = self.dimensions[:]
+    result.extend(self.managedVectors)
+    return result
   
   # The space mask for this field
   # i.e. which parts of the space variable we care about
@@ -57,7 +59,7 @@ class _FieldElement (ScriptElement):
     geometryElement = self.getVar('geometry')
     
     for dimensionNumber, dimension in enumerate(geometryElement.dimensions):
-      if self.hasDimension(dimension) and dimension.type == 'double':
+      if self.hasDimension(dimension) and dimension.isTransformable:
         bitMask |= 1 << dimensionNumber
     
     return bitMask
@@ -123,7 +125,8 @@ class _FieldElement (ScriptElement):
       # Only put a multiply sign in for everything after the first dimension
       result.append(separator)
       separator = ' * '
-      result.extend([self.prefix, '_lattice_', self.dimensions[dimensionIndex].name])
+      maxRep = max([(rep.lattice, rep) for rep in self.dimensions[dimensionIndex].representations if rep])[1]
+      result.append(maxRep.globalLattice)
     
     return ''.join(result)
   
@@ -152,10 +155,10 @@ class _FieldElement (ScriptElement):
     return self.localPointsInDimensionsWithIndicesInSpace(indices, space)
   
   @property
-  def pointsInDimensionsNumerically(self):
+  def maxPoints(self):
     points = 1
     for dimension in self.dimensions:
-      points *= int(dimension.lattice)
+      points *= max([rep.lattice for rep in dimension.representations])
     
     return points
   
@@ -168,24 +171,17 @@ class _FieldElement (ScriptElement):
     for dim in self.dimensions:
       # Once we hit a double dimension, we must have passed
       # the 'first' integer valued dimensions if we have any
-      if dim.type == 'double':
+      if not dim.indexable:
         if dimensionList:
           result.append(dimensionList)
           dimensionList = []
-      elif dim.type == 'long':
-        dimensionList.append(dim)
       else:
-        # Badness
-        assert False
+        dimensionList.append(dim)
     
     if dimensionList:
       result.append(dimensionList)
     return result
   
-  # Dimension overrides
-  @property
-  def dimensionOverrides(self):
-    return filter(lambda x: x.hasattr('override'), self.dimensions)
   
   @property
   def transverseDimensions(self):
@@ -204,13 +200,14 @@ class _FieldElement (ScriptElement):
     return self.implementationsForChildren('free')
   
   def volumeElementInSpace(self, space):
-    if not any([d.fourier for d in self.dimensions]):
+    reps = [d.inSpace(space) for d in self.dimensions]
+    if all([rep.type == 'long' for rep in reps]):
       return '1.0'
     result = []
     separator = ''
     result.append('(')
-    for dimension in filter(lambda x: x.fourier, self.dimensions):
-      result.extend([separator, self.prefix, '_d', self.dimensionNameForSpace(dimension, space)])
+    for rep in filter(lambda x: x.type == 'double', reps):
+      result.extend([separator, rep.prefix, '_d', rep.name])
       separator = ' * '
     result.append(')')
     
@@ -244,11 +241,8 @@ class _FieldElement (ScriptElement):
     # Complain if illegal fieldnames or k[integer-valued] are used
     legalDimensionNames = set()
     for fieldDimension in self.dimensions:
-      legalDimensionNames.add(fieldDimension.name)
-      # If the dimension is of type 'double', then we may be
-      # fourier transforming it.
-      if fieldDimension.type == 'double':
-        legalDimensionNames.add('k' + fieldDimension.name)
+      for rep in fieldDimension.representations:
+        legalDimensionNames.add(rep.name)
     
     spacesSymbols = RegularExpressionStrings.symbolsInString(spacesString)
     
@@ -258,23 +252,21 @@ class _FieldElement (ScriptElement):
                 "The fourier_space string must only contain real-valued dimensions from the\n"
                 "designated field.  '%(symbol)s' cannot be used."  % locals())
     
-    for dimensionNumber, fieldDimension in enumerate(self.dimensions):
+    for fieldDimension in self.dimensions:
       fieldDimensionName = fieldDimension.name
-      validDimensionNamesForField = set([fieldDimensionName])
-      if fieldDimension.type == 'double':
-        validDimensionNamesForField.add('k' + fieldDimensionName)
+      validDimensionNamesForField = [rep.name for rep in fieldDimension.representations]
       
       dimensionOccurrences = sum([spacesSymbols.count(dimName) for dimName in validDimensionNamesForField])
       
       if dimensionOccurrences > 1:
         raise ParserException(xmlElement,
                   "The fourier_space attribute must only have one entry for dimension '%(fieldDimensionName)s'." % locals())
-      elif dimensionOccurrences == 0 and fieldDimension.type == 'double':
+      elif dimensionOccurrences == 0 and fieldDimension.isTransformable:
         raise ParserException(xmlElement,
                   "The fourier_space attribute must have an entry for dimension '%(fieldDimensionName)s'." % locals())
       
-      if fieldDimension.type == 'double' and ('k' + fieldDimensionName) in spacesSymbols:
-        resultSpace |= 1 << geometryTemplate.indexOfDimension(self.dimensions[dimensionNumber])
+      if fieldDimension.isTransformable and spacesSymbols.count(validDimensionNamesForField[1]):
+        resultSpace |= 1 << geometryTemplate.indexOfDimension(fieldDimension)
     
     return resultSpace
   
@@ -322,7 +314,7 @@ class _FieldElement (ScriptElement):
       # Otherwise we need to construct our own
       field = cls(name = fieldName, **cls.argumentsToTemplateConstructors)
       # Copy in our dimensions
-      field.dimensions[:] = fieldDimensions
+      field.dimensions[:] = [dim.copy(parent = field) for dim in fieldDimensions]
       
       if xmlElement:
         field.xmlElement = xmlElement

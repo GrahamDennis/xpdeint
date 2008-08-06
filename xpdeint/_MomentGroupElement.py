@@ -9,25 +9,29 @@ Created by Graham Dennis on 2007-10-18.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 """
 
-from xpdeint.Geometry.FieldElement import FieldElement
+from xpdeint.ScriptElement import ScriptElement
 from xpdeint.ParserException import ParserException
 
-class _MomentGroupElement (FieldElement):
+class _MomentGroupElement (ScriptElement):
   def __init__(self, number, *args, **KWs):
     self.number = number
     self.name = 'mg' + str(self.number)
     
-    FieldElement.__init__(self, *args, **KWs)
+    ScriptElement.__init__(self, *args, **KWs)
     
     # Set default variables
     self.requiresInitialSample = False
     self.getVar('momentGroups').append(self)
     self.computedVectors = set()
     self.operatorContainers = []
+    
+    scriptElements = self.getVar('scriptElements')
+    if not self in scriptElements:
+      scriptElements.append(self)
   
   @property
   def children(self):
-    result = set(super(_MomentGroupElement, self).children)
+    result = set()
     result.update(self.computedVectors)
     result.update(self.operatorContainers)
     return result
@@ -55,15 +59,27 @@ class _MomentGroupElement (FieldElement):
   def bindNamedVectors(self):
     super(_MomentGroupElement, self).bindNamedVectors()
     
-    if self.hasattr('sampleField'):
-      sampleSpaceMask = self.sampleField.spaceMask
-    else:
-      sampleSpaceMask = self.spaceMask
-    
     for dependency in self.dependencies:
       if self.hasPostProcessing and dependency.type == 'complex':
         self.rawVector.type = 'complex'
       
+    if not self.rawVectorNeedsToBeAllocated:
+      self.outputField.managedVectors.remove(self.processedVector)
+      self.processedVector.remove()
+      self.processedVector = self.rawVector
+    
+  
+  def preflight(self):
+    super(_MomentGroupElement, self).preflight()
+    
+    # Throw out the propagation dimension if it only contains a single sample
+    if self.outputField.hasDimensionName(self.propagationDimension):
+      if self.outputField.dimensionWithName(self.propagationDimension).inSpace(0).lattice == 1:
+        singlePointDimension = self.outputField.dimensionWithName(self.propagationDimension)
+        self.outputField.dimensions.remove(singlePointDimension)
+        singlePointDimension.remove()
+    
+  
   
 
 

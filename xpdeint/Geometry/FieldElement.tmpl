@@ -20,11 +20,6 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   @#
   @set $prefix = c'_${name}'
 #define ${prefix}_ndims ${len($dimensions)}
-
-  @for $dimension in $dimensions
-${dimension.definesWithPrefix($prefix)}@slurp
-
-  @end for
 #define ${prefix}_full_kspace_mask  ${spaceMask} // @slurp
   @set $separator = ''
   @for $dimension in $geometry.dimensions

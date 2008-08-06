@@ -11,6 +11,7 @@ from xpdeint.Operators.Operator import Operator
 from xpdeint.Geometry.FieldElement import FieldElement
 from xpdeint.Vectors.VectorElement import VectorElement
 from xpdeint.Vectors.VectorInitialisation import VectorInitialisation
+from xpdeint.Function import Function
 
 from xpdeint.ParserException import ParserException
 
@@ -29,6 +30,7 @@ class _DeltaAOperator (Operator):
     self.integrationVectors = set()
     self.deltaAField = None
     self.deltaAVectorMap = {}
+    
   
   @property
   def defaultOperatorSpace(self):
@@ -207,7 +209,7 @@ class _DeltaAOperator (Operator):
         loopingField = FieldElement(name = loopingFieldName,
                                     **self.argumentsToTemplateConstructors)
         
-        loopingField.dimensions = newFieldDimensions
+        loopingField.dimensions = [dim.copy(parent=loopingField) for dim in newFieldDimensions]
         self.loopingField = loopingField
         
         # Now construct a second field for the vector which will hold our delta a operators
@@ -216,7 +218,7 @@ class _DeltaAOperator (Operator):
         self.deltaAField = FieldElement(name = deltaAFieldName,
                                         **self.argumentsToTemplateConstructors)
         
-        self.deltaAField.dimensions = dimensionsNeedingReordering
+        self.deltaAField.dimensions = [dim.copy(parent = self.deltaAField) for dim in dimensionsNeedingReordering]
         
         propagationDimension = self.propagationDimension
         
@@ -306,5 +308,16 @@ class _DeltaAOperator (Operator):
       
       
     
+    if self.deltaAField:
+      copyDeltaAFunctionName = ''.join(['_', self.id, '_copy_delta_a'])
+      arguments = [('double', '_step')]
+      arguments.extend([('long', '_' + dim.inSpace(self.operatorSpace).name + '_index') \
+                            for dim in self.loopingField.dimensions if not self.deltaAField.hasDimension(dim)])
+      copyDeltaAFunction = Function(name = copyDeltaAFunctionName,
+                                    args = arguments,
+                                    implementation = self.copyDeltaAFunctionContents,
+                                    returnType = 'inline void')
+      self.functions['copyDeltaA'] = copyDeltaAFunction
+      
   
 

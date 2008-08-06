@@ -167,6 +167,7 @@ def main(argv=None):
   globalNameSpace['xmds'] = {'versionString': versionString,
                              'subversionRevision': subversionRevisionString}
   globalNameSpace['templates'] = set()
+  globalNameSpace['transforms'] = {}
   
   # We need the anyObject function in a few templates, so
   # we add it to the globalNameSpace, so that the function can

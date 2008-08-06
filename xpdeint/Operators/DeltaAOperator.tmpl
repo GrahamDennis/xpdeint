@@ -10,37 +10,12 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 
 @def description: Delta A propagation operator for field $field.name
 
-@def functionPrototypes
-  @#
-  @super
-  @#
-  @if not $deltaAField
-    @stop
-  @end if
-  @#
-  @set $arguments = ''.join([c', long _${dim.name}_index' for dim in $loopingField.dimensions if not $deltaAField.hasDimension(dim)])
-inline void _${integrator.name}_${name}_copy_delta_a(double _step${arguments});
-  @#
-@end def
-
-@def functionImplementations
-  @#
-  @super
-  @#
-  @if not $deltaAField
-    @stop
-  @end if
-  @#
+@def copyDeltaAFunctionContents($function)
   @set $dimensionsWithIndexOverrides = [dim for dim in $loopingField.dimensions if not $deltaAField.hasDimension(dim)]
-  @set $arguments = ''.join([c', long _${dim.name}_index' for dim in $dimensionsWithIndexOverrides])
-
-inline void _${integrator.name}_${name}_copy_delta_a(double _step${arguments})
-{
   @set $setOfVectorsToLoopOver = set($deltaAField.vectors)
   @silent setOfVectorsToLoopOver.update($vectorsForcingReordering)
-  @set $indexOverrides = dict([(dim.name, {$loopingField: c'_${dim.name}_index'}) for dim in $dimensionsWithIndexOverrides])
-  ${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $operatorSpace, $setOfVectorsToLoopOver, $insideCopyDeltaALoops, $indexOverrides), autoIndent=True}@slurp
-}
+  @set $indexOverrides = dict([(dim.name, {$loopingField: c'_${dim.inSpace($operatorSpace).name}_index'}) for dim in $dimensionsWithIndexOverrides])
+${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $operatorSpace, $setOfVectorsToLoopOver, $insideCopyDeltaALoops, $indexOverrides)}@slurp
   @#
 @end def
 
@@ -60,19 +35,6 @@ d${componentName}_d${propagationDimension} = 0.0;
       @end if
     @end for
   @end for
-  @#
-@end def
-
-@def callCopyDeltaA
-  @#
-  @# WARNING: The following code depends on the implementation of ScriptElement's loopOverFieldInSpaceWithVectorsAndInnerContent
-  @#          to determine the indices for each of the dimensions being looped over. In the future, we should consider either
-  @#          working out a way to get loopOverFieldInSpaceWithVectorsAndInnerContent to give us this information, or just be
-  @#          aware that should any change be made to the definition of those variables, the following code will need to change.
-  @#
-  @set $arguments = ''.join([c', _i${loopingField.indexOfDimension(dim)}' for dim in $loopingField.dimensions if not $deltaAField.hasDimension(dim)])
-_${integrator.name}_${name}_copy_delta_a(_step${arguments});
-
   @#
 @end def
 
@@ -109,7 +71,10 @@ $operatorComponentName * _step;
   @set $postDimensionLoopClosingCode = {}
   @#
   @if $deltaAField
-    @silent postDimensionLoopClosingCode[$deltaAField.dimensions[0].name] = $callCopyDeltaA
+    @set $arguments = dict([(c'_${dim.inSpace($operatorSpace).name}_index', dim.inSpace($operatorSpace).loopIndex) \
+                                for dim in $loopingField.dimensions if not $deltaAField.hasDimension(dim)])
+    @set $functionCall = $functions['copyDeltaA'].call(parentFunction=$functions['evaluate'], arguments = arguments)
+    @silent postDimensionLoopClosingCode[$deltaAField.dimensions[0].name] = functionCall + '\n'
   @end if
   @#
 ${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $operatorSpace, $setOfVectorsToLoopOver,
