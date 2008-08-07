@@ -23,7 +23,7 @@ ${functions['nonconstantIPFields'].call(arguments, _exponent = 1, _arrayIndex = 
 
 ${functions['ipEvolve'].call(arguments, _exponent = +1, parentFunction=function)}
 
-${propagationDimension} += _step/2.0;
+${propagationDimension} += 0.5*_step;
 
 ${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
 
@@ -35,13 +35,17 @@ _active_${vector.id} = _${vector.id};
 
 for (int _iteration = 0; _iteration < ${iterations}; _iteration++) {
   if (_iteration < ${iterations} - 1) {
-    ${functions['leftDeltaA'].call(arguments, _step = '_step/2.0', parentFunction=function), autoIndent=True}
-    ${functions['rightDeltaA'].call(arguments, _step = '_step/2.0', parentFunction=function), autoIndent=True}
+  @if $leftOperatorContainer
+    ${functions['leftDeltaA'].call(arguments, _step = '0.5*_step', parentFunction=function), autoIndent=True}
+  @end if
+  @if $rightOperatorContainer
+    ${functions['rightDeltaA'].call(arguments, _step = '0.5*_step', parentFunction=function), autoIndent=True}
+  @end if
   } else {
     ${functions['deltaA'].call(arguments, parentFunction=function), autoIndent=True}
     
     ${transformVectorsToSpace($integrationVectors, $homeSpace), autoIndent=True}@slurp
-
+    
     ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """// a = oldcopy + a
 _${vector.id}[$index] += _oldcopy_${vector.id}[$index];
@@ -52,12 +56,12 @@ _${vector.id}[$index] += _oldcopy_${vector.id}[$index];
 
 ${functions['ipEvolve'].call(arguments, _exponent = +1, parentFunction=function)}
 
-${propagationDimension} += _step/2.0;
+${propagationDimension} += 0.5*_step;
 
   @#
 @end def
 
-@def leftRightDeltaAFunctionBody($function, $replacementDeltaAOperator)
+@def leftRightDeltaAFunctionBody($function, $replacementOperatorContainer)
   @#
   @# First evaluate any computed vector that any of our operators may depend on
 ${evaluateComputedVectors($computedVectorsNeedingPrecalculationForOperatorContainers($intraStepOperatorContainers))}@slurp
@@ -79,7 +83,7 @@ ${operatorContainer.evaluatePreDeltaAOperators(parentFunction = function)}@slurp
     @if not operatorContainer == $operatorContainerToOverride
 ${operatorContainer.evaluateDeltaAOperator(parentFunction = function)}@slurp
     @else
-${replacementDeltaAOperator.functions['evaluate'].call(parentFunction = function)}@slurp
+${replacementOperatorContainer.evaluateDeltaAOperator(parentFunction = function)}@slurp
     @end if
   @end for
   @#
@@ -93,11 +97,13 @@ ${operatorContainer.evaluatePostDeltaAOperators(parentFunction = function)}@slur
   @end for
   @#
 
-${transformVectorsToSpace($integrationVectors, $homeSpace), autoIndent=True}@slurp
+  @set $integrationVectorsNeedingUpdating = $integrationVectors
+  @silent integrationVectorsNeedingUpdating.difference_update(replacementOperatorContainer.deltaAOperator.integrationVectors)
+${transformVectorsToSpace($integrationVectorsNeedingUpdating, $homeSpace), autoIndent=True}@slurp
 
-${loopOverVectorsWithInnerContentTemplate($integrationVectors,
-"""// a = oldcopy + a
-_${vector.id}[$index] += _oldcopy_${vector.id}[$index];
+${loopOverVectorsWithInnerContentTemplate($integrationVectorsNeedingUpdating,
+c"""// a = oldcopy + a
+_\${vector.id}[\$index] += _${name}_oldcopy_\${vector.id}[\$index];
 """)}@slurp
   @#
 @end def

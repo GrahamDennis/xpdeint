@@ -30,20 +30,25 @@ class Function(object):
   for it, and it isn't clear how this behaviour would work in the face of nested
   looping segments.
   """
-  __slots__ = ['name', 'returnType', 'args', 'description', 'implementationContents']
-  def __init__(self, name, args, implementation, description = None, returnType = 'void'):
+  __slots__ = ['name', 'returnType', 'args', 'description', 'implementationContents', 'predicate']
+  def __init__(self, name, args, implementation,
+               description = None, returnType = 'void', predicate = lambda: True):
     """
     Initialise a `Function` object with C name `functionName`, arguments `args` and a
     return type of `returnType`. The `implementation` argument must be a function that
     returns the body of the C function.
     
     The `args` argument is an array of 2-tuples of the form ``('argType', 'argName')``.
+    
+    `predicate` is a callable that will cause the function not to be defined if it returns false
     """
     self.name = name
     self.args = args[:]
     self.implementationContents = implementation
     self.returnType = returnType
     self.description = description
+    # Note that the predicate is actually used by _ScriptElement
+    self.predicate = predicate
   
   def _prototype(self):
     """

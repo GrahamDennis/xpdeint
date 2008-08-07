@@ -85,6 +85,7 @@ class _ScriptElement (Template):
     self.dependenciesEntity = None
     self.functions = {}
     self._id = None
+    self._haveBeenRemoved = False
     
     if self.hasattr('globalNameSpaceName'):
       globalNameSpace = KWs['searchList'][0]
@@ -259,13 +260,13 @@ class _ScriptElement (Template):
   def functionPrototypes(self):
     if not self.functions:
       return
-    return ''.join([f.prototype() for f in self.functions.itervalues()])
+    return ''.join([f.prototype() for f in self.functions.itervalues() if f.predicate()])
   
   # Function implemenations
   def functionImplementations(self):
     if not self.functions:
       return
-    return '\n\n'.join([f.implementation() for f in self.functions.itervalues()])
+    return '\n\n'.join([f.implementation() for f in self.functions.itervalues() if f.predicate()])
   
   # Define a whole bunch of static versions of these functions
   def static_includes(self):
@@ -498,7 +499,7 @@ class _ScriptElement (Template):
                   "Cannot satisfy dependence on vector '%s' because it is not "
                   "of type complex, and needs to be fourier transformed." % vector.name)
       if vector.needsFourierTransforms:
-        result.extend(['_', vector.id, '_go_space(', str(space), ');\n'])
+        result.extend([vector.functions['goSpace'].call(_newSpace=space), '\n'])
       # Add space $space to the set of spaces in which this vector is needed
       vector.spacesNeeded.add(space & vector.field.spaceMask)
     return ''.join(result)
@@ -520,6 +521,8 @@ class _ScriptElement (Template):
     if self.hasattr('children'):
       for child in self.children:
         child.remove()
+    
+    self._haveBeenRemoved = True
   
   def fixupComponentsWithIntegerValuedDimensions(self, vectors, code):
     """

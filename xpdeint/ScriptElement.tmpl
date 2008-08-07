@@ -201,7 +201,7 @@ for (long _i0 = 0; _i0 < ${sizeOfFieldInSpace(field, space)}; _i0++) {
 @end def
 
 @# FIXME: Extend this def over multiple lines once my patch to Cheetah gets accepted (and we bump the required version number)
-@def loopOverFieldInSpaceWithVectorsAndInnerContent($field, $space, $vectors, $innerLoopCode, $indexOverrides = None, $vectorOverrides = None, $loopingOrder = _ScriptElement.LoopingOrder.MemoryOrder, $postDimensionLoopClosingCode = None, vectorsNotNeedingDefines = None)
+@def loopOverFieldInSpaceWithVectorsAndInnerContent($field, $space, $vectors, $innerLoopCode, $indexOverrides = None, $vectorOverrides = None, $loopingOrder = _ScriptElement.LoopingOrder.MemoryOrder, $preDimensionLoopOpeningCode = None, $postDimensionLoopClosingCode = None, vectorsNotNeedingDefines = None)
 @*doc:
 Insert code to loop over a fields points making available the given vectors
 Note that this code asserts that the field that will be iterated over is at
@@ -232,6 +232,12 @@ Optional arguments:
     to be performed in strictly ascending order instead of starting at 0, working up to the maximum value,
     and then doing the negative values in increasing order.
   
+  - `preDimensionLoopOpeningCode`: a dictionary containing code to be put in the loop structure before
+    the loop for a given dimension has been opened. For example, if you want to insert code before the
+    ``x`` dimension, you would pass the following for `postDimensionLoopOpeningCode`::
+    
+      { 'x': lotsAndLotsOfPreLoopCode }
+  
   - `postDimensionLoopClosingCode`: a dictionary containing code to be put in the loop structure after
     the loop for a given dimension has been closed. For example, if you want to insert code after the
     ``x`` dimension, you would pass the following for `postDimensionLoopClosingCode`::
@@ -247,6 +253,7 @@ Optional arguments:
   @#
   @set indexOverrides = indexOverrides or {}
   @set vectorOverrides = vectorOverrides or []
+  @set preDimensionLoopOpeningCode = preDimensionLoopOpeningCode or {}
   @set postDimensionLoopClosingCode = postDimensionLoopClosingCode or {}
   @set vectorsNotNeedingDefines = vectorsNotNeedingDefines or set()
   @#
@@ -340,6 +347,9 @@ ${dimension.inSpace(space).createCoordinateVariableForSinglePointSample}@slurp
   @set $lastLoopDimension = None
   @for $dimension in $orderedDimensionsForFieldInSpace(field, space)
     @#
+    @if $dimension.name in $preDimensionLoopOpeningCode
+${preDimensionLoopOpeningCode[$dimension.name], extraIndent=$indentLevel}@slurp
+    @end if
     @if not $indexOverrides.has_key($dimension.name)
       @# If there isn't an indexOverride for this dimension, then open a loop
       @set $lastLoopDimension = $dimension
@@ -350,7 +360,7 @@ ${dimension.inSpace(space).openLoop(loopingOrder=loopingOrder), extraIndent=inde
 ${prologueForOverriddenDimensionInFieldInSpaceWithVectors($dimension, $field, $space, $vectors, $indexOverrides), extraIndent=$indentLevel}@slurp
     @end if
     @#
-  @end for $dimension in $field.dimensions
+  @end for
 
 @set $result = $setExplicitIndexPointersForVectorsWithFieldAndSpace($vectorsRequiringExplictIndexPointers, $field, $space, $indexOverrides)
 @# Don't bother writing it out unless it contains more than the comment line
@@ -550,7 +560,7 @@ _${vector.id}_index_pointer += $field.localPointsInDimensionsAfterDimensionInSpa
 @#doc: Evaluate the computed vectors in an appropriate order taking into account dependencies
   @#
   @for vector in self._computedVectorOrderingForVectors(vectors)
-_${vector.id}_evaluate();
+${vector.functions['evaluate'].call()}
   @end for
   @#
 @end def

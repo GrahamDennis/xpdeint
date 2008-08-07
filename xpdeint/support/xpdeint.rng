@@ -426,6 +426,9 @@
     </attribute>
     <attribute name="algorithm"/>
     <attribute name="propagation_dimension"/>
+    <optional>
+      <attribute name="iterations"/>
+    </optional>
     <oneOrMore>
       <choice>
         <element name="integration_vectors">

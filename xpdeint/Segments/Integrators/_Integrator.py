@@ -32,6 +32,7 @@ class _Integrator (_Segment):
     self.intraStepOperatorContainers = []
     self.stepEndOperatorContainers = []
     self.computedVectors = set()
+    self._children = []
     
     functionNamePrefix = '_' + self.id
     
@@ -54,7 +55,7 @@ class _Integrator (_Segment):
   @property
   def children(self):
     result = []
-    for array in [self.stepStartOperatorContainers, self.intraStepOperatorContainers, self.stepEndOperatorContainers, self.computedVectors]:
+    for array in [self.stepStartOperatorContainers, self.intraStepOperatorContainers, self.stepEndOperatorContainers, self.computedVectors, self._children]:
       result.extend(array)
     return result
   

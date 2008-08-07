@@ -9,7 +9,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 @*
   Description of template
 *@
-@def description: vector $vectorName
+@def description: vector $name
 
 @*
   Defines needed at the start of the simulation
@@ -19,7 +19,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   @super
   @#
 // vector $name defines
-#define _${field.name}_${name}_ncomponents $nComponents
+#define _${id}_ncomponents $nComponents
   @#
 @end def
 
@@ -31,70 +31,32 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   @super
   @#
 // vector $name globals
-$type* _${field.name}_${name} = NULL;
-$type* _active_${field.name}_${name} = NULL;
+$type* _${id} = NULL;
+$type* _active_${id} = NULL;
   @if $needsFourierTransforms
 
-unsigned long _${field.name}_${name}_space;
+unsigned long _${id}_space;
   @end if
   @#
-@end def
-
-@*
-  Function prototypes
-*@
-@def functionPrototypes
-  @#
-  @super
-  @#
-  @if not ($needsInitialisation or $needsFourierTransforms)
-    @return
-  @end if
-// vector $name function prototypes
-  @if $needsInitialisation
-void _${field.name}_${name}_initialise();
-  @end if
-  @#
-  @if $needsFourierTransforms
-void _${field.name}_${name}_go_space(unsigned long _newSpace);
-  @end if
-  @#
-@end def
-
-@*
-  Function implementations
-*@
-@def functionImplementations
-  @#
-  @super
-  @#
-  @if not ($needsInitialisation or $needsFourierTransforms)
-    @return
-  @end if
-// vector $name function implementations
-  @if $needsInitialisation
-    @# Write the vector initialiser
-$initialisationFunctionImplementation@slurp
-  @end if
-  @if $needsFourierTransforms
-    @# If we need fourier transforms, then write the FFT go_space routine
-
-${features['FourierTransform'].goSpaceFunctionImplementationForVector(self)}@slurp
-  @end if $needsFourierTransforms
 @end def
 
 @*
   Write the vector initialisation routine
 *@
-@def initialisationFunctionImplementation
-void _${field.name}_${name}_initialise()
-{
-  ${initialiser.initialiseVector, autoIndent=True}@slurp
+@def initialiseFunctionContents($function)
+  @#
+${initialiser.initialiseVector}@slurp
   @if $needsFourierTransforms
-  
-  _${field.name}_${name}_space = $initialSpace;
+
+_${id}_space = $initialSpace;
   @end if
-}
+  @#
+@end def
+
+@def goSpaceFunctionContents($function)
+  @#
+${features['FourierTransform'].goSpaceFunctionContentsForVector(function, self)}@slurp
+  @#
 @end def
 
 @*
@@ -104,11 +66,11 @@ void _${field.name}_${name}_initialise()
   @#
   @if $needsInitialisation
     @for aliasName in $aliases
-_active_${field.name}_${name} = $aliasName;
-_${field.name}_${name}_initialise();
+_active_${id} = $aliasName;
+${functions['initialise'].call()}
     @end for
-_active_${field.name}_${name} = _${field.name}_${name};
-_${field.name}_${name}_initialise();
+_active_${id} = _${id};
+${functions['initialise'].call()}
   @end if
   @#
 @end def
@@ -118,8 +80,8 @@ _${field.name}_${name}_initialise();
 *@
 @def allocate
 
-_${field.name}_${name} = ($type*) xmds_malloc(sizeof($type) * ${allocSizeOfVector(self)});
-_active_${field.name}_${name} = _${field.name}_${name};
+_${id} = ($type*) xmds_malloc(sizeof($type) * ${allocSizeOfVector(self)});
+_active_${id} = _${id};
   @for aliasName in $aliases
 $aliasName = ($type*) xmds_malloc(sizeof($type) * ${allocSizeOfVector(self)}); // alias for _${id}
   @end for
@@ -127,8 +89,8 @@ $aliasName = ($type*) xmds_malloc(sizeof($type) * ${allocSizeOfVector(self)}); /
 
 @def free
 
-xmds_free(_${field.name}_${name});
-_active_${field.name}_${name} = _${field.name}_${name} = NULL;
+xmds_free(_${id});
+_active_${id} = _${id} = NULL;
   @for aliasName in $aliases
 xmds_free($aliasName); // alias for _${id}
 ${aliasName} = NULL;

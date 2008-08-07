@@ -45,7 +45,7 @@ d${componentName}_d${propagationDimension} = 0.0;
 #define d${propagationDimension} _step
 
 // ************* Propagation code ***************
-${propagationCode}@slurp
+${insertUserCodeFromEntity($propagationCodeEntity)}@slurp
 // **********************************************
 
 #undef d${propagationDimension}
@@ -77,7 +77,8 @@ $operatorComponentName * _step;
     @silent postDimensionLoopClosingCode[$deltaAField.dimensions[0].name] = functionCall + '\n'
   @end if
   @#
-${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $operatorSpace, $setOfVectorsToLoopOver,
-                                                 $insideEvaluateOperatorLoops, postDimensionLoopClosingCode=$postDimensionLoopClosingCode)}@slurp
+${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $operatorSpace, $setOfVectorsToLoopOver, $insideEvaluateOperatorLoops,
+                                                 postDimensionLoopClosingCode=$postDimensionLoopClosingCode,
+                                                 loopingOrder=$loopingOrder)}@slurp
   @#
 @end def

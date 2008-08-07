@@ -204,10 +204,12 @@ def main(argv=None):
     
     # Loop over a copy because we may create templates during iteration
     for template in globalNameSpace['scriptElements'][:]:
-      template.implementationsForFunctionName('bindNamedVectors')
+      if not template._haveBeenRemoved:
+        template.implementationsForFunctionName('bindNamedVectors')
     
     for template in globalNameSpace['scriptElements'][:]:
-      template.implementationsForFunctionName('preflight')
+      if not template._haveBeenRemoved:
+        template.implementationsForFunctionName('preflight')
     
     # Preflight is done
     

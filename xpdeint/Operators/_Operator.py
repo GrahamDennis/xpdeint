@@ -42,6 +42,7 @@ class _Operator (ScriptElement):
     self._field = None
     self._children = []
     self._loopingField = None
+    self.loopingOrder = ScriptElement.LoopingOrder.MemoryOrder
     
     parent = self.parent
     parent.addOperator(self)
@@ -143,6 +144,12 @@ class _Operator (ScriptElement):
   def bindNamedVectors(self):
     super(_Operator, self).bindNamedVectors()
     
+    if self.resultVector:
+      self.resultVector.spacesNeeded.add(self.operatorSpace)
+  
+  def preflight(self):
+    super(_Operator, self).preflight()
+    
     if self.dependenciesEntity:
       for dependency in self.dependencies:
         if self.vectorsMustBeInSubsetsOfIntegrationField and not dependency.field.isSubsetOfField(self.field):
@@ -152,7 +159,5 @@ class _Operator (ScriptElement):
                   "The vector causing this problem is '%s'." 
                   % (self.field.name, dependency.name))
     
-    if self.resultVector:
-      self.resultVector.spacesNeeded.add(self.operatorSpace)
-  
+    
   

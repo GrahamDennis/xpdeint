@@ -27,7 +27,7 @@ const double _inverse_sqrt_2pi = 1.0 / sqrt(2.0 * M_PI);
 // destroy plans
 @end def
 
-@def goSpaceFunctionImplementationForVector($vector)
+@def goSpaceFunctionContentsForVector($function, $vector)
 @*doc:
 Returns the ``go_space`` function implementation for vector `vector`.
 
@@ -35,51 +35,47 @@ This writes the function that does the fourier transforming of a specific vector
 to and from arbitrary combinations of fourier-space and normal-space.
 *@
   @#
-void _${vector.id}_go_space(unsigned long _newSpace)
-{
-  // This field may not have all of the dimensions in the geometry, so
-  // find the space variable for the dimensions we care about
-  _newSpace &= _${vector.field.name}_full_kspace_mask;
-  if (_${vector.id}_space == _newSpace)
-    return;
-  
-  double _c = 1.0;
+// This field may not have all of the dimensions in the geometry, so
+// find the space variable for the dimensions we care about
+_newSpace &= _${vector.field.name}_full_kspace_mask;
+if (_${vector.id}_space == _newSpace)
+  return;
+
+double _c = 1.0;
 
   @# First we do the cases for the full forward / backward transforms. This is easy.
-  if ( _${vector.id}_space == 0 && _newSpace == _${vector.field.name}_full_kspace_mask ) {
-    // Do a full forward transform
-    ${fullFFTForVector($vector, 'forward'), autoIndent=True}@slurp
+if ( _${vector.id}_space == 0 && _newSpace == _${vector.field.name}_full_kspace_mask ) {
+  // Do a full forward transform
+  ${fullFFTForVector($vector, 'forward'), autoIndent=True}@slurp
   @for $dimension in $vector.field.dimensions
     @if dimension.transform != self
       @continue
     @end if
-    _c *= _${vector.field.name}_d${dimension.name} * _inverse_sqrt_2pi;
+  _c *= _${vector.field.name}_d${dimension.name} * _inverse_sqrt_2pi;
   @end for
-  } 
-  else if ( _${vector.id}_space == _${vector.field.name}_full_kspace_mask && _newSpace == 0) {
-    // Do a full reverse transform
-    ${fullFFTForVector($vector, 'backward'), autoIndent=True}@slurp
+} 
+else if ( _${vector.id}_space == _${vector.field.name}_full_kspace_mask && _newSpace == 0) {
+  // Do a full reverse transform
+  ${fullFFTForVector($vector, 'backward'), autoIndent=True}@slurp
   @for $dimension in $vector.field.dimensions
     @if $dimension.transform != self
       @continue
     @end if
-    _c *= _${vector.field.name}_dk${dimension.name} * _inverse_sqrt_2pi;
+  _c *= _${vector.field.name}_dk${dimension.name} * _inverse_sqrt_2pi;
   @end for
-  }
+}
   @if len($vector.field.dimensions) > 1
     @# 
     @# This is the awful case of mixed transforms. It has been put in a separate function
     @# so that it can be overridden in the deterministic MPI case
     @#
-  else {
-    ${mixedTransformsForVector($vector), autoIndent=True}@slurp
-  }
-  @end if
-  _${vector.id}_space = _newSpace;
-
-  ${loopOverVectorsWithInnerContentTemplate([$vector], '_active_${vector.id}[$index] *= _c;'), autoIndent=True}@slurp
+else {
+  ${mixedTransformsForVector($vector), autoIndent=True}@slurp
 }
+  @end if
+_${vector.id}_space = _newSpace;
 
+${loopOverVectorsWithInnerContentTemplate([$vector], '_active_${vector.id}[$index] *= _c;')}@slurp
   @#
 @end def
 

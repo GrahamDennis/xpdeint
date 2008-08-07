@@ -231,6 +231,7 @@ CrossPropagationOperatorContents =
     attribute kind { "cross_propagation" }
     , attribute algorithm { text }
     , attribute propagation_dimension { text }
+    , attribute iterations { text}?
     , ( 
         element integration_vectors { text }
         | Dependencies
