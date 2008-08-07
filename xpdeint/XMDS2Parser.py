@@ -1068,15 +1068,19 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       integratorTemplateClass = Integrators.ARK45.ARK45
     elif algorithmString == 'ARK89':
       integratorTemplateClass = Integrators.ARK89.ARK89
-    elif algorithmString == 'SI':
-      integratorTemplateClass = Integrators.SI.SI
+    elif algorithmString in ['SI','SIC']:
+      if algorithmString == 'SI':
+        integratorTemplateClass = Integrators.SI.SI
+      else:
+        integratorTemplateClass = Integrators.SIC.SIC
+      
       if integrateElement.hasAttribute('iterations'):
         algorithmSpecificOptionsDict['iterations'] = RegularExpressionStrings.integerInString(integrateElement.getAttribute('iterations'))
         if algorithmSpecificOptionsDict['iterations']<1:
           raise ParserException(integrateElement, "Iterations element must be 1 or greater (default 3).")
     else:
       raise ParserException(integrateElement, "Unknown algorithm '%(algorithmString)s'. "
-                                              "Options are 'SI', 'RK4', 'RK9', 'ARK45' or 'ARK89'." % locals())
+                                              "Options are 'SI', 'SIC', 'RK4', 'RK9', 'ARK45' or 'ARK89'." % locals())
     
     integratorTemplate = integratorTemplateClass(**self.argumentsToTemplateConstructors)
     self.applyAttributeDictionaryToObject(algorithmSpecificOptionsDict, integratorTemplate)      

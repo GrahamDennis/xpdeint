@@ -13,6 +13,8 @@ from xpdeint.Vectors.VectorElement import VectorElement
 
 from xpdeint.Geometry.FieldElement import FieldElement
 
+from xpdeint.Function import Function
+
 class _ComputedVector (VectorElement):
   isComputed = True
   
@@ -25,6 +27,14 @@ class _ComputedVector (VectorElement):
     self._integratingComponents = True
     self._evaluationSpace = 0
     self.evaluationCodeEntity = None
+    
+    evaluateFunctionName = ''.join(['_', self.id, '_evaluate'])
+    evaluateFunction = Function(name = evaluateFunctionName,
+                               args = [],
+                               implementation = self.evaluateFunctionContents)
+    self.functions['evaluate'] = evaluateFunction
+    
+    
   
   @property
   def noiseField(self):

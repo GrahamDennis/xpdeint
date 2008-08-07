@@ -1,0 +1,86 @@
+@*
+SICDeltaAOperator.tmpl
+
+delta-a operator for the left/right propagation in the SIC integrator.
+
+Created by Graham Dennis on 2008-08-07.
+Copyright (c) 2008 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.Operators._SICDeltaAOperator
+
+@def description: Left/Right Delta A propagation operator for field $field.name
+
+@def insideEvaluateOperatorLoops
+  @#
+  @# The Operator class will have defined for us all of the dVariableName_dPropagationDimension variables.
+  @# Note that we assume that all of the integration vectors have an operotor component defined for them.
+  
+  @set $crossDim = $loopingField.dimensionWithName($crossPropagationDimension)
+  @if $crossPropagationDirection == '+'
+if (${crossDim.inSpace($operatorSpace).loopIndex} == 0) {
+  @else
+if (${crossDim.inSpace($operatorSpace).loopIndex} == ${crossDim.globalLattice} - 1) {
+  @end if
+  // ********** Boundary condition code ***********
+  ${insertUserCodeFromEntity($boundaryConditionCodeEntity), autoIndent=True}@slurp
+  // **********************************************
+  
+  @for crossIntegrationVector in $crossIntegrationVectors
+  for (long _cmp = 0; _cmp < _${crossIntegrationVector.id}_ncomponents; _cmp++)
+    _old_${crossIntegrationVector.id}[_cmp] = _active_${crossIntegrationVector.id}[_${crossIntegrationVector.id}_index_pointer + _cmp];
+  @end for
+}
+
+for (long _iter = 0; _iter < ${iterations}; _iter++) {
+  
+  #define d${propagationDimension} _step
+  
+  // ************* Propagation code ***************
+  ${insertUserCodeFromEntity($propagationCodeEntity), autoIndent=True}@slurp
+  // **********************************************
+  
+  #undef d${propagationDimension}
+  
+  // *********** Cross-propagation code ***********
+  ${insertUserCodeFromEntity($crossPropagationCodeEntity), autoIndent=True}@slurp
+  // **********************************************
+  
+  // Update propagation vectors (note that _step is actually half a step)
+  @for integrationVector in $integrationVectors
+    @for componentNumber, componentName in enumerate(integrationVector.components)
+  ${componentName} = _${integrator.name}_oldcopy_${integrationVector.id}[_${integrationVector.id}_index_pointer + ${componentNumber}] + d${componentName}_d${propagationDimension} * _step;
+    @end for
+  @end for
+  
+  // Update cross-propagation vectors
+  @for crossIntegrationVector in $crossIntegrationVectors
+    @for componentNumber, componentName in enumerate($crossIntegrationVector.components)
+  ${componentName} = _old_${crossIntegrationVector.id}[${componentNumber}] + d${componentName}_d${crossPropagationDimension} * (${crossPropagationDirection}0.5*d${crossPropagationDimension});
+    @end for
+  @end for
+}
+
+// Update the 'old' copy for the next half-step
+@for crossIntegrationVector in $crossIntegrationVectors
+  @for componentNumber, componentName in enumerate($crossIntegrationVector.components)
+_old_${crossIntegrationVector.id}[${componentNumber}] += d${componentName}_d${crossPropagationDimension} * (${crossPropagationDirection}d${crossPropagationDimension});
+  @end for
+@end for
+
+  @#
+@end def
+
+@def evaluateOperatorLoop($setOfVectorsToLoopOver)
+  @#
+  @#
+  @# We shouldn't have a deltaAField. It doesn't work with cross-propagation.
+  @assert not $deltaAField
+  @#
+  @for $crossIntegrationVector in $crossIntegrationVectors
+${crossIntegrationVector.type} _old_${crossIntegrationVector.id}[_${crossIntegrationVector.id}_ncomponents];
+  @end for
+
+${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $operatorSpace, $setOfVectorsToLoopOver, $insideEvaluateOperatorLoops,
+                                                 loopingOrder=$loopingOrder)}@slurp
+  @#
+@end def

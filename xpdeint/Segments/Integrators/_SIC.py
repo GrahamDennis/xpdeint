@@ -10,38 +10,107 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 from xpdeint.Segments.Integrators.FixedStep import FixedStep
 
 from xpdeint.Operators.CrossPropagationOperator import CrossPropagationOperator
+from xpdeint.Operators.OperatorContainer import OperatorContainer
+from xpdeint.Operators.SICDeltaAOperator import SICDeltaAOperator
 
 from xpdeint.ParserException import ParserException
+from xpdeint.Function import Function
 
 class _SIC (FixedStep):
   def __init__(self, *args, **KWs):
     FixedStep.__init__(self, *args, **KWs)
     
     self.operatorContainerToOverride = None
-    self.leftDeltaAOperator = None
-    self.rightDeltaAOperator = None
+    self.leftOperatorContainer = None
+    self.rightOperatorContainer = None
+    self.leftRightLoopingField = None
     
     functionNamePrefix = '_' + self.id
     
     self.functions['leftDeltaA'] = Function(name = functionNamePrefix + '_calculate_left_delta_a',
                                             args = [('double', '_step')], 
-                                            implementation = self.leftDeltaAFunctionBody)
-    self.functions['rightDeltaA'] = Function(name = functionNamePrefix + '_calculate_left_delta_a',
+                                            implementation = self.leftDeltaAFunctionBody,
+                                            predicate = lambda: bool(self.leftOperatorContainer))
+    self.functions['rightDeltaA'] = Function(name = functionNamePrefix + '_calculate_right_delta_a',
                                              args = [('double', '_step')], 
-                                             implementation = self.rightDeltaAFunctionBody)
+                                             implementation = self.rightDeltaAFunctionBody,
+                                             predicate = lambda: bool(self.rightOperatorContainer))
     
   
   def leftDeltaAFunctionBody(self, function):
-    return self.leftRightDeltaAFunctionBody(function, self.leftDeltaAOperator)
+    return self.leftRightDeltaAFunctionBody(function, self.leftOperatorContainer)
   
   def rightDeltaAFunctionBody(self, function):
-    return self.leftRightDeltaAFunctionBody(function, self.rightDeltaAOperator)
+    return self.leftRightDeltaAFunctionBody(function, self.rightOperatorContainer)
   
-  def leftRightDeltaAOperatorFromCrossPropagationOperator(self, crossOp):
-    pass
+  def leftRightOperatorContainerFromCrossPropagationOperator(self, crossOp):
+    # We can just extract the Delta-a operator from the cross-propagation integrator
+    # and then modify the inner code somewhat, and we're done.
+    # We may need to reorder the looping dimensions in order to get the cross-propagation dimension
+    # looped across last.... Is this safe, combined with integer-valued dimension stuff?
+    # How about we just assert that its current loopingField is the same as the operator field.
+    # Nope. It's in preflight() that the DeltaA operator reorders its dimensions... but we can make
+    # it not do that if loopingField has already been set. (and raise an exception)
+    direction = crossOp.propagationDirection
+    if direction == '+':
+      directionName = 'left'
+    else:
+      directionName = 'right'
+    
+    oldCrossDeltaAOperator = crossOp.crossPropagationIntegratorDeltaAOperator
+    normalDeltaAOperator = self.operatorContainerToOverride.deltaAOperator
+    
+    operatorContainer = OperatorContainer(field = self.operatorContainerToOverride.field,
+                                          parent = self,
+                                          name = directionName + '_container',
+                                          **self.argumentsToTemplateConstructors)
+    
+    leftRightDeltaAOperator = SICDeltaAOperator(parent = operatorContainer,
+                                                **self.argumentsToTemplateConstructors)
+    leftRightDeltaAOperator.crossPropagationDimension           = crossOp.propagationDimension
+    leftRightDeltaAOperator.crossPropagationDirection           = direction
+    leftRightDeltaAOperator.integrationVectorsEntity            = normalDeltaAOperator.integrationVectorsEntity
+    leftRightDeltaAOperator.dependenciesEntity                  = normalDeltaAOperator.dependenciesEntity
+    leftRightDeltaAOperator.propagationCodeEntity               = normalDeltaAOperator.propagationCodeEntity
+    
+    leftRightDeltaAOperator.boundaryConditionDependenciesEntity = crossOp.boundaryConditionDependenciesEntity
+    leftRightDeltaAOperator.boundaryConditionCodeEntity         = crossOp.boundaryConditionCodeEntity
+    
+    leftRightDeltaAOperator.crossIntegrationVectorsEntity       = crossOp.integrationVectorsEntity
+    leftRightDeltaAOperator.crossPropagationDependenciesEntity  = oldCrossDeltaAOperator.dependenciesEntity
+    leftRightDeltaAOperator.crossPropagationCodeEntity          = crossOp.operatorDefinitionCodeEntity
+    
+    leftRightDeltaAOperator.iterations = self.iterations
+    
+    # Now we need to work out if we need to create a new field to be the looping field
+    crossPropagationDimensionName = crossOp.propagationDimension
+    if not self.leftRightLoopingField:
+      if leftRightDeltaAOperator.field.dimensions[-1].name != crossPropagationDimensionName:
+        # We need to create a new field with reordered dimensions
+        loopingFieldName = ''.join(['_', normalDeltaAOperator.id, '_leftright_looping_field'])
+      
+        loopingField = FieldElement(name = loopingFieldName,
+                                    **self.argumentsToTemplateConstructors)
+      
+        loopingField.dimensions = [dim.copy(parent=loopingField) for dim in newFieldDimensions]
+        crossDim = loopingField.dimensionWithName(crossPropagationDimensionName)
+        loopingField.dimensions.remove(crossDim)
+        loopingField.dimensions.append(crossDim)
+        self.leftRightLoopingField = loopingField
+      else:
+        # We set this to prevent the delta-a operator itself trying to change its looping field.
+        self.leftRightLoopingField = leftRightDeltaAOperator.field
+    leftRightDeltaAOperator.loopingField = self.leftRightLoopingField
+    
+    self._children.append(operatorContainer)
+    return operatorContainer
   
-  def preflight(self):
-    super(FixedStep, self).preflight()
+  def bindNamedVectors(self):
+    super(_SIC, self).bindNamedVectors()
+    
+    # This needs to go in bindNamedVectors not preflight because the CrossPropagationOperator
+    # fiddles with the mapping of vector names to vectors for its child elements, and it will be annoying
+    # to undo, so we best clear out all of these objects before that happens.
     
     # Now we need to drill down into our operator container objects, locate the cross-propagators (there should be some)
     # and then destroy them and copy their code into our left- and right-propagating delta-a objects. But destroying a
@@ -55,23 +124,36 @@ class _SIC (FixedStep):
       for crossOp in crossOperators:
         if not propagationDimension:
           propagationDimension = crossOp.propagationDimension
-        if crossOp.propagationDirection == '+':
-          # Propagating from left
-          if self.leftDeltaAOperator:
-            raise ParserException(self.xmlElement, "This integrator has two cross-propagators with left boundary conditions.\n"
-                                                   "The SIC integrator can only have two cross-propagators, one in each direction of a single dimension.")
-          self.leftDeltaAOperator = self.leftRightDeltaAOperatorFromCrossPropagationOperator(crossOp)
-        else:
-          # Propagating from right
-          if self.rightDeltaAOperator:
-            raise ParserException(self.xmlElement, "This integrator has two cross-propagators with right boundary conditions.\n"
-                                                   "The SIC integrator can only have two cross-propagators, one in each direction of a single dimension.")
-          self.rightDeltaAOperator = self.leftRightDeltaAOperatorFromCrossPropagationOperator(crossOp)
-        
         if self.operatorContainerToOverride and not oc == self.operatorContainerToOverride:
           raise ParserException(self.xmlElement, "This integrator can only have at most two cross-propagators.\n"
                                                  "They must be in opposite directions, and be in the same <operators> block.")
         self.operatorContainerToOverride = oc
-  
-  
+        if crossOp.propagationDirection == '+':
+          # Propagating from left
+          if self.leftOperatorContainer:
+            raise ParserException(self.xmlElement, "This integrator has two cross-propagators with left boundary conditions.\n"
+                                                   "The SIC integrator can only have two cross-propagators, one in each direction of a single dimension.")
+          self.leftOperatorContainer = self.leftRightOperatorContainerFromCrossPropagationOperator(crossOp)
+        else:
+          # Propagating from right
+          if self.rightOperatorContainer:
+            raise ParserException(self.xmlElement, "This integrator has two cross-propagators with right boundary conditions.\n"
+                                                   "The SIC integrator can only have two cross-propagators, one in each direction of a single dimension.")
+          self.rightOperatorContainer = self.leftRightOperatorContainerFromCrossPropagationOperator(crossOp)
+        
+        # Kill the CrossPropagationOperator and its children
+        oc.preDeltaAOperators.remove(crossOp)
+        crossOp.remove()
+    
+  def preflight(self):
+    super(_SIC, self).preflight()
+    
+    if not self.leftOperatorContainer and not self.rightOperatorContainer:
+      raise ParserException(self.xmlElement, "It doesn't make sense to use the 'SIC' integrator without any cross-propagation operators. Use 'SI' instead.")
+    
+    for oc in [self.leftOperatorContainer, self.rightOperatorContainer]:
+      if not oc:
+        continue
+      self.operatorContainerToOverride.deltaAOperator.dependencies.update(oc.deltaAOperator.crossIntegrationVectors)
+
 

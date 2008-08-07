@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="cross_propagation_sic.xsil" expected="cross_propagation_sic_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+  </testing>
+  <name>cross_propagation_sic</name>
+  <author>Graham Dennis</author>
+  <description>
+    Sine cross-propagation validity tests, using the SIC integrator.
+    
+    The 'u' variable checks for errors caused by poorly interpolating
+    dependencies. The 'v' variable checks for errors just in the
+    cross-propagation algorithm.
+  </description>
+  
+  <features>
+    <benchmark />
+    <bing />
+    <fftw version="none" />
+    <!-- That's right, this script breaks the shackles with FFTW! -->
+  </features>
+  
+  <geometry>
+    <propagation_dimension> z </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="t" lattice="128"  domain="(0, 10)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="main" type="complex">
+    <components>
+      foo
+    </components>
+    <initialisation>
+      <![CDATA[
+      foo = 0.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <vector name="constants" type="double">
+    <components>cosine</components>
+    <initialisation>
+      <![CDATA[
+        cosine = cos(t);
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <vector name="zerodConstants" type="double">
+    <components>bar</components>
+    <initialisation>
+      <![CDATA[
+        bar = M_PI;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <vector name="cross" type="complex">
+    <components>u v</components>
+    <initialisation>
+      <![CDATA[
+        u = 0.0;
+        v = 1.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="SIC" interval="1" steps="2">
+      <samples>1</samples>
+      <operators>
+        <operator kind="cross_propagation" algorithm="SI" propagation_dimension="t">
+          <integration_vectors>cross</integration_vectors>
+          <dependencies>constants zerodConstants</dependencies>
+          <boundary_condition kind="left">
+            <![CDATA[
+              // These are shifted back half a step because the interpretation
+              // of the boundary conditions for SIC is slightly different for normal
+              // cross-propagators. For normal cross-propagators, they start at the left edge
+              // for SIC, they start half a step to the left (or right).
+              u = sin(-0.5*_dt);
+              v = pcomplex(1.0, -0.5*_dt);
+            ]]>
+          </boundary_condition>
+          
+          <![CDATA[
+            du_dt = cosine;
+            dv_dt = i*v;
+          ]]>
+        </operator>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+        dfoo_dz = 0.0;
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  
+  <output format="binary">
+    <group>
+      <sampling initial_sample="no">
+        <dimension name="t" />
+        <moments>error_u error_v</moments>
+        <dependencies>cross</dependencies>
+        <![CDATA[
+          error_u = mod(u - sin(t));
+          error_v = mod(v - pcomplex(1.0, t));
+        ]]>
+      </sampling>
+    </group>
+  </output>
+
+<info>
+Script compiled with xpdeint version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+See http://www.xmds.org for more information.
+</info>
+
+<XSIL Name="moment_group_1">
+  <Param Name="n_independent">1</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>3</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t error_u error_v 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>128</Dim>
+    <Dim>3</Dim>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
+cross_propagation_sic_expected_mg0.dat
+    </Stream>
+  </Array>
+</XSIL>
+</simulation>

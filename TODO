@@ -79,7 +79,7 @@
 
 * Add support for multiple transforms. Here we will want a transform multiplexer to combine the results of the (separable) transforms. The kinds of transforms
   that should be considered should include:
-  - Discrete Cosine / Sine Transforms (for even/odd symmetric boundary conditions)
+  - Discrete Cosine / Sine Transforms (for even/odd symmetric boundary conditions): Done
   - General matrix transforms. For example, Hankel transforms (require non-uniform dimensions) 
     and hermite-gaussian basis decomposition (may require non-square transforms).
 
@@ -103,7 +103,5 @@
   - Now works fine with limited features, fftw without wisdom, and ASCII output. 
   - kubo is MUCH faster compiled on MSVC++ than cygwin GCC
   - diffusion_win works fine on windows.
-  - Cygwin users will now probably want to pass the -DPOSIX switch when compiling code. Why
-    doesn't cygwin define this by default? Could a *nix and Mac user check I didn't do this wrong?
   - Next priorities: getting fftw3 working and porting the benchmark code...
   - Investigate MinGW GCC 4.3 performance versus Visual Studio performance.

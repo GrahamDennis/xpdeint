@@ -30,8 +30,8 @@ class _DeltaAOperator (Operator):
     self.integrationVectors = set()
     self.deltaAField = None
     self.deltaAVectorMap = {}
-    self._propagationCode = None
     
+    self.propagationCodeEntity = None
   
   @property
   def defaultOperatorSpace(self):
@@ -42,25 +42,11 @@ class _DeltaAOperator (Operator):
     # Our parent is an OperatorContainer, and its parent is the Integrator
     return self.parent.parent
   
-  def _getPropagationCode(self):
-    if self._propagationCode:
-      return self._propagationCode
-    else:
-      return self.insertUserCodeFromEntity(self.propagationCodeEntity)
-  
-  def _setPropagationCode(self, value):
-    self._propagationCode = value
-  
-  # Create a propagationCode variable so that the propagation code can be overridden
-  propagationCode = property(_getPropagationCode, _setPropagationCode)
-  del _getPropagationCode, _setPropagationCode
-  
-  
   def bindNamedVectors(self):
     super(_DeltaAOperator, self).bindNamedVectors()
     
     if self.integrationVectorsEntity:
-      self.integrationVectors = self.vectorsFromEntity(self.integrationVectorsEntity)
+      self.integrationVectors.update(self.vectorsFromEntity(self.integrationVectorsEntity))
       
       for integrationVector in self.integrationVectors:
         if not integrationVector.field == self.field:

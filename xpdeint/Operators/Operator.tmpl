@@ -51,7 +51,7 @@ ${transformVectorsToSpace($dependencies, $operatorSpace)}@slurp
 
   @set $vectorsToLoopOver = $dependencies.copy()
   @silent $vectorsToLoopOver.add($operatorVector)
-${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $operatorSpace, $vectorsToLoopOver, $insideCalculateOperatorFieldLoops)}@slurp
+${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $operatorSpace, $vectorsToLoopOver, $insideCalculateOperatorFieldLoops, loopingOrder=$loopingOrder)}@slurp
   @#
 @end def
 
@@ -118,7 +118,7 @@ ${loopOverVectorsInSpaceWithInnerContent($setOfVectorsToLoopOver, $operatorSpace
     @if $resultVector
       @silent $setOfVectorsToLoopOver.add($resultVector)
     @end if
-${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $operatorSpace, $setOfVectorsToLoopOver, $insideEvaluateOperatorLoops)}@slurp
+${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $operatorSpace, $setOfVectorsToLoopOver, $insideEvaluateOperatorLoops, loopingOrder=$loopingOrder)}@slurp
   @end if
   @#
 @end def

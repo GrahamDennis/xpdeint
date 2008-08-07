@@ -334,7 +334,7 @@ _${vector.id}_plan_map.clear(); // This doesn't actually destroy the fftw_plan o
 @end def
 
 
-@def goSpaceFunctionImplementationForVector($vector)
+@def goSpaceFunctionContentsForVector($function, $vector)
 @*doc:
 Returns the ``go_space`` function implementation for vector `vector`.
 
@@ -342,44 +342,40 @@ This writes the function that does the fourier transforming of a specific vector
 to and from arbitrary combinations of fourier-space and normal-space.
 *@
   @#
-void _${vector.id}_go_space(unsigned long _newSpace)
-{
-  // This field may not have all of the dimensions in the geometry, so
-  // find the space variable for the dimensions we care about
-  _newSpace &= _${vector.field.name}_full_kspace_mask;
-  if (_${vector.id}_space == _newSpace)
-    return;
-  
-  double _c = 1.0;
-  
-  if (_${vector.id}_plan_map.count(_spaces_pair(_${vector.id}_space, _newSpace)) == 0) {
-    _LOG(_ERROR_LOG_LEVEL, "Error: We should have plans for every required transform, but it seems we don't for this transform.\n"
-                           "       The transform is for the vector '${vector.id}' from space %li to space %li\n.",
-                           _${vector.id}_space, _newSpace);
-  }
-  
-  _space_transform& _transform = _${vector.id}_plan_map[_spaces_pair(_${vector.id}_space, _newSpace)];
-  if (_transform._plans.size() == 0) {
-    _LOG(_ERROR_LOG_LEVEL, "Error: It looks like we tried to create plans for this transform, but failed.\n"
-                           "       The transform was for the vector '${vector.id}' from space %li to space %li\n.",
-                           _${vector.id}_space, _newSpace);
-  }
-  
-  
-  for (vector<_plan_pair>::iterator _it = _transform._plans.begin(); _it != _transform._plans.end(); ++_it) {
-    switch(_it->second) {
-      ${executePlanForVector(vector), autoIndent=True}@slurp
-      default:
-        _LOG(_ERROR_LOG_LEVEL, "Unknown plan type: %i\n", _it->second);
-    }
-  }
-  _c = _transform._c;
-  
-  _${vector.id}_space = _newSpace;
+// This field may not have all of the dimensions in the geometry, so
+// find the space variable for the dimensions we care about
+_newSpace &= _${vector.field.name}_full_kspace_mask;
+if (_${vector.id}_space == _newSpace)
+  return;
 
-  ${loopOverVectorsWithInnerContentTemplate([$vector], '_active_${vector.id}[$index] *= _c;'), autoIndent=True}@slurp
+double _c = 1.0;
+
+if (_${vector.id}_plan_map.count(_spaces_pair(_${vector.id}_space, _newSpace)) == 0) {
+  _LOG(_ERROR_LOG_LEVEL, "Error: We should have plans for every required transform, but it seems we don't for this transform.\n"
+                         "       The transform is for the vector '${vector.id}' from space %li to space %li\n.",
+                         _${vector.id}_space, _newSpace);
 }
 
+_space_transform& _transform = _${vector.id}_plan_map[_spaces_pair(_${vector.id}_space, _newSpace)];
+if (_transform._plans.size() == 0) {
+  _LOG(_ERROR_LOG_LEVEL, "Error: It looks like we tried to create plans for this transform, but failed.\n"
+                         "       The transform was for the vector '${vector.id}' from space %li to space %li\n.",
+                         _${vector.id}_space, _newSpace);
+}
+
+
+for (vector<_plan_pair>::iterator _it = _transform._plans.begin(); _it != _transform._plans.end(); ++_it) {
+  switch(_it->second) {
+    ${executePlanForVector(vector), autoIndent=True}@slurp
+    default:
+      _LOG(_ERROR_LOG_LEVEL, "Unknown plan type: %i\n", _it->second);
+  }
+}
+_c = _transform._c;
+
+_${vector.id}_space = _newSpace;
+
+${loopOverVectorsWithInnerContentTemplate([$vector], '_active_${vector.id}[$index] *= _c;')}@slurp
   @#
 @end def
 

@@ -87,7 +87,7 @@ class _DimensionRepresentation(ScriptElement):
   
   @property
   def loopIndex(self):
-    return '_idx_' + self.name
+    return '_index_' + self.name
   
   
 

@@ -23,7 +23,7 @@ ${functions['nonconstantIPFields'].call(arguments, _exponent = 1, _arrayIndex = 
 
 ${functions['ipEvolve'].call(arguments, _exponent = +1, parentFunction=function)}
 
-${propagationDimension} += _step/2.0;
+${propagationDimension} += 0.5*_step;
 
 ${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
 
@@ -40,7 +40,7 @@ ${interpolateDependencies}@slurp
 
 for (int _iteration = 0; _iteration < ${iterations}; _iteration++) {
   if (_iteration < ${iterations} - 1) {
-    ${functions['deltaA'].call(arguments, _step = '_step/2.0', parentFunction=function), autoIndent=True}
+    ${functions['deltaA'].call(arguments, _step = '0.5*_step', parentFunction=function), autoIndent=True}
   } else {
     ${functions['deltaA'].call(arguments, parentFunction=function), autoIndent=True}
   }
@@ -55,7 +55,7 @@ _${vector.id}[$index] += _oldCopy_${vector.id}[$index];
 
 ${functions['ipEvolve'].call(arguments, _exponent = +1, parentFunction=function)}
 
-${propagationDimension} += _step/2.0;
+${propagationDimension} += 0.5*_step;
 
   @#
 @end def

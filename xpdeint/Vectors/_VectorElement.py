@@ -6,11 +6,13 @@ _VectorElement.py
 This contains all the pure-python code for VectorElement.tmpl
 
 Created by Graham Dennis on 2007-10-17.
-Copyright (c) 2007 __MyCompanyName__. All rights reserved.
+Copyright (c) 2007-2008 __MyCompanyName__. All rights reserved.
 """
 
 from xpdeint.ScriptElement import ScriptElement
 from xpdeint.Vectors.VectorInitialisation import VectorInitialisation
+
+from xpdeint.Function import Function
 
 class _VectorElement (ScriptElement):
   isComputed = False
@@ -33,6 +35,23 @@ class _VectorElement (ScriptElement):
     # Set default initialisation to be the zero initialisation template
     self.initialiser = VectorInitialisation(*args, **KWs)
     self.initialiser.vector = self
+    
+    intialiseFunctionName = ''.join(['_', self.id, '_initialise'])
+    initialiseFunction = Function(name = intialiseFunctionName,
+                                  args = [],
+                                  implementation = self.initialiseFunctionContents,
+                                  description = 'initialisation for ' + self.description(),
+                                  predicate = lambda: self.needsInitialisation)
+    self.functions['initialise'] = initialiseFunction
+    
+    goSpaceFunctionName = ''.join(['_', self.id, '_go_space'])
+    goSpaceFunction = Function(name = goSpaceFunctionName,
+                               args = [('unsigned long', '_newSpace')],
+                               implementation = self.goSpaceFunctionContents,
+                               predicate = lambda: self.needsFourierTransforms)
+    self.functions['goSpace'] = goSpaceFunction
+    
+    
   
   @property
   def needsFourierTransforms(self):

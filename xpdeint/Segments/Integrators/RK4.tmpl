@@ -47,10 +47,10 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """// a = a + a_k/6
 _${vector.id}[$index] += _akfield_${vector.id}[$index]/6.0;
 // a_k = a_i + a_k/2
-_akfield_${vector.id}[$index] = _aifield_${vector.id}[$index] + _akfield_${vector.id}[$index]/2.0;
+_akfield_${vector.id}[$index] = _aifield_${vector.id}[$index] + 0.5*_akfield_${vector.id}[$index];
 """)}@slurp
 
-${propagationDimension} += _step/2.0;
+${propagationDimension} += 0.5*_step;
   @if $cross
 
 ${interpolateDependencies}@slurp
@@ -64,7 +64,7 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """// a = a + a_k/3
 _${vector.id}[$index] += _akfield_${vector.id}[$index]/3.0;
 // a_k = a_i + a_k/2
-_akfield_${vector.id}[$index] = _aifield_${vector.id}[$index] + _akfield_${vector.id}[$index]/2.0;
+_akfield_${vector.id}[$index] = _aifield_${vector.id}[$index] + 0.5*_akfield_${vector.id}[$index];
 """)}@slurp
 
 // a_k = G[a_k, t + h/2]
@@ -81,7 +81,7 @@ _akfield_${vector.id}[$index] = _aifield_${vector.id}[$index] + _akfield_${vecto
 // a_k = D[a_k]
 ${functions['ipEvolve'].call(arguments, _exponent = +1, parentFunction=function)}
 
-${propagationDimension} += _step/2.0;
+${propagationDimension} += 0.5*_step;
   @if $cross
 
 ${updateDependenciesForNextStep}@slurp
