@@ -80,7 +80,7 @@ class _SIC (FixedStep):
     leftRightDeltaAOperator.crossPropagationDependenciesEntity  = oldCrossDeltaAOperator.dependenciesEntity
     leftRightDeltaAOperator.crossPropagationCodeEntity          = crossOp.operatorDefinitionCodeEntity
     
-    leftRightDeltaAOperator.iterations = self.iterations
+    leftRightDeltaAOperator.iterations = crossOp.crossPropagationIntegrator.iterations
     
     # Now we need to work out if we need to create a new field to be the looping field
     crossPropagationDimensionName = crossOp.propagationDimension
