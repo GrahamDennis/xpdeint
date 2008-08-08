@@ -61,5 +61,5 @@ class _SICDeltaAOperator (DeltaAOperator):
         self.operatorComponents[derivativeString] = {crossIntegrationVector: [componentName]}
     
     if self.crossPropagationDirection == '-':
-      self.loopingOrder = _SICDeltaAOperator.LoopingOrder.StrictlyDecreasingOrder
+      self.loopingOrder = _SICDeltaAOperator.LoopingOrder.StrictlyDescendingOrder
     
