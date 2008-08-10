@@ -27,6 +27,7 @@
 #define CFG_PLATFORM_SOLARIS 3
 #define CFG_PLATFORM_CYGWIN 4
 #define CFG_PLATFORM_OSX 5
+#define CFG_PLATFORM_FREEBSD 6
 
 #define CFG_ENDIAN_LITTLE 1234
 #define CFG_ENDIAN_BIG 4321
@@ -97,6 +98,10 @@
   
   #if defined(__APPLE__)
     #define CFG_PLATFORM CFG_PLATFORM_OSX
+  #endif
+  
+  #if defined(__FreeBSD__)
+    #define CFG_PLATFORM CFG_PLATFORM_FREEBSD
   #endif
 
   #ifndef CFG_PLATFORM
@@ -301,7 +306,7 @@
   #endif
 #endif
 
-#if (CFG_PLATFORM == CFG_PLATFORM_OSX)
+#if (CFG_PLATFORM == CFG_PLATFORM_OSX) || (CFG_PLATFORM == CFG_PLATFORM_FREEBSD)
   inline void *_aligned_malloc(size_t size, size_t alignment)
   {
     UNREFERENCED_PARAMETER(alignment);
@@ -337,7 +342,7 @@
 #elif CFG_COMPILER == CFG_COMPILER_MSVC
   // _aligned_malloc and _aligned_free are native.
 #else
-  #error No aligned malloc support. Please implement.
+  #warning No aligned malloc support. Please implement.
 #endif
 
 // Choose compiler-specific fixes.
@@ -440,6 +445,8 @@
     #define CFG_OSAPI CFG_OSAPI_POSIX
   #elif CFG_PLATFORM == CFG_PLATFORM_OSX
     #define CFG_OSAPI CFG_OSAPI_POSIX
+  #elif CFG_PLATFORM == CFG_PLATFORM_FREEBSD
+    #define CFG_OSAPI CFG_OSAPI_POSIX
   #else
     #error Cannot detect OS API.
   #endif
@@ -455,6 +462,8 @@
   #elif CFG_PLATFORM == CFG_PLATFORM_SOLARIS
     #define CFG_THREADAPI CFG_THREADAPI_PTHREADS
   #elif CFG_PLATFORM == CFG_PLATFORM_OSX
+    #define CFG_THREADAPI CFG_THREADAPI_PTHREADS
+  #elif CFG_PLATFORM == CFG_PLATFORM_FREEBSD
     #define CFG_THREADAPI CFG_THREADAPI_PTHREADS
   #else
     #error Cannot detect threading API.
