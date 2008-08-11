@@ -277,15 +277,15 @@
             <attribute name="kind"/>
           </optional>
           <optional>
+            <attribute name="geometry_matching_mode"/>
+          </optional>
+          <optional>
             <ref name="NoiseAttributes"/>
           </optional>
           <optional>
             <element name="filename">
               <optional>
                 <attribute name="moment_group"/>
-              </optional>
-              <optional>
-                <attribute name="geometry_matching_mode"/>
               </optional>
               <text/>
             </element>
