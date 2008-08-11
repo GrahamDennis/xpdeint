@@ -35,8 +35,8 @@
     <components>
       u uDot
     </components>
-    <initialisation kind="xsil">
-      <filename moment_group="2" geometry_matching_mode="strict">vibstring_dirichlet_boundary.xsil</filename>
+    <initialisation kind="xsil" geometry_matching_mode="strict">
+      <filename moment_group="2">vibstring_dirichlet_boundary.xsil</filename>
     </initialisation>
   </vector>
   
