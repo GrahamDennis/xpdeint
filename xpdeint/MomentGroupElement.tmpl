@@ -11,61 +11,25 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *@
 @def description: moment group $number
 
-@*
-
-  Function prototypes
-*@
-@def functionPrototypes
-  @#
-  @super
-  @#
-void _${name}_sample();
-void _${name}_process();
-void _${name}_write_out(FILE*);
-  @#
-@end def
-
-@*
-  Function implementations
-*@
-@def functionImplementations
-  @# Call the field version of this function
-  @# to get initialisation and fourier transform
-  @# function implementations (as necessary)
-  @super
-  @#
-
-  @# The sample function
-$sampleFunctionImplementation@slurp
-
-  @# The process function
-$processFunctionImplementation@slurp
-
-  @# The write_out function
-$writeOutFunctionImplementation@slurp
-  @#
-@end def
 
 @*
   Implementation of the moment group sample function
 *@
-@def sampleFunctionImplementation
-void _${name}_sample()
-{
+@def sampleFunctionContents($function)
   @# Evaluate any computed vectors we have that either we or one
   @# of our operators depends on
   @set $computedVectorDependencies = $dependencies.copy()
   @silent computedVectorDependencies.update($computedVectorsNeedingPrecalculationForOperatorContainers($operatorContainers))
-  ${evaluateComputedVectors(computedVectorDependencies), autoIndent=True}@slurp
+${evaluateComputedVectors(computedVectorDependencies)}@slurp
   @#
   @# Execute any operatorContainers
   @for $operatorContainer in $operatorContainers
-  
-  ${operatorContainer.evaluateOperators, autoIndent=True}@slurp
+
+${operatorContainer.evaluateOperators(parentFunction=function)}@slurp
   @end for
-  
+
   @# Now we need to loop over the vector dependencies going the the appropriate space.
-  ${transformVectorsToSpace($dependencies, $sampleSpace), autoIndent=True}@slurp
+${transformVectorsToSpace($dependencies, $sampleSpace)}@slurp
   @#
   @# Set up the index overrides
   @set $indexOverrides = {}
@@ -74,17 +38,17 @@ void _${name}_sample()
   @set $vectorsForLoop = $dependencies.copy()
   @silent $vectorsForLoop.add($rawVector)
   @# Now actually begin the loop
-  
-  ${loopOverFieldInSpaceWithVectorsAndInnerContent($samplingField, $sampleSpace, $vectorsForLoop, $insideSamplingLoops, indexOverrides=indexOverrides), autoIndent=True}@slurp
+
+${loopOverFieldInSpaceWithVectorsAndInnerContent($samplingField, $sampleSpace, $vectorsForLoop, $insideSamplingLoops, indexOverrides=indexOverrides, vectorOverrides=[$rawVector])}@slurp
   @# That's the end of the loop, magic eh?
   @#
   @if $outputField.hasDimensionName($propagationDimension)
-  
-  _${outputField.id}_${propagationDimension}[_${outputField.id}_index_${propagationDimension}++] = $propagationDimension;
+
+_${outputField.id}_${propagationDimension}[_${outputField.id}_index_${propagationDimension}++] = $propagationDimension;
   @end if
-  
-  _LOG(_SAMPLE_LOG_LEVEL, "Sampled field (for moment group #${number + 1}) at ${propagationDimension} = %e\n", ${propagationDimension});
-}
+
+_LOG(_SAMPLE_LOG_LEVEL, "Sampled field (for moment group #${number + 1}) at ${propagationDimension} = %e\n", ${propagationDimension});
+  @#
 @end def
 
 @*
@@ -92,34 +56,37 @@ void _${name}_sample()
 *@
 @def insideSamplingLoops
   @#
+#define _SAMPLE_COMPLEX(variable) \
+          variable ## R = variable.re; variable ## I = variable.im;
+
 // *************** Sampling code ****************
 ${insertUserCodeFromEntity($samplingCodeEntity)}@slurp
 // **********************************************
+
+#undef _SAMPLE_COMPLEX
   @#
 @end def
 
 @*
   Process function implementation
 *@
-@def processFunctionImplementation
-void _${name}_process()
-{
+@def processFunctionContents($function)
   @# If we don't have any processing code then we don't need to do a complicated loop
   @if not self.hasattr('processingCode')
     @# If we didn't allocate a raw vector, then there actually is no processing to do
     @# at all.
     @if not $rawVectorNeedsToBeAllocated
-  // No post processing needs to be done
+// No post processing needs to be done
     @else
       @#
       @# Although we don't have any processing code, one of our features has
       @# processing code that needs to run (but it is simple, right?)
-  ${loopOverVectorsWithInnerContentTemplate($outputField.vectors, $insideProcessingLoopsNoProcessingCode), autoIndent=True}@slurp
+${loopOverVectorsWithInnerContentTemplate($outputField.vectors, $insideProcessingLoopsNoProcessingCode)}@slurp
     @end if
   @else
     @# In this case, we did allocate a raw vector, and we will have processing to do
     @# Transform the moment group sampling vector into the processing space
-  ${transformVectorsToSpace($vectors, $processingSpace), autoIndent=True}@slurp
+${transformVectorsToSpace($vectors, $processingSpace)}@slurp
     @#
     @if len($outputField.dimensions) != len($dimensions)
       @# If the output field doesn't have the same number of dimensions as the sampled
@@ -132,10 +99,9 @@ void _${name}_process()
     @end if
     @set $vectorsForLoop = $vectors.copy()
     @silent $vectorsForLoop.update($outputField.vectors)
-  ${loopOverFieldInSpaceWithVectorsAndInnerContent($self, $processingSpace, $vectorsForLoop, $insideProcessingLoops, vectorOverrides=$vectorOverrides), autoIndent=True}@slurp
+${loopOverFieldInSpaceWithVectorsAndInnerContent($self, $processingSpace, $vectorsForLoop, $insideProcessingLoops, vectorOverrides=$vectorOverrides)}@slurp
   @end if
   @#
-}
 @end def
 
 @def insideProcessingLoopsNoProcessingCode
@@ -163,10 +129,7 @@ $insertCodeForFeatures('insideMomentGroupProcessingLoop', $featureOrdering)@slur
 @*
   Write output function implementation
 *@
-@def writeOutFunctionImplementation
-  @#
-void _${name}_write_out(FILE* _outfile)
-{
+@def writeOutFunctionContents($function)
   @#
   @set $outputFieldVectorComponents = $anyObject($outputField.vectors).components
   @set $dependentVariables = [{'vector': $processedVector,
@@ -190,10 +153,10 @@ void _${name}_write_out(FILE* _outfile)
   @# The features can return Cheetah template code suitable for passing to loopOverVectorsWithInnerContentTemplate
   @# in order to create their data. If any have, then we should actually create that loop and run that code.
   @if $result
-  ${loopOverVectorsWithInnerContentTemplate([$processedVector], $result), autoIndent=True}@slurp
+${loopOverVectorsWithInnerContentTemplate([$processedVector], $result)}@slurp
   @end if
-  
-  // The meat of the function goes here
+
+// The meat of the function goes here
   @set $featureOrdering = ['Output']
   @set $dict = {'field': $outputField,
                 'space': $outputSpace,
@@ -201,9 +164,7 @@ void _${name}_write_out(FILE* _outfile)
                 'dependentVariables': $dependentVariables,
                 'xsilElementName': c'moment_group_${number + 1}',
                 }
-  ${insertCodeForFeatures('writeOutFunctionImplementationBody', $featureOrdering, $dict), autoIndent=True}@slurp
-  
-}
+${insertCodeForFeatures('writeOutFunctionImplementationBody', $featureOrdering, $dict)}@slurp
   @#
 @end def
 
