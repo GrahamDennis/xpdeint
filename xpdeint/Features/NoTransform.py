@@ -13,7 +13,7 @@ from xpdeint.Geometry._Dimension import _Dimension
 from xpdeint.Geometry.UniformDimensionRepresentation import UniformDimensionRepresentation
 
 class NoTransform (Transform):
-  featureName = 'FourierTransform'
+  featureName = 'NoTransform'
   
   def __init__(self, *args, **KWs):
     Transform.__init__(self, *args, **KWs)
