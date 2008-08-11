@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="groundstate.xsil" expected="groundstate_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="groundstate_break.xsil" expected="groundstate_expected_break.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+  </testing>
+  
+  <name>groundstate</name>
+  <author>Graham Dennis</author>
+  <description>
+    Calculate the ground state of a negative gaussian potential.
+  </description>
+  
+  <features>
+    <auto_vectorise />
+    <benchmark />
+    <bing />
+    <fftw version="3" plan="patient" />
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="y" lattice="1024"  domain="(-12.0, 12.0)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="potential" initial_space="y" type="complex">
+    <components>
+      V1
+    </components>
+    <initialisation>
+      <![CDATA[
+        double Vtrap = -exp(-y*y);
+      
+        V1  = -i*Vtrap;
+      
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <vector name="wavefunction" initial_space="y" type="complex">
+    <components>
+      phi
+    </components>
+    <initialisation>
+      <![CDATA[
+      
+      // This will be automatically normalised later
+      phi = exp(-y*y);
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <computed_vector name="normalisation" dimensions="" type="double">
+    <components> Ncalc </components>
+    <evaluation>
+      <dependencies fourier_space="y">wavefunction</dependencies>
+      <![CDATA[
+        // Calculate the current normalisation of the wave function.
+        Ncalc = mod2(phi);
+      ]]>
+    </evaluation>
+  </computed_vector>
+  
+  <sequence>
+    <integrate algorithm="RK4" interval="1.0" steps="1000">
+      <samples>50 50 50</samples>
+      <filters>
+        <filter>
+          <dependencies>wavefunction normalisation</dependencies>
+          <![CDATA[
+            // Correct normalisation of the wavefunction
+            phi *= sqrt(1.0/Ncalc);
+          ]]>
+        </filter>
+      </filters>
+      <operators>
+        <operator kind="ip" constant="yes">
+          <operator_names>T</operator_names>
+          <![CDATA[
+            T = -0.5*ky*ky;
+          ]]>
+        </operator>
+        <integration_vectors>wavefunction</integration_vectors>
+        <dependencies>potential</dependencies>
+        <![CDATA[
+          dphi_dt = T[phi] - (i*V1)*phi;
+        ]]>
+      </operators>
+    </integrate>
+    <breakpoint filename="groundstate_break.xsil">
+      <dependencies>wavefunction potential</dependencies>
+    </breakpoint>
+  </sequence>
+  <output format="binary">
+    <group>
+      <sampling initial_sample="no">
+        <dimension name="y" />
+        <moments>dens</moments>
+        <dependencies>wavefunction</dependencies>
+        <![CDATA[
+          dens = mod2(phi);
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling initial_sample="no">
+        <moments>N</moments>
+        <dependencies>normalisation</dependencies>
+        <![CDATA[
+          N = Ncalc;
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling initial_sample="no">
+        <moments>N</moments>
+        <dimension name="y" lattice="0" />
+        <dependencies>wavefunction</dependencies>
+        <![CDATA[
+          N = mod2(phi);
+        ]]>
+      </sampling>
+    </group>
+  </output>
+
+<info>
+Script compiled with xpdeint version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+See http://www.xmds.org for more information.
+</info>
+
+<XSIL Name="moment_group_1">
+  <Param Name="n_independent">2</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>3</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t y dens 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>50</Dim>
+    <Dim>1024</Dim>
+    <Dim>3</Dim>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
+groundstate_expected_mg0.dat
+    </Stream>
+  </Array>
+</XSIL>
+
+<XSIL Name="moment_group_2">
+  <Param Name="n_independent">1</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>2</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t N 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>50</Dim>
+    <Dim>2</Dim>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
+groundstate_expected_mg1.dat
+    </Stream>
+  </Array>
+</XSIL>
+
+<XSIL Name="moment_group_3">
+  <Param Name="n_independent">1</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>2</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t N 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>50</Dim>
+    <Dim>2</Dim>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
+groundstate_expected_mg2.dat
+    </Stream>
+  </Array>
+</XSIL>
+</simulation>

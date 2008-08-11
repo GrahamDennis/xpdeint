@@ -12,6 +12,8 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 from xpdeint.ScriptElement import ScriptElement
 from xpdeint.ParserException import ParserException
 
+from xpdeint.Function import Function
+
 class _MomentGroupElement (ScriptElement):
   def __init__(self, number, *args, **KWs):
     self.number = number
@@ -28,6 +30,25 @@ class _MomentGroupElement (ScriptElement):
     scriptElements = self.getVar('scriptElements')
     if not self in scriptElements:
       scriptElements.append(self)
+    
+    
+    sampleFunctionName = ''.join(['_', self.id, '_sample'])
+    sampleFunction = Function(name = sampleFunctionName,
+                              args = [],
+                              implementation = self.sampleFunctionContents)
+    self.functions['sample'] = sampleFunction
+    
+    processFunctionName = ''.join(['_', self.id, '_process'])
+    processFunction = Function(name = processFunctionName,
+                               args = [],
+                               implementation = self.processFunctionContents)
+    self.functions['process'] = processFunction
+    
+    writeOutFunctionName = ''.join(['_', self.id, '_write_out'])
+    writeOutFunction = Function(name = writeOutFunctionName,
+                                args = [('FILE*', '_outfile')],
+                                implementation = self.writeOutFunctionContents)
+    self.functions['writeOut'] = writeOutFunction
   
   @property
   def children(self):
