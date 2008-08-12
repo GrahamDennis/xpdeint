@@ -29,6 +29,15 @@ if (${crossDim.inSpace($operatorSpace).loopIndex} == ${crossDim.inSpace($operato
   for (long _cmp = 0; _cmp < _${crossIntegrationVector.id}_ncomponents; _cmp++)
     _old_${crossIntegrationVector.id}[_cmp] = _active_${crossIntegrationVector.id}[_${crossIntegrationVector.id}_index_pointer + _cmp];
   @end for
+  
+  @# This is where one (half-step) cross-IP step would go
+} else {
+  // Update the next guess for iteration.
+  @for crossIntegrationVector in $crossIntegrationVectors
+    @for componentNumber, componentName, in enumerate(crossIntegrationVector.components)
+  ${componentName} = _old_${crossIntegrationVector.id}[${componentNumber}] + d${componentName}_d${crossPropagationDimension} * (${crossPropagationDirection}0.5*d${crossPropagationDimension});
+    @end for
+  @end for
 }
 
 for (long _iter = 0; _iter < ${iterations}; _iter++) {
@@ -64,10 +73,12 @@ for (long _iter = 0; _iter < ${iterations}; _iter++) {
 
 // Update the 'old' copy for the next half-step
 @for crossIntegrationVector in $crossIntegrationVectors
-  @for componentNumber, componentName in enumerate($crossIntegrationVector.components)
+  @for componentNumber, componentName in enumerate(crossIntegrationVector.components)
 _old_${crossIntegrationVector.id}[${componentNumber}] += d${componentName}_d${crossPropagationDimension} * (${crossPropagationDirection}d${crossPropagationDimension});
   @end for
 @end for
+
+@# This is where one (full step) cross-IP step would go
 
   @#
 @end def
