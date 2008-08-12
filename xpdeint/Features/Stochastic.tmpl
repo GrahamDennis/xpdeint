@@ -94,11 +94,7 @@ ${insertCodeForFeatures('generateNoisesBegin', featureOrdering, featureDict)}@sl
   @set $extraIndent = featureDict['extraIndent']
   @#
   @capture result
-double _var = 1.0@slurp
-    @if len([dim for dim in field.dimensions if dim.type == 'double'])
- / $field.volumeElementInSpace($space)@slurp
-    @end if
-;
+double _var = 1.0 / $field.volumeElementInSpace($space);
 
     @for noise in noisesNeeded
       @set $noiseVector = noise.noiseVectorForField(field)
