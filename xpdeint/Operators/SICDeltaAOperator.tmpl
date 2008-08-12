@@ -34,16 +34,18 @@ if (${crossDim.inSpace($operatorSpace).loopIndex} == ${crossDim.inSpace($operato
 for (long _iter = 0; _iter < ${iterations}; _iter++) {
   
   #define d${propagationDimension} _step
-  
-  // ************* Propagation code ***************
-  ${insertUserCodeFromEntity($propagationCodeEntity), autoIndent=True}@slurp
-  // **********************************************
-  
+  {
+    // ************* Propagation code ***************
+    ${insertUserCodeFromEntity($propagationCodeEntity), autoIndent=True}@slurp
+    // **********************************************
+  }
   #undef d${propagationDimension}
   
-  // *********** Cross-propagation code ***********
-  ${insertUserCodeFromEntity($crossPropagationCodeEntity), autoIndent=True}@slurp
-  // **********************************************
+  {
+    // *********** Cross-propagation code ***********
+    ${insertUserCodeFromEntity($crossPropagationCodeEntity), autoIndent=True}@slurp
+    // **********************************************
+  }
   
   // Update propagation vectors (note that _step is actually half a step)
   @for integrationVector in $integrationVectors
