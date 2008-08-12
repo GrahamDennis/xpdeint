@@ -1257,6 +1257,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
   
   def parseOperatorsElement(self, operatorsElement, integratorTemplate, fieldTemplate):
     operatorContainer = OperatorContainerTemplate(field = fieldTemplate, xmlElement = operatorsElement,
+                                                  name = fieldTemplate.name + '_operators',
                                                   parent = integratorTemplate,
                                                   **self.argumentsToTemplateConstructors)
     integratorTemplate.intraStepOperatorContainers.append(operatorContainer)
