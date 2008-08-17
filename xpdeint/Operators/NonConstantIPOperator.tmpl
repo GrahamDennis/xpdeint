@@ -57,10 +57,15 @@ const double _propagationStepFraction = ${integrator.ipPropagationStepFractions[
 ${insertUserCodeFromEntity($operatorDefinitionCodeEntity)}@slurp
 // **********************************************
 
+  @if $operatorVector.type == 'complex'
+    @set $expFunction = 'c_exp'
+  @elif $operatorVector.type == 'double'
+    @set $expFunction = 'exp'
+  @end if
   @# Loop over each operator component
   @for $operatorComponentNumber, $operatorComponent in enumerate($operatorComponents.iterkeys())
 _${operatorVector.id}[_${operatorVector.id}_index_pointer + _arrayIndex * $len($operatorComponents) + ${operatorComponentNumber}]@slurp
- = c_exp(${operatorComponent} * _propagationStepFraction * _step);
+ = ${expFunction}(${operatorComponent} * _propagationStepFraction * _step);
   @end for
   @#
 @end def

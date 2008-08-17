@@ -406,6 +406,9 @@
     <optional>
       <attribute name="fourier_space"/>
     </optional>
+    <optional>
+      <attribute name="type"/>
+    </optional>
     <element name="operator_names">
       <text/>
     </element>

@@ -72,7 +72,7 @@
         </filter>
       </filters>
       <operators>
-        <operator kind="ip" constant="yes">
+        <operator kind="ip" constant="yes" type="double">
           <operator_names>T</operator_names>
           <![CDATA[
             T = -0.5*ky*ky;

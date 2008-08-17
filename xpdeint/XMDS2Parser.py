@@ -1392,6 +1392,12 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     operatorVectorTemplate = VectorElementTemplate(name = vectorName, field = operatorTemplate.field,
                                                    **self.argumentsToTemplateConstructors)
     operatorVectorTemplate.type = 'complex'
+    if operatorElement.hasAttribute('type'):
+      typeString = operatorElement.getAttribute('type').strip().lower()
+      if not typeString in ['double', 'complex']:
+        raise ParserException(operatorElement, "Unknown IP operator type '%(typeString)s'.\n"
+                                               "The 'type' attribute must be either 'double' or 'complex'." % locals())
+      operatorVectorTemplate.type = typeString
     
     operatorVectorTemplate.initialSpace = operatorTemplate.operatorSpace
     operatorVectorTemplate.needsInitialisation = False

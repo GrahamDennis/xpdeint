@@ -44,7 +44,7 @@ ${vector.free}@slurp
 @def calculateOperatorFieldFunctionContents($function)
   @#
   @for $operatorComponentName in $operatorComponents.iterkeys()
-complex $operatorComponentName;
+${operatorVector.type} $operatorComponentName;
   @end for
   @#
 ${transformVectorsToSpace($dependencies, $operatorSpace)}@slurp
