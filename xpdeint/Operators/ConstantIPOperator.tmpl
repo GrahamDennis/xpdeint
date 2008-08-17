@@ -27,13 +27,18 @@ ${integrator.createStepVariable}@slurp
 // ************** Operator code *****************
 ${insertUserCodeFromEntity($operatorDefinitionCodeEntity)}@slurp
 // **********************************************
+  @if $operatorVector.type == 'complex'
+    @set $expFunction = 'c_exp'
+  @elif $operatorVector.type == 'double'
+    @set $expFunction = 'exp'
+  @end if
   @# Loop over the propagation step fractions
   @for $fractionIndex, $propagationStepFraction in enumerate($integrator.ipPropagationStepFractions)
     
     @# Loop over each operator component
     @for $operatorComponentNumber, $operatorComponent in enumerate($operatorComponents.iterkeys())
       @set $offsetIndex = $operatorComponentNumber + $fractionIndex * len($operatorComponents)
-_${operatorVector.id}[_${operatorVector.id}_index_pointer + ${offsetIndex}] = c_exp(${operatorComponent} * $propagationStepFraction * _step);
+_${operatorVector.id}[_${operatorVector.id}_index_pointer + ${offsetIndex}] = ${expFunction}(${operatorComponent} * $propagationStepFraction * _step);
     @end for
   @end for
   @#

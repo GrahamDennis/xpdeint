@@ -219,6 +219,7 @@ IPEXOperatorContents =
     attribute kind { "ip" | "ex" }
     , attribute constant { Bool }
     , attribute fourier_space { text }?
+    , attribute type { text }?
     , element operator_names { text }
     , Dependencies?
     , text

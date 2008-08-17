@@ -1,28 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
-  <name>diffusion</name>
+  <testing>
+    <xsil_file name="nonconstant_complex_ip.xsil" expected="derivative_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+  </testing>
+  
+  <name>nonconstant_complex_ip</name>
   <author>Graham Dennis</author>
   <description>
-    Simple one-dimensional diffusion with a pointless second dimension thrown in for fun
+    Simple one-dimensional diffusion using the IP operator (of complex type)
   </description>
   
   <features>
     <benchmark />
-    <error_check />
     <bing />
-    <fftw version="3" plan="exhaustive" />
-    <openmp />
+    <fftw version="3" plan="estimate" />
   </features>
   
   <geometry>
     <propagation_dimension> t </propagation_dimension>
     <transverse_dimensions>
-      <dimension name="x" lattice="32"  domain="(-10.0, 10.0)" />
       <dimension name="y" lattice="128" domain="(-1.0, 1.0)" />
     </transverse_dimensions>
   </geometry>
   
-  <vector name="main" initial_space="x y" type="complex">
+  <vector name="main" initial_space="y" type="complex">
     <components>
       phi
     </components>
@@ -34,10 +35,10 @@
   </vector>
   
   <sequence>
-    <integrate algorithm="ARK45" interval="10.0" steps="2400" tolerance="1e-5">
+    <integrate algorithm="RK4" interval="10.0" steps="2400" tolerance="1e-5">
       <samples>24</samples>
       <operators>
-        <operator kind="ip" constant="yes" fourier_space="x ky" type="double">
+        <operator kind="ip" constant="no" type="complex">
           <operator_names>L</operator_names>
           <![CDATA[
             L = -0.02*ky*ky;
@@ -51,12 +52,9 @@
     </integrate>
   </sequence>
   
-  <output format="binary" filename="diffusion.xsil">
+  <output format="binary">
     <group>
       <sampling initial_sample="yes">
-        <!-- Any dimension not mentioned is assumed to be in real space and its middle element will be sampled -->
-        <!-- Note that dimensions can be in any order. Not that I can think of a reason why you would want to do that -->
-        <dimension name="x" lattice="0" fourier_space="x" />
         <dimension name="y" lattice="128" fourier_space="y" />
         <moments>dens</moments>
         <dependencies>main</dependencies>
