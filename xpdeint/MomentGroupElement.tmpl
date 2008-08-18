@@ -81,7 +81,7 @@ ${insertUserCodeFromEntity($samplingCodeEntity)}@slurp
       @#
       @# Although we don't have any processing code, one of our features has
       @# processing code that needs to run (but it is simple, right?)
-${loopOverVectorsWithInnerContentTemplate($outputField.vectors, $insideProcessingLoopsNoProcessingCode)}@slurp
+${loopOverVectorsWithInnerContentTemplate([$rawVector], $insideProcessingLoopsNoProcessingCode)}@slurp
     @end if
   @else
     @# In this case, we did allocate a raw vector, and we will have processing to do

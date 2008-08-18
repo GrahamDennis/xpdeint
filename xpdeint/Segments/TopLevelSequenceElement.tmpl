@@ -25,7 +25,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   @#
 $propagationDimension = 0.0;
   @#
-  @for $field in $filter(lambda x: not x.isOutputField, $fields)
+  @for $field in $fields
     @set $result = $field.initialise
     @if $result
 

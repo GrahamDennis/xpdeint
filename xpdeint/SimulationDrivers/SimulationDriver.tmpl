@@ -51,9 +51,14 @@ int main(int argc, char **argv)
   @#
   @for $field in $fields
 ${field.allocate}@slurp
-    @if $field.isOutputField
-${field.initialise}@slurp
-    @end if
+  @end for
+  
+  @for $mg in $momentGroups
+    @for vector in mg.outputField.managedVectors
+      @if vector.name != 'raw'
+${vector.initialise}@slurp
+      @end if
+    @end for
   @end for
 
   @*
