@@ -1611,7 +1611,6 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       
       outputFieldTemplate = FieldElementTemplate(name = momentGroupTemplate.name + "_output",
                                                  **self.argumentsToTemplateConstructors)
-      outputFieldTemplate.isOutputField = True
       momentGroupTemplate.outputField = outputFieldTemplate
       
       momentGroupTemplate.computedVectors.update(self.parseComputedVectorElements(samplingElement, momentGroupTemplate))

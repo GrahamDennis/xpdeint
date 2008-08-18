@@ -24,7 +24,6 @@ class _FieldElement (ScriptElement):
     ScriptElement.__init__(self, *args, **KWs)
     
     # Set default variables
-    self.isOutputField = False
     self.managedVectors = set()
     self.temporaryVectors = set()
     self.dimensions = []
