@@ -55,16 +55,17 @@ for (_half_step = false; ; _half_step = true)
   @# Loop over the moment groups setting the output field to the already-allocated halfstep field
   @for $momentGroup in $momentGroups
     @set $momentGroupOutputField = $momentGroup.outputField
-
+    
     _active_${momentGroup.processedVector.id} = _${momentGroupOutputField.name}_halfstep;
   @end for
   }
+  
   @silent $dict['extraIndent'] += 2
   @#
 @end def
 
 @def topLevelSequenceEnd($dict)
-
+  
   if (_half_step)
       break;
 }

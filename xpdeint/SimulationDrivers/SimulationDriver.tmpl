@@ -27,7 +27,6 @@ void _segment0()
   @set $dict = {'extraIndent': 0}
   ${insertCodeForFeatures('topLevelSequenceBegin', featureOrdering, dict), autoIndent=True}@slurp
   @set $extraIndent = dict['extraIndent']
-
   ${topLevelSequence.topLevelSequenceInnerContent, autoIndent=True, extraIndent=extraIndent}@slurp
   @#
   ${insertCodeForFeaturesInReverseOrder('topLevelSequenceEnd', featureOrdering, dict), autoIndent=True}@slurp
@@ -52,13 +51,9 @@ int main(int argc, char **argv)
   @for $field in $fields
 ${field.allocate}@slurp
   @end for
-  
+
   @for $mg in $momentGroups
-    @for vector in mg.outputField.managedVectors
-      @if vector.name != 'raw'
-${vector.initialise}@slurp
-      @end if
-    @end for
+${mg.outputField.initialise}@slurp
   @end for
 
   @*

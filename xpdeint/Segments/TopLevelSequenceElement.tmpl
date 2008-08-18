@@ -25,7 +25,17 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   @#
 $propagationDimension = 0.0;
   @#
-  @for $field in $fields
+
+  @set $fieldsNotToInitialise = set()
+  @for $mg in $momentGroups
+    @# Initialise the raw vector
+${mg.rawVector.functions['initialise'].call()}
+    @# Don't call the initialise method as that will cause
+    @# its aliases to be initialised, which is bad.
+    @silent fieldsNotToInitialise.add(mg.outputField)
+  @end for
+  @#
+  @for $field in filter(lambda f: f not in fieldsNotToInitialise, $fields)
     @set $result = $field.initialise
     @if $result
 
