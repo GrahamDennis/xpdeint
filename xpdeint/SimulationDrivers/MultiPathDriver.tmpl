@@ -60,6 +60,10 @@ ${o.initialise}@slurp
 for (long _i0 = 0; _i0 < _n_paths; _i0++) {
   _LOG(_PATH_LOG_LEVEL, "Starting path %li\n", _i0 + 1);
   
+  @for $mg in $momentGroups
+  ${mg.rawVector.functions['initialise'].call(), autoIndent=True}@slurp
+  @end for
+  
   ${topLevelSequence.topLevelSequenceInnerContent, autoIndent=True}@slurp
 }
   @#
