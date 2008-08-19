@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="kubo.xsil" expected="kubo_expected.xsil" />
+  </testing>
+  
+  <name>kubo</name>
+  <author>Graham Dennis / Michael Hush</author>
+  <description>
+    Example Kubo oscillator simulation 
+  </description>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+  </geometry>
+  
+  <driver name="multi-path" paths="1000" />
+  
+  <features>
+    <benchmark />
+    <!--<error_check />-->
+    <bing />
+    <stochastic>
+      <noise kind="gaussian" prefix="n" num="1" seed="157 9348 234"/>
+      <!-- If there is no seed attribute then seeds will be chosen randomly at run-time -->
+    </stochastic>
+  </features>
+  
+  <vector name="main">
+    <components type="complex">
+      z
+    </components>
+    <initialisation noises="">
+      <![CDATA[
+        z = 1.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="ARK89" interval="10" steps="1000" tolerance="1e-8">
+      <samples>500 </samples>
+      <operators noises="n">
+        <integration_vectors>main</integration_vectors>
+        <dependencies>0d_noise</dependencies>
+        <![CDATA[
+          dz_dt = i*z*n_1;
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  
+  <output format="binary">
+    <group>
+      <sampling initial_sample="yes">
+        <moments>zR zI</moments>
+        <dependencies>main 0d_noise</dependencies>
+        <![CDATA[
+          zR = z.re;
+          zI = z.im;
+        ]]>
+      </sampling>
+    </group>
+  </output>
+
+<info>
+Script compiled with xpdeint version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+See http://www.xmds.org for more information.
+</info>
+
+<XSIL Name="moment_group_1">
+  <Param Name="n_independent">1</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>5</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t mean_zR mean_zI stderr_zR stderr_zI 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>501</Dim>
+    <Dim>5</Dim>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
+kubo_expected_mg0.dat
+    </Stream>
+  </Array>
+</XSIL>
+</simulation>

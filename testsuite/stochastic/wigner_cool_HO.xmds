@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="wigner_cool_HO.xsil" expected="wigner_cool_HO_expected.xsil" />
+  </testing>
+  <name>wigner_cool_HO</name>
+  <author>Michael Hush</author>
+  <description>
+    Single particle in a harmonic oscillator under God control (no realistic measurement has been taken into account), such that energy is reduced. Simulated using a stochastic unravelling from the wigner representation.  
+  </description>
+  
+  <features>
+    <benchmark />
+    <!-- <error_check /> -->
+    <!-- <bing /> -->
+    <fftw version="3" plan="patient"/>
+    <openmp />
+    <stochastic>
+      <noise kind="gaussian" prefix="n" num="2" seed="157 9348 234"/>
+    </stochastic>
+    <globals>
+      <![CDATA[
+      
+        const double feedp = -1.35;
+        
+      ]]>
+    </globals>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <integer_valued>
+        <dimension name="j" domain="(1, 10000)" />
+      </integer_valued>
+    </transverse_dimensions>
+  </geometry>
+    
+  <vector type="double" name="variables" dimensions="j">
+    <components> x p </components>
+    <initialisation>
+      <![CDATA[
+      
+        //Coherent state initialisation
+        
+        double x0 = sqrt(10.0);
+        double p0 = sqrt(10.0);
+        double sigma0 = sqrt(0.5);
+      
+        x = x0 + n_1*sigma0;
+        p = p0 + n_2*sigma0;
+         
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <computed_vector type="double" name="observables_evo" dimensions="">
+    <components>avg_x_evo avg_p_evo avg_pp_evo</components>
+    <evaluation>
+    <dependencies>variables</dependencies>
+    <![CDATA[
+      avg_p_evo = p/_lattice_j;  
+    ]]>
+    </evaluation>
+  </computed_vector>
+  
+  <computed_vector type="double" name="observables" dimensions="">
+    <components>avg_x avg_p avg_E avg_EE avg_exx avg_epp avg_eEE avg_eEEEE</components>
+    <evaluation>
+    <dependencies>variables</dependencies>
+    <![CDATA[
+      
+      avg_x = x/_lattice_j;
+      avg_p = p/_lattice_j;
+      avg_E = 0.5*(x*x+p*p)/_lattice_j;
+      avg_EE = pow(0.5*(x*x+p*p),2)/_lattice_j;
+      
+      //Error calculation
+      avg_exx = avg_x*avg_x*_lattice_j;
+      avg_epp = avg_p*avg_p*_lattice_j;
+      avg_eEE = avg_E*avg_E*_lattice_j;
+      avg_eEEEE = avg_EE*avg_EE*_lattice_j;
+       
+    ]]>
+    </evaluation>
+  </computed_vector>
+  
+  <sequence>
+  
+    <integrate algorithm="ARK89" tolerance="1e-8" interval="10" steps="100">
+      <samples>50</samples>
+      
+      <operators dimensions="j">
+        <integration_vectors>variables</integration_vectors>
+        <dependencies>observables_evo</dependencies>
+        <![CDATA[
+        
+          dx_dt = p; 
+          dp_dt = -x + feedp*avg_p_evo;
+          
+        ]]>
+      </operators>
+    </integrate>
+    
+  </sequence>
+  <output format="binary">
+  
+    <group>
+      <sampling initial_sample="yes">
+        <moments>P X E EE P_err X_err E_err EE_err</moments>
+        <dependencies>observables</dependencies>
+        <![CDATA[
+          
+          P = avg_p;
+          X = avg_x;
+          E = avg_E;
+          EE = avg_EE;
+          
+          //errors
+          X_err = sqrt(avg_exx - avg_x*avg_x)/sqrt(_lattice_j);
+          P_err = sqrt(avg_epp - avg_p*avg_p)/sqrt(_lattice_j);
+          E_err = sqrt(avg_eEE - avg_E*avg_E)/sqrt(_lattice_j);
+          EE_err = sqrt(avg_eEEEE - avg_EE*avg_EE)/sqrt(_lattice_j);
+          
+        ]]>
+      </sampling>
+    </group>
+    
+  </output>
+</simulation>
