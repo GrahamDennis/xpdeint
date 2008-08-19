@@ -10,5 +10,9 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 from xpdeint.Features._Feature import _Feature
 
 class Transform (_Feature):
+  def canTransformVectorInDimension(self, vector, dim):
+    if dim.isTransformable:
+      return True
+    else:
+      return False
   
-  pass

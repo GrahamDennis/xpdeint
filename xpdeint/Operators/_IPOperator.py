@@ -107,6 +107,9 @@ class _IPOperator(Operator):
         else:
           self.operatorComponents[operatorName][targetVector].append(componentName)
         
+        if targetVector.type == 'double':
+          self.operatorVector.type = 'double'
+        
         # Regular expression to check the sanity of the integration code
         # i.e. to check that we don't have something of the form:
         # dy_dt = L[x].

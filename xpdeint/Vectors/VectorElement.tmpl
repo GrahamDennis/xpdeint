@@ -33,7 +33,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 // vector $name globals
 $type* _${id} = NULL;
 $type* _active_${id} = NULL;
-  @if $needsFourierTransforms
+  @if $needsTransforms
 
 unsigned long _${id}_space;
   @end if
@@ -46,7 +46,7 @@ unsigned long _${id}_space;
 @def initialiseFunctionContents($function)
   @#
 ${initialiser.initialiseVector}@slurp
-  @if $needsFourierTransforms
+  @if $needsTransforms
 
 _${id}_space = $initialSpace;
   @end if

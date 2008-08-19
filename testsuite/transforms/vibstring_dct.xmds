@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
+  <testing>
+    <xsil_file name="vibstring_dct.xsil" expected="vibstring_dct_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+  </testing>
+  
   <name>vibstring_dct</name>
   <author>Graham Dennis</author>
   <description>

@@ -56,11 +56,8 @@ class _Dimension(ScriptElement):
   @property
   def transformMask(self):
     if self._transformMask == None:
-      if len(self.representations) == 1:
-        self._transformMask = 0
-      else:
-        geometry = self.getVar('geometry')
-        self._transformMask = 1 << geometry.indexOfDimension(self)
+      geometry = self.getVar('geometry')
+      self._transformMask = 1 << geometry.indexOfDimension(self)
     return self._transformMask
   
   def inSpace(self, space):
