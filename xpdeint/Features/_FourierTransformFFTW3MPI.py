@@ -24,14 +24,14 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
       # If all the distributed dimensions are the same in this field as in the geometry, then everything is OK
       if all([field.dimensionWithName(name) == geometry.dimensionWithName(name) for name in driver.distributedDimensionNames]):
         continue
-      for vector in filter(lambda x: x.needsFourierTransforms, field.vectors):
+      for vector in filter(lambda x: x.needsTransforms, field.vectors):
         raise ParserException(vector.xmlElement, "Vector '%s' cannot be fourier transformed because it would be distributed with MPI\n"
                                                  "and it doesn't have the same number of points as the geometry for the distributed dimensions." % vector)
   
   def vectorNeedsPartialTransforms(self, vector):
     if not self._driver.isFieldDistributed(vector.field):
       return False
-    if not vector.needsFourierTransforms:
+    if not vector.needsTransforms:
       return False
     # If any of the spaces in which this vector is needed are not full spaces, then we need partial transforms
     if any([space != 0 and space != vector.field.spaceMask for space in vector.spacesNeeded]):

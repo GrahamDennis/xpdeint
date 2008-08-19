@@ -77,6 +77,10 @@ class _EXOperator(Operator):
             # When constructing the 'special targets' vector it may depend on anything the parent code (usually delta a operator) depends on
             specialTargetsVector.dependencies = self.parent.dependencies.copy()
             
+            # If all dependencies are of type double, then the special targets vector must be double too
+            if all([v.type == 'double' for v in self.parent.dependencies]):
+              specialTargetsVector.type = 'double'
+            
             specialTargetsVector.evaluationSpace = self.parent.sharedCodeSpace
             specialTargetsVector.evaluationCodeEntity = ParsedEntity(None, '')
             specialTargetsVector.integratingComponents = False
@@ -112,6 +116,10 @@ class _EXOperator(Operator):
         elif not targetComponentName in self.operatorComponents[operatorName][targetVector]:
           self.operatorComponents[operatorName][targetVector].append(targetComponentName)
         
+        if targetVector.type == 'complex':
+          for v in [self.operatorVector, self.resultVector]:
+            if v:
+              v.type = 'complex'
         
         # Set the replacement string for the L[x] operator
         replacementString = "_%(operatorName)s_%(targetComponentName)s" % locals()

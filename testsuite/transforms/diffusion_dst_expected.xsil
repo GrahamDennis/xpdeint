@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
+  <testing>
+    <xsil_file name="diffusion_dst.xsil" expected="diffusion_dst_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+  </testing>
+  
   <name>diffusion_dst</name>
   <author>Graham Dennis</author>
   <description>
@@ -65,4 +69,27 @@
       </sampling>
     </group>
   </output>
+
+<info>
+Script compiled with xpdeint version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+See http://www.xmds.org for more information.
+</info>
+
+<XSIL Name="moment_group_1">
+  <Param Name="n_independent">2</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>4</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t y dens error_dens 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>49</Dim>
+    <Dim>128</Dim>
+    <Dim>4</Dim>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
+diffusion_dst_expected_mg0.dat
+    </Stream>
+  </Array>
+</XSIL>
 </simulation>

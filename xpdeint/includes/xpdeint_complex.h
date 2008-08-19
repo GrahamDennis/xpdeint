@@ -301,10 +301,20 @@ typedef struct {
   inline double mod2(const fftw_complex& z) {
     return z.re*z.re + z.im*z.im;
   }
+  
+  //! Returns modulus squared of a real number
+  inline double mod2(const double& x) {
+    return x*x;
+  }
 
   //! Returns modulus of a complex number
   inline double mod(const fftw_complex& z) {
     return sqrt(z.re*z.re + z.im*z.im);
+  }
+  
+  //! Returns modulus of a real number
+  inline double mod(const double& x) {
+    return fabs(x);
   }
 
   //! Returns arg of a complex number

@@ -1446,7 +1446,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       
       operatorVectorTemplate = VectorElementTemplate(name = vectorName, field = operatorTemplate.field,
                                                      **self.argumentsToTemplateConstructors)
-      operatorVectorTemplate.type = 'complex'
+      operatorVectorTemplate.type = 'double'
       
       operatorVectorTemplate.initialSpace = operatorTemplate.operatorSpace
       operatorVectorTemplate.needsInitialisation = False
@@ -1458,7 +1458,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     vectorName = operatorTemplate.id + "_result"
     resultVector = VectorElementTemplate(name = vectorName, field = operatorTemplate.field,
                                          **self.argumentsToTemplateConstructors)
-    resultVector.type = 'complex'
+    resultVector.type = 'double'
     
     resultVector.initialSpace = 0
     resultVector.needsInitialisation = False

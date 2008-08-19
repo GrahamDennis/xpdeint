@@ -48,13 +48,13 @@ class _VectorElement (ScriptElement):
     goSpaceFunction = Function(name = goSpaceFunctionName,
                                args = [('unsigned long', '_newSpace')],
                                implementation = self.goSpaceFunctionContents,
-                               predicate = lambda: self.needsFourierTransforms)
+                               predicate = lambda: self.needsTransforms)
     self.functions['goSpace'] = goSpaceFunction
     
     
   
   @property
-  def needsFourierTransforms(self):
+  def needsTransforms(self):
     if self.transformFree:
       return False
     return len(self.spacesNeeded) > 1
@@ -111,6 +111,26 @@ class _VectorElement (ScriptElement):
   # Create a property for the class with the above getter and setter methods
   initialSpace = property(_getInitialSpace, _setInitialSpace)
   del _getInitialSpace, _setInitialSpace
+  
+  @property
+  def maxSizeInReals(self):
+    if self.type == 'complex':
+      multiplier = 2
+    else:
+      multiplier = 1
+    return self.field.maxPoints * self.nComponents * multiplier
+  
+  def isTransformableTo(self, newSpace):
+    if self.transformFree:
+      return True
+    newSpace &= self.field.spaceMask
+    for dim in self.field.dimensions:
+      if (newSpace ^ self.initialSpace) & dim.transformMask:
+        if not dim.transform.canTransformVectorInDimension(self, dim):
+          # If the transform can't transform this vector, then
+          # this vector can't be transformed to the new space
+          return False
+    return True
   
 
 

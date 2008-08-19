@@ -99,7 +99,7 @@ ${typeName} ${operatorComponentName};
 
 ${evaluateOperatorLoop($setOfVectorsToLoopOver)}@slurp
   @#
-  @if $resultVector and $resultVector.needsFourierTransforms
+  @if $resultVector and $resultVector.needsTransforms
 
 _${resultVector.id}_space = $operatorSpace;
   @end if

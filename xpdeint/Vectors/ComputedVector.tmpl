@@ -41,7 +41,7 @@ ${insertCodeForFeatures('computedVectorEvaluationBegin', $featureOrdering, featu
 ${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $evaluationSpace, $setOfVectorsToLoopOver, $insideEvaluationLoops, vectorOverrides=vectorOverrides)}@slurp
 ${insertCodeForFeaturesInReverseOrder('computedVectorEvaluationEnd', $featureOrdering, featureDict)}@slurp
   @#
-  @if $needsFourierTransforms
+  @if $needsTransforms
 
 _${id}_space = $initialSpace;
   @end if

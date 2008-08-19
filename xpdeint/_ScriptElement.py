@@ -494,11 +494,11 @@ class _ScriptElement (Template):
     result = []
     for vector in vectors:
       if not (vector.initialSpace) == (space & vector.field.spaceMask):
-        if not vector.type == "complex" and not vector.transformFree:
+        if not vector.isTransformableTo(space):
           raise ParserException(self.xmlElement,
-                  "Cannot satisfy dependence on vector '%s' because it is not "
-                  "of type complex, and needs to be fourier transformed." % vector.name)
-      if vector.needsFourierTransforms:
+                  "Cannot satisfy dependence on vector '%s' because it cannot "
+                  "be transformed to the appropriate space." % vector.name)
+      if vector.needsTransforms:
         result.extend([vector.functions['goSpace'].call(_newSpace=space), '\n'])
       # Add space $space to the set of spaces in which this vector is needed
       vector.spacesNeeded.add(space & vector.field.spaceMask)

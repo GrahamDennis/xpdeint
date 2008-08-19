@@ -66,3 +66,14 @@ class _FourierTransform (Transform):
     dim.representations.extend([xspace, kspace])
     return dim
   
+  def canTransformVectorInDimension(self, vector, dim):
+    result = super(_FourierTransform, self).canTransformVectorInDimension(vector, dim)
+    if result:
+      transformName = self.transformNameMap[dim.name]
+      # We can only transform complex vectors with dft.
+      # dct/dst can manage both complex and double
+      if transformName == 'dft' and not vector.type == 'complex':
+        result = False
+    
+    return result
+    

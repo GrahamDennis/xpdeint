@@ -81,7 +81,7 @@ fftw_mpi_gather_wisdom(MPI_COMM_WORLD);
   @end if
   @#
   @set $blankLineSeparator = ''
-  @set $vectorsNeedingFourierTransforms = filter(lambda x: x.needsFourierTransforms, field.vectors)
+  @set $vectorsNeedingFourierTransforms = filter(lambda x: x.needsTransforms, field.vectors)
   @#
   @for vector in vectorsNeedingFourierTransforms
 ${blankLineSeparator}@slurp
@@ -361,7 +361,7 @@ for (int _from_space_index = 0; _from_space_index < ${numberOfSpacesNeeded}; _fr
   @end if
   @#
   @# only loop over those vectors that need fourier transforms
-  @for vector in filter(lambda x: x.needsFourierTransforms, field.vectors)
+  @for vector in filter(lambda x: x.needsTransforms, field.vectors)
 fftw_destroy_plan(_${vector.id}_forward_plan);
 fftw_destroy_plan(_${vector.id}_backward_plan);
     @if $vectorNeedsPartialTransforms(vector)

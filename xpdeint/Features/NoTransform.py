@@ -33,3 +33,5 @@ class NoTransform (Transform):
     dim.representations.append(rep)
     return dim
   
+  def canTransformVectorInDimension(self, vector, dim):
+    return False
