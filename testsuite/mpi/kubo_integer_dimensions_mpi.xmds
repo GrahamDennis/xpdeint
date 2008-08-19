@@ -2,8 +2,8 @@
 <simulation xmds-version="2">
   <testing>
     <command_line>mpirun -n 2 ./kubo_integer_dimensions_mpi</command_line>
-    <xsil_file name="kubo_integer_dimensions_mpi.xsil" expected="kubo_integer_dimensions_mpi_expected.xsil" />
-    <xsil_file name="kubo_integer_dimensions_mpi_break.xsil" expected="kubo_integer_dimensions_mpi_break_expected.xsil" />
+    <xsil_file name="kubo_integer_dimensions_mpi.xsil" expected="kubo_integer_dimensions_mpi_expected.xsil" absolute_tolerance="5e-2" relative_tolerance="1e-1" />
+    <xsil_file name="kubo_integer_dimensions_mpi_break.xsil" expected="kubo_integer_dimensions_mpi_break_expected.xsil" absolute_tolerance="5e-2" relative_tolerance="1e-1" />
   </testing>
   
   <name>kubo_integer_dimensions_mpi</name>
@@ -25,7 +25,6 @@
   
   <features>
     <benchmark />
-    <error_check />
     <bing />
     <stochastic>
       <noise kind="gaussian" prefix="n" num="1" seed="157 9348 234"/>

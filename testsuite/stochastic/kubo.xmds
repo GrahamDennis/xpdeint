@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
   <testing>
-    <xsil_file name="kubo.xsil" expected="kubo_expected.xsil" />
+    <xsil_file name="kubo.xsil" expected="kubo_expected.xsil" absolute_tolerance="5e-2" relative_tolerance="1e-1" />
   </testing>
   
   <name>kubo</name>
@@ -18,7 +18,6 @@
   
   <features>
     <benchmark />
-    <!--<error_check />-->
     <bing />
     <stochastic>
       <noise kind="gaussian" prefix="n" num="1" seed="157 9348 234"/>

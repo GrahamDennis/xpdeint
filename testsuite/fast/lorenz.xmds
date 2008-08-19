@@ -12,7 +12,6 @@
   
   <features>
     <benchmark />
-    <error_check />
     <fftw version="none" />
     <!-- That's right, this script breaks the shackles with FFTW! -->
     <globals>
