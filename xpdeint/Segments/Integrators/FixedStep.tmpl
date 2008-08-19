@@ -43,7 +43,6 @@ ${initialiseCrossPropagationFunctionImplementation}@slurp
 _${name}_initialise_cross_propagation();
 
     @set $integrationDimension = $parent.field.dimensionWithName($propagationDimension)
-    @# FIXME: This variable is only available inside the integrator... what about the delta a operator?
     @if $propagationDirection == '+'
       @set $dimensionSide = 'min'
     @else
