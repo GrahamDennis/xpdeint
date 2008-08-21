@@ -516,10 +516,10 @@ class XMDS2Parser(ScriptParser):
                                      parent = geometryTemplate,
                                      **self.argumentsToTemplateConstructors)
     
-    propagationDimension.representations.append(NonUniformDimensionRepresentation(name = propagationDimensionName,
-                                                                                  type = 'double',
-                                                                                  parent = propagationDimension,
-                                                                                  **self.argumentsToTemplateConstructors))
+    propagationDimension.addRepresentation(NonUniformDimensionRepresentation(name = propagationDimensionName,
+                                                                             type = 'double',
+                                                                             parent = propagationDimension,
+                                                                             **self.argumentsToTemplateConstructors))
     
     geometryTemplate.dimensions = [propagationDimension]
     
@@ -1514,13 +1514,15 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     
     propagationDimension = fullField.dimensionWithName(propagationDimensionName)
     
-    if not isinstance(propagationDimension.representations[0], UniformDimensionRepresentation):
+    propDimRep = propagationDimension.inSpace(0)
+    
+    if not propDimRep.type == 'double' or not isinstance(propagationDimension.inSpace(0), UniformDimensionRepresentation):
       raise ParserException(operatorElement, "Cannot integrate in the '%(propagationDimensionName)s' direction as it is an integer-valued dimension.\n"
                                              "Cross-propagators can only integrate along normal dimensions." % locals())
     
     fieldPropagationDimensionIndex = fullField.indexOfDimension(propagationDimension)
     # Set the stepCount -- this is the lattice for this dimension minus 1 because we know the value at the starting boundary
-    crossIntegratorTemplate.stepCount = ''.join(['(_', fullField.name, '_lattice_', propagationDimensionName, ' - 1)'])
+    crossIntegratorTemplate.stepCount = ''.join(['(', propDimRep.globalLattice, ' - 1)'])
     
     boundaryConditionElement = operatorElement.getChildElementByTagName('boundary_condition')
     
@@ -1627,11 +1629,11 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
                                     transverse = False,
                                     parent = momentGroupTemplate.outputField,
                                     **self.argumentsToTemplateConstructors)
-      samplingDimension.representations.append(NonUniformDimensionRepresentation(name = self.globalNameSpace['globalPropagationDimension'],
-                                                                                 type = 'double',
-                                                                                 lattice = sampleCount,
-                                                                                 parent = samplingDimension,
-                                                                                 **self.argumentsToTemplateConstructors))
+      samplingDimension.addRepresentation(NonUniformDimensionRepresentation(name = self.globalNameSpace['globalPropagationDimension'],
+                                                                            type = 'double',
+                                                                            lattice = sampleCount,
+                                                                            parent = samplingDimension,
+                                                                            **self.argumentsToTemplateConstructors))
       
       momentGroupTemplate.outputField.dimensions = [samplingDimension]
       
@@ -1702,11 +1704,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
         if lattice > 1:
           if not dimensionRepresentation.lattice == lattice:
             dimensionRepresentation.lattice = lattice
-            # Invalidate all other representations
-            for idx, rep in enumerate(dimension.representations[:]):
-              if rep != dimensionRepresentation:
-                rep.remove()
-                dimension.representations[idx] = None
+            dimension.invalidateRepresentationsOtherThan(dimensionRepresentation)
           
           outputFieldDimension = dimension.copy()
           dimension._parent = samplingFieldTemplate

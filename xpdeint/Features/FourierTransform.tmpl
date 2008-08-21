@@ -105,7 +105,7 @@ int _lattice;
 
 // Partial transforms for dimension '$dimension.name'
 _howMany = _${vector.id}_ncomponents * $vector.field.pointsInDimensionsWithIndices(range($fieldDimensionNumber + 1, len($vector.field.dimensions)));
-_lattice = _${vector.field.name}_lattice_${dimension.name};
+_lattice = ${dimension.inSpace(0).globalLattice};
 
 if ( !(_${vector.id}_space & $powerOfTwo) && (_newSpace & $powerOfTwo) ) {
   // Partial forward transform for dimension '$dimension.name'

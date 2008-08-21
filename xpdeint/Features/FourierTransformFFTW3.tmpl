@@ -237,7 +237,7 @@ for (int _from_space_index = 0; _from_space_index < ${numberOfSpacesNeeded}; _fr
       _r2r_kind[_r2r_sizes_index++] = FFTW_RODFT10;
           @end if
         @end if
-      _c *= ${dimension.representations[0].stepSize} * _inverse_sqrt_2pi;
+      _c *= ${dimension.inSpace(0).stepSize} * _inverse_sqrt_2pi;
     } else if ( (_from_space & ${bitMask}) && !(_to_space & ${bitMask}) ) {
       // Backward ${transformNameMap[dimension.name]} transform for '$dimension.name'
         @if $transformNameMap[dimension.name] == 'dft'
@@ -250,7 +250,7 @@ for (int _from_space_index = 0; _from_space_index < ${numberOfSpacesNeeded}; _fr
       _r2r_kind[_r2r_sizes_index++] = FFTW_RODFT01;
           @end if
         @end if
-      _c *= ${dimension.representations[1].stepSize} * _inverse_sqrt_2pi;
+      _c *= ${dimension.inSpace(-1).stepSize} * _inverse_sqrt_2pi;
     }
       @end if
     // if any pointers aren't set, they must be a loop

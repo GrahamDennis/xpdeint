@@ -29,7 +29,7 @@ class _Dimension(ScriptElement):
   a transformed coordinate that is strictly positive.
   """
   def __init__(self, *args, **KWs):
-    localKWs = self.extractLocalKWs(['name', 'transverse', 'representations', 'indexable', 'transform'], KWs)
+    localKWs = self.extractLocalKWs(['name', 'transverse', 'indexable', 'transform'], KWs)
     ScriptElement.__init__(self, *args, **KWs)
     
     self.name = localKWs['name']
@@ -37,7 +37,7 @@ class _Dimension(ScriptElement):
     self.transform = localKWs.get('transform')
     self.indexable = localKWs.get('indexable', False)
     
-    self.representations = localKWs.get('representations', [])
+    self.representations = []
     self._transformMask = None
   
   @property
@@ -65,6 +65,15 @@ class _Dimension(ScriptElement):
     if index:
       index = 1
     return self.representations[index]
+  
+  def addRepresentation(self, rep):
+    self.representations.append(rep)
+  
+  def invalidateRepresentationsOtherThan(self, mainRep):
+    for idx, rep in enumerate(self.representations[:]):
+      if rep != mainRep:
+        rep.remove()
+        self.representations[idx] = None
   
   def copy(self, parent = None):
     newInstanceKeys = ['name', 'transverse', 'transform', 'indexable']

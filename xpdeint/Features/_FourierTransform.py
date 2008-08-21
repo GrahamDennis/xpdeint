@@ -63,7 +63,8 @@ class _FourierTransform (Transform):
         kspace._minimum = '%s' % kspace.stepSize
         kspace._maximum = '%s * (%s + 1)' % (kspace.stepSize, kspace.globalLattice)
     
-    dim.representations.extend([xspace, kspace])
+    dim.addRepresentation(xspace)
+    dim.addRepresentation(kspace)
     return dim
   
   def canTransformVectorInDimension(self, vector, dim):
