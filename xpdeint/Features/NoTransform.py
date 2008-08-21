@@ -30,7 +30,7 @@ class NoTransform (Transform):
     rep = UniformDimensionRepresentation(name = name, type = type, lattice = lattice,
                                          minimum = minimum, maximum = maximum, stepSize = stepSize, parent = dim,
                                          **self.argumentsToTemplateConstructors)
-    dim.representations.append(rep)
+    dim.addRepresentation(rep)
     return dim
   
   def canTransformVectorInDimension(self, vector, dim):

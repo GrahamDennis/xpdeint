@@ -35,7 +35,7 @@ class _FixedStep (Integrator):
       # Remove ourselves from the scriptElements if we are to become a cross-propagator
       if self._cross:
         scriptElements = self.getVar('scriptElements')
-      
+        
         if self in scriptElements:
           scriptElements.remove(self)
   
