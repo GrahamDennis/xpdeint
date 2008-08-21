@@ -218,9 +218,8 @@ for (int _from_space_index = 0; _from_space_index < ${numberOfSpacesNeeded}; _fr
     _c = 1.0;
     @for $dimension in $vector.field.dimensions
       @set $fieldDimensionNumber = $vector.field.indexOfDimension($dimension)
-      @set $geometryDimensionNumber = $geometry.indexOfDimension($dimension)
       @# All spaces are defined relative to the dimension ordering in the geometry
-      @set $bitMask = 1 << $geometryDimensionNumber
+      @set $bitMask = $dimension.transformMask
     
     // Set sizes for transforms in dimension '$dimension.name'
     _forward_iodim_ptr = _backward_iodim_ptr = _r2r_iodim_ptr = NULL;

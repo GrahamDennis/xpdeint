@@ -1672,7 +1672,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
         
         dimensionRepresentation = dimension.inSpace(0)
         if fourierSpace:
-          momentGroupTemplate.sampleSpace |= 1 << geometryTemplate.indexOfDimensionName(dimensionName)
+          momentGroupTemplate.sampleSpace |= dimension.transformMask
           dimensionRepresentation = dimension.representations[1]
         
         lattice = dimensionRepresentation.lattice
