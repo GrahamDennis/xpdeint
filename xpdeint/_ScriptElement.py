@@ -363,8 +363,7 @@ class _ScriptElement (Template):
   
   def dimensionIsInFourierSpace(self, dimension, space):
     """Return `True` if `dimension` is in fourier space in `space`."""
-    geometryDimensionNumber = self.getVar('geometry').indexOfDimension(dimension)
-    if space & (1 << geometryDimensionNumber):
+    if space & dimension.transformMask:
       # This dimension is in fourier space
       return True
     else:

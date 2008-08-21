@@ -301,9 +301,8 @@ for (int _from_space_index = 0; _from_space_index < ${numberOfSpacesNeeded}; _fr
     
   @for $dimension in $vector.field.dimensions[2:]
     @set $fieldDimensionNumber = $vector.field.indexOfDimension($dimension)
-    @set $geometryDimensionNumber = $geometry.indexOfDimension($dimension)
     @# All spaces are defined relative to the dimension ordering in the geometry
-    @set $bitMask = 1 << $geometryDimensionNumber
+    @set $bitMask = $dimension.transformMask
     
     @if $dimension.type == 'double'
     // Set sizes for transforms in dimension '$dimension.name'

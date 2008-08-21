@@ -59,7 +59,7 @@ class _FieldElement (ScriptElement):
     
     for dimensionNumber, dimension in enumerate(geometryElement.dimensions):
       if self.hasDimension(dimension) and dimension.isTransformable:
-        bitMask |= 1 << dimensionNumber
+        bitMask |= dimension.transformMask
     
     return bitMask
   
@@ -232,7 +232,6 @@ class _FieldElement (ScriptElement):
     
     Note that the entries in `spacesString` do not need to be in any order.
     """
-    geometryTemplate = self.getVar('geometry')
     resultSpace = 0
     
     xmlElement = xmlElement or self.xmlElement
@@ -265,7 +264,7 @@ class _FieldElement (ScriptElement):
                   "The fourier_space attribute must have an entry for dimension '%(fieldDimensionName)s'." % locals())
       
       if fieldDimension.isTransformable and spacesSymbols.count(validDimensionNamesForField[1]):
-        resultSpace |= 1 << geometryTemplate.indexOfDimension(fieldDimension)
+        resultSpace |= fieldDimension.transformMask
     
     return resultSpace
   
