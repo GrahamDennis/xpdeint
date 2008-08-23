@@ -206,7 +206,7 @@ class _FieldElement (ScriptElement):
     separator = ''
     result.append('(')
     for rep in filter(lambda x: x.type == 'double', reps):
-      result.extend([separator, rep.prefix, '_d', rep.name])
+      result.extend([separator, rep.stepSize])
       separator = ' * '
     result.append(')')
     

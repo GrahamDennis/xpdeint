@@ -51,7 +51,7 @@ if ( _${vector.id}_space == 0 && _newSpace == _${vector.field.name}_full_kspace_
     @if dimension.transform != self
       @continue
     @end if
-  _c *= _${vector.field.name}_d${dimension.name} * _inverse_sqrt_2pi;
+  _c *= ${dimension.inSpace(0).stepSize} * _inverse_sqrt_2pi;
   @end for
 } 
 else if ( _${vector.id}_space == _${vector.field.name}_full_kspace_mask && _newSpace == 0) {
@@ -61,7 +61,7 @@ else if ( _${vector.id}_space == _${vector.field.name}_full_kspace_mask && _newS
     @if $dimension.transform != self
       @continue
     @end if
-  _c *= _${vector.field.name}_dk${dimension.name} * _inverse_sqrt_2pi;
+  _c *= ${dimension.inSpace(-1).stepSize} * _inverse_sqrt_2pi;
   @end for
 }
   @if len($vector.field.dimensions) > 1
@@ -111,13 +111,13 @@ if ( !(_${vector.id}_space & $powerOfTwo) && (_newSpace & $powerOfTwo) ) {
   // Partial forward transform for dimension '$dimension.name'
   ${mixedTransformForVectorInDimension($vector, $fieldDimensionNumber, 'forward'), autoIndent=True}@slurp
 
-  _c *= _${vector.field.name}_d${dimension.name} / sqrt(2.0 * M_PI);
+  _c *= ${dimension.inSpace(0).stepSize} / sqrt(2.0 * M_PI);
 }
 else if ( (_${vector.id}_space & $powerOfTwo) && !(_newSpace & $powerOfTwo) ) {
   // Partial reverse transform for dimension '$dimension.name'
   ${mixedTransformForVectorInDimension($vector, $fieldDimensionNumber, 'backward'), autoIndent=True}@slurp
 
-  _c *= _${vector.field.name}_dk${dimension.name} / sqrt(2.0 * M_PI);
+  _c *= ${dimension.inSpace(-1).stepSize} / sqrt(2.0 * M_PI);
 }
     @set $powerOfTwo *= 2
   @end for
