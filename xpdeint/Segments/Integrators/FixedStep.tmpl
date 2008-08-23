@@ -124,7 +124,8 @@ ${insertCodeForFeaturesInReverseOrder('integrateFixedStepEnd', featureOrderingOu
     @if $negativeIndexOverride
       @set $indexOverrideValue = $negativeIndexOverride
     @else
-      @set $indexOverrideValue = c'(_${parent.field.name}_lattice_${propagationDimension} - _istep - 1)'
+      @set $propDimRep = $parent.field.dimensionWithName($propagationDimension).inSpace(0)
+      @set $indexOverrideValue = c'(${propDimRep.globalLattice} - _istep - 1)'
     @end if
   @end if
   @#
@@ -171,7 +172,8 @@ ${loopOverFieldInSpaceWithVectorsAndInnerContent($parent.reducedField, $homeSpac
 void _${name}_initialise_cross_propagation()
 {
   @set $positiveIndexOverride = '0'
-  @set $negativeIndexOverride = c'(_${parent.field.name}_lattice_${propagationDimension} - 1)'
+  @set $propDimRep = $parent.field.dimensionWithName($propagationDimension).inSpace(0)
+  @set $negativeIndexOverride = c'(${propDimRep.globalLattice} - 1)'
   @#
   @set $combinedLoopVectorMap = $integrationVectorMap.copy()
   @silent combinedLoopVectorMap.update($dependencyMap)
