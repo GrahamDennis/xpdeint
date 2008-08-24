@@ -3,6 +3,9 @@
 
 * Make the regular expressions for integer-valued dimensions not consider or modify strings which are
   in comments or in quotes (e.g. printf strings)
+  - Upgrade our RegularExpressionStrings things to a full-fledged lexer. But don't write it ourselves, instead
+    use the lexers in Pygments (http://pygments.org). This will prevent us catching operators in comments/strings,
+    similarly for integer-valued dimensions.
 
 * Write a front-end to auto-configure preference file.
   For reading the preferences file, look into using the Python module
@@ -105,3 +108,4 @@
   - diffusion_win works fine on windows.
   - Next priorities: getting fftw3 working and porting the benchmark code...
   - Investigate MinGW GCC 4.3 performance versus Visual Studio performance.
+
