@@ -34,8 +34,7 @@ from xpdeint.Segments.TopLevelSequenceElement import TopLevelSequenceElement as 
 from xpdeint.SimulationDrivers.DefaultDriver import DefaultDriver as DefaultDriverTemplate
 from xpdeint.SimulationDrivers.MultiPathDriver import MultiPathDriver as MultiPathDriverTemplate
 from xpdeint.SimulationDrivers.MPIMultiPathDriver import MPIMultiPathDriver as MPIMultiPathDriverTemplate
-from xpdeint.SimulationDrivers.IntegerDistributedMPIDriver import IntegerDistributedMPIDriver as IntegerDistributedMPIDriverTemplate
-from xpdeint.SimulationDrivers.DoubleDistributedMPIDriver import DoubleDistributedMPIDriver as DoubleDistributedMPIDriverTemplate
+from xpdeint.SimulationDrivers.DistributedMPIDriver import DistributedMPIDriver as DistributedMPIDriverTemplate
 
 from xpdeint.Segments import Integrators
 from xpdeint.Segments.FilterSegment import FilterSegment as FilterSegmentTemplate
@@ -58,7 +57,7 @@ from xpdeint.Features.BinaryOutput import BinaryOutput as BinaryOutputTemplate
 from xpdeint.Features.AsciiOutput import AsciiOutput as AsciiOutputTemplate
 from xpdeint.MomentGroupElement import MomentGroupElement as MomentGroupTemplate
 
-from xpdeint.Features.NoTransform import NoTransform as NoTransform
+from xpdeint.Features import Transforms
 
 from xpdeint import Features
 
@@ -70,9 +69,6 @@ from xpdeint.Features.Noises.MKL.UniformMKLNoise import UniformMKLNoise
 from xpdeint.Features.Noises.DSFMT.GaussianDSFMTNoise import GaussianDSFMTNoise
 from xpdeint.Features.Noises.DSFMT.UniformDSFMTNoise import UniformDSFMTNoise
 from xpdeint.Features.Noises.DSFMT.PoissonianDSFMTNoise import PoissonianDSFMTNoise
-
-from xpdeint.Features.FourierTransformFFTW3 import FourierTransformFFTW3
-from xpdeint.Features.FourierTransformFFTW3Threads import FourierTransformFFTW3Threads
 
 # TODO: Must check that we are never sampling a temporary vector when it doesn't exist.
 # The way to do this is after the template tree has been built to iterate over all elements that can sample
@@ -123,11 +119,11 @@ class XMDS2Parser(ScriptParser):
     
     simulationElementTemplate = SimulationElementTemplate(**self.argumentsToTemplateConstructors)
     
+    self.parseDriverElement(simulationElement)
+    
     self.parseFeatures(simulationElement)
     
     self.parseGeometryElement(simulationElement)
-    
-    self.parseDriverElement(simulationElement)
     
     self.parseVectorElements(simulationElement)
     
@@ -155,12 +151,12 @@ class XMDS2Parser(ScriptParser):
     
     driverElement = simulationElement.getChildElementByTagName('driver', optional=True)
     if driverElement:
-    
+      
       driverName = driverElement.getAttribute('name').strip().lower()
-    
+      
       class UnknownDriverException(Exception):
         pass
-    
+      
       try:
         if 'multi-path' in driverName:
           if driverName == 'multi-path':
@@ -169,7 +165,7 @@ class XMDS2Parser(ScriptParser):
             driverClass = MPIMultiPathDriverTemplate
           else:
             raise UnknownDriverException()
-        
+          
           if not driverElement.hasAttribute('paths'):
             raise ParserException(driverElement, "Missing 'paths' attribute for multi-path driver.")
           pathCount = RegularExpressionStrings.integerInString(driverElement.getAttribute('paths'))
@@ -177,21 +173,13 @@ class XMDS2Parser(ScriptParser):
         elif driverName == 'none':
           pass
         elif driverName == 'distributed-mpi':
-          transverseDimensions = filter(lambda x: x.transverse, self.globalNameSpace['geometry'].dimensions)
-          if not transverseDimensions:
-            raise ParserException(driverElement, "The distributed-mpi driver requires transverse dimensions to be able to be used.")
-          if not transverseDimensions[0].isTransformable:
-            driverClass = IntegerDistributedMPIDriverTemplate
-          elif len(transverseDimensions) < 2 or not transverseDimensions[1].isTransformable:
-            raise ParserException(driverElement, "At least two 'double' dimensions are required to use the distributed-mpi driver with 'double' dimensions.")
-          else:
-            driverClass = DoubleDistributedMPIDriverTemplate
+          driverClass = DistributedMPIDriverTemplate
         else:
           raise UnknownDriverException()
       except UnknownDriverException, err:
         raise ParserException(driverElement, "Unknown driver type '%(driverName)s'. "
                                              "The options are 'none' (default), 'multi-path', 'mpi-multi-path' or 'distributed-mpi'." % locals())
-    
+      
       if driverClass == MultiPathDriverTemplate:
         kindString = None
         if driverElement.hasAttribute('kind'):
@@ -397,7 +385,7 @@ class XMDS2Parser(ScriptParser):
     fftAttributeDictionary = dict()
     
     if not fftwElement:
-      fourierTransformClass = NoTransform
+      fourierTransformClass = Transforms._NoTransform._NoTransform
     else:
       threadCount = 1
       if fftwElement.hasAttribute('threads'):
@@ -413,11 +401,11 @@ class XMDS2Parser(ScriptParser):
       
       if not fftwElement.hasAttribute('version'):
         # FIXME: We need to determine the default FFTW version based on what is available
-        fourierTransformClass = FourierTransformFFTW3
+        fourierTransformClass = Transforms.FourierTransformFFTW3.FourierTransformFFTW3
       elif fftwElement.getAttribute('version').strip() == '3':
-        fourierTransformClass = FourierTransformFFTW3
+        fourierTransformClass = Transforms.FourierTransformFFTW3.FourierTransformFFTW3
       elif fftwElement.getAttribute('version').strip().lower() == 'none':
-        fourierTransformClass = NoTransform
+        fourierTransformClass = Transforms._NoTransform._NoTransform
       else:
         raise ParserException(fftwElement, "The version attribute must be either 'none' or '3'.")
       
@@ -439,9 +427,9 @@ class XMDS2Parser(ScriptParser):
         fftAttributeDictionary['planType'] = planType
       
       if threadCount > 1:
-        if fourierTransformClass == FourierTransformFFTW3:
-          fourierTransformClass = FourierTransformFFTW3Threads
-        elif fourierTransformClass == NoTransform:
+        if fourierTransformClass == Transforms.FourierTransformFFTW3.FourierTransformFFTW3:
+          fourierTransformClass = Transforms.FourierTransformFFTW3Threads.FourierTransformFFTW3Threads
+        elif fourierTransformClass == Transforms._NoTransform._NoTransform:
           raise ParserException(fftwElement, "Can't use threads with no fourier transforms.")
         else:
           # This shouldn't be reached because the fourierTransformClass should be one of the above options
@@ -519,6 +507,7 @@ class XMDS2Parser(ScriptParser):
     propagationDimension.addRepresentation(NonUniformDimensionRepresentation(name = propagationDimensionName,
                                                                              type = 'double',
                                                                              parent = propagationDimension,
+                                                                             xmlElement = propagationDimensionElement,
                                                                              **self.argumentsToTemplateConstructors))
     
     geometryTemplate.dimensions = [propagationDimension]
@@ -605,17 +594,26 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
           elif 'none' in self.globalNameSpace['transforms']:
             transform = self.globalNameSpace['transforms']['none']
           else:
-            transform = NoTransform(**self.argumentsToTemplateConstructors)
+            transform = Transforms._NoTransform._NoTransform(**self.argumentsToTemplateConstructors)
         
         dim = transform.newDimension(name = dimensionName, lattice = int(latticeString),
                                      minimum = minimumString, maximum = maximumString,
-                                     parent = geometryTemplate, transformName = transformName)
+                                     parent = geometryTemplate, transformName = transformName,
+                                     xmlElement = dimensionElement)
         
         geometryTemplate.dimensions.append(dim)
       
       # We have just finished looping over the normal dimensions in the transverse_dimensions element.
       # Now we need to grab any 'integer_valued' tags and parse those.
       self.parseIntegerValuedElements(transverseDimensionsElement, geometryTemplate)
+    
+    driver = self.globalNameSpace['features']['Driver']
+    if isinstance(driver, DistributedMPIDriverTemplate):
+      transverseDimensions = geometryTemplate.dimensions[1:]
+      mpiTransform = transverseDimensions[0].transform
+      if not mpiTransform.isMPICapable:
+        raise ParserException(mpiTransform.xmlElement, "The '%s' transform cannot be used with the 'distributed-mpi' driver." % mpiTransform.featureName)
+      mpiTransform.initialiseForMPIWithDimensions(transverseDimensions)
     
     return geometryTemplate
   
@@ -725,7 +723,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       if 'none' in self.globalNameSpace['transforms']:
         transform = self.globalNameSpace['transforms']['none']
       else:
-        transform = NoTransform(**self.argumentsToTemplateConstructors)
+        transform = Transforms._NoTransform._NoTransform(**self.argumentsToTemplateConstructors)
         
       dim = transform.newDimension(name = dimensionName, lattice = lattice, type = 'long',
                                    minimum = minimumString, maximum = maximumString,
@@ -1663,17 +1661,18 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
           elif spaceString == 'no':
             fourierSpace = False
           else:
-            for idx, rep in enumerate(dimension.representations):
-              if spaceString == rep.name:
-                fourierSpace = bool(idx)
+            if dimension.inSpace(0).name == spaceString:
+              fourierSpace = False
+            elif dimension.inSpace(-1).name == spaceString:
+              fourierSpace = True
           if fourierSpace == None:
             raise ParserException(dimensionElement, "fourier_space attribute for dimension '%s' must be 'yes' / '%s' or 'no' / '%s'"
-                                                    % (dimensionName, dimension.representations[1].name, dimension.representations[0].name))
+                                                    % (dimensionName, dimension.inSpace(-1).name, dimension.inSpace(0).name))
         
         dimensionRepresentation = dimension.inSpace(0)
         if fourierSpace:
           momentGroupTemplate.sampleSpace |= dimension.transformMask
-          dimensionRepresentation = dimension.representations[1]
+          dimensionRepresentation = dimension.inSpace(momentGroupTemplate.sampleSpace)
         
         lattice = dimensionRepresentation.lattice
         

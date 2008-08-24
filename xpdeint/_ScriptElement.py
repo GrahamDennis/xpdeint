@@ -681,19 +681,6 @@ class _ScriptElement (Template):
       result.update(operatorContainer.computedVectorsNeedingPrecalculation)
     return result
   
-  def mayHaveLocalOffsetForDimensionInFieldInSpace(self, dimension, field, space):
-    """
-    Return `True` if this dimension may have a local offset. This should only be true
-    when `dimension` is being distributed with MPI.
-    """
-    return self._driver.mayHaveLocalOffsetForDimensionInFieldInSpace(dimension, field, space)
-  
-  def localOffsetForDimensionInFieldInSpace(self, dimension, field, space):
-    return self._driver.localOffsetForDimensionInFieldInSpace(dimension, field, space)
-  
-  def localLatticeForDimensionInFieldInSpace(self, dimension, field, space):
-    return self._driver.localLatticeForDimensionInFieldInSpace(dimension, field, space)
-  
   def sizeOfVectorInSpace(self, vector, space):
     return ''.join([self.sizeOfFieldInSpace(vector.field, space), ' * _', vector.id, '_ncomponents'])
   
@@ -704,10 +691,7 @@ class _ScriptElement (Template):
       return '2 * ' + self.sizeOfVectorInSpace(vector, space)
   
   def allocSizeOfVector(self, vector):
-    return ''.join([self.allocSizeOfField(vector.field), ' * _', vector.id, '_ncomponents'])
-  
-  def allocSizeOfField(self, field):
-    return self._driver.allocSizeOfField(field)
+    return '_' + vector.field.id + '_alloc_size * _' + vector.id + '_ncomponents'
   
   def sizeOfVector(self, vector):
     return self._driver.sizeOfVector(vector)

@@ -18,13 +18,14 @@ class _DimensionRepresentation(ScriptElement):
   how exactly to split the dimension are controlled by the transform that created the representation.
   """
   def __init__(self, **KWs):
-    localKWs = self.extractLocalKWs(['name', 'type', 'lattice'], KWs)
+    localKWs = self.extractLocalKWs(['name', 'type', 'lattice', '_localVariablePrefix'], KWs)
     ScriptElement.__init__(self, **KWs)
     
     self.name = localKWs['name']
     
     self.type = localKWs['type']
     self.lattice = localKWs.get('lattice', 0)
+    self._localVariablePrefix = localKWs.get('_localVariablePrefix')
     
   
   def __eq__(self, other):
@@ -43,7 +44,7 @@ class _DimensionRepresentation(ScriptElement):
       return not eq
   
   def _newInstanceDict(self):
-    return {'name': self.name, 'type': self.type, 'lattice': self.lattice}
+    return {'name': self.name, 'type': self.type, 'lattice': self.lattice, '_localVariablePrefix': self._localVariablePrefix}
   
   def copy(self):
     newInstanceDict = self._newInstanceDict()
@@ -58,20 +59,28 @@ class _DimensionRepresentation(ScriptElement):
   def globalLattice(self):
     return self.prefix + '_lattice_' + self.name
   
+  def setHaveLocalOffset(self, localVariablePrefix = ''):
+    self._localVariablePrefix = '_local'
+    if localVariablePrefix:
+      self._localVariablePrefix += '_' + localVariablePrefix
+  
   @property
-  def mayHaveLocalOffset(self):
-    # FIXME: Implement this
-    return False
+  def haveLocalOffset(self):
+    return self._localVariablePrefix != None
   
   @property
   def localLattice(self):
-    # FIXME: Implement this properly
-    return self.globalLattice
+    if not self.haveLocalOffset:
+      return self.globalLattice
+    else:
+      return self.prefix + self._localVariablePrefix + '_lattice_' + self.name
   
   @property
   def localOffset(self):
-    # FIXME: Implement this properly
-    return '0'
+    if not self.haveLocalOffset:
+      return '0'
+    else:
+      return self.prefix + self._localVariablePrefix + '_offset_' + self.name
   
   @property
   def minimum(self):

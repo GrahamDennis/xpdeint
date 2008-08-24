@@ -16,11 +16,22 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
   @#
 @end def
 
+@def globals
+  @#
+  @super
+  @#
+  @if $haveLocalOffset
+ptrdiff_t $localLattice = 0;
+ptrdiff_t $localOffset = 0;
+  @end if
+  @#
+@end def
+
 @def openLoopMemoryOrder
   @#
 #define d${name} ${stepSize}
 $type $name = 0.0;
-  @if $mayHaveLocalOffset
+  @if $haveLocalOffset
 if ($localOffset) {
   $name += $localOffset * ${stepSize};
   ${wrapCoordinateVariable, autoIndent=True}@slurp
@@ -45,7 +56,7 @@ for (long ${loopIndex} = 0; ${loopIndex} < ${localLattice}; ${loopIndex}++) {
 @def openLoopAscending
   @#
 $type $name = ${minimum};
-  @if $mayHaveLocalOffset
+  @if $haveLocalOffset
 #error "Cannot loop in k-space ascending order when the dimension is split with MPI (this error shouldn't be hit, please report it to xmds-devel@lists.sourceforge.net)"
   @end if
 
@@ -83,7 +94,7 @@ ${dimRep.loopIndex} + (signbit(${dimRep.name}) ? (${globalLattice} - ${dimRep.gl
 
 @def strictlyAscendingGlobalIndex
   @#
-  @if not $mayHaveLocalOffset
+  @if not $haveLocalOffset
 ${loopIndex} + (signbit(${name}) ? -(${globalLattice}+1)/2 : ${globalLattice}/2)@slurp
   @else
 lround(${name}/${stepSize}) + ${globalLattice}/2@slurp

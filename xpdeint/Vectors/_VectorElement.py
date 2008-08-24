@@ -126,7 +126,7 @@ class _VectorElement (ScriptElement):
     newSpace &= self.field.spaceMask
     for dim in self.field.dimensions:
       if (newSpace ^ self.initialSpace) & dim.transformMask:
-        if not dim.transform.canTransformVectorInDimension(self, dim):
+        if not dim.canTransformVector(self):
           # If the transform can't transform this vector, then
           # this vector can't be transformed to the new space
           return False

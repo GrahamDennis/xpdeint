@@ -36,14 +36,7 @@ class _SimulationDriver (ScriptElement):
   
   def sizeOfFieldInSpace(self, field, space):
     """Return a name of a variable the value of which is the size of `field` in `space`."""
-    return self.allocSizeOfField(field)
-  
-  def allocSizeOfField(self, field):
-    """
-    Return a name of a variable to be used as the number of lattice points for `field`
-    to be used when allocating vectors in `field`.
-    """
-    return ''.join(['_', field.name, '_size'])
+    return '_' + field.name + '_alloc_size'
   
   def sizeOfVector(self, vector):
     return self.sizeOfVectorInSpace(vector, None)

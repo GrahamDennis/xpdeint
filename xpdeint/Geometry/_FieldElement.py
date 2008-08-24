@@ -141,7 +141,7 @@ class _FieldElement (ScriptElement):
       # Only put a multiply sign in for everything after the first dimension
       result.append(separator)
       separator = ' * '
-      result.append(self.localLatticeForDimensionInFieldInSpace(self.dimensions[dimensionIndex], self, space))
+      result.append(self.dimensions[dimensionIndex].inSpace(space).localLattice)
     
     return ''.join(result)
   
@@ -252,7 +252,7 @@ class _FieldElement (ScriptElement):
     
     for fieldDimension in self.dimensions:
       fieldDimensionName = fieldDimension.name
-      validDimensionNamesForField = [rep.name for rep in fieldDimension.representations]
+      validDimensionNamesForField = set([rep.name for rep in fieldDimension.representations])
       
       dimensionOccurrences = sum([spacesSymbols.count(dimName) for dimName in validDimensionNamesForField])
       
@@ -263,7 +263,7 @@ class _FieldElement (ScriptElement):
         raise ParserException(xmlElement,
                   "The fourier_space attribute must have an entry for dimension '%(fieldDimensionName)s'." % locals())
       
-      if fieldDimension.isTransformable and spacesSymbols.count(validDimensionNamesForField[1]):
+      if fieldDimension.isTransformable and spacesSymbols.count(fieldDimension.inSpace(-1).name):
         resultSpace |= fieldDimension.transformMask
     
     return resultSpace

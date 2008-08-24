@@ -121,6 +121,15 @@ def integerValuedDimensionsForComponentInField(componentName, field):
   
   return regexString
 
+def targetComponentsForOperatorsInString(operatorNames, propagationCode):
+  """
+  Return a list of pairs of operator names and their targets that are in `propagationCode`.
+  The valid operator names searched for are `operatorNames`. For example, if 'L' is in `operatorNames`,
+  then in the code ``L[phi]`` the return value would be ``('L', 'phi')``.
+  """
+  operatorCodeRegex = re.compile(r'\b(' + '|'.join(operatorNames) + ')'+ threeLevelsMatchedSquareBrackets, re.VERBOSE)
+  return operatorCodeRegex.findall(propagationCode)
+
 
 
 def symbolsInString(string):

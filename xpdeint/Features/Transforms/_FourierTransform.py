@@ -7,15 +7,15 @@ Created by Graham Dennis on 2008-07-30.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
-from xpdeint.Features.Transform import Transform
+from xpdeint.Features.Transforms._Transform import _Transform
 
 from xpdeint.Geometry._Dimension import _Dimension
 from xpdeint.Geometry.UniformDimensionRepresentation import UniformDimensionRepresentation
 from xpdeint.Geometry.SplitUniformDimensionRepresentation import SplitUniformDimensionRepresentation
 
-class _FourierTransform (Transform):
+class _FourierTransform (_Transform):
   def __init__(self, *args, **KWs):
-    Transform.__init__(self, *args, **KWs)
+    _Transform.__init__(self, *args, **KWs)
     
     self.getVar('transforms')['dft'] = self
     self.getVar('transforms')['dct'] = self
@@ -23,10 +23,10 @@ class _FourierTransform (Transform):
     
     self.transformNameMap = {}
   
-  def newDimension(self, name, lattice, minimum, maximum, parent, transformName, type = 'double', indexable = False):
+  def newDimension(self, name, lattice, minimum, maximum, parent, transformName, type = 'double', xmlElement = None, indexable = False):
     assert type == 'double'
     assert transformName in ['dft', 'dct', 'dst']
-    dim = _Dimension(name = name, transform = self, parent = parent, indexable = indexable,
+    dim = _Dimension(name = name, transform = self, parent = parent, indexable = indexable, xmlElement = xmlElement,
                      **self.argumentsToTemplateConstructors)
     self.transformNameMap[dim.name] = transformName
     if transformName == 'dft':

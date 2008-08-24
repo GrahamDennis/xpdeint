@@ -1,16 +1,9 @@
 templates = $(wildcard *.tmpl)
+include ../../CheetahTemplateOptions.mk
 
-include ../CheetahTemplateOptions.mk
-
-SUBDIRS = Noises Transforms
-
-.PHONY: all compile clean
-
-MYMAKEFLAGS = 'cheetah_settings=$(cheetah_settings)'
+.PHONY: all compile
 
 all: compile
-	@for i in $(SUBDIRS); do \
-	(cd $$i; env $(MYMAKEFLAGS) $(MAKE) $(MFLAGS) all); done
 
 compile: .COMPILE
 
@@ -28,5 +21,3 @@ clean:
 	@rm -f *.pyc
 	@rm -f $(templates:.tmpl=.py)
 	@rm -f $(templates:.tmpl=.py.bak)
-	@for i in $(SUBDIRS); do \
-	(cd $$i; $(MAKE) $(MFLAGS) clean); done

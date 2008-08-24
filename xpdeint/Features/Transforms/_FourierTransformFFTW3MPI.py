@@ -7,7 +7,7 @@ Created by Graham Dennis on 2008-06-08.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
-from xpdeint.Features.FourierTransformFFTW3 import FourierTransformFFTW3
+from xpdeint.Features.Transforms.FourierTransformFFTW3 import FourierTransformFFTW3
 
 from xpdeint.ParserException import ParserException
 
