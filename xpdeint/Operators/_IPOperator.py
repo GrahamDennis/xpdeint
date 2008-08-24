@@ -25,7 +25,7 @@ class _IPOperator(Operator):
   def preflight(self):
     super(Operator, self).preflight()
     
-    operatorTargetPairs = self.targetComponentsForOperatorsInString(self.operatorNames, self.parent.sharedCode)
+    operatorTargetPairs = RegularExpressionStrings.targetComponentsForOperatorsInString(self.operatorNames, self.parent.sharedCode)
     
     if operatorTargetPairs:
       operatorNamesUsed = set()

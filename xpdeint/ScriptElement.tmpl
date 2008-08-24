@@ -139,7 +139,7 @@ to be performed in the same way on a range of vectors in possibly different fiel
     @silent $templateVariables['vector'] = $vector
 ${insertCodeForFeatures('loopOverVectorsWithInnerContentTemplateBegin', $loopFeatureOrdering, $dict)}@slurp
     @capture loopString
-for (long _i0 = 0; _i0 < ${loopCountPrefix}${sizeOfVector(vector)}; _i0++) {
+for (long _i0 = 0; _i0 < ${loopCountPrefix}${allocSizeOfVector(vector)}; _i0++) {
   ${innerLoopTemplate, autoIndent=True}@slurp
 }
     @end capture
@@ -469,8 +469,8 @@ _${vector.id}_index_pointer = ( 0@slurp
         @#
         @# If the lattices are the same, then there is nothing special to be done for this dimension
         @# We also require that there are neither dimension could have a local offset
-        @set $mayHaveLocalOffset = dimension.inSpace(space).mayHaveLocalOffset or fieldDimension.inSpace(space).mayHaveLocalOffset
-        @if $dimension.inSpace(space).lattice == $fieldDimension.inSpace(space).lattice and not mayHaveLocalOffset
+        @set $haveLocalOffset = dimension.inSpace(space).haveLocalOffset or fieldDimension.inSpace(space).haveLocalOffset
+        @if $dimension.inSpace(space).lattice == $fieldDimension.inSpace(space).lattice and not haveLocalOffset
   + ( ${fieldDimension.inSpace(space).loopIndex} )
       * $vector.field.localPointsInDimensionsAfterDimensionInSpace(dimension, space)@slurp
         @else
@@ -569,7 +569,7 @@ ${vector.functions['evaluate'].call()}
 @#doc: Copy the contents of `vecSrc` into `vecDest`
   @#
   @for $vector in $vectors
-memcpy(${destPrefix}_${vector.id}, ${srcPrefix}_${vector.id}, sizeof(${vector.type}) * ${sizeOfVector(vector)});
+memcpy(${destPrefix}_${vector.id}, ${srcPrefix}_${vector.id}, sizeof(${vector.type}) * ${allocSizeOfVector(vector)});
   @end for
   @#
 @end def

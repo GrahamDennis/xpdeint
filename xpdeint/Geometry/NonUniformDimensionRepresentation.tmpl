@@ -17,8 +17,9 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
   @#
 @end def
 
-
 @def globals
+  @#
+  @super
   @#
   @if $lattice
     @# We allocate an extra point so that evaluating ${stepSize} at the end of the grid
@@ -27,10 +28,17 @@ unsigned long ${index} = 0;
 ${type}* ${arrayName} = (${type}*) xmds_malloc(sizeof(${type}) * (${globalLattice}+1));
   @end if
   @#
+  @if $haveLocalOffset
+ptrdiff_t $localLattice = 0;
+ptrdiff_t $localOffset = 0;
+  @end if
+  @#
 @end def
 
 @def openLoopAscending
   @#
+  @# Non-uniform dimensions do not currently support being distributed
+  @assert not $haveLocalOffset
 #define ${name} ${arrayName}[${loopIndex}]
 
 for (long ${loopIndex} = 0; ${loopIndex} < ${localLattice}; ${loopIndex}++) {

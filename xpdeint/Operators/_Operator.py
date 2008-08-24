@@ -136,11 +136,6 @@ class _Operator (ScriptElement):
   field = property(_getField, _setField)
   del _getField, _setField
   
-  def targetComponentsForOperatorsInString(self, operatorNames, propagationCode):
-    operatorCodeRegex = re.compile(r'\b(' + '|'.join(operatorNames) + ')'+ RegularExpressionStrings.threeLevelsMatchedSquareBrackets, re.VERBOSE)
-    return operatorCodeRegex.findall(propagationCode)
-  
-  
   def bindNamedVectors(self):
     super(_Operator, self).bindNamedVectors()
     

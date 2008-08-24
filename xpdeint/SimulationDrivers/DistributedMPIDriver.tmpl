@@ -16,7 +16,7 @@ int main(int argc, char **argv)
   MPI_Comm_size(MPI_COMM_WORLD, &_size);
   MPI_Comm_rank(MPI_COMM_WORLD, &_rank);
   
-  ${setLocalLatticeAndOffsetVariables, autoIndent=True}@slurp
+  ${distributedTransform.setLocalLatticeAndOffsetVariables, autoIndent=True}@slurp
   
   ${mainRoutineInnerContent, autoIndent=True}@slurp
   
@@ -36,8 +36,8 @@ int main(int argc, char **argv)
   @set $mpiDimension = $mpiDimensionForSpace($space)
   @#
   @for $vector in $vectorOverrides
-    @set $dimensionsIntegratedOver = set([d.name for d in field.dimensions if not vector.field.hasDimension(d)])
-    @if not dimensionsIntegratedOver.intersection($distributedDimensionNames)
+    @set $dimensionsIntegratedOver = set([d.inSpace(space).name for d in field.dimensions if not vector.field.hasDimension(d)])
+    @if not mpiDimension.inSpace(space).name in dimensionsIntegratedOver
       @# If we aren't integrating over an MPI dimension, then everything is as usual.
       @continue
     @end if
@@ -95,8 +95,8 @@ else {
   // We are some other rank that isn't 0, so we need to send our data to rank 0.
   ptrdiff_t _sending_var;
   
-  @for $suffix in $geometryVariableSuffixesToBeShadowed
-  _sending_var = _${field.name}${suffix};
+  @for $shadowVariable in $shadowedVariablesForField(field)
+  _sending_var = $shadowVariable;
   MPI_Ssend(&_sending_var, sizeof(ptrdiff_t), MPI_BYTE, 0, 0, MPI_COMM_WORLD);
   @end for
   _sending_var = ${sizeOfFieldInSpace(field, space)};
@@ -123,8 +123,8 @@ MPI_Barrier(MPI_COMM_WORLD);
     @return
   @end if
   @#
-  @for $suffix in $geometryVariableSuffixesToBeShadowed
-ptrdiff_t _my_${field.name}${suffix} = _${field.name}${suffix};
+  @for $shadowVariable in $shadowedVariablesForField(field)
+ptrdiff_t _my${shadowVariable} = ${shadowVariable};
   @end for
   @#
 
@@ -134,20 +134,20 @@ ${variable.vector.type}* _backup${variable.arrayName} = ${variable.arrayName};
 @end for
 
 for (long _dataForRank = 0; _dataForRank < _size; _dataForRank++) {
-  @for $suffix in $geometryVariableSuffixesToBeShadowed
-  ptrdiff_t _${field.name}${suffix};
+  @for $shadowVariable in $shadowedVariablesForField(field)
+  ptrdiff_t ${shadowVariable};
   @end for
   ptrdiff_t _local_field_size;
   
   if (_dataForRank == 0) {
-  @for $suffix in $geometryVariableSuffixesToBeShadowed
-    _${field.name}${suffix} = _my_${field.name}${suffix};
+  @for $shadowVariable in $shadowedVariablesForField(field)
+    ${shadowVariable} = _my${shadowVariable};
   @end for
   
   } else {
     MPI_Status status;
-  @for $suffix in $geometryVariableSuffixesToBeShadowed
-    MPI_Recv(&_${field.name}${suffix}, sizeof(ptrdiff_t), MPI_BYTE, _dataForRank, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+  @for $shadowVariable in $shadowedVariablesForField(field)
+    MPI_Recv(&${shadowVariable}, sizeof(ptrdiff_t), MPI_BYTE, _dataForRank, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
   @end for
     MPI_Recv(&_local_field_size, sizeof(ptrdiff_t), MPI_BYTE, _dataForRank, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
     

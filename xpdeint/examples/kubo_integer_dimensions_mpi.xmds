@@ -19,7 +19,7 @@
   
   <features>
     <benchmark />
-    <error_check />
+    <!-- <error_check /> -->
     <bing />
     <stochastic>
       <noise kind="gaussian" prefix="n" num="1" seed="157 9348 234"/>
@@ -33,7 +33,7 @@
     </components>
     <initialisation noises="">
       <![CDATA[
-        if (_i0 == 1)
+        if (_index_j == 1)
           _LOG(_WARNING_LOG_LEVEL, "_j_local_lattice_j: %li, _j_local_offset_j: %li\n", _j_local_lattice_j, _j_local_offset_j);
         z = 1.0;
       ]]>

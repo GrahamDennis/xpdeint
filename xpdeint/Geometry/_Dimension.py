@@ -61,10 +61,17 @@ class _Dimension(ScriptElement):
     return self._transformMask
   
   def inSpace(self, space):
+    # The transform can override this mapping
+    if hasattr(self.transform, 'representationForDimensionInSpace'):
+      return self.transform.representationForDimensionInSpace(self, space)
+    
     index = self.transformMask & space
     if index:
       index = 1
     return self.representations[index]
+  
+  def canTransformVector(self, vector):
+    return self.transform.canTransformVectorInDimension(vector, self)
   
   def addRepresentation(self, rep):
     self.representations.append(rep)

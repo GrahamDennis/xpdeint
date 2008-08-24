@@ -16,11 +16,21 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
   @#
 @end def
 
+@def globals
+  @#
+  @super
+  @#
+  @if $haveLocalOffset
+ptrdiff_t $localLattice = 0;
+ptrdiff_t $localOffset = 0;
+  @end if
+  @#
+@end def
 
 @def openLoopAscending
   @#
 ${type} ${name} = ${minimum};
-  @if $mayHaveLocalOffset
+  @if $haveLocalOffset
 if ($localOffset)
   ${name} += ${localOffset} * ${stepSize};
   @end if
@@ -42,7 +52,7 @@ for (long ${loopIndex} = 0; ${loopIndex} < ${localLattice}; ${loopIndex}++) {
 @def openLoopDescending
   @#
 ${type} ${name} = ${maximum};
-  @if $mayHaveLocalOffset
+  @if $haveLocalOffset
 if ($localOffset)
   ${name} -= (${globalLattice}-(${localOffset} + ${localLattice})) * ${stepSize};
   @end if
@@ -73,7 +83,7 @@ for (long ${loopIndex} = ${localLattice}-1; ${loopIndex} >= 0; ${loopIndex}--) {
 
 @def strictlyAscendingGlobalIndex
   @#
-  @if not $mayHaveLocalOffset
+  @if not $haveLocalOffset
     @return $loopIndex
   @else
 lround((${name} - ${minimum})/${stepSize})@slurp

@@ -27,7 +27,7 @@ class _EXOperator(Operator):
     operatorNamesUsed = set()
     operatorNames = set(self.operatorNames)
     
-    operatorTargetPairs = self.targetComponentsForOperatorsInString(self.operatorNames, self.parent.sharedCode)
+    operatorTargetPairs = RegularExpressionStrings.targetComponentsForOperatorsInString(self.operatorNames, self.parent.sharedCode)
     
     if operatorTargetPairs:
       

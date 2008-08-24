@@ -17,6 +17,30 @@ class _DistributedMPIDriver (SimulationDriver, MPI):
   def __init__(self, *args, **KWs):
     SimulationDriver.__init__(self, *args, **KWs)
     MPI.__init__(self, *args, **KWs)
+    
+    self._distributedTransform = None
+  
+  def _getDistributedTransform(self):
+    return self._distributedTransform
+  
+  def _setDistributedTransform(self, value):
+    assert not self._distributedTransform
+    self._distributedTransform = value
+  
+  distributedTransform = property(_getDistributedTransform, _setDistributedTransform)
+  del _getDistributedTransform, _setDistributedTransform
+  
+  def mpiDimensionForSpace(self, space):
+    return self._distributedTransform.mpiDimensionForSpace(space)
+  
+  def shadowedVariablesForField(self, field):
+    if not self._distributedTransform.isFieldDistributed(field):
+      return []
+    result = []
+    for dim in field.dimensions:
+      for rep in [rep for rep in dim.representations if rep.haveLocalOffset]:
+        result.extend([rep.localLattice, rep.localOffset])
+    return result
   
   def preflight(self):
     super(_DistributedMPIDriver, self).preflight()
@@ -25,8 +49,5 @@ class _DistributedMPIDriver (SimulationDriver, MPI):
     if not isinstance(outputFeature, BinaryOutput):
       raise ParserException(outputFeature.xmlElement, "The 'ascii' output format cannot be used with the 'distributed-mpi' driver.")
   
-  def allocSizeOfField(self, field):
-    if not self.isFieldDistributed(field):
-      return super(_DistributedMPIDriver, self).allocSizeOfField(field)
-    return ''.join(['_', field.name, '_alloc_size'])
+  
   
