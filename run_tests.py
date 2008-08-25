@@ -174,8 +174,10 @@ def scriptTestingFunction(root, scriptName, tempPath, absPath, self):
       for mgNum, (o1, o2, mgElem) in enumerate(zip(results.xsilObjects, expectedResults.xsilObjects, momentGroupElements)):
         currentAbsoluteTolerance = absoluteTolerance
         currentRelativeTolerance = relativeTolerance
-        self.assert_(len(o1.independentVariables) == len(o2.independentVariables))
-        self.assert_(len(o1.dependentVariables) == len(o2.dependentVariables))
+        self.assert_(len(o1.independentVariables) == len(o2.independentVariables),
+                     "The number of independent variables in moment group %(mgNum)i doesn't match." % locals())
+        self.assert_(len(o1.dependentVariables) == len(o2.dependentVariables),
+                     "The number of dependent variables in moment group %(mgNum)i doesn't match." % locals())
         
         if mgElem:
           if mgElem.hasAttribute('absolute_tolerance'):

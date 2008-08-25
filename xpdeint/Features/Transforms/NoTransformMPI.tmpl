@@ -15,11 +15,11 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 ptrdiff_t _block_size = (${mpiDimRep.globalLattice}-1)/_size + 1;
 ${mpiDimRep.localOffset} = _rank * _block_size;
 if (_rank != _size - 1)
-  ${mpiDimRep.localOffset} = _block_size;
+  ${mpiDimRep.localLattice} = _block_size;
 else {
   // The last rank takes up everything else
   // this should be less than or equal to _block_size
-  ${mpiDimRep.localOffset} = ${mpiDimRep.globalLattice} - _block_size * (_size - 1);
+  ${mpiDimRep.localLattice} = ${mpiDimRep.globalLattice} - _block_size * (_size - 1);
 }
 
   @for $field in $fields
@@ -35,7 +35,7 @@ if (_rank == 0) {
   ${fieldMPIDimRep.localOffset} = 0;
   ${fieldMPIDimRep.localLattice} = (${mpiDimRep.localLattice}-1)/_${field.name}_skip_size + 1;
 } else {
-  ${fieldMPIDimRep.localOffset} = (${mpiDimRep.localLattice}-1)/_${field.name}_skip_size + 1;
+  ${fieldMPIDimRep.localOffset} = (${mpiDimRep.localOffset}-1)/_${field.name}_skip_size + 1;
   ${fieldMPIDimRep.localLattice} = (${mpiDimRep.localOffset} + ${mpiDimRep.localLattice} - 1)/_${field.name}_skip_size
                                          + 1 - ${fieldMPIDimRep.localOffset};
 }
