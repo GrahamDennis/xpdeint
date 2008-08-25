@@ -2,8 +2,8 @@
 <simulation xmds-version="2">
   <testing>
     <command_line>mpirun -n 2 ./kubo_integer_dimensions_mpi</command_line>
-    <xsil_file name="kubo_integer_dimensions_mpi.xsil" expected="kubo_integer_dimensions_mpi_expected.xsil" />
-    <xsil_file name="kubo_integer_dimensions_mpi_break.xsil" expected="kubo_integer_dimensions_mpi_break_expected.xsil" />
+    <xsil_file name="kubo_integer_dimensions_mpi.xsil" expected="kubo_integer_dimensions_mpi_expected.xsil" absolute_tolerance="5e-2" relative_tolerance="1e-1" />
+    <xsil_file name="kubo_integer_dimensions_mpi_break.xsil" expected="kubo_integer_dimensions_mpi_break_expected.xsil" absolute_tolerance="5e-2" relative_tolerance="1e-1" />
   </testing>
   
   <name>kubo_integer_dimensions_mpi</name>
@@ -25,7 +25,6 @@
   
   <features>
     <benchmark />
-    <error_check />
     <bing />
     <stochastic>
       <noise kind="gaussian" prefix="n" num="1" seed="157 9348 234"/>
@@ -102,14 +101,14 @@ See http://www.xmds.org for more information.
 <XSIL Name="moment_group_1">
   <Param Name="n_independent">1</Param>
   <Array Name="variables" Type="Text">
-    <Dim>5</Dim>
+    <Dim>3</Dim>
     <Stream><Metalink Format="Text" Delimiter=" \n"/>
-t zR zI error_zR error_zI 
+t zR zI 
     </Stream>
   </Array>
   <Array Name="data" Type="double">
     <Dim>501</Dim>
-    <Dim>5</Dim>
+    <Dim>3</Dim>
     <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
 kubo_integer_dimensions_mpi_expected_mg0.dat
     </Stream>
@@ -119,15 +118,15 @@ kubo_integer_dimensions_mpi_expected_mg0.dat
 <XSIL Name="moment_group_2">
   <Param Name="n_independent">2</Param>
   <Array Name="variables" Type="Text">
-    <Dim>6</Dim>
+    <Dim>4</Dim>
     <Stream><Metalink Format="Text" Delimiter=" \n"/>
-t j zR zI error_zR error_zI 
+t j zR zI 
     </Stream>
   </Array>
   <Array Name="data" Type="double">
     <Dim>11</Dim>
     <Dim>1024</Dim>
-    <Dim>6</Dim>
+    <Dim>4</Dim>
     <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
 kubo_integer_dimensions_mpi_expected_mg1.dat
     </Stream>
