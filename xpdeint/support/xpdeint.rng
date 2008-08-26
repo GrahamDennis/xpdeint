@@ -81,6 +81,9 @@
               <empty/>
             </choice>
           </element>
+          <element name="cflags">
+            <text/>
+          </element>
           <element name="diagnostics">
             <choice>
               <ref name="Bool"/>
