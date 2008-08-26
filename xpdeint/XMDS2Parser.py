@@ -290,6 +290,11 @@ class XMDS2Parser(ScriptParser):
       globalsTemplate = Features.Globals.Globals(**self.argumentsToTemplateConstructors)
       globalsTemplate.globalsCodeEntity = ParsedEntity(globalsElement, globalsElement.cdataContents())
     
+    cflagsElement = featuresParentElement.getChildElementByTagName('cflags', optional=True)
+    if cflagsElement:
+      cflagsTemplate = Features.CFlags.CFlags(**self.argumentsToTemplateConstructors)
+      cflagsTemplate.cflagsString = cflagsElement.innerText().strip()
+    
     stochasticFeatureElement, stochasticFeature = parseSimpleFeature('stochastic', Features.Stochastic.Stochastic)
     
     if stochasticFeature:

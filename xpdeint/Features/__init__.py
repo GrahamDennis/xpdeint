@@ -5,6 +5,7 @@ import Arguments
 import AutoVectorise
 import Benchmark
 import Bing
+import CFlags
 import Diagnostics
 import ErrorCheck
 import Globals
