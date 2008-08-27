@@ -43,7 +43,7 @@
       </integer_valued>
       <dimension name="r" lattice="64"  domain="(0, 6)" transform="dct" />
       <dimension name="s" lattice="64"  domain="(0, 6)" transform="dst" />
-      <dimension name="theta" lattice="128"  domain="(-M_PI, M_PI)" />
+      <dimension name="theta" lattice="32"  domain="(-M_PI, M_PI)" />
     </transverse_dimensions>
   </geometry>
   
