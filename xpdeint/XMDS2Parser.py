@@ -736,12 +736,12 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       
       dimensionList.append(dim)
     
-    if not dimensionElement.hasAttribute('kind') or dimensionElement.getAttribute('kind').strip().lower() == 'last':
+    if not integerValuedElement.hasAttribute('kind') or integerValuedElement.getAttribute('kind').strip().lower() == 'last':
       geometryTemplate.dimensions.extend(dimensionList)
     else:
       dimensionList.reverse()
       for dim in dimensionList:
-        geometryTemplate.dimensions.insert(0, dim)
+        geometryTemplate.dimensions.insert(1, dim)
     
     
   
