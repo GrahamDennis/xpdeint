@@ -173,15 +173,6 @@ ${insertCodeForFeatures('writeOutFunctionImplementationBody', $featureOrdering, 
   Allocate (and initialise active pointers) (called from main)
 *@
 @def allocate
-  @# We actually only want to allocate this vector (we should only have one)
-  @# if rawVectorNeedsToBeAllocated is True
-  @assert len($managedVectors) == 1
-  @assert $anyObject($managedVectors).name == 'raw'
-  @#
-  @if $rawVectorNeedsToBeAllocated
-    @# Call the superclass to allocate the vector
-    @super
-  @end if
   @#
   @for vector in $computedVectors
 ${vector.allocate}@slurp
@@ -197,14 +188,6 @@ ${operatorContainer.initialise}@slurp
   Free
 *@
 @def free
-  @#
-  @assert len($managedVectors) == 1
-  @assert $anyObject($managedVectors).name == 'raw'
-  @#
-  @if $rawVectorNeedsToBeAllocated
-    @# Call the superclass to free the vector
-    @super
-  @end if
   @#
   @for vector in $computedVectors
 ${vector.free}@slurp

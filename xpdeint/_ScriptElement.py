@@ -534,11 +534,12 @@ class _ScriptElement (Template):
     the ``phi[j, k, l][p, q, r]`` notation is replaced with the string ``phi`` which is a faster
     way of accessing the local value than through using the ``_phi(...)`` macro.
     """
-    if self.getVar('geometry').integerValuedDimensions:
-      components = set()
-      
-      for vector in vectors:
-        components.update(vector.components)
+    components = set()
+    
+    for vector in vectors:
+      components.update(vector.components)
+    
+    if self.getVar('geometry').integerValuedDimensions and components:
       
       componentsWithIntegerValuedDimensionsRegex = \
         re.compile(RegularExpressionStrings.componentWithIntegerValuedDimensions(components),

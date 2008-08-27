@@ -361,16 +361,16 @@ ${prologueForOverriddenDimensionInFieldInSpaceWithVectors($dimension, $field, $s
     @end if
     @#
   @end for
-
-@set $result = $setExplicitIndexPointersForVectorsWithFieldAndSpace($vectorsRequiringExplictIndexPointers, $field, $space, $indexOverrides)
-@# Don't bother writing it out unless it contains more than the comment line
-@if $result and $result.count('\n') > 1
+  @#
+  @set $result = $setExplicitIndexPointersForVectorsWithFieldAndSpace($vectorsRequiringExplictIndexPointers, $field, $space, $indexOverrides)
+  @# Don't bother writing it out unless it contains more than the comment line
+  @if $result and $result.count('\n') > 1
 ${result, extraIndent=$indentLevel}@slurp
-@end if
-
+  @end if
+  @#
 ${fixupComponentsWithIntegerValuedDimensions(vectors, innerLoopCode), extraIndent=$indentLevel}@slurp
 ${epilogueToIntegrateOverriddenVectorsForSamplingFieldInSpace($vectorOverrides, $field, $space), extraIndent=$indentLevel}@slurp
-
+  @#
   @if $lastLoopDimension
     @# Increment the index pointers. This needs to be in a function in order to be able
     @# to use the variable indentation required
