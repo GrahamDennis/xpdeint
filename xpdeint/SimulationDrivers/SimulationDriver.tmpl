@@ -53,6 +53,7 @@ ${field.allocate}@slurp
   @end for
 
   @for $mg in $momentGroups
+${mg.allocate}@slurp
 ${mg.outputField.initialise}@slurp
   @end for
 
