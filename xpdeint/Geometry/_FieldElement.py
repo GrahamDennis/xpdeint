@@ -147,7 +147,7 @@ class _FieldElement (ScriptElement):
   
   def localPointsInDimensionsAfterDimensionInSpace(self, dimension, space):
     assert self.hasDimension(dimension)
-    orderedDimensions = self.orderedDimensionsForFieldInSpace(self, space)
+    orderedDimensions = self.orderedDimensionsInSpace(space)
     # Grab everything after dimension
     orderedDimensions = orderedDimensions[(orderedDimensions.index(dimension)+1):]
     indices = [self.dimensions.index(dim) for dim in orderedDimensions]
@@ -211,6 +211,23 @@ class _FieldElement (ScriptElement):
     result.append(')')
     
     return ''.join(result)
+  
+  @property
+  def isDistributed(self):
+    return self._driver.isFieldDistributed(self)
+  
+  def orderedDimensionsInSpace(self, space):
+    """Return a list of the dimensions in the order in which they should be looped over"""
+    return self._driver.orderedDimensionsForFieldInSpace(self, space)
+  
+  @property
+  def allocSize(self):
+    return '_' + self.name + '_alloc_size'
+  
+  def sizeInSpace(self, space):
+    """Return a name of a variable the value of which is the size of this field in `space`."""
+    return self._driver.sizeOfFieldInSpace(self, space)
+  
   
   def sortDimensions(self):
     """Sort the dimensions of the field into canonical (geometry element) order."""

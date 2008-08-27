@@ -363,24 +363,13 @@ class _ScriptElement (Template):
   
   def dimensionIsInFourierSpace(self, dimension, space):
     """Return `True` if `dimension` is in fourier space in `space`."""
+    # FIXME: This function needs to be removed
     if space & dimension.transformMask:
       # This dimension is in fourier space
       return True
     else:
       # This dimension isn't in fourier space
       return False
-  
-  # Return the name of the dimension considering the current space
-  def dimensionNameForSpace(self, dimension, space):
-    """
-    Return the name for `dimension` in `space`. If the dimension is in fourier
-    space, then the dimension name is kDimensionName if the dimension's normal name
-    is 'DimensionName'.
-    """
-    if self.dimensionIsInFourierSpace(dimension, space):
-      return 'k' + dimension.name
-    else:
-      return dimension.name
   
   # Insert contents of function for self, classes and children
   def implementationsForFunctionName(self, functionName, *args, **KWs):
@@ -681,29 +670,6 @@ class _ScriptElement (Template):
     for operatorContainer in operatorContainers:
       result.update(operatorContainer.computedVectorsNeedingPrecalculation)
     return result
-  
-  def sizeOfVectorInSpace(self, vector, space):
-    return ''.join([self.sizeOfFieldInSpace(vector.field, space), ' * _', vector.id, '_ncomponents'])
-  
-  def sizeOfVectorInSpaceInReals(self, vector, space):
-    if vector.type == 'double':
-      return self.sizeOfVectorInSpace(vector, space)
-    else:
-      return '2 * ' + self.sizeOfVectorInSpace(vector, space)
-  
-  def allocSizeOfVector(self, vector):
-    return '_' + vector.field.id + '_alloc_size * _' + vector.id + '_ncomponents'
-  
-  def sizeOfVector(self, vector):
-    return self._driver.sizeOfVector(vector)
-  
-  def sizeOfFieldInSpace(self, field, space):
-    """Return a name of a variable the value of which is the size of `field` in `space`."""
-    return self._driver.sizeOfFieldInSpace(field, space)
-  
-  def orderedDimensionsForFieldInSpace(self, field, space):
-    """Return a list of the dimensions for field in the order in which they should be looped over"""
-    return self._driver.orderedDimensionsForFieldInSpace(field, space)
   
   @staticmethod
   def extractLocalKWs(legalKWs, KWs):

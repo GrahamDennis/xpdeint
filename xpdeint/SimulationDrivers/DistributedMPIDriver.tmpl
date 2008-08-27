@@ -43,7 +43,7 @@ int main(int argc, char **argv)
     @end if
     @# We did integrate over the MPI dimension, so we need to run MPI_Allreduce to combine the results.
     @set $arrayName = c'_active_${vector.id}'
-    @set $size = $sizeOfVectorInSpaceInReals(vector, space)
+    @set $size = $vector.sizeInSpaceInReals(space)
     @#
     @# If we have any dimension overrides, then we don't want to add up the entire field
     @for $dimName in indexOverrides.iterkeys()
@@ -99,12 +99,12 @@ else {
   _sending_var = $shadowVariable;
   MPI_Ssend(&_sending_var, sizeof(ptrdiff_t), MPI_BYTE, 0, 0, MPI_COMM_WORLD);
   @end for
-  _sending_var = ${sizeOfFieldInSpace(field, space)};
+  _sending_var = ${field.sizeInSpace(space)};
   MPI_Ssend(&_sending_var, sizeof(ptrdiff_t), MPI_BYTE, 0, 0, MPI_COMM_WORLD);
   
   @# Note that a variable corresponds to an array with given component names
   @for $variable in $dependentVariables
-  MPI_Ssend(${variable.arrayName}, ${sizeOfVectorInSpaceInReals($variable.vector, space)}, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+  MPI_Ssend(${variable.arrayName}, ${variable.vector.sizeInSpaceInReals(space)}, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
   @end for
 }
 
@@ -234,7 +234,7 @@ if (_rank == 0) {
 // Broadcast the noises to other nodes
   @for $noise in $noises
     @set $noiseVector = noise.noiseVectorForField(field)
-MPI_Bcast(_active_${noiseVector.id}, ${sizeOfVectorInSpaceInReals(noiseVector, space)}, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+MPI_Bcast(_active_${noiseVector.id}, ${noiseVector.sizeInSpaceInReals(space)}, MPI_DOUBLE, 0, MPI_COMM_WORLD);
   @end for
 
   @set $dict['extraIndent'] -= 2

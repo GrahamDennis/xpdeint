@@ -28,24 +28,12 @@ Return the options that need to be added to ``CFLAG``.
 #include <fftw3-mpi.h>
 @end def
 
-@def planGlobalsForVector($vector)
+@def transformTypes
   @#
-  @if not $vectorNeedsPartialTransforms(vector)
-    @super(vector)
-  @else
-fftw_plan _${vector.id}_forward_plan = NULL;
-fftw_plan _${vector.id}_backward_plan = NULL;
-_plan_map _${vector.id}_unswapped_plan_map;
-_plan_map _${vector.id}_swapped_plan_map;
-_space_transform _${vector.id}_partial_2d_forward;
-_space_transform _${vector.id}_partial_2d_backward;
-_space_transform _${vector.id}_partial_unswapped_forward;
-_space_transform _${vector.id}_partial_unswapped_backward;
-_space_transform _${vector.id}_partial_swapped_forward;
-_space_transform _${vector.id}_partial_swapped_backward;
-_space_transform _${vector.id}_partial_transpose;
-_space_transform _${vector.id}_partial_untranspose;
-  @end if
+  @super
+  @#
+, _MPI_DFT_TRANSFORM
+, _MPI_R2R_TRANSFORM
   @#
 @end def
 
@@ -76,7 +64,7 @@ fftw_mpi_gather_wisdom(MPI_COMM_WORLD);
 
 @def createGuruPlansForField($field)
   @#
-  @if not $_driver.isFieldDistributed(field)
+  @if not $field.isDistributed
     @super($field)
   @end if
   @#

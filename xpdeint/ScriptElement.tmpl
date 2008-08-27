@@ -139,7 +139,7 @@ to be performed in the same way on a range of vectors in possibly different fiel
     @silent $templateVariables['vector'] = $vector
 ${insertCodeForFeatures('loopOverVectorsWithInnerContentTemplateBegin', $loopFeatureOrdering, $dict)}@slurp
     @capture loopString
-for (long _i0 = 0; _i0 < ${loopCountPrefix}${allocSizeOfVector(vector)}; _i0++) {
+for (long _i0 = 0; _i0 < ${loopCountPrefix}${vector.allocSize}; _i0++) {
   ${innerLoopTemplate, autoIndent=True}@slurp
 }
     @end capture
@@ -183,7 +183,7 @@ long _${vector.id}_index_pointer = 0;
   @end for
   @set $dict = {'vectors': $vectors}
 ${insertCodeForFeatures('loopOverVectorsWithInnerContentBegin', $featureOrdering, $dict)}@slurp
-for (long _i0 = 0; _i0 < ${sizeOfFieldInSpace(field, space)}; _i0++) {
+for (long _i0 = 0; _i0 < ${field.sizeInSpace(space)}; _i0++) {
   ${insertCodeForFeaturesInReverseOrder('loopOverVectorsWithInnerContentEnd', $featureOrdering, $dict), autoIndent=True}@slurp
   @#
   ${innerContent, autoIndent=True}@slurp
@@ -345,7 +345,7 @@ ${dimension.inSpace(space).createCoordinateVariableForSinglePointSample}@slurp
   @#
   @# loop over the dimensions opening the loops
   @set $lastLoopDimension = None
-  @for $dimension in $orderedDimensionsForFieldInSpace(field, space)
+  @for $dimension in $field.orderedDimensionsInSpace(space)
     @#
     @if $dimension.name in $preDimensionLoopOpeningCode
 ${preDimensionLoopOpeningCode[$dimension.name], extraIndent=$indentLevel}@slurp
@@ -378,7 +378,7 @@ ${incrementIndexPointersForVectorsWithFieldAndSpaceAndLastLoopDimension($vectors
   @end if
   @#
   @# loop over the dimensions (in reverse order) closing the loops
-  @set $reversedLoopingDimensions = $orderedDimensionsForFieldInSpace(field, space)
+  @set $reversedLoopingDimensions = $field.orderedDimensionsInSpace(space)
   @silent $reversedLoopingDimensions.reverse()
   @#
   @for $dimension in $reversedLoopingDimensions
@@ -569,7 +569,7 @@ ${vector.functions['evaluate'].call()}
 @#doc: Copy the contents of `vecSrc` into `vecDest`
   @#
   @for $vector in $vectors
-memcpy(${destPrefix}_${vector.id}, ${srcPrefix}_${vector.id}, sizeof(${vector.type}) * ${allocSizeOfVector(vector)});
+memcpy(${destPrefix}_${vector.id}, ${srcPrefix}_${vector.id}, sizeof(${vector.type}) * ${vector.allocSize});
   @end for
   @#
 @end def
