@@ -257,7 +257,7 @@ for (int _from_space_index = 0; _from_space_index < ${numberOfSpacesNeeded}; _fr
     if (!_backward_iodim_ptr) _backward_iodim_ptr = &_backward_loop_sizes[_backward_loop_sizes_index++];
     if (!_r2r_iodim_ptr) _r2r_iodim_ptr = &_r2r_loop_sizes[_r2r_loop_sizes_index++];
     
-    _forward_iodim_ptr->n  = ${dimension.inSpace(0).globalLattice};
+    _forward_iodim_ptr->n  = ${dimension.inSpace(0).localLattice};
     _forward_iodim_ptr->is = _${vector.id}_ncomponents * ${vector.field.pointsInDimensionsWithIndices(range($fieldDimensionNumber + 1, len($vector.field.dimensions)))};
     _forward_iodim_ptr->os = _${vector.id}_ncomponents * ${vector.field.pointsInDimensionsWithIndices(range($fieldDimensionNumber + 1, len($vector.field.dimensions)))};
     
