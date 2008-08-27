@@ -53,7 +53,7 @@
     <integrate algorithm="SIC" interval="4" steps="200">
       <samples>100 100</samples>
       <operators>
-        <operator kind="cross_propagation" algorithm="RK4" propagation_dimension="t">
+        <operator kind="cross_propagation" algorithm="SI" propagation_dimension="t">
           <integration_vectors>cross</integration_vectors>
           <!-- You can have a dependencies tag in here -->
           <dependencies>main</dependencies>

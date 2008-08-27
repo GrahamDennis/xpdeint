@@ -47,10 +47,10 @@ void _segment0()
       @for arrayName in arrayNames
   
   if (_rank == 0)
-    MPI_Reduce(MPI_IN_PLACE, $arrayName, ${sizeOfVectorInSpaceInReals(vector, mg.outputSpace)},
+    MPI_Reduce(MPI_IN_PLACE, $arrayName, ${vector.sizeInSpaceInReals(mg.outputSpace)},
                MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
   else
-    MPI_Reduce($arrayName, NULL, ${sizeOfVectorInSpaceInReals(vector, mg.outputSpace)},
+    MPI_Reduce($arrayName, NULL, ${vector.sizeInSpaceInReals(mg.outputSpace)},
                MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
       @end for
     @end for

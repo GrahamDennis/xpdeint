@@ -33,8 +33,18 @@ class _DistributedMPIDriver (SimulationDriver, MPI):
   def mpiDimensionForSpace(self, space):
     return self._distributedTransform.mpiDimensionForSpace(space)
   
+  def isFieldDistributed(self, field):
+    return self._distributedTransform.isFieldDistributed(field)
+  
+  def sizeOfFieldInSpace(self, field, space):
+    """Return a name of a variable the value of which is the size of `field` in `space`."""
+    if self._distributedTransform.hasattr('sizeOfFieldInSpace'):
+      return self._distributedTransform.sizeOfFieldInSpace(space)
+    else:
+      return field.allocSize
+  
   def shadowedVariablesForField(self, field):
-    if not self._distributedTransform.isFieldDistributed(field):
+    if not self.isFieldDistributed(field):
       return []
     result = []
     for dim in field.dimensions:

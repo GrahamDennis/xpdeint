@@ -120,6 +120,19 @@ class _VectorElement (ScriptElement):
       multiplier = 1
     return self.field.maxPoints * self.nComponents * multiplier
   
+  @property
+  def allocSize(self):
+    return self.field.allocSize + ' * _' + self.id + '_ncomponents'
+  
+  def sizeInSpace(self, space):
+    return self.field.sizeInSpace(space) + ' * _' + self.id + '_ncomponents'
+  
+  def sizeInSpaceInReals(self, space):
+    if self.type == 'double':
+      return self.sizeInSpace(space)
+    else:
+      return '2 * ' + self.sizeInSpace(space)
+  
   def isTransformableTo(self, newSpace):
     if self.transformFree:
       return True

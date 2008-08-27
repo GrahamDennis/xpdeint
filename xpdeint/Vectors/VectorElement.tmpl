@@ -80,10 +80,10 @@ ${functions['initialise'].call()}
 *@
 @def allocate
 
-_${id} = ($type*) xmds_malloc(sizeof($type) * ${allocSizeOfVector(self)});
+_${id} = ($type*) xmds_malloc(sizeof($type) * ${allocSize});
 _active_${id} = _${id};
   @for aliasName in $aliases
-$aliasName = ($type*) xmds_malloc(sizeof($type) * ${allocSizeOfVector(self)}); // alias for _${id}
+$aliasName = ($type*) xmds_malloc(sizeof($type) * ${allocSize}); // alias for _${id}
   @end for
 @end def
 

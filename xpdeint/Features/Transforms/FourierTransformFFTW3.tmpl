@@ -71,10 +71,7 @@ struct _spaces_pair_less_than
 };
 
 enum _transform_type {
-  _LOCAL_DFT_TRANSFORM
-  , _LOCAL_R2R_TRANSFORM
-@#  , _MPI_DFT_TRANSFORM
-@#  , _MPI_R2R_TRANSFORM
+  ${transformTypes, autoIndent=True}@slurp
 };
 
 typedef pair<fftw_plan, _transform_type> _plan_pair;
@@ -98,6 +95,13 @@ typedef map<_spaces_pair, _space_transform, _spaces_pair_less_than> _plan_map;
 ${planGlobalsForVector(vector)}@slurp
     @end for
   @end for
+@end def
+
+@def transformTypes
+  @#
+_LOCAL_DFT_TRANSFORM
+, _LOCAL_R2R_TRANSFORM
+  @#
 @end def
 
 @def planGlobalsForVector($vector)
@@ -144,7 +148,7 @@ _LOG(_SIMULATION_LOG_LEVEL, "Making FFTW plans\n");
       @set $allocatedTemporaryVector = True
 
 // allocate an array so we can create plans for those vectors that we have not allocated yet
-double* _temporary_vector = (double*) xmds_malloc(sizeof(${maxVector.type}) * ${allocSizeOfVector(maxVector)});
+double* _temporary_vector = (double*) xmds_malloc(sizeof(${maxVector.type}) * ${maxVector.allocSize});
     @else
       @# The maximum managed vector is larger than the maximum temporary vector, so there's no point in allocating an array
       @set $allocatedTemporaryVector = False
