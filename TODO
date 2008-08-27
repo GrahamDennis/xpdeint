@@ -85,6 +85,13 @@
   - Discrete Cosine / Sine Transforms (for even/odd symmetric boundary conditions): Done
   - General matrix transforms. For example, Hankel transforms (require non-uniform dimensions) 
     and hermite-gaussian basis decomposition (may require non-square transforms).
+  - We need a differentiation operator D[phi, x, x, y, y] = d^4phi/(dx^2 dy^2) (better syntax needed) to represent derivatives of variables.
+    This is needed because for many transforms, a derivative cannot be represented in terms of IP or EX operators.
+    A good example is calculating odd derivatives with the DCT/DST transforms. i*kx is *NOT* the first derivative. This is only
+    true for DFTs. However, the first derivative can be calculated when using DCTs/DSTs, so the 'D' operator would make this available.
+    This would also lessen the learning curve for first-time users, as they can use a more obvious syntax instead of EX or IP operators.
+    Even better, this syntax would be independent of the transform you are using. If a specific transform doesn't support the particular
+    derivative requested, it can simply say so at compile time.
 
 * Make xmds/xpdeint code compile on Windows. Currently it works in Cygwin but suffers from 
   SERIOUS performance degradation. I've been trying to compile a simple script (modified 
@@ -109,3 +116,7 @@
   - Next priorities: getting fftw3 working and porting the benchmark code...
   - Investigate MinGW GCC 4.3 performance versus Visual Studio performance.
 
+* Allow IP operators to have reduced dimensionality. This is an important optimisation for adaptive step integrators in higher dimensions where the derivative
+  operators are typically separable, i.e. of the form kx*kx + ky*ky. This will allow significantly fewer complex exponentials to be calculated. O(2N) instead of
+  O(N^2) for 2 dimensions
+ 
