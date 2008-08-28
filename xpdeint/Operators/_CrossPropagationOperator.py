@@ -179,11 +179,6 @@ class _CrossPropagationOperator (Operator):
       self.boundaryConditionDependencies = self.vectorsFromEntity(self.boundaryConditionDependenciesEntity)
       
       for vector in self.boundaryConditionDependencies:
-        if vector.field.hasDimensionName(self.propagationDimension):
-          raise ParserException(self.boundaryConditionDependenciesEntity.xmlElement,
-                                "Cannot depend on vector '%s' because it is in the field '%s'\n"
-                                "which contains the cross-propagation dimension: '%s'."
-                                % (vector.name, vector.field.name, self.propagationDimension))
         if not vector.field.isSubsetOfField(self.field):
           raise ParserException(self.boundaryConditionDependenciesEntity.xmlElement,
                                 "Cannot depend on vector '%s' because it is in the field '%s'\n"
