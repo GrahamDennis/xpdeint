@@ -48,13 +48,13 @@ if (_temp_error > _component_errors[_i1])
   @#
 @end def
 
-@def adaptiveStepSucceeded($dict)
-  @#
-  @set $integrator = dict['caller']
-  @#
-_LOG(_WARNING_LOG_LEVEL, "Step size %e succeeded, ${integrator.propagationDimension} = %e, error = %e\n", _step, ${integrator.propagationDimension}, _error);
-  @#
-@end def
+@# @def adaptiveStepSucceeded($dict)
+@#   @#
+@#   @set $integrator = dict['caller']
+@#   @#
+@# _LOG(_WARNING_LOG_LEVEL, "Step size %e succeeded, ${integrator.propagationDimension} = %e, error = %e\n", _step, ${integrator.propagationDimension}, _error);
+@#   @#
+@# @end def
 
 @def adaptiveStepFailed($dict)
   @#
