@@ -14,12 +14,9 @@ from xpdeint.Geometry.UniformDimensionRepresentation import UniformDimensionRepr
 
 class _NoTransformMPI (_NoTransform):
   def initialiseForMPIWithDimensions(self, dimensions):
-    dimensions[0].inSpace(0).setHaveLocalOffset()
+    dimensions[0].inSpace(0).setHasLocalOffset()
     self.mpiDimension = dimensions[0]
     self._driver.distributedDimensionNames.append(self.mpiDimension.name)
-  
-  def canTransformVectorInDimension(self, vector, dim):
-    return False
   
   def isFieldDistributed(self, field):
     return field.hasDimension(self.mpiDimension)

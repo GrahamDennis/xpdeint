@@ -59,25 +59,28 @@ class _DimensionRepresentation(ScriptElement):
   def globalLattice(self):
     return self.prefix + '_lattice_' + self.name
   
-  def setHaveLocalOffset(self, localVariablePrefix = ''):
-    self._localVariablePrefix = '_local'
-    if localVariablePrefix:
-      self._localVariablePrefix += '_' + localVariablePrefix
+  def setHasLocalOffset(self, localVariablePrefix = ''):
+    if localVariablePrefix == None:
+      self._localVariablePrefix = None
+    else:
+      self._localVariablePrefix = '_local'
+      if localVariablePrefix:
+        self._localVariablePrefix += '_' + localVariablePrefix
   
   @property
-  def haveLocalOffset(self):
+  def hasLocalOffset(self):
     return self._localVariablePrefix != None
   
   @property
   def localLattice(self):
-    if not self.haveLocalOffset:
+    if not self.hasLocalOffset:
       return self.globalLattice
     else:
       return self.prefix + self._localVariablePrefix + '_lattice_' + self.name
   
   @property
   def localOffset(self):
-    if not self.haveLocalOffset:
+    if not self.hasLocalOffset:
       return '0'
     else:
       return self.prefix + self._localVariablePrefix + '_offset_' + self.name

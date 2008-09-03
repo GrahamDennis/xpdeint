@@ -20,7 +20,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
   @#
   @super
   @#
-  @if $haveLocalOffset
+  @if $hasLocalOffset
 ptrdiff_t $localLattice = 0;
 ptrdiff_t $localOffset = 0;
   @end if
@@ -30,7 +30,7 @@ ptrdiff_t $localOffset = 0;
 @def openLoopAscending
   @#
 ${type} ${name} = ${minimum};
-  @if $haveLocalOffset
+  @if $hasLocalOffset
 if ($localOffset)
   ${name} += ${localOffset} * ${stepSize};
   @end if
@@ -52,7 +52,7 @@ for (long ${loopIndex} = 0; ${loopIndex} < ${localLattice}; ${loopIndex}++) {
 @def openLoopDescending
   @#
 ${type} ${name} = ${maximum};
-  @if $haveLocalOffset
+  @if $hasLocalOffset
 if ($localOffset)
   ${name} -= (${globalLattice}-(${localOffset} + ${localLattice})) * ${stepSize};
   @end if
@@ -83,7 +83,7 @@ for (long ${loopIndex} = ${localLattice}-1; ${loopIndex} >= 0; ${loopIndex}--) {
 
 @def strictlyAscendingGlobalIndex
   @#
-  @if not $haveLocalOffset
+  @if not $hasLocalOffset
     @return $loopIndex
   @else
 lround((${name} - ${minimum})/${stepSize})@slurp

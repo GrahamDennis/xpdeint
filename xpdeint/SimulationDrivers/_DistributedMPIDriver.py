@@ -48,9 +48,19 @@ class _DistributedMPIDriver (SimulationDriver, MPI):
       return []
     result = []
     for dim in field.dimensions:
-      for rep in [rep for rep in dim.representations if rep.haveLocalOffset]:
+      for rep in [rep for rep in dim.representations if rep and rep.hasLocalOffset]:
         result.extend([rep.localLattice, rep.localOffset])
     return result
+  
+  def setDistributedMPILatticeVariableForSpace(self, varName, spaceVarName):
+    return self._distributedTransform.setDistributedMPILatticeVariableForSpace(varName, spaceVarName)
+  
+  def orderedDimensionsForFieldInSpace(self, field, space):
+    """Return a list of the dimensions for field in the order in which they should be looped over"""
+    if self._distributedTransform.hasattr('orderedDimensionsForFieldInSpace'):
+      return self._distributedTransform.orderedDimensionsForFieldInSpace(field, space)
+    return super(_DistributedMPIDriver, self).orderedDimensionsForFieldInSpace(field, space)
+  
   
   def preflight(self):
     super(_DistributedMPIDriver, self).preflight()

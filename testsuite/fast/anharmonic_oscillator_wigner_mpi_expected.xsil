@@ -99,7 +99,7 @@
   
   <sequence>
     <integrate algorithm="ARK45" cutoff="1e-3" tolerance="1e-5" interval="7.0e-1" steps="100000">
-      <samples>20 20 20 20</samples>
+      <samples>20 20 20 20 20 20</samples>
       <operators dimensions="r m">
         <integration_vectors>evens</integration_vectors>
         <![CDATA[
@@ -159,6 +159,28 @@
       <sampling initial_sample="yes">
         <dimension name="m"/>
         <dimension name="s" />
+        <moments>hOR hOI</moments>
+        <dependencies>odds</dependencies>
+        <![CDATA[
+          _SAMPLE_COMPLEX(hO);
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling initial_sample="yes">
+        <dimension name="m"/>
+        <dimension name="r" fourier_space="yes" />
+        <moments>hER hEI</moments>
+        <dependencies>evens</dependencies>
+        <![CDATA[
+          _SAMPLE_COMPLEX(hE);
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling initial_sample="yes">
+        <dimension name="m"/>
+        <dimension name="s" fourier_space="yes" />
         <moments>hOR hOI</moments>
         <dependencies>odds</dependencies>
         <![CDATA[
@@ -245,6 +267,44 @@ t m s hOR hOI
     <Dim>5</Dim>
     <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
 anharmonic_oscillator_wigner_mpi_expected_mg3.dat
+    </Stream>
+  </Array>
+</XSIL>
+
+<XSIL Name="moment_group_5">
+  <Param Name="n_independent">3</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>5</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t m kr hER hEI 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>21</Dim>
+    <Dim>21</Dim>
+    <Dim>64</Dim>
+    <Dim>5</Dim>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
+anharmonic_oscillator_wigner_mpi_expected_mg4.dat
+    </Stream>
+  </Array>
+</XSIL>
+
+<XSIL Name="moment_group_6">
+  <Param Name="n_independent">3</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>5</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t m ks hOR hOI 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>21</Dim>
+    <Dim>21</Dim>
+    <Dim>64</Dim>
+    <Dim>5</Dim>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
+anharmonic_oscillator_wigner_mpi_expected_mg5.dat
     </Stream>
   </Array>
 </XSIL>

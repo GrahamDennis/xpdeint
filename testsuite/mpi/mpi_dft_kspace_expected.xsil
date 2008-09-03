@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <command_line>mpirun -n 3 ./mpi_dft</command_line>
+    <xsil_file name="mpi_dft_xspace1.xsil" expected="mpi_dft_xspace_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="mpi_dft_kspace.xsil" expected="mpi_dft_kspace_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="mpi_dft_xspace2.xsil" expected="mpi_dft_xspace_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+  </testing>
+  
+  
+  <name>mpi_dft</name>
+  <author>Graham Dennis</author>
+  <description>
+    Test of the fourier transforms using MPI.
+  </description>
+  
+  <features>
+    <benchmark />
+    <bing />
+    <fftw version="3" plan="patient" />
+    <openmp />
+    <globals>
+      <![CDATA[
+      const double T = 10.0;
+      const double mass = 1e-3;
+      const double length = 1.0;
+      const double mu = mass/length;
+      
+      const double xmax = _xy_max_x;
+      const double width = 0.1;
+      const double absorb = 80.0;
+      ]]>
+    </globals>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="x" lattice="32"  domain="(-1, 1)" />
+      <dimension name="y" lattice="32"  domain="(-1, 1)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <driver name="distributed-mpi" />
+  
+  <vector name="main" initial_space="x y" type="complex">
+    <components>
+      u
+    </components>
+    <initialisation>
+      <![CDATA[
+        u = exp(-100.0*((x-0.5)*(x-0.5) + y*y));
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <breakpoint filename="mpi_dft_xspace1.xsil">
+      <dependencies>main</dependencies>
+    </breakpoint>
+    <breakpoint filename="mpi_dft_kspace.xsil">
+      <dependencies fourier_space="ky kx">main</dependencies>
+    </breakpoint>
+    <breakpoint filename="mpi_dft_xspace2.xsil">
+      <dependencies fourier_space="y x">main</dependencies>
+    </breakpoint>
+  </sequence>
+  <output format="binary">
+  </output>
+
+<info>
+Script compiled with xpdeint version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+See http://www.xmds.org for more information.
+</info>
+
+<XSIL Name="breakpoint">
+  <Param Name="n_independent">2</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>4</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+kx ky uR uI 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>32</Dim>
+    <Dim>32</Dim>
+    <Dim>4</Dim>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
+mpi_dft_kspace_expected.dat
+    </Stream>
+  </Array>
+</XSIL>
+</simulation>

@@ -33,11 +33,10 @@ int main(int argc, char **argv)
   @set $indexOverrides = dict['indexOverrides']
   @set $field = dict['field']
   @set $space = dict['space']
-  @set $mpiDimension = $mpiDimensionForSpace($space)
   @#
   @for $vector in $vectorOverrides
     @set $dimensionsIntegratedOver = set([d.inSpace(space).name for d in field.dimensions if not vector.field.hasDimension(d)])
-    @if not mpiDimension.inSpace(space).name in dimensionsIntegratedOver
+    @if not dimensionsIntegratedOver.intersection(self.distributedDimensionNames)
       @# If we aren't integrating over an MPI dimension, then everything is as usual.
       @continue
     @end if
