@@ -101,5 +101,10 @@ class _DimensionRepresentation(ScriptElement):
   def loopIndex(self):
     return '_index_' + self.name
   
-  
+  @property
+  def isTransformed(self):
+    if self.parent.representations.index(self) > 0:
+      return True
+    else:
+      return False
 

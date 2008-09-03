@@ -18,7 +18,8 @@ Simulation = element simulation {
 
 Testing = element testing {
     ( 
-        XSILFile
+        element command_line { text }
+        | XSILFile
         | InputXSILFile
     )+
 }

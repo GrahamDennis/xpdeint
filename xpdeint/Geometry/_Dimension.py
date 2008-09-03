@@ -95,13 +95,13 @@ class _Dimension(ScriptElement):
   
   def invalidateRepresentationsOtherThan(self, mainRep):
     for idx, rep in enumerate(self.representations[:]):
-      if rep != mainRep:
+      if id(rep) != id(mainRep):
         rep.remove()
         self.representations[idx] = None
   
   def invalidateRepresentation(self, oldRep):
     for idx, rep in enumerate(self.representations[:]):
-      if rep == oldRep:
+      if id(rep) == id(oldRep):
         rep.remove()
         self.representations[idx] = None
   

@@ -54,7 +54,7 @@
   
   <sequence>
     <integrate algorithm="ARK45" tolerance="1e-5" interval="2e-3" steps="1000">
-      <samples>5</samples>
+      <samples>5 5</samples>
       <operators>
         <operator kind="ex" constant="yes">
           <operator_names>L</operator_names>
@@ -86,6 +86,17 @@
         ]]>
       </sampling>
     </group>
+    <group>
+      <sampling initial_sample="yes">
+        <dimension name="x" fourier_space="yes" lattice="32" />
+        <dimension name="y" fourier_space="yes" lattice="32" />
+        <moments>amp</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          amp = mod2(u);
+        ]]>
+      </sampling>
+    </group>
   </output>
 
 <info>
@@ -108,6 +119,25 @@ t x y amp
     <Dim>4</Dim>
     <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
 vibstring_dst_mpi_expected_mg0.dat
+    </Stream>
+  </Array>
+</XSIL>
+
+<XSIL Name="moment_group_2">
+  <Param Name="n_independent">3</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>4</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t kx ky amp 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>6</Dim>
+    <Dim>32</Dim>
+    <Dim>32</Dim>
+    <Dim>4</Dim>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
+vibstring_dst_mpi_expected_mg1.dat
     </Stream>
   </Array>
 </XSIL>

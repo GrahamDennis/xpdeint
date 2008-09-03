@@ -232,7 +232,7 @@ ptrdiff_t _${field.name}_2d_size = 0;
         @if not fieldRep1 or not fieldRep2
           @continue
         @end if
-_${field.name}_2d_size = MAX(_${field.name}_2d_size, ${fieldRep1.localLattice} * ${fieldRep2.localLattice});
+_${field.name}_2d_size = MAX(_${field.name}_2d_size, ${fieldRep1.localLattice} * ${fieldRep2.localLattice}); // space = $space
       @end for
       @set $indices = range(len(field.dimensions))
       @silent indices.remove(field.indexOfDimension(firstMPIDim))

@@ -122,8 +122,8 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
     """Return a list of the dimensions for field in the order in which they should be looped over"""
     dimensions = field.dimensions[:]
     if self.isSpaceSwapped(space) and self.isFieldDistributed(field):
-      firstMPIDimIndex = dimensions.index(self.mpiDimensions[0])
-      secondMPIDimIndex = dimensions.index(self.mpiDimensions[1])
+      firstMPIDimIndex = field.indexOfDimension(self.mpiDimensions[0])
+      secondMPIDimIndex = field.indexOfDimension(self.mpiDimensions[1])
       (dimensions[secondMPIDimIndex], dimensions[firstMPIDimIndex]) = (dimensions[firstMPIDimIndex], dimensions[secondMPIDimIndex])
     return dimensions
   
