@@ -187,6 +187,7 @@ Integrate = element integrate {
     , attribute tolerance { text }?
     , attribute iterations { text }?
     , attribute cutoff { text }?
+    , attribute home_space { text }?
     , (
         element samples { text }
         | Filters

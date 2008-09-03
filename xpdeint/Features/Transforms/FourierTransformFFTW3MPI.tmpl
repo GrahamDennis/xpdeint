@@ -190,6 +190,7 @@ if (${geometryRep.localOffset} >= ${fieldRep.globalLattice}) {
 }
             @elif isinstance(fieldRep, NonUniformDimensionRepresentation)
               @# In this case, we are in 'k' space and may be subdividing a NonUniformDimensionRepresentation (dft)
+${fieldRep.localOffset} = -1;
 if (${geometryRep.localOffset} >= (${fieldRep.globalLattice}+1)/2) {
   // No points due to positive 'k' values.
 } else if (${geometryRep.localOffset} + ${geometryRep.localLattice} > (${fieldRep.globalLattice}+1)/2) {
@@ -206,7 +207,7 @@ if (${geometryRep.localOffset} + ${geometryRep.localLattice} <= ${geometryRep.gl
   // No points due to negative 'k' values.
 } else if (${geometryRep.localOffset} < ${geometryRep.globalLattice} - ${fieldRep.globalLattice}/2) {
   // the lower edge of the negative values are here
-  if (${fieldRep.localOffset} == 0)
+  if (${fieldRep.localOffset} == -1)
     ${fieldRep.localOffset} = (${fieldRep.globalLattice}+1)/2;
   ${fieldRep.localLattice} += ${geometryRep.localLattice} - (${geometryRep.globalLattice}-${fieldRep.globalLattice}/2-${geometryRep.localOffset});
 } else if (${geometryRep.localOffset} + ${geometryRep.localLattice} > ${geometryRep.globalLattice} - ${fieldRep.globalLattice}/2) {
@@ -232,7 +233,7 @@ ptrdiff_t _${field.name}_2d_size = 0;
         @if not fieldRep1 or not fieldRep2
           @continue
         @end if
-_${field.name}_2d_size = MAX(_${field.name}_2d_size, ${fieldRep1.localLattice} * ${fieldRep2.localLattice}); // space = $space
+_${field.name}_2d_size = MAX(_${field.name}_2d_size, ${fieldRep1.localLattice} * ${fieldRep2.localLattice});
       @end for
       @set $indices = range(len(field.dimensions))
       @silent indices.remove(field.indexOfDimension(firstMPIDim))
