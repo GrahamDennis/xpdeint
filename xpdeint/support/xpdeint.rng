@@ -348,6 +348,9 @@
       <optional>
         <attribute name="cutoff"/>
       </optional>
+      <optional>
+        <attribute name="home_space"/>
+      </optional>
       <oneOrMore>
         <choice>
           <element name="samples">
