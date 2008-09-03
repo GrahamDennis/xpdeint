@@ -1608,6 +1608,8 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     outputTemplate.filename = filename
     outputTemplate.xmlElement = outputElement
     
+    geometryTemplate = self.globalNameSpace['geometry']
+    
     momentGroupElements = outputElement.getChildElementsByTagName('group', optional=True)
     for momentGroupNumber, momentGroupElement in enumerate(momentGroupElements):
       samplingElement = momentGroupElement.getChildElementByTagName('sampling')
@@ -1654,7 +1656,6 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
                   'Dimension element needs a name attribute corresponding to a dimension name')
         
         dimensionName = dimensionElement.getAttribute('name').strip()
-        geometryTemplate = self.globalNameSpace['geometry']
         
         if not geometryTemplate.hasDimensionName(dimensionName):
           raise ParserException(dimensionElement, 
@@ -1713,15 +1714,16 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
           
         if lattice > 1:
           if not dimensionRepresentation.lattice == lattice:
-            dimensionRepresentation.lattice = lattice
-            dimension.invalidateRepresentationsOtherThan(dimensionRepresentation)
-          
+            for rep in dimension.representations:
+              rep.lattice = lattice
           outputFieldDimension = dimension.copy()
           dimension._parent = samplingFieldTemplate
           samplingFieldTemplate.dimensions.append(dimension)
           
           outputFieldDimension._parent = outputFieldTemplate
           outputFieldTemplate.dimensions.append(outputFieldDimension)
+          
+          
         elif lattice == 1:
           # In this case, we don't want the dimension in either the moment group, or the sampling field
           dimension.remove()
@@ -1735,6 +1737,13 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       
       samplingFieldTemplate.sortDimensions()
       outputFieldTemplate.sortDimensions()
+      
+      for field in [samplingFieldTemplate, outputFieldTemplate]:
+        field.sortDimensions()
+        space = momentGroupTemplate.sampleSpace
+        for dim in field.dimensions:
+          if not dim.inSpace(space).lattice == geometryTemplate.dimensionWithName(dim.name).inSpace(space).lattice:
+            dim.invalidateRepresentationsOtherThan(dim.inSpace(space))
       
       # end looping over dimension elements.  
       rawVectorTemplate = VectorElementTemplate(name = 'raw', field = momentGroupTemplate.outputField,
