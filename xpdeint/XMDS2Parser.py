@@ -503,9 +503,14 @@ class XMDS2Parser(ScriptParser):
     self.globalNameSpace['globalPropagationDimension'] = propagationDimensionName
     self.globalNameSpace['symbolNames'].add(propagationDimensionName)
     
+    if 'none' in self.globalNameSpace['transforms']:
+      noTransform = self.globalNameSpace['transforms']['none']
+    else:
+      noTransform = Transforms._NoTransform._NoTransform(**self.argumentsToTemplateConstructors)
+    
     propagationDimension = Dimension(name = propagationDimensionName,
                                      transverse = False,
-                                     transform = None,
+                                     transform = noTransform,
                                      parent = geometryTemplate,
                                      **self.argumentsToTemplateConstructors)
     
@@ -1630,6 +1635,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       momentGroupTemplate.sampleSpace = 0
       samplingDimension = Dimension(name = self.globalNameSpace['globalPropagationDimension'],
                                     transverse = False,
+                                    transform = self.globalNameSpace['transforms']['none'],
                                     parent = momentGroupTemplate.outputField,
                                     **self.argumentsToTemplateConstructors)
       samplingDimension.addRepresentation(NonUniformDimensionRepresentation(name = self.globalNameSpace['globalPropagationDimension'],

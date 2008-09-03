@@ -282,7 +282,6 @@ class _FieldElement (ScriptElement):
       
       if fieldDimension.isTransformable and spacesSymbols.count(fieldDimension.inSpace(-1).name):
         resultSpace |= fieldDimension.transformMask
-    
     return resultSpace
   
   @classmethod

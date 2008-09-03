@@ -9,4 +9,4 @@ import FourierTransformFFTW3
 import FourierTransformFFTW3Threads
 import FourierTransformFFTW3MPI
 
-# FourierTransformFFTW3.FourierTransformFFTW3.mpiCapableSubclass = FourierTransformFFTW3MPI.FourierTransformFFTW3MPI
+FourierTransformFFTW3.FourierTransformFFTW3.mpiCapableSubclass = FourierTransformFFTW3MPI.FourierTransformFFTW3MPI

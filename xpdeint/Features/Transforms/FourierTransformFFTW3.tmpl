@@ -4,8 +4,9 @@ FourierTransformFFTW3.tmpl
 Created by Graham Dennis on 2007-08-23.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *@
-@extends xpdeint.Features.Transforms.FourierTransform
+@extends xpdeint.Features.Transforms._FourierTransformFFTW3
 
+@attr $featureName = 'FourierTransform'
 @def description: FFTW3
 
 @attr $planType = "FFTW_MEASURE"
@@ -43,7 +44,7 @@ Return the options that need to be added to ``CFLAG``.
 Return the string defining the globals needed by FFTW3.
 *@
   @#
-  @super
+const double _inverse_sqrt_2pi = 1.0 / sqrt(2.0 * M_PI); 
   @#
   @# The basic idea here is that in addition to the full forward/backward plans
   @# we should store plans for every other arbitrary space transform that we do.
@@ -84,6 +85,17 @@ struct _space_transform
   _space_transform(double _c_in = 1.0) : _c(_c_in) {}
   
   _space_transform(const _space_transform& _s) : _plans(_s._plans), _c(_s._c) {}
+  
+  _space_transform(fftw_plan _p, _transform_type _t, double _c_in = 1.0) : _c(_c_in)
+  {
+    _plans.push_back(_plan_pair(_p, _t));
+  }
+  
+  void append(const _space_transform& _s)
+  {
+    _c *= _s._c;
+    _plans.insert(_plans.end(), _s._plans.begin(), _s._plans.end());
+  }
 };
 
 // Map type for holding (old_space, new_space) -> _space_transform mappings
@@ -109,6 +121,8 @@ _LOCAL_DFT_TRANSFORM
 _plan_map _${vector.id}_plan_map;
   @#
 @end def
+
+
 
 @def mainBegin($dict)
 // load wisdom and create plans for fft
@@ -164,26 +178,29 @@ fftw_iodim _forward_sizes[${len($geometry.dimensions)}], _forward_loop_sizes[${l
 fftw_iodim _backward_sizes[${len($geometry.dimensions)}], _backward_loop_sizes[${len($geometry.dimensions) + 1}];
 fftw_iodim _r2r_sizes[${len($geometry.dimensions)}], _r2r_loop_sizes[${len($geometry.dimensions) + 1}];
 fftw_iodim *_forward_iodim_ptr = NULL, *_backward_iodim_ptr = NULL, *_r2r_iodim_ptr;
-fftw_r2r_kind _r2r_kind[${len($geometry.dimensions)}];
+fftw_r2r_kind _r2r_kinds[${len($geometry.dimensions)}];
 
 int _forward_sizes_index, _backward_sizes_index, _r2r_sizes_index;
 int _forward_loop_sizes_index, _backward_loop_sizes_index, _r2r_loop_sizes_index;
 double _c;
+
+_space_transform *_transform;
   @#
   @for field in $fields
-    @if len(filter(lambda x: x.needsTransforms, field.vectors)) == 0
+    @set $vectorsNeedingFourierTransforms = filter(lambda x: x.needsTransforms, field.vectors)
+    @if len(vectorsNeedingFourierTransforms) == 0
       @continue
     @end if
 
 // Plans for field ${field.name}
-${createGuruPlansForField(field)}@slurp
-
+    @for vector in vectorsNeedingFourierTransforms
+${createGuruPlansForVector(vector)}@slurp
+    @end for
   @end for
   @#
   @if $temporaryVectorsNeedingFourierTransforms and $allocatedTemporaryVector
 xmds_free(_temporary_vector);
 _temporary_vector = NULL;
-
 
   @end if
 #if CFG_OSAPI == CFG_OSAPI_POSIX // Don't load wisdom on windows
@@ -193,20 +210,66 @@ ${saveWisdom}@slurp
 _LOG(_SIMULATION_LOG_LEVEL, "FFTW planning complete\n");
 @end def
 
-@def createGuruPlansForField($field)
+
+@def loadWisdom
   @#
+char _hostName[256];
+gethostname(_hostName, 256);
+_hostName[255] = '\0'; // just in case
+
+string _pathToWisdom = getenv("HOME");
+_pathToWisdom += "/.xmds/wisdom/";
+
+string _wisdomFileName = _hostName;
+_wisdomFileName += ".wisdom";
+_wisdomFileName += "${wisdomExtension}";
+
+FILE *_fp = NULL;
+
+_fp = fopen(_pathToWisdom.c_str(), "r");
+if (_fp) {
+  fclose(_fp);
+} else {
+  _LOG(_WARNING_LOG_LEVEL, "Warning: Cannot find enlightenment, the path to wisdom ~/.xmds/wisdom doesn't seem to exist.\n"
+                           "         I'll use the current path instead.\n");
+  _pathToWisdom = ""; // present directory
+}
+
+string _wisdomPath = _pathToWisdom + _wisdomFileName;
+
+FILE *_wisdomFile = NULL;
+
+if ( (_wisdomFile = fopen(_wisdomPath.c_str(), "r")) != NULL) {
+  _LOG(_SIMULATION_LOG_LEVEL, "Found enlightenment... (Importing wisdom)\n");
+  fftw_import_wisdom_from_file(_wisdomFile);
+  fclose(_wisdomFile);
+}
+  @#
+@end def
+
+
+@def saveWisdom
+  @#
+if ( (_wisdomFile = fopen(_wisdomPath.c_str(), "w")) != NULL) {
+  _LOG(_SIMULATION_LOG_LEVEL, "Keeping accumulated wisdom\n");
+  fftw_export_wisdom_to_file(_wisdomFile);
+  fclose(_wisdomFile);
+}
+  @#
+@end def
+
+
+@def createGuruPlansForVector($vector)
+  @#
+  @set $dimensions = [dim for dim in vector.field.dimensions if not dim.isDistributed]
   @set $blankLineSeparator = ''
-  @set $vectorsNeedingFourierTransforms = filter(lambda x: x.needsTransforms, field.vectors)
   @#
-  @for vector in vectorsNeedingFourierTransforms
-${blankLineSeparator}@slurp
-    @if vector.type == 'double'
-      @set $r2rMultiplier = 1
-    @else
-      @set $r2rMultiplier = 2
-    @end if
-    @set $blankLineSeparator = '\n'
-    @set $numberOfSpacesNeeded = len(vector.spacesNeeded)
+  @if vector.type == 'double'
+    @set $r2rMultiplier = 1
+  @else
+    @set $r2rMultiplier = 2
+  @end if
+  @set $numberOfSpacesNeeded = len(vector.spacesNeeded)
 unsigned long _spaces_needed_for_${vector.id}[] = {${', '.join([str(space) for space in vector.spacesNeeded])}};
 
 for (int _from_space_index = 0; _from_space_index < ${numberOfSpacesNeeded}; _from_space_index++) {
@@ -219,59 +282,71 @@ for (int _from_space_index = 0; _from_space_index < ${numberOfSpacesNeeded}; _fr
     _forward_sizes_index = _backward_sizes_index = _r2r_sizes_index = 0;
     _forward_loop_sizes_index = _backward_loop_sizes_index = _r2r_loop_sizes_index = 0;
     _plan = NULL;
-    _c = 1.0;
-    @for $dimension in $vector.field.dimensions
-      @set $fieldDimensionNumber = $vector.field.indexOfDimension($dimension)
-      @# All spaces are defined relative to the dimension ordering in the geometry
-      @set $bitMask = $dimension.transformMask
+    
+    _${vector.id}_plan_map[_spaces_pair(_from_space, _to_space)] = _space_transform(1.0);
+    
+    _transform = &_${vector.id}_plan_map[_spaces_pair(_from_space, _to_space)];
+    
+  @# This is where to put code to modify the way local transforms are produced
+  @# when we have MPI transforms too
+  @if $vector.field.isDistributed
+    _forward_iodim_ptr = &_forward_loop_sizes[_forward_loop_sizes_index++];
+    _backward_iodim_ptr = &_backward_loop_sizes[_backward_loop_sizes_index++];
+    _r2r_iodim_ptr = &_r2r_loop_sizes[_r2r_loop_sizes_index++];
+    
+    _forward_iodim_ptr->n  = ${' * '.join([dim.inSpace('_from_space').localLattice for dim in vector.field.dimensions if dim.isDistributed])};
+    @set $indices = [i for i, dim in enumerate(vector.field.dimensions) if not dim.isDistributed]
+    _forward_iodim_ptr->is = _${vector.id}_ncomponents * ${vector.field.pointsInDimensionsWithIndices(indices)};
+    
+    _backward_iodim_ptr->n  = _r2r_iodim_ptr->n = _forward_iodim_ptr->n;
+    _backward_iodim_ptr->os = _forward_iodim_ptr->os = _backward_iodim_ptr->is = _forward_iodim_ptr->is;
+    
+    _r2r_iodim_ptr->os =_r2r_iodim_ptr->is = ${r2rMultiplier}*_forward_iodim_ptr->is;
+    
+    ${setupLocalTransformsForVector(vector), autoIndent=True}@slurp
+  @end if
+  @#
+  @for dimension in dimensions
+    @# All spaces are defined relative to the dimension ordering in the geometry
+    @set $bitMask = dimension.transformMask
     
     // Set sizes for transforms in dimension '$dimension.name'
     _forward_iodim_ptr = _backward_iodim_ptr = _r2r_iodim_ptr = NULL;
-      @if $dimension.transform == self
+    @if $transformNameMap.get(dimension.name) in ['dct', 'dst', 'dft']
     if ( !(_from_space & ${bitMask}) && (_to_space & ${bitMask})) {
       // Forward ${transformNameMap[dimension.name]} transform for '$dimension.name'
-        @if $transformNameMap[dimension.name] == 'dft'
+      @if $transformNameMap[dimension.name] == 'dft'
       _forward_iodim_ptr = &_forward_sizes[_forward_sizes_index++];
-        @else
+      @else
       _r2r_iodim_ptr = &_r2r_sizes[_r2r_sizes_index];
-          @if $transformNameMap[dimension.name] == 'dct'
-      _r2r_kind[_r2r_sizes_index++] = FFTW_REDFT10;
-          @else
-      _r2r_kind[_r2r_sizes_index++] = FFTW_RODFT10;
-          @end if
-        @end if
-      _c *= ${dimension.inSpace(0).stepSize} * _inverse_sqrt_2pi;
+      _r2r_kinds[_r2r_sizes_index++] = ${r2rKindForDimensionAndDirection(dimension, 'forward')};
+      @end if
+      _transform->_c *= ${dimension.inSpace(0).stepSize} * _inverse_sqrt_2pi;
     } else if ( (_from_space & ${bitMask}) && !(_to_space & ${bitMask}) ) {
       // Backward ${transformNameMap[dimension.name]} transform for '$dimension.name'
-        @if $transformNameMap[dimension.name] == 'dft'
+      @if $transformNameMap[dimension.name] == 'dft'
       _backward_iodim_ptr = &_backward_sizes[_backward_sizes_index++];
-        @else
+      @else
       _r2r_iodim_ptr = &_r2r_sizes[_r2r_sizes_index];
-          @if $transformNameMap[dimension.name] == 'dct'
-      _r2r_kind[_r2r_sizes_index++] = FFTW_REDFT01;
-          @else
-      _r2r_kind[_r2r_sizes_index++] = FFTW_RODFT01;
-          @end if
-        @end if
-      _c *= ${dimension.inSpace(-1).stepSize} * _inverse_sqrt_2pi;
-    }
+      _r2r_kinds[_r2r_sizes_index++] = ${r2rKindForDimensionAndDirection(dimension, 'backward')};
       @end if
+      _transform->_c *= ${dimension.inSpace(-1).stepSize} * _inverse_sqrt_2pi;
+    }
+    @end if
     // if any pointers aren't set, they must be a loop
     if (!_forward_iodim_ptr) _forward_iodim_ptr = &_forward_loop_sizes[_forward_loop_sizes_index++];
     if (!_backward_iodim_ptr) _backward_iodim_ptr = &_backward_loop_sizes[_backward_loop_sizes_index++];
     if (!_r2r_iodim_ptr) _r2r_iodim_ptr = &_r2r_loop_sizes[_r2r_loop_sizes_index++];
     
     _forward_iodim_ptr->n  = ${dimension.inSpace(0).localLattice};
+    @set $fieldDimensionNumber = $vector.field.indexOfDimension(dimension)
     _forward_iodim_ptr->is = _${vector.id}_ncomponents * ${vector.field.pointsInDimensionsWithIndices(range($fieldDimensionNumber + 1, len($vector.field.dimensions)))};
-    _forward_iodim_ptr->os = _${vector.id}_ncomponents * ${vector.field.pointsInDimensionsWithIndices(range($fieldDimensionNumber + 1, len($vector.field.dimensions)))};
     
     _backward_iodim_ptr->n  = _r2r_iodim_ptr->n = _forward_iodim_ptr->n;
-    _backward_iodim_ptr->is = _forward_iodim_ptr->is;
-    _backward_iodim_ptr->os = _forward_iodim_ptr->os;
+    _backward_iodim_ptr->os = _forward_iodim_ptr->os = _backward_iodim_ptr->is = _forward_iodim_ptr->is;
     
-    _r2r_iodim_ptr->is = ${r2rMultiplier}*_forward_iodim_ptr->is;
-    _r2r_iodim_ptr->os = ${r2rMultiplier}*_forward_iodim_ptr->os;
-    @end for
+    _r2r_iodim_ptr->os = _r2r_iodim_ptr->is = ${r2rMultiplier}*_forward_iodim_ptr->is;
+  @end for
     
     // Now the 'components' dimension
     if (_${vector.id}_ncomponents > 1) {
@@ -280,28 +355,22 @@ for (int _from_space_index = 0; _from_space_index < ${numberOfSpacesNeeded}; _fr
       _r2r_iodim_ptr      = &_r2r_loop_sizes[_r2r_loop_sizes_index++];
       
       _forward_iodim_ptr->n  = _${vector.id}_ncomponents;
-      _forward_iodim_ptr->is = 1;
-      _forward_iodim_ptr->os = 1;
+      _forward_iodim_ptr->os = _forward_iodim_ptr->is = 1;
       
       _backward_iodim_ptr->n  = _forward_iodim_ptr->n;
       _r2r_iodim_ptr->n = ${r2rMultiplier}*_forward_iodim_ptr->n;
-      _backward_iodim_ptr->is = _r2r_iodim_ptr->is = _forward_iodim_ptr->is;
-      _backward_iodim_ptr->os = _r2r_iodim_ptr->os = _forward_iodim_ptr->os;
+      _backward_iodim_ptr->os = _r2r_iodim_ptr->os = _forward_iodim_ptr->os = _backward_iodim_ptr->is = _r2r_iodim_ptr->is = _forward_iodim_ptr->is;
     }
-    @if r2rMultiplier > 1
+  @if r2rMultiplier > 1
     else {
       // r2r transforms still require a loop
       _r2r_iodim_ptr = &_r2r_loop_sizes[_r2r_loop_sizes_index++];
       _r2r_iodim_ptr->n  = ${r2rMultiplier};
-      _r2r_iodim_ptr->is = 1;
-      _r2r_iodim_ptr->os = 1;
+      _r2r_iodim_ptr->os = _r2r_iodim_ptr->is = 1;
     }
-    @end if
+  @end if
     
-    _${vector.id}_plan_map[_spaces_pair(_from_space, _to_space)] = _space_transform(_c);
-    
-    _space_transform& _transform = _${vector.id}_plan_map[_spaces_pair(_from_space, _to_space)];
-    
+  @#
     if (_forward_sizes_index) {
       // If we have dimensions needing forward transforms, then we need a forward fft plan
       ${createGuruDFTPlanForVector($vector, 'forward'), autoIndent=True}@slurp
@@ -317,7 +386,14 @@ for (int _from_space_index = 0; _from_space_index < ${numberOfSpacesNeeded}; _fr
   }
 }
 
-  @end for
+  @#
+@end def
+
+@def setupLocalTransformsForVector($vector)
+  @#
+  @if not $_driver.hasattr('distributedTransform')
+    @return
+  @end if
   @#
 @end def
 
@@ -340,7 +416,6 @@ fftw_cleanup();
   @for vector in filter(lambda x: x.needsTransforms, field.vectors)
 _${vector.id}_plan_map.clear(); // This doesn't actually destroy the fftw_plan objects
   @end for
-
   @#
 @end def
 
@@ -420,7 +495,7 @@ _plan = fftw_plan_guru_dft(_${type}_sizes_index, _${type}_sizes,
                            reinterpret_cast<fftw_complex*>(${arrayName}),
                            FFTW_${type.upper()}, ${planType});
 
-_transform._plans.push_back(_plan_pair(_plan, _LOCAL_DFT_TRANSFORM));
+_transform->_plans.push_back(_plan_pair(_plan, _LOCAL_DFT_TRANSFORM));
   @#
 @end def
 
@@ -435,8 +510,9 @@ _plan = fftw_plan_guru_r2r(_r2r_sizes_index, _r2r_sizes,
                            _r2r_loop_sizes_index, _r2r_loop_sizes,
                            reinterpret_cast<double*>(${arrayName}),
                            reinterpret_cast<double*>(${arrayName}),
-                           _r2r_kind, ${planType});
+                           _r2r_kinds, ${planType});
 
-_transform._plans.push_back(_plan_pair(_plan, _LOCAL_R2R_TRANSFORM));
+_transform->_plans.push_back(_plan_pair(_plan, _LOCAL_R2R_TRANSFORM));
   @#
 @end def
+

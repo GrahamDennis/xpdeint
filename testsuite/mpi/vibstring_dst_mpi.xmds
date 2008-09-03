@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
-  <name>vibstring_circle_mpi</name>
+  <testing>
+    <command_line>mpirun -n 4 ./vibstring_dst_mpi</command_line>
+    <xsil_file name="vibstring_dst_mpi.xsil" expected="vibstring_dst_mpi_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+  </testing>
+  
+  <name>vibstring_dst_mpi</name>
   <author>Graham Dennis</author>
   <description>
-    Vibrating string with Dirichlet boundary conditions on a circle.
+    Vibrating string with Dirichlet boundary conditions on a square using DST's.
   </description>
   
   <features>
@@ -28,14 +33,14 @@
   <geometry>
     <propagation_dimension> t </propagation_dimension>
     <transverse_dimensions>
-      <dimension name="x" lattice="256"  domain="(-1, 1)" />
-      <dimension name="y" lattice="256"  domain="(-1, 1)" />
+      <dimension name="x" lattice="256"  domain="(-1, 1)" transform="dst"/>
+      <dimension name="y" lattice="256"  domain="(-1, 1)" transform="dst"/>
     </transverse_dimensions>
   </geometry>
   
   <driver name="distributed-mpi" />
   
-  <vector name="main" initial_space="x y" type="complex">
+  <vector name="main" initial_space="x y" type="double">
     <components>
       u uDot
     </components>
@@ -47,41 +52,9 @@
     </initialisation>
   </vector>
   
-  <vector name="boundary" initial_space="x y" type="double">
-    <components>
-      bc
-    </components>
-    <initialisation>
-      <![CDATA[
-        double r = sqrt(x*x + y*y);
-        double rright = xmax-width;
-        double rdamping = r > rright ? absorb*(1-cos(M_PI*(r - rright)/width)) : 0.0;
-
-        bc = exp(-rdamping);
-        if (r > xmax)
-          bc = 0.0;
-        if ( r > rright)
-          bc = 0.0;
-        else
-          bc = 1.0;
-          
-        
-      ]]>
-    </initialisation>
-  </vector>
-  
   <sequence>
-    <integrate algorithm="ARK45" tolerance="1e-5" interval="2e-2" steps="1000">
-      <samples>50 50</samples>
-      <filters>
-        <filter>
-          <dependencies>main boundary</dependencies>
-          <![CDATA[
-          u *= bc;
-          uDot *= bc;
-          ]]>
-        </filter>
-      </filters>
+    <integrate algorithm="ARK45" tolerance="1e-5" interval="2e-3" steps="1000">
+      <samples>5</samples>
       <operators>
         <operator kind="ex" constant="yes">
           <operator_names>L</operator_names>
@@ -104,23 +77,12 @@
         <!-- Note that this is different default behaviour to the filter operator. To integrate, put in a dimension -->
         <!-- with zero lattice points. -->
         <!-- Note that dimensions can be in any order. Not that I can think of a reason why you would want to do that -->
-        <dimension name="x" fourier_space="no" />
-        <dimension name="y" fourier_space="no" />
+        <dimension name="x" fourier_space="no" lattice="32"/>
+        <dimension name="y" fourier_space="no" lattice="32"/>
         <moments>amp</moments>
         <dependencies>main</dependencies>
         <![CDATA[
-          amp = real(u);
-        ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling initial_sample="yes">
-        <dimension name="x" fourier_space="yes" />
-        <dimension name="y" fourier_space="yes" />
-        <moments>amp</moments>
-        <dependencies>main</dependencies>
-        <![CDATA[
-          amp = mod2(u);
+          amp = u;
         ]]>
       </sampling>
     </group>

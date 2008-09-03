@@ -28,7 +28,7 @@ unsigned long ${index} = 0;
 ${type}* ${arrayName} = (${type}*) xmds_malloc(sizeof(${type}) * (${globalLattice}+1));
   @end if
   @#
-  @if $haveLocalOffset
+  @if $hasLocalOffset
 ptrdiff_t $localLattice = 0;
 ptrdiff_t $localOffset = 0;
   @end if
@@ -38,7 +38,7 @@ ptrdiff_t $localOffset = 0;
 @def openLoopAscending
   @#
   @# Non-uniform dimensions do not currently support being distributed
-  @assert not $haveLocalOffset
+  @assert not $hasLocalOffset
 #define ${name} ${arrayName}[${loopIndex}]
 
 for (long ${loopIndex} = 0; ${loopIndex} < ${localLattice}; ${loopIndex}++) {

@@ -5,6 +5,9 @@ Created by Graham Dennis on 2008-06-06.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 *@
 @extends xpdeint.Features.Transforms._FourierTransformFFTW3MPI
+@import operator
+@from xpdeint.Geometry.UniformDimensionRepresentation import UniformDimensionRepresentation
+@from xpdeint.Geometry.SplitUniformDimensionRepresentation import SplitUniformDimensionRepresentation
 
 @def description: FFTW3 with MPI
 @attr $wisdomExtension = '.fftw3_mpi'
@@ -28,12 +31,22 @@ Return the options that need to be added to ``CFLAG``.
 #include <fftw3-mpi.h>
 @end def
 
+@def globals
+  @#
+  @super
+  @#
+ptrdiff_t _unswapped_block_size = 0;
+ptrdiff_t _swapped_block_size = 0;
+  @#
+@end def
+
 @def transformTypes
   @#
   @super
   @#
 , _MPI_DFT_TRANSFORM
 , _MPI_R2R_TRANSFORM
+, _MPI_TRANSPOSE
   @#
 @end def
 
@@ -44,6 +57,194 @@ ptrdiff_t _fft_sizes[${len($geometry.dimensions)}];
   @super($dict)
   @#
 @end def
+
+
+@def setLocalLatticeAndOffsetVariables
+  @#
+// First work out the local lattice and offset for the geometry
+  @set $firstMPIDim = $mpiDimensions[0]
+  @set $secondMPIDim = $mpiDimensions[1]
+  @set $fullTransformDimensions = $fullTransformDimensionsForField($geometry)
+ptrdiff_t _sizes[] = {${', '.join([dim.inSpace(0).globalLattice for dim in fullTransformDimensions])}};
+
+  @set $indices = range($geometry.indexOfDimension(fullTransformDimensions[-1])+1, len($geometry.dimensions))
+ptrdiff_t _howmany = ((ptrdiff_t)1) * ${geometry.pointsInDimensionsWithIndices(indices)};
+ptrdiff_t _local_alloc_size;
+
+_local_alloc_size = fftw_mpi_local_size_many_transposed(${len(fullTransformDimensions)}, _sizes, _howmany,
+                                                        FFTW_MPI_DEFAULT_BLOCK, FFTW_MPI_DEFAULT_BLOCK, MPI_COMM_WORLD,
+                                                        &${firstMPIDim.inSpace(0).localLattice}, &${firstMPIDim.inSpace(0).localOffset},
+                                                        &${secondMPIDim.inSpace($swappedSpace).localLattice}, &${secondMPIDim.inSpace($swappedSpace).localOffset});
+  @# Set the transformed, but unswapped variables for the first dimension
+${firstMPIDim.inSpace($firstMPIDim.transformMask).localLattice} = ${firstMPIDim.inSpace(0).localLattice};
+${firstMPIDim.inSpace($firstMPIDim.transformMask).localOffset} = ${firstMPIDim.inSpace(0).localOffset};
+
+if (_rank == 0) {
+  _unswapped_block_size = ${firstMPIDim.inSpace(0).localLattice};
+  _swapped_block_size = ${secondMPIDim.inSpace($swappedSpace).localLattice};
+}
+MPI_Bcast(&_unswapped_block_size, sizeof(ptrdiff_t), MPI_BYTE, 0, MPI_COMM_WORLD);
+MPI_Bcast(&_swapped_block_size, sizeof(ptrdiff_t), MPI_BYTE, 0, MPI_COMM_WORLD);
+
+  @for $field in $fields
+    @if field.name == 'geometry' or not $field.isDistributed
+      @continue
+    @end if
+    @#
+    @# Set the local_lattice and local_offset variables based on the
+    @# values for the geometry's version of these
+    @set $fieldMPIDim1 = field.dimensionWithName(firstMPIDim.name)
+    @set $fieldMPIDim2 = field.dimensionWithName(secondMPIDim.name)
+// Set the local lattice and offset variables for the '${field.name}' field
+    @if fieldMPIDim1 == firstMPIDim and fieldMPIDim2 == secondMPIDim
+      @# The field has the same structure for these dimensions as the geometry
+      @for dimOut, dimIn in [(fieldMPIDim1, firstMPIDim), (fieldMPIDim2, secondMPIDim)]
+        @for repOut, repIn in zip(dimOut.representations, dimIn.representations)
+          @if repOut and repOut.hasLocalOffset
+${repOut.localLattice} = ${repIn.localLattice};
+${repOut.localOffset} = ${repIn.localOffset};
+          @end if
+        @end for
+      @end for
+      @if all([dim.isTransformable for dim in [fieldMPIDim1, fieldMPIDim2]])
+        @# Set the alloc size variable through an actual call to local_size_many_transposed
+        @set $indices = range(len(field.dimensions))
+        @for dim in [fieldMPIDim1, fieldMPIDim2]
+          @silent indices.remove(field.indexOfDimension(dim))
+        @end for
+_howmany = ((ptrdiff_t)1) * ${field.pointsInDimensionsWithIndices(indices)};
+${field.allocSize} = fftw_mpi_local_size_many_transposed(2, _sizes, _howmany, _unswapped_block_size, _swapped_block_size, MPI_COMM_WORLD,
+        &${fieldMPIDim1.inSpace(0).localLattice}, &${fieldMPIDim1.inSpace(0).localOffset},
+        &${fieldMPIDim2.inSpace($swappedSpace).localLattice}, &${fieldMPIDim2.inSpace($swappedSpace).localOffset});
+if (   (${fieldMPIDim1.inSpace(0).localLattice} != ${firstMPIDim.inSpace(0).localLattice})
+    || (${fieldMPIDim1.inSpace(0).localOffset} != ${firstMPIDim.inSpace(0).localOffset})
+    || (${fieldMPIDim2.inSpace($swappedSpace).localLattice} != ${secondMPIDim.inSpace($swappedSpace).localLattice})
+    || (${fieldMPIDim2.inSpace($swappedSpace).localOffset} != ${secondMPIDim.inSpace($swappedSpace).localOffset})) {
+  _LOG(_ERROR_LOG_LEVEL, "Local lattice/offset values returned for field '$field.name' aren't the same as the values for the full transform.\n"
+                         "Please report this error and the script that caused it to xmds-devel@lists.sourceforge.net\n"
+                         "Number of nodes: %i\n"
+                         "${firstMPIDim.inSpace(0).localLattice}: %ti\n"
+                         "${firstMPIDim.inSpace(0).localOffset}: %ti\n"
+                         "${fieldMPIDim1.inSpace(0).localLattice}: %ti\n"
+                         "${fieldMPIDim1.inSpace(0).localOffset}: %ti\n"
+                         "${secondMPIDim.inSpace($swappedSpace).localLattice}: %ti\n"
+                         "${secondMPIDim.inSpace($swappedSpace).localOffset}: %ti\n"
+                         "${fieldMPIDim2.inSpace($swappedSpace).localLattice}: %ti\n"
+                         "${fieldMPIDim2.inSpace($swappedSpace).localOffset}: %ti\n",
+                         _size, ${firstMPIDim.inSpace(0).localLattice}, ${firstMPIDim.inSpace(0).localOffset},
+                         ${fieldMPIDim1.inSpace(0).localLattice}, ${fieldMPIDim1.inSpace(0).localOffset},
+                         ${secondMPIDim.inSpace($swappedSpace).localLattice}, ${secondMPIDim.inSpace($swappedSpace).localOffset},
+                         ${fieldMPIDim2.inSpace($swappedSpace).localLattice}, ${fieldMPIDim2.inSpace($swappedSpace).localOffset});
+}
+      @else
+              @set $fieldIndices = range(0, len(field.dimensions))
+              @silent fieldIndices.remove(field.indexOfDimension(firstMPIDim))
+              @silent fieldIndices.remove(field.indexOfDimension(secondMPIDim))
+              @set $geometryIndices = range(1, len($geometry.dimensions))
+              @silent geometryIndices.remove($geometry.indexOfDimension(firstMPIDim))
+              @silent geometryIndices.remove($geometry.indexOfDimension(secondMPIDim))
+${field.allocSize} = _local_alloc_size * ${field.pointsInDimensionsWithIndices(fieldIndices)} / (${geometry.pointsInDimensionsWithIndices(geometryIndices)});
+      @end if
+    @else
+      @# The field has different structure to the geometry, so we need to work out our local offsets and lattice sizes.
+      @for fieldDim, mpiDim in [(fieldMPIDim1, firstMPIDim), (fieldMPIDim2, secondMPIDim)]
+        @if fieldDim == mpiDim
+          @# This dimension matches.
+          @for repOut, repIn in zip(fieldDim.representations, mpiDim.representations)
+            @if repOut
+${repOut.localLattice} = ${repIn.localLattice};
+${repOut.localOffset} = ${repIn.localOffset};
+            @end if
+          @end for
+        @else
+          @# The dimensions aren't the same.
+          @for index, (fieldRep, geometryRep) in enumerate(zip(fieldDim.representations, mpiDim.representations))
+            @if not fieldRep or not fieldRep.hasLocalOffset
+              @continue
+            @end if
+            @if index == 0
+              @# In this case we are in 'x' space and are subdividing a distributed dimension
+ptrdiff_t _${field.name}_unswapped_skip_size = ${geometryRep.globalLattice}/${fieldRep.globalLattice};
+if (_rank == 0) {
+  ${fieldRep.localOffset}  = 0;
+  ${fieldRep.localLattice} = (${geometryRep.localLattice}-1)/_${field.name}_unswapped_skip_size + 1;
+} else {
+  ${fieldRep.localOffset}  = (${geometryRep.localOffset}-1)/_${field.name}_unswapped_skip_size + 1;
+  ${fieldRep.localLattice} = (${geometryRep.localOffset} + ${geometryRep.localLattice} - 1)/_${field.name}_unswapped_skip_size
+                             + 1 - ${fieldRep.localOffset};
+}
+            @elif isinstance(fieldRep, UniformDimensionRepresentation)
+              @# In this case, we are in 'k' space and may be subdividing a UniformDimensionRepresentation (dct/dst)
+if (${geometryRep.localOffset} >= ${fieldRep.globalLattice}) {
+  // No points here
+  ${fieldRep.localOffset} = 0;
+  ${fieldRep.localLattice} = 0;
+} else if (${geometryRep.localOffset} + ${geometryRep.localLattice} > ${fieldRep.globalLattice}){
+  // The upper edge is here
+  ${fieldRep.localOffset} = ${geometryRep.localOffset};
+  ${fieldRep.localLattice} = ${fieldRep.globalLattice} - ${geometryRep.localOffset};
+} else {
+  // somewhere near the start
+  ${fieldRep.localOffset} = ${geometryRep.localOffset};
+  ${fieldRep.localLattice} = ${geometryRep.localLattice};
+}
+            @elif isinstance(fieldRep, NonUniformDimensionRepresentation)
+              @# In this case, we are in 'k' space and may be subdividing a NonUniformDimensionRepresentation (dft)
+if (${geometryRep.localOffset} >= (${fieldRep.globalLattice}+1)/2) {
+  // No points due to positive 'k' values.
+} else if (${geometryRep.localOffset} + ${geometryRep.localLattice} > (${fieldRep.globalLattice}+1)/2) {
+  // the upper edge of the positive values are here
+  ${fieldRep.localOffset} = ${geometryRep.localOffset};
+  ${fieldRep.localLattice} = (${fieldRep.globalLattice}+1)/2 - ${geometryRep.localOffset};
+} else if (${geometryRep.localOffset} < (${fieldRep.globalLattice}+1)/2) {
+  // somewhere near the start of the positive values
+  ${fieldRep.localOffset} = ${geometryRep.localOffset};
+  ${fieldRep.localLattice} = ${geometryRep.localLattice};
+}
+
+if (${geometryRep.localOffset} + ${geometryRep.localLattice} <= ${geometryRep.globalLattice} - ${fieldRep.globalLattice}/2) {
+  // No points due to negative 'k' values.
+} else if (${geometryRep.localOffset} < ${geometryRep.globalLattice} - ${fieldRep.globalLattice}/2) {
+  // the lower edge of the negative values are here
+  if (${fieldRep.localOffset} == 0)
+    ${fieldRep.localOffset} = (${fieldRep.globalLattice}+1)/2;
+  ${fieldRep.localLattice} += ${geometryRep.localLattice} - (${geometryRep.globalLattice}-${fieldRep.globalLattice}/2-${geometryRep.localOffset});
+} else if (${geometryRep.localOffset} + ${geometryRep.localLattice} > ${geometryRep.globalLattice} - ${fieldRep.globalLattice}/2) {
+  // somewhere near the end of the negative values
+  ${fieldRep.localOffset} = ${geometryRep.localOffset} - (${geometryRep.globalLattice}-${fieldRep.globalLattice});
+  ${fieldRep.localLattice} = ${geometryRep.localLattice};
+}
+            @end if
+          @end for
+        @end if
+      @end for
+ptrdiff_t _${field.name}_2d_size = 0;
+      @for spaceID in range(4)
+        @set $space = 0
+        @if spaceID & 1
+          @set $space |= $firstMPIDim.transformMask
+        @end if
+        @if spaceID & 2
+          @set $space |= $secondMPIDim.transformMask
+        @end if
+        @set $fieldRep1 = $fieldMPIDim1.inSpace(space)
+        @set $fieldRep2 = $fieldMPIDim2.inSpace(space)
+        @if not fieldRep1 or not fieldRep2
+          @continue
+        @end if
+_${field.name}_2d_size = MAX(_${field.name}_2d_size, ${fieldRep1.localLattice} * ${fieldRep2.localLattice});
+      @end for
+      @set $indices = range(len(field.dimensions))
+      @silent indices.remove(field.indexOfDimension(firstMPIDim))
+      @silent indices.remove(field.indexOfDimension(secondMPIDim))
+${field.allocSize} = _${field.name}_2d_size * ${field.pointsInDimensionsWithIndices(indices)};
+    @end if
+  @end for
+  @#
+@end def
+
+
+
 
 @def loadWisdom
   @#
@@ -62,486 +263,367 @@ fftw_mpi_gather_wisdom(MPI_COMM_WORLD);
 @end def
 
 
-@def createGuruPlansForField($field)
+@def createMPIPlansForVector($vector, $direction, $transformDimensions, $space, $identifier)
   @#
-  @if not $field.isDistributed
-    @super($field)
+  @set $r2rMultiplier = 1
+  @if vector.type == 'complex' and not 'dft' in $distributedMPIKinds
+    @set $r2rMultiplier = 2
   @end if
   @#
-  @set $blankLineSeparator = ''
-  @set $vectorsNeedingFourierTransforms = filter(lambda x: x.needsTransforms, field.vectors)
+  @set $arrayName = c'_${vector.id}'
+  @if vector in vector.field.temporaryVectors
+    @set $arrayName = '_temporary_vector'
+  @end if
   @#
-  @for vector in vectorsNeedingFourierTransforms
-${blankLineSeparator}@slurp
-    @set $blankLineSeparator = '\n'
-    @#
-    @set $doubleDimensions = [d for d in vector.field.dimensions if d.type == 'double']
-    @set $integerDimensions = [d for d in vector.field.dimensions if d.type == 'long']
-    @set $arrayName = c'_${vector.id}'
-    @if vector in vector.field.temporaryVectors
-      @set $arrayName = '_temporary_vector'
+_c = 1.0;
+  @for i, dim in enumerate(transformDimensions)
+_fft_sizes[$i] = ${dim.inSpace(space).globalLattice};
+    @if 'mpi-dct' in $distributedMPIKinds
+_r2r_kinds[$i]  = ${r2rKindForDimensionAndDirection(dim, direction)};
     @end if
-    @#
-${'\n'.join([c'_fft_sizes[$i] = _${vector.field.name}_lattice_${dimension.name};' for (i, dimension) in enumerate(doubleDimensions)])}
-_howmany = ((ptrdiff_t)1)${''.join([c'*_${vector.field.name}_lattice_${dimension.name}' for dimension in integerDimensions])}*_${vector.id}_ncomponents;
-_${vector.id}_forward_plan  = fftw_mpi_plan_many_dft(${len(doubleDimensions)}, _fft_sizes, _howmany, _unswapped_block_size, _swapped_block_size, 
-                                                     reinterpret_cast<fftw_complex*>($arrayName),
-                                                     reinterpret_cast<fftw_complex*>($arrayName),
-                                                     MPI_COMM_WORLD, FFTW_FORWARD, ${planType} | FFTW_MPI_TRANSPOSED_OUT);
-_${vector.id}_backward_plan = fftw_mpi_plan_many_dft(${len(doubleDimensions)}, _fft_sizes, _howmany, _swapped_block_size, _unswapped_block_size,
-                                                     reinterpret_cast<fftw_complex*>($arrayName),
-                                                     reinterpret_cast<fftw_complex*>($arrayName),
-                                                     MPI_COMM_WORLD, FFTW_BACKWARD, ${planType} | FFTW_MPI_TRANSPOSED_IN);
-
-    @if $vectorNeedsPartialTransforms(vector)
-      @# The idea here is to break the process of going from one space to another into two stages
-      @# the first involving MPI, the second is purely local.
-      @# In the first stage, the space of the first two dimensions are changed from their initial
-      @# space to their values in the final space.
-      @# In the second stage, local fourier transforms are performed on each node to perform the
-      @# remaining transforms necessary.
-      @# For more details on the transforms and transposes involved in the first stage, see
-      @# "FFTW3MPI Design.pdf" in the doc/ directory of the repository.
-// First create plans for changing the spaces of the first two dimensions arbitrarily
-// then create (local) plans for the rest of the transforms
-      @set $firstMPIDimName = $_driver.firstMPIDimension.name
-      @set $secondMPIDimName = $_driver.secondMPIDimension.name
-
-// 1a. Create plans for the 2D forward and reverse transforms.
-_howmany = ((ptrdiff_t)1)${''.join([c'*_${vector.field.name}_lattice_${dimension.name}' for dimension in vector.field.dimensions[2:]])}*_${vector.id}_ncomponents;
-_forward_plan  = fftw_mpi_plan_many_dft(2, _fft_sizes, _howmany, _unswapped_block_size, _swapped_block_size,
-                                        reinterpret_cast<fftw_complex*>($arrayName),
-                                        reinterpret_cast<fftw_complex*>($arrayName),
-                                        MPI_COMM_WORLD, FFTW_FORWARD, ${planType} | FFTW_MPI_TRANSPOSED_OUT);
-
-if (!_forward_plan)
-  _LOG(_ERROR_LOG_LEVEL, "Unable to create partial 2D forward plan for vector ${vector.id}\n");
-
-_c = ${'*'.join([c'_${vector.field.name}_d${dimName}' for dimName in $_driver.distributedDimensionNames])} / (2.0 * M_PI);
-_${vector.id}_partial_2d_forward = _space_transform(_forward_plan, NULL, _c, _MPI_TRANSFORM);
-
-_backward_plan = fftw_mpi_plan_many_dft(2, _fft_sizes, _howmany, _swapped_block_size, _unswapped_block_size,
-                                        reinterpret_cast<fftw_complex*>($arrayName),
-                                        reinterpret_cast<fftw_complex*>($arrayName),
-                                        MPI_COMM_WORLD, FFTW_BACKWARD, ${planType} | FFTW_MPI_TRANSPOSED_IN);
-if (!_backward_plan)
-  _LOG(_ERROR_LOG_LEVEL, "Unable to create partial 2D backward plan for vector ${vector.id}\n");
-
-_c = ${'*'.join([c'_${vector.field.name}_dk${dimName}' for dimName in $_driver.distributedDimensionNames])} / (2.0 * M_PI);
-_${vector.id}_partial_2d_backward = _space_transform(NULL, _backward_plan, _c, _MPI_TRANSFORM);
-
-// 1b. Create plans for the 2D transpose operations.
-_forward_plan  = fftw_mpi_plan_many_transpose(_${vector.field.name}_lattice_${firstMPIDimName},
-                                              _${vector.field.name}_lattice_${secondMPIDimName},
-                                              _howmany*2, _unswapped_block_size, _swapped_block_size,
-                                              reinterpret_cast<double*>($arrayName),
-                                              reinterpret_cast<double*>($arrayName),
-                                              MPI_COMM_WORLD, ${planType});
-if (!_forward_plan)
-  _LOG(_ERROR_LOG_LEVEL, "Unable to create partial transpose plan for vector ${vector.id}\n");
-
-_${vector.id}_partial_transpose = _space_transform(_forward_plan, NULL, 1.0, _MPI_TRANSFORM);
-
-_backward_plan = fftw_mpi_plan_many_transpose(_${vector.field.name}_lattice_${secondMPIDimName},
-                                              _${vector.field.name}_lattice_${firstMPIDimName},
-                                              _howmany*2, _swapped_block_size, _unswapped_block_size,
-                                              reinterpret_cast<double*>($arrayName),
-                                              reinterpret_cast<double*>($arrayName),
-                                              MPI_COMM_WORLD, ${planType});
-if (!_backward_plan)
-  _LOG(_ERROR_LOG_LEVEL, "Unable to create partial untranspose plan for vector ${vector.id}\n");
-
-_${vector.id}_partial_untranspose = _space_transform(NULL, _backward_plan, 1.0, _MPI_TRANSFORM);
-
-// 1c. Create local plans for unswapped fourier transforms
-_forward_sizes_index = _backward_sizes_index = _loop_sizes_index = 0;
-//     Loop over the distributed dimension '$firstMPIDimName'
-_iodim_ptr     = &_loop_sizes[_loop_sizes_index++];
-_iodim_ptr->n  = _${vector.field.name}_local_unswapped_lattice_${firstMPIDimName};
-_iodim_ptr->is = _${vector.id}_ncomponents * ${vector.field.pointsInDimensionsWithIndices(range(1, len(vector.field.dimensions)))};
-_iodim_ptr->os = _iodim_ptr->is;
-//     Forward transform the local MPI dimension '$secondMPIDimName'
-_iodim_ptr     = &_forward_sizes[_forward_sizes_index++];
-_iodim_ptr->n  = _${vector.field.name}_lattice_${secondMPIDimName};
-_iodim_ptr->is = _${vector.id}_ncomponents * ${vector.field.pointsInDimensionsWithIndices(range(2, len(vector.field.dimensions)))};
-_iodim_ptr->os = _iodim_ptr->is;
-_c = _${vector.field.name}_d${secondMPIDimName} * _inverse_sqrt_2pi;
-//     Loop over any remaining dimensions
-_iodim_ptr     = &_loop_sizes[_loop_sizes_index++];
-_iodim_ptr->n  = _${vector.id}_ncomponents * ${vector.field.pointsInDimensionsWithIndices(range(2, len(vector.field.dimensions)))};
-_iodim_ptr->is = 1;
-_iodim_ptr->os = _iodim_ptr->is;
-
-${createGuruPlanForVector(vector, 'forward')}@slurp
-if (!_forward_plan)
-  _LOG(_ERROR_LOG_LEVEL, "Unable to create partial unswapped forward plan for vector ${vector.id}\n");
-_${vector.id}_partial_unswapped_forward = _space_transform(_forward_plan, NULL, _c, _LOCAL_TRANSFORM);
-
-//     Backward transform the local MPI dimension '$secondMPIDimName'
-_iodim_ptr     = &_backward_sizes[_backward_sizes_index++];
-_iodim_ptr->n  = _${vector.field.name}_lattice_${secondMPIDimName};
-_iodim_ptr->is = _${vector.id}_ncomponents * ${vector.field.pointsInDimensionsWithIndices(range(2, len(vector.field.dimensions)))};
-_iodim_ptr->os = _iodim_ptr->is;
-_c = _${vector.field.name}_dk${secondMPIDimName} * _inverse_sqrt_2pi;
-
-${createGuruPlanForVector(vector, 'backward')}@slurp
-if (!_backward_plan)
-  _LOG(_ERROR_LOG_LEVEL, "Unable to create partial unswapped backward plan for vector ${vector.id}\n");
-_${vector.id}_partial_unswapped_backward = _space_transform(NULL, _backward_plan, _c, _LOCAL_TRANSFORM);
-
-// 1d. Create local plans for swapped fourier transforms
-//     Loop over the distributed dimension '$secondMPIDimName'
-_iodim_ptr     = &_loop_sizes[0];
-_iodim_ptr->n  = _${vector.field.name}_local_swapped_lattice_k${secondMPIDimName};
-_iodim_ptr->is = _${vector.id}_ncomponents * _${vector.field.name}_lattice_${firstMPIDimName} * ${vector.field.pointsInDimensionsWithIndices(range(2, len(vector.field.dimensions)))};
-_iodim_ptr->os = _iodim_ptr->is;
-//     Forward transform the local MPI dimension '$firstMPIDimName'
-_iodim_ptr     = &_forward_sizes[0];
-_iodim_ptr->n  = _${vector.field.name}_lattice_${firstMPIDimName};
-_iodim_ptr->is = _${vector.id}_ncomponents * ${vector.field.pointsInDimensionsWithIndices(range(2, len(vector.field.dimensions)))};
-_iodim_ptr->os = _iodim_ptr->is;
-_c = _${vector.field.name}_d${firstMPIDimName} * _inverse_sqrt_2pi;
-//     Reuse variable for the remaining loop that was constructed above.
-
-${createGuruPlanForVector(vector, 'forward')}@slurp
-if (!_forward_plan)
-  _LOG(_ERROR_LOG_LEVEL, "Unable to create partial swapped forward plan for vector ${vector.id}\n");
-_${vector.id}_partial_swapped_forward = _space_transform(_forward_plan, NULL, _c, _LOCAL_TRANSFORM);
-
-//     Backward transform the local MPI dimension '$firstMPIDimName'
-_iodim_ptr     = &_backward_sizes[0];
-_iodim_ptr->n  = _${vector.field.name}_lattice_${firstMPIDimName};
-_iodim_ptr->is = _${vector.id}_ncomponents * ${vector.field.pointsInDimensionsWithIndices(range(2, len(vector.field.dimensions)))};
-_iodim_ptr->os = _iodim_ptr->is;
-_c = _${vector.field.name}_dk${firstMPIDimName} * _inverse_sqrt_2pi;
-
-${createGuruPlanForVector(vector, 'backward')}@slurp
-if (!_backward_plan)
-  _LOG(_ERROR_LOG_LEVEL, "Unable to create partial swapped backward plan for vector ${vector.id}\n");
-_${vector.id}_partial_swapped_backward = _space_transform(NULL, _backward_plan, _c, _LOCAL_TRANSFORM);
-
-// 2. Create local plans for the remainder of the transforms (if needed)
-${partialTransformPlansForVector(vector, swapped = False)}@slurp
-
-${partialTransformPlansForVector(vector, swapped = True)}@slurp
-    @end if
+_c *= ${dim.inSpace(space).stepSize} * _inverse_sqrt_2pi;
   @end for
+  @#
+  @set $rank = $i+1
+_howmany = ${r2rMultiplier} * _${vector.id}_ncomponents;
+  @for dim in vector.field.dimensions[rank:]
+_howmany *= ${dim.inSpace(space).globalLattice};
+  @end for
+
+  @if direction == 'forward'
+    @set $inBlockSize = '_unswapped_block_size'
+    @set $outBlockSize = '_swapped_block_size'
+    @set $transposedState = 'FFTW_MPI_TRANSPOSED_OUT'
+  @else
+    @set $inBlockSize = '_swapped_block_size'
+    @set $outBlockSize = '_unswapped_block_size'
+    @set $transposedState = 'FFTW_MPI_TRANSPOSED_IN'
+  @end if
+  @#
+  @if 'mpi-dft' in $distributedMPIKinds
+_plan = fftw_mpi_plan_many_dft(${rank}, _fft_sizes, _howmany, ${inBlockSize}, ${outBlockSize}, 
+                               reinterpret_cast<fftw_complex*>($arrayName),
+                               reinterpret_cast<fftw_complex*>($arrayName),
+                               MPI_COMM_WORLD, FFTW_${direction.upper}, ${planType} | ${transposedState});
+  @else
+_plan = fftw_mpi_plan_many_r2r(${rank}, _fft_sizes, _howmany, ${inBlockSize}, ${outBlockSize},
+                               reinterpret_cast<double*>($arrayName),
+                               reinterpret_cast<double*>($arrayName),
+                               MPI_COMM_WORLD, _r2r_kinds, ${planType} | ${transposedState});
+  @end if
+if (!_plan)
+  _LOG(_ERROR_LOG_LEVEL, "(%s: %i) Unable to create $direction plan for vector ${vector.id}.\n", __FILE__, __LINE__);
+  @if 'mpi-dft' in $distributedMPIKinds
+    @set $transformType = '_MPI_DFT_TRANSFORM'
+  @else
+    @set $transformType = '_MPI_R2R_TRANSFORM'
+  @end if
+_space_transform _${vector.id}_${identifier}(_plan, $transformType, _c);
   @#
 @end def
 
-@def partialTransformPlansForVector(vector, swapped)
+@def createGuruPlansForVector($vector)
   @#
-  @if not swapped
-    @set $prefix = '_unswapped'
-    @set $baseSpace = 0
-  @else
-    @set $prefix = '_swapped'
-    @set $baseSpace = 6
-  @end if
-  @#
-  @# Set a mask for everything other than the first two (transverse) dimensions
-  @set $spaceMask = vector.field.spaceMask & ~6
-  @#
-  @set $spacesNeeded = set([(space & spaceMask) | baseSpace for space in vector.spacesNeeded if $_driver.isSpaceSwapped(space) == swapped])
-  @if len(spacesNeeded) <= 1
+  @if not $vector.field.isDistributed
+    @super(vector)
     @return
   @end if
   @#
-  @set $numberOfSpacesNeeded = len(spacesNeeded)
-unsigned long ${prefix}_spaces_needed_for_${vector.id}[] = {${', '.join([str(space) for space in spacesNeeded])}};
-
-for (int _from_space_index = 0; _from_space_index < ${numberOfSpacesNeeded}; _from_space_index++) {
-  unsigned long _from_space = ${prefix}_spaces_needed_for_${vector.id}[_from_space_index];
-  for (int _to_space_index = 0; _to_space_index < ${numberOfSpacesNeeded}; _to_space_index++) {
-    unsigned long _to_space = ${prefix}_spaces_needed_for_${vector.id}[_to_space_index];
-    if (_from_space == _to_space)
-      continue;
-    
-    _forward_sizes_index = _backward_sizes_index = _loop_sizes_index = 0;
-    _forward_plan = _backward_plan = NULL;
-    _c = 1.0;
-    
-  @if not swapped
-    // unswapped case
-    // Loop over the distributed dimension '$_driver.firstMPIDimension.name'
-    _iodim_ptr     = &_loop_sizes[_loop_sizes_index++];
-    _iodim_ptr->n  = _${vector.field.name}_local_unswapped_lattice_${_driver.firstMPIDimension.name};
-    _iodim_ptr->is = _${vector.id}_ncomponents * ${vector.field.pointsInDimensionsWithIndices(range(1, len(vector.field.dimensions)))};
-    _iodim_ptr->os = _iodim_ptr->is;
-    // Loop over the local MPI dimension '$_driver.secondMPIDimension.name'
-    _iodim_ptr     = &_loop_sizes[_loop_sizes_index++];
-    _iodim_ptr->n  = _${vector.field.name}_lattice_${_driver.secondMPIDimension.name};
-    _iodim_ptr->is = _${vector.id}_ncomponents * ${vector.field.pointsInDimensionsWithIndices(range(2, len(vector.field.dimensions)))};
-    _iodim_ptr->os = _iodim_ptr->is;
-  @else
-    // swapped case
-    // Loop over the distributed dimension '$_driver.secondMPIDimension.name'
-    _iodim_ptr     = &_loop_sizes[_loop_sizes_index++];
-    _iodim_ptr->n  = _${vector.field.name}_local_swapped_lattice_k${_driver.secondMPIDimension.name};
-    _iodim_ptr->is = _${vector.id}_ncomponents * _${vector.field.name}_lattice_${_driver.firstMPIDimension.name} * ${vector.field.pointsInDimensionsWithIndices(range(2, len(vector.field.dimensions)))};
-    _iodim_ptr->os = _iodim_ptr->is;
-    // Loop over the local MPI dimension '$_driver.firstMPIDimension.name'
-    _iodim_ptr     = &_loop_sizes[_loop_sizes_index++];
-    _iodim_ptr->n  = _${vector.field.name}_lattice_${_driver.firstMPIDimension.name};
-    _iodim_ptr->is = _${vector.id}_ncomponents * ${vector.field.pointsInDimensionsWithIndices(range(2, len(vector.field.dimensions)))};
-    _iodim_ptr->os = _iodim_ptr->is;
+  @set $r2rMultiplier = 1
+  @if vector.type == 'complex'
+    @set $r2rMultiplier = 2
   @end if
-    
-  @for $dimension in $vector.field.dimensions[2:]
-    @set $fieldDimensionNumber = $vector.field.indexOfDimension($dimension)
-    @# All spaces are defined relative to the dimension ordering in the geometry
-    @set $bitMask = $dimension.transformMask
-    
-    @if $dimension.type == 'double'
-    // Set sizes for transforms in dimension '$dimension.name'
-    if ( !(_from_space & ${bitMask}) && (_to_space & ${bitMask})) {
-      // Forward transform for '$dimension.name'
-      _iodim_ptr = &_forward_sizes[_forward_sizes_index++];
-      _c *= _${vector.field.name}_d${dimension.name} * _inverse_sqrt_2pi;
-    } else if ( (_from_space & ${bitMask}) && !(_to_space & ${bitMask}) ) {
-      // Backward transform for '$dimension.name'
-      _iodim_ptr = &_backward_sizes[_backward_sizes_index++];
-      _c *= _${vector.field.name}_dk${dimension.name} * _inverse_sqrt_2pi;
-    } else {
-      // No transform, simply loop over dimension '$dimension.name'
-      _iodim_ptr = &_loop_sizes[_loop_sizes_index++];
-    }
+  @#
+  @set $arrayName = c'_${vector.id}'
+  @if vector in vector.field.temporaryVectors
+    @set $arrayName = '_temporary_vector'
+  @end if
+  @#
+  @set $transformDimensions = $fullTransformDimensionsForField(vector.field)
+  @#
+unsigned long _${vector.id}_full_mask = ${reduce(operator.__or__, [dim.transformMask for dim in transformDimensions])};
+${createMPIPlansForVector(vector, 'forward', transformDimensions, space = 0, identifier = 'forward')}@slurp
+${createMPIPlansForVector(vector, 'backward', transformDimensions, space = -1, identifier = 'backward')}@slurp
+
+  @if $vectorNeedsPartialTransforms(vector)
+    @# The idea here is to break the process of going from one space to another into two stages
+    @# the first involving MPI, the second is purely local.
+    @# In the first stage, the space of the first two dimensions are changed from their initial
+    @# space to their values in the final space.
+    @# In the second stage, local fourier transforms are performed on each node to perform the
+    @# remaining transforms necessary.
+    @# For more details on the transforms and transposes involved in the first stage, see
+    @# "FFTW3MPI Design.pdf" in the doc/ directory of the repository.
+// First create plans for changing the spaces of the first two dimensions arbitrarily
+// then create (local) plans for the rest of the transforms
+
+// 1a. Create plans for the 2D forward and reverse transforms.
+    @set $transformDimensions = vector.field.dimensions[0:2]
+${createMPIPlansForVector(vector, 'forward', transformDimensions, space = 0, identifier = 'partial_2d_forward')}@slurp
+${createMPIPlansForVector(vector, 'backward', transformDimensions, space = $swappedSpace, identifier = 'partial_2d_backward')}@slurp
+
+// 1b. Create plans for the 2D transpose operations.
+    @set $transposeMultiplier = 2
+    @if vector.type == 'double'
+      @set $transposeMultiplier = 1
+    @end if
+_howmany = ${transposeMultiplier} * _${vector.id}_ncomponents;
+    @for dim in vector.field.dimensions[2:]
+_howmany *= ${dim.inSpace(0).globalLattice};
+    @end for
+
+_plan  = fftw_mpi_plan_many_transpose(${mpiDimensions[0].inSpace(0).globalLattice},
+                                      ${mpiDimensions[1].inSpace(0).globalLattice},
+                                      _howmany, _unswapped_block_size, _swapped_block_size,
+                                      reinterpret_cast<double*>($arrayName),
+                                      reinterpret_cast<double*>($arrayName),
+                                      MPI_COMM_WORLD, ${planType});
+if (!_plan)
+  _LOG(_ERROR_LOG_LEVEL, "Unable to create partial transpose plan for vector ${vector.id}\n");
+
+_space_transform _${vector.id}_partial_transpose(_plan, _MPI_TRANSPOSE);
+
+_plan = fftw_mpi_plan_many_transpose(${mpiDimensions[1].inSpace(0).globalLattice},
+                                     ${mpiDimensions[0].inSpace(0).globalLattice},
+                                     _howmany, _swapped_block_size, _unswapped_block_size,
+                                     reinterpret_cast<double*>($arrayName),
+                                     reinterpret_cast<double*>($arrayName),
+                                     MPI_COMM_WORLD, ${planType});
+if (!_plan)
+  _LOG(_ERROR_LOG_LEVEL, "Unable to create partial untranspose plan for vector ${vector.id}\n");
+
+_space_transform _${vector.id}_partial_untranspose(_plan, _MPI_TRANSPOSE);
+
+// 1c. Create local plans for unswapped fourier transforms
+_forward_sizes_index = _backward_sizes_index = _r2r_sizes_index = 0;
+_forward_loop_sizes_index = _backward_loop_sizes_index = _r2r_loop_sizes_index = 0;
+
+//     Loop over the distributed dimension '$mpiDimensions[0].name'
+    @if 'mpi-dft' in $distributedMPIKinds
+_forward_iodim_ptr = &_forward_loop_sizes[_forward_loop_sizes_index++];
+_backward_iodim_ptr = &_backward_loop_sizes[_backward_loop_sizes_index++];
+
+_forward_iodim_ptr->n  = ${mpiDimensions[0].inSpace(0).localLattice};
+_forward_iodim_ptr->is = _${vector.id}_ncomponents * ${vector.field.pointsInDimensionsWithIndices(range(1, len(vector.field.dimensions)))};
+
+_backward_iodim_ptr->n = _forward_iodim_ptr->n;
+_backward_iodim_ptr->os = _forward_iodim_ptr->os = _backward_iodim_ptr->is = _forward_iodim_ptr->is;
     @else
-    // Loop over integer-valued dimension '$dimension.name'
-    _iodim_ptr = &_loop_sizes[_loop_sizes_index++];
+_r2r_iodim_ptr = &_r2r_loop_sizes[_r2r_loop_sizes_index++];
+_r2r_iodim_ptr->n = ${mpiDimensions[0].inSpace(0).localLattice};
+_r2r_iodim_ptr->is = ${r2rMultiplier} * _${vector.id}_ncomponents * ${vector.field.pointsInDimensionsWithIndices(range(1, len(vector.field.dimensions)))};
+_r2r_iodim_ptr->os = _r2r_iodim_ptr->is;
     @end if
-    
-    _iodim_ptr->n  = _${vector.field.name}_lattice_${dimension.name};
-    _iodim_ptr->is = _${vector.id}_ncomponents * ${vector.field.pointsInDimensionsWithIndices(range($fieldDimensionNumber + 1, len($vector.field.dimensions)))};
-    _iodim_ptr->os = _iodim_ptr->is;
-  @end for
-    
-    // Now the 'components' dimension
-    if (_${vector.id}_ncomponents > 1) {
-      _iodim_ptr = &_loop_sizes[_loop_sizes_index++];
-      
-      _iodim_ptr->n  = _${vector.id}_ncomponents;
-      _iodim_ptr->is = 1;
-      _iodim_ptr->os = _iodim_ptr->is;
-    }
-    
-    if (_forward_sizes_index) {
-      // If we have dimensions needing forward transforms, then we need a forward fft plan
-      ${createGuruPlanForVector($vector, 'forward'), autoIndent=True}@slurp
-    }
-    if (_backward_sizes_index) {
-      // If we have some dimensions needing backward transforms, then we need a backward fft plan
-      ${createGuruPlanForVector($vector, 'backward'), autoIndent=True}@slurp
-    }
-    
-    _${vector.id}${prefix}_plan_map[_spaces_pair(_from_space, _to_space)] = _space_transform(_forward_plan, _backward_plan, _c, _LOCAL_TRANSFORM);
-  }
-}
 
-  @#
-@end def
+// Forward transform the local MPI dimension '$mpiDimensions[1].name'
+    @if 'mpi-dft' in $distributedMPIKinds
+_forward_iodim_ptr = &_forward_sizes[_forward_sizes_index++];
+_backward_iodim_ptr = &_backward_sizes[_backward_sizes_index++];
 
-@def destroyPlansForField($field)
-  @#
-  @if not $_driver.isFieldDistributed(field)
-    @super($field)
+_forward_iodim_ptr->n  = ${mpiDimensions[1].inSpace(0).localLattice};
+_forward_iodim_ptr->is = _${vector.id}_ncomponents * ${vector.field.pointsInDimensionsWithIndices(range(2, len(vector.field.dimensions)))};
+
+_backward_iodim_ptr->n = _forward_iodim_ptr->n;
+_backward_iodim_ptr->os = _forward_iodim_ptr->os = _backward_iodim_ptr->is = _forward_iodim_ptr->is;
+
+_space_transform _${vector.id}_partial_unswapped_forward(${mpiDimensions[1].inSpace(0).stepSize} * _inverse_sqrt_2pi);
+_transform = &_${vector.id}_partial_unswapped_forward;
+${createGuruDFTPlanForVector(vector, 'forward')}@slurp
+_space_transform _${vector.id}_partial_unswapped_backward(${mpiDimensions[1].inSpace($mpiDimensions[1].transformMask).stepSize} * _inverse_sqrt_2pi);
+_transform = &_${vector.id}_partial_unswapped_backward;
+${createGuruDFTPlanForVector(vector, 'backward')}@slurp
+    @else
+_r2r_iodim_ptr = &_r2r_sizes[_r2r_sizes_index];
+_r2r_kinds[_r2r_sizes_index++] = ${r2rKindForDimensionAndDirection($mpiDimensions[1], 'forward')};
+_r2r_iodim_ptr->n = ${mpiDimensions[1].inSpace(0).localLattice};
+_r2r_iodim_ptr->is = ${r2rMultiplier} * _${vector.id}_ncomponents * ${vector.field.pointsInDimensionsWithIndices(range(2, len(vector.field.dimensions)))};
+_r2r_iodim_ptr->os = _r2r_iodim_ptr->is;
+
+_space_transform _${vector.id}_partial_unswapped_forward(${mpiDimensions[1].inSpace(0).stepSize} * _inverse_sqrt_2pi);
+_transform = &_${vector.id}_partial_unswapped_forward;
+${createGuruR2RPlanForVector(vector)}@slurp
+_r2r_kinds[0] = ${r2rKindForDimensionAndDirection($mpiDimensions[1], 'backward')};
+_space_transform _${vector.id}_partial_unswapped_backward(${mpiDimensions[1].inSpace($mpiDimensions[1].transformMask).stepSize} * _inverse_sqrt_2pi);
+_transform = &_${vector.id}_partial_unswapped_backward;
+${createGuruR2RPlanForVector(vector)}@slurp
+    @end if
+
+
+// 1d. Create local plans for swapped fourier transforms
+_forward_sizes_index = _backward_sizes_index = _r2r_sizes_index = 0;
+_forward_loop_sizes_index = _backward_loop_sizes_index = _r2r_loop_sizes_index = 0;
+
+//     Loop over the distributed dimension '$mpiDimensions[1].name'
+    @if 'mpi-dft' in $distributedMPIKinds
+_forward_iodim_ptr = &_forward_loop_sizes[_forward_loop_sizes_index++];
+_backward_iodim_ptr = &_backward_loop_sizes[_backward_loop_sizes_index++];
+
+_forward_iodim_ptr->n  = ${mpiDimensions[1].inSpace($swappedSpace).localLattice};
+_forward_iodim_ptr->is = _${vector.id}_ncomponents * ${mpiDimensions[0].inSpace($swappedSpace).localLattice} * ${vector.field.pointsInDimensionsWithIndices(range(2, len(vector.field.dimensions)))};
+
+_backward_iodim_ptr->n = _forward_iodim_ptr->n;
+_backward_iodim_ptr->os = _forward_iodim_ptr->os = _backward_iodim_ptr->is = _forward_iodim_ptr->is;
+    @else
+_r2r_iodim_ptr = &_r2r_loop_sizes[_r2r_loop_sizes_index++];
+_r2r_iodim_ptr->n = ${mpiDimensions[1].inSpace($swappedSpace).localLattice};
+_r2r_iodim_ptr->is = ${r2rMultiplier} * _${vector.id}_ncomponents * ${mpiDimensions[0].inSpace($swappedSpace).localLattice} * ${vector.field.pointsInDimensionsWithIndices(range(2, len(vector.field.dimensions)))};
+_r2r_iodim_ptr->os = _r2r_iodim_ptr->is;
+    @end if
+
+//     Forward transform the local MPI dimension '$mpiDimensions[0].name'
+    @if 'mpi-dft' in $distributedMPIKinds
+_forward_iodim_ptr = &_forward_sizes[_forward_sizes_index++];
+_backward_iodim_ptr = &_backward_sizes[_backward_sizes_index++];
+
+_forward_iodim_ptr->n  = ${mpiDimensions[0].inSpace($swappedSpace).localLattice};
+_forward_iodim_ptr->is = _${vector.id}_ncomponents * ${vector.field.pointsInDimensionsWithIndices(range(2, len(vector.field.dimensions)))};
+
+_backward_iodim_ptr->n = _forward_iodim_ptr->n;
+_backward_iodim_ptr->os = _forward_iodim_ptr->os = _backward_iodim_ptr->is = _forward_iodim_ptr->is;
+
+_space_transform _${vector.id}_partial_swapped_forward(${mpiDimensions[0].inSpace(0).stepSize} * _inverse_sqrt_2pi);
+_transform = &_${vector.id}_partial_swapped_forward;
+${createGuruDFTPlanForVector(vector, 'forward')}@slurp
+_space_transform _${vector.id}_partial_swapped_backward(${mpiDimensions[0].inSpace($mpiDimensions[0].transformMask).stepSize} * _inverse_sqrt_2pi);
+_transform = &_${vector.id}_partial_swapped_backward;
+${createGuruDFTPlanForVector(vector, 'backward')}@slurp
+    @else
+_r2r_iodim_ptr = &_r2r_sizes[_r2r_sizes_index];
+_r2r_kinds[_r2r_sizes_index++] = ${r2rKindForDimensionAndDirection($mpiDimensions[0], 'forward')};
+_r2r_iodim_ptr->n = ${mpiDimensions[0].inSpace($swappedSpace).localLattice};
+_r2r_iodim_ptr->is = ${r2rMultiplier} * _${vector.id}_ncomponents * ${vector.field.pointsInDimensionsWithIndices(range(2, len(vector.field.dimensions)))};
+_r2r_iodim_ptr->os = _r2r_iodim_ptr->is;
+
+_space_transform _${vector.id}_partial_swapped_forward(${mpiDimensions[1].inSpace(0).stepSize} * _inverse_sqrt_2pi);
+_transform = &_${vector.id}_partial_swapped_forward;
+${createGuruR2RPlanForVector(vector)}@slurp
+_r2r_kinds[0] = ${r2rKindForDimensionAndDirection($mpiDimensions[0], 'backward')};
+_space_transform _${vector.id}_partial_swapped_backward(${mpiDimensions[1].inSpace($mpiDimensions[1].transformMask).stepSize} * _inverse_sqrt_2pi);
+_transform = &_${vector.id}_partial_swapped_backward;
+${createGuruR2RPlanForVector(vector)}@slurp
+    @end if
   @end if
   @#
-  @# only loop over those vectors that need fourier transforms
-  @for vector in filter(lambda x: x.needsTransforms, field.vectors)
-fftw_destroy_plan(_${vector.id}_forward_plan);
-fftw_destroy_plan(_${vector.id}_backward_plan);
-    @if $vectorNeedsPartialTransforms(vector)
-    
-_${vector.id}_partial_2d_forward.destroy();               _${vector.id}_partial_2d_backward.destroy();
-_${vector.id}_partial_unswapped_forward.destroy();        _${vector.id}_partial_unswapped_backward.destroy();
-_${vector.id}_partial_swapped_forward.destroy();          _${vector.id}_partial_swapped_backward.destroy();
-_${vector.id}_partial_transpose.destroy();                _${vector.id}_partial_untranspose.destroy();
-
-for (_plan_map::iterator _it = _${vector.id}_unswapped_plan_map.begin(); _it != _${vector.id}_unswapped_plan_map.end(); _it++)
-  _it->second.destroy();
-_${vector.id}_unswapped_plan_map.clear();
-
-for (_plan_map::iterator _it = _${vector.id}_swapped_plan_map.begin(); _it != _${vector.id}_swapped_plan_map.end(); _it++)
-  _it->second.destroy();
-_${vector.id}_swapped_plan_map.clear();
-    @end if
-  @end for
-
+  @super(vector)
   @#
 @end def
 
 
-@def mixedTransformsForVector($vector)
-@*doc:
-Return the mixed-transform part of the ``go_space`` function for fourier transforming
-a vector `vector` to an arbitrary space.
-
-This FFTW3-MPI version of this function uses local ffts, partial 2D MPI ffts and 2D MPI
-transpose operations. To see an illustration of the transforms needed to link any two
-spaces for the first two dimensions with either being swapped or unswapped see the file
-'FFTW3MPI Design.pdf' in the doc/ directory of the repository. Doing things this way should
-make mixed-space transforms about as fast as they can be with MPI.
-
-If you can reduce the number of transforms needed in a given dimension, then doing that for the
-first dimension will yield the greatest speedup.
-*@
+@def setupLocalTransformsForVector($vector)
   @#
-  @if not $vectorNeedsPartialTransforms(vector)
-// No mixed transforms needed
-    @stop
+  @if not $_driver.hasattr('distributedTransform')
+    @return
+  @end if
+// First check if we can use the full forward or reverse transforms
+if (!(_from_space & _${vector.id}_full_mask) && ((_to_space & _${vector.id}_full_mask) == _${vector.id}_full_mask)) {
+  // using full forward transform
+  _transform->append(_${vector.id}_forward);
+  // update from space so that we don't do transforms twice
+  _from_space |= _${vector.id}_full_mask;
+}
+else if (((_from_space & _${vector.id}_full_mask) == _${vector.id}_full_mask) && !(_to_space & _${vector.id}_full_mask)) {
+  // using full backward transform
+  _transform->append(_${vector.id}_backward);
+  _from_space ^= _${vector.id}_full_mask;
+}
+  @if $vectorNeedsPartialTransforms(vector)
+// Now check for partial 2d transforms
+    @set $partial2DMask = reduce(operator.__or__, [dim.transformMask for dim in vector.field.dimensions if dim.isDistributed])
+    @assert partial2DMask == 6
+else if ((_from_space & ${partial2DMask}) != (_to_space & ${partial2DMask})) {
+  // There is some transform required in the distributed dimensions
+    @# The partial 2D mask should be 6 as they should be the first 2 dimensions excluding the propagation dimension
+  unsigned long _2d_oldspace = _from_space & 6;
+  unsigned long _2d_newspace = _to_space & 6;
+  
+  // Consider all transforms between the first two dimensions. There are twelve.
+  // Note that 6 has the second lowest and third lowest bits set corresponding to
+  // the spaceMask for the first two transverse dimensions.
+  // These cases are sorted by the number of operations involved (for no good reason)
+  // The names of the dimensions don't necessarily correspond to those in the simulation,
+  // but instead to the names in the xpdeint document "doc/FFTW3 Design.pdf"
+  // Case 1:  x,  y -> kx, ky
+  if (_2d_oldspace == 0 && _2d_newspace == 6)
+    _transform->append(_${vector.id}_partial_2d_forward);
+  // Case 2: kx, ky ->  x,  y
+  else if (_2d_oldspace == 6 && _2d_newspace == 0)
+    _transform->append(_${vector.id}_partial_2d_backward);
+  // Case 3:  x,  y ->  x, ky
+  else if (_2d_oldspace == 0 && _2d_newspace == 4)
+    _transform->append(_${vector.id}_partial_unswapped_forward);
+  // Case 4:  x, ky ->  x,  y
+  else if (_2d_oldspace == 4 && _2d_newspace == 0)
+    _transform->append(_${vector.id}_partial_unswapped_backward);
+  // Case 5:  x, ky -> kx, ky
+  else if (_2d_oldspace == 4 && _2d_newspace == 6) {
+    _transform->append(_${vector.id}_partial_transpose);
+    _transform->append(_${vector.id}_partial_swapped_forward);
+  }
+  // Case 6: kx, ky ->  x, ky
+  else if (_2d_oldspace == 6 && _2d_newspace == 4) {
+    _transform->append(_${vector.id}_partial_swapped_backward);
+    _transform->append(_${vector.id}_partial_untranspose);
+  }
+  // Case 7: kx,  y -> kx, ky
+  else if (_2d_oldspace == 2 && _2d_newspace == 6) {
+    _transform->append(_${vector.id}_partial_unswapped_forward);
+    _transform->append(_${vector.id}_partial_transpose);
+  }
+  // Case 8: kx, ky -> kx,  y
+  else if (_2d_oldspace == 6 && _2d_newspace == 2) {
+    _transform->append(_${vector.id}_partial_untranspose);
+    _transform->append(_${vector.id}_partial_unswapped_backward);
+  }
+  // Case 9:  x,  y -> kx,  y
+  else if (_2d_oldspace == 0 && _2d_newspace == 2) {
+    _transform->append(_${vector.id}_partial_transpose);
+    _transform->append(_${vector.id}_partial_swapped_forward);
+    _transform->append(_${vector.id}_partial_untranspose);
+  }
+  // Case 10: kx,  y ->  x,  y
+  else if (_2d_oldspace == 2 && _2d_newspace == 0) {
+    _transform->append(_${vector.id}_partial_transpose);
+    _transform->append(_${vector.id}_partial_swapped_backward);
+    _transform->append(_${vector.id}_partial_untranspose);
+  }
+  // Case 11:  x, ky -> kx,  y
+  else if (_2d_oldspace == 4 && _2d_newspace == 2) {
+    _transform->append(_${vector.id}_partial_unswapped_backward);
+    _transform->append(_${vector.id}_partial_transpose);
+    _transform->append(_${vector.id}_partial_swapped_forward);
+    _transform->append(_${vector.id}_partial_untranspose);
+  }
+  // Case 12: kx,  y ->  x, ky
+  else if (_2d_oldspace == 2 && _2d_newspace == 4) {
+    _transform->append(_${vector.id}_partial_transpose);
+    _transform->append(_${vector.id}_partial_swapped_backward);
+    _transform->append(_${vector.id}_partial_untranspose);
+    _transform->append(_${vector.id}_partial_unswapped_forward);
+  }
+  else
+    _LOG(_ERROR_LOG_LEVEL, "Missing combination of spaces? _2d_oldspace: %lu, _2d_newspace: %lu\n", _2d_oldspace, _2d_newspace);
+}
   @end if
   @#
-// Mixed transform stuff
-_space_transform *_transforms[5];
-int _transform_index = 0;
-unsigned long _2d_oldspace = _${vector.id}_space & 6, _2d_newspace = _newSpace & 6;
+@end def
 
-// Consider all transforms between the first two dimensions. There are twelve.
-// Note that 6 has the second lowest and third lowest bits set corresponding to
-// the spaceMask for the first two transverse dimensions.
-// These cases are sorted by the number of operations involved (for no good reason)
-// Case 1: 00 -> 11
-if (_2d_oldspace == 0 && _2d_newspace == 6)
-  _transforms[_transform_index++] = &_${vector.id}_partial_2d_forward;
-// Case 2: 11 -> 00
-else if (_2d_oldspace == 6 && _2d_newspace == 0)
-  _transforms[_transform_index++] = &_${vector.id}_partial_2d_backward;
-// Case 3: 00 -> 01
-else if (_2d_oldspace == 0 && _2d_newspace == 4)
-  _transforms[_transform_index++] = &_${vector.id}_partial_unswapped_forward;
-// Case 4: 01 -> 00
-else if (_2d_oldspace == 4 && _2d_newspace == 0)
-  _transforms[_transform_index++] = &_${vector.id}_partial_unswapped_backward;
-// Case 5: 01 -> 11
-else if (_2d_oldspace == 4 && _2d_newspace == 6) {
-  _transforms[_transform_index++] = &_${vector.id}_partial_transpose;
-  _transforms[_transform_index++] = &_${vector.id}_partial_swapped_forward;
-}
-// Case 6: 11 -> 01
-else if (_2d_oldspace == 6 && _2d_newspace == 4) {
-  _transforms[_transform_index++] = &_${vector.id}_partial_swapped_backward;
-  _transforms[_transform_index++] = &_${vector.id}_partial_untranspose;
-}
-// Case 7: 10 -> 11
-else if (_2d_oldspace == 2 && _2d_newspace == 6) {
-  _transforms[_transform_index++] = &_${vector.id}_partial_unswapped_forward;
-  _transforms[_transform_index++] = &_${vector.id}_partial_transpose;
-}
-// Case 8: 11 -> 10
-else if (_2d_oldspace == 6 && _2d_newspace == 2) {
-  _transforms[_transform_index++] = &_${vector.id}_partial_untranspose;
-  _transforms[_transform_index++] = &_${vector.id}_partial_unswapped_backward;
-}
-// Case 9: 00 -> 10
-else if (_2d_oldspace == 0 && _2d_newspace == 2) {
-  _transforms[_transform_index++] = &_${vector.id}_partial_transpose;
-  _transforms[_transform_index++] = &_${vector.id}_partial_swapped_forward;
-  _transforms[_transform_index++] = &_${vector.id}_partial_untranspose;
-}
-// Case 10: 10 -> 00
-else if (_2d_oldspace == 2 && _2d_newspace == 0) {
-  _transforms[_transform_index++] = &_${vector.id}_partial_transpose;
-  _transforms[_transform_index++] = &_${vector.id}_partial_swapped_backward;
-  _transforms[_transform_index++] = &_${vector.id}_partial_untranspose;
-}
-// Case 11: 01 -> 10
-else if (_2d_oldspace == 4 && _2d_newspace == 2) {
-  _transforms[_transform_index++] = &_${vector.id}_partial_unswapped_backward;
-  _transforms[_transform_index++] = &_${vector.id}_partial_transpose;
-  _transforms[_transform_index++] = &_${vector.id}_partial_swapped_forward;
-  _transforms[_transform_index++] = &_${vector.id}_partial_untranspose;
-}
-// Case 12: 10 -> 01
-else if (_2d_oldspace == 2 && _2d_newspace == 4) {
-  _transforms[_transform_index++] = &_${vector.id}_partial_transpose;
-  _transforms[_transform_index++] = &_${vector.id}_partial_swapped_backward;
-  _transforms[_transform_index++] = &_${vector.id}_partial_untranspose;
-  _transforms[_transform_index++] = &_${vector.id}_partial_unswapped_forward;
-}
-else
-  _LOG(_ERROR_LOG_LEVEL, "Missing combination of spaces? _2d_oldspace: %lu, _2d_newspace: %lu\n", _2d_oldspace, _2d_newspace);
-
-// Now add the local transform if needed.
-if ((_${vector.id}_space & ~6) != (_newSpace & ~6)) {
-  // The _spaces_pair we need to look up either has the first two dimensions '0' if unswapped
-  // or '1' if swapped, so we need to construct these variables.
-  unsigned long _rest_oldspace = _${vector.id}_space & ~6, _rest_newspace = _newSpace & ~6;
-  if ((_newSpace & 6) == 6) {
-    // swapped
-    _rest_oldspace |= 6;
-    _rest_newspace |= 6;
-    // If we have not already created the plan, we must exit as we should have already made it.
-    if (_${vector.id}_swapped_plan_map.count(_spaces_pair(_rest_oldspace, _rest_newspace)) == 0) {
-      _LOG(_ERROR_LOG_LEVEL, "Error: We should have plans for every required transform, but it seems we don't for this transform.\n"
-                             "       The transform is for the vector '${vector.id}' from space %li to space %li (via %li)\n.",
-                             _${vector.id}_space, _newSpace, _rest_oldspace);
-      // _LOG will cause the simulation to exit
-    }
-    _transforms[_transform_index++] = &_${vector.id}_swapped_plan_map[_spaces_pair(_rest_oldspace, _rest_newspace)];
-  } else {
-    // unswapped
-    // If we have not already created the plan, we must exit as we should have already made it.
-    if (_${vector.id}_unswapped_plan_map.count(_spaces_pair(_rest_oldspace, _rest_newspace)) == 0) {
-      _LOG(_ERROR_LOG_LEVEL, "Error: We should have plans for every required transform, but it seems we don't for this transform.\n"
-                             "       The transform is for the vector '${vector.id}' from space %li to space %li (via %li)\n.",
-                             _${vector.id}_space, _newSpace, _rest_oldspace);
-      // _LOG will cause the simulation to exit
-    }
-    _transforms[_transform_index++] = &_${vector.id}_unswapped_plan_map[_spaces_pair(_rest_oldspace, _rest_newspace)];
-  }
-}
-
-_c = 1.0;
-
-int _counter;
-
-for (_counter = 0; _counter < _transform_index; _counter++) {
-  _c *= _transforms[_counter]->_c;
-  if (_transforms[_counter]->_type == _LOCAL_TRANSFORM) {
-    if (_transforms[_counter]->_forward_plan) {
-      ${executeLocalGuruPlanForVector('_transforms[_counter]->_forward_plan', vector), autoIndent=True}@slurp
-    }
-    if (_transforms[_counter]->_backward_plan) {
-      ${executeLocalGuruPlanForVector('_transforms[_counter]->_backward_plan', vector), autoIndent=True}@slurp
-    }
-  } else {
-    // _MPI_TRANSFORM
-    if (_transforms[_counter]->_forward_plan) {
-      ${executeGuruPlanForVector('_transforms[_counter]->_forward_plan', vector), autoIndent=True}@slurp
-    }
-    if (_transforms[_counter]->_backward_plan) {
-      ${executeGuruPlanForVector('_transforms[_counter]->_backward_plan', vector), autoIndent=True}@slurp
-    }
-  }
-}
+@def addOtherTransformsForVector($vector)
+  @if not $vector.field.isDistributed
+    @return
+  @end if
   @#
 @end def
 
-@def executeGuruPlanForVector($planName, $vector)
-@*doc:
-Return the execution call for a plan in a variable named `planName` for a vector `vector`.
 
-You might think that I've made a mistake here by calling the r2r function (real-to-real transform)
-instead of the dft version, and you'd be wrong (at least in fftw-3.2alpha3). After much trawling through their
-code, because the r2r transforms require the same number of arguments as mpi dft transforms (as split real/complex
-data isn't supported by the mpi code but is supported by the serial code) you actually need to call the r2r version
-not the dft version if you don't want you code to SEGFAULT. And who likes SEGFAULTs? Not me.
-*@
+@def executePlanForVector($vector)
   @#
-fftw_execute_r2r($planName, reinterpret_cast<double*>(_active_${vector.id}),
-                 reinterpret_cast<double*>(_active_${vector.id}));
+  @super(vector)
   @#
-@end def
-
-@def executeLocalGuruPlanForVector($planName, $vector)
-@*doc:
-Return the execution call for a plan in a variable named `planName` for a vector `vector`.
-
-This is local, so we call with _dft not _r2r
-*@
-  @#
-fftw_execute_dft($planName, reinterpret_cast<fftw_complex*>(_active_${vector.id}),
-                 reinterpret_cast<fftw_complex*>(_active_${vector.id}));
+case _MPI_DFT_TRANSFORM:
+case _MPI_R2R_TRANSFORM:
+case _MPI_TRANSPOSE:
+  fftw_execute_r2r(_it->first, reinterpret_cast<double*>(_active_${vector.id}),
+                               reinterpret_cast<double*>(_active_${vector.id}));
+  break;
   @#
 @end def
