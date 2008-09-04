@@ -271,8 +271,8 @@ def main(argv=None):
     script_doc = etree.fromstring(globalNameSpace['inputScript'])
     if not relaxng.validate(script_doc):
       # Validation failed
-      error = relaxng.error_log.last_error
-      parserWarning((error.line, error.column), error.message)
+      for error in relaxng.error_log:
+        parserWarning((error.line, error.column), error.message)
       # print error, error.domain_name, error.type_name, error.message, dir(error)
   
   
