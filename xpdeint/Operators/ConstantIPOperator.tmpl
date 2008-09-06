@@ -62,9 +62,9 @@ if (_exponent > 0) {
 
 @def insideEvaluateOperatorLoops($operationString)
   @#
-  @for $operatorComponentNumber, ($operatorComponentName, $operatorComponentVectors) in enumerate($operatorComponents.iteritems())
-    @for $targetVectorComponents in $operatorComponentVectors.itervalues()
-      @for $targetVectorComponent in $targetVectorComponents
+  @for operatorComponentNumber, (operatorComponentName, operatorComponentVectors) in enumerate($operatorComponents.iteritems())
+    @for targetVectorComponents in operatorComponentVectors.itervalues()
+      @for targetVectorComponent in targetVectorComponents
 // ${operatorComponentName}[$targetVectorComponent]
 $targetVectorComponent ${operationString}= _${operatorVector.id}[_${operatorVector.id}_index_pointer + $operatorComponentNumber@slurp
         @if len($integrator.ipPropagationStepFractions) > 1

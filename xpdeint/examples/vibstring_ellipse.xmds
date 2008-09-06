@@ -17,6 +17,7 @@
       const double mass = 1e-3;
       const double length = 1.0;
       const double mu = mass/length;
+      const double T_mu = T/mu;
       
       const double ellipse_a = 0.9;
       const double ellipse_b = 0.5;
@@ -29,8 +30,8 @@
   <geometry>
     <propagation_dimension> t </propagation_dimension>
     <transverse_dimensions>
-      <dimension name="x" lattice="256"  domain="(-1, 1)" />
-      <dimension name="y" lattice="256"  domain="(-1, 1)" />
+      <dimension name="x" lattice="128"  domain="(-1, 1)" />
+      <dimension name="y" lattice="128"  domain="(-1, 1)" />
     </transverse_dimensions>
   </geometry>
   
@@ -63,28 +64,24 @@
   </vector>
   
   <sequence>
-    <integrate algorithm="RK4" tolerance="1e-8" interval="2e-2" steps="1000">
-      <samples>250</samples>
-      <filters>
-        <filter>
-          <dependencies>main boundary</dependencies>
-          <![CDATA[
-          u *= bc;
-          uDot *= bc;
-          ]]>
-        </filter>
-      </filters>
+    <integrate algorithm="ARK89" tolerance="1e-8" interval="2e-2" steps="1000">
+      <samples>50</samples>
       <operators>
-        <operator kind="ex" constant="yes">
+        <operator kind="ex" constant="yes" fourier_space="x y">
           <operator_names>L</operator_names>
           <![CDATA[
-            L = -T*(kx*kx + ky*ky)/mu;
+          double r_norm = sqrt(x*x/ellipse_a/ellipse_a + y*y/ellipse_b/ellipse_b);
+
+          if ( r_norm > 1.0)
+            L = 0.0;
+          else
+            L = 1.0;
           ]]>
         </operator>
-        <integration_vectors>main</integration_vectors>
+        <integration_vectors fourier_space="kx ky">main</integration_vectors>
         <![CDATA[
           du_dt = uDot;
-          duDot_dt = L[u];
+          duDot_dt = L[-T_mu*(kx*kx+ky*ky)*u];
         ]]>
       </operators>
     </integrate>

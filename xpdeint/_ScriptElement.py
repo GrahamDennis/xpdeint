@@ -13,9 +13,10 @@ import sys
 
 from Cheetah.Template import Template
 from xpdeint.ParserException import ParserException
+from xpdeint.ParsedEntity import ParsedEntity
 
 import re
-from xpdeint import RegularExpressionStrings
+from xpdeint import CodeLexer
 
 class _ScriptElement (Template):
   class LoopingOrder(object):
@@ -99,10 +100,10 @@ class _ScriptElement (Template):
   @property
   def parent(self):
     """
-    Return the parent template of this template. Note that the return value may be `None`.
+    Return the parent template of this template. Note that the return value may be ``None``.
     
     The parent of the template is defined as the template that has this template as a member
-    of the `children` attribute of that instance. Should multiple templates meet this requirement
+    of the ``children`` attribute of that instance. Should multiple templates meet this requirement
     an exception will be raised.
     """
     if self._parent:
@@ -124,7 +125,7 @@ class _ScriptElement (Template):
     """
     Return a string that should uniquely identify this object.
     
-    The string returned will be appropriate for use as a `C` variable name and
+    The string returned will be appropriate for use as a ``C`` variable name and
     will begin with and underscore.
     """
     if not self._id:
@@ -523,42 +524,13 @@ class _ScriptElement (Template):
     the ``phi[j, k, l][p, q, r]`` notation is replaced with the string ``phi`` which is a faster
     way of accessing the local value than through using the ``_phi(...)`` macro.
     """
-    components = set()
-    
-    for vector in vectors:
-      components.update(vector.components)
-    
-    if self.getVar('geometry').integerValuedDimensions and components:
-      
-      componentsWithIntegerValuedDimensionsRegex = \
-        re.compile(RegularExpressionStrings.componentWithIntegerValuedDimensions(components),
-                   re.VERBOSE)
-      
-      originalCode = code
-      
-      for match in componentsWithIntegerValuedDimensionsRegex.finditer(originalCode):
-        # So we now have a component, but if it doesn't have a match for 'integerValuedDimensions'
-        # then we don't have to do anything with it.
-        if not match.group('integerValuedDimensions'):
-          continue
+    if self.getVar('geometry').integerValuedDimensions and vectors:
+      fakeCodeEntity = ParsedEntity(self.xmlElement, code)
+      fakeCodeEntity.isFake = True
+      for componentName, field, integerDimDict, codeSlice in reversed(CodeLexer.integerValuedDimensionsForVectors(vectors, fakeCodeEntity)):
+        # We know that integerDimDict is non-empty
         
-        componentName = match.group('componentName')
-        tempVectors = [v for v in vectors if componentName in v.components]
-        assert len(tempVectors) == 1
-        
-        vector = tempVectors[0]
-        regex = re.compile(RegularExpressionStrings.integerValuedDimensionsForComponentInField(componentName, vector.field),
-                           re.VERBOSE)
-        
-        integerValuedDimensionsMatch = regex.search(code)
-        
-        if not integerValuedDimensionsMatch:
-          target = match.group(0)
-          raise ParserException(self.xmlElement,
-                                "Unable to extract the integer-valued dimensions for the '%(componentName)s' variable.\n"
-                                "The string that couldn't be parsed was '%(target)s'." % locals())
-        
-        integerValuedDimensions = vector.field.integerValuedDimensions
+        integerValuedDimensions = field.integerValuedDimensions
         
         integerValuedDimensionNames = []
         for dimList in integerValuedDimensions:
@@ -569,28 +541,26 @@ class _ScriptElement (Template):
         # phi[j, k] can become just 'phi' if the first integer-valued dimension is 'j' and
         # the second is 'k'.
         
-        canOptimiseIntegerValuedDimensions = all([integerValuedDimensionsMatch.group(dimName).strip() == dimName for dimName in integerValuedDimensionNames])
+        canOptimiseIntegerValuedDimensions = all([integerDimDict[dimName][0] == dimName for dimName in integerValuedDimensionNames])
         
         if canOptimiseIntegerValuedDimensions:
           replacementString = componentName
         else:
           # It would be illegal to try and access any distributed dimensions nonlocally, so we need to check for this.
-          for dim in vector.field.dimensions:
+          for dim in field.dimensions:
             simulationDriver = self.getVar('features')['Driver']
             if dim.name in simulationDriver.distributedDimensionNames and dim.name in integerValuedDimensionNames:
-              if not integerValuedDimensionsMatch.group(dim.name).strip() == dim.name:
+              if not integerDimDict[dim.name][0] == dim.name:
                 dimName = dim.name
                 raise ParserException(self.xmlElement, "It is illegal to access the dimension '%(dimName)s' nonlocally because it is being distributed with MPI.\n"
                                                        "Try not using MPI or changing the order of your dimensions." % locals())
           
-          argumentsString = ', '.join([integerValuedDimensionsMatch.group(dimName).strip() for dimName in integerValuedDimensionNames])
+          argumentsString = ', '.join([integerDimDict[dimName][0] for dimName in integerValuedDimensionNames])
           
           replacementString = '_%(componentName)s(%(argumentsString)s)' % locals()
         
         # Create a regular expression to replace the phi[j] string with the appropriate string
-        operatorCodeReplacementRegex = re.compile(r'\b' + re.escape(componentName) + re.escape(match.group('integerValuedDimensions')))
-        
-        code = operatorCodeReplacementRegex.sub(replacementString, code, count = 1)
+        code = code[:codeSlice.start] + replacementString + code[codeSlice.stop:]
     
     return code
   

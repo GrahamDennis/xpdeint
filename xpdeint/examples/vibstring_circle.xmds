@@ -18,6 +18,7 @@
       const double mass = 1e-3;
       const double length = 1.0;
       const double mu = mass/length;
+      const double T_mu = T/mu;
       
       const double xmax = _xy_max_x;
       const double width = 0.1;
@@ -72,26 +73,18 @@
   <sequence>
     <integrate algorithm="ARK89" tolerance="1e-7" interval="2e-2" steps="1000">
       <samples>50</samples>
-      <filters>
-        <filter>
-          <dependencies>main boundary</dependencies>
-          <![CDATA[
-          u *= bc;
-          uDot *= bc;
-          ]]>
-        </filter>
-      </filters>
       <operators>
-        <operator kind="ex" constant="yes">
+        <operator kind="ex" constant="no">
           <operator_names>L</operator_names>
           <![CDATA[
-            L = -T*(kx*kx + ky*ky)/mu;
+            L = -T_mu*(kx*kx + ky*ky);
           ]]>
         </operator>
         <integration_vectors>main</integration_vectors>
+        <dependencies>boundary</dependencies>
         <![CDATA[
           du_dt = uDot;
-          duDot_dt = L[u];
+          duDot_dt = bc*L[u];
         ]]>
       </operators>
     </integrate>

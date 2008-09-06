@@ -20,9 +20,9 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 ${insertUserCodeFromEntity($operatorDefinitionCodeEntity)}@slurp
 // **********************************************
 
-  @for $operatorComponentNumber, ($operatorComponentName, $operatorComponentVectors) in enumerate($operatorComponents.iteritems())
-    @for $targetVectorComponents in $operatorComponentVectors.itervalues()
-      @for $targetVectorComponent in $targetVectorComponents
+  @for operatorComponentNumber, (operatorComponentName, operatorComponentVectors) in enumerate($operatorComponents.iteritems())
+    @for targetVectorComponents in operatorComponentVectors.itervalues()
+      @for targetVectorComponent in targetVectorComponents
 // ${operatorComponentName}[$targetVectorComponent]
 _${operatorComponentName}_${targetVectorComponent} = $operatorComponentName * $targetVectorComponent;
       @end for

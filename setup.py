@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 
 setup(name="xpdeint",
-      version="0.4",
+      version="0.5",
       description="Stochastic ODE/PDE integrator",
       url="http://xmds.sourceforge.net",
       license="GPL2",
@@ -28,7 +28,7 @@ setup(name="xpdeint",
       exclude_package_data = {'': ['README', 'TODO']},
       
       # Project requires Cheetah for all of the templates
-      install_requires = ['Cheetah>=2.0.1'],
+      install_requires = ['Cheetah>=2.0.1', 'Pygments'],
       
       package_data = {
         '': ['includes/*.c', 'includes/*.h', 'includes/*.cc', 'examples/*.xmds', 'support/xpdeint.rng']

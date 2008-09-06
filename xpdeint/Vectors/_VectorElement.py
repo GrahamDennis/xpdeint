@@ -145,6 +145,11 @@ class _VectorElement (ScriptElement):
           return False
     return True
   
+  def remove(self):
+    self.field.managedVectors.discard(self)
+    self.field.temporaryVectors.discard(self)
+    
+    super(_VectorElement, self).remove()
 
 
   

@@ -385,6 +385,9 @@
         <choice>
           <ref name="Operator"/>
           <element name="integration_vectors">
+            <optional>
+              <attribute name="fourier_space"/>
+            </optional>
             <text/>
           </element>
           <ref name="Dependencies"/>

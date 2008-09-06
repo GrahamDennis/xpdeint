@@ -10,4 +10,4 @@ CFLAGS="-O3 -ffast-math -funroll-all-loops -fomit-frame-pointer -lxmds"
 MPICC="mpic++"
 MPICFLAGS="-O3 -ffast-math -funroll-all-loops -fomit-frame-pointer  -lxmds -lfftw_mpi -lfftw"
 
-versionString = '0.4 "Soylent Green is Purple!"'
+versionString = '0.5 "Are you thinking what I\'m thinking B1?"'

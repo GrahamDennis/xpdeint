@@ -1304,6 +1304,10 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     integrationVectorsElement = operatorsElement.getChildElementByTagName('integration_vectors')
     integrationVectorsNames = RegularExpressionStrings.symbolsInString(integrationVectorsElement.innerText())
     
+    if integrationVectorsElement.hasAttribute('fourier_space'):
+      deltaAOperatorTemplate.operatorSpace = operatorContainer.field.spaceFromString(integrationVectorsElement.getAttribute('fourier_space'),
+                                                                                     xmlElement = integrationVectorsElement)
+    
     if not integrationVectorsNames:
       raise ParserException(integrationVectorsElement, "Element must be non-empty.")
     
@@ -1786,7 +1790,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
         operatorContainer = OperatorContainerTemplate(field = samplingFieldTemplate,
                                                       # Point the proxies for the shared code etc at
                                                       # the moment group object's sampling code, the sampling space, etc.
-                                                      sharedCodeKeyPath = 'parent.samplingCodeEntity.value',
+                                                      sharedCodeEntityKeyPath = 'parent.samplingCodeEntity',
                                                       sharedCodeSpaceKeyPath = 'parent.sampleSpace',
                                                       dependenciesKeyPath = 'parent.dependencies',
                                                       parent = momentGroupTemplate,

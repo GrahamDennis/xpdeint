@@ -65,15 +65,6 @@
   <sequence>
     <integrate algorithm="ARK89" tolerance="1e-8" interval="2e-2" steps="1000">
       <samples>500 1</samples>
-      <filters>
-        <filter>
-          <dependencies>main boundary</dependencies>
-          <![CDATA[
-          u *= bc;
-          uDot *= bc;
-          ]]>
-        </filter>
-      </filters>
       <operators>
         <operator kind="ex" constant="yes">
           <operator_names>L</operator_names>
@@ -82,9 +73,10 @@
           ]]>
         </operator>
         <integration_vectors>main</integration_vectors>
+        <dependencies>boundary</dependencies>
         <![CDATA[
           du_dt = uDot;
-          duDot_dt = L[u];
+          duDot_dt = bc*L[u];
         ]]>
       </operators>
     </integrate>

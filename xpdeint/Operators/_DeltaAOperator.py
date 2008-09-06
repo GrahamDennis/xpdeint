@@ -15,8 +15,7 @@ from xpdeint.Function import Function
 
 from xpdeint.ParserException import ParserException
 
-import re
-from xpdeint import RegularExpressionStrings
+from xpdeint import CodeLexer
 
 class _DeltaAOperator (Operator):
   evaluateOperatorFunctionArguments = [('double', '_step')]
@@ -112,27 +111,10 @@ class _DeltaAOperator (Operator):
           components.add(derivativeString)
           derivativeMap[derivativeString] = vector
       
+      indexAccessedVariables = CodeLexer.integerValuedDimensionsForComponentsInField(components, self.field, self.propagationCodeEntity)
       
-      # The following regular expression has both a 'good' group and a 'bad' group
-      # because we don't care about anything that might match an expression like
-      # phi[j] if it happens to be inside another pair of square brackets, i.e.
-      # something like L[phi[j]], as that will not be the same array.
-      componentsWithIntegerValuedDimensionsRegex = \
-        re.compile(r'(?P<bad>'  + RegularExpressionStrings.threeLevelsMatchedSquareBrackets + r')|'
-                   r'(?P<good>' + RegularExpressionStrings.componentWithIntegerValuedDimensions(components) + ')',
-                   re.VERBOSE)
-      
-      for match in componentsWithIntegerValuedDimensionsRegex.finditer(self.propagationCodeEntity.value):
-        # If we have a match for the 'bad' group, ignore it
-        if match.group('bad'):
-          continue
+      for componentName, resultDict, codeSlice in indexAccessedVariables:
         
-        # So we now have a component, but if it doesn't have a match for 'integerValuedDimensions'
-        # then we don't have to do anything with it.
-        if not match.group('integerValuedDimensions'):
-          continue
-        
-        componentName = match.group('componentName')
         vectors = [v for v in self.integrationVectors if componentName in v.components]
         
         if len(vectors) == 1:
@@ -142,26 +124,9 @@ class _DeltaAOperator (Operator):
           # Or it is a derivative, and so the vector we should use is the one for the original component
           vector = derivativeMap[componentName]
         
-        regex = re.compile(RegularExpressionStrings.integerValuedDimensionsForComponentInField('', vector.field),
-                           re.VERBOSE)
-        
-        integerValuedDimensionsMatch = regex.search(match.group('integerValuedDimensions'))
-        
-        if not integerValuedDimensionsMatch:
-          target = match.group(0)
-          raise ParserException(self.xmlElement,
-                                "Unable to extract the integer-valued dimensions for the '%(componentName)s' variable.\n"
-                                "The string that couldn't be parsed was '%(target)s'." % locals())
-        
-        integerValuedDimensions = vector.field.integerValuedDimensions
-        
-        integerValuedDimensionNames = []
-        for dimList in integerValuedDimensions:
-          integerValuedDimensionNames.extend([dim.name for dim in dimList])
-        
         # Add the dimension names that aren't being accessed with the dimension variable
         # to the set of dimensions needing reordering.
-        dimensionNamesForThisVectorNeedingReordering = [dimName for dimName in integerValuedDimensionNames if integerValuedDimensionsMatch.group(dimName).strip() != dimName]
+        dimensionNamesForThisVectorNeedingReordering = [dimName for dimName, (indexString, codeSlice) in resultDict.iteritems() if indexString != dimName]
         
         if dimensionNamesForThisVectorNeedingReordering:
           # If we have any dimensions that need reordering for this vector, add them to the complete set
@@ -187,21 +152,15 @@ class _DeltaAOperator (Operator):
                                     "The dimension '%(dimensionName)s' cannot be accessed nonlocally because it is being distributed with MPI.\n"
                                     "Try turning off MPI or re-ordering the dimensions in the <geometry> element." % locals())
         
-        # Sort these dimensions in canonical order
-        geometryTemplate = self.getVar('geometry')
-        sortFunction = lambda x, y: cmp(geometryTemplate.indexOfDimension(x), geometryTemplate.indexOfDimension(y))
-        dimensionsNeedingReordering.sort(sortFunction)
-        
         # Now we need to construct a new field which has the same dimensions as self.field,
         # but has the dimensions that need reordering at the end.
         newFieldDimensions = self.field.dimensions[:]
         
-        # First remove the dimensions needing reordering
-        for dim in dimensionsNeedingReordering:
-          newFieldDimensions.remove(dim)
-        
-        # Now put them at the end.
-        newFieldDimensions.extend(dimensionsNeedingReordering)
+        # Remove the dimensions needing reordering and replace them at the end
+        for dim in newFieldDimensions[:]:
+          if dim in dimensionsNeedingReordering:
+            newFieldDimensions.remove(dim)
+            newFieldDimensions.append(dim)
         
         loopingFieldName = ''.join([self.integrator.name, '_', self.name, '_looping_field'])
         
@@ -258,53 +217,31 @@ class _DeltaAOperator (Operator):
       if self.deltaAField:
         deltaAIntegerValuedDimensions = self.deltaAField.integerValuedDimensions
       
-      derivativesWithIntegerValuedDimensionsRegex = \
-        re.compile(RegularExpressionStrings.componentWithIntegerValuedDimensions(derivativeMap.keys()),
-                   re.VERBOSE)
+      indexAccessedDerivatives = CodeLexer.integerValuedDimensionsForComponentsInField(derivativeMap.keys(), self.field, self.propagationCodeEntity)
       
-      originalCode = self.propagationCodeEntity.value
-      for match in derivativesWithIntegerValuedDimensionsRegex.finditer(originalCode):
-        # If we don't have a match for integerValuedDimensions, then everything is OK
-        if not match.group('integerValuedDimensions'):
-          continue
-        
-        componentName = match.group('componentName')
-        
-        integrationVector = derivativeMap[componentName]
-        
-        regex = re.compile(RegularExpressionStrings.integerValuedDimensionsForComponentInField('', integrationVector.field),
-                           re.VERBOSE)
-        
-        integerValuedDimensionsMatch = regex.search(match.group('integerValuedDimensions'))
-        
-        if not integerValuedDimensionsMatch:
-          target = match.group(0)
-          raise ParserException(self.xmlElement,
-                                "Unable to extract the integer-valued dimensions for the '%(componentName)s' variable.\n"
-                                "The string that couldn't be parsed was '%(target)s'." % locals())
-        
-        integerValuedDimensionsString = ''
+      dimensionNamesToBeRemoved = [dim.name for dim in self.field.dimensions if dim.name not in dimensionNamesNeedingReordering]
+      
+      for componentName, resultDict, codeSlice in reversed(indexAccessedDerivatives):
+        componentAccessString = componentName
         for dimList in deltaAIntegerValuedDimensions:
-          integerValuedDimensionsString += '[' + ', '.join([integerValuedDimensionsMatch.group(dim.name) for dim in dimList]) + ']'
-        
-        # If we have at least one dimension that is not being accessed with the correct index,
-        # we must initialise the delta a vector just in case. (See gravity.xmds for an example)
-        if any([integerValuedDimensionsMatch.group(dim.name).strip() != dim.name for dim in dimList]):
+          componentAccessString += '[' + ','.join([resultDict[dim.name][0] for dim in dimList]) + ']'
           
-          # The integrationVector must be in the deltaAVectorMap because we would have had to allocate
-          # a delta-a vector for this integration vector.
-          deltaAVector = self.deltaAVectorMap[integrationVector]
-          if not deltaAVector.needsInitialisation:
-            deltaAVector.needsInitialisation = True
-            deltaAVector.initialiser = VectorInitialisation(**self.argumentsToTemplateConstructors)
-            deltaAVector.initialiser.vector = deltaAVector
+          # If we have at least one dimension that is not being accessed with the correct index,
+          # we must initialise the delta a vector just in case. (See gravity.xmds for an example)
+          if any([resultDict[dim.name][0] != dim.name for dim in dimList]):
+          
+            # The integrationVector must be in the deltaAVectorMap because we would have had to allocate
+            # a delta-a vector for this integration vector.
+            deltaAVector = self.deltaAVectorMap[integrationVector]
+            if not deltaAVector.needsInitialisation:
+              deltaAVector.needsInitialisation = True
+              deltaAVector.initialiser = VectorInitialisation(**self.argumentsToTemplateConstructors)
+              deltaAVector.initialiser.vector = deltaAVector
         
-        # Replace the derivative string with one accessed using only indices corresponding to dimensions in
-        # the delta a field.
-        self.propagationCodeEntity.value = re.sub(re.escape(componentName) + re.escape(match.group('integerValuedDimensions')),
-                                              componentName + integerValuedDimensionsString,
-                                              self.propagationCodeEntity.value, count=1)
-      
+        self.propagationCodeEntity.value = self.propagationCodeEntity.value[:codeSlice.start] + componentAccessString \
+                                          + self.propagationCodeEntity.value[codeSlice.stop:]
+        
+        
       
     
     if self.deltaAField:
