@@ -22,9 +22,9 @@ ${insertUserCodeFromEntity($operatorDefinitionCodeEntity)}@slurp
 
 @def insideEvaluateOperatorLoops
   @#
-  @for $operatorComponentNumber, ($operatorComponentName, $operatorComponentVectors) in enumerate($operatorComponents.iteritems())
-    @for $targetVectorComponents in $operatorComponentVectors.itervalues()
-      @for $targetVectorComponent in $targetVectorComponents
+  @for operatorComponentNumber, (operatorComponentName, operatorComponentVectors) in enumerate($operatorComponents.iteritems())
+    @for targetVectorComponents in operatorComponentVectors.itervalues()
+      @for targetVectorComponent in targetVectorComponents
 // ${operatorComponentName}[$targetVectorComponent]
 _${operatorComponentName}_${targetVectorComponent} = $operatorComponentName * $targetVectorComponent;
       @end for

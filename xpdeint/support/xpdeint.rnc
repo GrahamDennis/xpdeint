@@ -206,7 +206,10 @@ Operators = element operators {
     , NoiseAttributes?
     , (
         Operator
-        | element integration_vectors { text }
+        | element integration_vectors {
+            attribute fourier_space { text }?
+            , text
+          }
         | Dependencies
         | text
       )+

@@ -235,14 +235,15 @@ def main(argv=None):
   # error string that should be presented to the user.
   except ParserException, err:  
     # Print the error to the user
-    lineNumber = -1
-    columnNumber = -1
-    if err.element:
-      lineNumber = err.element.getUserData('lineNumber')
-      columnNumber = err.element.getUserData('columnNumber')
+    lineNumber = err.lineNumber
+    columnNumber = err.columnNumber
     print >> sys.stderr, "Error: " + err.msg
-    if lineNumber and lineNumber > 0:
-      print >> sys.stderr, "    At line %(lineNumber)i, column %(columnNumber)i." % locals()
+    if not lineNumber == None:
+      positionReference =  "    At line %(lineNumber)i" % locals()
+      if not columnNumber == None:
+        positionReference += ", column %(columnNumber)i" % locals()
+      positionReference += "."
+      print >> sys.stderr, positionReference
     if debug:
       if err.element:
         print >> sys.stderr, "    In element: " + err.element.userUnderstandableXPath()

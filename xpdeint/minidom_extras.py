@@ -145,7 +145,7 @@ def concatenateFunctions(f1, f2):
 
 def composeFunctions(f1, f2):
   """
-  Returns a function that calls `f2`(`f1`(args)).
+  Returns a function that calls ``f2(f1(args))``.
   """
   @wraps(f1)
   def wrapper(*args, **KWs):

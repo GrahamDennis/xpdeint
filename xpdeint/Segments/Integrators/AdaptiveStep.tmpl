@@ -140,7 +140,7 @@ double _segment${segmentNumber}_${vector.id}_timestep_error(${vector.type}* _che
   @# @end for
   @#
   {
-    ${loopOverVectorsInSpaceWithInnerContent([vector], $homeSpace, $insideFindMaxErrorLoops(vector)), autoIndent=True}@slurp
+    ${loopOverFieldInSpaceWithVectorsAndInnerContent(vector.field, $homeSpace, [vector], $insideFindMaxErrorLoops(vector)), autoIndent=True}@slurp
   }
   ${insertCodeForFeatures('findMax', ['Driver'], {'variable': '&_error', 'count': '1'}), autoIndent=True}@slurp
   ${insertCodeForFeaturesInReverseOrder('timestepErrorEnd', featureOrdering, dict), autoIndent=True}@slurp

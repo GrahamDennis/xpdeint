@@ -64,7 +64,7 @@ class Function(object):
     """
     Return as a string the C function prototype for this function.
     
-    For example, return ``void _segment3(int myInt);\n``.
+    For example, return ``void _segment3(int myInt);\\n``.
     """
     return self._prototype() + ';\n'
   

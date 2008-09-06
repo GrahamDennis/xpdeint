@@ -13,6 +13,13 @@ class ParserException(Exception):
   def __init__(self, element, msg):
     self.msg = msg
     self.element = element
+    
+    self.lineNumber = self.columnNumber = None
+    
+    if self.element:
+      self.lineNumber = self.element.getUserData('lineNumber')
+      self.columnNumber = self.element.getUserData('columnNumber')
+    
 
 
 def parserWarning(element, msg):

@@ -1,12 +1,6 @@
 * Complete Stochastics support
   * Test
 
-* Make the regular expressions for integer-valued dimensions not consider or modify strings which are
-  in comments or in quotes (e.g. printf strings)
-  - Upgrade our RegularExpressionStrings things to a full-fledged lexer. But don't write it ourselves, instead
-    use the lexers in Pygments (http://pygments.org). This will prevent us catching operators in comments/strings,
-    similarly for integer-valued dimensions.
-
 * Write a front-end to auto-configure preference file.
   For reading the preferences file, look into using the Python module
   ConfigParser. It seems to be part of the standard distribution.
@@ -119,4 +113,9 @@
 * Allow IP operators to have reduced dimensionality. This is an important optimisation for adaptive step integrators in higher dimensions where the derivative
   operators are typically separable, i.e. of the form kx*kx + ky*ky. This will allow significantly fewer complex exponentials to be calculated. O(2N) instead of
   O(N^2) for 2 dimensions
- 
+
+* Permit general dirichlet boundary conditions to be specified as a special kind of filter that automatically prevents amplitude from
+  straying into these regions. It would also perform optimisations in the looping code to only loop over the parts of the grid that
+  aren't zero. I'm thinking specifically here of the Projected-GPE type things and creating a general optimisation for these kinds of
+  problems where only a small subset of the fourier space is cared about, but the transform is done on the entire grid. The optimisation
+  would probably use something like run-length encoding to determine the parts of the grid that need to be looped over.

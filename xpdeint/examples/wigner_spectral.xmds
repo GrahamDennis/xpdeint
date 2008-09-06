@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
-  <name>wigner</name>
+  <name>wigner_spectral</name>
   <author>Graham Dennis</author>
   <description>
     Simulation of the Wigner function for an anharmonic oscillator with the initial state
     being a coherent state.
+    
+    This is a modification of wigner.xmds to be more like a true spectral method by evaluating
+    the temporal derivatives in spectral (fourier) space. This script runs faster than the original
+    wigner.xmds
     
     WARNING: This simulation will take a couple of hours.
   </description>
@@ -15,6 +19,7 @@
     <bing />
     <fftw version="3" plan="patient" />
     <openmp />
+    <validation kind="run-time" />
     <globals>
       <![CDATA[
       /* physical constants */
@@ -76,35 +81,34 @@
   </vector>
   
   <sequence>
-    <integrate algorithm="ARK89" tolerance="1e-7" interval="7.0" steps="100000">
+    <integrate algorithm="ARK89" tolerance="1e-7" interval="2.0*M_PI" steps="100000" home_space="k">
       <samples>200</samples>
       <operators>
-        <operator kind="ex" constant="yes">
-          <operator_names>Lx Ly Lxxx Lxxy Lxyy Lyyy</operator_names>
+        <operator kind="ex" constant="no" fourier_space="x y">
+          <operator_names>Lx Ly LxR LyR</operator_names>
           <![CDATA[
-            Lx = i*kx;
-            Ly = i*ky;
-            Lxxx = -i*kx*kx*kx;
-            Lxxy = -i*kx*kx*ky;
-            Lxyy = -i*kx*ky*ky;
-            Lyyy = -i*ky*ky*ky;
+            double r2 = x*x + y*y;
+            if (r2 > (_max_x-width)*(_max_x-width)) {
+              Lx = Ly = LxR = LyR = 0.0;
+            } else {
+              Lx = x;
+              Ly = y;
+              LxR = x*(r2-1.0);
+              LyR = y*(r2-1.0);
+            }
           ]]>
         </operator>
-        <integration_vectors>main</integration_vectors>
-        <dependencies>dampConstants</dependencies>
+        <integration_vectors fourier_space="kx ky">main</integration_vectors>
         <![CDATA[
-          dW_dt = damping * (
-                  (omega + Uint_hbar*(-1.0 + x*x + y*y))*x*Ly[W]
-                - (omega + Uint_hbar*(-1.0 + x*x + y*y))*y*Lx[W]
-                - Uint_hbar/16.0*(x*(Lxxy[W] + Lyyy[W])
-                                 -y*(Lxyy[W] + Lxxx[W]))
-                );
+          dW_dt = -i*omega*(kx*Ly[W] - ky*Lx[W])
+                  -i*Uint_hbar*(kx*LyR[W] - ky*LxR[W])
+                  -i*Uint_hbar/16.0*((kx*kx*kx+ky*ky*kx)*Ly[W] - (ky*ky*ky + ky*kx*kx)*Lx[W]);
         ]]>
       </operators>
     </integrate>
   </sequence>
   
-  <output format="binary" filename="wigner.xsil">
+  <output format="binary">
     <group>
       <sampling initial_sample="yes">
         <!-- Any dimension not mentioned is assumed to be in real space and its middle element will be sampled -->

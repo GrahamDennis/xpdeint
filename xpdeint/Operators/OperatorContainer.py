@@ -25,9 +25,9 @@ class OperatorContainer(ScriptElement):
   to know whether they are being used in an integrator or in moment group sampling,
   all they care about is that the `OperatorContainer` has been configured correctly.
   
-  Configuring an OperatorContainer amounts to setting the `sharedCodeKeyPath`, 
+  Configuring an OperatorContainer amounts to setting the `sharedCodeEntityKeyPath`, 
   `dependenciesKeyPath` and `sharedCodeSpaceKeyPath` variables in the initialiser
-  for `OperatorContainer`. `sharedCodeKeyPath` is a string that is a dotted-name
+  for `OperatorContainer`. `sharedCodeEntityKeyPath` is a string that is a dotted-name
   lookup specifier for the string that is the 'shared' code block for this operator
   container. For example, in the case of an integrator, the 'shared' code block is the
   integration code ``'dphi_dt = L[phi] + V*phi; // etc.'`` In an integrator, this
@@ -52,7 +52,7 @@ class OperatorContainer(ScriptElement):
   ``callOperatorFunctionWithArguments`` method.
   """
   def __init__(self, *args, **KWs):
-    localKWs = self.extractLocalKWs(['field', 'name', 'sharedCodeKeyPath', 'dependenciesKeyPath', 'sharedCodeSpaceKeyPath'], KWs)
+    localKWs = self.extractLocalKWs(['field', 'name', 'sharedCodeEntityKeyPath', 'dependenciesKeyPath', 'sharedCodeSpaceKeyPath'], KWs)
     
     ScriptElement.__init__(self, *args, **KWs)
     
@@ -65,19 +65,23 @@ class OperatorContainer(ScriptElement):
     self._name = localKWs.get('name', None)
     
     # These key paths are the 'paths' to the actual attributes for our
-    # 'sharedCode', 'dependencies' and 'sharedCodeSpace' proxy properties
-    self.sharedCodeKeyPath = localKWs.get('sharedCodeKeyPath', 'deltaAOperator.propagationCodeEntity.value')
+    # 'sharedCodeEntity', 'dependencies' and 'sharedCodeSpace' proxy properties
+    self.sharedCodeEntityKeyPath = localKWs.get('sharedCodeEntityKeyPath', 'deltaAOperator.propagationCodeEntity')
     self.dependenciesKeyPath = localKWs.get('dependenciesKeyPath', 'deltaAOperator.dependencies')
     self.sharedCodeSpaceKeyPath = localKWs.get('sharedCodeSpaceKeyPath', 'deltaAOperator.operatorSpace')
   
   def _getSharedCode(self):
-    return self.valueForKeyPath(self.sharedCodeKeyPath)
+    return self.valueForKeyPath(self.sharedCodeEntityKeyPath).value
   
   def _setSharedCode(self, value):
-    return self.setValueForKeyPath(value, self.sharedCodeKeyPath)
+    self.valueForKeyPath(self.sharedCodeEntityKeyPath).value = value
   
   sharedCode = property(_getSharedCode, _setSharedCode)
   del _getSharedCode, _setSharedCode
+  
+  @property
+  def sharedCodeEntity(self):
+    return self.valueForKeyPath(self.sharedCodeEntityKeyPath)
   
   @property
   def dependencies(self):
