@@ -94,8 +94,8 @@ fieldOffset += sizeof(unsigned long) + sizeof(double) * dataSize;
 off_t vectorFieldSize = _${field.name}_size * sizeof(double) + sizeof(unsigned long);
 dataSize = _${field.name}_size;
 
-for (int i = 0; i < ${componentCount}; i++) {
-  fseeko(fpBinary, fieldOffset + i * vectorFieldSize, SEEK_SET);
+for (int _i = 0; _i < ${componentCount}; _i++) {
+  fseeko(fpBinary, fieldOffset + _i * vectorFieldSize, SEEK_SET);
   fwrite(&dataSize, sizeof(unsigned long), 1, fpBinary);
 }
 

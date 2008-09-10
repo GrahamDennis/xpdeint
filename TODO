@@ -119,3 +119,5 @@
   aren't zero. I'm thinking specifically here of the Projected-GPE type things and creating a general optimisation for these kinds of
   problems where only a small subset of the fourier space is cared about, but the transform is done on the entire grid. The optimisation
   would probably use something like run-length encoding to determine the parts of the grid that need to be looped over.
+
+* Breakpoint on signal? (e.g. USR1)
