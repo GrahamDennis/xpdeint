@@ -44,6 +44,13 @@ ${result}@slurp
 
 using namespace std;
 
+#if CFG_COMPILER == CFG_COMPILER_ICC
+  //
+  // Disable ICC's warning: label was declared but never referenced
+  //
+  #pragma warning ( disable : 177 )
+#endif
+
 // ********************************************************
 // DEFINES
 // ********************************************************
