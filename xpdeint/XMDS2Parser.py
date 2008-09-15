@@ -1666,10 +1666,9 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
                   "Dimension name '%(dimensionName)s' doesn't correspond to a previously-defined dimension." % locals())
         
         geometryDimension = geometryTemplate.dimensions[geometryTemplate.indexOfDimensionName(dimensionName)]
-        dimension = geometryDimension.copy()
         
         fourierSpace = False
-        if dimensionElement.hasAttribute('fourier_space') and dimension.isTransformable:
+        if dimensionElement.hasAttribute('fourier_space') and geometryDimension.isTransformable:
           spaceString = dimensionElement.getAttribute('fourier_space').strip().lower()
           fourierSpace = None
           if spaceString == 'yes':
@@ -1677,18 +1676,18 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
           elif spaceString == 'no':
             fourierSpace = False
           else:
-            if dimension.inSpace(0).name == spaceString:
+            if geometryDimension.inSpace(0).name == spaceString:
               fourierSpace = False
-            elif dimension.inSpace(-1).name == spaceString:
+            elif geometryDimension.inSpace(-1).name == spaceString:
               fourierSpace = True
           if fourierSpace == None:
             raise ParserException(dimensionElement, "fourier_space attribute for dimension '%s' must be 'yes' / '%s' or 'no' / '%s'"
-                                                    % (dimensionName, dimension.inSpace(-1).name, dimension.inSpace(0).name))
+                                                    % (dimensionName, geometryDimension.inSpace(-1).name, geometryDimension.inSpace(0).name))
         
-        dimensionRepresentation = dimension.inSpace(0)
+        dimensionRepresentation = geometryDimension.inSpace(0)
         if fourierSpace:
-          momentGroupTemplate.sampleSpace |= dimension.transformMask
-          dimensionRepresentation = dimension.inSpace(momentGroupTemplate.sampleSpace)
+          momentGroupTemplate.sampleSpace |= geometryDimension.transformMask
+          dimensionRepresentation = geometryDimension.inSpace(momentGroupTemplate.sampleSpace)
         
         lattice = dimensionRepresentation.lattice
         
@@ -1717,27 +1716,22 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
           # is less than the total number of points, something that we have already checked.
           
         if lattice > 1:
+          outputFieldDimension = geometryDimension.copy(parent = samplingFieldTemplate)
           if not dimensionRepresentation.lattice == lattice:
-            for rep in dimension.representations:
+            for rep in outputFieldDimension.representations:
               rep.lattice = lattice
-          outputFieldDimension = dimension.copy()
-          dimension._parent = samplingFieldTemplate
-          samplingFieldTemplate.dimensions.append(dimension)
-          
-          outputFieldDimension._parent = outputFieldTemplate
+          samplingFieldTemplate.dimensions.append(outputFieldDimension.copy(parent = samplingFieldTemplate))
           outputFieldTemplate.dimensions.append(outputFieldDimension)
-          
           
         elif lattice == 1:
           # In this case, we don't want the dimension in either the moment group, or the sampling field
-          dimension.remove()
-          del dimension
+          pass
         elif lattice == 0:
           # In this case, the dimension only belongs to the sampling field because we are integrating over it.
           # Note that we previously set the lattice of the dimension to be the same as the number
           # of points in this dimension according to the geometry element.
           
-          samplingFieldTemplate.dimensions.append(dimension)
+          samplingFieldTemplate.dimensions.append(geometryDimension.copy(parent=samplingFieldTemplate))
       
       samplingFieldTemplate.sortDimensions()
       outputFieldTemplate.sortDimensions()

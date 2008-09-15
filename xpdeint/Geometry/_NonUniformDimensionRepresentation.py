@@ -8,13 +8,14 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
 from xpdeint.Geometry.DimensionRepresentation import DimensionRepresentation
+from xpdeint.Utilities import lazyproperty
 
 class _NonUniformDimensionRepresentation(DimensionRepresentation):
-  @property
+  @lazyproperty
   def index(self):
     return self.prefix + '_index_' + self.name
   
-  @property
+  @lazyproperty
   def arrayName(self):
     return self.prefix + '_' + self.name
   

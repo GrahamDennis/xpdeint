@@ -99,7 +99,7 @@ ${transformVectorsToSpace($vectors, $processingSpace)}@slurp
     @end if
     @set $vectorsForLoop = $vectors.copy()
     @silent $vectorsForLoop.update($outputField.vectors)
-${loopOverFieldInSpaceWithVectorsAndInnerContent($self, $processingSpace, $vectorsForLoop, $insideProcessingLoops, vectorOverrides=$vectorOverrides)}@slurp
+${loopOverFieldInSpaceWithVectorsAndInnerContent($outputField, $processingSpace, $vectorsForLoop, $insideProcessingLoops, vectorOverrides=$vectorOverrides)}@slurp
   @end if
   @#
 @end def

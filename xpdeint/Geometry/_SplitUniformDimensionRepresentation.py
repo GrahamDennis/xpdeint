@@ -8,6 +8,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
 from xpdeint.Geometry.DimensionRepresentation import DimensionRepresentation
+from xpdeint.Utilities import lazyproperty
 
 class _SplitUniformDimensionRepresentation(DimensionRepresentation):
   def __init__(self, **KWs):
@@ -28,7 +29,7 @@ class _SplitUniformDimensionRepresentation(DimensionRepresentation):
     result.update({'range': self._range})
     return result
   
-  @property
+  @lazyproperty
   def alternateLoopIndex(self):
     return '_j_' + self.name
   
