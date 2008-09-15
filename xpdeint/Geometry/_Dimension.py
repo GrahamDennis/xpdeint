@@ -8,6 +8,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
 from xpdeint.ScriptElement import ScriptElement
+from xpdeint.Utilities import lazyproperty
 import types
 
 class _Dimension(ScriptElement):
@@ -42,27 +43,27 @@ class _Dimension(ScriptElement):
     self._transformMask = None
     self._mappingRules = None
   
-  @property
+  @lazyproperty
   def children(self):
     # Only return non-None representations
     return [rep for rep in self.representations if rep]
   
-  @property
+  @lazyproperty
   def prefix(self):
     return self.parent.prefix
   
-  @property
+  @lazyproperty
   def isTransformable(self):
     return len(self.representations) >= 2
   
-  @property
+  @lazyproperty
   def transformMask(self):
     if self._transformMask == None:
       geometry = self.getVar('geometry')
       self._transformMask = 1 << geometry.indexOfDimension(self)
     return self._transformMask
   
-  @property
+  @lazyproperty
   def mappingRules(self):
     if not self.parent:
       return self.transform.mappingRulesForDimensionInField(self, None)
@@ -105,11 +106,11 @@ class _Dimension(ScriptElement):
         rep.remove()
         self.representations[idx] = None
   
-  @property
+  @lazyproperty
   def isDistributed(self):
     return any([rep.hasLocalOffset for rep in self.representations if rep])
   
-  def copy(self, parent = None):
+  def copy(self, parent):
     newInstanceKeys = ['name', 'transverse', 'transform', 'indexable']
     newInstanceDict = dict([(key, getattr(self, key)) for key in newInstanceKeys])
     newInstanceDict.update(self.argumentsToTemplateConstructors)

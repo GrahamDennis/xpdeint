@@ -8,6 +8,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
 from xpdeint.ScriptElement import ScriptElement
+from xpdeint.Utilities import lazyproperty
 
 class _DimensionRepresentation(ScriptElement):
   """
@@ -51,11 +52,11 @@ class _DimensionRepresentation(ScriptElement):
     newInstanceDict.update(self.argumentsToTemplateConstructors)
     return self.__class__(**newInstanceDict)
   
-  @property
+  @lazyproperty
   def prefix(self):
     return self.parent.prefix
   
-  @property
+  @lazyproperty
   def globalLattice(self):
     return self.prefix + '_lattice_' + self.name
   
@@ -67,41 +68,41 @@ class _DimensionRepresentation(ScriptElement):
       if localVariablePrefix:
         self._localVariablePrefix += '_' + localVariablePrefix
   
-  @property
+  @lazyproperty
   def hasLocalOffset(self):
     return self._localVariablePrefix != None
   
-  @property
+  @lazyproperty
   def localLattice(self):
     if not self.hasLocalOffset:
       return self.globalLattice
     else:
       return self.prefix + self._localVariablePrefix + '_lattice_' + self.name
   
-  @property
+  @lazyproperty
   def localOffset(self):
     if not self.hasLocalOffset:
       return '0'
     else:
       return self.prefix + self._localVariablePrefix + '_offset_' + self.name
   
-  @property
+  @lazyproperty
   def minimum(self):
     return self.prefix + '_min_' + self.name
   
-  @property
+  @lazyproperty
   def maximum(self):
     return self.prefix + '_max_' + self.name
   
-  @property
+  @lazyproperty
   def stepSize(self):
     return self.prefix + '_d' + self.name
   
-  @property
+  @lazyproperty
   def loopIndex(self):
     return '_index_' + self.name
   
-  @property
+  @lazyproperty
   def isTransformed(self):
     if self.parent.representations.index(self) > 0:
       return True

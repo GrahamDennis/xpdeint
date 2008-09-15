@@ -11,12 +11,13 @@ from xpdeint.Operators.Operator import Operator
 from xpdeint.ParserException import ParserException, parserWarning
 
 from xpdeint import CodeLexer
+from xpdeint.Utilities import lazyproperty
 
 class _IPOperator(Operator):
   evaluateOperatorFunctionArguments = [('int', '_exponent')]
   operatorKind = Operator.IPOperatorKind
   
-  @property
+  @lazyproperty
   def integrator(self):
     # Our parent is an OperatorContainer, and its parent is the Integrator
     return self.parent.parent

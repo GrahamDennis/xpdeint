@@ -10,10 +10,10 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
 from xpdeint.Vectors.VectorElement import VectorElement
-
 from xpdeint.Geometry.FieldElement import FieldElement
 
 from xpdeint.Function import Function
+from xpdeint.Utilities import lazyproperty
 
 class _ComputedVector (VectorElement):
   isComputed = True
@@ -36,7 +36,7 @@ class _ComputedVector (VectorElement):
     
     
   
-  @property
+  @lazyproperty
   def noiseField(self):
     return self.loopingField
   

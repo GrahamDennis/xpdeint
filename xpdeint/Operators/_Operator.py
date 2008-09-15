@@ -16,6 +16,7 @@ from xpdeint import RegularExpressionStrings
 import re
 
 from xpdeint.Function import Function
+from xpdeint.Utilities import lazyproperty
 
 class _Operator (ScriptElement):
   # This is an ordered list of (type, argName) pairs
@@ -39,9 +40,7 @@ class _Operator (ScriptElement):
     self.operatorVector = None
     self.resultVector = None
     self.operatorNumber = -1
-    self._field = None
     self._children = []
-    self._loopingField = None
     self.loopingOrder = ScriptElement.LoopingOrder.MemoryOrder
     
     parent = self.parent
@@ -71,11 +70,11 @@ class _Operator (ScriptElement):
     result.extend(self._children)
     return result
   
-  @property
+  @lazyproperty
   def name(self):
     return 'operator' + str(self.operatorNumber)
   
-  @property
+  @lazyproperty
   def targetVectors(self):
     targetVectors = set()
     
@@ -85,56 +84,33 @@ class _Operator (ScriptElement):
     
     return targetVectors
   
-  @property
+  @lazyproperty
   def defaultOperatorSpace(self):
     return self.field.spaceMask
   
-  @property
+  @lazyproperty
   def calculateOperatorFieldFunctionArgumentString(self):
     return ', '.join([pair[0] + ' ' + pair[1] for pair in self.calculateOperatorFieldFunctionArguments])
   
-  @property
+  @lazyproperty
   def evaluateOperatorFunctionArgumentString(self):
     return ', '.join([pair[0] + ' ' + pair[1] for pair in self.evaluateOperatorFunctionArguments])
   
-  @property
+  @lazyproperty
   def computedVectorsNeedingPrecalculation(self):
     return filter(lambda x: x.isComputed, self.dependencies)
   
-  def _getOperatorSpace(self):
-    if not self.hasattr('_operatorSpace'):
-      return self.defaultOperatorSpace
-    else:
-      return self._operatorSpace
+  @lazyproperty
+  def operatorSpace(self):
+    return self.defaultOperatorSpace
   
-  def _setOperatorSpace(self, newOperatorSpace):
-    self._operatorSpace = newOperatorSpace
+  @lazyproperty
+  def loopingField(self):
+    return self.field
   
-  operatorSpace = property(_getOperatorSpace, _setOperatorSpace)
-  del _getOperatorSpace, _setOperatorSpace
-  
-  
-  def _getLoopingField(self):
-    return self._loopingField or self.field
-  
-  def _setLoopingField(self, value):
-    self._loopingField = value
-  
-  loopingField = property(_getLoopingField, _setLoopingField)
-  del _getLoopingField, _setLoopingField
-  
-  
-  def _getField(self):
-    if self._field:
-      return self._field
-    else:
-      return self.parent.field
-  
-  def _setField(self, value):
-    self._field = value
-  
-  field = property(_getField, _setField)
-  del _getField, _setField
+  @lazyproperty
+  def field(self):
+    return self.parent.field
   
   def bindNamedVectors(self):
     super(_Operator, self).bindNamedVectors()

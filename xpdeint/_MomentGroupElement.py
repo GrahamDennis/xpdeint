@@ -13,6 +13,7 @@ from xpdeint.ScriptElement import ScriptElement
 from xpdeint.ParserException import ParserException
 
 from xpdeint.Function import Function
+from xpdeint.Utilities import lazyproperty
 
 class _MomentGroupElement (ScriptElement):
   def __init__(self, number, *args, **KWs):
@@ -50,7 +51,7 @@ class _MomentGroupElement (ScriptElement):
                                 implementation = self.writeOutFunctionContents)
     self.functions['writeOut'] = writeOutFunction
   
-  @property
+  @lazyproperty
   def children(self):
     result = set()
     result.update(self.computedVectors)
@@ -60,7 +61,7 @@ class _MomentGroupElement (ScriptElement):
   # Do we actually need to allocate the moment group vector?
   # We may not need to allocate the raw vector if there is no
   # processing of the raw vector to be done before it is written.
-  @property
+  @lazyproperty
   def rawVectorNeedsToBeAllocated(self):
     # If we have processing code, then we definitely need a raw vector
     if self.hasattr('processingCode') and self.processingCode:

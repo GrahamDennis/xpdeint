@@ -17,6 +17,7 @@ from xpdeint.ParsedEntity import ParsedEntity
 
 import re
 from xpdeint import CodeLexer
+from xpdeint.Utilities import lazyproperty
 
 class _ScriptElement (Template):
   class LoopingOrder(object):
@@ -79,13 +80,12 @@ class _ScriptElement (Template):
     if not hasattr(type(self), 'dependencies'):
       self.dependencies = set()
     
-    self._parent = localKWs.get('parent', None)
+    if 'parent' in localKWs: self.parent = localKWs['parent']
     self._propagationDimension = None
     self._propagationDirection = None
     self.xmlElement = localKWs.get('xmlElement', None)
     self.dependenciesEntity = None
     self.functions = {}
-    self._id = None
     self._haveBeenRemoved = False
     
     if self.hasattr('globalNameSpaceName'):
@@ -97,7 +97,7 @@ class _ScriptElement (Template):
     # Create the entry in the callOnceGuards
     _ScriptElement._callOncePerInstanceGuards[self] = set()
   
-  @property
+  @lazyproperty
   def parent(self):
     """
     Return the parent template of this template. Note that the return value may be ``None``.
@@ -106,9 +106,6 @@ class _ScriptElement (Template):
     of the ``children`` attribute of that instance. Should multiple templates meet this requirement
     an exception will be raised.
     """
-    if self._parent:
-      return self._parent
-    
     potentialParents = filter(lambda x: x.hasattr('children') and id(self) in map(id, x.children), self.getVar('templates'))
     
     if not potentialParents:
@@ -117,10 +114,9 @@ class _ScriptElement (Template):
     if len(potentialParents) > 1:
       raise AssertionError("We seem to have more than one parent: " + ', '.join([repr((potentialParent, potentialParent.id)) for potentialParent in potentialParents]))
     
-    self._parent = potentialParents[0]
-    return self._parent
+    return potentialParents[0]
   
-  @property
+  @lazyproperty
   def id(self):
     """
     Return a string that should uniquely identify this object.
@@ -128,14 +124,12 @@ class _ScriptElement (Template):
     The string returned will be appropriate for use as a ``C`` variable name and
     will begin with and underscore.
     """
-    if not self._id:
-      if not self.parent or not self.parent.id:
-        self._id = self.name
-      else:
-        self._id = '_'.join([self.parent.id, self.name])
-    return self._id
+    if not self.parent or not self.parent.id:
+      return self.name
+    else:
+      return '_'.join([self.parent.id, self.name])
   
-  @property
+  @lazyproperty
   def noiseField(self):
     """
     The field that noises should be evaluated in for this object.
@@ -143,31 +137,22 @@ class _ScriptElement (Template):
     """
     return self.field
   
-  def _getPropagationDimension(self):
+  @lazyproperty
+  def propagationDimension(self):
     """
     Return the name of the current propagation dimension for this template. Note that this
     does not need to be the same as the propagation dimension for the entire simulation because
     cross-propagation works by using a standard integrator, but by setting a different propagation
     dimension.
-    
-    This function is used in the creation of the `propagationDimension` property.
     """
-    
-    if self._propagationDimension:
-      return self._propagationDimension
     
     if self.parent:
       return self.parent.propagationDimension
     
     return self.getVar("globalPropagationDimension")
   
-  def _setPropagationDimension(self, value):
-    self._propagationDimension = value
-  
-  propagationDimension = property(_getPropagationDimension, _setPropagationDimension)
-  del _getPropagationDimension, _setPropagationDimension
-  
-  def _getPropagationDirection(self):
+  @lazyproperty
+  def propagationDirection(self):
     """
     Return a string representing the sign of the direction of propagation. This string will
     either be '+' or '-'. Note that usually this will be '+', however it will be '-' for
@@ -175,21 +160,10 @@ class _ScriptElement (Template):
     
     This method is used in the creation of the `propagationDirection` property.
     """
-    if self._propagationDirection:
-      return self._propagationDirection
-    
     if self.parent:
-      self._propagationDirection = self.parent.propagationDirection
+      return self.parent.propagationDirection
     else:
-      self._propagationDirection = '+'
-    
-    return self._propagationDirection
-  
-  def _setPropagationDirection(self, value):
-    self._propagationDirection = value
-  
-  propagationDirection = property(_getPropagationDirection, _setPropagationDirection)
-  del _getPropagationDirection, _setPropagationDirection
+      return '+'
   
   def hasattr(self, attrName):
     """
@@ -563,6 +537,7 @@ class _ScriptElement (Template):
         code = code[:codeSlice.start] + replacementString + code[codeSlice.stop:]
     
     return code
+  
   
   def templateObjectFromStringWithTemplateVariables(self, templateString, templateVars):
     """

@@ -143,14 +143,13 @@ ${insertCodeForFeaturesInReverseOrder('integrateFixedStepEnd', featureOrderingOu
       @if vector.field.hasDimensionName($propagationDimension)
         @set $indices = range(vector.field.indexOfDimensionName($propagationDimension) + 1, len(vector.field.dimensions))
         @silent innerLoopTemplate.skipSize = $propagationDirection + $vector.field.localPointsInDimensionsWithIndicesInSpace($indices, $homeSpace)
-      @elif hasattr(innerLoopTemplate, 'skipSize')
-        @del innerLoopTemplate.skipSize
       @end if
       @silent innerLoopTemplate.reducedVector = reducedVector
       @silent innerLoopTemplate.vector = vector
 for (long _icomp = 0; _icomp < _${vector.id}_ncomponents; _icomp++) {
   ${innerLoopTemplate, autoIndent=True}@slurp
 }
+      @del innerLoopTemplate.skipSize
     @end for
   @end capture
   @#
