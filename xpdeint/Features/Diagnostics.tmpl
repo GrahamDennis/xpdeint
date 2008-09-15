@@ -60,6 +60,8 @@ if (_temp_error > _component_errors[_i1])
   @#
   @set $integrator = dict['caller']
   @#
+if (_error == 2.0*${integrator.tolerance})
+  _LOG(_SEGMENT_LOG_LEVEL, "NaN hit on this step. Retrying. (Error set to %e)\n", 2.0*${integrator.tolerance})
 _LOG(_SEGMENT_LOG_LEVEL, "Step size %e failed, ${integrator.propagationDimension} = %e, error = %e\n", _step, ${integrator.propagationDimension}, _error);
   @#
 @end def
