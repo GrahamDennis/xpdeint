@@ -294,11 +294,13 @@ def main(argv=None):
   myfile.close()
   
   
-  from Preferences import CC, CFLAGS
+  from Preferences import CC, CFLAGS, MPICC, MPICFLAGS
   
   prefs = {}
   prefs['CC'] = CC
   prefs['CFLAGS'] = CFLAGS
+  prefs['MPICC'] = MPICC
+  prefs['MPICFLAGS'] = MPICFLAGS
   
   # Load user preferences. This will be a file called
   # "xpdeint_prefs.py" in ~/.xmds
@@ -311,12 +313,14 @@ def main(argv=None):
   else:
     # We did find the preferences file
     user_prefs = imp.load_module('xpdeint_prefs', fd, pathname, description)
-    for prefName in ['CC', 'CFLAGS']:
+    for prefName in ['CC', 'CFLAGS', 'MPICC', 'MPICFLAGS']:
       if hasattr(user_prefs, prefName):
         prefs[prefName] = getattr(user_prefs, prefName)
   
   CC = prefs['CC']
   CFLAGS = prefs['CFLAGS']
+  MPICC = prefs['MPICC']
+  MPICFLAGS = prefs['MPICFLAGS']
   
   pathToIncludeDirectory = resource_filename(__name__, 'includes')
   
@@ -333,6 +337,10 @@ def main(argv=None):
     if template.hasattr('compiler'):
       CC = template.compiler()
   
+  # FIXME: DODGY DODGY
+  if CC == "mpic++":
+    CC = MPICC
+    CFLAGS += " " + MPICFLAGS
   
   # These compile variables are defined in Preferences.py
   # We'll need some kind of check to choose which compiler and options, but not until we need varying options
