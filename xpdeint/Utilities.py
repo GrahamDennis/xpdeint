@@ -10,8 +10,8 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 class lazyproperty(object):
   """
   A data descriptor that provides a default value for the attribute
-  represented via a user-defined function, and once evaluated, this
-  property is evaluated only once. Additionally, the property can be
+  represented via a user-defined function, and this function is evaluated
+  at most once with the result cached. Additionally, the property can be
   overridden.
   """
   
