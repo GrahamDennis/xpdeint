@@ -151,7 +151,7 @@ ${field.allocSize} = _local_alloc_size * ${field.pointsInDimensionsWithIndices(f
         @if fieldDim == mpiDim
           @# This dimension matches.
           @for repOut, repIn in zip(fieldDim.representations, mpiDim.representations)
-            @if repOut
+            @if repOut and repOut.hasLocalOffset
 ${repOut.localLattice} = ${repIn.localLattice};
 ${repOut.localOffset} = ${repIn.localOffset};
             @end if
@@ -188,8 +188,8 @@ if (${geometryRep.localOffset} >= ${fieldRep.globalLattice}) {
   ${fieldRep.localOffset} = ${geometryRep.localOffset};
   ${fieldRep.localLattice} = ${geometryRep.localLattice};
 }
-            @elif isinstance(fieldRep, NonUniformDimensionRepresentation)
-              @# In this case, we are in 'k' space and may be subdividing a NonUniformDimensionRepresentation (dft)
+            @elif isinstance(fieldRep, SplitUniformDimensionRepresentation)
+              @# In this case, we are in 'k' space and may be subdividing a SplitUniformDimensionRepresentation (dft)
 ${fieldRep.localOffset} = -1;
 if (${geometryRep.localOffset} >= (${fieldRep.globalLattice}+1)/2) {
   // No points due to positive 'k' values.

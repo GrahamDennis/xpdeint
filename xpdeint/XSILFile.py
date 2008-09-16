@@ -76,9 +76,13 @@ class XSILDataBinary(XSILData):
       a = numpy.fromfile(fd, dtype=floatDType, count=size)
       independentVariable['array'] = a
     
+    if len(independentGeometry) == 0:
+      independentGeometry.append(1)
+    
     for dependentVariable in self.dependentVariables:
       size = numpy.fromfile(fd, dtype=ulongDType, count=1)
       a = numpy.fromfile(fd, dtype=floatDType, count=size)
+      assert a.size == size, "Data file %s has incorrect size. Variable '%s' wasn't written completely." % (dataFile, dependentVariable['name'])
       dependentVariable['array'] = a.reshape(*independentGeometry)
     
 

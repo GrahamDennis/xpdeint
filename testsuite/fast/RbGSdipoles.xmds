@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <command_line>mpirun -n 4 ./RbGS</command_line>
+    <xsil_file name="RbGS.xsil" expected="RbGS_expected.xsil" absolute_tolerance="1e-4" relative_tolerance="1e-4" />
+    <xsil_file name="potential.xsil" expected="potential_expected.xsil" absolute_tolerance="1e-4" relative_tolerance="1e-4" />
+    <xsil_file name="RbGSa.xsil" expected="RbGSa_expected.xsil" absolute_tolerance="1e-4" relative_tolerance="1e-4" />
+  </testing>
+
+  <name>RbGS</name>
+  <author>Robin Stevenson</author>
+  <description>
+    Three dimensional harmonic trap Ground state calculation. cigar trap.
+  </description>
+  
+  <features>
+    <halt_non_finite />
+    <auto_vectorise />
+    <benchmark />
+    <bing />
+    <error_check />
+    <!-- <openmp /> -->
+    <fftw version="3" plan="measure" />
+    <!-- <diagnostics /> -->
+	<globals>
+		<![CDATA[
+		/*constants*/
+			const double hbar = 1.054e-34;
+			const double massRb = 1.44316e-25;
+			const double c0OnHbar = 5.16891e-51/hbar; 		//for Rb-87
+			const double c2OnHbar = -2.38868e-53/hbar;         
+
+      const double cd = 2.1501769e-54;  // =mu0 * muB^2 *Gf^2 / 4pi --> this is for rubidium 
+      const double cdOnHbar = 2.1501769e-54/hbar;  // =mu0 * muB^2 *Gf^2 / 4pi --> this is for rubidium 
+      const double gamma1 = 4.39943e10;
+	
+			const double Sqrt2 = pow(2.0, 0.5); 			
+			const double a3dSqrt2 = 3.0/pow(2.0, 0.5); 
+			const double Pi = 3.141592654;   
+
+      /*experimental variables*/
+			const double ratio = 1.0/40.0;
+			const double omegap = 2*3.141592654*3000;
+			const double N0 = 1.0e5;                  //Note this change
+			const double B = 73.0e-7;        
+			const double gamma1B = gamma1*B;
+			const double muOnHbar = 0.0*24411.0;
+		]]>
+    </globals>  
+  </features>
+
+  <driver name="distributed-mpi" />  
+
+
+
+  <geometry>
+    <propagation_dimension>t</propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="x" lattice="32"  domain="(-2.2e-6, 2.2e-6)" />
+      <dimension name="y" lattice="32"  domain="(-2.2e-6, 2.2e-6)" />
+      <dimension name="z" lattice="32"  domain="(-90.0e-6, 90.0e-6)" />
+    </transverse_dimensions>
+  </geometry>
+
+  
+  <vector name="wavefunction" initial_space="x y z" type="complex">
+    <components>
+      phi1 phi0 phim1
+    </components>
+
+    <initialisation>
+      <![CDATA[	    
+      phi1 = (x<1.0e-6 ? (y<1.0e-6 ? (z<40.0e-6 ? 1.0 : 0.0) : 0.0) : 0.0 );
+      phi0 = 0.0;
+      phim1 = 0.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <vector name="potential" type="double">
+    <components>
+      VtrapOnHbar
+    </components>
+    <initialisation>
+      <![CDATA[
+   			//VtrapOnHbar = 0.5* massRb * omegap*omegap*(x*x + y*y + z*z*ratio*ratio);
+   			VtrapOnHbar = x*x+y*y+z*z*ratio*ratio < 2.0*2.0e-12 ? 0.5 * massRb * omegap * omegap *  (x*x+y*y+z*z*ratio*ratio)/hbar-muOnHbar : 0.5 * massRb * omegap * omegap *  2.0*2.0e-12/hbar-muOnHbar;
+      ]]>
+    </initialisation>
+  </vector>
+
+  
+  <computed_vector name="spins" type="complex">
+    <components>
+      Sz Splus Sminus S0
+    </components>
+	  <evaluation>
+	  <dependencies>
+	    wavefunction
+	  </dependencies>
+      <![CDATA[
+			S0 = mod2(phi1) + mod2(phi0) + mod2(phim1);
+			Splus = conj(phi1)*phi0 + conj(phi0)*phim1;
+			Sminus = conj(phi0)*phi1 + conj(phim1)*phi0;
+			//Sx = Sqrt2*(phi1.re * phi0.re - phi1.im * phi0.im + phi0.re * phim1.re - phi0.im * phim1.im);
+			//Sy = Sqrt2*(phim1.im * phi0.re - phim1.re * phi0.im - phi0.re * phi1.im + phi0.im * phi1.re);
+			Sz = mod2(phi1)- mod2(phim1);
+			// Splus = Sx + i*Sy;
+			// Sminus = conj(Splus);
+      ]]>		
+    </evaluation>
+  </computed_vector>  
+
+  <computed_vector type="complex" name="bilinear" dimensions="x y z">
+    <components>b11 bm1m1 b10 b01 bm10 b0m1</components>
+    <evaluation>
+      <dependencies fourier_space="x y z">wavefunction</dependencies>
+        <![CDATA[
+          b11 = mod2(phi1);
+          bm1m1 = mod2(phim1);
+          b10 = conj(phi1)*phi0;
+          b01 = conj(phi0)*phi1;
+          bm10 = conj(phim1)*phi0;
+          b0m1 = conj(phi0)*phim1;
+        ]]>
+    </evaluation>
+  </computed_vector>
+ 
+ 
+  <vector name="DipoleTerms" type="complex" initial_space="kx ky kz">
+    <components>DA DB DC DCstar DE DEstar</components>
+    <initialisation>
+      <![CDATA[
+        double Ksqd = kx*kx + ky*ky + kz*kz;
+        DA = Ksqd<1.0      ?     0.0*i     :     -4*Pi/3 * (1 - 3 * kz*kz /Ksqd) + 0.0*i;
+        DB = Ksqd<1.0      ?     0.0*i     :     2*Pi/3 * (1 - 3 * kz*kz /Ksqd) + 0.0*i;
+        DC = Ksqd<1.0      ?     0.0*i     :    2* 2*Pi/3 * (kx - i * ky)*kz/Ksqd;
+        DCstar = Ksqd<1.0      ?     0.0*i     :  2*   2*Pi/3 * (kx + i * ky)*kz/Ksqd;
+        DE = Ksqd < 1.0      ?     0.0*i     :     -4*Pi/3 * (kx - i*ky)*(kx - i*ky) / Ksqd;
+        DEstar = Ksqd < 1.0      ?     0.0*i     :     -4*Pi/3 * (kx + i*ky)*(kx + i*ky) / Ksqd;
+      ]]>
+    </initialisation>
+  </vector>
+
+
+  <computed_vector name="dipoles" type="complex" dimensions="x y z">
+    <components>Dz Dplus Dminus</components>
+    <evaluation>
+      <dependencies fourier_space="kx ky kz">DipoleTerms bilinear</dependencies>
+      <![CDATA[
+        Dz = DA*(b11 - bm1m1) - a3dSqrt2 * DC*(b10 + b0m1) - a3dSqrt2 * DCstar*(bm10 + b01);
+        Dplus = DB*(b10 + b0m1) -1.5 * DEstar*(b01 + bm10) - a3dSqrt2 * DCstar*(b11 - bm1m1);
+        Dminus = DB*(b01 + bm10) -1.5 * DE*(b10 + b0m1) - a3dSqrt2 * DC*(b11 - bm1m1);        
+      ]]>
+    </evaluation>
+  </computed_vector>
+
+
+  
+  <computed_vector name="normalisation" dimensions="" type="double">
+    <components>
+      Ncalc
+    </components>
+    <evaluation>
+    <dependencies fourier_space="x y z">wavefunction</dependencies>
+      <![CDATA[
+        // Calculate the current normalisation of the wave function.
+        Ncalc = mod2(phi1) + mod2(phi0) + mod2(phim1);
+      ]]>
+    </evaluation>
+  </computed_vector>
+ 
+  <sequence>
+    <breakpoint filename="potential.xsil">
+      <dependencies>
+        potential
+      </dependencies>
+    </breakpoint>
+    <integrate algorithm="RK4" interval="15.0e-4" steps="3">
+      <samples>1 1 1 1</samples>
+      <filters>
+        <filter>
+          <dependencies>wavefunction normalisation</dependencies>
+          <![CDATA[
+            // Correct normalisation of the wavefunction
+            phi1 *= sqrt(N0/Ncalc);
+            phi0 *= sqrt(N0/Ncalc);
+            phim1 *= sqrt(N0/Ncalc);
+          ]]>
+        </filter>
+      </filters>
+      <operators noises="">
+        <operator kind="ip" constant="yes">
+          <operator_names>T</operator_names>
+          <![CDATA[
+			      T   = -0.5*hbar*(kx*kx+ky*ky+kz*kz)/massRb;
+          ]]>
+        </operator>
+        <dependencies>potential spins dipoles</dependencies>
+        <integration_vectors>wavefunction</integration_vectors>
+        <![CDATA[
+          dphi1_dt = T[phi1] + ((-VtrapOnHbar)*phi1 -c0OnHbar*S0*phi1 -c2OnHbar*(Sz*phi1 + Sminus*phi0) +gamma1B*phi1 -cdOnHbar*(phi1*Dz + phi0*Dminus));
+          
+          dphi0_dt = T[phi0] + ((-VtrapOnHbar)*phi0 -c0OnHbar*S0*phi0 -c2OnHbar*(Splus*phi1 + Sminus*phim1) -cdOnHbar*(phi1*Dplus + phim1*Dminus));
+          
+          dphim1_dt = T[phim1] + ((-VtrapOnHbar)*phim1 -c0OnHbar*S0*phim1 -c2OnHbar*(-Sz*phim1 + Splus*phi0) -gamma1B*phim1 -cdOnHbar*(-phim1*Dz + phi0*Dplus));
+        ]]>
+      </operators>
+    </integrate>
+    
+        <filter>
+          <dependencies>wavefunction normalisation</dependencies>
+          <![CDATA[
+            // Correct normalisation of the wavefunction
+            phi1 *= sqrt(N0/Ncalc);
+            phi0 *= sqrt(N0/Ncalc);
+            phim1 *= sqrt(N0/Ncalc);
+          ]]>
+        </filter>
+
+
+    <breakpoint filename="potential.xsil">
+      <dependencies>
+        potential
+      </dependencies>
+    </breakpoint>
+    <breakpoint filename="RbGSa.xsil">
+      <dependencies>
+        wavefunction
+      </dependencies>
+    </breakpoint>
+  </sequence>
+  
+  <output format="binary">
+    <group>
+      <sampling initial_sample="no">
+        <dimension name="x" lattice="16" fourier_space="no" />
+        <dimension name="y" lattice="16" fourier_space="no" />
+        <dimension name="z" fourier_space="no" />
+        <moments>phi1re dens0 densm1 phi1im dens1</moments>
+        <dependencies>wavefunction</dependencies>
+        <![CDATA[
+          dens1 = mod2(phi1);
+          densm1 = mod2(phim1);
+          phi1re = real(phi1);
+          dens0 = mod2(phi0);
+          phi1im = imag(phi1);
+        ]]>
+      </sampling>
+    </group>
+
+
+    
+    <group>
+      <sampling initial_sample="no">
+        <dimension name="x" lattice="16" fourier_space="yes" />
+        <dimension name="y" lattice="16" fourier_space="yes" />
+        <dimension name="z" fourier_space="yes" />
+        <moments>dens1</moments>
+        <dependencies>wavefunction</dependencies>
+        <![CDATA[
+          dens1 = mod2(phi1);
+        ]]>
+      </sampling>
+    </group>
+ 
+    <group>
+      <sampling initial_sample="yes">
+        <dimension name="x" lattice="0" fourier_space="no" />
+        <dimension name="y" lattice="0" fourier_space="no" />
+        <dimension name="z" lattice="0" fourier_space="no" />
+        <moments>N1 N0 Nm1</moments>
+        <dependencies>wavefunction</dependencies>
+        <![CDATA[
+          N1 = mod2(phi1);
+          N0 = mod2(phi0);
+          Nm1 = mod2(phim1);
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling initial_sample="no">
+        <dimension name="x" lattice="0" fourier_space="no" />
+        <dimension name="y" lattice="0" fourier_space="no" />
+        <dimension name="z" lattice="0" fourier_space="no" />
+        <moments>E1OnHbarRe E1OnHbarIm</moments>
+        <operator kind="ex" constant="no">
+          <operator_names>T2</operator_names>
+          <![CDATA[
+			      T2   = -0.5*hbar*(kx*kx+ky*ky+kz*kz)/massRb;
+          ]]>
+        </operator>       
+        <dependencies>wavefunction potential spins dipoles</dependencies>
+        <![CDATA[
+          E1OnHbarRe =  real(conj(phi1)*(T2[phi1] + (-VtrapOnHbar)*phi1 -c0OnHbar*S0*phi1 -c2OnHbar*(Sz*phi1 + Sminus*phi0) +gamma1B*phi1 -cdOnHbar*(phi1*Dz + phi0*Dminus)));
+          E1OnHbarIm =  imag(conj(phi1)*(T2[phi1] + (-VtrapOnHbar)*phi1 -c0OnHbar*S0*phi1 -c2OnHbar*(Sz*phi1 + Sminus*phi0) +gamma1B*phi1 -cdOnHbar*(phi1*Dz + phi0*Dminus)));
+        ]]>
+      </sampling>
+    </group>    
+  </output>
+
+</simulation>
