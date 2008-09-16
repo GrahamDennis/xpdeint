@@ -51,7 +51,7 @@ class _MomentGroupElement (ScriptElement):
                                 implementation = self.writeOutFunctionContents)
     self.functions['writeOut'] = writeOutFunction
   
-  @lazyproperty
+  @property
   def children(self):
     result = set()
     result.update(self.computedVectors)
