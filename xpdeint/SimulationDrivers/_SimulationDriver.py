@@ -17,7 +17,6 @@ class _SimulationDriver (ScriptElement):
     
     self.getVar('features')['Driver'] = self
     # Put ourselves at the start after the simulation element
-    self.getVar('scriptElements').insert(1, self)
     self.distributedDimensionNames = []
   
   def sizeOfFieldInSpace(self, field, space):

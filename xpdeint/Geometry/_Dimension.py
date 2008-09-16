@@ -114,16 +114,13 @@ class _Dimension(ScriptElement):
     newInstanceKeys = ['name', 'transverse', 'transform', 'indexable']
     newInstanceDict = dict([(key, getattr(self, key)) for key in newInstanceKeys])
     newInstanceDict.update(self.argumentsToTemplateConstructors)
-    newDim = self.__class__(**newInstanceDict)
+    newDim = self.__class__(parent = parent, **newInstanceDict)
     for rep in self.representations:
       if rep:
-        newRep = rep.copy()
-        newRep._parent = newDim
+        newRep = rep.copy(parent = newDim)
       else:
         newRep = rep
       newDim.representations.append(newRep)
-    if parent:
-      newDim._parent = parent
     return newDim
   
   def __eq__(self, other):

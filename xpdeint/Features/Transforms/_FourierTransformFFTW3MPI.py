@@ -73,11 +73,11 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
     firstMPIDimension = dimensions[0]
     secondMPIDimension = dimensions[1]
     # Add additional transformed representations for the swapped case.
-    firstMPIDimension.addRepresentation(firstMPIDimension.inSpace(firstMPIDimension.transformMask).copy())
+    firstMPIDimension.addRepresentation(firstMPIDimension.inSpace(firstMPIDimension.transformMask).copy(parent=firstMPIDimension))
     firstMPIDimension.inSpace(0).setHasLocalOffset('unswapped')
     firstMPIDimension.inSpace(firstMPIDimension.transformMask).setHasLocalOffset('unswapped')
     
-    secondMPIDimension.addRepresentation(secondMPIDimension.inSpace(secondMPIDimension.transformMask).copy())
+    secondMPIDimension.addRepresentation(secondMPIDimension.inSpace(secondMPIDimension.transformMask).copy(parent=secondMPIDimension))
     secondMPIDimension.inSpace(self.swappedSpace).setHasLocalOffset('swapped')
     
     self.distributedMPIKinds = set([self.transformNameMap[firstMPIDimension.name]])

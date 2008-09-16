@@ -28,11 +28,6 @@ class _MomentGroupElement (ScriptElement):
     self.computedVectors = set()
     self.operatorContainers = []
     
-    scriptElements = self.getVar('scriptElements')
-    if not self in scriptElements:
-      scriptElements.append(self)
-    
-    
     sampleFunctionName = ''.join(['_', self.id, '_sample'])
     sampleFunction = Function(name = sampleFunctionName,
                               args = [],

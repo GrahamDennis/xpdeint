@@ -16,5 +16,4 @@ class _Feature (ScriptElement):
     ScriptElement.__init__(self, *args, **KWs)
     
     self.getVar('features')[self.featureName] = self
-    self.getVar('scriptElements').append(self)
   
