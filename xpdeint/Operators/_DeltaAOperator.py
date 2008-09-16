@@ -183,7 +183,7 @@ class _DeltaAOperator (Operator):
         # For each integration vector forcing the reordering, we need to construct
         # a corresponding vector in the new field.
         for integrationVector in self.vectorsForcingReordering:
-          deltaAVector = VectorElement(name = integrationVector.name, field = self.deltaAField,
+          deltaAVector = VectorElement(name = integrationVector.name, field = self.deltaAField, parent = self,
                                        **self.argumentsToTemplateConstructors)
           deltaAVector.type = integrationVector.type
           
@@ -194,9 +194,6 @@ class _DeltaAOperator (Operator):
           deltaAVector.initialSpace = self.operatorSpace
           # Construct dx_dt variables for the delta a vector.
           deltaAVector.components = [''.join(['d', componentName, '_d', propagationDimension]) for componentName in integrationVector.components]
-          
-          # Make sure the field knows about the vector
-          self.deltaAField.temporaryVectors.add(deltaAVector)
           
           # Make sure the vector gets allocated etc.
           self._children.append(deltaAVector)
@@ -235,7 +232,7 @@ class _DeltaAOperator (Operator):
             deltaAVector = self.deltaAVectorMap[integrationVector]
             if not deltaAVector.needsInitialisation:
               deltaAVector.needsInitialisation = True
-              deltaAVector.initialiser = VectorInitialisation(**self.argumentsToTemplateConstructors)
+              deltaAVector.initialiser = VectorInitialisation(parent = deltaAVector, **self.argumentsToTemplateConstructors)
               deltaAVector.initialiser.vector = deltaAVector
         
         self.propagationCodeEntity.value = self.propagationCodeEntity.value[:codeSlice.start] + componentAccessString \

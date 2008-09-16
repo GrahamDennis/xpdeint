@@ -2,14 +2,20 @@
 Simulation.tmpl
 
 Created by Graham Dennis on 2007-08-23.
-Copyright (c) 2007 __MyCompanyName__. All rights reserved.
+Copyright (c) 2007-2008 __MyCompanyName__. All rights reserved.
 *@
+@#
+@extends xpdeint.ScriptElement
+@#
+@attr $name = ''
+@attr $id = ''
 @#
 @# First check we have at least Cheetah version 2.0.1
 @if __CHEETAH_versionTuple__ < (2, 0, 1, 'final', 0)
   @silent raise AssertionError("xpdeint requires at least Cheetah version "
                                "2.0.1. You currently have %s." % __CHEETAH_version__)
 @end if
+@#
 @#
 @# Base simulation template
 // ********************************************************
@@ -32,9 +38,9 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 #include <list>
 #include <vector>
 
-@for $element in $scriptElements
+@for $child in $children
   @# Prevent writing zero-length defines
-  @set $result = $element.implementationsForFunctionName('includes')
+  @set $result = $child.implementationsForFunctionName('includes')
   @if $result and not $result.isspace()
 ${result}@slurp
 
@@ -55,13 +61,13 @@ using namespace std;
 // DEFINES
 // ********************************************************
 @# only loop over the elements that implement the defines function
-@for $element in $scriptElements
+@for $child in $children
   @# Prevent writing zero-length defines
-  @set $result = $element.implementationsForFunctionName('defines')
+  @set $result = $child.implementationsForFunctionName('defines')
   @if result and not result.isspace()
 
 // ********************************************************
-//   $element.description defines
+//   $child.description defines
 $result@slurp
   @end if
 @end for
@@ -71,13 +77,13 @@ $result@slurp
 // GLOBALS
 // ********************************************************
 @# only loop over the elements that implement the globals function
-@for $element in $scriptElements
+@for $child in $children
   @# Prevent writing zero-length globals
-  @set $result = $element.implementationsForFunctionName('globals')
+  @set $result = $child.implementationsForFunctionName('globals')
   @if result and not result.isspace()
 
 // ********************************************************
-//   $element.description globals
+//   $child.description globals
 $result@slurp
   @end if
 @end for
@@ -87,13 +93,13 @@ $result@slurp
 // FUNCTION PROTOTYPES
 // ********************************************************
 @# only loop over the elements that implement the prototypes function
-@for $element in $scriptElements
+@for $child in $children
   @# Prevent writing zero-length globals
-  @set $result = $element.implementationsForFunctionName('functionPrototypes')
+  @set $result = $child.implementationsForFunctionName('functionPrototypes')
   @if result and not result.isspace()
 
 // ********************************************************
-//   $element.description function prototypes
+//   $child.description function prototypes
 $result@slurp
   @end if
 @end for
@@ -107,13 +113,13 @@ $features.Driver.mainRoutine@slurp
 // FUNCTION IMPLEMENTATIONS
 // ********************************************************
 @# only loop over the elements that implement the prototypes function
-@for $element in $scriptElements
+@for $child in $children
   @# Prevent writing zero-length function implementations
-  @set $result = $element.implementationsForFunctionName('functionImplementations')
+  @set $result = $child.implementationsForFunctionName('functionImplementations')
   @if result and not result.isspace()
 
 // ********************************************************
-//   $element.description function implementations
+//   $child.description function implementations
 $result@slurp
   @end if
 @end for

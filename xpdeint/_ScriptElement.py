@@ -30,6 +30,8 @@ class _ScriptElement (Template):
   _callOnceGuards = set()
   _callOncePerInstanceGuards = dict()
   
+  simulation = None
+  
   @classmethod
   def resetGuards(cls):
     """
@@ -80,41 +82,24 @@ class _ScriptElement (Template):
     if not hasattr(type(self), 'dependencies'):
       self.dependencies = set()
     
+    assert 'parent' in localKWs
     if 'parent' in localKWs: self.parent = localKWs['parent']
-    self._propagationDimension = None
-    self._propagationDirection = None
+    if self.parent and self.parent == self.simulation:
+      self.simulation.children.append(self)
     self.xmlElement = localKWs.get('xmlElement', None)
     self.dependenciesEntity = None
     self.functions = {}
     self._haveBeenRemoved = False
     
-    if self.hasattr('globalNameSpaceName'):
+    if not hasattr(type(self), 'children'):
+      self.children = []
+    
+    if hasattr(type(self), 'globalNameSpaceName'):
       globalNameSpace = KWs['searchList'][0]
       globalNameSpace[self.globalNameSpaceName] = self
-      if not self in globalNameSpace['scriptElements']:
-        globalNameSpace['scriptElements'].append(self)
     
     # Create the entry in the callOnceGuards
     _ScriptElement._callOncePerInstanceGuards[self] = set()
-  
-  @lazyproperty
-  def parent(self):
-    """
-    Return the parent template of this template. Note that the return value may be ``None``.
-    
-    The parent of the template is defined as the template that has this template as a member
-    of the ``children`` attribute of that instance. Should multiple templates meet this requirement
-    an exception will be raised.
-    """
-    potentialParents = filter(lambda x: x.hasattr('children') and id(self) in map(id, x.children), self.getVar('templates'))
-    
-    if not potentialParents:
-      return None
-    
-    if len(potentialParents) > 1:
-      raise AssertionError("We seem to have more than one parent: " + ', '.join([repr((potentialParent, potentialParent.id)) for potentialParent in potentialParents]))
-    
-    return potentialParents[0]
   
   @lazyproperty
   def id(self):
@@ -474,9 +459,8 @@ class _ScriptElement (Template):
     should be called if a template is no longer needed and should be deleted.
     """
     self.getVar('templates').discard(self)
-    scriptElements = self.getVar('scriptElements')
     
-    for someIterable in (self.getVar('scriptElements'), self.getVar('fields'),
+    for someIterable in (self.parent.children, self.getVar('fields'),
                          self.getVar('vectors'), self.getVar('momentGroups')):
       while self in someIterable:
         someIterable.remove(self)

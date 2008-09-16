@@ -32,12 +32,6 @@ class _FixedStep (Integrator):
       raise AssertionError("This class (%s) does not support cross-propagation." % str(type(self)))
     else:
       self._cross = value
-      # Remove ourselves from the scriptElements if we are to become a cross-propagator
-      if self._cross:
-        scriptElements = self.getVar('scriptElements')
-        
-        if self in scriptElements:
-          scriptElements.remove(self)
   
   cross = property(_getCross, _setCross)
   del _getCross, _setCross
@@ -81,14 +75,5 @@ class _FixedStep (Integrator):
   step = property(_getStep, _setStep)
   del _getStep, _setStep
   
-  def preflight(self):
-    super(_FixedStep, self).preflight()
-    # If we are cross-propagating, then we aren't a top-level script element, and so will be
-    # called by the appropriate CrossPropagationOperator
-    if self.cross:
-      scriptElements = self.getVar('scriptElements')
-      if self in scriptElements:
-        scriptElements.remove(self)
-    
   
 

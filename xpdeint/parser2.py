@@ -158,7 +158,6 @@ def main(argv=None):
   
   globalNameSpace['debug'] = debug
   globalNameSpace['xmlDocument'] = xmlDocument
-  globalNameSpace['scriptElements'] = []
   globalNameSpace['features'] = {}
   globalNameSpace['fields'] = []
   globalNameSpace['vectors'] = []
@@ -191,7 +190,9 @@ def main(argv=None):
     # Set our magic filter
     filterClass = IndentFilter
     # Construct the top-level template class
-    simulationTemplate = SimulationTemplate(searchList=[globalNameSpace], filter=filterClass)
+    simulationTemplate = SimulationTemplate(parent = None, searchList=[globalNameSpace], filter=filterClass)
+    _ScriptElement.simulation = simulationTemplate
+    globalNameSpace['simulation'] = simulationTemplate
     # Now get the parser to do the complex job of mapping the XML classes onto our
     # templates.
     parser.parseXMLDocument(xmlDocument, globalNameSpace, filterClass)
@@ -203,11 +204,11 @@ def main(argv=None):
     #
     
     # Loop over a copy because we may create templates during iteration
-    for template in globalNameSpace['scriptElements'][:]:
+    for template in globalNameSpace['simulation'].children[:]:
       if not template._haveBeenRemoved:
         template.implementationsForFunctionName('bindNamedVectors')
     
-    for template in globalNameSpace['scriptElements'][:]:
+    for template in globalNameSpace['simulation'].children[:]:
       if not template._haveBeenRemoved:
         template.implementationsForFunctionName('preflight')
     

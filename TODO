@@ -71,8 +71,7 @@
   Currently you can probably get around this limitation by using cross-propagation for the integration. I *think* you can have noises in cross-propagation
   integrators.
 
-* Rewrite bindNamedVectors/preflight/parent system. It's all a mess. The parent object should be set explicitly during initialisation, not found implicitly
-  and bindNamedVectors/preflight should probably change to something like 'localPreflight'/'nonLocalPreflight'.
+* Rewrite bindNamedVectors/preflight system. It's a mess. bindNamedVectors/preflight should probably be renamed to something like 'localPreflight'/'nonLocalPreflight'.
 
 * Add support for multiple transforms. Here we will want a transform multiplexer to combine the results of the (separable) transforms. The kinds of transforms
   that should be considered should include:

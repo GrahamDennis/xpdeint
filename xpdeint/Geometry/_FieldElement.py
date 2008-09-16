@@ -20,7 +20,7 @@ class _FieldElement (ScriptElement):
     if not self.hasattr('name'):
       self.name = KWs['name']
       del KWs['name']
-    
+    if not 'parent' in KWs: KWs['parent'] = self.simulation
     ScriptElement.__init__(self, *args, **KWs)
     
     # Set default variables
@@ -29,9 +29,6 @@ class _FieldElement (ScriptElement):
     self.dimensions = []
     
     self.getVar('fields').append(self)
-    scriptElements = self.getVar('scriptElements')
-    if not self in scriptElements:
-      scriptElements.append(self)
   
   @property
   def vectors(self):

@@ -18,6 +18,13 @@ class _VectorElement (ScriptElement):
   isComputed = False
   
   def __init__(self, name, field, transformFree = False, *args, **KWs):
+    if not 'parent' in KWs: KWs['parent'] = field
+    
+    if KWs['parent'] is field:
+      field.managedVectors.add(self)
+    else:
+      field.temporaryVectors.add(self)
+    
     ScriptElement.__init__(self, *args, **KWs)
     self.name = name
     self.field = field
@@ -50,8 +57,6 @@ class _VectorElement (ScriptElement):
                                implementation = self.goSpaceFunctionContents,
                                predicate = lambda: self.needsTransforms)
     self.functions['goSpace'] = goSpaceFunction
-    
-    
   
   @property
   def needsTransforms(self):

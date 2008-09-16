@@ -15,6 +15,7 @@ from xpdeint.Function import Function
 
 class _Segment (ScriptElement):
   def __init__(self, *args, **KWs):
+    if not 'parent' in KWs: KWs['parent'] = self.simulation
     ScriptElement.__init__(self, *args, **KWs)
     
     self.segmentNumber = len(filter(lambda x: isinstance(x, _Segment), self.getVar('templates'))) - 1
@@ -23,10 +24,6 @@ class _Segment (ScriptElement):
     self.localCycles = 1
     self.name = 'segment' + str(self.segmentNumber)
     self._id = self.name # Override the id as the segments have unique numbering
-    scriptElements = self.getVar('scriptElements')
-    
-    if not self in scriptElements:
-      scriptElements.append(self)
     
     self.functions['segment'] = Function(name = '_segment' + str(self.segmentNumber),
                                          args = [], 

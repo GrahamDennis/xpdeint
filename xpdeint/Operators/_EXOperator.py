@@ -74,10 +74,10 @@ class _EXOperator(Operator):
           if not specialTargetsVector:
             # Construct a filter operator to create the special targets vector
             specialTargetsVector = ComputedVector(name = self.id + "_special_targets", field = self.field,
+                                                  parent = self,
                                                   xmlElement = self.xmlElement,
                                                   **self.argumentsToTemplateConstructors)
             
-            self.field.temporaryVectors.add(specialTargetsVector)
             self._children.append(specialTargetsVector)
             self.dependencies.add(specialTargetsVector)
             

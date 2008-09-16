@@ -117,7 +117,9 @@ class XMDS2Parser(ScriptParser):
     descriptionElement = simulationElement.getChildElementByTagName('description')
     self.globalNameSpace['simulationDescription'] = descriptionElement.innerText()
     
-    simulationElementTemplate = SimulationElementTemplate(**self.argumentsToTemplateConstructors)
+    self.simulation = self.globalNameSpace['simulation']
+    
+    simulationElementTemplate = SimulationElementTemplate(parent = self.simulation, **self.argumentsToTemplateConstructors)
     
     self.parseDriverElement(simulationElement)
     
@@ -127,7 +129,7 @@ class XMDS2Parser(ScriptParser):
     
     self.parseVectorElements(simulationElement)
     
-    self.parseComputedVectorElements(simulationElement, simulationElementTemplate)
+    self.parseComputedVectorElements(simulationElement, None)
     
     self.parseTopLevelSequenceElement(simulationElement)
     
@@ -193,7 +195,8 @@ class XMDS2Parser(ScriptParser):
                                 "Unknown multi-path kind '%(kindString)s'. "
                                 "The options are 'single' (default), or 'mpi'." % locals())
     
-    simulationDriver = driverClass(xmlElement = driverElement, **self.argumentsToTemplateConstructors)
+    simulationDriver = driverClass(parent = self.simulation, xmlElement = driverElement,
+                                   **self.argumentsToTemplateConstructors)
     self.applyAttributeDictionaryToObject(driverAttributeDictionary, simulationDriver)
     return simulationDriver
   
@@ -208,7 +211,8 @@ class XMDS2Parser(ScriptParser):
       feature = None
       if featureElement:
         if len(featureElement.innerText()) == 0 or featureElement.innerText().lower() == 'yes':
-          feature = featureClass(**self.argumentsToTemplateConstructors)
+          feature = featureClass(parent = self.simulation,
+                                 **self.argumentsToTemplateConstructors)
           feature.xmlElement = featureElement
       return featureElement, feature
     
@@ -227,7 +231,8 @@ class XMDS2Parser(ScriptParser):
       kindString = validationFeatureElement.getAttribute('kind').strip().lower()
       
       if kindString in ('run-time', 'none'):
-        validationFeature = Features.Validation.Validation(runValidationChecks = kindString == 'run-time',
+        validationFeature = Features.Validation.Validation(parent = self.simulation,
+                                                           runValidationChecks = kindString == 'run-time',
                                                            **self.argumentsToTemplateConstructors)
       elif kindString == 'compile-time':
         pass
@@ -239,7 +244,8 @@ class XMDS2Parser(ScriptParser):
     argumentsFeatureElement = featuresParentElement.getChildElementByTagName('arguments', optional=True)
     
     if argumentsFeatureElement:
-      argumentsFeature = Features.Arguments.Arguments(**self.argumentsToTemplateConstructors)
+      argumentsFeature = Features.Arguments.Arguments(parent = self.simulation,
+                                                      **self.argumentsToTemplateConstructors)
       argumentsFeature.xmlElement = argumentsFeatureElement
       
       argumentElements = argumentsFeatureElement.getChildElementsByTagName('argument')
@@ -287,12 +293,14 @@ class XMDS2Parser(ScriptParser):
     
     globalsElement = featuresParentElement.getChildElementByTagName('globals', optional=True)
     if globalsElement:
-      globalsTemplate = Features.Globals.Globals(**self.argumentsToTemplateConstructors)
+      globalsTemplate = Features.Globals.Globals(parent = self.simulation,
+                                                 **self.argumentsToTemplateConstructors)
       globalsTemplate.globalsCodeEntity = ParsedEntity(globalsElement, globalsElement.cdataContents())
     
     cflagsElement = featuresParentElement.getChildElementByTagName('cflags', optional=True)
     if cflagsElement:
-      cflagsTemplate = Features.CFlags.CFlags(**self.argumentsToTemplateConstructors)
+      cflagsTemplate = Features.CFlags.CFlags(parent = self.simulation,
+                                              **self.argumentsToTemplateConstructors)
       cflagsTemplate.cflagsString = cflagsElement.innerText().strip()
     
     stochasticFeatureElement, stochasticFeature = parseSimpleFeature('stochastic', Features.Stochastic.Stochastic)
@@ -347,7 +355,8 @@ class XMDS2Parser(ScriptParser):
           noiseClass = UniformDSFMTNoise
         else:
           raise ParserException(noiseElement, "Unknown noise kind '%(kind)s'." % locals())
-        noise = noiseClass(**self.argumentsToTemplateConstructors)
+        noise = noiseClass(parent = stochasticFeature,
+                           **self.argumentsToTemplateConstructors)
         
         self.applyAttributeDictionaryToObject(noiseAttributeDictionary, noise)
         
@@ -442,7 +451,7 @@ class XMDS2Parser(ScriptParser):
         
         fftAttributeDictionary['threadCount'] = threadCount
     
-    fourierTransform = fourierTransformClass(**self.argumentsToTemplateConstructors)
+    fourierTransform = fourierTransformClass(parent = self.simulation, **self.argumentsToTemplateConstructors)
     
     self.applyAttributeDictionaryToObject(fftAttributeDictionary, fourierTransform)
   
@@ -491,7 +500,7 @@ class XMDS2Parser(ScriptParser):
   def parseGeometryElement(self, simulationElement):
     geometryElement = simulationElement.getChildElementByTagName('geometry')
     
-    geometryTemplate = GeometryElementTemplate(**self.argumentsToTemplateConstructors)
+    geometryTemplate = GeometryElementTemplate(parent = self.simulation, **self.argumentsToTemplateConstructors)
     
     ## First grab the propagation dimension name
     
@@ -506,7 +515,7 @@ class XMDS2Parser(ScriptParser):
     if 'none' in self.globalNameSpace['transforms']:
       noTransform = self.globalNameSpace['transforms']['none']
     else:
-      noTransform = Transforms._NoTransform._NoTransform(**self.argumentsToTemplateConstructors)
+      noTransform = Transforms._NoTransform._NoTransform(parent = self.simulation, **self.argumentsToTemplateConstructors)
     
     propagationDimension = Dimension(name = propagationDimensionName,
                                      transverse = False,
@@ -754,7 +763,6 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     vectorElements = parentElement.getChildElementsByTagName('vector', optional=True)
     for vectorElement in vectorElements:
       vectorTemplate = self.parseVectorElement(vectorElement)
-      vectorTemplate.field.managedVectors.add(vectorTemplate)
   
   def parseVectorElement(self, vectorElement):
     if not vectorElement.hasAttribute('dimensions'):
@@ -847,7 +855,8 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
         kindString = initialisationElement.getAttribute('kind').lower()
       
       if kindString in (None, 'code'):
-        initialisationTemplate = VectorInitialisationFromCDATATemplate(xmlElement=initialisationElement, **self.argumentsToTemplateConstructors)
+        initialisationTemplate = VectorInitialisationFromCDATATemplate(parent = vectorTemplate, xmlElement=initialisationElement,
+                                                                       **self.argumentsToTemplateConstructors)
         initialisationTemplate.dependenciesEntity = self.parseDependencies(initialisationElement, optional=True)
         
         if len(initialisationElement.cdataContents()) == 0:
@@ -856,7 +865,8 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       elif kindString == 'zero':
         initialisationTemplate = vectorTemplate.initialiser
       elif kindString == 'xsil':
-        initialisationTemplate = VectorInitialisationFromXSILTemplate(xmlElement=initialisationElement, **self.argumentsToTemplateConstructors)
+        initialisationTemplate = VectorInitialisationFromXSILTemplate(parent = vectorTemplate, xmlElement=initialisationElement,
+                                                                      **self.argumentsToTemplateConstructors)
         geometryMatchingMode = 'strict'
         if initialisationElement.hasAttribute('geometry_matching_mode'):
           geometryMatchingMode = initialisationElement.getAttribute('geometry_matching_mode').strip().lower()
@@ -940,9 +950,12 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     
     fieldTemplate = FieldElementTemplate.sortedFieldWithDimensionNames(dimensionNames, xmlElement = computedVectorElement)
     
+    if parentTemplate is None:
+      parentTemplate = fieldTemplate
     # One way or another, we now have our fieldTemplate
     # So we can now construct the computed vector template
     vectorTemplate = ComputedVectorTemplate(name = vectorName, field = fieldTemplate,
+                                            parent = parentTemplate,
                                             xmlElement = computedVectorElement,
                                             **self.argumentsToTemplateConstructors)
     
@@ -987,11 +1000,6 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     vectorTemplate.dependenciesEntity = self.parseDependencies(evaluationElement, optional=True)
     
     self.parseFeatureAttributes(evaluationElement, vectorTemplate)
-    
-    if not type(parentTemplate) == SimulationElementTemplate:
-      fieldTemplate.temporaryVectors.add(vectorTemplate)
-    else:
-      fieldTemplate.managedVectors.add(vectorTemplate)
     
     return vectorTemplate
   
@@ -1402,6 +1410,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     vectorName = operatorTemplate.id + "_field"
     
     operatorVectorTemplate = VectorElementTemplate(name = vectorName, field = operatorTemplate.field,
+                                                   parent = operatorTemplate,
                                                    **self.argumentsToTemplateConstructors)
     operatorVectorTemplate.type = 'complex'
     if operatorElement.hasAttribute('type'):
@@ -1413,7 +1422,6 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     
     operatorVectorTemplate.initialSpace = operatorTemplate.operatorSpace
     operatorVectorTemplate.needsInitialisation = False
-    operatorVectorTemplate.field.temporaryVectors.add(operatorVectorTemplate)
     
     operatorContainer = operatorTemplate.parent
     integratorTemplate = operatorContainer.parent
@@ -1457,24 +1465,24 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       vectorName = operatorTemplate.id + "_field"
       
       operatorVectorTemplate = VectorElementTemplate(name = vectorName, field = operatorTemplate.field,
+                                                     parent = operatorTemplate,
                                                      **self.argumentsToTemplateConstructors)
       operatorVectorTemplate.type = 'double'
       
       operatorVectorTemplate.initialSpace = operatorTemplate.operatorSpace
       operatorVectorTemplate.needsInitialisation = False
-      operatorVectorTemplate.field.temporaryVectors.add(operatorVectorTemplate)
       operatorVectorTemplate.components = operatorNames[:]
       operatorTemplate.operatorVector = operatorVectorTemplate
     
     
     vectorName = operatorTemplate.id + "_result"
     resultVector = VectorElementTemplate(name = vectorName, field = operatorTemplate.field,
+                                         parent = operatorTemplate,
                                          **self.argumentsToTemplateConstructors)
     resultVector.type = 'double'
     
     resultVector.initialSpace = 0
     resultVector.needsInitialisation = False
-    resultVector.field.temporaryVectors.add(resultVector)
     resultVector.components = resultVectorComponents
     operatorTemplate.resultVector = resultVector
     
@@ -1607,7 +1615,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       index = filename.lower().rindex('.xsil')
       filename = filename[0:index]
     
-    outputTemplate = outputTemplateClass(**self.argumentsToTemplateConstructors)
+    outputTemplate = outputTemplateClass(parent = self.simulation, **self.argumentsToTemplateConstructors)
     outputTemplate.precision = 'double'
     outputTemplate.filename = filename
     outputTemplate.xmlElement = outputElement
@@ -1619,13 +1627,14 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       samplingElement = momentGroupElement.getChildElementByTagName('sampling')
       
       momentGroupTemplate = MomentGroupTemplate(number = momentGroupNumber, xmlElement = momentGroupElement,
+                                                parent = self.simulation,
                                                 **self.argumentsToTemplateConstructors)
       
-      samplingFieldTemplate = FieldElementTemplate(name = momentGroupTemplate.name + "_sampling",
+      samplingFieldTemplate = FieldElementTemplate(name = momentGroupTemplate.name + "_sampling", parent = self.simulation,
                                                    **self.argumentsToTemplateConstructors)
       momentGroupTemplate.samplingField = samplingFieldTemplate
       
-      outputFieldTemplate = FieldElementTemplate(name = momentGroupTemplate.name + "_output",
+      outputFieldTemplate = FieldElementTemplate(name = momentGroupTemplate.name + "_output", parent = self.simulation,
                                                  **self.argumentsToTemplateConstructors)
       momentGroupTemplate.outputField = outputFieldTemplate
       
@@ -1716,7 +1725,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
           # is less than the total number of points, something that we have already checked.
           
         if lattice > 1:
-          outputFieldDimension = geometryDimension.copy(parent = samplingFieldTemplate)
+          outputFieldDimension = geometryDimension.copy(parent = outputFieldTemplate)
           if not dimensionRepresentation.lattice == lattice:
             for rep in outputFieldDimension.representations:
               rep.lattice = lattice
@@ -1748,7 +1757,6 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
                                                 **self.argumentsToTemplateConstructors)
       rawVectorTemplate.type = 'double'
       rawVectorTemplate.initialSpace = momentGroupTemplate.sampleSpace
-      momentGroupTemplate.outputField.managedVectors.add(rawVectorTemplate)
       momentGroupTemplate.rawVector = rawVectorTemplate
       
       momentsElement = samplingElement.getChildElementByTagName('moments')
@@ -1810,7 +1818,6 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
                                                       **self.argumentsToTemplateConstructors)
       processedVectorTemplate.type = 'double'
       processedVectorTemplate.initialSpace = momentGroupTemplate.outputSpace
-      outputFieldTemplate.managedVectors.add(processedVectorTemplate)
       momentGroupTemplate.processedVector = processedVectorTemplate
       
       if not processingElement:

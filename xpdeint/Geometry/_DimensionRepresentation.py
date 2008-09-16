@@ -47,10 +47,10 @@ class _DimensionRepresentation(ScriptElement):
   def _newInstanceDict(self):
     return {'name': self.name, 'type': self.type, 'lattice': self.lattice, '_localVariablePrefix': self._localVariablePrefix}
   
-  def copy(self):
+  def copy(self, parent):
     newInstanceDict = self._newInstanceDict()
     newInstanceDict.update(self.argumentsToTemplateConstructors)
-    return self.__class__(**newInstanceDict)
+    return self.__class__(parent = parent, **newInstanceDict)
   
   @lazyproperty
   def prefix(self):
