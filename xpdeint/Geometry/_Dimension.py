@@ -43,7 +43,7 @@ class _Dimension(ScriptElement):
     self._transformMask = None
     self._mappingRules = None
   
-  @lazyproperty
+  @property
   def children(self):
     # Only return non-None representations
     return [rep for rep in self.representations if rep]
