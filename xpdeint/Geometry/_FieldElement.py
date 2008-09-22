@@ -14,6 +14,8 @@ from xpdeint.ScriptElement import ScriptElement
 from xpdeint import RegularExpressionStrings
 from xpdeint.ParserException import ParserException
 
+from xpdeint.Utilities import lazyproperty
+
 class _FieldElement (ScriptElement):
   def __init__(self, *args, **KWs):
     # The MomentGroup and GeometryElement subclasses define name properties
@@ -39,12 +41,13 @@ class _FieldElement (ScriptElement):
   @property
   def children(self):
     result = self.dimensions[:]
+    # Sort managed vectors by name
     result.extend(self.managedVectors)
     return result
   
   # The space mask for this field
   # i.e. which parts of the space variable we care about
-  @property
+  @lazyproperty
   def spaceMask(self):
     """
     Return the spaceMask for this field, i.e. which part of a spaces variable
@@ -60,7 +63,7 @@ class _FieldElement (ScriptElement):
     
     return bitMask
   
-  @property
+  @lazyproperty
   def prefix(self):
     if not self.name == 'geometry':
       return '_' + self.name
@@ -150,7 +153,7 @@ class _FieldElement (ScriptElement):
     indices = [self.dimensions.index(dim) for dim in orderedDimensions]
     return self.localPointsInDimensionsWithIndicesInSpace(indices, space)
   
-  @property
+  @lazyproperty
   def maxPoints(self):
     points = 1
     for dimension in self.dimensions:
@@ -209,7 +212,7 @@ class _FieldElement (ScriptElement):
     
     return ''.join(result)
   
-  @property
+  @lazyproperty
   def isDistributed(self):
     return self._driver.isFieldDistributed(self)
   
@@ -217,7 +220,7 @@ class _FieldElement (ScriptElement):
     """Return a list of the dimensions in the order in which they should be looped over"""
     return self._driver.orderedDimensionsForFieldInSpace(self, space)
   
-  @property
+  @lazyproperty
   def allocSize(self):
     return '_' + self.name + '_alloc_size'
   

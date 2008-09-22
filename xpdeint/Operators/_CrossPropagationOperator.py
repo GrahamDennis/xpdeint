@@ -13,10 +13,13 @@ from xpdeint.Geometry.FieldElement import FieldElement
 from xpdeint.Vectors.VectorElement import VectorElement
 
 from xpdeint.ParserException import ParserException
+from xpdeint.Utilities import lazyproperty
 
 class _CrossPropagationOperator (Operator):
   operatorKind = Operator.OtherOperatorKind
   evaluateOperatorFunctionArguments = []
+  
+  operatorSpace = 0
   
   # This is a class attribute and not an instance attribute to prevent two
   # cross-propagation operators trying to create the same reduced field
@@ -45,14 +48,9 @@ class _CrossPropagationOperator (Operator):
     self.dependencyMap = {}
     self.integrationVectorMap = {}
     self.reducedField = None
-    self._fieldMap = None
   
   
-  @property
-  def operatorSpace(self):
-    return 0
-  
-  @property
+  @lazyproperty
   def fieldMap(self):
     """
     Return the field map for this cross-propagator.
@@ -61,13 +59,10 @@ class _CrossPropagationOperator (Operator):
     cross-propagation dimension. The fieldMap instances are shared between cross-propagators that have
     the same cross-propagation dimension.
     """
-    if not self._fieldMap:
-      if not self.propagationDimension in self.sharedFieldMap:
-        self._fieldMap = self.sharedFieldMap[self.propagationDimension] = {}
-      else:
-        self._fieldMap = self.sharedFieldMap[self.propagationDimension]
+    if not self.propagationDimension in self.sharedFieldMap:
+      self.sharedFieldMap[self.propagationDimension] = {}
+    return self.sharedFieldMap[self.propagationDimension]
     
-    return self._fieldMap
   
   def _getCrossPropagationIntegrator(self):
     return self._crossPropagationIntegrator

@@ -12,6 +12,8 @@ from xpdeint.ScriptElement import ScriptElement
 from xpdeint.Operators._Operator import _Operator
 from xpdeint.ParserException import ParserException
 
+from xpdeint.Utilities import lazyproperty
+
 class OperatorContainer(ScriptElement):
   """
   The `OperatorContainer` is, as the name suggests, a container for operators.
@@ -79,7 +81,7 @@ class OperatorContainer(ScriptElement):
   sharedCode = property(_getSharedCode, _setSharedCode)
   del _getSharedCode, _setSharedCode
   
-  @property
+  @lazyproperty
   def sharedCodeEntity(self):
     return self.valueForKeyPath(self.sharedCodeEntityKeyPath)
   
