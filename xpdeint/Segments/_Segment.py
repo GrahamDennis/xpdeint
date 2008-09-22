@@ -12,6 +12,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 from xpdeint.ScriptElement import ScriptElement
 
 from xpdeint.Function import Function
+from xpdeint.Utilities import lazyproperty
 
 class _Segment (ScriptElement):
   def __init__(self, *args, **KWs):
@@ -34,7 +35,7 @@ class _Segment (ScriptElement):
   def childSegments(self):
     return self._childSegments[:]
   
-  @property
+  @lazyproperty
   def totalCycles(self):
     currSegment = self
     totalCycles = 1

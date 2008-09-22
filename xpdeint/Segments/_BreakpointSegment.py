@@ -10,6 +10,8 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 from xpdeint.Segments._Segment import _Segment
 from xpdeint.ParserException import ParserException
 
+from xpdeint.Utilities import lazyproperty
+
 class _BreakpointSegment (_Segment):
   def __init__(self, *args, **KWs):
     _Segment.__init__(self, *args, **KWs)
@@ -18,7 +20,7 @@ class _BreakpointSegment (_Segment):
     self.breakpointSpace = 0
     self.field = None
   
-  @property
+  @lazyproperty
   def outputComponents(self):
     result = []
     for vector in self.orderedDependencies:

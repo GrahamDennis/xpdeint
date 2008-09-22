@@ -9,6 +9,8 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 
 from xpdeint.Segments.Integrators.Integrator import Integrator
 
+from xpdeint.Utilities import lazyproperty
+
 class _FixedStep (Integrator):
   # Is this integrator capable of doing cross-propagation integration?
   isCrossCapable = False
@@ -18,7 +20,6 @@ class _FixedStep (Integrator):
     
     # Set default variables
     self._cross = False
-    self._step = None
     
     # Is this integrator being used as a cross-propagation integrator?
     self.cross = KWs.get('cross', False)
@@ -36,7 +37,7 @@ class _FixedStep (Integrator):
   cross = property(_getCross, _setCross)
   del _getCross, _setCross
   
-  @property
+  @lazyproperty
   def bannedFeatures(self):
     """Return the features which are not permitted to be inserted by this instance."""
     
@@ -64,16 +65,9 @@ class _FixedStep (Integrator):
     else:
       return None
   
-  def _getStep(self):
-    if self._step:
-      return self._step
+  @lazyproperty
+  def step(self):
     return ''.join([str(self.interval), '/(double)', str(self.stepCount)])
-  
-  def _setStep(self, value):
-    self._step = value
-  
-  step = property(_getStep, _setStep)
-  del _getStep, _setStep
   
   
 

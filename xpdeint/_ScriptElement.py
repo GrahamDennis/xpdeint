@@ -46,17 +46,14 @@ class _ScriptElement (Template):
     for instanceGuardSet in _ScriptElement._callOncePerInstanceGuards.itervalues():
       instanceGuardSet.clear()
   
-  __driver = None
-  
   @property
   def _driver(self):
     """
     Return the simulation driver, but cache the result in a variable shared between
     all `_ScriptElement` instances.
     """
-    if not _ScriptElement.__driver:
-      _ScriptElement.__driver = self.getVar('features')['Driver']
-    return _ScriptElement.__driver
+    _ScriptElement._driver = self.getVar('features')['Driver']
+    return _ScriptElement._driver
   
   
   _ScriptElement_haveCalledInit = False

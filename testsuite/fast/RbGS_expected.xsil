@@ -18,7 +18,6 @@
     <auto_vectorise />
     <benchmark />
     <bing />
-    <error_check />
     <!-- <openmp /> -->
     <fftw version="3" plan="measure" />
     <!-- <diagnostics /> -->
@@ -176,7 +175,7 @@
         potential
       </dependencies>
     </breakpoint>
-    <integrate algorithm="RK4" interval="15.0e-4" steps="3">
+    <integrate algorithm="RK4" interval="15.0e-7" steps="3">
       <samples>1 1 1 1</samples>
       <filters>
         <filter>
@@ -308,16 +307,16 @@ See http://www.xmds.org for more information.
 <XSIL Name="moment_group_1">
   <Param Name="n_independent">3</Param>
   <Array Name="variables" Type="Text">
-    <Dim>13</Dim>
+    <Dim>8</Dim>
     <Stream><Metalink Format="Text" Delimiter=" \n"/>
-x y z phi1re dens0 densm1 phi1im dens1 error_phi1re error_dens0 error_densm1 error_phi1im error_dens1 
+x y z phi1re dens0 densm1 phi1im dens1 
     </Stream>
   </Array>
   <Array Name="data" Type="double">
     <Dim>16</Dim>
     <Dim>16</Dim>
     <Dim>32</Dim>
-    <Dim>13</Dim>
+    <Dim>8</Dim>
     <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
 RbGS_expected_mg0.dat
     </Stream>
@@ -327,16 +326,16 @@ RbGS_expected_mg0.dat
 <XSIL Name="moment_group_2">
   <Param Name="n_independent">3</Param>
   <Array Name="variables" Type="Text">
-    <Dim>5</Dim>
+    <Dim>4</Dim>
     <Stream><Metalink Format="Text" Delimiter=" \n"/>
-kx ky kz dens1 error_dens1 
+kx ky kz dens1 
     </Stream>
   </Array>
   <Array Name="data" Type="double">
     <Dim>16</Dim>
     <Dim>16</Dim>
     <Dim>32</Dim>
-    <Dim>5</Dim>
+    <Dim>4</Dim>
     <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
 RbGS_expected_mg1.dat
     </Stream>
@@ -346,14 +345,14 @@ RbGS_expected_mg1.dat
 <XSIL Name="moment_group_3">
   <Param Name="n_independent">1</Param>
   <Array Name="variables" Type="Text">
-    <Dim>7</Dim>
+    <Dim>4</Dim>
     <Stream><Metalink Format="Text" Delimiter=" \n"/>
-t N1 N0 Nm1 error_N1 error_N0 error_Nm1 
+t N1 N0 Nm1 
     </Stream>
   </Array>
   <Array Name="data" Type="double">
     <Dim>2</Dim>
-    <Dim>7</Dim>
+    <Dim>4</Dim>
     <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
 RbGS_expected_mg2.dat
     </Stream>
@@ -363,13 +362,13 @@ RbGS_expected_mg2.dat
 <XSIL Name="moment_group_4">
   <Param Name="n_independent">0</Param>
   <Array Name="variables" Type="Text">
-    <Dim>4</Dim>
+    <Dim>2</Dim>
     <Stream><Metalink Format="Text" Delimiter=" \n"/>
-E1OnHbarRe E1OnHbarIm error_E1OnHbarRe error_E1OnHbarIm 
+E1OnHbarRe E1OnHbarIm 
     </Stream>
   </Array>
   <Array Name="data" Type="double">
-    <Dim>4</Dim>
+    <Dim>2</Dim>
     <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
 RbGS_expected_mg3.dat
     </Stream>

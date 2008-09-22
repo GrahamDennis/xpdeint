@@ -14,17 +14,16 @@ from xpdeint import RegularExpressionStrings
 from xpdeint.ParserException import ParserException
 
 class _FilterOperator (Operator):
+  defaultOperatorSpace = 0
+  
+  # Filter operators must cause their computed vectors to be re-evaluated
+  # as one filter operator could easily change the value of a computed vector
+  # (think renormalisation)
+  computedVectorsNeedingPrecalculation = []
+  
   evaluateOperatorFunctionArguments = []
   operatorKind = Operator.OtherOperatorKind
   vectorsMustBeInSubsetsOfIntegrationField = False
-  
-  @property
-  def defaultOperatorSpace(self):
-    return 0
-  
-  @property
-  def computedVectorsNeedingPrecalculation(self):
-    return []
   
   
   def bindNamedVectors(self):

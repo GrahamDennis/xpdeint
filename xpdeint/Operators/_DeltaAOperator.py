@@ -12,6 +12,7 @@ from xpdeint.Geometry.FieldElement import FieldElement
 from xpdeint.Vectors.VectorElement import VectorElement
 from xpdeint.Vectors.VectorInitialisation import VectorInitialisation
 from xpdeint.Function import Function
+from xpdeint.Utilities import lazyproperty
 
 from xpdeint.ParserException import ParserException
 
@@ -20,6 +21,8 @@ from xpdeint import CodeLexer
 class _DeltaAOperator (Operator):
   evaluateOperatorFunctionArguments = [('double', '_step')]
   operatorKind = Operator.DeltaAOperatorKind
+  
+  defaultOperatorSpace = 0
   
   def __init__(self, *args, **KWs):
     Operator.__init__(self, *args, **KWs)
@@ -32,11 +35,7 @@ class _DeltaAOperator (Operator):
     
     self.propagationCodeEntity = None
   
-  @property
-  def defaultOperatorSpace(self):
-    return 0
-  
-  @property
+  @lazyproperty
   def integrator(self):
     # Our parent is an OperatorContainer, and its parent is the Integrator
     return self.parent.parent

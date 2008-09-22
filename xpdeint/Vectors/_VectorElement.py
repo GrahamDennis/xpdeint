@@ -13,6 +13,7 @@ from xpdeint.ScriptElement import ScriptElement
 from xpdeint.Vectors.VectorInitialisation import VectorInitialisation
 
 from xpdeint.Function import Function
+from xpdeint.Utilities import lazyproperty
 
 class _VectorElement (ScriptElement):
   isComputed = False
@@ -20,20 +21,19 @@ class _VectorElement (ScriptElement):
   def __init__(self, name, field, transformFree = False, *args, **KWs):
     if not 'parent' in KWs: KWs['parent'] = field
     
+    self.name = name
+    self.field = field
+    
     if KWs['parent'] is field:
       field.managedVectors.add(self)
     else:
       field.temporaryVectors.add(self)
     
     ScriptElement.__init__(self, *args, **KWs)
-    self.name = name
-    self.field = field
-    
     # Set default variables
     self.components = []
     self._needsInitialisation = True
     self._initialSpace = 0
-    self.nComponentsOverride = None
     self.type = 'complex'
     self.aliases = set()
     self.spacesNeeded = set()
@@ -64,7 +64,13 @@ class _VectorElement (ScriptElement):
       return False
     return len(self.spacesNeeded) > 1
   
-  @property
+  def __hash__(self):
+    """
+    Returns a hash of the vector element. This is used to ensure the ordering of vectors in sets remains the same between invocations.
+    """
+    return hash(self.id)
+  
+  @lazyproperty
   def id(self):
     return ''.join([self.field.name, '_', self.name])
   
@@ -74,17 +80,9 @@ class _VectorElement (ScriptElement):
       return [self.initialiser]
     return []
   
-  def _getNComponents(self):
-    if self.nComponentsOverride:
-      return self.nComponentsOverride
+  @lazyproperty
+  def nComponents(self):
     return len(self.components)
-  
-  def _setNComponents(self, value):
-    self.nComponentsOverride = value
-  
-  # Create a property for the class with the above getter and setter methods
-  nComponents = property(_getNComponents, _setNComponents)
-  del _getNComponents, _setNComponents
   
   def _getNeedsInitialisation(self):
     return self._needsInitialisation
@@ -117,7 +115,7 @@ class _VectorElement (ScriptElement):
   initialSpace = property(_getInitialSpace, _setInitialSpace)
   del _getInitialSpace, _setInitialSpace
   
-  @property
+  @lazyproperty
   def maxSizeInReals(self):
     if self.type == 'complex':
       multiplier = 2
@@ -125,7 +123,7 @@ class _VectorElement (ScriptElement):
       multiplier = 1
     return self.field.maxPoints * self.nComponents * multiplier
   
-  @property
+  @lazyproperty
   def allocSize(self):
     return self.field.allocSize + ' * _' + self.id + '_ncomponents'
   
