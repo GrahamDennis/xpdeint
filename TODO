@@ -79,6 +79,10 @@
   - General matrix transforms. For example, Hankel transforms (require non-uniform dimensions) 
     and hermite-gaussian basis decomposition (may require non-square transforms).
   - We need a differentiation operator D[phi, x, x, y, y] = d^4phi/(dx^2 dy^2) (better syntax needed) to represent derivatives of variables.
+    Another option for the syntax could be D_x[phi], D_x2[phi], D_theta[phi], D_x_y[phi]. This way only symbols starting with 'D_' would be banned
+    instead of all beginning with 'D' which would be a little restrictive. Also, we won't introduce a new kind of operator notation that could be confused
+    with IP or EX operators. And this way we can then use the same parsing code as is used for EX/IP operators and all this code can be combined into a single
+    location.
     This is needed because for many transforms, a derivative cannot be represented in terms of IP or EX operators.
     A good example is calculating odd derivatives with the DCT/DST transforms. i*kx is *NOT* the first derivative. This is only
     true for DFTs. However, the first derivative can be calculated when using DCTs/DSTs, so the 'D' operator would make this available.
@@ -120,3 +124,11 @@
   would probably use something like run-length encoding to determine the parts of the grid that need to be looped over.
 
 * Breakpoint on signal? (e.g. USR1)
+
+
+Things to be done by AIP:
+* Windows compatibility
+* Remove dependence on libxmds for XSIL import (port xsil2graphics too?)
+* 'D' operators (for ease of use by new users)
+Lower priority, but still nice:
+* General matrix transforms lending credibility to calling xpdeint a general spectral method code generator.
