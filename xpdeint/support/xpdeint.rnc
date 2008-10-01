@@ -266,7 +266,7 @@ Output = element output {
     , attribute filename { text }?
     , element group {
         element sampling {
-            attribute initial_sample { Bool }
+            attribute initial_sample { Bool } ?
             , (
                 ComputedVector
                 | Operator
