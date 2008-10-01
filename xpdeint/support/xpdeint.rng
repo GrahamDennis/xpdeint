@@ -487,9 +487,11 @@
       <zeroOrMore>
         <element name="group">
           <element name="sampling">
-            <attribute name="initial_sample">
-              <ref name="Bool"/>
-            </attribute>
+            <optional>
+              <attribute name="initial_sample">
+                <ref name="Bool"/>
+              </attribute>
+            </optional>
             <oneOrMore>
               <choice>
                 <ref name="ComputedVector"/>

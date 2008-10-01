@@ -29,12 +29,19 @@ Build instructions:
    b) If necessary install setuptools, by executing ez_setup.py from the repository.
       "python ez_setup.py --prefix=~"
 
-3. Install Cheetah version 2.0.1 or later. 
+3. Install Cheetah version 2.0.1 or later, Pygments, and (optionally) lxml. 
    If you have root access, this is as easy as:
-   "sudo easy_install Cheetah"
+   "sudo easy_install Cheetah" or "sudo easy_install Pygments" or "sudo easy_install lxml"
    
    If you don't have root access or want to install into your home directory, use:
-   "easy_install --prefix=~ Cheetah"
+   "easy_install --prefix=~ Cheetah" (etc.)
+   
+   Note that lxml is not required for xpdeint to run. If it is installed, it is used to validate
+   the xmds script passed to xpdeint to check that there isn't any invalid syntax or typos that
+   xpdeint wouldn't have otherwise noticed. Also note that installing lxml is a bit tricky on OS X
+   because Apple continues to ship old versions of libxml2 with the system.
+   
+   Pygments and Cheetah are required installs for xpdeint.
 
 4. Install xpdeint into your python path by running (in the xpdeint/ directory):
    sudo ./setup.py develop
