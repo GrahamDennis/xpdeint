@@ -55,6 +55,8 @@ for (_half_step = false; ; _half_step = true)
   @# Loop over the moment groups setting the output field to the already-allocated halfstep field
   @for $momentGroup in $momentGroups
     @set $momentGroupOutputField = $momentGroup.outputField
+    // _active_${momentGroup.processedVector.id} = _${momentGroupOutputField.name}_sd;
+    // _mg0_output_processed_initialise();   // Slightly more general than this
     
     _active_${momentGroup.processedVector.id} = _${momentGroupOutputField.name}_halfstep;
   @end for
