@@ -2,10 +2,10 @@
 <simulation xmds-version="2">
   <testing>
     <arguments>--time_factor 2.0 --size 25.0</arguments>
-    <xsil_file name="diffusion_arguments.xsil" expected="diffusion_arguments_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="arguments.xsil" expected="arguments_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
   </testing>
   
-  <name>diffusion_arguments</name>
+  <name>arguments</name>
   <author>Andy Ferris</author>
   <description>
     Simple one-dimensional diffusion with a pointless second dimension thrown in for fun.

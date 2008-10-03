@@ -38,9 +38,11 @@ def pass_nan_test(array1, array2):
     return nanTestPassed
 
 def array_approx_equal(array1, array2, absTol, relTol):
-  """Return `True` if all of (`array1` - `array2`) <= `absTol` or (`array1` - `array2`) <= `relTol` * `array1`"""
+  """Return `True` if all of (`array1` - `array2`) <= `absTol` or (`array1` - `array2`) <= `relTol` * `array2`"""
   diff = array1-array2
-  return numpy.logical_or(numpy.abs(diff) <= relTol * array1, diff <= absTol).all()
+  # NaN values would fail this test. So we have to exclude them. But only exclude them if array2 (the expected results)
+  # have a NaN
+  return numpy.logical_or(numpy.logical_or(numpy.abs(diff) <= relTol * array2, diff <= absTol), numpy.isnan(array2)).all()
 
 
 def scriptTestingFunction(root, scriptName, tempPath, absPath, self):
@@ -213,7 +215,7 @@ def scriptTestingFunction(root, scriptName, tempPath, absPath, self):
         for v1, v2 in zip(o1.dependentVariables, o2.dependentVariables):
           self.assert_(v1['name'] == v2['name'])
           self.assert_(pass_nan_test(v1['array'], v2['array']),
-                       "Dependent variable '%s' in moment group %i of file '%s' had a NaN where the expected results didn't." % (v1['name'], mgNum+1, sourceFile))
+                       "Dependent variable '%s' in moment group %i of file '%s' had a NaN where the expected results didn't (or vice-versa)." % (v1['name'], mgNum+1, sourceFile))
           self.assert_(array_approx_equal(v1['array'], v2['array'], currentAbsoluteTolerance, currentRelativeTolerance),
                        "Dependent variable '%s' in moment group %i of file '%s' failed to pass tolerance criteria." % (v1['name'], mgNum+1, sourceFile))
   
