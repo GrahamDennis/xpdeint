@@ -31,11 +31,16 @@ class Usage(Exception):
   def __init__(self, msg):
     self.msg = msg
 
+def pass_nan_test(array1, array2):
+    """Return `True` if isNaN(`array1`) == isNaN(`array2`)"""
+    # NaN test. array2 is allowed to be NaN at an index if array1 is also NaN there.
+    nanTestPassed = numpy.equal(numpy.isnan(array1), numpy.isnan(array2)).all()
+    return nanTestPassed
 
 def array_approx_equal(array1, array2, absTol, relTol):
   """Return `True` if all of (`array1` - `array2`) <= `absTol` or (`array1` - `array2`) <= `relTol` * `array1`"""
   diff = array1-array2
-  return numpy.logical_or(numpy.logical_or(numpy.abs(diff) <= relTol * array1, diff <= absTol), numpy.isnan(diff)).all()
+  return numpy.logical_or(numpy.abs(diff) <= relTol * array1, diff <= absTol).all()
 
 
 def scriptTestingFunction(root, scriptName, tempPath, absPath, self):
@@ -145,7 +150,17 @@ def scriptTestingFunction(root, scriptName, tempPath, absPath, self):
     results = XSILFile(resultsFullPath)
     expectedResultsFullPath = os.path.join(os.path.split(absPath)[0], expectedResultsFile)
     if not os.path.exists(expectedResultsFullPath):
-      print >> sys.stderr, "Expected results file '%(expectedResultsFile)s' missing. Using current. " % locals(),
+      print >> sys.stderr, "Expected results file '%(expectedResultsFile)s' missing. Using current. " % locals()
+      
+      # If there are any NaN's in the results, issue a warning.
+      for mgNum, o in enumerate(results.xsilObjects):
+        for v in o.independentVariables:
+          if numpy.isnan(v['array']).any():
+            print >> sys.stderr, "Warning: Coordinate '%s' in moment group %i of file '%s' contains a NaN." % (v['name'], mgNum+1, sourceFile)
+        for v in o.dependentVariables:
+          if numpy.isnan(v['array']).any():
+            print >> sys.stderr, "Warning: Dependent variable '%s' in moment group %i of file '%s' contains a NaN." % (v['name'], mgNum+1, sourceFile)
+      
       resultsFileContents = file(resultsFullPath).read()
       
       for xsilObject in results.xsilObjects:
@@ -197,6 +212,8 @@ def scriptTestingFunction(root, scriptName, tempPath, absPath, self):
         
         for v1, v2 in zip(o1.dependentVariables, o2.dependentVariables):
           self.assert_(v1['name'] == v2['name'])
+          self.assert_(pass_nan_test(v1['array'], v2['array']),
+                       "Dependent variable '%s' in moment group %i of file '%s' had a NaN where the expected results didn't." % (v1['name'], mgNum+1, sourceFile))
           self.assert_(array_approx_equal(v1['array'], v2['array'], currentAbsoluteTolerance, currentRelativeTolerance),
                        "Dependent variable '%s' in moment group %i of file '%s' failed to pass tolerance criteria." % (v1['name'], mgNum+1, sourceFile))
   

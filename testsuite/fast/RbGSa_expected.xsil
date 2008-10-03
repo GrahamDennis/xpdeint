@@ -175,7 +175,7 @@
         potential
       </dependencies>
     </breakpoint>
-    <integrate algorithm="RK4" interval="15.0e-7" steps="3">
+    <integrate algorithm="RK4" interval="15.0e-7" steps="5">
       <samples>1 1 1 1</samples>
       <filters>
         <filter>
