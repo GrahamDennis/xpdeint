@@ -88,7 +88,7 @@ if ( ${name} > ((${globalLattice} - 1)/2 + 0.1) * ${stepSize})
   @# Check that our lattice has more points than the other lattice
   @assert $lattice >= dimRep.lattice
   @#
-${dimRep.loopIndex} + (signbit(${dimRep.name}) ? (${globalLattice} - ${dimRep.globalLattice}) : 0)@slurp
+${dimRep.loopIndex} + (signbit(${dimRep.name}) ? (${globalLattice} - ${dimRep.globalLattice} - (${localOffset} - ${dimRep.localOffset})) : 0)@slurp
   @#
 @end def
 
