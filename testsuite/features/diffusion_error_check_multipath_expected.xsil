@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="diffusion_error_check_multipath.xsil" expected="diffusion_error_check_multipath_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+  </testing>
+  
+  <name>diffusion_error_check_multipath</name>
+  <author>Graham Dennis</author>
+  <description>
+    Check that the bug that was fixed in r2135 doesn't recur. The standard error calculation
+    was broken when error checking was turned on and the multi-path driver was used.
+  </description>
+  
+  <driver name="multi-path" paths="3" />
+  
+  <features>
+    <benchmark />
+    <error_check />
+    <fftw version="3" plan="patient" />
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="y" lattice="128" domain="(-1.0, 1.0)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="main" initial_space="y" type="complex">
+    <components>
+      phi
+    </components>
+    <initialisation>
+      <![CDATA[
+        phi = exp(-y*y);
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <!-- This is an interesting simulation because using IP operators means there is NO error due to the algorithm (though there may be numerical error) -->
+    <integrate algorithm="ARK45" interval="10" steps="24" tolerance="1e-5">
+      <samples>6</samples>
+      <operators>
+        <operator kind="ip" constant="yes" fourier_space="ky">
+          <operator_names>L</operator_names>
+          <![CDATA[
+            L = -0.02*ky*ky;
+          ]]>
+        </operator>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+          dphi_dt = L[phi];
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  <output format="binary">
+    <group>
+      <sampling initial_sample="yes">
+        <!-- Any dimension not mentioned is assumed to be in real space and its middle element will be sampled -->
+        <!-- Note that dimensions can be in any order. Not that I can think of a reason why you would want to do that -->
+        <dimension name="y" lattice="128" fourier_space="y" />
+        <moments>dens</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          dens = mod2(phi);
+        ]]>
+      </sampling>
+    </group>
+  </output>
+
+<info>
+Script compiled with xpdeint version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+See http://www.xmds.org for more information.
+</info>
+
+<XSIL Name="moment_group_1">
+  <Param Name="n_independent">2</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>5</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t y mean_dens error_dens stderr_dens 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>7</Dim>
+    <Dim>128</Dim>
+    <Dim>5</Dim>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
+diffusion_error_check_multipath_expected_mg0.dat
+    </Stream>
+  </Array>
+</XSIL>
+</simulation>
