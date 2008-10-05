@@ -92,10 +92,10 @@ class _EXOperator(Operator):
             specialTargetsVector.evaluationCodeEntity = ParsedEntity(None, '')
             specialTargetsVector.integratingComponents = False
             
-            # We have to call preflight on the filter operator in case it has some preflight to do
-            # as it won't be called by parser2.py
+            # We have to call bindNamedVectors on the filter operator in case it has some binding to do
+            # as it won't be called by parser2.py, however, preflight() will be called because it will
+            # be a child of this element.
             specialTargetsVector.bindNamedVectors()
-            specialTargetsVector.preflight()
           
           if not target in specialTargets:
             specialTargets.append(target)

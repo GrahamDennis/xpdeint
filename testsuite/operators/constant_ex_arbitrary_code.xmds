@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="constant_ex_arbitrary_code.xsil" expected="derivative_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+  </testing>
+  
+  <name>constant_ex_arbitrary_code</name>
+  <author>Graham Dennis</author>
+  <description>
+    Simple one-dimensional diffusion using the EX operator acting on a general expression
+    forcing the construction of a 'special targets' computed vector.
+  </description>
+  
+  <features>
+    <benchmark />
+    <bing />
+    <fftw version="3" plan="estimate" />
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="y" lattice="128" domain="(-1.0, 1.0)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="main" initial_space="y" type="complex">
+    <components>
+      phi
+    </components>
+    <initialisation>
+      <![CDATA[
+        phi = exp(-y*y);
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="RK4" interval="10.0" steps="24000" tolerance="1e-5">
+      <samples>24</samples>
+      <operators>
+        <operator kind="ex" constant="yes">
+          <operator_names>L</operator_names>
+          <![CDATA[
+            L = -0.02*ky*ky;
+          ]]>
+        </operator>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+          dphi_dt = L[1.0*phi+0.0];
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  
+  <output format="binary">
+    <group>
+      <sampling initial_sample="yes">
+        <dimension name="y" lattice="128" fourier_space="y" />
+        <moments>dens</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          dens = mod2(phi);
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>
