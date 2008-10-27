@@ -1210,7 +1210,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       
       whereString = None
       if filtersElement.hasAttribute('where'):
-        whereString = filtersElement.getAttribute('where').strip()
+        whereString = filtersElement.getAttribute('where').strip().lower()
       if whereString in (None, 'step start'):
         integratorTemplate.stepStartOperatorContainers.append(filterOperatorContainer)
       elif whereString == 'step end':
