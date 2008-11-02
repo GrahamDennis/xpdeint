@@ -15,6 +15,7 @@ from xml.dom import minidom
 from xpdeint import RegularExpressionStrings
 
 from xpdeint._ScriptElement import _ScriptElement
+from xpdeint._UserLoopCodeBlock import _UserLoopCodeBlock
 
 from xpdeint.SimulationElement import SimulationElement as SimulationElementTemplate
 from xpdeint.Geometry.GeometryElement import GeometryElement as GeometryElementTemplate
@@ -854,14 +855,22 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       if initialisationElement.hasAttribute('kind'):
         kindString = initialisationElement.getAttribute('kind').lower()
       
+      def createInitialisationCodeBlock():
+        initialisationCodeBlock = _UserLoopCodeBlock(field = vectorTemplate.field, space = vectorTemplate.initialSpace, xmlElement = initialisationElement,
+                                                     parent = initialisationTemplate, **self.argumentsToTemplateConstructors)
+        initialisationCodeBlock.dependenciesEntity = self.parseDependencies(initialisationElement, optional=True)
+        initialisationCodeBlock.targetVector = vectorTemplate
+        return initialisationCodeBlock
+      
+      
       if kindString in (None, 'code'):
         initialisationTemplate = VectorInitialisationFromCDATATemplate(parent = vectorTemplate, xmlElement=initialisationElement,
                                                                        **self.argumentsToTemplateConstructors)
-        initialisationTemplate.dependenciesEntity = self.parseDependencies(initialisationElement, optional=True)
+        initialisationCodeBlock = createInitialisationCodeBlock()
+        initialisationTemplate.codeBlocks['initialisation'] = initialisationCodeBlock
         
-        if len(initialisationElement.cdataContents()) == 0:
+        if len(initialisationCodeBlock.codeString) == 0:
           raise ParserException(initialisationElement, "Empty initialisation code in 'code' initialisation element.")
-        initialisationTemplate.initialisationCodeEntity = ParsedEntity(initialisationElement, initialisationElement.cdataContents())
       elif kindString == 'zero':
         initialisationTemplate = vectorTemplate.initialiser
       elif kindString == 'xsil':
@@ -881,7 +890,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
         
         initialisationTemplate.momentGroupName = momentGroupName
         
-        initialisationTemplate.initialisationCodeEntity = ParsedEntity(initialisationElement, initialisationElement.cdataContents())
+        initialisationTemplate.codeBlocks['initialisation'] = createInitialisationCodeBlock()
         
         filename = filenameElement.innerText()
         if filename.isspace():
@@ -995,9 +1004,11 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       vectorTemplate.components.append(componentName)
     
     evaluationElement = computedVectorElement.getChildElementByTagName('evaluation')
-    vectorTemplate.evaluationCodeEntity = ParsedEntity(evaluationElement, evaluationElement.cdataContents())
-    
-    vectorTemplate.dependenciesEntity = self.parseDependencies(evaluationElement, optional=True)
+    evaluationCodeBlock = _UserLoopCodeBlock(field = None, space = 0, xmlElement = evaluationElement,
+                                             parent = vectorTemplate, **self.argumentsToTemplateConstructors)
+    evaluationCodeBlock.dependenciesEntity = self.parseDependencies(evaluationElement, optional=True)
+    evaluationCodeBlock.targetVector = vectorTemplate
+    vectorTemplate.codeBlocks['evaluation'] = evaluationCodeBlock
     
     self.parseFeatureAttributes(evaluationElement, vectorTemplate)
     
@@ -1239,9 +1250,10 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
                                             xmlElement = filterElement,
                                             **self.argumentsToTemplateConstructors)
     
-    filterTemplate.operatorDefinitionCodeEntity = ParsedEntity(filterElement, filterElement.cdataContents())
-    
-    filterTemplate.dependenciesEntity = self.parseDependencies(filterElement, optional=True)
+    codeBlock = _UserLoopCodeBlock(field = None, space = 0, xmlElement = filterElement,
+                                   parent = filterTemplate, **self.argumentsToTemplateConstructors)
+    codeBlock.dependenciesEntity = self.parseDependencies(filterElement, optional=True)
+    filterTemplate.codeBlocks['operatorDefinition'] = codeBlock
     
     return filterTemplate
   
@@ -1302,18 +1314,16 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     deltaAOperatorTemplate = DeltaAOperatorTemplate(parent = operatorContainer, xmlElement = operatorsElement,
                                                     **self.argumentsToTemplateConstructors)
     
-    deltaAOperatorTemplate.propagationCodeEntity = ParsedEntity(operatorsElement, operatorsElement.cdataContents())
+    operatorDefinitionCodeBlock = _UserLoopCodeBlock(field = operatorContainer.field, space = 0, xmlElement = operatorsElement,
+                                                     parent = operatorContainer, **self.argumentsToTemplateConstructors)
+    operatorDefinitionCodeBlock.dependenciesEntity = self.parseDependencies(operatorsElement, optional=True)
+    
+    deltaAOperatorTemplate.codeBlocks['operatorDefinition'] = operatorDefinitionCodeBlock
     
     self.parseFeatureAttributes(operatorsElement, deltaAOperatorTemplate)
     
-    deltaAOperatorTemplate.dependenciesEntity = self.parseDependencies(operatorsElement, optional=True)
-    
     integrationVectorsElement = operatorsElement.getChildElementByTagName('integration_vectors')
     integrationVectorsNames = RegularExpressionStrings.symbolsInString(integrationVectorsElement.innerText())
-    
-    if integrationVectorsElement.hasAttribute('fourier_space'):
-      deltaAOperatorTemplate.operatorSpace = operatorContainer.field.spaceFromString(integrationVectorsElement.getAttribute('fourier_space'),
-                                                                                     xmlElement = integrationVectorsElement)
     
     if not integrationVectorsNames:
       raise ParserException(integrationVectorsElement, "Element must be non-empty.")
@@ -1321,7 +1331,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     deltaAOperatorTemplate.integrationVectorsEntity = ParsedEntity(integrationVectorsElement, integrationVectorsNames)
     
     if integrationVectorsElement.hasAttribute('fourier_space'):
-      deltaAOperatorTemplate.operatorSpace = \
+      operatorDefinitionCodeBlock.operatorSpace = \
         deltaAOperatorTemplate.field.spaceFromString(integrationVectorsElement.getAttribute('fourier_space'))
   
   def parseOperatorElement(self, operatorElement, operatorContainer):
@@ -1377,9 +1387,11 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
                                              xmlElement = operatorElement,
                                              **self.argumentsToTemplateConstructors)
     
-    operatorTemplate.operatorDefinitionCodeEntity = ParsedEntity(operatorElement, operatorElement.cdataContents())
+    operatorDefinitionCodeBlock = _UserLoopCodeBlock(field = operatorContainer.field, xmlElement = operatorElement,
+                                                     parent = operatorTemplate, **self.argumentsToTemplateConstructors)
+    operatorDefinitionCodeBlock.dependenciesEntity = self.parseDependencies(operatorElement, optional=True)
     
-    operatorTemplate.dependenciesEntity = self.parseDependencies(operatorElement, optional=True)
+    operatorTemplate.codeBlocks['operatorDefinition'] = operatorDefinitionCodeBlock
     
     if parserMethod:
       parserMethod(operatorTemplate, operatorElement)
@@ -1387,10 +1399,14 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     return operatorTemplate
   
   def parseIPOperatorElement(self, operatorTemplate, operatorElement):
+    operatorDefinitionCodeBlock = operatorTemplate.primaryCodeBlock
+    
     if operatorElement.hasAttribute('fourier_space'):
-      operatorTemplate.operatorSpace = \
+      operatorDefinitionCodeBlock.space = \
         operatorTemplate.field.spaceFromString(operatorElement.getAttribute('fourier_space'),
                                                xmlElement = operatorElement)
+    else:
+      operatorDefinitionCodeBlock.space = operatorTemplate.field.spaceMask
     
     operatorNamesElement = operatorElement.getChildElementByTagName('operator_names')
     operatorNames = RegularExpressionStrings.symbolsInString(operatorNamesElement.innerText())
@@ -1422,6 +1438,8 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     operatorVectorTemplate.initialSpace = operatorTemplate.operatorSpace
     operatorVectorTemplate.needsInitialisation = False
     
+    operatorDefinitionCodeBlock.targetVector = operatorVectorTemplate
+    
     operatorContainer = operatorTemplate.parent
     integratorTemplate = operatorContainer.parent
     
@@ -1434,10 +1452,14 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     return operatorTemplate
   
   def parseEXOperatorElement(self, operatorTemplate, operatorElement):
+    operatorDefinitionCodeBlock = operatorTemplate.primaryCodeBlock
+    
     if operatorElement.hasAttribute('fourier_space'):
-      operatorTemplate.operatorSpace = \
+      operatorDefinitionCodeBlock.space = \
         operatorTemplate.field.spaceFromString(operatorElement.getAttribute('fourier_space'),
                                                xmlElement = operatorElement)
+    else:
+      operatorDefinitionCodeBlock.space = operatorTemplate.field.spaceMask
     
     operatorNamesElement = operatorElement.getChildElementByTagName('operator_names')
     
@@ -1472,7 +1494,8 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       operatorVectorTemplate.needsInitialisation = False
       operatorVectorTemplate.components = operatorNames[:]
       operatorTemplate.operatorVector = operatorVectorTemplate
-    
+      
+      operatorDefinitionCodeBlock.targetVector = operatorVectorTemplate
     
     vectorName = operatorTemplate.id + "_result"
     resultVector = VectorElementTemplate(name = vectorName, field = operatorTemplate.field,
@@ -1485,17 +1508,23 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     resultVector.components = resultVectorComponents
     operatorTemplate.resultVector = resultVector
     
+    if isinstance(operatorTemplate, NonConstantEXOperatorTemplate):
+      operatorDefinitionCodeBlock.targetVector = resultVector
+    
     return operatorTemplate
   
   
   def parseCrossPropagationOperatorElement(self, operatorTemplate, operatorElement):
+    operatorDefinitionCodeBlock = operatorTemplate.primaryCodeBlock
+    
+    operatorDefinitionCodeBlock.space = 0
+    
     if not operatorElement.hasAttribute('algorithm'):
       raise ParserException(operatorElement, "Missing 'algorithm' attribute.")
     
     algorithmString = operatorElement.getAttribute('algorithm').strip()
     
     crossIntegratorClass = None
-    
     algorithmSpecificOptionsDict = {}
     
     if algorithmString == 'RK4':
@@ -1504,7 +1533,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       crossIntegratorClass = Integrators.SI.SI
       if operatorElement.hasAttribute('iterations'):
         algorithmSpecificOptionsDict['iterations'] = RegularExpressionStrings.integerInString(operatorElement.getAttribute('iterations'))
-        if algorithmSpecificOptionsDict['iterations']<1:
+        if algorithmSpecificOptionsDict['iterations'] < 1:
           raise ParserException(operatorElement, "Iterations element must be 1 or greater (default 3).")
       
     else:
@@ -1560,11 +1589,6 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     # Set the step
     crossIntegratorTemplate.step = ''.join([operatorTemplate.propagationDirection, '_', fullField.name, '_d', propagationDimensionName])
     
-    
-    operatorTemplate.boundaryConditionDependenciesEntity = self.parseDependencies(boundaryConditionElement, optional=True)
-    
-    operatorTemplate.boundaryConditionCodeEntity = ParsedEntity(boundaryConditionElement, boundaryConditionElement.cdataContents())
-    
     integrationVectorsElement = operatorElement.getChildElementByTagName('integration_vectors')
     integrationVectorNames = RegularExpressionStrings.symbolsInString(integrationVectorsElement.innerText())
     operatorTemplate.integrationVectorsEntity = ParsedEntity(integrationVectorsElement, integrationVectorNames)
@@ -1577,6 +1601,13 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
                                                   parent = crossIntegratorTemplate,
                                                   **self.argumentsToTemplateConstructors)
     crossIntegratorTemplate.intraStepOperatorContainers.append(operatorContainer)
+    
+    boundaryConditionCodeBlock = _UserLoopCodeBlock(field = reducedField, space = 0, xmlElement = boundaryConditionElement,
+                                                    parent = operatorTemplate, **self.argumentsToTemplateConstructors)
+    boundaryConditionCodeBlock.dependenciesEntity = self.parseDependencies(boundaryConditionElement, optional=True)
+    
+    operatorTemplate.codeBlocks['boundaryCondition'] = boundaryConditionCodeBlock
+    
     
     # Now we can construct the delta a operator for the cross-propagation integrator
     # When we parse our operator elements (if we have any), the delta a operator will also be constructed
@@ -1614,10 +1645,10 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       index = filename.lower().rindex('.xsil')
       filename = filename[0:index]
     
-    outputTemplate = outputTemplateClass(parent = self.simulation, **self.argumentsToTemplateConstructors)
+    outputTemplate = outputTemplateClass(parent = self.simulation, xmlElement = outputElement,
+                                         **self.argumentsToTemplateConstructors)
     outputTemplate.precision = 'double'
     outputTemplate.filename = filename
-    outputTemplate.xmlElement = outputElement
     
     geometryTemplate = self.globalNameSpace['geometry']
     
@@ -1646,7 +1677,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
           momentGroupTemplate.requiresInitialSample = True
           sampleCount = 1
       
-      momentGroupTemplate.sampleSpace = 0
+      sampleSpace = 0
       samplingDimension = Dimension(name = self.globalNameSpace['globalPropagationDimension'],
                                     transverse = False,
                                     transform = self.globalNameSpace['transforms']['none'],
@@ -1694,8 +1725,8 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
         
         dimensionRepresentation = geometryDimension.inSpace(0)
         if fourierSpace:
-          momentGroupTemplate.sampleSpace |= geometryDimension.transformMask
-          dimensionRepresentation = geometryDimension.inSpace(momentGroupTemplate.sampleSpace)
+          sampleSpace |= geometryDimension.transformMask
+          dimensionRepresentation = geometryDimension.inSpace(sampleSpace)
         
         lattice = dimensionRepresentation.lattice
         
@@ -1709,7 +1740,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
                     "Unable to interpret '%(latticeString)s' as an integer" % locals())
           
           lattice = int(latticeString)
-          geometryLattice = int(geometryDimension.inSpace(momentGroupTemplate.sampleSpace).lattice)
+          geometryLattice = int(geometryDimension.inSpace(sampleSpace).lattice)
           
           if lattice > geometryLattice:
             raise ParserException(dimensionElement, 
@@ -1746,7 +1777,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       
       for field in [samplingFieldTemplate, outputFieldTemplate]:
         field.sortDimensions()
-        space = momentGroupTemplate.sampleSpace
+        space = sampleSpace
         for dim in field.dimensions:
           if not dim.inSpace(space).lattice == geometryTemplate.dimensionWithName(dim.name).inSpace(space).lattice:
             dim.invalidateRepresentationsOtherThan(dim.inSpace(space))
@@ -1755,7 +1786,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       rawVectorTemplate = VectorElementTemplate(name = 'raw', field = momentGroupTemplate.outputField,
                                                 **self.argumentsToTemplateConstructors)
       rawVectorTemplate.type = 'double'
-      rawVectorTemplate.initialSpace = momentGroupTemplate.sampleSpace
+      rawVectorTemplate.initialSpace = sampleSpace
       momentGroupTemplate.rawVector = rawVectorTemplate
       
       momentsElement = samplingElement.getChildElementByTagName('moments')
@@ -1773,14 +1804,17 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
         ## We don't add the momentName to the symbol list because they can be used by other moment groups safely
         rawVectorTemplate.components.append(momentName)
       
-      momentGroupTemplate.dependenciesEntity = self.parseDependencies(samplingElement)
+      samplingCodeBlock = _UserLoopCodeBlock(field = samplingFieldTemplate, space = sampleSpace, xmlElement = samplingElement,
+                                             parent = momentGroupTemplate, **self.argumentsToTemplateConstructors)
+      samplingCodeBlock.dependenciesEntity = self.parseDependencies(samplingElement)
+      # The raw vector will be needed during looping
+      samplingCodeBlock.targetVector = rawVectorTemplate
+      momentGroupTemplate.codeBlocks['sampling'] = samplingCodeBlock
       
-      samplingCodeEntity = ParsedEntity(samplingElement, samplingElement.cdataContents())
-      if not samplingCodeEntity.value:
+      if not samplingCodeBlock.codeString:
         raise ParserException(samplingElement, "The CDATA section for the sampling code must not be empty.")
       
-      momentGroupTemplate.samplingCodeEntity = samplingCodeEntity
-      momentGroupTemplate.outputSpace = momentGroupTemplate.sampleSpace & momentGroupTemplate.outputField.spaceMask
+      momentGroupTemplate.outputSpace = sampleSpace & momentGroupTemplate.outputField.spaceMask
       
       operatorContainer = self.parseFilterElements(samplingElement, parent=momentGroupTemplate, optional=True)
       if operatorContainer:
@@ -1791,9 +1825,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
         operatorContainer = OperatorContainerTemplate(field = samplingFieldTemplate,
                                                       # Point the proxies for the shared code etc at
                                                       # the moment group object's sampling code, the sampling space, etc.
-                                                      sharedCodeEntityKeyPath = 'parent.samplingCodeEntity',
-                                                      sharedCodeSpaceKeyPath = 'parent.sampleSpace',
-                                                      dependenciesKeyPath = 'parent.dependencies',
+                                                      sharedCodeBlockKeyPath = 'parent.codeBlocks.sampling',
                                                       parent = momentGroupTemplate,
                                                       **self.argumentsToTemplateConstructors)
         

@@ -8,7 +8,8 @@ Copyright (c) 2007-2008 __MyCompanyName__. All rights reserved.
 *@
 @extends xpdeint.Operators._IPOperator
 
-@def description: IP transverse derivative operator for field $field.name
+@from xpdeint.CallOnceGuards import callOncePerInstanceGuard
+
 @attr $calculateOperatorFieldFunctionArguments = [('double', '_step'), ('int', '_exponent'), ('int', '_arrayIndex')]
 
 @def globals
@@ -21,9 +22,8 @@ int _${id}_exponent_offset_map[${len($integrator.ipPropagationStepFractions)}];
   @#
 @end def
 
+@@callOncePerInstanceGuard
 @def initialise
-  @#
-${allocate}@slurp
   @#
   @if len($integrator.ipPropagationStepFractions) > 1
 memset(_${id}_exponent_offset_map, 0, sizeof(_${id}_exponent_offset_map));
@@ -49,12 +49,12 @@ const double _propagationStepFraction = ${integrator.ipPropagationStepFractions[
   @#
 @end def
 
-@def insideCalculateOperatorFieldLoops
+@def insideCalculateOperatorFieldLoops($codeString)
   @#
   @# We expect the integrator to have defined '_step'
   @#
 // ************** Operator code *****************
-${insertUserCodeFromEntity($operatorDefinitionCodeEntity)}@slurp
+${codeString}@slurp
 // **********************************************
 
   @if $operatorVector.type == 'complex'

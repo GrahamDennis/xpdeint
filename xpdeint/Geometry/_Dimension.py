@@ -8,7 +8,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
 from xpdeint.ScriptElement import ScriptElement
-from xpdeint.Utilities import lazyproperty
+from xpdeint.Utilities import lazy_property
 import types
 
 class _Dimension(ScriptElement):
@@ -45,25 +45,27 @@ class _Dimension(ScriptElement):
   
   @property
   def children(self):
-    # Only return non-None representations
-    return [rep for rep in self.representations if rep]
+    children = super(_Dimension, self).children
+    # Only add non-None representations
+    children.extend([rep for rep in self.representations if rep])
+    return children
   
-  @lazyproperty
+  @lazy_property
   def prefix(self):
     return self.parent.prefix
   
-  @lazyproperty
+  @lazy_property
   def isTransformable(self):
     return len(self.representations) >= 2
   
-  @lazyproperty
+  @lazy_property
   def transformMask(self):
     if self._transformMask == None:
       geometry = self.getVar('geometry')
       self._transformMask = 1 << geometry.indexOfDimension(self)
     return self._transformMask
   
-  @lazyproperty
+  @lazy_property
   def mappingRules(self):
     if not self.parent:
       return self.transform.mappingRulesForDimensionInField(self, None)
@@ -106,7 +108,7 @@ class _Dimension(ScriptElement):
         rep.remove()
         self.representations[idx] = None
   
-  @lazyproperty
+  @lazy_property
   def isDistributed(self):
     return any([rep.hasLocalOffset for rep in self.representations if rep])
   

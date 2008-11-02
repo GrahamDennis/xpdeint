@@ -14,26 +14,3 @@ ${crossPropagationIntegrator.functions['segment'].call(parentFunction=function)}
   @#
 @end def
 
-@def initialise
-  @#
-  @super
-  @#
-${crossPropagationIntegrator.initialise}@slurp
-  @#
-@end def
-
-@def finalise
-  @#
-  @super
-  @#
-${crossPropagationIntegrator.finalise}@slurp
-  @#
-@end def
-
-@def boundaryConditionCode
-  @#
-// ********** Boundary condition code ***********
-${insertUserCodeFromEntity($boundaryConditionCodeEntity)}@slurp
-// **********************************************
-  @#
-@end def

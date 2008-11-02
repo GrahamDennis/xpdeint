@@ -13,7 +13,7 @@ from xpdeint.ScriptElement import ScriptElement
 from xpdeint.ParserException import ParserException
 
 from xpdeint.Function import Function
-from xpdeint.Utilities import lazyproperty
+from xpdeint.Utilities import lazy_property
 
 class _MomentGroupElement (ScriptElement):
   def __init__(self, number, *args, **KWs):
@@ -48,19 +48,18 @@ class _MomentGroupElement (ScriptElement):
   
   @property
   def children(self):
-    result = set()
-    result.update(self.computedVectors)
-    result.update(self.operatorContainers)
-    return result
+    children = super(_MomentGroupElement, self).children
+    children.extend(self.computedVectors)
+    children.extend(self.operatorContainers)
+    return children
   
   # Do we actually need to allocate the moment group vector?
   # We may not need to allocate the raw vector if there is no
   # processing of the raw vector to be done before it is written.
-  @lazyproperty
+  @lazy_property
   def rawVectorNeedsToBeAllocated(self):
     # If we have processing code, then we definitely need a raw vector
-    if self.hasattr('processingCode') and self.processingCode:
-      return True
+    if self.hasattr('processingCode') and self.processingCode: return True
     
     dict = {'returnValue': False, 'MomentGroup': self}
     featureOrdering = ['Driver']
@@ -76,10 +75,6 @@ class _MomentGroupElement (ScriptElement):
   def bindNamedVectors(self):
     super(_MomentGroupElement, self).bindNamedVectors()
     
-    for dependency in self.dependencies:
-      if self.hasPostProcessing and dependency.type == 'complex':
-        self.rawVector.type = 'complex'
-      
     if not self.rawVectorNeedsToBeAllocated:
       self.outputField.managedVectors.remove(self.processedVector)
       self.processedVector.remove()
@@ -88,6 +83,9 @@ class _MomentGroupElement (ScriptElement):
   
   def preflight(self):
     super(_MomentGroupElement, self).preflight()
+    for dependency in self.codeBlocks['sampling'].dependencies:
+      if self.hasPostProcessing and dependency.type == 'complex':
+        self.rawVector.type = 'complex'
     
     # Throw out the propagation dimension if it only contains a single sample
     if self.outputField.hasDimensionName(self.propagationDimension):

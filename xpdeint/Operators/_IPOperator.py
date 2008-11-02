@@ -11,13 +11,13 @@ from xpdeint.Operators.Operator import Operator
 from xpdeint.ParserException import ParserException, parserWarning
 
 from xpdeint import CodeLexer
-from xpdeint.Utilities import lazyproperty
+from xpdeint.Utilities import lazy_property
 
 class _IPOperator(Operator):
   evaluateOperatorFunctionArguments = [('int', '_exponent')]
   operatorKind = Operator.IPOperatorKind
   
-  @lazyproperty
+  @lazy_property
   def integrator(self):
     # Our parent is an OperatorContainer, and its parent is the Integrator
     return self.parent.parent
@@ -28,7 +28,8 @@ class _IPOperator(Operator):
     for operatorName in self.operatorNames:
       self.operatorComponents[operatorName] = {}
     
-    operatorTargetPairs = CodeLexer.targetComponentsForOperatorsInString(self.operatorNames, self.parent.sharedCodeEntity)
+    sharedCodeBlock = self.parent.sharedCodeBlock
+    operatorTargetPairs = CodeLexer.targetComponentsForOperatorsInString(self.operatorNames, sharedCodeBlock)
     
     operatorNamesUsed = set()
     operatorNames = set(self.operatorNames)
@@ -61,13 +62,13 @@ class _IPOperator(Operator):
         componentName = target
       else:
         if indexAccessedVariables == None:
-          indexAccessedVariables = CodeLexer.integerValuedDimensionsForVectors(integrationVectors, self.parent.sharedCodeEntity)
+          indexAccessedVariables = CodeLexer.integerValuedDimensionsForVectors(integrationVectors, sharedCodeBlock)
         
         try:
           # This will extract the componentName corresponding to the indexed variable in the target
           # or it will fail because it isn't of that form.
-          componentName, resultDict = [(l[0], l[2]) for l in indexAccessedVariables if l[3] == codeSlice][0]
-        except:
+          componentName, resultDict = [(l[0], l[2]) for l in indexAccessedVariables if sharedCodeBlock.codeString[l[3]] == target][0]
+        except Exception:
           # Target didn't match something of the form 'phi[j, k][m+3,n-9]'
           raise ParserException(self.xmlElement,
                                 "IP operators can only act on components of integration vectors.\n"
@@ -116,10 +117,10 @@ class _IPOperator(Operator):
       # Obviously the user could hide this from us, but if we can check the most
       # common case that frequently goes wrong, then we should.
       
-      CodeLexer.performIPOperatorSanityCheck(componentName, self.propagationDimension, codeSlice, self.parent.sharedCodeEntity)
+      CodeLexer.performIPOperatorSanityCheck(componentName, self.propagationDimension, codeSlice, sharedCodeBlock)
       
       # Replace the L[x] string with 0.0
-      self.parent.sharedCode = self.parent.sharedCode[:codeSlice.start] + '0.0' + self.parent.sharedCode[codeSlice.stop:]
+      sharedCodeBlock.codeString = sharedCodeBlock.codeString[:codeSlice.start] + '0.0' + sharedCodeBlock.codeString[codeSlice.stop:]
     
     
     # If any operator names weren't used in the code, issue a warning

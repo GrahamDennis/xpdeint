@@ -12,11 +12,17 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 @attr $operatorKind = _EXOperator.OtherOperatorKind
 @attr $calculateOperatorFieldFunctionArguments = []
 
-@def insideCalculateOperatorFieldLoops
+@def insideCalculateOperatorFieldLoops($codeString)
   @#
 // ************** Operator code *****************
-${insertUserCodeFromEntity($operatorDefinitionCodeEntity)}@slurp
+${codeString}@slurp
 // **********************************************
+  @#
+@end def
+
+@def evaluateOperatorLoop($setOfVectorsToLoopOver)
+  @#
+${loopOverVectorsInSpaceWithInnerContent(setOfVectorsToLoopOver, $operatorSpace, $insideEvaluateOperatorLoops)}@slurp
   @#
 @end def
 

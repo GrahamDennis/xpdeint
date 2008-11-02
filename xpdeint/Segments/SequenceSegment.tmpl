@@ -17,6 +17,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
   @set $extraIndent = 0
   @if $localCycles > 1
 // Initialise child segments
+${allocate}@slurp
 ${initialise}@slurp
 for (unsigned long _cycle = 0; _cycle < ${localCycles}; _cycle++) {
     @set $extraIndent = 2
@@ -29,10 +30,10 @@ ${callChildSegments(function), extraIndent=extraIndent}@slurp
     @set $extraIndent = 0
 // Finalise child segments
 ${finalise}@slurp
+${free}@slurp
   @end if
   @#
 @end def
-
 
 @def callChildSegments($function)
   @#
@@ -42,9 +43,32 @@ ${segment.functions['segment'].call(parentFunction=function)}
   @#
 @end def
 
+@@callOncePerInstanceGuard
+@def allocate
+  @#
+  @super
+  @#
+  @for $segment in $childSegments
+$segment.allocate@slurp
+  @end for
+  @#
+@end def
+
+@@callOncePerInstanceGuard
+@def free
+  @#
+  @super
+  @#
+  @for $segment in $childSegments
+$segment.free@slurp
+  @end for
+  @#
+@end def
 
 @@callOncePerInstanceGuard
 @def initialise
+  @#
+  @super
   @#
   @for $segment in $childSegments
 $segment.initialise@slurp
@@ -55,8 +79,11 @@ $segment.initialise@slurp
 @@callOncePerInstanceGuard
 @def finalise
   @#
+  @super
+  @#
   @for $segment in $childSegments
 $segment.finalise@slurp
   @end for
   @#
 @end def
+

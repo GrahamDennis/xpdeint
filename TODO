@@ -125,10 +125,12 @@
 
 * Breakpoint on signal? (e.g. USR1)
 
+* Make CodeLexer's IPOperatorSanityCheck check for multiplying IP operators by things or dividing (in the simplest possible way).
+  i.e. check for 0.5 * L[phi] and L[phi]/3.0 etc, but not ((L[phi]) + 6.0) / 3.0;
 
 Things to be done by AIP:
 * Windows compatibility
 * Remove dependence on libxmds for XSIL import (port xsil2graphics too?)
-* 'D' operators (for ease of use by new users)
+* 'D_' operators (for ease of use by new users)
 Lower priority, but still nice:
 * General matrix transforms lending credibility to calling xpdeint a general spectral method code generator.

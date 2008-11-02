@@ -8,7 +8,6 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *@
 @extends xpdeint.Operators._IPOperator
 
-@def description: IP transverse derivative operator for field $field.name
 @attr $calculateOperatorFieldFunctionArguments = []
 
 @def calculateOperatorFieldFunctionContents($function)
@@ -20,12 +19,12 @@ ${integrator.createStepVariable}@slurp
 @end def
 
 
-@def insideCalculateOperatorFieldLoops
+@def insideCalculateOperatorFieldLoops($codeString)
   @#
   @# We expect the integrator to have defined '_step'
   @#
 // ************** Operator code *****************
-${insertUserCodeFromEntity($operatorDefinitionCodeEntity)}@slurp
+${codeString}@slurp
 // **********************************************
   @if $operatorVector.type == 'complex'
     @set $expFunction = 'c_exp'

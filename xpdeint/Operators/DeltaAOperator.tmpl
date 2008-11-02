@@ -11,11 +11,12 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 @def description: Delta A propagation operator for field $field.name
 
 @def copyDeltaAFunctionContents($function)
-  @set $dimensionsWithIndexOverrides = [dim for dim in $loopingField.dimensions if not $deltaAField.hasDimension(dim)]
+  @set $loopingField = $primaryCodeBlock.field
+  @set $dimensionsWithIndexOverrides = [dim for dim in loopingField.dimensions if not $deltaAField.hasDimension(dim)]
   @set $setOfVectorsToLoopOver = set($deltaAField.vectors)
   @silent setOfVectorsToLoopOver.update($vectorsForcingReordering)
-  @set $indexOverrides = dict([(dim.name, {$loopingField: c'_${dim.inSpace($operatorSpace).name}_index'}) for dim in $dimensionsWithIndexOverrides])
-${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $operatorSpace, $setOfVectorsToLoopOver, $insideCopyDeltaALoops, $indexOverrides)}@slurp
+  @set $indexOverrides = dict([(dim.name, {loopingField: c'_${dim.inSpace($operatorSpace).name}_index'}) for dim in $dimensionsWithIndexOverrides])
+${loopOverFieldInSpaceWithVectorsAndInnerContent(loopingField, $operatorSpace, $setOfVectorsToLoopOver, $insideCopyDeltaALoops, $indexOverrides)}@slurp
   @#
 @end def
 
@@ -38,14 +39,14 @@ d${componentName}_d${propagationDimension} = 0.0;
   @#
 @end def
 
-@def insideEvaluateOperatorLoops
+@def insideEvaluateOperatorLoops($codeString)
   @#
   @# The Operator class will have defined for us all of the dVariableName_dPropagationDimension variables.
   @# Note that we assume that all of the integration vectors have an operotor component defined for them.
 #define d${propagationDimension} _step
 
 // ************* Propagation code ***************
-${insertUserCodeFromEntity($propagationCodeEntity)}@slurp
+${codeString}@slurp
 // **********************************************
 
 #undef d${propagationDimension}
@@ -64,21 +65,3 @@ $operatorComponentName * _step;
   @#
 @end def
 
-@def evaluateOperatorLoop($setOfVectorsToLoopOver)
-  @#
-  @# If we have a deltaAField, then we know we need to add in additional code to copy the delta a operators
-  @# back into the original field.
-  @set $postDimensionLoopClosingCode = {}
-  @#
-  @if $deltaAField
-    @set $arguments = dict([(c'_${dim.inSpace($operatorSpace).name}_index', dim.inSpace($operatorSpace).loopIndex) \
-                                for dim in $loopingField.dimensions if not $deltaAField.hasDimension(dim)])
-    @set $functionCall = $functions['copyDeltaA'].call(parentFunction=$functions['evaluate'], arguments = arguments)
-    @silent postDimensionLoopClosingCode[$deltaAField.dimensions[0].name] = functionCall + '\n'
-  @end if
-  @#
-${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $operatorSpace, $setOfVectorsToLoopOver, $insideEvaluateOperatorLoops,
-                                                 postDimensionLoopClosingCode=$postDimensionLoopClosingCode,
-                                                 loopingOrder=$loopingOrder)}@slurp
-  @#
-@end def

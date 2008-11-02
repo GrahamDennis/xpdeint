@@ -25,21 +25,3 @@ ${operatorContainer.evaluateOperators(parentFunction = function)}@slurp
   @#
 @end def
 
-@@callOncePerInstanceGuard
-@def initialise
-  @# Let the operators allocate and initialise any arrays they need
-  @for $operatorContainer in $operatorContainers
-$operatorContainer.initialise@slurp
-  @end for
-  @#
-@end def
-
-@@callOncePerInstanceGuard
-@def finalise
-  @#
-  @# Let the operators do their own clean up
-  @for $operatorContainer in $operatorContainers
-$operatorContainer.finalise@slurp
-  @end for
-  @#
-@end def

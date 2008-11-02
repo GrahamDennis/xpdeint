@@ -17,7 +17,7 @@ from xpdeint.ParsedEntity import ParsedEntity
 
 import re
 from xpdeint import CodeLexer
-from xpdeint.Utilities import lazyproperty
+from xpdeint.Utilities import lazy_property
 
 class _ScriptElement (Template):
   class LoopingOrder(object):
@@ -80,16 +80,17 @@ class _ScriptElement (Template):
       self.dependencies = set()
     
     assert 'parent' in localKWs
-    if 'parent' in localKWs: self.parent = localKWs['parent']
+    self.parent = localKWs['parent']
+    
     if self.parent and self.parent == self.simulation:
-      self.simulation.children.append(self)
+      self.simulation._children.append(self)
     self.xmlElement = localKWs.get('xmlElement', None)
     self.dependenciesEntity = None
     self.functions = {}
+    self.codeBlocks = {}
     self._haveBeenRemoved = False
     
-    if not hasattr(type(self), 'children'):
-      self.children = []
+    self._children = []
     
     if hasattr(type(self), 'globalNameSpaceName'):
       globalNameSpace = KWs['searchList'][0]
@@ -98,7 +99,7 @@ class _ScriptElement (Template):
     # Create the entry in the callOnceGuards
     _ScriptElement._callOncePerInstanceGuards[self] = set()
   
-  @lazyproperty
+  @lazy_property
   def id(self):
     """
     Return a string that should uniquely identify this object.
@@ -111,7 +112,13 @@ class _ScriptElement (Template):
     else:
       return '_'.join([self.parent.id, self.name])
   
-  @lazyproperty
+  @property
+  def children(self):
+    result = self._children[:]
+    result.extend(self.codeBlocks.values())
+    return result
+  
+  @lazy_property
   def noiseField(self):
     """
     The field that noises should be evaluated in for this object.
@@ -119,7 +126,7 @@ class _ScriptElement (Template):
     """
     return self.field
   
-  @lazyproperty
+  @lazy_property
   def propagationDimension(self):
     """
     Return the name of the current propagation dimension for this template. Note that this
@@ -133,7 +140,7 @@ class _ScriptElement (Template):
     
     return self.getVar("globalPropagationDimension")
   
-  @lazyproperty
+  @lazy_property
   def propagationDirection(self):
     """
     Return a string representing the sign of the direction of propagation. This string will
@@ -162,40 +169,6 @@ class _ScriptElement (Template):
       return False
     else:
       return True
-  
-  def valueForKeyPath(self, keyPath):
-    """
-    Return the value for a dotted-name lookup of `keyPath` antichored at `self`.
-    
-    This is similar to the KVC methods in Objective-C, however its use is appropriate in Python.
-    Evaluating the `keyPath` 'foo.bar.baz' returns the object that would be returned by evaluating
-    the string (in Python) self.foo.bar.baz
-    """
-    attrNames = keyPath.split('.')
-    try:
-      currentObject = self
-      for attrName in attrNames:
-        currentObject = getattr(currentObject, attrName)
-    except Exception, err:
-      selfRep = repr(self)
-      print >> sys.stderr, "Hit exception trying to get keyPath '%(keyPath)s' on object %(selfRep)s." % locals()
-      raise
-    return currentObject
-  
-  def setValueForKeyPath(self, value, keyPath):
-    """Set the value of the result of the dotted-name lookup of `keyPath` anchored at `self` to `value`."""
-    attrNames = keyPath.split('.')
-    lastAttrName = attrNames.pop()
-    currentObject = self
-    try:
-      for attrName in attrNames:
-        currentObject = getattr(currentObject, attrName)
-      setattr(currentObject, lastAttrName, value)
-    except Exception, err:
-      selfRep = repr(self)
-      print >> sys.stderr, "Hit exception trying to set keyPath '%(keyPath)s' on object %(selfRep)s." % locals()
-      raise
-    
   
   # Default description of the template
   def description(self):
@@ -240,6 +213,12 @@ class _ScriptElement (Template):
   
   def static_functionImplementations(self):
     pass
+  
+  def allocate(self):   return self.implementationsForChildren('allocate')
+  def free(self):       return self.implementationsForChildren('free')
+  
+  def initialise(self): return self.implementationsForChildren('initialise')
+  def finalise(self):   return self.implementationsForChildren('finalise')
   
   # Insert code for a list of features by calling a named function
   def insertCodeForFeatures(self, functionName, featureList, dict = None, reverse = False):
@@ -347,13 +326,12 @@ class _ScriptElement (Template):
           blankLineSeparator = '\n'
           result.append(functionOutput)
     
-    if self.hasattr('children'):
-      for child in self.children:
-        childFunctionOutput = child.implementationsForFunctionName(functionName, *args, **KWs)
-        if childFunctionOutput and not childFunctionOutput.isspace():
-          result.append(blankLineSeparator)
-          blankLineSeparator = '\n'
-          result.append(childFunctionOutput)
+    for child in self.children:
+      childFunctionOutput = child.implementationsForFunctionName(functionName, *args, **KWs)
+      if childFunctionOutput and not childFunctionOutput.isspace():
+        result.append(blankLineSeparator)
+        blankLineSeparator = '\n'
+        result.append(childFunctionOutput)
     
     return ''.join(result)
   
@@ -382,6 +360,10 @@ class _ScriptElement (Template):
     """
     if self.dependenciesEntity:
       self.dependencies.update(self.vectorsFromEntity(self.dependenciesEntity))
+    
+    for codeBlock in self.codeBlocks.itervalues():
+      # Warning: This means that codeBlocks will have bindNamedVectors() called twice.
+      codeBlock.bindNamedVectors()
     
   
   def preflight(self):
@@ -442,7 +424,7 @@ class _ScriptElement (Template):
         if not vector.isTransformableTo(space):
           raise ParserException(self.xmlElement,
                   "Cannot satisfy dependence on vector '%s' because it cannot "
-                  "be transformed to the appropriate space." % vector.name)
+                  "be transformed to the appropriate space (%i). The vector's initial space is %i." % (vector.name, space, vector.initialSpace))
       if vector.needsTransforms:
         result.extend([vector.functions['goSpace'].call(_newSpace=space), '\n'])
       # Add space $space to the set of spaces in which this vector is needed
@@ -467,58 +449,6 @@ class _ScriptElement (Template):
         child.remove()
     
     self._haveBeenRemoved = True
-  
-  def fixupComponentsWithIntegerValuedDimensions(self, vectors, code):
-    """
-    In user code, the user may refer to parts of a vector nonlocally in integer-valued dimensions.
-    This code translates variables accessed with the ``phi[j-3, k+5, l/2][p*p, q, r]`` notation to a form
-    that can be used in the C++ source file. The form currently used is ``_phi(j-3, k+5, l/2, p*p, q, r)``
-    and this is defined as a macro by the appropriate `ScriptElement` looping function.
-    
-    This function makes an optimisation where if all integer-valued dimensions are accessed locally,
-    the ``phi[j, k, l][p, q, r]`` notation is replaced with the string ``phi`` which is a faster
-    way of accessing the local value than through using the ``_phi(...)`` macro.
-    """
-    if self.getVar('geometry').integerValuedDimensions and vectors:
-      fakeCodeEntity = ParsedEntity(self.xmlElement, code)
-      fakeCodeEntity.isFake = True
-      for componentName, field, integerDimDict, codeSlice in reversed(CodeLexer.integerValuedDimensionsForVectors(vectors, fakeCodeEntity)):
-        # We know that integerDimDict is non-empty
-        
-        integerValuedDimensions = field.integerValuedDimensions
-        
-        integerValuedDimensionNames = []
-        for dimList in integerValuedDimensions:
-          integerValuedDimensionNames.extend([dim.name for dim in dimList])
-        
-        # We can do an optimisation here, components accessed with the 'normal' pattern
-        # can be stripped of the integer-valued dimension specifiers. i.e.
-        # phi[j, k] can become just 'phi' if the first integer-valued dimension is 'j' and
-        # the second is 'k'.
-        
-        canOptimiseIntegerValuedDimensions = all([integerDimDict[dimName][0] == dimName for dimName in integerValuedDimensionNames])
-        
-        if canOptimiseIntegerValuedDimensions:
-          replacementString = componentName
-        else:
-          # It would be illegal to try and access any distributed dimensions nonlocally, so we need to check for this.
-          for dim in field.dimensions:
-            simulationDriver = self.getVar('features')['Driver']
-            if dim.name in simulationDriver.distributedDimensionNames and dim.name in integerValuedDimensionNames:
-              if not integerDimDict[dim.name][0] == dim.name:
-                dimName = dim.name
-                raise ParserException(self.xmlElement, "It is illegal to access the dimension '%(dimName)s' nonlocally because it is being distributed with MPI.\n"
-                                                       "Try not using MPI or changing the order of your dimensions." % locals())
-          
-          argumentsString = ', '.join([integerDimDict[dimName][0] for dimName in integerValuedDimensionNames])
-          
-          replacementString = '_%(componentName)s(%(argumentsString)s)' % locals()
-        
-        # Create a regular expression to replace the phi[j] string with the appropriate string
-        code = code[:codeSlice.start] + replacementString + code[codeSlice.stop:]
-    
-    return code
-  
   
   def templateObjectFromStringWithTemplateVariables(self, templateString, templateVars):
     """
@@ -571,8 +501,8 @@ class _ScriptElement (Template):
           startIndex = stack.index(v)
           conflictList = stack[startIndex:]
           conflictList.append(v)
-          raise ParserException(self, "Cannot construct ordering for computed vector dependencies.\n"
-                                      "The vectors causing the conflict are: %s." % ' --> '.join([v.name for v in conflictList]))
+          raise ParserException(self.xmlElement, "Cannot construct ordering for computed vector dependencies.\n"
+                                                 "The vectors causing the conflict are: %s." % ' --> '.join([v.name for v in conflictList]))
         
         # v is not on the stack, so we are safe
         # Put v on the stack

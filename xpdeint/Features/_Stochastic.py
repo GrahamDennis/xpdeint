@@ -22,7 +22,9 @@ from xpdeint.ParserException import ParserException
 class _Stochastic (_Feature):
   @property
   def children(self):
-    return self.noises
+    children = super(_Stochastic, self).children
+    children.extend(self.noises)
+    return children
   
   def integratorNeedsNoises(self, integrator):
     for deltaAOperator in [oc.deltaAOperator for oc in integrator.operatorContainers if oc.deltaAOperator]:
@@ -60,7 +62,7 @@ class _Stochastic (_Feature):
     return self.implementationsForChildren('xsilOutputInfo', dict)
   
   def preflight(self):
-    super(_Feature, self).preflight()
+    super(_Stochastic, self).preflight()
     
     # We need to iterate over everything that could possibly need noises
     # The best way to do that is to have the ability to iterate over everything
@@ -123,7 +125,10 @@ class _Stochastic (_Feature):
     for o in objectsThatMightUseNoises:
       # Add to the dependencies for this object the noise vectors corresponding to the noises
       # that this object wants to use
-      o.dependencies.update([noise.noiseVectorForField(o.noiseField) for noise in o.noises])
+      noiseVectors = [noise.noiseVectorForField(o.noiseField) for noise in o.noises]
+      o.dependencies.update(noiseVectors)
+      # FIXME: Dodgy hack. Fortunately, this won't be needed once noise vectors are implemented.
+      for codeBlock in o.codeBlocks.itervalues(): codeBlock.dependencies.update(noiseVectors)
     
     
     # For each adaptive step integrator, we need to make sure that the noises being used are
@@ -152,6 +157,5 @@ class _Stochastic (_Feature):
       for noiseVector in noiseVectorsNeedingAlias:
         noiseVector.aliases.add('_%s2' % noiseVector.id)
         self.noiseAliases.append(noiseVector)
-    
     
   

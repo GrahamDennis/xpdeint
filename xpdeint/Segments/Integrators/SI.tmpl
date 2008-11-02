@@ -64,18 +64,6 @@ ${propagationDimension} += 0.5*_step;
   @#
   @# Insert code to interpolate the dependency vectors onto the half-step point.
   @# 
-  @if $propagationDirection == '+'
-    @set $indexOverrideValue = '_istep'
-  @else
-    @set $integrationDimensionNumber = $parent.field.indexOfDimensionName($propagationDimension)
-    @set $indexOverrideValue = c'(_${parent.field.name}_lattice${integrationDimensionNumber} - _istep - 1)'
-  @end if
-  @#
-  @# Create the index overrides dictionary. We only need to override the propagation dimension.
-  @set $indexOverrides = {$propagationDimension: dict([(v.field, indexOverrideValue) for v in $parent.dependencies])}
-  @#
-  @set $setOfVectorsToLoopOver = $dependencies.copy()
-  @silent setOfVectorsToLoopOver.update($parent.dependencies)
 ${reducedFieldCopy($dependencyMap, 
 """
 _active_${reducedVector.id}[_${reducedVector.id}_index_pointer + ${componentIndex}] = \\

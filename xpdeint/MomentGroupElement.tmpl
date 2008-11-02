@@ -18,7 +18,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 @def sampleFunctionContents($function)
   @# Evaluate any computed vectors we have that either we or one
   @# of our operators depends on
-  @set $computedVectorDependencies = $dependencies.copy()
+  @set $computedVectorDependencies = $codeBlocks['sampling'].dependencies.copy()
   @silent computedVectorDependencies.update($computedVectorsNeedingPrecalculationForOperatorContainers($operatorContainers))
 ${evaluateComputedVectors(computedVectorDependencies)}@slurp
   @#
@@ -28,18 +28,13 @@ ${evaluateComputedVectors(computedVectorDependencies)}@slurp
 ${operatorContainer.evaluateOperators(parentFunction=function)}@slurp
   @end for
 
-  @# Now we need to loop over the vector dependencies going the the appropriate space.
-${transformVectorsToSpace($dependencies, $sampleSpace)}@slurp
   @#
   @# Set up the index overrides
   @set $indexOverrides = {}
   @silent indexOverrides[$propagationDimension] = { $outputField: c'_${outputField.id}_index_${propagationDimension}'}
   @#
-  @set $vectorsForLoop = $dependencies.copy()
-  @silent $vectorsForLoop.add($rawVector)
   @# Now actually begin the loop
-
-${loopOverFieldInSpaceWithVectorsAndInnerContent($samplingField, $sampleSpace, $vectorsForLoop, $insideSamplingLoops, indexOverrides=indexOverrides, vectorOverrides=[$rawVector])}@slurp
+${codeBlocks['sampling'].loop(self.insideSamplingLoops, indexOverrides=indexOverrides, vectorOverrides=[$rawVector])}@slurp
   @# That's the end of the loop, magic eh?
   @#
   @if $outputField.hasDimensionName($propagationDimension)
@@ -54,13 +49,13 @@ _LOG(_SAMPLE_LOG_LEVEL, "Sampled field (for moment group #${number + 1}) at ${pr
 @*
   This function provides the contents of the moment group sampling loop
 *@
-@def insideSamplingLoops
+@def insideSamplingLoops($codeString)
   @#
 #define _SAMPLE_COMPLEX(variable) \
           variable ## R = variable.re; variable ## I = variable.im;
 
 // *************** Sampling code ****************
-${insertUserCodeFromEntity($samplingCodeEntity)}@slurp
+${codeString}@slurp
 // **********************************************
 
 #undef _SAMPLE_COMPLEX
@@ -168,33 +163,3 @@ ${insertCodeForFeatures('writeOutFunctionImplementationBody', $featureOrdering, 
   @#
 @end def
 
-
-@*
-  Allocate (and initialise active pointers) (called from main)
-*@
-@def allocate
-  @#
-  @for vector in $computedVectors
-${vector.allocate}@slurp
-  @end for
-  @#
-  @for operatorContainer in $operatorContainers
-${operatorContainer.initialise}@slurp
-  @end for
-  @#
-@end def
-
-@*
-  Free
-*@
-@def free
-  @#
-  @for vector in $computedVectors
-${vector.free}@slurp
-  @end for
-  @#
-  @for operatorContainer in $operatorContainers
-${operatorContainer.finalise}@slurp
-  @end for
-  @#
-@end def

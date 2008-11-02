@@ -11,13 +11,13 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 @def description: EX transverse derivative operator for field $field.name (not constant)
 @attr $operatorKind = _EXOperator.OtherOperatorKind
 
-@def insideEvaluateOperatorLoops
+@def insideEvaluateOperatorLoops($codeString)
   @#
   @# NonConstantOperator will have defined for us all of the operatorName variables.
   @# Note that we assume that all of the integration vectors have an operotor component defined for them.
 
 // ************** Operator code *****************
-${insertUserCodeFromEntity($operatorDefinitionCodeEntity)}@slurp
+${codeString}@slurp
 // **********************************************
 
   @for operatorComponentNumber, (operatorComponentName, operatorComponentVectors) in enumerate($operatorComponents.iteritems())
