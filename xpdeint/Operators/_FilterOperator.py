@@ -14,8 +14,6 @@ from xpdeint import RegularExpressionStrings
 from xpdeint.ParserException import ParserException
 
 class _FilterOperator (Operator):
-  defaultOperatorSpace = 0
-  
   # Filter operators must cause their computed vectors to be re-evaluated
   # as one filter operator could easily change the value of a computed vector
   # (think renormalisation)
@@ -33,12 +31,12 @@ class _FilterOperator (Operator):
     for dependency in self.dependencies:
       dimensionNames.update([dim.name for dim in dependency.field.dimensions])
     
-    self.field = FieldElement.sortedFieldWithDimensionNames(dimensionNames)
+    codeBlock = self.primaryCodeBlock
+    codeBlock.field = FieldElement.sortedFieldWithDimensionNames(dimensionNames)
     
-    if self.dependenciesEntity and self.dependenciesEntity.xmlElement.hasAttribute('fourier_space'):
-       self.operatorSpace = self.field.spaceFromString(self.dependenciesEntity.xmlElement.getAttribute('fourier_space'),
-                                                       xmlElement = self.dependenciesEntity.xmlElement)
-  
+    if codeBlock.dependenciesEntity and codeBlock.dependenciesEntity.xmlElement.hasAttribute('fourier_space'):
+      codeBlock.space = codeBlock.field.spaceFromString(codeBlock.dependenciesEntity.xmlElement.getAttribute('fourier_space'),
+                                                        xmlElement = codeBlock.dependenciesEntity.xmlElement)
   
 
 

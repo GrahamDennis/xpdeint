@@ -17,6 +17,8 @@ class _FilterSegment (_Segment):
   
   @property
   def children(self):
-    return self.operatorContainers[:]
+    children = super(_FilterSegment, self).children
+    children.extend(self.operatorContainers)
+    return children
   
 

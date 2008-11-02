@@ -32,7 +32,6 @@ class _Integrator (_Segment):
     self.intraStepOperatorContainers = []
     self.stepEndOperatorContainers = []
     self.computedVectors = set()
-    self._children = []
     
     functionNamePrefix = '_' + self.id
     
@@ -54,10 +53,10 @@ class _Integrator (_Segment):
   
   @property
   def children(self):
-    result = []
-    for array in [self.stepStartOperatorContainers, self.intraStepOperatorContainers, self.stepEndOperatorContainers, self.computedVectors, self._children]:
-      result.extend(array)
-    return result
+    children = super(_Integrator, self).children
+    for array in [self.stepStartOperatorContainers, self.intraStepOperatorContainers, self.stepEndOperatorContainers, self.computedVectors]:
+      children.extend(array)
+    return children
   
   @property
   def integrationVectors(self):
@@ -80,7 +79,6 @@ class _Integrator (_Segment):
   @property
   def integrationFields(self):
     return set([v.field for v in self.integrationVectors])
-  
   
   # List of the operator containers in descending order of the number of dimensions in their fields.
   #

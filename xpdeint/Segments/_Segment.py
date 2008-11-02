@@ -12,7 +12,8 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 from xpdeint.ScriptElement import ScriptElement
 
 from xpdeint.Function import Function
-from xpdeint.Utilities import lazyproperty
+from xpdeint.Utilities import lazy_property
+from xpdeint.CallOnceGuards import callOncePerInstanceGuard
 
 class _Segment (ScriptElement):
   def __init__(self, *args, **KWs):
@@ -35,7 +36,7 @@ class _Segment (ScriptElement):
   def childSegments(self):
     return self._childSegments[:]
   
-  @lazyproperty
+  @lazy_property
   def totalCycles(self):
     currSegment = self
     totalCycles = 1
@@ -48,4 +49,13 @@ class _Segment (ScriptElement):
     self._childSegments.append(seg)
     seg.parentSegment = self
   
+  @callOncePerInstanceGuard
+  def allocate(self):   return super(_Segment, self).allocate()
+  @callOncePerInstanceGuard
+  def free(self):       return super(_Segment, self).free()
+  
+  @callOncePerInstanceGuard
+  def initialise(self): return super(_Segment, self).initialise()
+  @callOncePerInstanceGuard
+  def finalise(self):   return super(_Segment, self).finalise()
 

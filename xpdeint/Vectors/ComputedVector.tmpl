@@ -25,12 +25,8 @@ ${initialise}@slurp
 
   @end if
   @#
-${transformVectorsToSpace($dependencies, $evaluationSpace)}@slurp
-
-  @set $setOfVectorsToLoopOver = $dependencies.copy()
-  @silent $setOfVectorsToLoopOver.add(self)
   @set $featureOrdering = ['Stochastic']
-  @set $featureDict = {'field': $loopingField, 'space': $evaluationSpace}
+  @set $featureDict = {'codeBlock': $codeBlocks['evaluation']}
   @#
   @set $vectorOverrides = []
   @if $integratingComponents
@@ -38,7 +34,7 @@ ${transformVectorsToSpace($dependencies, $evaluationSpace)}@slurp
   @end if
   @#
 ${insertCodeForFeatures('computedVectorEvaluationBegin', $featureOrdering, featureDict)}@slurp
-${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $evaluationSpace, $setOfVectorsToLoopOver, $insideEvaluationLoops, vectorOverrides=vectorOverrides)}@slurp
+${codeBlocks['evaluation'].loop(self.insideEvaluationLoops, vectorOverrides=vectorOverrides)}@slurp
 ${insertCodeForFeaturesInReverseOrder('computedVectorEvaluationEnd', $featureOrdering, featureDict)}@slurp
   @#
   @if $needsTransforms
@@ -48,10 +44,10 @@ _${id}_space = $initialSpace;
   @#
 @end def
 
-@def insideEvaluationLoops
+@def insideEvaluationLoops(codeString)
   @#
 // ************* Evaluation code ****************
-${insertUserCodeFromEntity($evaluationCodeEntity)}@slurp
+${codeString}@slurp
 // **********************************************
   @#
 @end def

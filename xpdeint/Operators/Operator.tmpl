@@ -7,6 +7,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 @extends xpdeint.Operators._Operator
 
 @from xpdeint.Vectors.VectorElement import VectorElement
+@from xpdeint.CallOnceGuards import callOncePerInstanceGuard
 
 @def insideEvaluateOperatorLoops
   @#
@@ -15,29 +16,14 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   @#
 @end def
 
-@def allocate
-  @#
-  @for $vector in filter(lambda x: isinstance(x, VectorElement), $children)
-${vector.allocate}@slurp
-  @end for
-  @#
-@end def
-
+@@callOncePerInstanceGuard
 @def initialise
   @#
-${allocate}@slurp
+  @super
   @#
   @if $operatorVector
 _${parent.id}_calculate_${name}_field();
   @end if
-  @#
-@end def
-
-@def finalise
-  @#
-  @for $vector in filter(lambda x: isinstance(x, VectorElement), $children)
-${vector.free}@slurp
-  @end for
   @#
 @end def
 
@@ -47,11 +33,7 @@ ${vector.free}@slurp
 ${operatorVector.type} $operatorComponentName;
   @end for
   @#
-${transformVectorsToSpace($dependencies, $operatorSpace)}@slurp
-
-  @set $vectorsToLoopOver = $dependencies.copy()
-  @silent $vectorsToLoopOver.add($operatorVector)
-${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $operatorSpace, $vectorsToLoopOver, $insideCalculateOperatorFieldLoops, loopingOrder=$loopingOrder)}@slurp
+${codeBlocks['operatorDefinition'].loop(self.insideCalculateOperatorFieldLoops)}@slurp
   @#
 @end def
 
@@ -59,24 +41,17 @@ ${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $operatorSpace, 
 
 @def evaluateOperatorFunctionContents($function)
   @#
-  @# We need to loop over the operator vector (if we have one),
-  @# all of the vectors to which we are applying any of our operators,
-  @# any dependencies, and the vector containing the result of this
-  @# operator evaluation
-  @#
-  @set $setOfVectorsToLoopOver = set()
-  @silent $setOfVectorsToLoopOver.update($targetVectors)
-  @if not $operatorVector
-    @# If we don't have an operator vector, then we will need our dependencies here
-    @silent $setOfVectorsToLoopOver.update($dependencies)
-  @end if
-${transformVectorsToSpace($setOfVectorsToLoopOver, $operatorSpace)}@slurp
-  @#
-
-  @if $operatorVector
-    @# If we have an operator vector, we will need to loop over it
-    @silent $setOfVectorsToLoopOver.add($operatorVector)
+  @if not 'calculateOperatorField' in $functions
+${evaluateOperatorFunctionContentsWithCodeBlock(function)}@slurp
   @else
+${evaluateOperatorFunctionContentsWithoutCodeBlock(function)}@slurp
+  @end if
+  @#
+@end def
+
+@def evaluateOperatorFunctionContentsWithCodeBlock($function)
+  @#
+  @if not $operatorVector
     @# If we don't have an operator vector, then we need to create
     @# the component variables so that the user can set them inside
     @# the loop
@@ -91,13 +66,7 @@ ${typeName} ${operatorComponentName};
 
   @end if
   @#
-  @# If we have a result vector, add it
-  @if $resultVector
-    @silent $setOfVectorsToLoopOver.add($resultVector)
-  @end if
-  @#
-
-${evaluateOperatorLoop($setOfVectorsToLoopOver)}@slurp
+${codeBlocks['operatorDefinition'].loop(self.insideEvaluateOperatorLoops)}@slurp
   @#
   @if $resultVector and $resultVector.needsTransforms
 
@@ -106,19 +75,25 @@ _${resultVector.id}_space = $operatorSpace;
   @#
 @end def
 
-@def evaluateOperatorLoop($setOfVectorsToLoopOver)
+@def evaluateOperatorFunctionContentsWithoutCodeBlock($function)
   @#
-  @if $operatorVector
-    @# If we have an operator vector, then there is no user code in this loop
-${loopOverVectorsInSpaceWithInnerContent($setOfVectorsToLoopOver, $operatorSpace, $insideEvaluateOperatorLoops)}@slurp
-  @else
-    @# If we don't have an operator vector, then we will be looping over user code.
-    @#
-    @# If we have a result vector, then we need to add that to the loop
-    @if $resultVector
-      @silent $setOfVectorsToLoopOver.add($resultVector)
-    @end if
-${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $operatorSpace, $setOfVectorsToLoopOver, $insideEvaluateOperatorLoops, loopingOrder=$loopingOrder)}@slurp
+  @# We need to loop over all of the vectors to which we are applying our operators.
+  @#
+${transformVectorsToSpace($targetVectors, $operatorSpace)}@slurp
+  @#
+
+  @# We have an operator vector and we will need to loop over it
+  @set $setOfVectorsToLoopOver = $targetVectors.copy()
+  @silent $setOfVectorsToLoopOver.add($operatorVector)
+  @if $resultVector
+    @silent $setOfVectorsToLoopOver.add($resultVector)
+  @end if
+  @#
+${evaluateOperatorLoop(setOfVectorsToLoopOver)}@slurp
+  @#
+  @if $resultVector and $resultVector.needsTransforms
+
+_${resultVector.id}_space = $operatorSpace;
   @end if
   @#
 @end def

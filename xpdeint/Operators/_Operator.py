@@ -16,7 +16,8 @@ from xpdeint import RegularExpressionStrings
 import re
 
 from xpdeint.Function import Function
-from xpdeint.Utilities import lazyproperty
+from xpdeint.Utilities import lazy_property
+from xpdeint.CallOnceGuards import callOncePerInstanceGuard
 
 class _Operator (ScriptElement):
   # This is an ordered list of (type, argName) pairs
@@ -40,8 +41,6 @@ class _Operator (ScriptElement):
     self.operatorVector = None
     self.resultVector = None
     self.operatorNumber = -1
-    self._children = []
-    self.loopingOrder = ScriptElement.LoopingOrder.MemoryOrder
     
     parent = self.parent
     parent.addOperator(self)
@@ -65,16 +64,15 @@ class _Operator (ScriptElement):
   def children(self):
     # Return either or both of operatorVector and resultVector
     # depending on whether or not they are 'None'
-    # And also return the _children
-    result = filter(lambda x: x, [self.operatorVector, self.resultVector])
-    result.extend(self._children)
-    return result
+    children = super(_Operator, self).children
+    children.extend(filter(lambda x: x, [self.operatorVector, self.resultVector]))
+    return children
   
-  @lazyproperty
+  @lazy_property
   def name(self):
     return 'operator' + str(self.operatorNumber)
   
-  @lazyproperty
+  @lazy_property
   def targetVectors(self):
     targetVectors = set()
     
@@ -84,31 +82,33 @@ class _Operator (ScriptElement):
     
     return targetVectors
   
-  @lazyproperty
-  def defaultOperatorSpace(self):
-    return self.field.spaceMask
-  
-  @lazyproperty
+  @lazy_property
   def calculateOperatorFieldFunctionArgumentString(self):
     return ', '.join([pair[0] + ' ' + pair[1] for pair in self.calculateOperatorFieldFunctionArguments])
   
-  @lazyproperty
+  @lazy_property
   def evaluateOperatorFunctionArgumentString(self):
     return ', '.join([pair[0] + ' ' + pair[1] for pair in self.evaluateOperatorFunctionArguments])
   
-  @lazyproperty
+  @lazy_property
   def computedVectorsNeedingPrecalculation(self):
-    return filter(lambda x: x.isComputed, self.dependencies)
+    vectorSet = self.dependencies.copy()
+    vectorSet.update(self.targetVectors)
+    return filter(lambda x: x.isComputed, vectorSet)
   
-  @lazyproperty
+  @lazy_property
+  def primaryCodeBlock(self):
+    return self.codeBlocks['operatorDefinition']
+  
+  @property
+  def dependencies(self):
+    return self.primaryCodeBlock.dependencies
+  
+  @property
   def operatorSpace(self):
-    return self.defaultOperatorSpace
+    return self.primaryCodeBlock.space
   
-  @lazyproperty
-  def loopingField(self):
-    return self.field
-  
-  @lazyproperty
+  @lazy_property
   def field(self):
     return self.parent.field
   
@@ -116,19 +116,29 @@ class _Operator (ScriptElement):
     super(_Operator, self).bindNamedVectors()
     
     if self.resultVector:
-      self.resultVector.spacesNeeded.add(self.operatorSpace)
+      self.resultVector.spacesNeeded.add(self.primaryCodeBlock.space)
   
   def preflight(self):
     super(_Operator, self).preflight()
     
-    if self.dependenciesEntity:
-      for dependency in self.dependencies:
+    if self.primaryCodeBlock.dependenciesEntity:
+      for dependency in self.primaryCodeBlock.dependencies:
         if self.vectorsMustBeInSubsetsOfIntegrationField and not dependency.field.isSubsetOfField(self.field):
-          raise ParserException(self.dependenciesEntity.xmlElement,
+          raise ParserException(self.primaryCodeBlock.dependenciesEntity.xmlElement,
                   "Can't depend on a vector that is in a field that has dimensions that "
                   "aren't in this field (%s).\n"
                   "The vector causing this problem is '%s'." 
                   % (self.field.name, dependency.name))
     
-    
+  
+  @callOncePerInstanceGuard
+  def allocate(self):   return super(_Operator, self).allocate()
+  @callOncePerInstanceGuard
+  def free(self):       return super(_Operator, self).free()
+  
+  @callOncePerInstanceGuard
+  def initialise(self): return super(_Operator, self).initialise()
+  @callOncePerInstanceGuard
+  def finalise(self):   return super(_Operator, self).finalise()
+  
   

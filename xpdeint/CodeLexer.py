@@ -30,24 +30,21 @@ class LexerException(ParserException):
   corresponds to the part of the code block that triggered the
   exception.
   """
-  def __init__(self, codeEntity, codeIndex, msg):
-    ParserException.__init__(self, codeEntity.xmlElement, msg)
+  def __init__(self, codeBlock, codeIndex, msg):
+    ParserException.__init__(self, codeBlock.xmlElement, msg)
     
-    if not hasattr(codeEntity, 'isFake'):
-      # We have a real code entity that actually correseponds to a CDATA section in the script.
-      
-      self.columnNumber = None
-      
-      lines = codeEntity.value.splitlines(True)
-      indexCounter = 0
-      for lineNumber, line in enumerate(lines):
-        indexCounter += len(line)
-        if indexCounter > codeIndex:
-          self.lineNumber = codeEntity.xmlElement.lineNumberForCDATASection() + lineNumber
-          break
+    self.columnNumber = None
     
+    lines = codeBlock.codeString.splitlines(True)
+    indexCounter = 0
+    for lineNumber, line in enumerate(lines):
+      indexCounter += len(line)
+      if indexCounter > codeIndex:
+        self.lineNumber = codeBlock.scriptLineOffset + lineNumber
+        break
+  
 
-def balancedTokens(tokenGenerator, openingToken, finalPunctuation, codeEntity):
+def balancedTokens(tokenGenerator, openingToken, finalPunctuation, codeBlock):
   """
   Returns a nested list of tokens (tuples of ``(stringIndex, tokenKind, tokenString)`` )
   starting at the current state of the `tokenGenerator` with all balanced sub-expressions
@@ -81,13 +78,13 @@ def balancedTokens(tokenGenerator, openingToken, finalPunctuation, codeEntity):
       result = token
       for startChar, endChar in pairedPunctuation:
         if string == startChar:
-          result = balancedTokens(tokenGenerator, token, endChar, codeEntity)
+          result = balancedTokens(tokenGenerator, token, endChar, codeBlock)
           break
       results.append(result)
     else:
       results.append(token)
   if finalPunctuation:
-    raise LexerException(codeEntity, charIndex, "Unable to parse code due to mismatched brackets.")
+    raise LexerException(codeBlock, charIndex, "Unable to parse code due to mismatched brackets.")
   return results
 
 def flatten(lst):
@@ -122,21 +119,21 @@ def strippedTokenStream(tokenStream):
   return ''.join(result), slice(startIndex, endIndex)
 
 
-def targetComponentsForOperatorsInString(operatorNames, codeEntity):
+def targetComponentsForOperatorsInString(operatorNames, codeBlock):
   """
   Return a list of pairs of operator names and their targets that are in `codeString`.
   The valid operator names searched for are `operatorNames`. For example, if 'L' is in `operatorNames`,
   then in the code ``L[phi]`` the return value would be ``('L', 'phi', slice(firstCharacterIndex, lastCharacterIndex))``.
   """
   results = []
-  tokenGenerator = cppLexer.get_tokens_unprocessed(codeEntity.value)
+  tokenGenerator = cppLexer.get_tokens_unprocessed(codeBlock.codeString)
   for charIndex, tokenKind, string in tokenGenerator:
     if tokenKind in Token.Name and string in operatorNames:
       operatorName = string
       nextToken = tokenGenerator.next()
       if not nextToken[1] in Token.Punctuation or not nextToken[2] == '[':
-        raise LexerException(codeEntity, charIndex, "Invalid use of '%(string)s' operator in code block." % locals())
-      balancedTokenStream = balancedTokens(tokenGenerator, nextToken, ']', codeEntity)
+        raise LexerException(codeBlock, charIndex, "Invalid use of '%(string)s' operator in code block." % locals())
+      balancedTokenStream = balancedTokens(tokenGenerator, nextToken, ']', codeBlock)
       strippedContents, tokenRange = strippedTokenStream(balancedTokenStream)
       operatorTarget = strippedContents[1:-1].strip() # Strip leading '[' and trailing ']', and any other whitespace
       tokenRange = slice(charIndex, tokenRange.stop)
@@ -144,7 +141,7 @@ def targetComponentsForOperatorsInString(operatorNames, codeEntity):
   return results
 
 
-def integerValuedDimensionsForField(tokenGenerator, field, codeEntity):
+def integerValuedDimensionsForField(tokenGenerator, field, codeBlock):
   """
   Return a ``(dict, slice)`` tuple to extract the integer-valued dimension
   indices starting at the position of `tokenGenerator` given that the indices
@@ -171,7 +168,7 @@ def integerValuedDimensionsForField(tokenGenerator, field, codeEntity):
       return {}, slice(None)
     if overallStartIndex == None:
       overallStartIndex = nextToken[0]
-    balancedTokenStream = balancedTokens(tokenGenerator, nextToken, ']', codeEntity)
+    balancedTokenStream = balancedTokens(tokenGenerator, nextToken, ']', codeBlock)
     overallEndIndex = balancedTokenStream[-1][0] + len(balancedTokenStream[-1][2])
     tokenStreamIterator = iter(balancedTokenStream[1:-1]) # skip leading '[' and trailing ']'
     for dim in dimList:
@@ -197,13 +194,13 @@ def integerValuedDimensionsForField(tokenGenerator, field, codeEntity):
             if not tokenKind in Token.Comment:
               indexString += string
       if not indexString:
-        raise LexerException(codeEntity, startIndex, "Index for integer-valued dimension '%s' is empty!" % dim.name)
+        raise LexerException(codeBlock, startIndex, "Index for integer-valued dimension '%s' is empty!" % dim.name)
       result[dim.name] = (indexString.strip(), slice(startIndex, endIndex))
   return result, slice(overallStartIndex, overallEndIndex)
 
-def integerValuedDimensionsForVectors(vectors, codeEntity):
+def integerValuedDimensionsForVectors(vectors, codeBlock):
   """
-  Find all places in the `codeEntity` where any components of any of the `vectors`
+  Find all places in the `codeBlock` where any components of any of the `vectors`
   are accessed with index-valued dimensions and return a ``(componentName, field, resultDict, codeSlice)``
   tuple for each such occurrence. ``codeSlice`` is the character range over which this expression occurs,
   and ``resultDict`` is a dictionary describing how each dimension is accessed. See `integerValuedDimensionsForField`
@@ -213,37 +210,37 @@ def integerValuedDimensionsForVectors(vectors, codeEntity):
   for v in vectors:
     componentNames.update(v.components)
   results = []
-  tokenGenerator = cppLexer.get_tokens_unprocessed(codeEntity.value)
+  tokenGenerator = cppLexer.get_tokens_unprocessed(codeBlock.codeString)
   for charIndex, tokenKind, string in tokenGenerator:
     if tokenKind in Token.Name and string in componentNames:
       componentName = string
       
       field = [v.field for v in vectors if componentName in v.components][0]
-      resultDict, codeSlice = integerValuedDimensionsForField(tokenGenerator, field, codeEntity)
+      resultDict, codeSlice = integerValuedDimensionsForField(tokenGenerator, field, codeBlock)
       if resultDict:
         results.append((componentName, field, resultDict, slice(charIndex, codeSlice.stop)))
   
   return results
 
-def integerValuedDimensionsForComponentsInField(components, field, codeEntity):
+def integerValuedDimensionsForComponentsInField(components, field, codeBlock):
   """
-  Find all places in the `codeEntity` where any of `components` are accessed with
+  Find all places in the `codeBlock` where any of `components` are accessed with
   index-valued dimensions and return a ``(componentName, resultDict, codeSlice)``
   tuple for each such occurrence. The companion of `integerValuedDimensionsForVectors` and
   to be used when `components` are components of vectors.
   """
   results = []
-  tokenGenerator = cppLexer.get_tokens_unprocessed(codeEntity.value)
+  tokenGenerator = cppLexer.get_tokens_unprocessed(codeBlock.codeString)
   for charIndex, tokenKind, string in tokenGenerator:
     if tokenKind in Token.Name and string in components:
       componentName = string
-      resultDict, codeSlice = integerValuedDimensionsForField(tokenGenerator, field, codeEntity)
+      resultDict, codeSlice = integerValuedDimensionsForField(tokenGenerator, field, codeBlock)
       if resultDict:
         results.append((componentName, resultDict, slice(charIndex, codeSlice.stop)))
   
   return results
 
-def performIPOperatorSanityCheck(componentName, propagationDimension, operatorCodeSlice, codeEntity):
+def performIPOperatorSanityCheck(componentName, propagationDimension, operatorCodeSlice, codeBlock):
   """
   Check that the user hasn't tried to use an IP operator where an IP operator cannot be used.
   
@@ -260,7 +257,7 @@ def performIPOperatorSanityCheck(componentName, propagationDimension, operatorCo
   statementStartIndex = 0
   statementStopIndex = None
   derivativeStringAppearedInCurrentStatement = False
-  tokenGenerator = cppLexer.get_tokens_unprocessed(codeEntity.value)
+  tokenGenerator = cppLexer.get_tokens_unprocessed(codeBlock.codeString)
   for charIndex, tokenKind, string in tokenGenerator:
     if tokenKind in Token.Punctuation and string == ';':
       statementStopIndex = charIndex + len(string)
@@ -270,14 +267,14 @@ def performIPOperatorSanityCheck(componentName, propagationDimension, operatorCo
              or (operatorCodeSlice.start >= statementStartIndex and operatorCodeSlice.stop <= statementStopIndex) \
              or operatorCodeSlice.start >= statementStopIndex
       if operatorCodeSlice.start >= statementStartIndex and operatorCodeSlice.stop <= statementStopIndex and not derivativeStringAppearedInCurrentStatement:
-        raise LexerException(codeEntity, charIndex, 
+        raise LexerException(codeBlock, charIndex, 
                              "Due to the way IP operators work, they can only contribute\n"
                              "to the derivative of the variable they act on,\n"
                              "i.e. dx_dt = L[x] not dy_dt = L[x].\n\n"
                              "What you probably need to use in this circumstance is an EX operator.\n"
                              "The conflict was caused by the operator '%s' in the statement:\n"
                              "'%s'"
-                             % (codeEntity.value[operatorCodeSlice], codeEntity.value[statementStartIndex:statementStopIndex].strip()))
+                             % (codeBlock.codeString[operatorCodeSlice], codeBlock.codeString[statementStartIndex:statementStopIndex].strip()))
       derivativeStringAppearedInCurrentStatement = False
       statementStartIndex = statementStopIndex
     elif tokenKind in Token.Name and string == derivativeString:

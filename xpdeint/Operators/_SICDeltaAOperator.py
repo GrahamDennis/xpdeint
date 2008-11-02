@@ -18,12 +18,8 @@ class _SICDeltaAOperator (DeltaAOperator):
     # Set default variables
     self.crossPropagationDimension           = None
     self.crossPropagationDirection           = None
-    self.boundaryConditionDependenciesEntity = None
-    self.boundaryConditionCodeEntity         = None
     self.crossIntegrationVectors             = set()
     self.crossIntegrationVectorsEntity       = None
-    self.crossPropagationCodeEntity          = None
-    self.crossPropagationDependenciesEntity  = None
     
   
   @property
@@ -34,8 +30,8 @@ class _SICDeltaAOperator (DeltaAOperator):
   def bindNamedVectors(self):
     super(_SICDeltaAOperator, self).bindNamedVectors()
     
-    if self.boundaryConditionDependenciesEntity:
-      self.dependencies.update(self.vectorsFromEntity(self.boundaryConditionDependenciesEntity))
+    self.primaryCodeBlock.dependencies.update(self.codeBlocks['boundaryCondition'].dependencies)
+    self.primaryCodeBlock.dependencies.update(self.codeBlocks['crossPropagation'].dependencies)
     
     if self.crossIntegrationVectorsEntity:
       self.crossIntegrationVectors.update(self.vectorsFromEntity(self.crossIntegrationVectorsEntity))
@@ -46,8 +42,6 @@ class _SICDeltaAOperator (DeltaAOperator):
                               "The vectors causing the problems are: %s" % ', '.join([v.name for v in badVectors]))
       self.dependencies.update(self.crossIntegrationVectors)
       
-    if self.crossPropagationDependenciesEntity:
-      self.dependencies.update(self.vectorsFromEntity(self.crossPropagationDependenciesEntity))
   
   
   def preflight(self):
@@ -61,5 +55,5 @@ class _SICDeltaAOperator (DeltaAOperator):
         self.operatorComponents[derivativeString] = {crossIntegrationVector: [componentName]}
     
     if self.crossPropagationDirection == '-':
-      self.loopingOrder = _SICDeltaAOperator.LoopingOrder.StrictlyDescendingOrder
+      self.primaryCodeBlock.loopArguments['loopingOrder'] = _SICDeltaAOperator.LoopingOrder.StrictlyDescendingOrder
     

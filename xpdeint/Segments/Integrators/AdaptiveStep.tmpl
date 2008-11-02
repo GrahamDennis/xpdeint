@@ -268,8 +268,8 @@ if ( $propagationDimension - _${propagationDimension}_ini + _step >= _${propagat
   _step = _${propagationDimension}_break_next - ${propagationDimension} + _${propagationDimension}_ini;
 }
 
+${allocate}@slurp
 ${initialise}@slurp
-
 ${localInitialise}@slurp
 
 do {
@@ -342,6 +342,7 @@ do {
 
 ${localFinalise}@slurp
 ${finalise}@slurp
+${free}@slurp
   @#
 ${insertCodeForFeaturesInReverseOrder('integrateAdaptiveStepEnd', featureOrderingOuter)}@slurp
 

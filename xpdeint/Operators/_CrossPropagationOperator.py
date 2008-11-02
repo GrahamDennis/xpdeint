@@ -13,7 +13,7 @@ from xpdeint.Geometry.FieldElement import FieldElement
 from xpdeint.Vectors.VectorElement import VectorElement
 
 from xpdeint.ParserException import ParserException
-from xpdeint.Utilities import lazyproperty
+from xpdeint.Utilities import lazy_property
 
 class _CrossPropagationOperator (Operator):
   operatorKind = Operator.OtherOperatorKind
@@ -40,17 +40,15 @@ class _CrossPropagationOperator (Operator):
     
     self._crossPropagationIntegrator = None
     self.crossPropagationIntegratorDeltaAOperator = None
-    self.boundaryConditionDependenciesEntity = None
-    self.boundaryConditionDependencies = set()
-    self.boundaryConditionCodeEntity = None
     self.integrationVectorsEntity = None
     self.integrationVectors = set()
-    self.dependencyMap = {}
+    self.reducedVectorMap = {}
+    self.fullVectorMap = {}
     self.integrationVectorMap = {}
     self.reducedField = None
   
   
-  @lazyproperty
+  @lazy_property
   def fieldMap(self):
     """
     Return the field map for this cross-propagator.
@@ -94,10 +92,8 @@ class _CrossPropagationOperator (Operator):
     return reducedField
   
   def reducedDimensionVectorForVector(self, fullVector):
-    if fullVector in self.dependencyMap:
-      return self.dependencyMap[fullVector]
-    if fullVector in self.integrationVectorMap:
-      return self.integrationVectorMap[fullVector]
+    if fullVector in self.reducedVectorMap:
+      return self.reducedVectorMap[fullVector]
     # If the vector belongs to a field that lacks the cross-propagation field
     # then we can just use the original field and we don't need a reduced dimension
     # version of this vector.
@@ -119,6 +115,9 @@ class _CrossPropagationOperator (Operator):
       reducedVector.needsInitialisation = False
       reducedField.managedVectors.add(reducedVector)
     
+    self.reducedVectorMap[fullVector] = reducedVector
+    self.fullVectorMap[reducedVector] = fullVector
+    
     return reducedVector
   
   def vectorForVectorName(self, vectorName, vectorDictionary):
@@ -126,23 +125,24 @@ class _CrossPropagationOperator (Operator):
     This method allows us to override the mapping of vector names to vectors for our children.
     This way we can replace the full vectors specified by the user with their reduced equivalents.
     """
-    if not vectorName in vectorDictionary:
+    # Don't try and remap vector names if we don't have a reduced vector map yet.
+    # i.e. if we are parsing our own code blocks
+    if not vectorName in vectorDictionary or not self.reducedVectorMap:
       return self.parent.vectorForVectorName(vectorName, vectorDictionary)
     return self.reducedDimensionVectorForVector(vectorDictionary[vectorName])
   
   def bindNamedVectors(self):
     super(_CrossPropagationOperator, self).bindNamedVectors()
     
+    reducedDependencies = set()
     # Our named dependencies will already have been taken care of thanks to _Operator.bindNamedVectors()
     for vector in self.dependencies:
       reducedVector = self.reducedDimensionVectorForVector(vector)
       # If the reducedVector is the same as the vector, then it doesn't belong in the dependency map
       if not reducedVector == vector:
-        self.dependencyMap[vector] = reducedVector
+        reducedDependencies.add(reducedVector)
     
-    reducedDependencies = set(self.dependencyMap.values())
     # Add the reduced dependencies to the various parts of the cross-propagation integrator
-    self.crossPropagationIntegrator.dependencies.update(reducedDependencies)
     self.crossPropagationIntegratorDeltaAOperator.dependencies.update(reducedDependencies)
     
     if self.integrationVectorsEntity:
@@ -168,18 +168,25 @@ class _CrossPropagationOperator (Operator):
       self.crossPropagationIntegratorDeltaAOperator.integrationVectors.update(reducedIntegrationVectors)
       self.crossPropagationIntegratorDeltaAOperator.dependencies.update(reducedIntegrationVectors)
       
-      self.parent.dependencies.update(self.integrationVectors)
+      self.parent.sharedCodeBlock.dependencies.update(self.integrationVectors)
     
-    if self.boundaryConditionDependenciesEntity:
-      self.boundaryConditionDependencies = self.vectorsFromEntity(self.boundaryConditionDependenciesEntity)
-      
-      for vector in self.boundaryConditionDependencies:
-        if not vector.field.isSubsetOfField(self.field):
-          raise ParserException(self.boundaryConditionDependenciesEntity.xmlElement,
-                                "Cannot depend on vector '%s' because it is in the field '%s'\n"
-                                "which contains dimensions that are not in the field for this operator ('%s')."
-                                % (vector.name, vector.field.name, self.field))
     
+    boundaryConditionDependencies = self.codeBlocks['boundaryCondition'].dependencies
+    boundaryConditionDependencies.update(self.integrationVectors)
+    for vector in boundaryConditionDependencies:
+      if not vector.field.isSubsetOfField(self.field):
+        raise ParserException(self.codeBlocks['boundaryCondition'].xmlElement,
+                              "Cannot depend on vector '%s' because it is in the field '%s'\n"
+                              "which contains dimensions that are not in the field for this operator ('%s')."
+                              % (vector.name, vector.field.name, self.field))
+    
+    if self.propagationDirection == '+':
+      indexOverrideValue = '0'
+    else:
+      propDimRep = self.field.dimensionWithName(self.propagationDimension).inSpace(0)
+      indexOverrideValue = '(%s - 1)' % propDimRep.globalLattice
+    indexOverrides = {self.propagationDimension: dict([(v.field, indexOverrideValue) for v in boundaryConditionDependencies])}
+    self.codeBlocks['boundaryCondition'].loopArguments['indexOverrides'] = indexOverrides
   
   def preflight(self):
     super(_CrossPropagationOperator, self).preflight()
@@ -194,12 +201,12 @@ class _CrossPropagationOperator (Operator):
     # fullVector --> reducedVector maps as we constructed above.
     
     self.crossPropagationIntegrator.dependencyMap = \
-      dict([(reducedVector, fullVector) for (fullVector, reducedVector) in self.dependencyMap.iteritems()])
+      dict([(reducedVector, fullVector) for (fullVector, reducedVector) in self.reducedVectorMap.iteritems() if fullVector in self.dependencies])
     self.crossPropagationIntegrator.integrationVectorMap = \
       dict([(reducedVector, fullVector) for (fullVector, reducedVector) in self.integrationVectorMap.iteritems()])
     
     # Copy the evolution code to the delta a operator
-    self.crossPropagationIntegratorDeltaAOperator.propagationCodeEntity = self.operatorDefinitionCodeEntity
+    # self.crossPropagationIntegratorDeltaAOperator.codeBlocks['operatorDefinition'] = self.primaryCodeBlock
     
     # Allow the cross propagation dimension variable to exist in the delta a operator.
     self.crossPropagationIntegrator.functions['deltaA'].args.append(('double', self.propagationDimension)) # Add it to the calculate_delta_a function

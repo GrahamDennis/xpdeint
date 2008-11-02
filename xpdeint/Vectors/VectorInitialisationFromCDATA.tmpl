@@ -18,20 +18,18 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 @def initialiseVector
   @#
   @set $featureOrdering = ['Stochastic']
-  @set $featureDict = {'field': $vector.field, 'space': $vector.initialSpace}
+  @set $featureDict = {'codeBlock': $codeBlocks['initialisation']}
   @#
-  @set $vectorsToLoopOver = set([$vector])
-  @silent $vectorsToLoopOver.update($dependencies)
 $insertCodeForFeatures('vectorInitialisationBegin', $featureOrdering, featureDict)@slurp
-$loopOverFieldInSpaceWithVectorsAndInnerContent($vector.field, $vector.initialSpace, $vectorsToLoopOver, $insideInitialisationLoops)@slurp
+$codeBlocks['initialisation'].loop(self.insideInitialisationLoops)@slurp
 $insertCodeForFeaturesInReverseOrder('vectorInitialisationEnd', $featureOrdering, featureDict)@slurp
   @#
 @end def
 
-@def insideInitialisationLoops
+@def insideInitialisationLoops($codeString)
 
 // ********** Initialisation code ***************
-${insertUserCodeFromEntity($initialisationCodeEntity)}@slurp
+${codeString}@slurp
 // **********************************************
 
 @end def

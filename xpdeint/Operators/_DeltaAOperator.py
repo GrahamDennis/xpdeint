@@ -12,7 +12,7 @@ from xpdeint.Geometry.FieldElement import FieldElement
 from xpdeint.Vectors.VectorElement import VectorElement
 from xpdeint.Vectors.VectorInitialisation import VectorInitialisation
 from xpdeint.Function import Function
-from xpdeint.Utilities import lazyproperty
+from xpdeint.Utilities import lazy_property
 
 from xpdeint.ParserException import ParserException
 
@@ -32,10 +32,8 @@ class _DeltaAOperator (Operator):
     self.integrationVectors = set()
     self.deltaAField = None
     self.deltaAVectorMap = {}
-    
-    self.propagationCodeEntity = None
   
-  @lazyproperty
+  @lazy_property
   def integrator(self):
     # Our parent is an OperatorContainer, and its parent is the Integrator
     return self.parent.parent
@@ -110,7 +108,7 @@ class _DeltaAOperator (Operator):
           components.add(derivativeString)
           derivativeMap[derivativeString] = vector
       
-      indexAccessedVariables = CodeLexer.integerValuedDimensionsForComponentsInField(components, self.field, self.propagationCodeEntity)
+      indexAccessedVariables = CodeLexer.integerValuedDimensionsForComponentsInField(components, self.field, self.primaryCodeBlock)
       
       for componentName, resultDict, codeSlice in indexAccessedVariables:
         
@@ -167,7 +165,7 @@ class _DeltaAOperator (Operator):
                                     **self.argumentsToTemplateConstructors)
         
         loopingField.dimensions = [dim.copy(parent=loopingField) for dim in newFieldDimensions]
-        self.loopingField = loopingField
+        self.primaryCodeBlock.field = loopingField
         
         # Now construct a second field for the vector which will hold our delta a operators
         deltaAFieldName = ''.join([self.integrator.name, '_', self.name, '_delta_a_field'])
@@ -198,7 +196,7 @@ class _DeltaAOperator (Operator):
           self._children.append(deltaAVector)
           
           # Make the vector available when looping
-          self.dependencies.add(deltaAVector)
+          self.primaryCodeBlock.dependencies.add(deltaAVector)
           
           # Remove the components of the vector from our operatorComponents so that we won't get doubly-defined variables
           for componentName in deltaAVector.components:
@@ -213,7 +211,7 @@ class _DeltaAOperator (Operator):
       if self.deltaAField:
         deltaAIntegerValuedDimensions = self.deltaAField.integerValuedDimensions
       
-      indexAccessedDerivatives = CodeLexer.integerValuedDimensionsForComponentsInField(derivativeMap.keys(), self.field, self.propagationCodeEntity)
+      indexAccessedDerivatives = CodeLexer.integerValuedDimensionsForComponentsInField(derivativeMap.keys(), self.field, self.primaryCodeBlock)
       
       dimensionNamesToBeRemoved = [dim.name for dim in self.field.dimensions if dim.name not in dimensionNamesNeedingReordering]
       
@@ -234,22 +232,31 @@ class _DeltaAOperator (Operator):
               deltaAVector.initialiser = VectorInitialisation(parent = deltaAVector, **self.argumentsToTemplateConstructors)
               deltaAVector.initialiser.vector = deltaAVector
         
-        self.propagationCodeEntity.value = self.propagationCodeEntity.value[:codeSlice.start] + componentAccessString \
-                                          + self.propagationCodeEntity.value[codeSlice.stop:]
+        self.primaryCodeBlock.codeString = self.primaryCodeBlock.codeString[:codeSlice.start] + componentAccessString \
+                                          + self.primaryCodeBlock.codeString[codeSlice.stop:]
         
         
       
     
     if self.deltaAField:
       copyDeltaAFunctionName = ''.join(['_', self.id, '_copy_delta_a'])
+      loopingField = self.primaryCodeBlock.field
       arguments = [('double', '_step')]
       arguments.extend([('long', '_' + dim.inSpace(self.operatorSpace).name + '_index') \
-                            for dim in self.loopingField.dimensions if not self.deltaAField.hasDimension(dim)])
+                            for dim in loopingField.dimensions if not self.deltaAField.hasDimension(dim)])
       copyDeltaAFunction = Function(name = copyDeltaAFunctionName,
                                     args = arguments,
                                     implementation = self.copyDeltaAFunctionContents,
                                     returnType = 'inline void')
       self.functions['copyDeltaA'] = copyDeltaAFunction
+      
+      operatorSpace = self.operatorSpace
+      
+      # Create arguments dictionary for a call to the copyDeltaA function
+      arguments = dict([('_' + dim.inSpace(operatorSpace).name + '_index', dim.inSpace(operatorSpace).loopIndex) \
+                          for dim in loopingField.dimensions if not self.deltaAField.hasDimension(dim)])
+      functionCall = self.functions['copyDeltaA'].call(parentFunction = self.functions['evaluate'], arguments = arguments) + '\n'
+      self.primaryCodeBlock.loopArguments['postDimensionLoopClosingCode'] = {self.deltaAField.dimensions[0].name: functionCall}
       
   
 

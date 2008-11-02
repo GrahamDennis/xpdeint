@@ -13,7 +13,7 @@ from xpdeint.ScriptElement import ScriptElement
 from xpdeint.Vectors.VectorInitialisation import VectorInitialisation
 
 from xpdeint.Function import Function
-from xpdeint.Utilities import lazyproperty
+from xpdeint.Utilities import lazy_property
 
 class _VectorElement (ScriptElement):
   isComputed = False
@@ -70,17 +70,18 @@ class _VectorElement (ScriptElement):
     """
     return hash(self.id)
   
-  @lazyproperty
+  @lazy_property
   def id(self):
     return ''.join([self.field.name, '_', self.name])
   
   @property
   def children(self):
+    children = super(_VectorElement, self).children
     if self.initialiser:
-      return [self.initialiser]
-    return []
+      children.append(self.initialiser)
+    return children
   
-  @lazyproperty
+  @lazy_property
   def nComponents(self):
     return len(self.components)
   
@@ -108,14 +109,14 @@ class _VectorElement (ScriptElement):
     As a side-effect, this method also adds the initial space to the set of spaces
     that this vector is needed in.
     """
-    self._initialSpace = value
+    self._initialSpace = value & self.field.spaceMask
     self.spacesNeeded.add(value)
   
   # Create a property for the class with the above getter and setter methods
   initialSpace = property(_getInitialSpace, _setInitialSpace)
   del _getInitialSpace, _setInitialSpace
   
-  @lazyproperty
+  @lazy_property
   def maxSizeInReals(self):
     if self.type == 'complex':
       multiplier = 2
@@ -123,7 +124,7 @@ class _VectorElement (ScriptElement):
       multiplier = 1
     return self.field.maxPoints * self.nComponents * multiplier
   
-  @lazyproperty
+  @lazy_property
   def allocSize(self):
     return self.field.allocSize + ' * _' + self.id + '_ncomponents'
   

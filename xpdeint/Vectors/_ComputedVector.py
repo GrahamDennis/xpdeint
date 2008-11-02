@@ -13,7 +13,7 @@ from xpdeint.Vectors.VectorElement import VectorElement
 from xpdeint.Geometry.FieldElement import FieldElement
 
 from xpdeint.Function import Function
-from xpdeint.Utilities import lazyproperty
+from xpdeint.Utilities import lazy_property
 
 class _ComputedVector (VectorElement):
   isComputed = True
@@ -22,33 +22,21 @@ class _ComputedVector (VectorElement):
     VectorElement.__init__(self, *args, **KWs)
     
     # Set default variables
-    self.loopingField = None
-    self.dependenciesEntity = None
     self._integratingComponents = True
-    self._evaluationSpace = 0
-    self.evaluationCodeEntity = None
     
     evaluateFunctionName = ''.join(['_', self.id, '_evaluate'])
     evaluateFunction = Function(name = evaluateFunctionName,
                                args = [],
                                implementation = self.evaluateFunctionContents)
     self.functions['evaluate'] = evaluateFunction
-    
-    
   
-  @lazyproperty
+  @lazy_property
   def noiseField(self):
-    return self.loopingField
+    return self.codeBlocks['evaluation'].field
   
-  def _getEvaluationSpace(self):
-    return self._evaluationSpace
-  
-  def _setEvaluationSpace(self, value):
-    self._evaluationSpace = value
-    self.initialSpace = value & self.field.spaceMask
-  
-  evaluationSpace = property(_getEvaluationSpace, _setEvaluationSpace)
-  del _getEvaluationSpace, _setEvaluationSpace
+  @property
+  def dependencies(self):
+    return self.codeBlocks['evaluation'].dependencies
   
   def _getIntegratingComponents(self):
     return self._integratingComponents
@@ -64,26 +52,31 @@ class _ComputedVector (VectorElement):
   def bindNamedVectors(self):
     super(VectorElement, self).bindNamedVectors()
     
-    # This code must be here and not in preflight because _Stochastic needs to be able
-    # to work out our noiseField, and that occurs in preflight. As we don't know what
-    # order the templates' preflight functions will be called in, we have to put this in
-    # bindNamedVectors to make sure that loopingField exists before the preflight stage.
+    evaluationCodeBlock = self.codeBlocks['evaluation']
+    # This code to determine the evaluation looping field used to be in bindNamedVectors because
+    # _Stochastic needed access to 'noiseField' during its preflight. However, the way that the
+    # Stochastic feature works at the moment is silly, and is causing design problems. The better
+    # design is to use noise vectors but until that is implemented, the Stochastic feature will
+    # be dealt with specially.
     loopingDimensionNames = set([dim.name for dim in self.field.dimensions])
-    for dependency in self.dependencies:
+    for dependency in evaluationCodeBlock.dependencies:
       loopingDimensionNames.update([dim.name for dim in dependency.field.dimensions])
     
-    self.loopingField = FieldElement.sortedFieldWithDimensionNames(loopingDimensionNames)
-  
-  def preflight(self):
-    super(VectorElement, self).preflight()
+    evaluationCodeBlock.field = FieldElement.sortedFieldWithDimensionNames(loopingDimensionNames)
     
-    if self.dependenciesEntity and self.dependenciesEntity.xmlElement.hasAttribute('fourier_space'):
-      dependenciesXMLElement = self.dependenciesEntity.xmlElement
-      self.evaluationSpace = self.loopingField.spaceFromString(dependenciesXMLElement.getAttribute('fourier_space'),
-                                                               xmlElement = dependenciesXMLElement)
+  def preflight(self):
+    super(_ComputedVector, self).preflight()
+    
+    evaluationCodeBlock = self.codeBlocks['evaluation']
+    if evaluationCodeBlock.dependenciesEntity and evaluationCodeBlock.dependenciesEntity.xmlElement.hasAttribute('fourier_space'):
+      dependenciesXMLElement = evaluationCodeBlock.dependenciesEntity.xmlElement
+      evaluationSpace = evaluationCodeBlock.field.spaceFromString(dependenciesXMLElement.getAttribute('fourier_space'),
+                                                                  xmlElement = dependenciesXMLElement)
+      evaluationCodeBlock.space = evaluationSpace
+      self.initialSpace = evaluationSpace
     
     # Our components are constructed by an integral if the looping field doesn't have the same
     # dimensions as the field to which the computed vector belongs.
-    self.integratingComponents = not self.loopingField.isEquivalentToField(self.field)
+    self.integratingComponents = not evaluationCodeBlock.field.isEquivalentToField(self.field)
   
 

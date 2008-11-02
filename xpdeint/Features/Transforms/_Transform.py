@@ -8,7 +8,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
 from xpdeint.Features._Feature import _Feature
-from xpdeint.Utilities import lazyproperty
+from xpdeint.Utilities import lazy_property
 import operator
 
 class _Transform (_Feature):
@@ -18,7 +18,7 @@ class _Transform (_Feature):
     _Feature.__init__(self, *args, **KWs)
     self.transformMask = 0
   
-  @lazyproperty
+  @lazy_property
   def isMPICapable(self):
     return bool(self.mpiCapableSubclass)
   

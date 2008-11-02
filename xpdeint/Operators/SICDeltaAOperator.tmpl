@@ -10,7 +10,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 
 @def description: Left/Right Delta A propagation operator for field $field.name
 
-@def insideEvaluateOperatorLoops
+@def insideEvaluateOperatorLoops($codeString)
   @#
   @# The Operator class will have defined for us all of the dVariableName_dPropagationDimension variables.
   @# Note that we assume that all of the integration vectors have an operotor component defined for them.
@@ -22,7 +22,7 @@ if (${crossDim.inSpace($operatorSpace).loopIndex} == 0) {
 if (${crossDim.inSpace($operatorSpace).loopIndex} == ${crossDim.inSpace($operatorSpace).globalLattice} - 1) {
   @end if
   // ********** Boundary condition code ***********
-  ${insertUserCodeFromEntity($boundaryConditionCodeEntity), autoIndent=True}@slurp
+  ${codeBlocks['boundaryCondition'].codeString, autoIndent=True}@slurp
   // **********************************************
   
   @for crossIntegrationVector in $crossIntegrationVectors
@@ -45,14 +45,14 @@ for (long _iter = 0; _iter < ${iterations}; _iter++) {
   #define d${propagationDimension} _step
   {
     // ************* Propagation code ***************
-    ${insertUserCodeFromEntity($propagationCodeEntity), autoIndent=True}@slurp
+    ${codeString, autoIndent=True}@slurp
     // **********************************************
   }
   #undef d${propagationDimension}
   
   {
     // *********** Cross-propagation code ***********
-    ${insertUserCodeFromEntity($crossPropagationCodeEntity), autoIndent=True}@slurp
+    ${codeBlocks['crossPropagation'].codeString, autoIndent=True}@slurp
     // **********************************************
   }
   
@@ -83,8 +83,7 @@ _old_${crossIntegrationVector.id}[${componentNumber}] += d${componentName}_d${cr
   @#
 @end def
 
-@def evaluateOperatorLoop($setOfVectorsToLoopOver)
-  @#
+@def evaluateOperatorFunctionContentsWithCodeBlock($function)
   @#
   @# We shouldn't have a deltaAField. It doesn't work with cross-propagation.
   @assert not $deltaAField
@@ -92,8 +91,7 @@ _old_${crossIntegrationVector.id}[${componentNumber}] += d${componentName}_d${cr
   @for $crossIntegrationVector in $crossIntegrationVectors
 ${crossIntegrationVector.type} _old_${crossIntegrationVector.id}[_${crossIntegrationVector.id}_ncomponents];
   @end for
-
-${loopOverFieldInSpaceWithVectorsAndInnerContent($loopingField, $operatorSpace, $setOfVectorsToLoopOver, $insideEvaluateOperatorLoops,
-                                                 loopingOrder=$loopingOrder)}@slurp
+  @#
+  @super(function)
   @#
 @end def

@@ -28,21 +28,20 @@ class _EXOperator(Operator):
     
     operatorNamesUsed = set()
     operatorNames = set(self.operatorNames)
+    sharedCodeBlock = self.parent.sharedCodeBlock
     
-    operatorTargetPairs = CodeLexer.targetComponentsForOperatorsInString(self.operatorNames, self.parent.sharedCodeEntity)
-    
-    parentDependencies = self.parent.dependencies
+    operatorTargetPairs = CodeLexer.targetComponentsForOperatorsInString(self.operatorNames, sharedCodeBlock)
     
     targetComponents = set()
-    for vector in parentDependencies:
+    for vector in sharedCodeBlock.dependencies:
       targetComponents.update(vector.components)
-    
-    specialTargetsVector = None
-    specialTargets = []
     
     indexAccessedVariables = None
     
-    for operatorName, target, codeSlice in operatorTargetPairs:
+    # We loop over this in reverse order as we will be modifying the code string. So in order to not have to
+    # re-run targetComponentsForOperatorsInString after each modification, we loop over the operatorTargetPairs in
+    # reverse order so that slices (character index ranges) for earlier operator-target pairs don't change
+    for operatorName, target, codeSlice in reversed(operatorTargetPairs):
       operatorNamesUsed.add(operatorName)
       
       # Target is what is inside the square brackets in the integration code block
@@ -57,66 +56,19 @@ class _EXOperator(Operator):
       
       if target in targetComponents:
         targetComponentName = target
-      else:
-        # The target might just be an indexed component i.e. phi[j+3, etc..]
-        if indexAccessedVariables == None:
-          indexAccessedVariables = CodeLexer.integerValuedDimensionsForVectors(parentDependencies, self.parent.sharedCodeEntity)
-        
-        try:
-          # This will extract the componentName corresponding to the indexed variable access if it is of that form
-          targetComponentName = [l[0] for l in indexAccessedVariables if l[3] == codeSlice][0]
-        except:
-          # The target of our EX operator isn't a simple component.
-          # In principle, this could be OK. We just need to construct the variable using the result vector.
-          # If the user has made a mistake with their code, the compiler will barf, not xpdeint. This isn't ideal
-          # but we can't understand an arbitrary string; that's what the compiler is for.
-          
-          if not specialTargetsVector:
-            # Construct a filter operator to create the special targets vector
-            specialTargetsVector = ComputedVector(name = self.id + "_special_targets", field = self.field,
-                                                  parent = self,
-                                                  xmlElement = self.xmlElement,
-                                                  **self.argumentsToTemplateConstructors)
-            
-            self._children.append(specialTargetsVector)
-            self.dependencies.add(specialTargetsVector)
-            
-            # When constructing the 'special targets' vector it may depend on anything the parent code (usually delta a operator) depends on
-            specialTargetsVector.dependencies = self.parent.dependencies.copy()
-            
-            # If all dependencies are of type double, then the special targets vector must be double too
-            if all([v.type == 'double' for v in self.parent.dependencies]):
-              specialTargetsVector.type = 'double'
-            
-            specialTargetsVector.evaluationSpace = self.parent.sharedCodeSpace
-            specialTargetsVector.evaluationCodeEntity = ParsedEntity(None, '')
-            specialTargetsVector.integratingComponents = False
-            
-            # We have to call bindNamedVectors on the filter operator in case it has some binding to do
-            # as it won't be called by parser2.py, however, preflight() will be called because it will
-            # be a child of this element.
-            specialTargetsVector.bindNamedVectors()
-          
-          if not target in specialTargets:
-            specialTargets.append(target)
-            targetComponentName = 'target' + str(specialTargets.index(target))
-            specialTargetsVector.components.append(targetComponentName)
-            specialTargetsVector.evaluationCodeEntity.value += ''.join([targetComponentName, ' = ', target, ';\n'])
-          
-          targetComponentName = 'target' + str(specialTargets.index(target))
-          targetVector = specialTargetsVector
-        else:
-          # We were able to extract the componentName corresponding to the index variable access
-          replacementStringSuffix = self.parent.sharedCode[codeSlice]
-          assert replacementStringSuffix.startswith(targetComponentName)
-          replacementStringSuffix = replacementStringSuffix[len(targetComponentName):]
-          
-      if not targetVector:
         # We have direct access to the component, so just work out which vector it belongs to
         # Now we need to get the vector corresponding to componentName
-        tempVectorList = [v for v in parentDependencies if targetComponentName in v.components]
+        tempVectorList = [v for v in sharedCodeBlock.dependencies if targetComponentName in v.components]
         assert len(tempVectorList) == 1
         targetVector = tempVectorList[0]
+      else:
+        # The target of our EX operator isn't a simple component.
+        # In principle, this could be OK. We just need to construct the variable using the result vector.
+        # If the user has made a mistake with their code, the compiler will barf, not xpdeint. This isn't ideal
+        # but we can't understand an arbitrary string; that's what the compiler is for.
+        
+        targetComponentName = sharedCodeBlock.addCodeStringToSpecialTargetsVector(target, codeSlice)
+        targetVector = sharedCodeBlock.specialTargetsVector
       
       # We have our match, now we need to create the operatorComponents dictionary
       if not operatorName in self.operatorComponents:
@@ -129,8 +81,7 @@ class _EXOperator(Operator):
       
       if targetVector.type == 'complex':
         for v in [self.operatorVector, self.resultVector]:
-          if v:
-            v.type = 'complex'
+          if v: v.type = 'complex'
       
       # Set the replacement string for the L[x] operator
       replacementString = "_%(operatorName)s_%(targetComponentName)s" % locals()
@@ -139,11 +90,7 @@ class _EXOperator(Operator):
       if not replacementString in self.resultVector.components:
         self.resultVector.components.append(replacementString)
       
-      if replacementStringSuffix:
-        replacementString += replacementStringSuffix
-      
-      self.parent.sharedCode = self.parent.sharedCode[:codeSlice.start] + replacementString + self.parent.sharedCode[codeSlice.stop:]
-    
+      sharedCodeBlock.codeString = sharedCodeBlock.codeString[:codeSlice.start] + replacementString + sharedCodeBlock.codeString[codeSlice.stop:]
     
     # If any operator names weren't used in the code, issue a warning
     unusedOperatorNames = operatorNames.difference(operatorNamesUsed)
@@ -160,7 +107,9 @@ class _EXOperator(Operator):
     # These dependencies are just the delta a dependencies, so this is just adding
     # our result vector to the dependencies for the delta a operator
     if self.resultVector:
-      self.parent.dependencies.add(self.resultVector)
+      sharedCodeBlock.dependencies.add(self.resultVector)
     
+    # If we are nonconstant then we need to add the target vectors to the dependencies of our primary code block
+    if not 'calculateOperatorField' in self.functions:
+      self.primaryCodeBlock.dependencies.update(self.targetVectors)
     
-  

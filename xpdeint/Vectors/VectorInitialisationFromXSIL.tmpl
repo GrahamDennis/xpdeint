@@ -97,20 +97,18 @@ inline double XMDSSwapDouble(double __in)
 @def initialiseVector
   @#
   @set $featureOrdering = ['Stochastic']
-  @set $featureDict = {'field': $vector.field, 'space': $vector.initialSpace}
-  @#
-  @set $vectorsToLoopOver = set([$vector])
-  @silent $vectorsToLoopOver.update($dependencies)
+  @set $featureDict = {'codeBlock': $codeBlocks['initialisation']}
   @#
 $insertCodeForFeatures('vectorInitialisationBegin', $featureOrdering, featureDict)@slurp
   @#
+  @set $initialisationCodeBlock = $codeBlocks['initialisation']
 // XSIL initialisation has three stages.
 // 1. Initialise the vector to zero.
 // 2. Execute any CDATA code if there is any.
 // 3. Read data from the XSIL file.
 
 {
-  ${loopOverFieldInSpaceWithVectorsAndInnerContent($vector.field, $vector.initialSpace, $vectorsToLoopOver, $insideInitialisationLoops), autoIndent=True}@slurp
+  ${initialisationCodeBlock.loop(self.insideInitialisationLoops), autoIndent=True}@slurp
 }
 
 char **_dimNames  = new char* [_${vector.field.name}_ndims];
@@ -280,7 +278,13 @@ for (unsigned int _component = 0; _component < ${componentNameSizePrefix}_${vect
     continue;
   _inputfield_index_pointer = -42; // Just so that we always seek the first time
   
-  ${loopOverFieldInSpaceWithVectorsAndInnerContent($vector.field, $vector.initialSpace, $vectorsToLoopOver, $insideDataLoops), autoIndent=True}@slurp
+  @set $loopingVectors = $initialisationCodeBlock.dependencies.copy()
+  @silent loopingVectors.add($vector)
+  
+  ${loopOverFieldInSpaceWithVectorsAndInnerContent($initialisationCodeBlock.field,
+                                                   $initialisationCodeBlock.space,
+                                                   $loopingVectors,
+                                                   $insideDataLoops), autoIndent=True}@slurp
   
 } // end the loop over components
 
@@ -302,19 +306,19 @@ $insertCodeForFeaturesInReverseOrder('vectorInitialisationEnd', $featureOrdering
   @#
 @end def
 
-@def insideInitialisationLoops
+@def insideInitialisationLoops($codeString)
   @#
 // Stage 1 of initialisation
 for (unsigned int _component = 0; _component < _${vector.id}_ncomponents; _component++)
   _active_${vector.id}[_${vector.id}_index_pointer + _component] = 0.0;
 
 // Stage 2 of initialisation
-  @if not $initialisationCodeEntity.value.isspace()
+  @if $codeString.isspace()
 // There is no stage 2.
   @else
 
 // ********** Initialisation code ***************
-${insertUserCodeFromEntity($initialisationCodeEntity)}@slurp
+${codeString}@slurp
 // **********************************************
   @end if
   @#

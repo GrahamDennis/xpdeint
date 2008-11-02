@@ -5,8 +5,8 @@ Created by Graham Dennis on 2007-10-20.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *@
 @extends xpdeint.Segments.Integrators._Integrator
-@from xpdeint.CallOnceGuards import callOncePerInstanceGuard
 @from xpdeint.Geometry.NonUniformDimensionRepresentation import NonUniformDimensionRepresentation
+@from xpdeint.CallOnceGuards import callOncePerInstanceGuard
 
 @def description: segment $segmentNumber (Unnamed Integrator)
 
@@ -86,7 +86,7 @@ ${operatorContainer.evaluateOperators}@slurp
 @end def
 
 @@callOncePerInstanceGuard
-@def initialise
+@def allocate
 @*doc:
 Allocate additional arrays needed for the integrator
 
@@ -94,6 +94,9 @@ This is a call once-per-instance function because we may want to do the initiali
 (and clean-up) for this segment in a parent segment for efficiency reasons (if, for
 example we are looping over this segment, or we are running multiple paths).
 *@
+  @#
+  @super
+  @#
   @# Loop over the vectors creating the arrays
   @for $vector in $integrationVectors
     @# Loop over the variables that need to be created
@@ -103,35 +106,17 @@ _${name}_${arrayName}_${vector.id} = @slurp
     @end for
   @end for
   @#
-  @# Loop over the computed vectors, as we need to allocate their arrays
-  @for $vector in $computedVectors
-$vector.allocate@slurp
-  @end for
-  @#
-  @# Let the operators allocate and initialise any arrays they need
-  @for $operatorContainer in $operatorContainers
-$operatorContainer.initialise@slurp
-  @end for
-  @#
 @end def
 
 @@callOncePerInstanceGuard
-@def finalise
+@def free
+  @#
+  @super
   @#
   @for $vector in $integrationVectors
     @for $arrayName in $extraIntegrationArrayNames
 xmds_free(_${name}_${arrayName}_${vector.id});
     @end for
-  @end for
-  @#
-  @# Loop over the computed vectors, as we need to clean up their arrays
-  @for $vector in $computedVectors
-$vector.free@slurp
-  @end for
-  @#
-  @# Let the operators do their clean up
-  @for $operatorContainer in $operatorContainers
-$operatorContainer.finalise@slurp
   @end for
   @#
 @end def

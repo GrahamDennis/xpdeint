@@ -77,6 +77,7 @@ ${createStepVariable}@slurp
   @set $featureOrderingOuter = ['Stochastic']
 ${insertCodeForFeatures('integrateFixedStepBegin', featureOrderingOuter)}@slurp
 
+${allocate}@slurp
 ${initialise}@slurp
 ${localInitialise}@slurp
 
@@ -104,6 +105,7 @@ for (long _istep = 0; _istep < ${stepCount}; _istep++) {
 
 ${localFinalise}@slurp
 ${finalise}@slurp
+${free}@slurp
 
 ${insertCodeForFeaturesInReverseOrder('integrateFixedStepEnd', featureOrderingOuter)}@slurp
   @#
@@ -178,9 +180,10 @@ void _${name}_initialise_cross_propagation()
   @silent combinedLoopVectorMap.update($dependencyMap)
   @#
   @set $vectorsNeedingTransforms = set(combinedLoopVectorMap.keys())
+  @set $boundaryConditionDependencies = $parent.codeBlocks['boundaryCondition'].dependencies
   @silent vectorsNeedingTransforms.update(combinedLoopVectorMap.values())
-  @silent vectorsNeedingTransforms.update($parent.boundaryConditionDependencies)
-  ${transformVectorsToSpace(vectorsNeedingTransforms, $homeSpace), autoIndent=True}@slurp
+  @silent vectorsNeedingTransforms.update(boundaryConditionDependencies)
+  ${transformVectorsToSpace(vectorsNeedingTransforms, 0), autoIndent=True}@slurp
   
   // Copy the initial value of the cross-propagation integration vectors and dependencies into our local arrays
   {
@@ -190,22 +193,9 @@ void _${name}_initialise_cross_propagation()
   }
   
   @#
-  @if $propagationDirection == '+'
-    @set $indexOverrideValue = $positiveIndexOverride
-  @else
-    @set $indexOverrideValue = $negativeIndexOverride
-  @end if
-  @#
-  @# Create the index overrides dictionary for the boundary conditions. We only need to override the propagation dimension.
-  @set $indexOverrides = {$propagationDimension: dict([(v.field, indexOverrideValue) for v in $parent.boundaryConditionDependencies])}
-  @#
-  @set $setOfVectorsToLoopOver = $integrationVectors.copy()
-  @silent setOfVectorsToLoopOver.update($parent.boundaryConditionDependencies)
-  @#
   // Set the boundary condition
   {
-    ${loopOverFieldInSpaceWithVectorsAndInnerContent($parent.reducedField, $homeSpace, $setOfVectorsToLoopOver,
-                                                     $parent.boundaryConditionCode, indexOverrides = $indexOverrides), autoIndent=True}@slurp
+    ${parent.codeBlocks['boundaryCondition'].loop(self.boundaryConditionCode), autoIndent=True}@slurp
   }
 
   // Copy the initial value of the integration vectors back into their main arrays
@@ -216,6 +206,14 @@ void _${name}_initialise_cross_propagation()
   }
   
 }
+  @#
+@end def
+
+@def boundaryConditionCode($codeString)
+  @#
+// ********** Boundary condition code ***********
+${codeString}@slurp
+// **********************************************
   @#
 @end def
 

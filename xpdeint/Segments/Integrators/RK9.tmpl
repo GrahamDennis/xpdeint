@@ -20,6 +20,10 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 
 
 @def localInitialise
+  @#
+  @super
+  @#
+
 // Runge Kutta method constants
 double _a_raw[16];
 double _a[16];
@@ -143,8 +147,6 @@ _c[13] = 0.12691439652445903685643385312168037;
 _c[14] =-0.00052539244262118876455834655383035;
 _c[15] = 1.0/31.0;
 
-  @#
-  @super
   @#
 @end def
 

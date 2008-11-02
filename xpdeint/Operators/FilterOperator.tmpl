@@ -10,10 +10,10 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 
 @def description: Filter operator
 
-@def insideEvaluateOperatorLoops
+@def insideEvaluateOperatorLoops($codeString)
   @#
 // ************** Filter code *****************
-${insertUserCodeFromEntity($operatorDefinitionCodeEntity)}@slurp
+${codeString}@slurp
 // **********************************************
   @#
 @end def

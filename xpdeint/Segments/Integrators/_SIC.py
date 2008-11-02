@@ -70,15 +70,12 @@ class _SIC (FixedStep):
     leftRightDeltaAOperator.crossPropagationDimension           = crossOp.propagationDimension
     leftRightDeltaAOperator.crossPropagationDirection           = direction
     leftRightDeltaAOperator.integrationVectorsEntity            = normalDeltaAOperator.integrationVectorsEntity
-    leftRightDeltaAOperator.dependenciesEntity                  = normalDeltaAOperator.dependenciesEntity
-    leftRightDeltaAOperator.propagationCodeEntity               = normalDeltaAOperator.propagationCodeEntity
+    leftRightDeltaAOperator.codeBlocks['operatorDefinition']    = normalDeltaAOperator.codeBlocks['operatorDefinition']
     
-    leftRightDeltaAOperator.boundaryConditionDependenciesEntity = crossOp.boundaryConditionDependenciesEntity
-    leftRightDeltaAOperator.boundaryConditionCodeEntity         = crossOp.boundaryConditionCodeEntity
+    leftRightDeltaAOperator.codeBlocks['boundaryCondition']     = crossOp.codeBlocks['boundaryCondition']
     
     leftRightDeltaAOperator.crossIntegrationVectorsEntity       = crossOp.integrationVectorsEntity
-    leftRightDeltaAOperator.crossPropagationDependenciesEntity  = oldCrossDeltaAOperator.dependenciesEntity
-    leftRightDeltaAOperator.crossPropagationCodeEntity          = crossOp.operatorDefinitionCodeEntity
+    leftRightDeltaAOperator.codeBlocks['crossPropagation']      = oldCrossDeltaAOperator.codeBlocks['operatorDefinition']
     
     leftRightDeltaAOperator.iterations = crossOp.crossPropagationIntegrator.iterations
     
@@ -88,10 +85,10 @@ class _SIC (FixedStep):
       if leftRightDeltaAOperator.field.dimensions[-1].name != crossPropagationDimensionName:
         # We need to create a new field with reordered dimensions
         loopingFieldName = ''.join(['_', normalDeltaAOperator.id, '_leftright_looping_field'])
-      
+        
         loopingField = FieldElement(name = loopingFieldName,
                                     **self.argumentsToTemplateConstructors)
-      
+        
         loopingField.dimensions = [dim.copy(parent=loopingField) for dim in newFieldDimensions]
         crossDim = loopingField.dimensionWithName(crossPropagationDimensionName)
         loopingField.dimensions.remove(crossDim)

@@ -12,7 +12,7 @@ from xpdeint.ScriptElement import ScriptElement
 from xpdeint.Operators._Operator import _Operator
 from xpdeint.ParserException import ParserException
 
-from xpdeint.Utilities import lazyproperty
+from xpdeint.Utilities import lazy_property, valueForKeyPath
 
 class OperatorContainer(ScriptElement):
   """
@@ -54,7 +54,7 @@ class OperatorContainer(ScriptElement):
   ``callOperatorFunctionWithArguments`` method.
   """
   def __init__(self, *args, **KWs):
-    localKWs = self.extractLocalKWs(['field', 'name', 'sharedCodeEntityKeyPath', 'dependenciesKeyPath', 'sharedCodeSpaceKeyPath'], KWs)
+    localKWs = self.extractLocalKWs(['field', 'name', 'sharedCodeBlockKeyPath'], KWs)
     
     ScriptElement.__init__(self, *args, **KWs)
     
@@ -67,31 +67,21 @@ class OperatorContainer(ScriptElement):
     self._name = localKWs.get('name', None)
     
     # These key paths are the 'paths' to the actual attributes for our
-    # 'sharedCodeEntity', 'dependencies' and 'sharedCodeSpace' proxy properties
-    self.sharedCodeEntityKeyPath = localKWs.get('sharedCodeEntityKeyPath', 'deltaAOperator.propagationCodeEntity')
-    self.dependenciesKeyPath = localKWs.get('dependenciesKeyPath', 'deltaAOperator.dependencies')
-    self.sharedCodeSpaceKeyPath = localKWs.get('sharedCodeSpaceKeyPath', 'deltaAOperator.operatorSpace')
+    # 'sharedCodeBlock' proxy property
+    self.sharedCodeBlockKeyPath = localKWs.get('sharedCodeBlockKeyPath', 'deltaAOperator.primaryCodeBlock')
   
   def _getSharedCode(self):
-    return self.valueForKeyPath(self.sharedCodeEntityKeyPath).value
+    return valueForKeyPath(self, self.sharedCodeEntityKeyPath).value
   
   def _setSharedCode(self, value):
-    self.valueForKeyPath(self.sharedCodeEntityKeyPath).value = value
+    valueForKeyPath(self, self.sharedCodeEntityKeyPath).value = value
   
   sharedCode = property(_getSharedCode, _setSharedCode)
   del _getSharedCode, _setSharedCode
   
-  @lazyproperty
-  def sharedCodeEntity(self):
-    return self.valueForKeyPath(self.sharedCodeEntityKeyPath)
-  
-  @property
-  def dependencies(self):
-    return self.valueForKeyPath(self.dependenciesKeyPath)
-  
-  @property
-  def sharedCodeSpace(self):
-    return self.valueForKeyPath(self.sharedCodeSpaceKeyPath)
+  @lazy_property
+  def sharedCodeBlock(self):
+    return valueForKeyPath(self, self.sharedCodeBlockKeyPath)
   
   @property
   def name(self):
@@ -114,7 +104,9 @@ class OperatorContainer(ScriptElement):
   
   @property
   def children(self):
-    return self.operators
+    children = super(OperatorContainer, self).children
+    children.extend(self.operators)
+    return children
   
   @property
   def computedVectorsNeedingPrecalculation(self):
@@ -136,7 +128,6 @@ class OperatorContainer(ScriptElement):
       self.postDeltaAOperators.append(op)
     
     op.operatorNumber = len(self.operators) - 1
-  
   
   def evaluateIPOperators(self, arguments = None, parentFunction = None):
     arguments = arguments or {}
@@ -166,13 +157,6 @@ class OperatorContainer(ScriptElement):
   def callOperatorFunctionWithArguments(functionName, operators, arguments = None, parentFunction = None):
     arguments = arguments or {}
     return '\n'.join(['// ' + op.description() + '\n' + op.functions[functionName].call(arguments, parentFunction = parentFunction) + '\n' for op in operators])
-  
-  def initialise(self):
-    return '\n'.join([op.initialise() for op in self.operators])
-  
-  def finalise(self):
-    return '\n'.join([op.finalise() for op in self.operators])
-  
   
   def preflight(self):
     super(OperatorContainer, self).preflight()

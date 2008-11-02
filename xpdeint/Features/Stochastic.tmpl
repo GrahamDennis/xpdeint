@@ -77,8 +77,8 @@ ${generateNoisesForVector($dict)}@slurp
 @def generateNoisesForVector($dict)
   @#
   @set $caller = dict['caller']
-  @set $field = dict['field']
-  @set $space = dict['space']
+  @set $field = dict['codeBlock'].field
+  @set $space = dict['codeBlock'].space
   @#
   @set $noisesNeeded = $noises[:]
   @if caller.hasattr('noises')
