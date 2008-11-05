@@ -1269,7 +1269,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       else:
         dimensionNames = RegularExpressionStrings.symbolsInString(operatorsElement.getAttribute('dimensions'))
       
-      fieldTemplate = FieldElementTemplate.sortedFieldWithDimensionNames(dimensionNames, createIfNeeded = False)
+      fieldTemplate = FieldElementTemplate.sortedFieldWithDimensionNames(dimensionNames, xmlElement = operatorsElement, createIfNeeded = False)
       
       if not fieldTemplate:
         raise ParserException(operatorsElement, "There are no vectors with this combination of dimensions.")
