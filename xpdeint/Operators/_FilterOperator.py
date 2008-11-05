@@ -26,7 +26,7 @@ class _FilterOperator (Operator):
   
   @lazy_property
   def field(self):
-    return self.primaryCodeblock.field
+    return self.primaryCodeBlock.field
   
   def bindNamedVectors(self):
     super(_FilterOperator, self).bindNamedVectors()
