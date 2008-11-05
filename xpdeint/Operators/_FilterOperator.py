@@ -12,6 +12,7 @@ from xpdeint.Geometry.FieldElement import FieldElement
 
 from xpdeint import RegularExpressionStrings
 from xpdeint.ParserException import ParserException
+from xpdeint.Utilities import lazy_property
 
 class _FilterOperator (Operator):
   # Filter operators must cause their computed vectors to be re-evaluated
@@ -23,6 +24,9 @@ class _FilterOperator (Operator):
   operatorKind = Operator.OtherOperatorKind
   vectorsMustBeInSubsetsOfIntegrationField = False
   
+  @lazy_property
+  def field(self):
+    return self.primaryCodeblock.field
   
   def bindNamedVectors(self):
     super(_FilterOperator, self).bindNamedVectors()
