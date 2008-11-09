@@ -21,7 +21,7 @@ class _NoTransformMPI (_NoTransform):
   def isFieldDistributed(self, field):
     return field.hasDimension(self.mpiDimension)
   
-  def mpiDimensionForSpace(self, space):
-    return self.mpiDimension
+  def mpiDimRepForSpace(self, space):
+    return self.mpiDimension.inSpace(space)
   
 

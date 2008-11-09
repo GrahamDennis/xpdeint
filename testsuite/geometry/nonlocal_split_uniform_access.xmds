@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="nonlocal_split_uniform_access.xsil" expected="nonlocal_split_uniform_access_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+  </testing>
+  
+  <name>nonlocal_split_uniform_access</name>
+  <author>Graham Dennis</author>
+  <description>
+    Script to test accessing a fourier-transformed dimension backwards.
+    Based off of vibstring.xmds
+  </description>
+  
+  <features>
+    <benchmark />
+    <bing />
+    <fftw version="3" plan="patient" />
+    <globals>
+      <![CDATA[
+      const double T = 10.0;
+      const double mass = 1e-3;
+      const double length = 1.0;
+      const double mu = mass/length;
+      const double T_mu = T/mu;
+      
+      const double xmax = _max_x;
+      const double width = 0.1;
+      const double absorb = 80.0;
+      ]]>
+    </globals>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="x" lattice="256"  domain="(-1, 1)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="main" initial_space="x" type="complex">
+    <components>
+      u uDot
+    </components>
+    <initialisation>
+      <![CDATA[
+        u = exp(-100.0*(x-0.5)*(x-0.5))*c_exp(i*200*x);
+        uDot = u*i*200*sqrt(T_mu);
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="ARK45" tolerance="1e-5" interval="2e-3" steps="1000">
+      <samples>5</samples>
+      <operators>
+        <operator kind="ex" constant="no">
+          <operator_names>L</operator_names>
+          <![CDATA[
+            L = -T_mu*kx*kx;
+          ]]>
+        </operator>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+          du_dt = uDot;
+          duDot_dt = L[u];
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  <output format="binary">
+    <group>
+      <sampling initial_sample="yes">
+        <dimension name="x" fourier_space="yes" lattice="256" />
+        <moments>amp amp_reversed</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          amp = mod2(u);
+          amp_reversed = mod2(u(kx: -kx));
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>

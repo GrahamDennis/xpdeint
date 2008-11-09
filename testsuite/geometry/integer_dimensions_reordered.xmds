@@ -19,10 +19,8 @@
   <geometry>
     <propagation_dimension> t </propagation_dimension>
     <transverse_dimensions>
-      <integer_valued>
-        <dimension name="j" lattice="5" domain="(0, 4)" />
-        <dimension name="k" lattice="7" domain="(-3, 3)" />
-      </integer_valued>
+      <dimension name="j" type="integer" lattice="5" domain="(0, 4)" />
+      <dimension name="k" type="integer" lattice="7" domain="(-3, 3)" />
     </transverse_dimensions>
   </geometry>
   
@@ -32,8 +30,8 @@
     </components>
     <initialisation>
       <![CDATA[
-      x[j, k] = 1.0e-3;
-      x[0, k] = 1.0;
+      x(k: k, j: j) = 1.0e-3;
+      x(j: 0, k: k) = 1.0;
       ]]>
     </initialisation>
   </vector>
@@ -48,7 +46,7 @@
         if (j_minus_one < 0)
           j_minus_one += _lattice_j;
         long j_plus_one  = (j+1) % _lattice_j;
-        dx_dt[j, k] = x[j, k]*(x[j_minus_one, k] - x[j_plus_one, k]);
+        dx_dt(j: j) = x(j: j, k: k)*(x(j: j_minus_one) - x(j: j_plus_one));
         ]]>
       </operators>
     </integrate>

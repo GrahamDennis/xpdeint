@@ -29,9 +29,7 @@
   <geometry>
     <propagation_dimension> t </propagation_dimension>
     <transverse_dimensions>
-      <integer_valued>
-        <dimension name="j" domain="(1, 10000)" />
-      </integer_valued>
+      <dimension name="j" type="integer" domain="(1, 10000)" />
     </transverse_dimensions>
   </geometry>
     

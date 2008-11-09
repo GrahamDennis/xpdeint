@@ -13,6 +13,7 @@ from xpdeint.ParserException import ParserException
 from xpdeint.Function import Function
 from xpdeint.Utilities import lazy_property
 from xpdeint import CodeLexer
+from xpdeint.CodeLexer import LexerException
 from xpdeint.CallOnceGuards import callOncePerInstanceGuard
 
 from xpdeint.Vectors.ComputedVector import ComputedVector
@@ -31,6 +32,9 @@ class _UserLoopCodeBlock(ScriptElement):
     
     self.bindNamedVectorsCalled = False
     self.preflightCalled = False
+    
+    self.prefixCodeString = ''
+    self.postfixCodeString = ''
   
   @property
   def value(self):
@@ -48,8 +52,12 @@ class _UserLoopCodeBlock(ScriptElement):
     """
     return self.xmlElement.lineNumberForCDATASection()
   
+  @property
+  def loopCodeString(self):
+    return self.prefixCodeString + self.codeString + self.postfixCodeString
+  
   def loop(self, codeWrapperFunction = None, **KWs):
-    loopCode = self.codeString
+    loopCode = self.loopCodeString
     if codeWrapperFunction: loopCode = codeWrapperFunction(loopCode)
     
     loopKWs = self.loopArguments.copy()
@@ -127,60 +135,102 @@ class _UserLoopCodeBlock(ScriptElement):
     
     return targetVariableName
   
-  def fixupComponentsWithIntegerValuedDimensions(self):
+  def fixupNonlocallyAccessedComponents(self):
     """
     In user code, the user may refer to parts of a vector nonlocally in integer-valued dimensions.
-    This code translates variables accessed with the ``phi[j-3, k+5, l/2][p*p, q, r]`` notation to a form
-    that can be used in the C++ source file. The form currently used is ``_phi(j-3, k+5, l/2, p*p, q, r)``
-    and this is defined as a macro by the appropriate `ScriptElement` looping function.
+    This code translates variables accessed with the ``phi(j: j-3, k:k+5, l:l/2, p:p*p, q:q, r:r)`` notation to a form
+    that can be used in the C++ source file. The form currently used is ``_phi_jklpqr(j-3, k+5, l/2, p*p, q, r)``.
     
-    This function makes an optimisation where if all integer-valued dimensions are accessed locally,
-    the ``phi[j, k, l][p, q, r]`` notation is replaced with the string ``phi`` which is a faster
-    way of accessing the local value than through using the ``_phi(...)`` macro.
+    This function makes an optimisation where if all dimensions are accessed locally,
+    the ``phi(j: j, k:k, l:l, p:p, q: q, r: r)`` notation is replaced with the string ``phi`` which is a faster
+    way of accessing the local value than through using the ``_phi_jklpqr(...)`` macro.
     """
     vectorsToFix = self.dependencies.copy()
     if self.targetVector: vectorsToFix.add(self.targetVector)
     
-    if self.getVar('geometry').integerValuedDimensions and vectorsToFix:
-      simulationDriver = self.getVar('features')['Driver']
-      for componentName, field, integerDimDict, codeSlice in reversed(CodeLexer.integerValuedDimensionsForVectors(vectorsToFix, self)):
-        # We know that integerDimDict is non-empty
+    nonlocalVariablesCreated = set()
+    
+    vectorOverrides = self.loopArguments.get('vectorOverrides', [])
+    
+    simulationDriver = self.getVar('features')['Driver']
+    for componentName, vector, nonlocalAccessDict, codeSlice in reversed(CodeLexer.nonlocalDimensionAccessForVectors(vectorsToFix, self)):
+      availableDimReps = [dim.inSpace(self.space) for dim in vector.field.dimensions]
+      validDimensionNames = [dimRep.name for dimRep in availableDimReps]
+      
+      # If the dict is empty, then it probably means something else
+      if not nonlocalAccessDict:
+        continue
+      
+      if vector in vectorOverrides:
+        vectorID = vector.id
+        raise LexerException(self, codeSlice.start, "Cannot access vector '%(vectorID)s' non-locally." % locals())
+      
+      # Check that there are no dimensions listed in the nonlocalAccessDict that don't refer to valid
+      # dimensions for this vector
+      
+      for dimName in nonlocalAccessDict.iterkeys():
+        if not dimName in validDimensionNames:
+          raise LexerException(self, nonlocalAccessDict[dimName][1].start, "Component '%s' doesn't have dimension '%s'." % (componentName, dimName))
+      
+      dimRepsNeeded = [dimRep for dimRep in availableDimReps if dimRep.name in nonlocalAccessDict and nonlocalAccessDict[dimRep.name][0] != dimRep.name]
+      
+      if not dimRepsNeeded:
+        replacementString = componentName
+      else:
+        # Check that the mpi distributed dimension isn't being accessed nonlocally.
+        if vector.field.isDistributed:
+          for dimRep in dimRepsNeeded:
+            if dimRep.name == simulationDriver.mpiDimRepForSpace(self.space).name:
+              dimRepName = dimRep.name
+              raise LexerException(self, nonlocalAccessDict[dimRepName][1].start,
+                                   "It is illegal to access the dimension '%(dimRepName)s' nonlocally because it is being distributed with MPI.\n"
+                                   "Try not using MPI or changing the order of your dimensions." % locals())
         
-        integerValuedDimensions = field.integerValuedDimensions
+        nonlocalAccessVariableName = '_%s_' % componentName
+        nonlocalAccessVariableName += ''.join([dimRep.name for dimRep in dimRepsNeeded])
         
-        integerValuedDimensionNames = []
-        for dimList in integerValuedDimensions:
-          integerValuedDimensionNames.extend([dim.name for dim in dimList])
-        
-        # We can do an optimisation here, components accessed with the 'normal' pattern
-        # can be stripped of the integer-valued dimension specifiers. i.e.
-        # phi[j, k] can become just 'phi' if the first integer-valued dimension is 'j' and
-        # the second is 'k'.
-        
-        canOptimiseIntegerValuedDimensions = all([integerDimDict[dimName][0] == dimName for dimName in integerValuedDimensionNames])
-        
-        if canOptimiseIntegerValuedDimensions:
-          replacementString = componentName
-        else:
-          # It would be illegal to try and access any distributed dimensions nonlocally, so we need to check for this.
-          for dim in field.dimensions:
-            if dim.name in simulationDriver.distributedDimensionNames and dim.name in integerValuedDimensionNames:
-              if not integerDimDict[dim.name][0] == dim.name:
-                dimName = dim.name
-                raise ParserException(self.xmlElement, "It is illegal to access the dimension '%(dimName)s' nonlocally because it is being distributed with MPI.\n"
-                                                       "Try not using MPI or changing the order of your dimensions." % locals())
+        if not nonlocalAccessVariableName in nonlocalVariablesCreated:
+          # Populate with whatever we have set for us if it's there.
+          indexOverrides = self.loopArguments.get('indexOverrides', {}).copy()
+          for dimRep in dimRepsNeeded:
+            indexOverrides[dimRep.name] = {vector.field: dimRep.loopIndex}
           
-          argumentsString = ', '.join([integerDimDict[dimName][0] for dimName in integerValuedDimensionNames])
+          argumentsString = ', '.join([dimRep.loopIndex for dimRep in dimRepsNeeded])
+          vectorID = vector.id
+          componentNumber = vector.components.index(componentName)
+          defineString = "#define %(nonlocalAccessVariableName)s(%(argumentsString)s) _active_%(vectorID)s[%(componentNumber)s + (0" % locals()
           
-          replacementString = '_%(componentName)s(%(argumentsString)s)' % locals()
+          for dimension in vector.field.dimensions:
+            termString = self.explicitIndexPointerTermForVectorAndDimensionWithFieldAndSpace(vector, dimension, self.field, self.space, indexOverrides)
+            defineString += termString.replace('\n', ' \\\n')
+          defineString += ') * _%(vectorID)s_ncomponents]\n' % locals()
+          self.prefixCodeString += defineString
+          nonlocalVariablesCreated.add(nonlocalAccessVariableName)
         
-        # Replace the phi[j] string with the appropriate string
-        self.codeString = self.codeString[:codeSlice.start] + replacementString + self.codeString[codeSlice.stop:]
+        arguments = []
+        for dimRep in dimRepsNeeded:
+          accessString = nonlocalAccessDict[dimRep.name][0]
+          if self.field.hasDimensionName(dimRep.parent.name):
+            fieldDimensionRep = self.field.dimensionWithName(dimRep.parent.name).inSpace(self.space)
+          else:
+            fieldDimensionRep = None
+          argumentValue = dimRep.nonlocalAccessIndexFromStringAndLoopDimRep(accessString, fieldDimensionRep)
+          dimRepName = dimRep.name
+          if not argumentValue:
+            raise LexerException(self, nonlocalAccessDict[dimRep.name][1].start,
+                                 "Cannot access the '%(dimRepName)s' dimension nonlocally with the string '%(accessString)s'. Check the documentation." % locals())
+          arguments.append('/* %(dimRepName)s: %(accessString)s */ (%(argumentValue)s)' % locals())
+        argumentsString = ', '.join(arguments)
+        replacementString = '%(nonlocalAccessVariableName)s(%(argumentsString)s)' % locals()
+      
+      # Replace the phi(j = j + 7) string with the appropriate string
+      # i.e. _phi_j(j + 7)
+      self.codeString = self.codeString[:codeSlice.start] + replacementString + self.codeString[codeSlice.stop:]
     
   
   def transformCodeString(self):
     """Modify the user code as necessary."""
-    self.fixupComponentsWithIntegerValuedDimensions()
+    self.fixupNonlocallyAccessedComponents()
     
     if self.codeString.count('\n'):
       # Deindent code and add '#line' compiler directives
@@ -225,8 +275,11 @@ class _TargetConstructorCodeBlock(_UserLoopCodeBlock):
     return frozenset(dependencies)
   
   @property
-  def codeString(self):
-    return ''.join(['target%i = %s;\n' % (targetNum, targetCodeBlock.codeString) for targetNum, targetCodeBlock in enumerate(self.targetCodeBlocks)])
+  def loopCodeString(self):
+    prefixString = ''.join([cb.prefixCodeString for cb in self.targetCodeBlocks])
+    loopString = ''.join(['target%i = %s;\n' % (targetNum, cb.codeString) for targetNum, cb in enumerate(self.targetCodeBlocks)])
+    postfixString = ''.join([cb.postfixCodeString for cb in self.targetCodeBlocks])
+    return prefixString + loopString + postfixString
   
   def transformCodeString(self):
     # This will be done as needed for all child code blocks

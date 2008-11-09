@@ -94,6 +94,11 @@ class _MomentGroupElement (ScriptElement):
         self.outputField.dimensions.remove(singlePointDimension)
         singlePointDimension.remove()
     
+    outputFieldID = self.outputField.id
+    propagationDimension = self.propagationDimension
+    self.codeBlocks['sampling'].loopArguments['indexOverrides'] = \
+      {propagationDimension: {self.outputField: "_%(outputFieldID)s_index_%(propagationDimension)s" % locals()}}
+    self.codeBlocks['sampling'].loopArguments['vectorOverrides'] = [self.rawVector]
   
   
 

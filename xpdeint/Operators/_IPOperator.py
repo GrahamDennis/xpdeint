@@ -62,7 +62,7 @@ class _IPOperator(Operator):
         componentName = target
       else:
         if indexAccessedVariables == None:
-          indexAccessedVariables = CodeLexer.integerValuedDimensionsForVectors(integrationVectors, sharedCodeBlock)
+          indexAccessedVariables = CodeLexer.nonlocalDimensionAccessForVectors(integrationVectors, sharedCodeBlock)
         
         try:
           # This will extract the componentName corresponding to the indexed variable in the target
@@ -76,12 +76,12 @@ class _IPOperator(Operator):
                                 "or '%(target)s' isn't in one of the integration vectors."
                                 % locals())
         
-        # Check that integer-valued dimensions are being accessed with the dimension names
-        # i.e. of the form 'phi[j, k][m, n]' not 'phi[j-7, k*2][3, n+1]'
+        # Check that nonlocally-accessed dimensions are being accessed with the dimension names
+        # i.e. of the form 'phi(j: j, k:k, m:m, n:n)' not 'phi(j: j-7, k: k*2, m: 3, n: n+1)'
         for dimName, (indexString, codeSlice) in resultDict.iteritems():
           if not dimName == indexString:
             raise ParserException(self.xmlElement,
-                                  "IP operators can only act on every value of an integer-valued dimension.\n"
+                                  "IP operators can only act on every value of a dimension.\n"
                                   "The problem was caused by the '%(operatorName)s' operator acting on '%(target)s'.\n"
                                   "EX operators do not have this restriction."
                                   % locals())

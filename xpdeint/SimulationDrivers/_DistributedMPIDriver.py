@@ -30,8 +30,8 @@ class _DistributedMPIDriver (SimulationDriver, MPI):
   distributedTransform = property(_getDistributedTransform, _setDistributedTransform)
   del _getDistributedTransform, _setDistributedTransform
   
-  def mpiDimensionForSpace(self, space):
-    return self._distributedTransform.mpiDimensionForSpace(space)
+  def mpiDimRepForSpace(self, space):
+    return self._distributedTransform.mpiDimRepForSpace(space)
   
   def isFieldDistributed(self, field):
     return self._distributedTransform.isFieldDistributed(field)

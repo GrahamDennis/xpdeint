@@ -564,12 +564,18 @@ class XMDS2Parser(ScriptParser):
         ## Now make sure no-one else steals it
         self.globalNameSpace['symbolNames'].add(dimensionName)
         
-        ## Grab the number of lattice points and make sure it's a positive integer
-        
-        latticeString = parseAttribute('lattice')
-        if not latticeString.isdigit():
-          raise ParserException(dimensionElement, "Could not understand lattice value "
-                                                  "'%(latticeString)s' as a positive integer." % locals())
+        # Work out the type of the dimension
+        dimensionType = 'double'
+        if dimensionElement.hasAttribute('type') and dimensionElement.getAttribute('type'):
+          dimensionType = dimensionElement.getAttribute('type').strip().lower()
+          if dimensionType in ('double', 'real'):
+            dimensionType = 'double'
+          elif dimensionType in ('long', 'int', 'integer'):
+            dimensionType = 'long'
+          else:
+            raise ParserException(dimensionElemment, "'%(dimensionType)s' is not a valid type for a dimension.\n"
+                                                     "It must be one of 'real'/'double' (default & synonyms) or "
+                                                     "'integer'/'int'/'long' (synonyms)." % locals())
         
         ## Grab the domain strings
         domainString = parseAttribute('domain')
@@ -577,10 +583,14 @@ class XMDS2Parser(ScriptParser):
         ## Returns two strings for the end points
         minimumString, maximumString = self.domainPairFromString(domainString, dimensionElement)
         
+        if dimensionType == 'double':
+          domainPairType = float
+        else:
+          domainPairType = int
         ## Now we try make some sense of them
         try:
-          minimumFloat = float(minimumString)
-          maximumFloat = float(maximumString)
+          minimumValue = domainPairType(minimumString)
+          maximumValue = domainPairType(maximumString)
         except ValueError, err: # If not floats then we check the validation feature.
           if 'Validation' in self.globalNameSpace['features']:
             validationFeature = self.globalNameSpace['features']['Validation']
@@ -588,23 +598,44 @@ class XMDS2Parser(ScriptParser):
             if (%(minimumString)s >= %(maximumString)s)
               _LOG(_ERROR_LOG_LEVEL, "ERROR: The end point of the dimension '%(maximumString)s' must be "
                                      "greater than the start point.\\n"
-                                     "Start = %%e, End = %%e\\n", %(minimumString)s,%(maximumString)s);""" % locals())
+                                     "Start = %%e, End = %%e\\n", (double)%(minimumString)s, (double)%(maximumString)s);""" % locals())
           else:
             raise ParserException(dimensionElement, """Could not understand domain (%(minimumString)s, %(maximumString)s) as numbers.
 Use feature <validation/> to allow for arbitrary code.""" % locals() )
         else: # In this case we were given numbers and should check that they in the correct order here
-          if minimumFloat >= maximumFloat:
+          if minimumValue >= maximumValue:
             raise ParserException(dimensionElement, "The end point of the dimension, '%(maximumString)s', must be "
-                                           "greater than the start point, '%(minimumString)s'." % locals())
+                                                    "greater than the start point, '%(minimumString)s'." % locals())
+        
+        if dimensionType == 'double' or dimensionElement.hasAttribute('lattice'):
+          ## Grab the number of lattice points and make sure it's a positive integer
+          latticeString = parseAttribute('lattice')
+          if not latticeString.isdigit():
+            raise ParserException(dimensionElement, "Could not understand lattice value "
+                                                    "'%(latticeString)s' as a positive integer." % locals())
+          lattice = int(latticeString)
+          if dimensionType == 'long' and (maximumValue - minimumValue + 1) != lattice:
+            raise ParserException(dimensionElement, "The lattice value of '%(latticeString)s' doesn't match with the domain "
+                                                    "'%(domainString)s'." % locals())
+        else:
+          # Only for 'long' dimensions
+          lattice = maximumValue - minimumValue + 1
+        
         
         transform = None
         transformName = 'none'
         
-        if dimensionElement.hasAttribute('transform'):
+        if dimensionType == 'double' and dimensionElement.hasAttribute('transform'):
           transformName = dimensionElement.getAttribute('transform').strip()
           if not transformName.lower() in self.globalNameSpace['transforms']:
             raise ParserException(dimensionElement, "Unknown transform of type '%(transformName)s'." % locals())
           transform = self.globalNameSpace['transforms'][transformName.lower()]
+        
+        if dimensionType == 'long':
+          if 'none' in self.globalNameSpace['transforms']:
+            transform = self.globalNameSpace['transforms']['none']
+          else:
+            transform = Transforms._NoTransform._NoTransform(**self.argumentsToTemplateConstructors)
         
         if not transform:
           # default to 'dft'
@@ -616,16 +647,13 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
           else:
             transform = Transforms._NoTransform._NoTransform(**self.argumentsToTemplateConstructors)
         
-        dim = transform.newDimension(name = dimensionName, lattice = int(latticeString),
+        dim = transform.newDimension(name = dimensionName, lattice = lattice, type = dimensionType,
                                      minimum = minimumString, maximum = maximumString,
                                      parent = geometryTemplate, transformName = transformName,
                                      xmlElement = dimensionElement)
         
         geometryTemplate.dimensions.append(dim)
       
-      # We have just finished looping over the normal dimensions in the transverse_dimensions element.
-      # Now we need to grab any 'integer_valued' tags and parse those.
-      self.parseIntegerValuedElements(transverseDimensionsElement, geometryTemplate)
     
     driver = self.globalNameSpace['features']['Driver']
     if isinstance(driver, DistributedMPIDriverTemplate):
@@ -636,129 +664,6 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       mpiTransform.initialiseForMPIWithDimensions(transverseDimensions)
     
     return geometryTemplate
-  
-  def parseIntegerValuedElements(self, transverseDimensionsElement, geometryTemplate):
-    integerValuedElements = transverseDimensionsElement.getChildElementsByTagName('integer_valued', optional=True)
-    if not integerValuedElements:
-      return
-    
-    firstIntegerValuedElement = None
-    lastIntegerValuedElement = None
-    
-    for integerValuedElement in integerValuedElements:
-      # If the integer_valued tag doesn't have a 'kind' attribute, default to 'last'
-      if not integerValuedElement.hasAttribute('kind'):
-        if lastIntegerValuedElement:
-          # We already have an integer_valued tag of kind 'last'
-          raise ParserException(integerValuedElement, "There is already an 'integer_valued' element of kind 'last'.")
-        else:
-          # Everything is OK
-          lastIntegerValuedElement = integerValuedElement
-      else:
-        # We have an integer_valued tag
-        kindString = integerValuedElement.getAttribute('kind').strip().lower()
-        if kindString == 'last':
-          if lastIntegerValuedElement:
-            # We already have an integer_valued tag of kind 'last'
-            raise ParserException(integerValuedElement, "There is already an 'integer_valued' element of kind 'last'.")
-          else:
-            # Everything is OK
-            lastIntegerValuedElement = integerValuedElement
-        elif kindString == 'first':
-          if firstIntegerValuedElement:
-            # We already have an integer_valued tag of kind 'first'
-            raise ParserException(integerValuedElement, "There is already an 'integer_valued' element of kind 'first'.")
-          else:
-            # Everything is OK
-            firstIntegerValuedElement = integerValuedElement
-        else:
-          raise ParserException(integerValuedElement, "Unknown kind '%(kindString)s' for an integer_valued element." % locals())
-    
-    # At this point we have at most one firstIntegerValuedElement
-    # and one lastIntegerValuedElement
-    
-    if firstIntegerValuedElement:
-      self.parseIntegerValuedElement(firstIntegerValuedElement, geometryTemplate)
-    if lastIntegerValuedElement:
-      self.parseIntegerValuedElement(lastIntegerValuedElement, geometryTemplate)
-    
-  
-  def parseIntegerValuedElement(self, integerValuedElement, geometryTemplate):
-    dimensionElements = integerValuedElement.getChildElementsByTagName('dimension')
-    
-    dimensionList = []
-    
-    for dimensionElement in dimensionElements:
-      # Parse the namem
-      if not dimensionElement.hasAttribute('name'):
-        raise ParserException(dimensionElement, "Missing 'name' attribute.")
-      
-      dimensionName = dimensionElement.getAttribute('name').strip()
-      
-      try:
-        dimensionName = RegularExpressionStrings.symbolInString(dimensionName)
-      except ValueError, err:
-        raise ParserException(dimensionElement, "'%(dimensionName)s is not a valid name for a dimension.\n"
-                                                "It must not start with a number, and can only contain "
-                                                "alphanumeric characters and underscores." % locals())
-      ## Make sure the name is unique
-      if dimensionName in self.globalNameSpace['symbolNames']:
-        raise ParserException(dimensionElement, "Dimension name %(dimensionName)s conflicts with "
-                                                "previously-defined symbol of the same name." % locals())
-      
-      
-      # Parse the domain string
-      if not dimensionElement.hasAttribute('domain'):
-        raise ParserException(dimensionElement, "Missing 'domain' attribute.")
-      
-      domainString = dimensionElement.getAttribute('domain').strip()
-      
-      minimumString, maximumString = self.domainPairFromString(domainString, dimensionElement)
-      # We are not guaranteed that these can be transformed into int's
-      try:
-        minimumValue = int(minimumString)
-        maximumValue = int(maximumString)
-      except ValueErr, err:
-        raise ParserException(dimensionElement, "Integer dimension %(dimensionName)s has non-integer domain "
-                                                "(%(minimumString)s, %(maximumString)s)" % locals())
-     
-      if minimumValue >= maximumValue:
-        raise ParserException(dimensionElement, "Integer dimension %(dimensionName)s must have end greater "
-                                                "than start. Domain = (%(minimumString)s, %(maximumString)s)" % locals())
-      
-      # If we have a lattice attribute, check that it agrees with the domain
-      if dimensionElement.hasAttribute('lattice'):
-        try:
-          latticeString = dimensionElement.getAttribute('lattice').strip()
-          lattice = RegularExpressionStrings.integerInString(latticeString)
-        except ValueError, err:
-          raise ParserException(dimensionElement, "Unable to understand '%(latticeString)s' as an integer." % locals())
-        
-        if (maximumValue - minimumValue + 1) != lattice:
-          raise ParserException(dimensionElement, "The lattice value of '%(latticeString)s' doesn't match with the domain "
-                                                  "'%(domainString)s'." % locals())
-      else:
-        lattice = maximumValue - minimumValue + 1
-      
-      if 'none' in self.globalNameSpace['transforms']:
-        transform = self.globalNameSpace['transforms']['none']
-      else:
-        transform = Transforms._NoTransform._NoTransform(**self.argumentsToTemplateConstructors)
-        
-      dim = transform.newDimension(name = dimensionName, lattice = lattice, type = 'long',
-                                   minimum = minimumString, maximum = maximumString,
-                                   parent = geometryTemplate, indexable = True, transformName = 'none')
-      
-      dimensionList.append(dim)
-    
-    if not integerValuedElement.hasAttribute('kind') or integerValuedElement.getAttribute('kind').strip().lower() == 'last':
-      geometryTemplate.dimensions.extend(dimensionList)
-    else:
-      dimensionList.reverse()
-      for dim in dimensionList:
-        geometryTemplate.dimensions.insert(1, dim)
-    
-    
   
   def parseVectorElements(self, parentElement):
     vectorElements = parentElement.getChildElementsByTagName('vector', optional=True)

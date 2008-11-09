@@ -108,4 +108,7 @@ class _DimensionRepresentation(ScriptElement):
       return True
     else:
       return False
+  
+  def nonlocalAccessIndexFromStringAndLoopDimRep(self, accessString, loopDimRep):
+    return
 

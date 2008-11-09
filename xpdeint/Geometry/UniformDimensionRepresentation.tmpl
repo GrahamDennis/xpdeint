@@ -80,7 +80,7 @@ for (long ${loopIndex} = ${localLattice}-1; ${loopIndex} >= 0; ${loopIndex}--) {
     @#
 (${dimRep.loopIndex} + ${dimRep.localOffset}) * (${globalLattice}/${dimRep.globalLattice}) - ${localOffset}@slurp
   @else
-${dimRep.loopIndex}@slurp
+${dimRep.loopIndex} + ${dimRep.localOffset} - ${localOffset}@slurp
   @end if
   @#
 @end def
@@ -104,8 +104,7 @@ ${globalLattice}/2@slurp
 
 @def createCoordinateVariableForSinglePointSample
   @#
-${type} ${name} = ${minimum}@slurp
-   + (${globalLattice}/2) * ${stepSize};
+${type} ${name} = ${minimum} + (${globalLattice}/2) * ${stepSize};
   @#
 @end def
 

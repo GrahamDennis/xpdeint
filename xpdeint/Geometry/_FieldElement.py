@@ -163,27 +163,6 @@ class _FieldElement (ScriptElement):
     return points
   
   @property
-  def integerValuedDimensions(self):
-    result = []
-    
-    dimensionList = []
-    
-    for dim in self.dimensions:
-      # Once we hit a double dimension, we must have passed
-      # the 'first' integer valued dimensions if we have any
-      if not dim.indexable:
-        if dimensionList:
-          result.append(dimensionList)
-          dimensionList = []
-      else:
-        dimensionList.append(dim)
-    
-    if dimensionList:
-      result.append(dimensionList)
-    return result
-  
-  
-  @property
   def transverseDimensions(self):
     return filter(lambda x: x.transverse, self.dimensions)
   

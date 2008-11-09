@@ -49,5 +49,24 @@ class _SplitUniformDimensionRepresentation(DimensionRepresentation):
     else:
       raise NotImplemented
   
+  def nonlocalAccessIndexFromStringAndLoopDimRep(self, accessString, loopDimRep):
+    # We only support access with the negative of the dimension variable. e.g. -kx
+    name = self.name
+    if not accessString == ('-%(name)s' % locals()):
+      return
+    # We only support the case where the global number of points in the looping dimension and the
+    # accessing dimension are the same. i.e. no sub-sampling and non-local access at the same time.
+    if not self.lattice == loopDimRep.lattice:
+      return
+    loopingIndex = loopDimRep.loopIndex
+    if self.hasLocalOffset:
+      localOffsetString = ' + ' + loopDimRep.localOffset
+    else:
+      localOffsetString = ''
+    globalLattice = self.globalLattice
+    return '(%(globalLattice)s - %(loopingIndex)s%(localOffsetString)s) %% %(globalLattice)s' % locals()
+  
+
+
 
 
