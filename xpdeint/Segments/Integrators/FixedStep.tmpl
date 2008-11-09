@@ -141,10 +141,10 @@ ${insertCodeForFeaturesInReverseOrder('integrateFixedStepEnd', featureOrderingOu
   @#
   @capture loopContents
     @for $reducedVector, $vector in $vectorMap.iteritems()
-      @set $indices = range(0, len(vector.field.dimensions))
       @if vector.field.hasDimensionName($propagationDimension)
-        @set $indices = range(vector.field.indexOfDimensionName($propagationDimension) + 1, len(vector.field.dimensions))
-        @silent innerLoopTemplate.skipSize = $propagationDirection + $vector.field.localPointsInDimensionsWithIndicesInSpace($indices, $homeSpace)
+        @set $propagationDimensionObject = vector.field.dimensionWithName($propagationDimension)
+        @silent innerLoopTemplate.skipSize = $propagationDirection + \
+                                             $vector.field.localPointsInDimensionsAfterDimensionInSpace(propagationDimensionObject, $homeSpace)
       @end if
       @silent innerLoopTemplate.reducedVector = reducedVector
       @silent innerLoopTemplate.vector = vector

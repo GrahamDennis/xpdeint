@@ -19,6 +19,8 @@ and so giving the user different results to what they were expecting.
 from pygments import lexers
 from pygments.token import Token
 
+from itertools import ifilter
+
 cppLexer = lexers.get_lexer_by_name('c++')
 
 from xpdeint.ParserException import ParserException, parserWarning
@@ -41,6 +43,7 @@ class LexerException(ParserException):
       indexCounter += len(line)
       if indexCounter > codeIndex:
         self.lineNumber = codeBlock.scriptLineOffset + lineNumber
+        self.columnNumber = codeIndex - (indexCounter - len(line)) + 1
         break
   
 
@@ -141,92 +144,119 @@ def targetComponentsForOperatorsInString(operatorNames, codeBlock):
   return results
 
 
-def integerValuedDimensionsForField(tokenGenerator, field, codeBlock):
+def nonlocalDimensionAccessForCodeBlock(tokenGenerator, codeBlock):
   """
-  Return a ``(dict, slice)`` tuple to extract the integer-valued dimension
+  Return a ``(dict, slice)`` tuple to extract the non-local dimension access
   indices starting at the position of `tokenGenerator` given that the indices
-  are accessing a component of a vector in `field`.
+  are accessing a component of a vector.
   
-  For example parse ``[j, k+7][m*n, n%3]`` to::
+  For example parse ``(j = j, k = k+7, m = m*n, n = n%3)`` to::
   
-    { 'j': ('j', slice(1, 2)),
-      'k': ('k+7', slice(4, 7)),
-      'm': ('m*n', slice(9, 12)),
-      'n': ('n%3', slice(14, 17))}
+    { 
+      'j': ('j', slice(5, 6)),
+      'k': ('k+7', slice(12, 15)),
+      'm': ('m*n', slice(21, 24)),
+      'n': ('n%3', slice(30, 33))
+    }
   
   where the ``slice`` objects are the ranges in the code string where these expressions occur.
   """
   result = {}
   overallStartIndex = None
   overallEndIndex = None
-  integerValuedDimensions = field.integerValuedDimensions
-  for dimList in integerValuedDimensions:
-    nextToken = tokenGenerator.next()
-    if not nextToken[1] in Token.Punctuation or not nextToken[2] == '[':
-      # The fact that we've just taken a token isn't a problem, as it isn't
-      # possible for a name token to immediately follow another name token
-      return {}, slice(None)
-    if overallStartIndex == None:
-      overallStartIndex = nextToken[0]
-    balancedTokenStream = balancedTokens(tokenGenerator, nextToken, ']', codeBlock)
-    overallEndIndex = balancedTokenStream[-1][0] + len(balancedTokenStream[-1][2])
-    tokenStreamIterator = iter(balancedTokenStream[1:-1]) # skip leading '[' and trailing ']'
-    for dim in dimList:
-      indexString = ''
-      startIndex = None
-      endIndex = None
-      for token in tokenStreamIterator:
-        if isinstance(token, list):
-          strippedStream, codeSlice = strippedTokenStream(token)
-          if startIndex == None:
-            startIndex = codeSlice.start
-          endIndex = codeSlice.stop
-          indexString += strippedStream
-        else:
-          charIndex, tokenKind, string = token
-          if tokenKind in Token.Punctuation and string == ',':
-            # We have found the dimension separator
-            break
-          else:
-            if startIndex == None:
-              startIndex = charIndex
-            endIndex = charIndex + len(string)
-            if not tokenKind in Token.Comment:
-              indexString += string
-      if not indexString:
-        raise LexerException(codeBlock, startIndex, "Index for integer-valued dimension '%s' is empty!" % dim.name)
-      result[dim.name] = (indexString.strip(), slice(startIndex, endIndex))
+  nextToken = tokenGenerator.next()
+  if not nextToken[1] in Token.Punctuation or not nextToken[2] == '(':
+    # The fact that we've just taken a token isn't a problem, as it isn't
+    # possible for a name token to immediately follow another name token
+    return {}, slice(None)
+  
+  overallStartIndex = nextToken[0]
+  balancedTokenStream = balancedTokens(tokenGenerator, nextToken, ')', codeBlock)
+  overallEndIndex = balancedTokenStream[-1][0] + len(balancedTokenStream[-1][2])
+  tokenStreamIterator = iter(balancedTokenStream[1:-1]) # skip leading '(' and trailing ')'
+  
+  validDimensionNames = frozenset([dim.inSpace(codeBlock.space).name for dim in codeBlock.field.dimensions])
+  
+  # Split token streams at ','
+  def splitTokenStreamAt(tokenStream, targetTokenKind, targetString):
+    result = []
+    currentBlock = []
+    for token in tokenStream:
+      if not isinstance(token, list):
+        charIndex, tokenKind, string = token
+        if tokenKind in targetTokenKind and string == targetString:
+          result.append(currentBlock)
+          currentBlock = []
+          continue
+      currentBlock.append(token)
+    if currentBlock:
+      result.append(currentBlock)
+    return result
+  
+  def skipWhitespace(token):
+    if isinstance(token, list):
+      return True
+    charIndex, tokenKind, string = token
+    if tokenKind in Token.Comment:
+      return False
+    if string.isspace():
+      return False
+    return True
+  
+  def checkForTokenKind(token, tokenKind, expectedString):
+    failingExpression = None
+    charIndex = None
+    if isinstance(token, list):
+      flattenedTokenList = flatten(token)
+      charIndex = flattenedTokenList[0][0]
+      failingExpression = strippedTokenStream(flattenedTokenList)
+    elif not token[1] in tokenKind:
+      charIndex = token[0]
+      failingExpression = token[2]
+    if failingExpression:
+      raise LexerException(codeBlock, charIndex, "Unexpected expression '%s'.\n%s" \
+                                                 % (failingExpression, expectedString))
+  
+  for tokenGroup in splitTokenStreamAt(balancedTokenStream[1:-1], Token.Punctuation, ','):
+    filteredTokenGroup = ifilter(skipWhitespace, tokenGroup)
+    token = filteredTokenGroup.next()
+    checkForTokenKind(token, Token.Name.Label, "Was looking for a dimension name followed by a ':'.")
+    charIndex, tokenKind, string = token
+    
+    dimensionName = string
+    if not dimensionName.endswith(':'):
+      raise LexerException(codeBlock, charIndex, "The dimension name should be immediately followed by a ':'.")
+    dimensionName = dimensionName[:-1] # Truncate last character.
+    
+    if not dimensionName in validDimensionNames:
+      raise LexerException(codeBlock, charIndex, "Expected a dimension name here (%s), but found '%s'." \
+                                                 % (', '.join(validDimensionNames), dimensionName))
+    
+    dimensionAccess, codeSlice = strippedTokenStream(filteredTokenGroup)
+    result[dimensionName] = (dimensionAccess.strip(), codeSlice)
   return result, slice(overallStartIndex, overallEndIndex)
 
-def integerValuedDimensionsForVectors(vectors, codeBlock):
+
+def nonlocalDimensionAccessForVectors(vectors, codeBlock):
   """
   Find all places in the `codeBlock` where any components of any of the `vectors`
-  are accessed with index-valued dimensions and return a ``(componentName, field, resultDict, codeSlice)``
+  are accessed non-locally (usually by integer-valued dimensions) and return a ``(componentName, vector, resultDict, codeSlice)``
   tuple for each such occurrence. ``codeSlice`` is the character range over which this expression occurs,
-  and ``resultDict`` is a dictionary describing how each dimension is accessed. See `integerValuedDimensionsForField`
+  and ``resultDict`` is a dictionary describing how each dimension is accessed. See `nonlocalDimensionAccessForField`
   for more information about ``resultDict``.
   """
-  componentNames = set()
+  componentNameToVectorMap = {}
   for v in vectors:
-    componentNames.update(v.components)
-  results = []
-  tokenGenerator = cppLexer.get_tokens_unprocessed(codeBlock.codeString)
-  for charIndex, tokenKind, string in tokenGenerator:
-    if tokenKind in Token.Name and string in componentNames:
-      componentName = string
-      
-      field = [v.field for v in vectors if componentName in v.components][0]
-      resultDict, codeSlice = integerValuedDimensionsForField(tokenGenerator, field, codeBlock)
-      if resultDict:
-        results.append((componentName, field, resultDict, slice(charIndex, codeSlice.stop)))
-  
-  return results
+    componentNameToVectorMap.update(dict.fromkeys(v.components, v))
+  result = nonlocalDimensionAccessForComponents(componentNameToVectorMap.keys(), codeBlock)
+  return [(componentName, componentNameToVectorMap[componentName], resultDict, codeSlice) \
+            for componentName, resultDict, codeSlice in result]
 
-def integerValuedDimensionsForComponentsInField(components, field, codeBlock):
+def nonlocalDimensionAccessForComponents(components, codeBlock):
   """
   Find all places in the `codeBlock` where any of `components` are accessed with
-  index-valued dimensions and return a ``(componentName, resultDict, codeSlice)``
-  tuple for each such occurrence. The companion of `integerValuedDimensionsForVectors` and
+  non-locally (usually integer-valued dimensions) and return a ``(componentName, resultDict, codeSlice)``
+  tuple for each such occurrence. The companion of `nonlocalDimensionAccessForVectors` and
   to be used when `components` are components of vectors.
   """
   results = []
@@ -234,10 +264,9 @@ def integerValuedDimensionsForComponentsInField(components, field, codeBlock):
   for charIndex, tokenKind, string in tokenGenerator:
     if tokenKind in Token.Name and string in components:
       componentName = string
-      resultDict, codeSlice = integerValuedDimensionsForField(tokenGenerator, field, codeBlock)
+      resultDict, codeSlice = nonlocalDimensionAccessForCodeBlock(tokenGenerator, codeBlock)
       if resultDict:
         results.append((componentName, resultDict, slice(charIndex, codeSlice.stop)))
-  
   return results
 
 def performIPOperatorSanityCheck(componentName, propagationDimension, operatorCodeSlice, codeBlock):

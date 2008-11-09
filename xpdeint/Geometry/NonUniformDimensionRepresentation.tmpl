@@ -51,6 +51,12 @@ for (long ${loopIndex} = 0; ${loopIndex} < ${localLattice}; ${loopIndex}++) {
   @#
 @end def
 
+@def localIndexFromIndexForDimensionRep($dimRep)
+  @#
+${dimRep.loopIndex} + ${dimRep.localOffset} - ${localOffset}@slurp
+  @#
+@end def
+
 @def strictlyAscendingGlobalIndex
   @#
 ${loopIndex} + ${localOffset}@slurp

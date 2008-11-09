@@ -22,7 +22,7 @@ if (${crossDim.inSpace($operatorSpace).loopIndex} == 0) {
 if (${crossDim.inSpace($operatorSpace).loopIndex} == ${crossDim.inSpace($operatorSpace).globalLattice} - 1) {
   @end if
   // ********** Boundary condition code ***********
-  ${codeBlocks['boundaryCondition'].codeString, autoIndent=True}@slurp
+  ${codeBlocks['boundaryCondition'].loopCodeString, autoIndent=True}@slurp
   // **********************************************
   
   @for crossIntegrationVector in $crossIntegrationVectors
@@ -52,7 +52,7 @@ for (long _iter = 0; _iter < ${iterations}; _iter++) {
   
   {
     // *********** Cross-propagation code ***********
-    ${codeBlocks['crossPropagation'].codeString, autoIndent=True}@slurp
+    ${codeBlocks['crossPropagation'].loopCodeString, autoIndent=True}@slurp
     // **********************************************
   }
   

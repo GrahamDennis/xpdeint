@@ -29,12 +29,8 @@ ${operatorContainer.evaluateOperators(parentFunction=function)}@slurp
   @end for
 
   @#
-  @# Set up the index overrides
-  @set $indexOverrides = {}
-  @silent indexOverrides[$propagationDimension] = { $outputField: c'_${outputField.id}_index_${propagationDimension}'}
-  @#
   @# Now actually begin the loop
-${codeBlocks['sampling'].loop(self.insideSamplingLoops, indexOverrides=indexOverrides, vectorOverrides=[$rawVector])}@slurp
+${codeBlocks['sampling'].loop(self.insideSamplingLoops)}@slurp
   @# That's the end of the loop, magic eh?
   @#
   @if $outputField.hasDimensionName($propagationDimension)

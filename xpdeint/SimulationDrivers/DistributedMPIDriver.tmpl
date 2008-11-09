@@ -127,10 +127,10 @@ ptrdiff_t _my${shadowVariable} = ${shadowVariable};
   @end for
   @#
 
-@for $variable in $dependentVariables
+  @for $variable in $dependentVariables
 ${variable.vector.type}* _local${variable.arrayName};
 ${variable.vector.type}* _backup${variable.arrayName} = ${variable.arrayName};
-@end for
+  @end for
 
 for (long _dataForRank = 0; _dataForRank < _size; _dataForRank++) {
   @for $shadowVariable in $shadowedVariablesForField(field)
@@ -200,8 +200,8 @@ ${variable.arrayName} = _backup${variable.arrayName};
   @set $space = dict['space']
   @set $noises = dict['noises']
   @#
-  @if $field.hasDimension($mpiDimensionForSpace(space))
-    @# If the field has the MPI dimension, then the noise
+  @if $field.isDistributed
+    @# If the field is distributed, then the noise
     @# will need to vary along the MPI dimension, so all is
     @# OK.
     @return
@@ -210,7 +210,7 @@ ${variable.arrayName} = _backup${variable.arrayName};
   @# This means that the noise field doesn't contain the MPI dimension.
   @# As a result, the noise vector should be identical
 if (_rank == 0) {
-  // This noise doesn't contain the MPI dimension ('${mpiDimensionForSpace($space).name}'), so we should
+  // This noise is for a field that isn't distributed, so we should
   // make sure the noise is the same on all ranks
   @set $dict['extraIndent'] += 2
   @#
@@ -222,8 +222,8 @@ if (_rank == 0) {
   @set $space = dict['space']
   @set $noises = dict['noises']
   @#
-  @if $field.hasDimension($mpiDimensionForSpace(space))
-    @# If the field has the MPI dimension, then the noise
+  @if $field.isDistributed
+    @# If the field is distributed, then the noise
     @# will need to vary along the MPI dimension, so all is
     @# OK.
     @return

@@ -197,10 +197,7 @@
       <optional>
         <element name="transverse_dimensions">
           <oneOrMore>
-            <choice>
-              <ref name="Dimension"/>
-              <ref name="IntegerValuedDimensions"/>
-            </choice>
+            <ref name="Dimension"/>
           </oneOrMore>
         </element>
       </optional>
@@ -209,31 +206,14 @@
   <define name="Dimension">
     <element name="dimension">
       <attribute name="name"/>
-      <attribute name="lattice"/>
-      <attribute name="domain"/>
-      <optional>
-        <attribute name="transform"/>
-      </optional>
-      <empty/>
-    </element>
-  </define>
-  <define name="IntegerValuedDimensions">
-    <element name="integer_valued">
-      <optional>
-        <attribute name="kind"/>
-      </optional>
-      <oneOrMore>
-        <ref name="IntegerValuedDimension"/>
-      </oneOrMore>
-    </element>
-  </define>
-  <define name="IntegerValuedDimension">
-    <element name="dimension">
-      <attribute name="name"/>
+      <attribute name="type"/>
       <optional>
         <attribute name="lattice"/>
       </optional>
       <attribute name="domain"/>
+      <optional>
+        <attribute name="transform"/>
+      </optional>
       <empty/>
     </element>
   </define>

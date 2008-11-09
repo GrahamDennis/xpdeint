@@ -99,28 +99,15 @@ FFTW = element fftw {
 # Geometry
 Geometry = element geometry {
     element propagation_dimension { text }
-    , element transverse_dimensions {
-        ( Dimension | IntegerValuedDimensions )+
-    }?
+    , element transverse_dimensions { Dimension+ }?
 }
 
 Dimension = element dimension {
     attribute name { text }
-    , attribute lattice { text }
-    , attribute domain { text }
-    , attribute transform { text }?
-    , empty
-}
-
-IntegerValuedDimensions = element integer_valued {
-    attribute kind { text }?
-    , IntegerValuedDimension+
-}
-
-IntegerValuedDimension = element dimension {
-    attribute name { text }
+    , attribute type { text }
     , attribute lattice { text }?
     , attribute domain { text }
+    , attribute transform { text }?
     , empty
 }
 

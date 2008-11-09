@@ -58,4 +58,14 @@ class _UniformDimensionRepresentation(DimensionRepresentation):
     else:
       raise NotImplemented
   
+  def nonlocalAccessIndexFromStringAndLoopDimRep(self, accessString, loopDimRep):
+    # We only support non-local access for integer-valued dimensions
+    if not self.type == 'long':
+      return
+    minimum = self.minimum
+    if self.hasLocalOffset:
+      localOffsetString = ' - ' + self.localOffset
+    else: localOffsetString = ''
+    return '(%(accessString)s) - %(minimum)s%(localOffsetString)s' % locals()
   
+
