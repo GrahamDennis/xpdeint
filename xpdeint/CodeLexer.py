@@ -164,7 +164,10 @@ def nonlocalDimensionAccessForCodeBlock(tokenGenerator, codeBlock):
   result = {}
   overallStartIndex = None
   overallEndIndex = None
-  nextToken = tokenGenerator.next()
+  try:
+    nextToken = tokenGenerator.next()
+  except StopIteration, err:
+    return {}, slice(None)
   if not nextToken[1] in Token.Punctuation or not nextToken[2] == '(':
     # The fact that we've just taken a token isn't a problem, as it isn't
     # possible for a name token to immediately follow another name token

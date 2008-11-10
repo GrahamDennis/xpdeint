@@ -25,15 +25,11 @@
   <geometry>
     <propagation_dimension> t </propagation_dimension>
     <transverse_dimensions>
-      <integer_valued kind="first">
-        <dimension name="u" lattice="2"  domain="(0, 1)" />
-      </integer_valued>
+      <dimension name="q" type="integer" lattice="2"  domain="(0, 1)" />
       <dimension name="x" lattice="100"  domain="(0, 1)" />
       <dimension name="y" lattice="100"  domain="(0, 1)" />
       <dimension name="z" lattice="100"  domain="(0, 1)" />
-      <integer_valued kind="last">
-        <dimension name="w" domain="(-3, 3)" />
-      </integer_valued>
+      <dimension name="w" type="integer" domain="(-3, 3)" />
     </transverse_dimensions>
   </geometry>
   

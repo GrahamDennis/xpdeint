@@ -1236,7 +1236,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     deltaAOperatorTemplate.integrationVectorsEntity = ParsedEntity(integrationVectorsElement, integrationVectorsNames)
     
     if integrationVectorsElement.hasAttribute('fourier_space'):
-      operatorDefinitionCodeBlock.operatorSpace = \
+      operatorDefinitionCodeBlock.space = \
         deltaAOperatorTemplate.field.spaceFromString(integrationVectorsElement.getAttribute('fourier_space'))
   
   def parseOperatorElement(self, operatorElement, operatorContainer):

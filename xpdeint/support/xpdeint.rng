@@ -206,7 +206,9 @@
   <define name="Dimension">
     <element name="dimension">
       <attribute name="name"/>
-      <attribute name="type"/>
+      <optional>
+        <attribute name="type"/>
+      </optional>
       <optional>
         <attribute name="lattice"/>
       </optional>

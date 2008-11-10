@@ -28,7 +28,11 @@ def parserWarning(element, msg):
   except Exception, err:
     lineNumber = element.getUserData('lineNumber')
     columnNumber = element.getUserData('columnNumber')
-  print >> sys.stderr, "Warning: " + msg
+  if msg.count('\n'):
+    msg = msg.splitlines()
+    msg[1:] = [' '*len("WARNING: ") + line for line in msg[1:]]
+    msg = '\n'.join(msg)
+  print >> sys.stderr, "WARNING: " + msg
   print >> sys.stderr, "    At line %(lineNumber)i, column %(columnNumber)i" % locals()
   # print >> sys.stderr, "    In element: " + element.userUnderstandableXPath()
 

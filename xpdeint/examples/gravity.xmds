@@ -22,10 +22,8 @@
   <geometry>
     <propagation_dimension> t </propagation_dimension>
     <transverse_dimensions>
-      <integer_valued>
-        <!-- Dimension for particle number -->
-        <dimension name="j" lattice="4" domain="(0, 3)" />
-      </integer_valued>
+      <!-- Dimension for particle number -->
+      <dimension name="j" type="integer" lattice="4" domain="(0, 3)" />
     </transverse_dimensions>
   </geometry>
   
@@ -67,13 +65,13 @@
           dx_dt = vx;
           dy_dt = vy;
           for (long k = 0; k < j; k++) {
-            double inverseSeparationCubed = pow((x[k] - x[j])*(x[k] - x[j]) + (y[k] - y[j])*(y[k] - y[j]), -3.0/2.0);
+            double inverseSeparationCubed = pow((x(j: k) - x(j: j))*(x(j: k) - x(j: j)) + (y(j: k) - y(j: j))*(y(j: k) - y(j: j)), -3.0/2.0);
             // printf("j: %li k: %li    x[j]: %e x[k]: %e  y[j]: %e y[k]: %e\n", j, k, x[j], x[k], y[j], y[k]);
             // printf("separationSquared: %e inverseSeparationCubed: %e\n", (x[k] - x[j])*(x[k] - x[j]) + (y[k] - y[j])*(y[k] - y[j]), inverseSeparationCubed);
-            dvx_dt[j] += m[k]*(x[k] - x[j])*inverseSeparationCubed;
-            dvx_dt[k] += m[j]*(x[j] - x[k])*inverseSeparationCubed;
-            dvy_dt[j] += m[k]*(y[k] - y[j])*inverseSeparationCubed;
-            dvy_dt[k] += m[j]*(y[j] - y[k])*inverseSeparationCubed;
+            dvx_dt(j: j) += m(j: k)*(x(j: k) - x(j: j))*inverseSeparationCubed;
+            dvx_dt(j: k) += m(j: k)*(x(j: j) - x(j: k))*inverseSeparationCubed;
+            dvy_dt(j: j) += m(j: k)*(y(j: k) - y(j: j))*inverseSeparationCubed;
+            dvy_dt(j: k) += m(j: k)*(y(j: j) - y(j: k))*inverseSeparationCubed;
           }
         ]]>
       </operators>
@@ -103,7 +101,7 @@
         // Check conserved quantities
           energy = 0.5*m*(vx*vx + vy*vy);
           for (long k = 0; k < j; k++) {
-            energy += -m[j]*m[k]*pow((x[j]-x[k])*(x[j]-x[k]) + (y[j]-y[k])*(y[j]-y[k]), -0.5);
+            energy += -m(j: j)*m(j: k)*pow((x(j: j)-x(j: k))*(x(j: j)-x(j: k)) + (y(j: j)-y(j: k))*(y(j: j)-y(j: k)), -0.5);
           }
           px = m*vx;
           py = m*vy;
