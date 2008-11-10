@@ -104,7 +104,7 @@ Geometry = element geometry {
 
 Dimension = element dimension {
     attribute name { text }
-    , attribute type { text }
+    , attribute type { text }?
     , attribute lattice { text }?
     , attribute domain { text }
     , attribute transform { text }?

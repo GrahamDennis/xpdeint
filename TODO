@@ -1,5 +1,7 @@
 * Complete Stochastics support
   * Test
+  * Implement noise vectors
+  * Fix given recent discovery of limitations
 
 * Write a front-end to auto-configure preference file.
   For reading the preferences file, look into using the Python module
@@ -14,8 +16,6 @@
 
 * Deterministic/distributed MPI
   * Needs testing.
-  * Implement sub-sampling k-space and check sub-sampling for x-space
-  * Implement sub-sampling the second MPI dimension
 
 * Make sure that all the things that Andy has been doing to enable various simulation
   parameters can be controlled at simulation run time can be done in xpdeint.
@@ -54,8 +54,6 @@
 * Check that all bug fixes to xmds-1 since September 1, 2007 have been added to xpdeint. In particular, I don't think the changes to the adaptive
   step error-calculation routine have been made.
   
-* Test the various integrators.
-
 * Shift the output code into its own directory and make the ASCII and Binary output type classes not inherit from _Feature. These need to be separate
   things that either are delegated to or are inherited from themselves. The better option is probably delegation in a similar manner to how Vectors
   delegate initialisation to a VectorInitialisation instance.

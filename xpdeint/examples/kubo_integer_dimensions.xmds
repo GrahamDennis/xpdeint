@@ -21,9 +21,7 @@
   <geometry>
     <propagation_dimension> t </propagation_dimension>
     <transverse_dimensions>
-      <integer_valued>
-        <dimension name="j" lattice="10240" domain="(1, 10240)" />
-      </integer_valued>
+      <dimension name="j" type="integer" lattice="10240" domain="(1, 10240)" />
     </transverse_dimensions>
   </geometry>
   
@@ -44,7 +42,7 @@
       <operators noises="n">
         <integration_vectors>main</integration_vectors>
         <![CDATA[
-          dz_dt[j] = i*z*n_1;
+          dz_dt(j: j) = i*z*n_1;
         ]]>
       </operators>
     </integrate>

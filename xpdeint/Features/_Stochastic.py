@@ -17,7 +17,7 @@ from xpdeint.Operators.DeltaAOperator import DeltaAOperator
 from xpdeint.Segments.Integrators.FixedStep import FixedStep as FixedStepIntegrator
 from xpdeint.Segments.Integrators.AdaptiveStep import AdaptiveStep as AdaptiveStepIntegrator
 
-from xpdeint.ParserException import ParserException
+from xpdeint.ParserException import ParserException, parserWarning
 
 class _Stochastic (_Feature):
   @property
@@ -134,6 +134,11 @@ class _Stochastic (_Feature):
     # For each adaptive step integrator, we need to make sure that the noises being used are
     # either gaussian or poissonian
     for deltaAOperator in [o for o in objectsThatMightUseNoises if isinstance(o, DeltaAOperator) and isinstance(o.integrator, AdaptiveStepIntegrator)]:
+      # Give the user a warning to note that the adaptive integrators with stochastics is not guaranteed to converge to the correct solution.
+      parserWarning(self.xmlElement, "The adaptive integrator with stochastics will not converge to the correct solution unless the solution\n"
+                                     "to the SDE can be written as a Taylor series in the propagation dimension (time) and the noises.\n"
+                                     "If this is the case, then there is probably an analytic solution to the SDE.\n"
+                                     "You have been warned.")
       for noise in deltaAOperator.noises:
         if noise.noiseDistribution not in ('gaussian', 'poissonian'):
           raise ParserException(self.xmlElement, "Can't use a noise with a '%s' distribution in an adaptive integrator. "

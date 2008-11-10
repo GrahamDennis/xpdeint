@@ -238,7 +238,12 @@ def main(argv=None):
     # Print the error to the user
     lineNumber = err.lineNumber
     columnNumber = err.columnNumber
-    print >> sys.stderr, "Error: " + err.msg
+    # Indent multiline error messages
+    if err.msg.count('\n'):
+      msg = err.msg.splitlines()
+      msg[1:] = [' '*len("ERROR: ") + line for line in msg[1:]]
+      err.msg = '\n'.join(msg)
+    print >> sys.stderr, "ERROR: " + err.msg
     if not lineNumber == None:
       positionReference =  "    At line %(lineNumber)i" % locals()
       if not columnNumber == None:
