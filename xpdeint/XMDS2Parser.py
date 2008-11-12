@@ -65,11 +65,15 @@ from xpdeint import Features
 from xpdeint.Features.Noises.POSIX.GaussianPOSIXNoise import GaussianPOSIXNoise
 from xpdeint.Features.Noises.POSIX.UniformPOSIXNoise import UniformPOSIXNoise
 from xpdeint.Features.Noises.POSIX.PoissonianPOSIXNoise import PoissonianPOSIXNoise
+
 from xpdeint.Features.Noises.MKL.GaussianMKLNoise import GaussianMKLNoise
 from xpdeint.Features.Noises.MKL.UniformMKLNoise import UniformMKLNoise
+
 from xpdeint.Features.Noises.DSFMT.GaussianDSFMTNoise import GaussianDSFMTNoise
 from xpdeint.Features.Noises.DSFMT.UniformDSFMTNoise import UniformDSFMTNoise
 from xpdeint.Features.Noises.DSFMT.PoissonianDSFMTNoise import PoissonianDSFMTNoise
+
+from xpdeint.Features.Noises.Solirte.GaussianSolirteNoise import GaussianSolirteNoise
 
 # TODO: Must check that we are never sampling a temporary vector when it doesn't exist.
 # The way to do this is after the template tree has been built to iterate over all elements that can sample
@@ -354,6 +358,8 @@ class XMDS2Parser(ScriptParser):
           noiseClass = GaussianDSFMTNoise
         elif kind in ('uniform-dsfmt'):
           noiseClass = UniformDSFMTNoise
+        elif kind in ('gaussian-solirte'):
+          noiseClass = GaussianSolirteNoise
         else:
           raise ParserException(noiseElement, "Unknown noise kind '%(kind)s'." % locals())
         noise = noiseClass(parent = stochasticFeature,

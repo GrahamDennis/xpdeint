@@ -52,11 +52,13 @@ void _segment0()
   @# possible to split this up into two stages of initialisation, but that
   @# seems to me like it would be ugly.
   @# 
+${topLevelSequence.allocate}@slurp
+
   @set $objectsNeedingInitialisation = [o for o in $templates if o.hasattr('canBeInitialisedEarly') and o.canBeInitialisedEarly]
   @for o in $objectsNeedingInitialisation
 ${o.initialise}@slurp
   @end for
-  @#
+
 for (long _i0 = 0; _i0 < _n_paths; _i0++) {
   _LOG(_PATH_LOG_LEVEL, "Starting path %li\n", _i0 + 1);
   
@@ -66,11 +68,13 @@ for (long _i0 = 0; _i0 < _n_paths; _i0++) {
   
   ${topLevelSequence.topLevelSequenceInnerContent, autoIndent=True}@slurp
 }
-  @#
+
   @# Now clean up after all of the objects that we initialised early.
   @for o in $objectsNeedingInitialisation
 ${o.finalise}@slurp
   @end for
+
+${topLevelSequence.free}@slurp
   @#
 @end def
 

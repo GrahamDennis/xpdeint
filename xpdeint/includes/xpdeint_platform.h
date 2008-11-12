@@ -362,6 +362,18 @@
   inline int strcasecmp(const char *s1, const char *s2)
   { return _stricmp(s1, s2); }
 
+  // Note what's supported
+  #define THREADVAR __declspec(thread)
+
+  #define CFG_HAVE_TCHAR_H 1
+  #define CFG_HAVE_SECURECRT 1
+
+  #define ALIGN_8(atype, avar) __declspec(align(8)) atype avar
+  #define ALIGN_16(atype, avar) __declspec(align(16)) atype avar
+  #define ALIGN_CACHE(atype, avar) __declspec(align(CFG_CACHELINE)) atype avar
+
+  #define NOINLINE __declspec(noinline)
+  #define FORCEINLINE __forceinline
 #endif
 
 #if (CFG_COMPILER == CFG_COMPILER_GCC) || (CFG_COMPILER == CFG_COMPILER_ICC)
@@ -370,6 +382,13 @@
   #define CFG_HAVE_LRINT 1
   #define CFG_HAVE_LRINTF 1
   #define CFG_HAVE_NAN 1
+
+  #define ALIGN_8(atype, avar) atype __attribute__((aligned(8))) avar
+  #define ALIGN_16(atype, avar) atype avar __attribute__((aligned(16)))
+  #define ALIGN_CACHE(atype, avar) atype avar __attribute__((aligned(CFG_CACHELINE)))
+
+  #define NOINLINE __attribute__ ((noinline))
+  #define FORCEINLINE __attribute__ ((always_inline))
 #endif
 
 #if CFG_COMPILER == CFG_COMPILER_SUNCC
@@ -380,7 +399,14 @@
   #define CFG_HAVE_LRINTF 1
   #define CFG_HAVE_NAN 1
 
-  #if __SUNPRO_CC < 0x590
+  #if __SUNPRO_CC >= 0x590
+    #define NOINLINE __attribute__ ((noinline))
+    #define FORCEINLINE __attribute__ ((always_inline))
+
+    #define ALIGN_8(atype, avar) atype __attribute__((aligned(8))) avar
+    #define ALIGN_16(atype, avar) atype __attribute__((aligned(16))) avar
+    #define ALIGN_CACHE(atype, avar) atype __attribute__((aligned(CFG_CACHELINE))) avar
+  #else
     // Sun C prior to 5.9 only has integer SSE2 and MMX support.
     #define CFG_ONLY_INTEGER_SSE2 1
     #ifdef CFG_HAVE_SSE1
@@ -392,6 +418,14 @@
       #define CFG_HAVE_SSE3 0
     #endif
   #endif
+#endif
+
+#ifndef NOINLINE
+  #define NOINLINE
+#endif
+
+#ifndef FORCEINLINE
+  #define FORCEINLINE inline
 #endif
 
 // -----------------------------------------------------------------------------
@@ -607,5 +641,71 @@
   #include <math.h>
   inline long int lrintf(float x) { return static_cast<long int>(floorf(x + 0.5f)); }
 #endif
+
+// -----------------------------------------------------------------------------
+// Endian correction.
+// -----------------------------------------------------------------------------
+
+template<int Bits> inline size_t EndianFix(size_t LittleEndianIndex)
+{
+  #if CFG_ENDIAN == CFG_ENDIAN_BIG
+  size_t FlipMask = (((size_t)1) << Bits) - 1;
+  return
+    (LittleEndianIndex & ~FlipMask) +
+    (FlipMask - (LittleEndianIndex & FlipMask));
+  #else
+  return LittleEndianIndex;
+  #endif
+}
+
+template<> size_t inline EndianFix<1>(size_t LittleEndianIndex)
+{
+  #if CFG_ENDIAN == CFG_ENDIAN_BIG
+  return (LittleEndianIndex ^ 1);
+  #else
+  return LittleEndianIndex;
+  #endif
+}
+
+template<int Bits> inline int EndianFix(int LittleEndianIndex)
+{
+  #if CFG_ENDIAN == CFG_ENDIAN_BIG
+  size_t FlipMask = (((int)1) << Bits) - 1;
+  return
+    (LittleEndianIndex & ~FlipMask) +
+    (FlipMask - (LittleEndianIndex & FlipMask));
+  #else
+  return LittleEndianIndex;
+  #endif
+}
+
+template<> int inline EndianFix<1>(int LittleEndianIndex)
+{
+  #if CFG_ENDIAN == CFG_ENDIAN_BIG
+  return (LittleEndianIndex ^ 1);
+  #else
+  return LittleEndianIndex;
+  #endif
+}
+
+template<int Bits, size_t LittleEndianIndex> struct EndianFix_static
+{
+  #if CFG_ENDIAN == CFG_ENDIAN_BIG
+  static const size_t FlipMask = (static_cast<size_t>(1) << Bits) - 1;
+  static const size_t Value = (LittleEndianIndex & ~FlipMask) + (FlipMask - (LittleEndianIndex & FlipMask));
+  #else
+  static const size_t Value = LittleEndianIndex;
+  #endif
+};
+
+template<int Bits, int LittleEndianIndex> struct EndianFix_static_int
+{
+  #if CFG_ENDIAN == CFG_ENDIAN_BIG
+  static const int FlipMask = (static_cast<int>(1) << Bits) - 1;
+  static const int Value = (LittleEndianIndex & ~FlipMask) + (FlipMask - (LittleEndianIndex & FlipMask));
+  #else
+  static const int Value = LittleEndianIndex;
+  #endif
+};
 
 #endif
