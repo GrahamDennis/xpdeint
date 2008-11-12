@@ -1,0 +1,51 @@
+@*
+SolirteNoise.tmpl
+
+Created by Graham Dennis on 2008-11-11.
+Copyright (c) 2008 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.Features.Noises.Noise
+
+@from xpdeint.CallOnceGuards import callOnceGuard
+@import random
+
+@def description: Generic Solirte noise
+@def generatorType: CPRNG<CSFMTParams_19937>*
+
+@*
+  Static includes
+*@
+@@callOnceGuard
+@def static_includes
+  @#
+  @super
+  @#
+#define CFG_TIMETRACK_DISABLE
+// We have disabled Solirte's MMX version.
+// Use SSE2 or get a newer computer.
+#undef CFG_HAVE_MMX
+#define CFG_HAVE_MMX 0
+#include <solirte/SFMTparams.h>
+#include <solirte/prng.h>
+#include <solirte/ziggurat.cpp>
+  @#
+@end def
+
+@*
+  Initialise seeds
+*@
+@def initialiseSeeds
+  @#
+  @set $featureOrdering = ['Driver']
+  @silent seedOffset = $insertCodeForFeatures('seedOffset', featureOrdering)
+  @#
+  @if not len($seedArray)
+    @set self.generatedSeeds = [random.randrange(0, pow(2, 31)) for i in xrange(1)]
+    @set seedArray = self.generatedSeeds
+  @end if
+  @#
+  @set $seedString = str($seedArray[0])
+  @#
+${generatorName} = new CPRNG<CSFMTParams_19937>($seedString);
+  @#
+@end def

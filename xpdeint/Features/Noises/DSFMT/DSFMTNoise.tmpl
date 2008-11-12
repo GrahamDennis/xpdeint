@@ -18,7 +18,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 Return the options that need to be added to ``CFLAG``.
 *@
   @#
--msse2 -finline-functions -fno-strict-aliasing --param max-inline-insns-single=1800 -DDSFMT_MEXP=19937 -DHAVE_SSE2@slurp
+-msse2 -finline-functions -fno-strict-aliasing --param max-inline-insns-single=1800 -DDSFMT_MEXP=19937@slurp
   @#
 @end def
 
@@ -31,19 +31,14 @@ Return the options that need to be added to ``CFLAG``.
   @super
   @#
 #define DSFMT_DO_NOT_USE_OLD_NAMES
-#include <dSFMT.h>
-#include <dSFMT.c>
-  @#
-@end def
+#if CFG_HAVE_SSE2
+  #define HAVE_SSE2
+#elif CFG_HAVE_ALTIVEC
+  #define HAVE_ALTIVEC
+#endif
 
-@*
-  Globals
-*@
-@def globals
-  @#
-  @super
-  @#
-dsfmt_t* ${generatorName};
+#include <dSFMT/dSFMT.h>
+#include <dSFMT/dSFMT.c>
   @#
 @end def
 
@@ -56,7 +51,7 @@ dsfmt_t* ${generatorName};
   @silent seedOffset = $insertCodeForFeatures('seedOffset', $featureOrdering)
   @#
   @if not len($seedArray)
-    @set self.generatedSeeds = [random.randrange(0, pow(2, 31)) for i in range(3)]
+    @set self.generatedSeeds = [random.randrange(0, pow(2, 31)) for i in xrange(3)]
     @set seedArray = self.generatedSeeds
   @end if
   @#
