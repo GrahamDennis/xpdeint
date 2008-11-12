@@ -1,0 +1,62 @@
+@*
+SICStepper.tmpl
+
+Created by Graham Dennis on 2008-08-06.
+Copyright (c) 2008 Graham Dennis. All rights reserved.
+*@
+@extends xpdeint.Segments.Integrators._Stepper
+
+@def name: SIC
+@attr $ipPropagationStepFractions = ['0.5']
+@attr $nonconstantIPFields = 1
+@attr $extraIntegrationArrayNames = ['oldcopy']
+@attr $isCrossCapable = False
+@attr $iterations = 3
+
+@*
+  Single integration step (SIC)
+*@
+@def singleIntegrationStep($function)
+  @#
+  @set $arguments = {'_step': '_step', $propagationDimension: $propagationDimension}
+${callFunction('nonconstantIPFields', arguments, _exponent = 1, _arrayIndex = 0, parentFunction=function)}
+
+${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction=function)}
+
+${propagationDimension} += 0.5*_step;
+
+${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
+
+${copyVectors($integrationVectors, '_oldcopy')}@slurp
+
+  @for $vector in $integrationVectors
+_active_${vector.id} = _${vector.id};
+  @end for
+
+for (int _iteration = 0; _iteration < ${iterations}; _iteration++) {
+  if (_iteration < ${iterations} - 1) {
+  @if $integrator.leftOperatorContainer
+    ${callFunction('leftDeltaA', arguments, _step = '0.5*_step', parentFunction=function), autoIndent=True}
+  @end if
+  @if $integrator.rightOperatorContainer
+    ${callFunction('rightDeltaA', arguments, _step = '0.5*_step', parentFunction=function), autoIndent=True}
+  @end if
+  } else {
+    ${callFunction('deltaA', arguments, parentFunction=function), autoIndent=True}
+    
+    ${transformVectorsToSpace($integrationVectors, $homeSpace), autoIndent=True}@slurp
+    
+    ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
+"""// a = oldcopy + a
+_${vector.id}[$index] += _oldcopy_${vector.id}[$index];
+"""), autoIndent=True}@slurp
+  }
+  
+}
+
+${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction=function)}
+
+${propagationDimension} += 0.5*_step;
+
+  @#
+@end def

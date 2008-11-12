@@ -995,22 +995,37 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       raise ParserException(integrateElement, "Integration element must have an 'algorithm' attribute.")
     
     integratorTemplateClass = None
+    stepperTemplateClass = None
     algorithmSpecificOptionsDict = dict()
+    
+    algorithms = {}
     
     algorithmString = integrateElement.getAttribute('algorithm')
     if algorithmString == 'RK4':
-      integratorTemplateClass = Integrators.RK4.RK4
+      integratorTemplateClass = Integrators.FixedStep.FixedStep
+      stepperTemplateClass = Integrators.RK4Stepper.RK4Stepper
     elif algorithmString == 'RK9':
-      integratorTemplateClass = Integrators.RK9.RK9
+      integratorTemplateClass = Integrators.FixedStep.FixedStep
+      stepperTemplateClass = Integrators.RK9Stepper.RK9Stepper
+    elif algorithmString == 'RK45':
+      integratorTemplateClass = Integrators.FixedStep.FixedStep
+      stepperTemplateClass = Integrators.RK45Stepper.RK45Stepper
     elif algorithmString == 'ARK45':
-      integratorTemplateClass = Integrators.ARK45.ARK45
+      integratorTemplateClass = Integrators.AdaptiveStep.AdaptiveStep
+      stepperTemplateClass = Integrators.RK45Stepper.RK45Stepper
+    elif algorithmString == 'RK89':
+      integratorTemplateClass = Integrators.FixedStep.FixedStep
+      stepperTemplateClass = Integrators.RK89Stepper.RK89Stepper
     elif algorithmString == 'ARK89':
-      integratorTemplateClass = Integrators.ARK89.ARK89
+      integratorTemplateClass = Integrators.AdaptiveStep.AdaptiveStep
+      stepperTemplateClass = Integrators.RK89Stepper.RK89Stepper
     elif algorithmString in ['SI','SIC']:
       if algorithmString == 'SI':
-        integratorTemplateClass = Integrators.SI.SI
+        integratorTemplateClass = Integrators.FixedStep.FixedStep
+        stepperTemplateClass = Integrators.SIStepper.SIStepper
       else:
-        integratorTemplateClass = Integrators.SIC.SIC
+        integratorTemplateClass = Integrators.FixedStepWithCross.FixedStepWithCross
+        stepperTemplateClass = Integrators.SICStepper.SICStepper
       
       if integrateElement.hasAttribute('iterations'):
         algorithmSpecificOptionsDict['iterations'] = RegularExpressionStrings.integerInString(integrateElement.getAttribute('iterations'))
@@ -1018,9 +1033,9 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
           raise ParserException(integrateElement, "Iterations element must be 1 or greater (default 3).")
     else:
       raise ParserException(integrateElement, "Unknown algorithm '%(algorithmString)s'. "
-                                              "Options are 'SI', 'SIC', 'RK4', 'RK9', 'ARK45' or 'ARK89'." % locals())
+                                              "Options are 'SI', 'SIC', 'RK4', 'RK9', 'RK45', 'ARK45' , 'RK89', or 'ARK89'." % locals())
     
-    integratorTemplate = integratorTemplateClass(**self.argumentsToTemplateConstructors)
+    integratorTemplate = integratorTemplateClass(stepperClass = stepperTemplateClass, **self.argumentsToTemplateConstructors)
     self.applyAttributeDictionaryToObject(algorithmSpecificOptionsDict, integratorTemplate)      
     
     if integrateElement.hasAttribute('home_space'):
@@ -1436,12 +1451,15 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     algorithmString = operatorElement.getAttribute('algorithm').strip()
     
     crossIntegratorClass = None
+    crossStepperClass = None
     algorithmSpecificOptionsDict = {}
     
     if algorithmString == 'RK4':
-      crossIntegratorClass = Integrators.RK4.RK4
+      crossIntegratorClass = Integrators.FixedStep.FixedStep
+      crossStepperClass = Integrators.RK4Stepper.RK4Stepper
     elif algorithmString == 'SI':
-      crossIntegratorClass = Integrators.SI.SI
+      crossIntegratorClass = Integrators.FixedStep.FixedStep
+      crossStepperClass = Integrators.SIStepper.SIStepper
       if operatorElement.hasAttribute('iterations'):
         algorithmSpecificOptionsDict['iterations'] = RegularExpressionStrings.integerInString(operatorElement.getAttribute('iterations'))
         if algorithmSpecificOptionsDict['iterations'] < 1:
@@ -1451,7 +1469,8 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       raise ParserException(operatorElement, "Unknown cross-propagation algorithm '%(algorithmString)s'.\n"
                                              "The options are 'SI' or 'RK4'." % locals())
     
-    crossIntegratorTemplate = crossIntegratorClass(xmlElement = operatorElement,
+    crossIntegratorTemplate = crossIntegratorClass(stepperClass = crossStepperClass,
+                                                   xmlElement = operatorElement,
                                                    parent = operatorTemplate,
                                                    **self.argumentsToTemplateConstructors)
     crossIntegratorTemplate.cross = True

@@ -1,12 +1,13 @@
 @*
-SI.tmpl
+SIStepper.tmpl
 
 Created by Joe Hope on 2008-03-24.
-Copyright (c) 2008 __MyCompanyName__. All rights reserved.
+Copyright (c) 2008 Joe Hope. All rights reserved.
+Copyright (c) 2008 Graham Dennis. All rights reserved.
 *@
-@extends xpdeint.Segments.Integrators.FixedStep
+@extends xpdeint.Segments.Integrators._Stepper
 
-@def description: segment $segmentNumber (SI Integrator)
+@def name: SI
 @attr $ipPropagationStepFractions = ['0.5']
 @attr $nonconstantIPFields = 1
 @attr $extraIntegrationArrayNames = ['oldCopy']
@@ -19,9 +20,9 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 @def singleIntegrationStep($function)
   @#
   @set $arguments = {'_step': '_step', $propagationDimension: $propagationDimension}
-${functions['nonconstantIPFields'].call(arguments, _exponent = 1, _arrayIndex = 0, parentFunction=function)}
+${callFunction('nonconstantIPFields', arguments, _exponent = 1, _arrayIndex = 0, parentFunction=function)}
 
-${functions['ipEvolve'].call(arguments, _exponent = +1, parentFunction=function)}
+${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction=function)}
 
 ${propagationDimension} += 0.5*_step;
 
@@ -40,9 +41,9 @@ ${interpolateDependencies}@slurp
 
 for (int _iteration = 0; _iteration < ${iterations}; _iteration++) {
   if (_iteration < ${iterations} - 1) {
-    ${functions['deltaA'].call(arguments, _step = '0.5*_step', parentFunction=function), autoIndent=True}
+    ${callFunction('deltaA', arguments, _step = '0.5*_step', parentFunction=function), autoIndent=True}
   } else {
-    ${functions['deltaA'].call(arguments, parentFunction=function), autoIndent=True}
+    ${callFunction('deltaA', arguments, parentFunction=function), autoIndent=True}
   }
   
   ${transformVectorsToSpace($integrationVectors, $homeSpace), autoIndent=True}@slurp
@@ -53,7 +54,7 @@ _${vector.id}[$index] += _oldCopy_${vector.id}[$index];
 """), autoIndent=True}@slurp
 }
 
-${functions['ipEvolve'].call(arguments, _exponent = +1, parentFunction=function)}
+${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction=function)}
 
 ${propagationDimension} += 0.5*_step;
 
@@ -64,7 +65,7 @@ ${propagationDimension} += 0.5*_step;
   @#
   @# Insert code to interpolate the dependency vectors onto the half-step point.
   @# 
-${reducedFieldCopy($dependencyMap, 
+${reducedFieldCopy($integrator.dependencyMap, 
 """
 _active_${reducedVector.id}[_${reducedVector.id}_index_pointer + ${componentIndex}] = \\
     0.5*(_active_${vector.id}[_${vector.id}_index_pointer + ${componentIndex}]

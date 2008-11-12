@@ -126,6 +126,9 @@
 * Make CodeLexer's IPOperatorSanityCheck check for multiplying IP operators by things or dividing (in the simplest possible way).
   i.e. check for 0.5 * L[phi] and L[phi]/3.0 etc, but not ((L[phi]) + 6.0) / 3.0;
 
+* There is some potential optimisation to be had in RK4 and possibly other integrators where delta_a is evaluated at the start of the step in the same way
+  that it was evaluated at the end of the previous step.
+
 Things to be done by AIP:
 * Windows compatibility
 * Remove dependence on libxmds for XSIL import (port xsil2graphics too?)

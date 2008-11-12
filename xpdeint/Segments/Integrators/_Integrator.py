@@ -13,13 +13,15 @@ from xpdeint.Segments._Segment import _Segment
 
 from xpdeint.Operators.NonConstantIPOperator import NonConstantIPOperator
 from xpdeint.ParserException import ParserException
+from xpdeint.Utilities import lazy_property
 from xpdeint.Function import Function
+from itertools import chain
 
 class _Integrator (_Segment):
   
   canBeInitialisedEarly = True
   
-  def __init__(self, *args, **KWs):
+  def __init__(self, stepperClass, *args, **KWs):
     _Segment.__init__(self, *args, **KWs)
     
     # Set default variables
@@ -32,6 +34,9 @@ class _Integrator (_Segment):
     self.intraStepOperatorContainers = []
     self.stepEndOperatorContainers = []
     self.computedVectors = set()
+    assert stepperClass
+    self.stepper = stepperClass(parent = self, **self.argumentsToTemplateConstructors)
+    self._children.append(self.stepper)
     
     functionNamePrefix = '_' + self.id
     
@@ -54,8 +59,8 @@ class _Integrator (_Segment):
   @property
   def children(self):
     children = super(_Integrator, self).children
-    for array in [self.stepStartOperatorContainers, self.intraStepOperatorContainers, self.stepEndOperatorContainers, self.computedVectors]:
-      children.extend(array)
+    children.extend(chain(self.stepStartOperatorContainers, self.intraStepOperatorContainers, self.stepEndOperatorContainers, \
+                          self.computedVectors))
     return children
   
   @property
@@ -69,12 +74,25 @@ class _Integrator (_Segment):
     
     return self._integrationVectors.copy()
   
+  @lazy_property
+  def extraIntegrationArrayNames(self):
+    return self.stepper.extraIntegrationArrayNames
+  
+  @lazy_property
+  def ipPropagationStepFractions(self):
+    return self.stepper.ipPropagationStepFractions
+  
+  @lazy_property
+  def nonconstantIPFields(self):
+    return self.stepper.nonconstantIPFields
+  
+  @property
+  def integrationOrder(self):
+    return self.stepper.integrationOrder
+  
   @property
   def operatorContainers(self):
-    result = []
-    for array in [self.stepStartOperatorContainers, self.intraStepOperatorContainers, self.stepEndOperatorContainers]:
-      result.extend(array)
-    return result
+    return list(chain(self.stepStartOperatorContainers, self.intraStepOperatorContainers, self.stepEndOperatorContainers))
   
   @property
   def integrationFields(self):
