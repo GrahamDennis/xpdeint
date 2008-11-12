@@ -1,65 +1,10 @@
 @*
-SIC.tmpl
+FixedStepWithCross.tmpl
 
-Created by Graham Dennis on 2008-08-06.
+Created by Graham Dennis on 2008-11-12.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 *@
-@extends xpdeint.Segments.Integrators._SIC
-
-@def description: segment $segmentNumber (SI Integrator with integrated cross-propagation)
-@attr $ipPropagationStepFractions = ['0.5']
-@attr $nonconstantIPFields = 1
-@attr $extraIntegrationArrayNames = ['oldcopy']
-@attr $isCrossCapable = False
-@attr $iterations = 3
-
-@*
-  Single integration step (SIC)
-*@
-@def singleIntegrationStep($function)
-  @#
-  @set $arguments = {'_step': '_step', $propagationDimension: $propagationDimension}
-${functions['nonconstantIPFields'].call(arguments, _exponent = 1, _arrayIndex = 0, parentFunction=function)}
-
-${functions['ipEvolve'].call(arguments, _exponent = +1, parentFunction=function)}
-
-${propagationDimension} += 0.5*_step;
-
-${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
-
-${copyVectors($integrationVectors, '_oldcopy')}@slurp
-
-  @for $vector in $integrationVectors
-_active_${vector.id} = _${vector.id};
-  @end for
-
-for (int _iteration = 0; _iteration < ${iterations}; _iteration++) {
-  if (_iteration < ${iterations} - 1) {
-  @if $leftOperatorContainer
-    ${functions['leftDeltaA'].call(arguments, _step = '0.5*_step', parentFunction=function), autoIndent=True}
-  @end if
-  @if $rightOperatorContainer
-    ${functions['rightDeltaA'].call(arguments, _step = '0.5*_step', parentFunction=function), autoIndent=True}
-  @end if
-  } else {
-    ${functions['deltaA'].call(arguments, parentFunction=function), autoIndent=True}
-    
-    ${transformVectorsToSpace($integrationVectors, $homeSpace), autoIndent=True}@slurp
-    
-    ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
-"""// a = oldcopy + a
-_${vector.id}[$index] += _oldcopy_${vector.id}[$index];
-"""), autoIndent=True}@slurp
-  }
-  
-}
-
-${functions['ipEvolve'].call(arguments, _exponent = +1, parentFunction=function)}
-
-${propagationDimension} += 0.5*_step;
-
-  @#
-@end def
+@extends xpdeint.Segments.Integrators._FixedStepWithCross
 
 @def leftRightDeltaAFunctionBody($function, $replacementOperatorContainer)
   @#

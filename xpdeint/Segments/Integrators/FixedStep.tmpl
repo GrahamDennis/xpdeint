@@ -6,7 +6,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *@
 @extends xpdeint.Segments.Integrators._FixedStep
 
-@def description: segment $segmentNumber (Unnamed fixed-step integrator)
+@def description: segment $segmentNumber ($stepper.name fixed-step integrator)
 
 
 @def functionPrototypes
@@ -90,7 +90,7 @@ for (long _istep = 0; _istep < ${stepCount}; _istep++) {
   @set $extraIndent = $dict.extraIndent
   
   ${preSingleStep, autoIndent=True, extraIndent=extraIndent}@slurp
-  ${singleIntegrationStep(function), autoIndent=True, extraIndent=extraIndent}@slurp
+  ${stepper.singleIntegrationStep(function), autoIndent=True, extraIndent=extraIndent}@slurp
   ${postSingleStep, autoIndent=True, extraIndent=extraIndent}@slurp
   
   @if $cross

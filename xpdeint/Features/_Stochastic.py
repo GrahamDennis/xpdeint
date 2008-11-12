@@ -147,7 +147,7 @@ class _Stochastic (_Feature):
     # For each adaptive step integrator using noises, we need to reduce the order of the integrator
     integratorsUsingNoises = set([o.integrator for o in objectsThatMightUseNoises if isinstance(o, DeltaAOperator) and isinstance(o.integrator, AdaptiveStepIntegrator)])
     for integrator in integratorsUsingNoises:
-      integrator.integrationOrder /= 2.0
+      integrator.stepper.integrationOrder /= 2.0
     
     # When we have error checking, every noise vector used by a delta a operator in a fixed step integrator
     # needs a '2' noise vector alias for generating two half-step noises and adding them.

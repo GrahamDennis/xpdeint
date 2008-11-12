@@ -1,12 +1,12 @@
 @*
-ARK45.tmpl
+RK45Stepper.tmpl
 
 Created by Graham Dennis on 2007-11-16.
-Copyright (c) 2007 __MyCompanyName__. All rights reserved.
+Copyright (c) 2007-2008 Graham Dennis. All rights reserved.
 *@
-@extends xpdeint.Segments.Integrators.AdaptiveStep
+@extends xpdeint.Segments.Integrators._Stepper
 
-@def description: segment $segmentNumber (ARK45 Integrator)
+@def name: RK45
 @attr $ipPropagationStepFractions = ['1.0', '4.0/5.0', '7.0/10.0', '2.0/5.0', '1.0/8.0']
 @attr $nonconstantIPFields = 2
 @attr $extraIntegrationArrayNames = ['akfield', 'aifield', 'ajfield', 'alfield', 'checkfield']
@@ -121,11 +121,11 @@ ${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
 // a_k = y1
 ${copyVectors($integrationVectors, '_akfield')}@slurp
 
-${functions['nonconstantIPFields'].call(arguments, _exponent = 1, _arrayIndex = 0, parentFunction=function)}
+${callFunction('nonconstantIPFields', arguments, _exponent = 1, _arrayIndex = 0, parentFunction=function)}
 
 // a_i = D(a_2*dt)[y1]
-${functions['ipEvolve'].call(arguments, _exponent = +1, parentFunction=function)}
-${goToHomeSpace}@slurp
+${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction=function)}
+${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
 
 // y2 = y1
 ${copyVectors($integrationVectors, '_checkfield')}@slurp
@@ -138,11 +138,11 @@ _active_${vector.id} = _akfield_${vector.id};
   @end for
 
 // a_k = G[a_k, t]
-${functions['deltaA'].call(arguments, parentFunction=function)}
+${callFunction('deltaA', arguments, parentFunction=function)}
 
 // a_i = D(a_2*dt)[a_k]
-${functions['ipEvolve'].call(arguments, _exponent = +1, parentFunction=function)}
-${goToHomeSpace}@slurp
+${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction=function)}
+${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
 
 ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """// y1 = y1 + c_1*a_k
@@ -155,15 +155,15 @@ _akfield_${vector.id}[$index] = _aifield_${vector.id}[$index] + _b[2][1]*_akfiel
 
 ${propagationDimension} += _a[2] * _step;
 
-${functions['nonconstantIPFields'].call(arguments, _exponent = 2, _arrayIndex = 1, parentFunction=function)}
+${callFunction('nonconstantIPFields', arguments, _exponent = 2, _arrayIndex = 1, parentFunction=function)}
 
-${functions['ipEvolve'].call(arguments, _exponent = -2, parentFunction=function)}
+${callFunction('ipEvolve', arguments, _exponent = -2, parentFunction=function)}
 
 // a_k = G[a_k, t + aa_2*dt]
-${functions['deltaA'].call(arguments, parentFunction=function)}
+${callFunction('deltaA', arguments, parentFunction=function)}
 
-${functions['ipEvolve'].call(arguments, _exponent = +2, parentFunction=function)}
-${goToHomeSpace}@slurp
+${callFunction('ipEvolve', arguments, _exponent = +2, parentFunction=function)}
+${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
 
 // c_2 == cs_2 == 0
 ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
@@ -177,17 +177,17 @@ ${propagationDimension} += _a[3] * _step;
 _active_${vector.id} = _ajfield_${vector.id};
   @end for
 
-${functions['nonconstantIPFields'].call(arguments, _exponent = 3, _arrayIndex = 1, parentFunction=function)}
+${callFunction('nonconstantIPFields', arguments, _exponent = 3, _arrayIndex = 1, parentFunction=function)}
 
 // a_j = D((a_3 - a_2)*dt)[a_j]
-${functions['ipEvolve'].call(arguments, _exponent = -3, parentFunction=function)}
+${callFunction('ipEvolve', arguments, _exponent = -3, parentFunction=function)}
 
 // a_j = G[a_j, t + aa_3*dt]
-${functions['deltaA'].call(arguments, parentFunction=function)}
+${callFunction('deltaA', arguments, parentFunction=function)}
 
 // a_j = D(-(a_3 - a_2)*dt)[a_j]
-${functions['ipEvolve'].call(arguments, _exponent = +3, parentFunction=function)}
-${goToHomeSpace}@slurp
+${callFunction('ipEvolve', arguments, _exponent = +3, parentFunction=function)}
+${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
 
 ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """// a_l = e_1*a_i + e_2*y1 + e_3*a_k + e_4*a_j
@@ -204,17 +204,17 @@ ${propagationDimension} += _a[4] * _step;
 _active_${vector.id} = _alfield_${vector.id};
   @end for
 
-${functions['nonconstantIPFields'].call(arguments, _exponent = 4, _arrayIndex = 1, parentFunction=function)}
+${callFunction('nonconstantIPFields', arguments, _exponent = 4, _arrayIndex = 1, parentFunction=function)}
 
 // a_l = D((a_4 - a_2)*dt)[a_l]
-${functions['ipEvolve'].call(arguments, _exponent = -4, parentFunction=function)}
+${callFunction('ipEvolve', arguments, _exponent = -4, parentFunction=function)}
 
 // a_l = G[a_l, t + aa_4*dt]
-${functions['deltaA'].call(arguments, parentFunction=function)}
+${callFunction('deltaA', arguments, parentFunction=function)}
 
 // a_l = D(-(a_4 - a_2)*dt)[a_l]
-${functions['ipEvolve'].call(arguments, _exponent = +4, parentFunction=function)}
-${goToHomeSpace}@slurp
+${callFunction('ipEvolve', arguments, _exponent = +4, parentFunction=function)}
+${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
 
 ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """// y1 = y1 + c_4*a_l
@@ -228,8 +228,8 @@ _alfield_${vector.id}[$index] = _f[1]*_aifield_${vector.id}[$index] + _f[2]*_${v
 ${propagationDimension} += _a[5] * _step;
 
 // a_l = G[a_l, t + aa_5*dt]
-${functions['deltaA'].call(arguments, parentFunction=function)}
-${goToHomeSpace}@slurp
+${callFunction('deltaA', arguments, parentFunction=function)}
+${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
 
 // c_5 == 0
 ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
@@ -241,17 +241,17 @@ _alfield_${vector.id}[$index] = _g[1]*_aifield_${vector.id}[$index] + _g[2]*_akf
 
 ${propagationDimension} += _a[6] * _step;
 
-${functions['nonconstantIPFields'].call(arguments, _exponent = 5, _arrayIndex = 1, parentFunction=function)}
+${callFunction('nonconstantIPFields', arguments, _exponent = 5, _arrayIndex = 1, parentFunction=function)}
 
 // a_l = D((a_6 - a_2)*dt)[a_l]
-${functions['ipEvolve'].call(arguments, _exponent = -5, parentFunction=function)}
+${callFunction('ipEvolve', arguments, _exponent = -5, parentFunction=function)}
 
 // a_l = G[a_l, t + aa_6*dt]
-${functions['deltaA'].call(arguments, parentFunction=function)}
+${callFunction('deltaA', arguments, parentFunction=function)}
 
 // a_l = D(-(a_6 - a_2)*dt)[a_l]
-${functions['ipEvolve'].call(arguments, _exponent = +5, parentFunction=function)}
-${goToHomeSpace}@slurp
+${callFunction('ipEvolve', arguments, _exponent = +5, parentFunction=function)}
+${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
 
 // c_5 == 0
 ${loopOverVectorsWithInnerContentTemplate($integrationVectors,

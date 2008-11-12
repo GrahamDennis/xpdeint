@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # encoding: utf-8
 """
-_SIC.py
+_FixedStepWithCross.py
 
 Created by Graham Dennis on 2008-08-06.
-Copyright (c) 2008 __MyCompanyName__. All rights reserved.
+Copyright (c) 2008 Graham Dennis. All rights reserved.
 """
 
 from xpdeint.Segments.Integrators.FixedStep import FixedStep
@@ -16,7 +16,7 @@ from xpdeint.Operators.SICDeltaAOperator import SICDeltaAOperator
 from xpdeint.ParserException import ParserException
 from xpdeint.Function import Function
 
-class _SIC (FixedStep):
+class _FixedStepWithCross (FixedStep):
   def __init__(self, *args, **KWs):
     FixedStep.__init__(self, *args, **KWs)
     
@@ -77,7 +77,7 @@ class _SIC (FixedStep):
     leftRightDeltaAOperator.crossIntegrationVectorsEntity       = crossOp.integrationVectorsEntity
     leftRightDeltaAOperator.codeBlocks['crossPropagation']      = oldCrossDeltaAOperator.codeBlocks['operatorDefinition']
     
-    leftRightDeltaAOperator.iterations = crossOp.crossPropagationIntegrator.iterations
+    leftRightDeltaAOperator.iterations = crossOp.crossPropagationIntegrator.stepper.iterations
     
     # Now we need to work out if we need to create a new field to be the looping field
     crossPropagationDimensionName = crossOp.propagationDimension
@@ -103,7 +103,7 @@ class _SIC (FixedStep):
     return operatorContainer
   
   def bindNamedVectors(self):
-    super(_SIC, self).bindNamedVectors()
+    super(_FixedStepWithCross, self).bindNamedVectors()
     
     # This needs to go in bindNamedVectors not preflight because the CrossPropagationOperator
     # fiddles with the mapping of vector names to vectors for its child elements, and it will be annoying
@@ -143,7 +143,7 @@ class _SIC (FixedStep):
         crossOp.remove()
     
   def preflight(self):
-    super(_SIC, self).preflight()
+    super(_FixedStepWithCross, self).preflight()
     
     if not self.leftOperatorContainer and not self.rightOperatorContainer:
       raise ParserException(self.xmlElement, "It doesn't make sense to use the 'SIC' integrator without any cross-propagation operators. Use 'SI' instead.")

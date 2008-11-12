@@ -5,14 +5,10 @@ Created by Graham Dennis on 2007-10-20.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *@
 @extends xpdeint.Segments.Integrators._Integrator
-@from xpdeint.Geometry.NonUniformDimensionRepresentation import NonUniformDimensionRepresentation
 @from xpdeint.CallOnceGuards import callOncePerInstanceGuard
 
-@def description: segment $segmentNumber (Unnamed Integrator)
+@def description: segment $segmentNumber ($stepper.name Integrator)
 
-@*
-  Globals
-*@
 @def globals
   @#
   @super
@@ -132,7 +128,9 @@ we need to set up pointers in the integrator to the appropriate arrays.
     @for $arrayName in $extraIntegrationArrayNames
 ${vector.type}* _${arrayName}_${vector.id} = _${name}_${arrayName}_${vector.id};
     @end for
-  @end for  
+  @end for
+
+${stepper.localInitialise}@slurp
   @#
 @end def
 
@@ -143,15 +141,7 @@ we need to be able to insert code at the end of the integrator as well.
 *@
   @#
 _SEGMENT${segmentNumber}_END:;
-  @#
-@end def
-
-@def goToHomeSpace
-@*doc:
-This method writes the code to transform all of the integration vectors
-back to the 'home space' of the integrator.
-*@
-${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
+${stepper.localFinalise}@slurp
   @#
 @end def
 

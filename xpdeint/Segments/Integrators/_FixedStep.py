@@ -29,8 +29,8 @@ class _FixedStep (Integrator):
     return self._cross
   
   def _setCross(self, value):
-    if value and not self.isCrossCapable:
-      raise AssertionError("This class (%s) does not support cross-propagation." % str(type(self)))
+    if value and not self.stepper.isCrossCapable:
+      raise AssertionError("This stepper (%s) does not support cross-propagation." % str(type(self.stepper)))
     else:
       self._cross = value
   

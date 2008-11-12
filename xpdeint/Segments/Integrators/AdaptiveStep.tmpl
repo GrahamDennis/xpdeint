@@ -282,14 +282,14 @@ do {
   @set $featureOrderingInnerLoop = ['Stochastic']
     ${insertCodeForFeatures('integrateAdaptiveStepInnerLoopBegin', featureOrderingInnerLoop), autoIndent=True}@slurp
     
-    ${singleIntegrationStep(function), autoIndent=True}@slurp
+    ${stepper.singleIntegrationStep(function), autoIndent=True}@slurp
     
     ${insertCodeForFeaturesInReverseOrder('integrateAdaptiveStepInnerLoopEnd', featureOrderingInnerLoop), autoIndent=True}@slurp
     
     _error = 0.0;
   @for $vector in $integrationVectors
     
-    _${name}_${vector.id}_error = _${name}_${vector.id}_timestep_error(_${errorFieldName}_${vector.id});
+    _${name}_${vector.id}_error = _${name}_${vector.id}_timestep_error(_${stepper.errorFieldName}_${vector.id});
     if (_${name}_${vector.id}_error > _error)
       _error = _${name}_${vector.id}_error;
   @end for
@@ -309,7 +309,7 @@ do {
       t -= _step;
   @for $vector in $integrationVectors
       
-      _${name}_${vector.id}_reset(_${resetFieldName}_${vector.id});
+      _${name}_${vector.id}_reset(_${stepper.resetFieldName}_${vector.id});
   @end for
       ${functions['ipEvolve'].call(_exponent = -1, parentFunction=function)}
       
