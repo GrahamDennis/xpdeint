@@ -64,9 +64,9 @@
     <initialisation>
       <![CDATA[
         u = 0.0;
-        v = 1.0;
-        w = 1.0;
-        x = 1.0;
+        v = 0.0;
+        w = 0.0;
+        x = 0.0;
       ]]>
     </initialisation>
   </vector>
