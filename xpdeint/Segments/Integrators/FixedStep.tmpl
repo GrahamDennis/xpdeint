@@ -201,7 +201,7 @@ void _${name}_initialise_cross_propagation()
   // Copy the initial value of the integration vectors back into their main arrays
   {
     ${reducedFieldCopy($integrationVectorMap,
-"""_active_${vector.id}[_${vector.id}_index_pointer + ${componentIndex}] = _active_${reducedVector.id}[_${reducedVector.id}_index_pointer + ${componentIndex}];
+"""_active_${reducedVector.id}[_${reducedVector.id}_index_pointer + ${componentIndex}] = _active_${vector.id}[_${vector.id}_index_pointer + ${componentIndex}];
 """, positiveIndexOverride = $positiveIndexOverride, negativeIndexOverride = $negativeIndexOverride), autoIndent=True}@slurp
   }
   
