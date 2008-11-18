@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <name>lorenz_minimal</name>
+  <author>Graham Dennis</author>
+  <description>
+    The Lorenz Attractor, an example of chaos.
+  </description>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+  </geometry>
+  
+  <vector name="main" type="double">
+    <components>
+      x y z
+    </components>
+    <initialisation>
+      <![CDATA[
+      x = y = z = 1.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="ARK89" interval="100.0" tolerance="1e-7">
+      <samples>5000</samples>
+      <operators>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+        dx_dt = 10.0*(y-x);
+        dy_dt = 28.0*x - y - x*z;
+        dz_dt = x*y - 8.0/3.0*z;
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  
+  <output>
+    <group>
+      <sampling>
+        <moments>xR yR zR</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          xR = x;
+          yR = y;
+          zR = z;
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>

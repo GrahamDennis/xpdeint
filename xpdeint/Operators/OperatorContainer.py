@@ -129,34 +129,34 @@ class OperatorContainer(ScriptElement):
     
     op.operatorNumber = len(self.operators) - 1
   
-  def evaluateIPOperators(self, arguments = None, parentFunction = None):
+  def evaluateIPOperators(self, arguments = None, parentFunction = None, **KWs):
     arguments = arguments or {}
-    return self.callOperatorFunctionWithArguments('evaluate', self.ipOperators, arguments, parentFunction)
+    return self.callOperatorFunctionWithArguments('evaluate', self.ipOperators, arguments, parentFunction, **KWs)
   
-  def evaluatePreDeltaAOperators(self, arguments = None, parentFunction = None):
+  def evaluatePreDeltaAOperators(self, arguments = None, parentFunction = None, **KWs):
     arguments = arguments or {}
-    return self.callOperatorFunctionWithArguments('evaluate', self.preDeltaAOperators, arguments, parentFunction)
+    return self.callOperatorFunctionWithArguments('evaluate', self.preDeltaAOperators, arguments, parentFunction, **KWs)
   
-  def evaluatePostDeltaAOperators(self, arguments = None, parentFunction = None):
+  def evaluatePostDeltaAOperators(self, arguments = None, parentFunction = None, **KWs):
     arguments = arguments or {}
-    return self.callOperatorFunctionWithArguments('evaluate', self.postDeltaAOperators, arguments, parentFunction)
+    return self.callOperatorFunctionWithArguments('evaluate', self.postDeltaAOperators, arguments, parentFunction, **KWs)
   
-  def evaluateDeltaAOperator(self, arguments = None, parentFunction = None):
+  def evaluateDeltaAOperator(self, arguments = None, parentFunction = None, **KWs):
     arguments = arguments or {}
     if self.deltaAOperator:
-      return self.callOperatorFunctionWithArguments('evaluate', [self.deltaAOperator], arguments, parentFunction)
+      return self.callOperatorFunctionWithArguments('evaluate', [self.deltaAOperator], arguments, parentFunction, **KWs)
     else:
       return ''
   
-  def evaluateOperators(self, arguments = None, parentFunction = None):
+  def evaluateOperators(self, arguments = None, parentFunction = None, **KWs):
     arguments = arguments or {}
     assert not self.postDeltaAOperators and not self.deltaAOperator and not self.ipOperators
-    return self.callOperatorFunctionWithArguments('evaluate', self.preDeltaAOperators, arguments, parentFunction)
+    return self.callOperatorFunctionWithArguments('evaluate', self.preDeltaAOperators, arguments, parentFunction, **KWs)
   
   @staticmethod
-  def callOperatorFunctionWithArguments(functionName, operators, arguments = None, parentFunction = None):
+  def callOperatorFunctionWithArguments(functionName, operators, arguments = None, parentFunction = None, **KWs):
     arguments = arguments or {}
-    return '\n'.join(['// ' + op.description() + '\n' + op.functions[functionName].call(arguments, parentFunction = parentFunction) + '\n' for op in operators])
+    return '\n'.join(['// ' + op.description() + '\n' + op.functions[functionName].call(arguments, parentFunction = parentFunction, **KWs) + '\n' for op in operators])
   
   def preflight(self):
     super(OperatorContainer, self).preflight()

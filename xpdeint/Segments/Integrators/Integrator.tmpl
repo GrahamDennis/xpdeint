@@ -61,7 +61,7 @@ ${evaluateComputedVectors($computedVectorsNeedingPrecalculationForOperatorContai
   @#
   @for $operatorContainer in $stepStartOperatorContainers
 
-${operatorContainer.evaluateOperators}@slurp
+${operatorContainer.evaluateOperators(_step = '_step')}@slurp
   @end for
   @#
 @end def
@@ -76,7 +76,7 @@ ${evaluateComputedVectors($computedVectorsNeedingPrecalculationForOperatorContai
   @#
   @for $operatorContainer in $stepEndOperatorContainers
 
-${operatorContainer.evaluateOperators}@slurp
+${operatorContainer.evaluateOperators(_step = '_step')}@slurp
   @end for
   @#
 @end def

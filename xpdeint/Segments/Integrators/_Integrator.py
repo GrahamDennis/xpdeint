@@ -13,7 +13,7 @@ from xpdeint.Segments._Segment import _Segment
 
 from xpdeint.Operators.NonConstantIPOperator import NonConstantIPOperator
 from xpdeint.ParserException import ParserException
-from xpdeint.Utilities import lazy_property
+from xpdeint.Utilities import lazy_property, leastCommonMultiple
 from xpdeint.Function import Function
 from itertools import chain
 
@@ -86,6 +86,10 @@ class _Integrator (_Segment):
   def nonconstantIPFields(self):
     return self.stepper.nonconstantIPFields
   
+  @lazy_property
+  def stepCount(self):
+    return leastCommonMultiple([sample for sample in self.samples])
+  
   @property
   def integrationOrder(self):
     return self.stepper.integrationOrder
@@ -145,12 +149,19 @@ class _Integrator (_Segment):
                                               "number of moment groups (%i)." % \
                                               (len(samplesList), len(momentGroups)))
       
-      for momentGroup, sampleCountString in zip(momentGroups, samplesList):
-        sampleCount = int(sampleCountString)
+      self.samples = [int(sampleCountString) for sampleCountString in samplesList]
+      
+      for momentGroup, sampleCount in zip(momentGroups, self.samples):
         if sampleCount and not (self.stepCount % sampleCount) == 0:
           raise ParserException(samplesElement, "Sample count does not evenly divide the number of steps")
-        self.samples.append(sampleCount)
         
         momentGroup.outputField.dimensionWithName(self.propagationDimension).inSpace(0).lattice += sampleCount * self.totalCycles
-      
+    
+    # Permit any step start or step end operators to use the '_step' variable.
+    for oc in chain(self.stepStartOperatorContainers, self.stepEndOperatorContainers):
+      for op in oc.operators:
+        evaluateFunction = op.functions['evaluate']
+        if not ('double', '_step') in evaluateFunction.args:
+          evaluateFunction.args.append(('double', '_step'))
+    
   

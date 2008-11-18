@@ -1103,17 +1103,17 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     
     integratorTemplate.interval = intervalString
     
-    if not integrateElement.hasAttribute('steps'):
-      raise ParserException(integrateElement, "Integrator needs a 'steps' attribute.")
+    if not integrateElement.hasAttribute('steps') and isinstance(integratorTemplate, Integrators.FixedStep.FixedStep):
+      raise ParserException(integrateElement, "Fixed-step integrators require a 'steps' attribute.")
+    
+    if integrateElement.hasAttribute('steps'):
+      stepsString = integrateElement.getAttribute('steps').strip()
+      if not stepsString.isdigit():
+        raise ParserException(integrateElement, "Could not understand steps '%(stepsString)s' "
+                                                "as a positive integer." % locals())
       
-    stepsString = integrateElement.getAttribute('steps').strip()
-    
-    if not stepsString.isdigit():
-      raise ParserException(integrateElement, "Could not understand steps '%(stepsString)s' "
-                                              "as a positive integer." % locals())
-    
-    steps = int(stepsString)
-    integratorTemplate.stepCount = steps
+      steps = int(stepsString)
+      integratorTemplate.stepCount = steps
     
     samplesElement = integrateElement.getChildElementByTagName('samples')
     samplesString = samplesElement.innerText()
@@ -1549,20 +1549,18 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
   
   def parseOutputElement(self, simulationElement):
     outputElement = simulationElement.getChildElementByTagName('output')
-    if not outputElement.hasAttribute('format') or not outputElement.getAttribute('format').strip():
-      raise ParserException(outputElement, "Missing format attribute.")
     
-    formatString = outputElement.getAttribute('format').strip()
+    outputTemplateClass = AsciiOutputTemplate
     
-    outputTemplateClass = None
-    
-    if formatString.lower() == 'binary':
-      outputTemplateClass = BinaryOutputTemplate
-    elif formatString.lower() == 'ascii':
-      outputTemplateClass = AsciiOutputTemplate
-    else:
-      raise ParserException(outputElement, "The format attribute must be either 'binary' or 'ascii'.")
-    
+    if outputElement.hasAttribute('format'):
+      formatString = outputElement.getAttribute('format').strip().lower()
+      if formatString == 'binary':
+        outputTemplateClass = BinaryOutputTemplate
+      elif formatString == 'ascii':
+        outputTemplateClass = AsciiOutputTemplate
+      else:
+        raise ParserException(outputElement, "Output format attribute '%(formatString)s' unknown.\n"
+                                             "The valid formats are 'binary' and 'ascii'." % locals())
     
     if not outputElement.hasAttribute('filename'):
       filename = self.globalNameSpace['simulationName']
