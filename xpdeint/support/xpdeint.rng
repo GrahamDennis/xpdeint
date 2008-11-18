@@ -320,7 +320,9 @@
     <element name="integrate">
       <attribute name="algorithm"/>
       <attribute name="interval"/>
-      <attribute name="steps"/>
+      <optional>
+        <attribute name="steps"/>
+      </optional>
       <optional>
         <attribute name="tolerance"/>
       </optional>

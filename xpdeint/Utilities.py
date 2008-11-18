@@ -76,3 +76,29 @@ def setValueForKeyPath(base, value, keyPath):
     print >> sys.stderr, "Hit exception trying to set keyPath '%(keyPath)s' on object %(baseRep)s." % locals()
     raise
 
+
+def greatestCommonFactor(num):
+    t_val = num[0]
+    for cnt in range(len(num)-1):
+        num1 = t_val
+        num2 = num[cnt+1]
+        if num1 < num2:
+            num1,num2=num2,num1
+        while num1 - num2:
+            num3 = num1 - num2
+            num1 = max(num2,num3)
+            num2 = min(num2,num3)
+        t_val = num1
+    return t_val
+
+def leastCommonMultiple(num):
+    if len(num) == 0:
+      return 1
+    t_val = num[0]
+    for cnt in range(len(num)-1):
+        num1 = t_val
+        num2 = num[cnt+1]
+        tmp = greatestCommonFactor([num1,num2])
+        t_val = tmp * num1/tmp * num2/tmp
+    return t_val
+

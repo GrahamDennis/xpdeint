@@ -170,7 +170,7 @@ Sequence = element sequence {
 Integrate = element integrate {
     attribute algorithm { text }
     , attribute interval { text }
-    , attribute steps { text }
+    , attribute steps { text }?
     , attribute tolerance { text }?
     , attribute iterations { text }?
     , attribute cutoff { text }?
