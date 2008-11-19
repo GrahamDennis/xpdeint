@@ -206,6 +206,8 @@ class _FieldElement (ScriptElement):
   
   def sizeInSpace(self, space):
     """Return a name of a variable the value of which is the size of this field in `space`."""
+    if not self.isDistributed:
+      return self.allocSize
     return self._driver.sizeOfFieldInSpace(self, space)
   
   

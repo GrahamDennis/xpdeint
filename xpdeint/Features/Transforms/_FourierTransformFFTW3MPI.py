@@ -104,6 +104,9 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
       return False
     return field.hasDimension(self.mpiDimensions[0]) and field.hasDimension(self.mpiDimensions[1])
   
+  def sizeOfFieldInSpace(self, field, space):
+    return '*'.join([dim.inSpace(space).localLattice for dim in field.dimensions])
+  
   def mpiDimRepForSpace(self, space):
     return [dim.inSpace(space) for dim in self.mpiDimensions if dim.inSpace(space).hasLocalOffset][0]
   
