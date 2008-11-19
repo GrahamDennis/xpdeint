@@ -52,7 +52,7 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 _${vector.id}[$index] += _akfield_${vector.id}[$index]/6.0;
 // a_k = a_i + a_k/2
 _akfield_${vector.id}[$index] = _aifield_${vector.id}[$index] + 0.5*_akfield_${vector.id}[$index];
-""")}@slurp
+""", space = $homeSpace)}@slurp
 
 ${propagationDimension} += 0.5*_step;
   @if $cross
@@ -69,7 +69,7 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 _${vector.id}[$index] += _akfield_${vector.id}[$index]/3.0;
 // a_k = a_i + a_k/2
 _akfield_${vector.id}[$index] = _aifield_${vector.id}[$index] + 0.5*_akfield_${vector.id}[$index];
-""")}@slurp
+""", space = $homeSpace)}@slurp
 
 // a_k = G[a_k, t + h/2]
 ${callFunction('deltaA', arguments, parentFunction = function)}
@@ -80,7 +80,7 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 _${vector.id}[$index] += _akfield_${vector.id}[$index]/3.0;
 // a_k = a_i + a_k
 _akfield_${vector.id}[$index] = _aifield_${vector.id}[$index] + _akfield_${vector.id}[$index];
-""")}@slurp
+""", space = $homeSpace)}@slurp
 
 // a_k = D[a_k]
 ${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction = function)}
@@ -106,7 +106,7 @@ ${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
 ${loopOverVectorsWithInnerContentTemplate($integrationVectors, 
 """// a = a + a_k/6
 _${vector.id}[$index] += _akfield_${vector.id}[$index]/6.0;
-""")}@slurp
+""", space = $homeSpace)}@slurp
   @#
 @end def
 

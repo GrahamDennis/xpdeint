@@ -96,3 +96,24 @@ xmds_free($aliasName); // alias for _${id}
 ${aliasName} = NULL;
   @end for
 @end def
+
+@def findMaximum($variableName, $space = None)
+double ${variableName} = 0.0;
+
+  @if $type == 'double'
+    @set $modFunction = 'fabs'
+  @else
+    @set $modFunction = 'mod2'
+  @end if
+  @capture loopContents
+double _current_size = ${modFunction}(_active_\${vector.id}[\${index}]);
+if (_current_size > $variableName) // UNVECTORISABLE
+  ${variableName} = _current_size;
+  @end capture
+${loopOverVectorsWithInnerContentTemplate([self], loopContents, space = space)}@slurp
+  @if $type == 'complex'
+${variableName} = sqrt(${variableName}); // Take the square root to find the modulus.
+  @end if
+${insertCodeForFeatures('findMax', ['Driver'], {'variable': c'&${variableName}', 'count': '1'})}@slurp
+  @#
+@end def

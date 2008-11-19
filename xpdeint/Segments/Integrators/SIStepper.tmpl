@@ -51,7 +51,7 @@ for (int _iteration = 0; _iteration < ${iterations}; _iteration++) {
   ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """// a = oldCopy + a
 _${vector.id}[$index] += _oldCopy_${vector.id}[$index];
-"""), autoIndent=True}@slurp
+""", space=$homeSpace), autoIndent=True}@slurp
 }
 
 ${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction=function)}

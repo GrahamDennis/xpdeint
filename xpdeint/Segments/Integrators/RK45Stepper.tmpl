@@ -151,7 +151,7 @@ _${vector.id}[$index] += _c[1]*_akfield_${vector.id}[$index];
 _checkfield_${vector.id}[$index] += _cs[1]*_akfield_${vector.id}[$index];
 // a_k = a_i + b_21*a_k
 _akfield_${vector.id}[$index] = _aifield_${vector.id}[$index] + _b[2][1]*_akfield_${vector.id}[$index];
-""")}@slurp
+""", space = $homeSpace)}@slurp
 
 ${propagationDimension} += _a[2] * _step;
 
@@ -169,7 +169,7 @@ ${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
 ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """// a_j = d_1*a_i + d_2*y1 + d_3*a_k
 _ajfield_${vector.id}[$index] = _d[1]*_aifield_${vector.id}[$index] + _d[2]*_${vector.id}[$index] + _d[3]*_akfield_${vector.id}[$index];
-""")}@slurp
+""", space = $homeSpace)}@slurp
 
 ${propagationDimension} += _a[3] * _step;
 
@@ -196,7 +196,7 @@ _alfield_${vector.id}[$index] = _e[1]*_aifield_${vector.id}[$index] + _e[2]*_${v
 _${vector.id}[$index] += _c[3]*_ajfield_${vector.id}[$index];
 // y2 = y2 + cs_3*a_j
 _checkfield_${vector.id}[$index] += _cs[3]*_ajfield_${vector.id}[$index];
-""")}@slurp
+""", space = $homeSpace)}@slurp
 
 ${propagationDimension} += _a[4] * _step;
 
@@ -223,7 +223,7 @@ _${vector.id}[$index] += _c[4]*_alfield_${vector.id}[$index];
 _checkfield_${vector.id}[$index] += _cs[4]*_alfield_${vector.id}[$index];
 // a_l = f_1*a_i + f_2*y1 + f_3*a_k + f_4*a_j + f_5*a_l
 _alfield_${vector.id}[$index] = _f[1]*_aifield_${vector.id}[$index] + _f[2]*_${vector.id}[$index] + _f[3]*_akfield_${vector.id}[$index] + _f[4]*_ajfield_${vector.id}[$index] + _f[5]*_alfield_${vector.id}[$index];
-""")}@slurp
+""", space = $homeSpace)}@slurp
 
 ${propagationDimension} += _a[5] * _step;
 
@@ -237,7 +237,7 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 _checkfield_${vector.id}[$index] += _cs[5]*_alfield_${vector.id}[$index];
 // a_l = g_1*a_i + g_2*a_k + g_3*a_j + g_4*y_1 + g_5*a_l + g_6*y2
 _alfield_${vector.id}[$index] = _g[1]*_aifield_${vector.id}[$index] + _g[2]*_akfield_${vector.id}[$index] + _g[3]*_ajfield_${vector.id}[$index] + _g[4]*_${vector.id}[$index] + _g[5]*_alfield_${vector.id}[$index] + _g[6]*_checkfield_${vector.id}[$index];
-""")}@slurp
+""", space = $homeSpace)}@slurp
 
 ${propagationDimension} += _a[6] * _step;
 
@@ -259,7 +259,7 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 _${vector.id}[$index] += _c[6]*_alfield_${vector.id}[$index];
 // y2 = y2 + cs_6*a_l
 _checkfield_${vector.id}[$index] += _cs[6]*_alfield_${vector.id}[$index];
-""")}@slurp
+""", space = $homeSpace)}@slurp
 
 // t -> t + dt
 ${propagationDimension} -= _a[6]*_step;

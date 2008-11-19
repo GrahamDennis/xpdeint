@@ -49,7 +49,7 @@ ${transformVectorsToSpace($integrationVectorsNeedingUpdating, $homeSpace), autoI
 ${loopOverVectorsWithInnerContentTemplate($integrationVectorsNeedingUpdating,
 c"""// a = oldcopy + a
 _\${vector.id}[\$index] += _${name}_oldcopy_\${vector.id}[\$index];
-""")}@slurp
+""", space = $homeSpace)}@slurp
   @#
 @end def
 
