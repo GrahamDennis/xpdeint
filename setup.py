@@ -38,4 +38,11 @@ setup(name="xpdeint",
       # *.c and *.h files inside the distributed egg
       zip_safe = False,
       
+      entry_points = '''
+      [pygments.lexers]
+      XMDSScriptLexer = xpdeint.XMDSScriptLexer:XMDSScriptLexer
+      
+      [pygments.styles]
+      friendly_plus = xpdeint.FriendlyPlusStyle:FriendlyPlusStyle
+      '''
 )
