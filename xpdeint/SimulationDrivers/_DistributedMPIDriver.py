@@ -39,7 +39,7 @@ class _DistributedMPIDriver (SimulationDriver, MPI):
   def sizeOfFieldInSpace(self, field, space):
     """Return a name of a variable the value of which is the size of `field` in `space`."""
     if self._distributedTransform.hasattr('sizeOfFieldInSpace'):
-      return self._distributedTransform.sizeOfFieldInSpace(space)
+      return self._distributedTransform.sizeOfFieldInSpace(field, space)
     else:
       return field.allocSize
   
