@@ -72,7 +72,7 @@ ${codeString}@slurp
       @#
       @# Although we don't have any processing code, one of our features has
       @# processing code that needs to run (but it is simple, right?)
-${loopOverVectorsWithInnerContentTemplate([$rawVector], $insideProcessingLoopsNoProcessingCode)}@slurp
+${loopOverVectorsWithInnerContentTemplate([$rawVector], $insideProcessingLoopsNoProcessingCode, space=$outputSpace)}@slurp
     @end if
   @else
     @# In this case, we did allocate a raw vector, and we will have processing to do
@@ -144,11 +144,11 @@ $insertCodeForFeatures('insideMomentGroupProcessingLoop', $featureOrdering)@slur
   @# The features can return Cheetah template code suitable for passing to loopOverVectorsWithInnerContentTemplate
   @# in order to create their data. If any have, then we should actually create that loop and run that code.
   @if $result
-${loopOverVectorsWithInnerContentTemplate([$processedVector], $result)}@slurp
+${loopOverVectorsWithInnerContentTemplate([$processedVector], $result, space = $outputSpace)}@slurp
   @end if
 
 // The meat of the function goes here
-  @set $featureOrdering = ['Output']
+  @set $featureOrdering = ['ErrorCheck', 'Output']
   @set $dict = {'field': $outputField,
                 'space': $outputSpace,
                 'fp': '_outfile',

@@ -133,3 +133,17 @@ for (int _error_check_loop_iter = (_half_step ? 2 : 1); _error_check_loop_iter >
   @silent $dict['extraIndent'] -= 2
   @#
 @end def
+
+@def writeOutFunctionImplementationBody($dict)
+  @set $momentGroup = dict['caller']
+  @set $processedVector = $momentGroup.processedVector
+  @set $outputFieldName = momentGroup.outputField.name
+_active_${processedVector.id} = _${outputFieldName}_fullstep;
+
+${processedVector.findMaximum('_max_step_error', space = momentGroup.outputSpace)}@slurp
+
+// Restore active pointer for processed vector
+_active_${processedVector.id} = _${outputFieldName}_halfstep;
+
+_LOG(_SIMULATION_LOG_LEVEL, "Maximum step error in moment group $momentGroup.number was %e\n", _max_step_error);
+@end def

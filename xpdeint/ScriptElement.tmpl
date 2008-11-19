@@ -83,7 +83,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *@
 
 
-@def loopOverVectorsWithInnerContentTemplate($vectors, $templateString)
+@def loopOverVectorsWithInnerContentTemplate($vectors, $templateString, $space = None)
 @*doc:
 Insert code to loop over a vector.
 
@@ -139,7 +139,12 @@ to be performed in the same way on a range of vectors in possibly different fiel
     @silent $templateVariables['vector'] = $vector
 ${insertCodeForFeatures('loopOverVectorsWithInnerContentTemplateBegin', $loopFeatureOrdering, $dict)}@slurp
     @capture loopString
-for (long _i0 = 0; _i0 < ${loopCountPrefix}${vector.allocSize}; _i0++) {
+      @if space is None
+        @set $vectorSize = vector.allocSize
+      @else
+        @set $vectorSize = vector.sizeInSpace(space)
+      @end if
+for (long _i0 = 0; _i0 < ${loopCountPrefix}${vectorSize}; _i0++) {
   ${innerLoopTemplate, autoIndent=True}@slurp
 }
     @end capture

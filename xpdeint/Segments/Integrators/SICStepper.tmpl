@@ -49,7 +49,7 @@ for (int _iteration = 0; _iteration < ${iterations}; _iteration++) {
     ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """// a = oldcopy + a
 _${vector.id}[$index] += _oldcopy_${vector.id}[$index];
-"""), autoIndent=True}@slurp
+""", space=$homeSpace), autoIndent=True}@slurp
   }
   
 }
