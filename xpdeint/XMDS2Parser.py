@@ -116,11 +116,16 @@ class XMDS2Parser(ScriptParser):
     nameElement = simulationElement.getChildElementByTagName('name')
     self.globalNameSpace['simulationName'] = nameElement.innerText()
     
-    authorElement = simulationElement.getChildElementByTagName('author')
-    self.globalNameSpace['author'] = authorElement.innerText()
+    authorElement = simulationElement.getChildElementByTagName('author', optional=True)
+    if authorElement: author = authorElement.innerText()
+    else: author = ''
+    self.globalNameSpace['author'] = author
     
-    descriptionElement = simulationElement.getChildElementByTagName('description')
-    self.globalNameSpace['simulationDescription'] = descriptionElement.innerText()
+    
+    descriptionElement = simulationElement.getChildElementByTagName('description', optional=True)
+    if descriptionElement: description = descriptionElement.innerText()
+    else: description = ''
+    self.globalNameSpace['simulationDescription'] = description
     
     self.simulation = self.globalNameSpace['simulation']
     
