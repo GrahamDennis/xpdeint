@@ -29,6 +29,11 @@ XSILFile = element xsil_file {
     , attribute expected { text }
     , attribute absolute_tolerance { text }?
     , attribute relative_tolerance { text }?
+    element moment_group {
+        attribute number { text },
+        attribute relative_tolerance { text }?,
+        attribute absolute_tolerance { text }?
+    }
 }
 
 InputXSILFile = element input_xsil_file {

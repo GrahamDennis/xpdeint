@@ -64,6 +64,14 @@ class _DeltaAOperator (Operator):
         # Map of operator names to vector -> component list dictionary
         self.operatorComponents[derivativeString] = {integrationVector: [componentName]}
         
+        # Check that the user code block contains derivatives for every vector.
+        # If not, throw an exception.
+        
+        if not derivativeString in self.primaryCodeBlock.codeString:
+          raise CodeLexer.LexerException(self.primaryCodeBlock, 0,
+                  "Missing derivative for integration variable '%s' in vector '%s'." % (componentName, integrationVector.name))
+    
+    
     
     # Our job here is to consider the case where the user's integration code
     # depends on a component of an integration vector which might get overwritten
