@@ -1,0 +1,66 @@
+<simulation xmds-version="2">
+  <name>sech_soliton</name>
+  
+  <author>Sebastian Wüster / Graham Dennis</author>
+  <description>
+    Nonlinear Schrödinger equation with attractive interactions.
+    This equation has an analytic solution of the form of a breathing soliton.
+  </description>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="x" lattice="4096"  domain="(-4.0, 4.0)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <features>
+    <auto_vectorise />
+    <fftw />
+    <globals>
+      <![CDATA[
+      const double N = 3.0;
+      ]]>
+    </globals>
+  </features>
+  
+  <vector name="wavefunction" initial_space="x" type="complex">
+    <components>psi</components>
+    <initialisation no_noises="true">
+      <![CDATA[
+        psi = N/cosh(x);
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="ARK45" interval="1.570796327" tolerance="1e-6">
+      <samples>200</samples>
+      <operators>
+        <operator kind="ip">
+          <operator_names>L</operator_names>
+          <![CDATA[
+            L = -0.5*i*kx*kx;
+          ]]>
+        </operator>
+        <integration_vectors>wavefunction</integration_vectors>
+        <![CDATA[
+          dpsi_dt = L[psi] + i*mod2(psi)*psi;
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  
+  <output format="binary">
+    <group>
+      <sampling initial_sample="yes">
+        <dimension name="x" lattice="512" fourier_space="no" />
+        <moments>density</moments>
+        <dependencies>wavefunction</dependencies>
+        <![CDATA[
+          density = mod2(psi);
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>

@@ -187,7 +187,9 @@
   </define>
   <define name="FFTW">
     <element name="fftw">
-      <attribute name="version"/>
+      <optional>
+        <attribute name="version"/>
+      </optional>
       <optional>
         <attribute name="plan"/>
       </optional>
@@ -405,9 +407,11 @@
         <value>ex</value>
       </choice>
     </attribute>
-    <attribute name="constant">
-      <ref name="Bool"/>
-    </attribute>
+    <optional>
+      <attribute name="constant">
+        <ref name="Bool"/>
+      </attribute>
+    </optional>
     <optional>
       <attribute name="fourier_space"/>
     </optional>

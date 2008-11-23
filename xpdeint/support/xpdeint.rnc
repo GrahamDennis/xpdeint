@@ -95,7 +95,7 @@ NoiseAttributes =
     )
 
 FFTW = element fftw {
-    attribute version { text }
+    attribute version { text }?
     , attribute plan { text }?
     , attribute threads { text }?
     , empty
@@ -215,7 +215,7 @@ Operator = element operator {
 
 IPEXOperatorContents = 
     attribute kind { "ip" | "ex" }
-    , attribute constant { Bool }
+    , attribute constant { Bool }?
     , attribute fourier_space { text }?
     , attribute type { text }?
     , element operator_names { text }
