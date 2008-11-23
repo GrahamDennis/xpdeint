@@ -54,6 +54,15 @@
       <optional>
         <attribute name="relative_tolerance"/>
       </optional>
+      <element name="moment_group">
+        <attribute name="number"/>
+        <optional>
+          <attribute name="relative_tolerance"/>
+        </optional>
+        <optional>
+          <attribute name="absolute_tolerance"/>
+        </optional>
+      </element>
     </element>
   </define>
   <define name="InputXSILFile">
