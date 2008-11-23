@@ -322,15 +322,16 @@ do {
     
     // Resize step
     if (_error < 0.5*_tolerance || _error > _tolerance) {
-      double _scalingFactor = 0.92 * pow(fabs(_error/_tolerance), -0.7/${integrationOrder}) * pow(_last_norm_error, 0.4/${integrationOrder});
+      const double _safetyFactor = 0.98;
+      double _scalingFactor = _safetyFactor * pow(fabs(_error/_tolerance), -0.7/${integrationOrder}) * pow(_last_norm_error, 0.4/${integrationOrder});
       _scalingFactor = MAX(_scalingFactor, 1.0/5.0);
       _scalingFactor = MIN(_scalingFactor, 7.0);
       if (_error > _tolerance && _scalingFactor > 1.0) {
         // If our step failed don't try and increase our step size. That would be silly.
-        _scalingFactor = 0.92 * pow(fabs(_error/_tolerance), -1.0/${integrationOrder});
+        _scalingFactor = _safetyFactor * pow(fabs(_error/_tolerance), -1.0/${integrationOrder});
       }
       _old_step = _step;
-      _last_norm_error = pow(0.92/_scalingFactor*pow(_last_norm_error, 0.4/${integrationOrder}), ${integrationOrder}/0.7);
+      _last_norm_error = pow(_safetyFactor/_scalingFactor*pow(_last_norm_error, 0.4/${integrationOrder}), ${integrationOrder}/0.7);
       _step *= _scalingFactor;
     }
     
