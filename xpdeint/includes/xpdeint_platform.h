@@ -452,7 +452,9 @@
   #endif
 
   #if CFG_HAVE_ALTIVEC == 1
-    #include <altivec.h>
+    #if !defined(__APPLE__)
+      #include <altivec.h>
+    #endif
 
     // Fix up GCC's mess
     #if !defined(__APPLE_ALTIVEC__)
