@@ -20,9 +20,9 @@ class _NoTransform (_Transform):
     
     self.getVar('transforms')['none'] = self
   
-  def newDimension(self, name, lattice, minimum, maximum, parent, transformName, type = 'double', indexable = False, xmlElement = None):
+  def newDimension(self, name, lattice, minimum, maximum, parent, transformName, type = 'double', xmlElement = None, aliases = set()):
     assert transformName == 'none'
-    dim = _Dimension(name = name, transform = self, parent = parent, indexable = indexable, xmlElement = xmlElement, **self.argumentsToTemplateConstructors)
+    dim = _Dimension(name = name, transform = self, aliases = aliases, parent = parent, xmlElement = xmlElement, **self.argumentsToTemplateConstructors)
     if type == 'long':
       stepSize = '1'
     else:

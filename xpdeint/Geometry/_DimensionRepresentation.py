@@ -109,6 +109,27 @@ class _DimensionRepresentation(ScriptElement):
     else:
       return False
   
-  def nonlocalAccessIndexFromStringAndLoopDimRep(self, accessString, loopDimRep):
-    return
+  def aliasRepresentationsForFieldInSpace(self, field, space):
+    return set([field.dimensionWithName(aliasName).inSpace(space) \
+                for aliasName in self.parent.aliases if field.hasDimensionName(aliasName)])
+  
+  def nonlocalAccessIndexFromStringForFieldInSpace(self, accessString, field, space):
+    """
+    Return the string representing the index to be used for this dimension representation
+    when accessing it nonlocally with the strgin `accessString` and when looping over
+    `field` in `space`.
+    """
+    # If we don't have any dimension aliases, then our subclasses will have to handle
+    # any other cases for nonlocal dimension access
+    if not len(self.parent.aliases) > 1: return
+    
+    aliasRepresentations = self.aliasRepresentationsForFieldInSpace(field, space)
+    matchingAliasReps = [rep for rep in aliasRepresentations if rep.name == accessString]
+    if not matchingAliasReps: return
+    matchingAliasRep = matchingAliasReps[0]
+    # We cannot access a dim rep nonlocally with an alias that is distributed.
+    if matchingAliasRep.hasLocalOffset: return
+    return matchingAliasRep.loopIndex
+    
+  
 

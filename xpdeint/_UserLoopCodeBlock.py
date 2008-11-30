@@ -210,11 +210,7 @@ class _UserLoopCodeBlock(ScriptElement):
         arguments = []
         for dimRep in dimRepsNeeded:
           accessString = nonlocalAccessDict[dimRep.name][0]
-          if self.field.hasDimensionName(dimRep.parent.name):
-            fieldDimensionRep = self.field.dimensionWithName(dimRep.parent.name).inSpace(self.space)
-          else:
-            fieldDimensionRep = None
-          argumentValue = dimRep.nonlocalAccessIndexFromStringAndLoopDimRep(accessString, fieldDimensionRep)
+          argumentValue = dimRep.nonlocalAccessIndexFromStringForFieldInSpace(accessString, self.field, self.space)
           dimRepName = dimRep.name
           if not argumentValue:
             raise LexerException(self, nonlocalAccessDict[dimRep.name][1].start,

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
   <testing>
-    <xsil_file name="nonlocal_split_uniform_access.xsil" expected="nonlocal_split_uniform_access_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="nonlocal_split_uniform_access.xsil" expected="nonlocal_split_uniform_access_expected.xsil" absolute_tolerance="1e-6" relative_tolerance="1e-5" />
   </testing>
   
   <name>nonlocal_split_uniform_access</name>
