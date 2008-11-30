@@ -25,10 +25,10 @@ class _FourierTransformFFTW3 (_Transform):
     
     self.transformNameMap = {}
   
-  def newDimension(self, name, lattice, minimum, maximum, parent, transformName, type = 'double', xmlElement = None, indexable = False):
+  def newDimension(self, name, lattice, minimum, maximum, parent, transformName, aliases = set(), type = 'double', xmlElement = None):
     assert type == 'double'
     assert transformName in ['dft', 'dct', 'dst']
-    dim = _Dimension(name = name, transform = self, parent = parent, indexable = indexable, xmlElement = xmlElement,
+    dim = _Dimension(name = name, transform = self, aliases = aliases, parent = parent, xmlElement = xmlElement,
                      **self.argumentsToTemplateConstructors)
     self.transformNameMap[dim.name] = transformName
     if transformName == 'dft':

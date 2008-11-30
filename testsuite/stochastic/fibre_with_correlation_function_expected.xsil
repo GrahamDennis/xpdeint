@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="fibre_with_correlation_function.xsil" expected="fibre_with_correlation_function_expected.xsil" absolute_tolerance="5e-2" relative_tolerance="1e-1" />
+  </testing>
+  <name>fibre_with_correlation_function</name>
+  <author>Unknown author</author>
+  <description>
+    Example fibre noise simulation
+  </description>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="x" lattice="64"  domain="(-5, 5)" aliases="xp" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <driver name="multi-path" paths="5" />
+  
+  <features>
+    <auto_vectorise />
+    <benchmark />
+    <bing />
+    <fftw version="3" />
+    <!-- <openmp /> -->
+    <stochastic>
+      <noise kind="gaussian-solirte" prefix="n" num="2" seed="293485"/>
+      <!-- If there is no seed attribute then seeds will be chosen randomly at run-time -->
+    </stochastic>
+    <globals>
+      <![CDATA[
+      const double ggamma = 1.0;
+      const double beta = sqrt(2.0*M_PI*ggamma/10.0);
+      ]]>
+    </globals>
+  </features>
+  
+  <vector name="main" initial_space="x" type="complex">
+    <components>phi</components>
+    <initialisation no_noises="true">
+      <![CDATA[
+        phi = 0.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="ARK89" iterations="3" interval="2.5" steps="200000" tolerance="1e-6">
+      <samples>50 1 1</samples>
+      <operators>
+        <operator kind="ex" constant="yes">
+          <operator_names>L</operator_names>
+          <![CDATA[
+            L = -i*kx*kx;
+          ]]>
+        </operator>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+          dphi_dt = L[phi] - ggamma*phi + beta*complex(n_1, n_2);
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  
+  <output format="binary">
+    <group>
+      <sampling initial_sample="yes">
+        <dimension name="x" lattice="64" fourier_space="yes" />
+        <moments>pow_dens</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          pow_dens = mod2(phi);
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling initial_sample="no">
+        <dimension name="x"  lattice="64" fourier_space="no" />
+        <dimension name="xp" lattice="64" fourier_space="no" />
+        <moments>g1 g2</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          g1 = mod(conj(phi) * phi(x: xp));
+          g2 = mod2(phi) * mod2(phi(x: xp));
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling initial_sample="no">
+        <dimension name="x"  lattice="64" fourier_space="yes" />
+        <dimension name="xp" lattice="64" fourier_space="yes" />
+        <moments>g1 g2 g2minus</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          g1 = mod(conj(phi) * phi(kx: kxp));
+          g2 = mod2(phi) * mod2(phi(kx: kxp));
+          g2minus = mod2(phi) * mod2(phi(kx: -kxp));
+        ]]>
+      </sampling>
+    </group>
+  </output>
+
+<info>
+Script compiled with xpdeint version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+See http://www.xmds.org for more information.
+</info>
+
+<XSIL Name="moment_group_1">
+  <Param Name="n_independent">2</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>4</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t kx mean_pow_dens stderr_pow_dens 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>51</Dim>
+    <Dim>64</Dim>
+    <Dim>4</Dim>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="BigEndian"/>
+fibre_with_correlation_function_expected_mg0.dat
+    </Stream>
+  </Array>
+</XSIL>
+
+<XSIL Name="moment_group_2">
+  <Param Name="n_independent">2</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>6</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+x xp mean_g1 mean_g2 stderr_g1 stderr_g2 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>64</Dim>
+    <Dim>64</Dim>
+    <Dim>6</Dim>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="BigEndian"/>
+fibre_with_correlation_function_expected_mg1.dat
+    </Stream>
+  </Array>
+</XSIL>
+
+<XSIL Name="moment_group_3">
+  <Param Name="n_independent">2</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>8</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+kx kxp mean_g1 mean_g2 mean_g2minus stderr_g1 stderr_g2 stderr_g2minus 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>64</Dim>
+    <Dim>64</Dim>
+    <Dim>8</Dim>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="BigEndian"/>
+fibre_with_correlation_function_expected_mg2.dat
+    </Stream>
+  </Array>
+</XSIL>
+</simulation>

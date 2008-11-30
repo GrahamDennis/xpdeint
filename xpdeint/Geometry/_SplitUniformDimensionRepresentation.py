@@ -49,22 +49,25 @@ class _SplitUniformDimensionRepresentation(DimensionRepresentation):
     else:
       raise NotImplemented
   
-  def nonlocalAccessIndexFromStringAndLoopDimRep(self, accessString, loopDimRep):
+  def nonlocalAccessIndexFromStringForFieldInSpace(self, accessString, field, space):
+    result = super(_SplitUniformDimensionRepresentation, self).nonlocalAccessIndexFromStringForFieldInSpace(accessString, field, space)
+    if result: return result
     # We only support access with the negative of the dimension variable. e.g. -kx
     name = self.name
-    if not accessString == ('-%(name)s' % locals()):
-      return
+    aliasRepresentations = self.aliasRepresentationsForFieldInSpace(field, space)
+    matchingAliasReps = [dimRep for dimRep in aliasRepresentations if accessString == ('-' + dimRep.name)]
+    assert len(matchingAliasReps) <= 1
+    if not matchingAliasReps: return
+    matchingAliasRep = matchingAliasReps[0]
+    
     # We only support the case where the global number of points in the looping dimension and the
     # accessing dimension are the same. i.e. no sub-sampling and non-local access at the same time.
-    if not self.lattice == loopDimRep.lattice:
-      return
+    if not field.hasDimensionName(matchingAliasRep.parent.name): return
+    loopDimRep = field.dimensionWithName(matchingAliasRep.parent.name).inSpace(space)
+    if not matchingAliasRep.lattice == loopDimRep.lattice: return
     loopingIndex = loopDimRep.loopIndex
-    if self.hasLocalOffset:
-      localOffsetString = ' + ' + loopDimRep.localOffset
-    else:
-      localOffsetString = ''
-    globalLattice = self.globalLattice
-    return '(%(globalLattice)s - %(loopingIndex)s%(localOffsetString)s) %% %(globalLattice)s' % locals()
+    globalLattice = matchingAliasRep.globalLattice
+    return '(%(globalLattice)s - %(loopingIndex)s) %% %(globalLattice)s' % locals()
   
 
 

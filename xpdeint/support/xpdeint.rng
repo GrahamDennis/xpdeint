@@ -227,6 +227,9 @@
       <optional>
         <attribute name="transform"/>
       </optional>
+      <optional>
+        <attribute name="aliases"/>
+      </optional>
       <empty/>
     </element>
   </define>

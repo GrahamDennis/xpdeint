@@ -545,6 +545,8 @@ class XMDS2Parser(ScriptParser):
     
     ## Now grab and parse all of the transverse dimensions
     
+    geometryTemplate.primaryTransverseDimensionNames = []
+    
     transverseDimensionsElement = geometryElement.getChildElementByTagName('transverse_dimensions', optional=True)
     if transverseDimensionsElement:
       dimensionElements = transverseDimensionsElement.getChildElementsByTagName('dimension', optional=True)
@@ -571,6 +573,8 @@ class XMDS2Parser(ScriptParser):
         if dimensionName in self.globalNameSpace['symbolNames']:
           raise ParserException(dimensionElement, "Dimension name %(dimensionName)s conflicts with "
                                                   "previously-defined symbol of the same name." % locals())
+        
+        geometryTemplate.primaryTransverseDimensionNames.append(dimensionName)
         
         ## Now make sure no-one else steals it
         self.globalNameSpace['symbolNames'].add(dimensionName)
@@ -633,6 +637,16 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
           lattice = maximumValue - minimumValue + 1
         
         
+        aliasNames = set()
+        if dimensionElement.hasAttribute('aliases'):
+          aliasNames.update(RegularExpressionStrings.symbolsInString(dimensionElement.getAttribute('aliases').strip()))
+          for aliasName in aliasNames:
+            if aliasName in self.globalNameSpace['symbolNames']:
+              raise ParserException(dimensionElement, "Cannot use '%(aliasName)s' as an alias name for dimension '%(dimensionName)s\n"
+                                                      "This name is already in use." % locals())
+            self.globalNameSpace['symbolNames'].add(aliasName)
+        
+        
         transform = None
         transformName = 'none'
         
@@ -658,12 +672,15 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
           else:
             transform = Transforms._NoTransform._NoTransform(**self.argumentsToTemplateConstructors)
         
-        dim = transform.newDimension(name = dimensionName, lattice = lattice, type = dimensionType,
-                                     minimum = minimumString, maximum = maximumString,
-                                     parent = geometryTemplate, transformName = transformName,
-                                     xmlElement = dimensionElement)
+        aliasNames.add(dimensionName)
         
-        geometryTemplate.dimensions.append(dim)
+        for aliasName in aliasNames:
+          dim = transform.newDimension(name = aliasName, lattice = lattice, type = dimensionType,
+                                       minimum = minimumString, maximum = maximumString,
+                                       parent = geometryTemplate, transformName = transformName,
+                                       aliases = aliasNames,
+                                       xmlElement = dimensionElement)
+          geometryTemplate.dimensions.append(dim)
       
     
     driver = self.globalNameSpace['features']['Driver']
@@ -683,7 +700,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
   
   def parseVectorElement(self, vectorElement):
     if not vectorElement.hasAttribute('dimensions'):
-      dimensionNames = [dim.name for dim in self.globalNameSpace['geometry'].dimensions if dim.transverse]
+      dimensionNames = self.globalNameSpace['geometry'].primaryTransverseDimensionNames
     elif len(vectorElement.getAttribute('dimensions').strip()) == 0:
       # No dimensions
       dimensionNames = []
@@ -861,7 +878,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     self.globalNameSpace['symbolNames'].add(vectorName)
     
     if not computedVectorElement.hasAttribute('dimensions'):
-      dimensionNames = [dim.name for dim in self.globalNameSpace['geometry'].dimensions if dim.transverse]
+      dimensionNames = self.globalNameSpace['geometry'].primaryTransverseDimensionNames
     elif len(computedVectorElement.getAttribute('dimensions').strip()) == 0:
       # No dimensions
       dimensionNames = []
@@ -1196,7 +1213,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     
     for operatorsElement in operatorsElements:
       if not operatorsElement.hasAttribute('dimensions'):
-        dimensionNames = [dim.name for dim in self.globalNameSpace['geometry'].dimensions if dim.transverse]
+        dimensionNames = self.globalNameSpace['geometry'].primaryTransverseDimensionNames
       else:
         dimensionNames = RegularExpressionStrings.symbolsInString(operatorsElement.getAttribute('dimensions'))
       

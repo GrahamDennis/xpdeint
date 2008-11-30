@@ -58,7 +58,9 @@ class _UniformDimensionRepresentation(DimensionRepresentation):
     else:
       raise NotImplemented
   
-  def nonlocalAccessIndexFromStringAndLoopDimRep(self, accessString, loopDimRep):
+  def nonlocalAccessIndexFromStringForFieldInSpace(self, accessString, field, space):
+    result = super(_UniformDimensionRepresentation, self).nonlocalAccessIndexFromStringForFieldInSpace(accessString, field, space)
+    if result: return result
     # We only support non-local access for integer-valued dimensions
     if not self.type == 'long':
       return

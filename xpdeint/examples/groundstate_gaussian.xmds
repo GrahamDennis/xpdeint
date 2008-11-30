@@ -17,7 +17,7 @@
   <geometry>
     <propagation_dimension> t </propagation_dimension>
     <transverse_dimensions>
-      <dimension name="y" lattice="1024"  domain="(-12.0, 12.0)" />
+      <dimension name="y" lattice="1024"  domain="(-12.0, 12.0)" aliases="yp" />
     </transverse_dimensions>
   </geometry>
   
@@ -60,8 +60,8 @@
   </computed_vector>
   
   <sequence>
-    <integrate algorithm="ARK89" interval="10.0" steps="10000" tolerance="1e-8">
-      <samples>500 500</samples>
+    <integrate algorithm="RK4" interval="10.0" steps="10000" tolerance="1e-8">
+      <samples>50 50 1</samples>
       <filters>
         <filter>
           <dependencies>wavefunction normalisation</dependencies>
@@ -106,6 +106,19 @@
         <dependencies>normalisation</dependencies>
         <![CDATA[
           N = Ncalc;
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling initial_sample="no">
+        <dimension name="y" />
+        <dimension name="yp" />
+        <moments>g1R g1I g2</moments>
+        <dependencies>wavefunction</dependencies>
+        <![CDATA[
+          complex g1 = conj(phi(y: y)) * phi(y: yp);
+          _SAMPLE_COMPLEX(g1);
+          g2 = mod2(phi(y: y)) * mod2(phi(y: yp));
         ]]>
       </sampling>
     </group>
