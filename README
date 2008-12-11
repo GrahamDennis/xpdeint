@@ -10,11 +10,14 @@ Build instructions:
 1. Install python 2.4 or greater. (2.5 recommended)
    Mac OS X: The easiest way to do this is by downloading a .dmg from http://pythonmac.org/packages/.
    If you have Leopard (10.5) or later, then python 2.5 comes pre-installed.
-
+   
    Linux: Install this using your favourite package manager.
+   Windows: One way to install Python and related packages is via the Enthought Python Distribution.
+            http://www.enthought.com/products/epd.php
    
 2. Install setuptools.
    Linux: Use your favourite package manager (if you can).
+   Windows: If you used the Enthought Python Distribution, this is already installed.
    
    Mac OS X: Leopard (10.5) has setuptools pre-installed.
    
