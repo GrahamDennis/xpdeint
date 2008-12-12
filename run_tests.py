@@ -13,6 +13,7 @@ import getopt
 import shutil
 import hashlib
 import unittest
+import tempfile
 import subprocess
 
 from xml.dom import minidom
@@ -256,9 +257,11 @@ def main(argv=None):
     print >> sys.stderr, "\t for help use --help"
     return 2
   
-  tempPath = '/tmp/xpdeint'
+  tempPath = os.path.join(tempfile.gettempdir(), 'xpdeint')
   if not os.path.exists(tempPath):
     os.mkdir(tempPath)
+  
+  print "Saving test results in %(tempPath)s" % locals()
   
   testsuites = {}
   baseSuiteName = 'testsuite'
