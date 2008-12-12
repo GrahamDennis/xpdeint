@@ -351,7 +351,7 @@ def main(argv=None):
   # These compile variables are defined in Preferences.py
   # We'll need some kind of check to choose which compiler and options, but not until we need varying options
   
-  compilerLine = '%(CC)s -o "%(output)s" "%(output)s.cc" %(CFLAGS)s -v' % locals()
+  compilerLine = '%(CC)s -o "%(output)s" "%(output)s.cc" %(CFLAGS)s' % locals()
   compilerLine += ' '.join(templateCFLAGS)
   
   if compileScript:
