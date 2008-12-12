@@ -246,8 +246,7 @@ class _FieldElement (ScriptElement):
     for symbol in spacesSymbols:
       if not symbol in legalDimensionNames:
         raise ParserException(xmlElement, 
-                "The fourier_space string must only contain real-valued dimensions from the\n"
-                "designated field.  '%(symbol)s' cannot be used."  % locals())
+                "'%(symbol)s' is not recognised as a dimension name for this field."  % locals())
     
     for fieldDimension in self.dimensions:
       fieldDimensionName = fieldDimension.name
