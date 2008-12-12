@@ -9,7 +9,6 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 
 from xpdeint.Features.Transforms._Transform import _Transform
 
-from xpdeint.Geometry._Dimension import _Dimension
 from xpdeint.Geometry.UniformDimensionRepresentation import UniformDimensionRepresentation
 
 class _NoTransform (_Transform):
@@ -20,9 +19,13 @@ class _NoTransform (_Transform):
     
     self.getVar('transforms')['none'] = self
   
-  def newDimension(self, name, lattice, minimum, maximum, parent, transformName, type = 'double', xmlElement = None, aliases = set()):
+  def newDimension(self, name, lattice, minimum, maximum,
+                   parent, transformName, aliases = set(),
+                   type = 'double', xmlElement = None):
     assert transformName == 'none'
-    dim = _Dimension(name = name, transform = self, aliases = aliases, parent = parent, xmlElement = xmlElement, **self.argumentsToTemplateConstructors)
+    dim = super(_NoTransform, self).newDimension(name, lattice, minimum, maximum,
+                                                 parent, transformName, aliases,
+                                                 type, xmlElement)
     if type == 'long':
       stepSize = '1'
     else:

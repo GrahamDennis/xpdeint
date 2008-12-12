@@ -9,9 +9,6 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 
 from xpdeint.Features.Transforms._NoTransform import _NoTransform
 
-from xpdeint.Geometry._Dimension import _Dimension
-from xpdeint.Geometry.UniformDimensionRepresentation import UniformDimensionRepresentation
-
 class _NoTransformMPI (_NoTransform):
   def initialiseForMPIWithDimensions(self, dimensions):
     dimensions[0].inSpace(0).setHasLocalOffset()

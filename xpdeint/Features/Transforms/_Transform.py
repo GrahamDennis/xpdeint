@@ -8,6 +8,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
 from xpdeint.Features._Feature import _Feature
+from xpdeint.Geometry._Dimension import _Dimension
 from xpdeint.Utilities import lazy_property
 import operator
 
@@ -45,6 +46,14 @@ class _Transform (_Feature):
     to the index in the rule is the result.
     """
     return [(dim.transformMask, 1), (None, 0)]
+  
+  def newDimension(self, name, lattice, minimum, maximum,
+                   parent, transformName, aliases = set(),
+                   type = 'double', xmlElement = None):
+    dim = _Dimension(name = name, transform = self, aliases = aliases, parent = parent, xmlElement = xmlElement,
+                     **self.argumentsToTemplateConstructors)
+    return dim
+  
   
   def preflight(self):
     self.transformMask = reduce(operator.__or__, [d.transformMask for d in self.getVar('geometry').dimensions if d.transform == self], 0)
