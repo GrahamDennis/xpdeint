@@ -351,17 +351,13 @@ def main(argv=None):
   # These compile variables are defined in Preferences.py
   # We'll need some kind of check to choose which compiler and options, but not until we need varying options
   
-  compilerLine = "%(CC)s -o '%(output)s' '%(output)s.cc' %(CFLAGS)s" % locals()
+  compilerLine = '%(CC)s -o "%(output)s" "%(output)s.cc" %(CFLAGS)s -v' % locals()
   compilerLine += ' '.join(templateCFLAGS)
   
   if compileScript:
     print "\n",compilerLine,"\n"
-  
-    proc = subprocess.Popen(compilerLine,
-                         shell=True,
-                         stdout=subprocess.PIPE,
-                         )
-    print proc.communicate()[0]
+    
+    proc = subprocess.Popen(compilerLine, shell=True)
     return proc.wait()
   else:
     # Don't compile the script, but show how we would compile it
