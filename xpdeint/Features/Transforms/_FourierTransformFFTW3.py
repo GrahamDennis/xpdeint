@@ -9,7 +9,6 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 
 from xpdeint.Features.Transforms._Transform import _Transform
 
-from xpdeint.Geometry._Dimension import _Dimension
 from xpdeint.Geometry.UniformDimensionRepresentation import UniformDimensionRepresentation
 from xpdeint.Geometry.SplitUniformDimensionRepresentation import SplitUniformDimensionRepresentation
 
@@ -25,11 +24,14 @@ class _FourierTransformFFTW3 (_Transform):
     
     self.transformNameMap = {}
   
-  def newDimension(self, name, lattice, minimum, maximum, parent, transformName, aliases = set(), type = 'double', xmlElement = None):
+  def newDimension(self, name, lattice, minimum, maximum,
+                   parent, transformName, aliases = set(),
+                   type = 'double', xmlElement = None):
     assert type == 'double'
     assert transformName in ['dft', 'dct', 'dst']
-    dim = _Dimension(name = name, transform = self, aliases = aliases, parent = parent, xmlElement = xmlElement,
-                     **self.argumentsToTemplateConstructors)
+    dim = super(_FourierTransformFFTW3, self).newDimension(name, lattice, minimum, maximum,
+                                                           parent, transformName, aliases,
+                                                           type, xmlElement)
     self.transformNameMap[dim.name] = transformName
     if transformName == 'dft':
       # x-space representation
