@@ -4,7 +4,7 @@
     <command_line>mpirun -n 2 ./anharmonic_oscillator_wigner_mpi</command_line>
     <input_xsil_file name="anharmonic_oscillator_wigner_mpi_initial_even.xsil" />
     <input_xsil_file name="anharmonic_oscillator_wigner_mpi_initial_odd.xsil" />
-    <xsil_file name="anharmonic_oscillator_wigner_mpi.xsil" expected="anharmonic_oscillator_wigner_mpi_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="anharmonic_oscillator_wigner_mpi.xsil" expected="anharmonic_oscillator_wigner_mpi_expected.xsil" absolute_tolerance="1e-5" relative_tolerance="1e-5" />
   </testing>
   
   <name>anharmonic_oscillator_wigner_mpi</name>
