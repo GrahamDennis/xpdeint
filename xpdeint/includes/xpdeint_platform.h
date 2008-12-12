@@ -128,7 +128,7 @@
 #endif
 
 #include <stdlib.h>
-#if (CFG_COMPILER == CFG_COMPILER_MSVC)
+#if (CFG_PLATFORM == CFG_PLATFORM_WIN32)
   #include <malloc.h>
   #ifdef _DEBUG
   #include <crtdbg.h>
@@ -339,7 +339,7 @@
   {
     free(memblock);
   }
-#elif CFG_COMPILER == CFG_COMPILER_MSVC
+#elif (CFG_PLATFORM == CFG_PLATFORM_WIN32)
   // _aligned_malloc and _aligned_free are native.
 #else
   #warning No aligned malloc support. Please implement.
