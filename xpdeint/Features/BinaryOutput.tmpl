@@ -80,13 +80,20 @@ double coordinate;
   @for $dim in $field.dimensions
     @set $dimRep = $dim.inSpace(space)
 dataSize = ${dimRep.globalLattice};
-fwrite(&dataSize, sizeof(unsigned long), 1, fpBinary);
+if (fwrite(&dataSize, sizeof(unsigned long), 1, fpBinary) != 1) {
+  _LOG(_ERROR_LOG_LEVEL, "Error writing size of dimension '${dimRep.name}' to binary data file '%s'.\n", ${datFilename});
+}
     @if isinstance(dimRep, NonUniformDimensionRepresentation)
-fwrite(${dimRep.arrayName}, sizeof(double), dataSize, fpBinary);
+if (fwrite(${dimRep.arrayName}, sizeof(double), dataSize, fpBinary) != dataSize) {
+  _LOG(_ERROR_LOG_LEVEL, "Error writing coordinate values for dimension '${dimRep.name}' to binary data file '%s'.\n", ${datFilename});
+}
     @else
 coordinate = ${dimRep.minimum};
-for (long _i0 = 0; _i0 < dataSize; _i0++, coordinate += ${dimRep.stepSize})
-  fwrite(&coordinate, sizeof(double), 1, fpBinary);
+for (long _i0 = 0; _i0 < dataSize; _i0++, coordinate += ${dimRep.stepSize}) {
+  if (fwrite(&coordinate, sizeof(double), 1, fpBinary) != 1) {
+    _LOG(_ERROR_LOG_LEVEL, "Error writing coordinate values for dimension '${dimRep.name}' to binary data file '%s'.\n", ${datFilename});
+  }
+}
     @end if
 fieldOffset += sizeof(unsigned long) + sizeof(double) * dataSize;
 
@@ -96,7 +103,9 @@ dataSize = _${field.name}_size;
 
 for (int _i = 0; _i < ${componentCount}; _i++) {
   fseeko(fpBinary, fieldOffset + _i * vectorFieldSize, SEEK_SET);
-  fwrite(&dataSize, sizeof(unsigned long), 1, fpBinary);
+  if (fwrite(&dataSize, sizeof(unsigned long), 1, fpBinary) != 1) {
+    _LOG(_ERROR_LOG_LEVEL, "Error writing vector size to binary data file '%s'.\n", ${datFilename});
+  }
 }
 
   @# This is where all of the magic MPI code goes
@@ -165,12 +174,19 @@ if (_outputfield_index_pointer != _outputfield_old_index_pointer + 1)
   fseeko(fpBinary, fieldOffset + _outputfield_index_pointer * sizeof(double) + (${variablesInEarlierVectors} + _component) * vectorFieldSize + sizeof(unsigned long), SEEK_SET);
 
   @if $variable.vector.type == 'double'
-fwrite(&${variable.arrayName}[_${variable.vector.id}_index_pointer + _component], sizeof(double), 1, fpBinary);
+if (fwrite(&${variable.arrayName}[_${variable.vector.id}_index_pointer + _component], sizeof(double), 1, fpBinary) != 1) {
+  _LOG(_ERROR_LOG_LEVEL, "Error writing output data.\n");
+}
   @else
-if (_component & 1)
-  fwrite(&${variable.arrayName}[_${variable.vector.id}_index_pointer + _component/2].im, sizeof(double), 1, fpBinary);
-else
-  fwrite(&${variable.arrayName}[_${variable.vector.id}_index_pointer + _component/2].re, sizeof(double), 1, fpBinary);
+if (_component & 1) {
+  if (fwrite(&${variable.arrayName}[_${variable.vector.id}_index_pointer + _component/2].im, sizeof(double), 1, fpBinary) != 1) {
+    _LOG(_ERROR_LOG_LEVEL, "Error writing output data.\n");
+  }
+} else {
+  if (fwrite(&${variable.arrayName}[_${variable.vector.id}_index_pointer + _component/2].re, sizeof(double), 1, fpBinary) != 1) {
+    _LOG(_ERROR_LOG_LEVEL, "Error writing output data.\n");
+  }
+}
   @end if
   @#
 @end def
