@@ -8,6 +8,7 @@ SUBDIRS = SimulationDrivers Geometry Vectors Segments Operators Features
 MYMAKEFLAGS = 'cheetah_settings=$(cheetah_settings)'
 
 all: compile
+	@./version.sh
 	@for i in $(SUBDIRS); do \
 	(cd $$i; env $(MYMAKEFLAGS) $(MAKE) $(MFLAGS) all); done
 
@@ -19,7 +20,6 @@ compile: .COMPILE
 	@if test "$?"; then \
 	cheetah compile --settings='$(cheetah_settings)' $?; fi
 	@touch .COMPILE
-	@./version.sh
 
 
 # remove all compiled files
