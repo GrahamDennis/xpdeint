@@ -25,6 +25,10 @@ Return the options that need to be added to ``CFLAG``.
   @#
   @super
   @#
+#if (CFG_COMPILER == CFG_COMPILER_MSVC)
+  #define FFTW_DLL
+#endif
+
 #include <fftw3.h>
 #include <utility>
 #include <map>

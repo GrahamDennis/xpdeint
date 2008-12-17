@@ -30,7 +30,9 @@ Copyright (c) 2007-2008 __MyCompanyName__. All rights reserved.
 #define _ALL_LOG_LEVELS        _SAMPLE_LOG_LEVEL|_SEGMENT_LOG_LEVEL|_PATH_LOG_LEVEL|_SIMULATION_LOG_LEVEL|_WARNING_LOG_LEVEL|_ERROR_LOG_LEVEL
 #define _LOG_LEVELS_BEING_LOGGED (${features['Driver'].logLevelsBeingLogged})
 
-  @set $featureOrdering = ['Driver']
+#include <stdio.h>
+
+@set $featureOrdering = ['Driver']
 #define _LOG(logLevel, ...) \
   do { \
     if (logLevel & _LOG_LEVELS_BEING_LOGGED) { \
@@ -48,7 +50,6 @@ Copyright (c) 2007-2008 __MyCompanyName__. All rights reserved.
 // simulation includes
 
 #include <xpdeint_platform.h>
-#include <stdio.h>
 #include <math.h>
 #include <string.h>
 #include <string>
