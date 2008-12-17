@@ -81,6 +81,17 @@ def main(argv=None):
   compileScript = True
   noVersionInformation = False
   
+  # Import version information
+  from Preferences import versionString
+  from Version import subversionRevisionString
+  
+  if noVersionInformation:
+    versionString = "VERSION_PLACEHOLDER"
+    subversionRevisionString = "SUBVERSION_REVISION_PLACEHOLDER"
+  
+  
+  print "xpdeint version %(versionString)s (%(subversionRevisionString)s)" % locals()
+  
   # Attempt to parse command line arguments
   if argv is None:
     argv = sys.argv
@@ -147,14 +158,6 @@ def main(argv=None):
   except Exception, err:
     print >> sys.stderr, "Exception raised during parsing xmds script:", err
     return
-  
-  # Set up the globalNameSpace with the appropriate variables
-  from Preferences import versionString
-  from Version import subversionRevisionString
-  
-  if noVersionInformation:
-    versionString = "VERSION_PLACEHOLDER"
-    subversionRevisionString = "SUBVERSION_REVISION_PLACEHOLDER"
   
   globalNameSpace['debug'] = debug
   globalNameSpace['xmlDocument'] = xmlDocument
