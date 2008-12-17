@@ -331,7 +331,9 @@
   inline void *_aligned_malloc(size_t size, size_t alignment)
   {
     void *RetVal;
-    posix_memalign(&RetVal, alignment, size);
+    if (!posix_memalign(&RetVal, alignment, size)) {
+      _LOG(_ERROR_LOG_LEVEL, "Couldn't allocate aligned memory!\n");
+    }
     return RetVal;
   }
 

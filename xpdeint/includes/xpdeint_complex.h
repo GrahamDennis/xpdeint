@@ -40,8 +40,8 @@ extern "C++" {
 #define xmds_malloc fftw_malloc
 #define xmds_free   fftw_free
 #else
-#define xmds_malloc malloc
-#define xmds_free   free
+#define xmds_malloc(n) _aligned_malloc(n, sizeof(double))
+#define xmds_free   _aligned_free
 
 typedef struct {
   double re;

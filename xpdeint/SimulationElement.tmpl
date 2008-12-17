@@ -16,30 +16,6 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   @super
   @#
 #define _EPSILON 1e-6
-
-#define _SAMPLE_LOG_LEVEL      (1 << 0)
-#define _SEGMENT_LOG_LEVEL     (1 << 1)
-#define _PATH_LOG_LEVEL        (1 << 2)
-#define _SIMULATION_LOG_LEVEL  (1 << 3)
-#define _WARNING_LOG_LEVEL     (1 << 4)
-#define _ERROR_LOG_LEVEL       (1 << 5)
-#define _ALL_LOG_LEVELS        _SAMPLE_LOG_LEVEL|_SEGMENT_LOG_LEVEL|_PATH_LOG_LEVEL|_SIMULATION_LOG_LEVEL|_WARNING_LOG_LEVEL|_ERROR_LOG_LEVEL
-#define _LOG_LEVELS_BEING_LOGGED (${features['Driver'].logLevelsBeingLogged})
-
-  @set $featureOrdering = ['Driver']
-#define _LOG(logLevel, ...) \
-  do { \
-    if (logLevel & _LOG_LEVELS_BEING_LOGGED) { \
-  @set $dict = {'extraIndent': 0}
-      ${insertCodeForFeatures('logFunctionBegin', $featureOrdering, $dict), autoIndent=True}@slurp
-  @set $extraIndent = dict['extraIndent']
-      ${logFunctionInnerContent, autoIndent=True, extraIndent=extraIndent}@slurp
-      ${insertCodeForFeaturesInReverseOrder('logFunctionEnd', $featureOrdering, $dict), autoIndent=True}@slurp
-      if (logLevel & _ERROR_LOG_LEVEL) \
-        exit(1); \
-    } \
-  } while (0)
-
 #ifndef INFINITY
 #define INFINITY HUGE_VAL
 #endif
@@ -63,13 +39,6 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
       _a < _b ? _a : _b; })
 #endif
 
-  @#
-@end def
-
-@def logFunctionInnerContent
-  @#
-printf(__VA_ARGS__); \
-fflush(stdout); \
   @#
 @end def
 
