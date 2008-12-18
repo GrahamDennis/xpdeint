@@ -59,33 +59,6 @@ void _segment0()
   @#
 @end def
 
-@def topLevelSegmentPathLoop
-  @#
-  @# Now loop over anything that can be initalised early and initialise them
-  @# so they don't allocate and free stuff for each path. This is done now
-  @# and not before the ErrorCheck and Stochastic Features because the
-  @# initialisation of IP operators will depend on the step size. It would be
-  @# possible to split this up into two stages of initialisation, but that
-  @# seems to me like it would be ugly.
-  @# 
-  @set $objectsNeedingInitialisation = [o for o in $templates if o.hasattr('canBeInitialisedEarly') and o.canBeInitialisedEarly]
-  @for o in $objectsNeedingInitialisation
-${o.initialise}@slurp
-  @end for
-  @#
-for (long _i0 = _rank; _i0 < _n_paths; _i0 += _size) {
-  _LOG(_PATH_LOG_LEVEL, "Starting path %li\n", _i0 + 1);
-  
-  ${topLevelSequence.topLevelSequenceInnerContent, autoIndent=True}@slurp
-}
-  @#
-  @# Now clean up after all of the objects that we initialised early.
-  @for o in $objectsNeedingInitialisation
-${o.finalise}@slurp
-  @end for
-  @#
-@end def
-
 @def writeOutBegin($dict)
   @#
 // If we aren't rank 0, then we don't want to write anything.
