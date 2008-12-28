@@ -12,7 +12,9 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
     @super
 #define ${minimum}     (${arrayName}[0])
 #define ${maximum}     (${arrayName}[${globalLattice}-1])
+    @if not $stepSizeArray
 #define ${stepSize}        (${arrayName}[${loopIndex}+1]-${arrayName}[${loopIndex}])
+    @end if
   @end if
   @#
 @end def
@@ -26,6 +28,9 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
     @# doesn't cause a SEGFAULT
 unsigned long ${index} = 0;
 ${type}* ${arrayName} = (${type}*) xmds_malloc(sizeof(${type}) * (${globalLattice}+1));
+    @if $stepSizeArray
+${type}* ${stepSizeArrayName} = (${type}*) xmds_malloc(sizeof(${type}) * (${globalLattice}));
+    @end if
   @end if
   @#
   @if $hasLocalOffset
@@ -40,6 +45,9 @@ ptrdiff_t $localOffset = 0;
   @# Non-uniform dimensions do not currently support being distributed
   @assert not $hasLocalOffset
 #define ${name} ${arrayName}[${loopIndex}]
+  @if $stepSizeArray
+#define d${name} ${stepSizeArrayName}[${loopIndex}]
+  @end if
 
 for (long ${loopIndex} = 0; ${loopIndex} < ${localLattice}; ${loopIndex}++) {
 @end def
@@ -48,12 +56,15 @@ for (long ${loopIndex} = 0; ${loopIndex} < ${localLattice}; ${loopIndex}++) {
   @#
 }
 #undef ${name}
+  @if $stepSizeArray
+#undef d${name}
+  @end if
   @#
 @end def
 
 @def localIndexFromIndexForDimensionRep($dimRep)
   @#
-${dimRep.loopIndex} + ${dimRep.localOffset} - ${localOffset}@slurp
+(${dimRep.loopIndex} + ${dimRep.localOffset}) * (${globalLattice}/${dimRep.globalLattice}) - ${localOffset}@slurp
   @#
 @end def
 

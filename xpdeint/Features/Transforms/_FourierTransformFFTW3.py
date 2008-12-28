@@ -15,6 +15,8 @@ from xpdeint.Geometry.SplitUniformDimensionRepresentation import SplitUniformDim
 from xpdeint.ParserException import ParserException
 
 class _FourierTransformFFTW3 (_Transform):
+  transformName = 'FourierTransform'
+  
   def __init__(self, *args, **KWs):
     _Transform.__init__(self, *args, **KWs)
     

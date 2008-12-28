@@ -1,0 +1,83 @@
+@*
+Basis.tmpl
+
+Created by Graham Dennis on 2008-12-14.
+Copyright (c) 2008 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.Features.Transforms._Basis
+
+@def globalsForDim($dim)
+  @#
+  @set $forwardDimRep = dim.inSpace(0)
+  @set $backwardDimRep = dim.inSpace(-1)
+double *_mmt_matrix_${forwardDimRep.name}_${backwardDimRep.name};
+double *_mmt_matrix_${backwardDimRep.name}_${forwardDimRep.name};
+  @#
+@end def
+
+@def gridAndStepForDimRep($dimRep)
+  @#
+for (long _i0=0; _i0 < ${dimRep.globalLattice}; _i0++) {
+  ${gridAndStepForDimRepAtIndex(dimRep, '_i0'), autoIndent=True}@slurp
+}
+  @#
+@end def
+
+@def gridAndStepForDimRepAtIndex($dimRep, $index)
+  @#
+${dimRep.arrayName}[$index] = ${gridForDimRepAtIndex(dimRep, index)};
+${dimRep.stepSizeArrayName}[$index] = ${stepWeightForDimRepAtIndex(dimRep, index)};
+  @#
+@end def
+
+@def transformMatricesForDim($dim)
+  @set $forwardDimRep = dim.inSpace(0)
+  @set $backwardDimRep = dim.inSpace(-1)
+_mmt_matrix_${forwardDimRep.name}_${backwardDimRep.name}  = (double *)xmds_malloc(sizeof(double) * ${forwardDimRep.globalLattice} * ${backwardDimRep.globalLattice});
+_mmt_matrix_${backwardDimRep.name}_${forwardDimRep.name} = (double *)xmds_malloc(sizeof(double) * ${backwardDimRep.globalLattice} * ${forwardDimRep.globalLattice});
+for (long _i0 = 0; _i0 < ${forwardDimRep.globalLattice}; _i0++) {
+  ${transformMatricesForwardDimConstantsAtIndex(dim, '_i0'), autoIndent=True}@slurp
+  for (long _i1 = 0; _i1 < ${backwardDimRep.globalLattice}; _i1++) {
+    ${transformMatricesForDimAtIndices(dim, '_i0', '_i1'), autoIndent=True}@slurp
+  }
+}
+@end def
+
+@def transformMatricesForwardDimConstantsAtIndex($dim, $index)
+@end def
+
+@def transformMatricesForDimAtIndices($dim, $forwardIndex, $backwardIndex)
+  @#
+  @set $forwardDimRep = dim.inSpace(0)
+  @set $backwardDimRep = dim.inSpace(-1)
+_mmt_matrix_${forwardDimRep.name}_${backwardDimRep.name} [${backwardIndex} * ${forwardDimRep.globalLattice} + ${forwardIndex}] = \
+  ${forwardMatrixForDimAtIndices(dim, forwardIndex, backwardIndex)};
+_mmt_matrix_${backwardDimRep.name}_${forwardDimRep.name}[${forwardIndex} * ${backwardDimRep.globalLattice} + ${backwardIndex}] = \
+  ${backwardMatrixForDimAtIndices(dim, forwardIndex, backwardIndex)};
+  @#
+@end def
+
+@def performTransformForVector($sourceDimRep, $destDimRep, vector)
+  @#
+cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
+            ${destDimRep.globalLattice},
+            /* nelem */ innerLoopSize,
+            ${sourceDimRep.globalLattice},
+            /* alpha */ 1.0,
+            /* A */ _mmt_matrix_${sourceDimRep.name}_${destDimRep.name}, ${sourceDimRep.globalLattice},
+            /* B */ source_${vector.id} + _i0 * innerLoopSize * ${sourceDimRep.globalLattice},
+                    innerLoopSize,
+            /* beta */ 0.0,
+            /* C */ dest_${vector.id} + _i0 * innerLoopSize * ${destDimRep.globalLattice},
+            innerLoopSize);
+  @#
+@end def
+
+@def destroyTransformMatricesForDim($dim)
+  @#
+  @set $forwardDimRep = dim.inSpace(0)
+  @set $backwardDimRep = dim.inSpace(-1)
+xmds_free(_mmt_matrix_${forwardDimRep.name}_${backwardDimRep.name});
+xmds_free(_mmt_matrix_${backwardDimRep.name}_${forwardDimRep.name});
+  @#
+@end def

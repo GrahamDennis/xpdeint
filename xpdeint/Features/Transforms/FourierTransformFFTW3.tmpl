@@ -6,7 +6,6 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *@
 @extends xpdeint.Features.Transforms._FourierTransformFFTW3
 
-@attr $featureName = 'FourierTransform'
 @def description: FFTW3
 
 @attr $planType = "FFTW_MEASURE"
@@ -105,11 +104,8 @@ struct _space_transform
 // Map type for holding (old_space, new_space) -> _space_transform mappings
 typedef map<_spaces_pair, _space_transform, _spaces_pair_less_than> _plan_map;
 
-  @for $field in $fields
-    @# only loop over those vectors that need fourier transforms
-    @for $vector in filter(lambda x: x.needsTransforms, $field.vectors)
+  @for $vector in $vectorsNeedingThisTransform
 ${planGlobalsForVector(vector)}@slurp
-    @end for
   @end for
 @end def
 
@@ -143,12 +139,8 @@ _LOG(_SIMULATION_LOG_LEVEL, "Making FFTW plans\n");
   @# and use that to create the plans. Unless we can use another vector that we have
   @# already allocated.
   @#
-  @set $temporaryVectorsNeedingFourierTransforms = set()
-  @set $managedVectorsNeedingFourierTransforms = set()
-  @for field in $fields
-    @silent temporaryVectorsNeedingFourierTransforms.update(filter(lambda x: x.needsTransforms, field.temporaryVectors))
-    @silent managedVectorsNeedingFourierTransforms.update(filter(lambda x: x.needsTransforms, field.managedVectors))
-  @end for
+  @set $temporaryVectorsNeedingFourierTransforms = [v for v in $vectorsNeedingThisTransform if v in v.field.temporaryVectors]
+  @set $managedVectorsNeedingFourierTransforms = [v for v in $vectorsNeedingThisTransform if v in v.field.managedVectors]
   @if temporaryVectorsNeedingFourierTransforms
     @# We have vectors that need something to be allocated
     @set $temporaryVectorSizes = [(vector.maxSizeInReals, vector) for vector in temporaryVectorsNeedingFourierTransforms]
@@ -190,16 +182,10 @@ double _c;
 
 _space_transform *_transform;
   @#
-  @for field in $fields
-    @set $vectorsNeedingFourierTransforms = filter(lambda x: x.needsTransforms, field.vectors)
-    @if len(vectorsNeedingFourierTransforms) == 0
-      @continue
-    @end if
+  @for vector in $vectorsNeedingThisTransform
 
-// Plans for field ${field.name}
-    @for vector in vectorsNeedingFourierTransforms
+// Plans for vector ${vector.name}
 ${createGuruPlansForVector(vector)}@slurp
-    @end for
   @end for
   @#
   @if $temporaryVectorsNeedingFourierTransforms and $allocatedTemporaryVector
@@ -273,8 +259,9 @@ if ( (_wisdomFile = fopen(_wisdomPath.c_str(), "w")) != NULL) {
   @else
     @set $r2rMultiplier = 2
   @end if
-  @set $numberOfSpacesNeeded = len(vector.spacesNeeded)
-unsigned long _spaces_needed_for_${vector.id}[] = {${', '.join([str(space) for space in vector.spacesNeeded])}};
+  @set $spacesNeeded = set([space & $transformMask for space in vector.spacesNeeded])
+  @set $numberOfSpacesNeeded = len(spacesNeeded)
+unsigned long _spaces_needed_for_${vector.id}[] = {${', '.join([str(space) for space in spacesNeeded])}};
 
 for (int _from_space_index = 0; _from_space_index < ${numberOfSpacesNeeded}; _from_space_index++) {
   unsigned long _from_space = _spaces_needed_for_${vector.id}[_from_space_index];
@@ -406,23 +393,13 @@ for (int _from_space_index = 0; _from_space_index < ${numberOfSpacesNeeded}; _fr
   @#
   
 // destroy plans and save wisdom
-  @for field in $fields
-${destroyPlansForField(field)}@slurp
+  @for vector in $vectorsNeedingThisTransform
+_${vector.id}_plan_map.clear(); // This doesn't actually destroy the fftw_plan objects
   @end for
 
 fftw_cleanup();
   @#
 @end def
-
-@def destroyPlansForField($field)
-  @#
-  @# only loop over those vectors that need fourier transforms
-  @for vector in filter(lambda x: x.needsTransforms, field.vectors)
-_${vector.id}_plan_map.clear(); // This doesn't actually destroy the fftw_plan objects
-  @end for
-  @#
-@end def
-
 
 @def goSpaceFunctionContentsForVector($function, $vector)
 @*doc:
@@ -432,25 +409,19 @@ This writes the function that does the fourier transforming of a specific vector
 to and from arbitrary combinations of fourier-space and normal-space.
 *@
   @#
-// This field may not have all of the dimensions in the geometry, so
-// find the space variable for the dimensions we care about
-_newSpace &= _${vector.field.name}_full_kspace_mask;
-if (_${vector.id}_space == _newSpace)
-  return;
-
 double _c = 1.0;
 
-if (_${vector.id}_plan_map.count(_spaces_pair(_${vector.id}_space, _newSpace)) == 0) {
+if (_${vector.id}_plan_map.count(_spaces_pair(_currentSpace, _newSpace)) == 0) {
   _LOG(_ERROR_LOG_LEVEL, "Error: We should have plans for every required transform, but it seems we don't for this transform.\n"
-                         "       The transform is for the vector '${vector.id}' from space %li to space %li\n.",
-                         _${vector.id}_space, _newSpace);
+                         "       The transform is for the vector '${vector.id}' from space %li to space %li.\n",
+                         _currentSpace, _newSpace);
 }
 
-_space_transform& _transform = _${vector.id}_plan_map[_spaces_pair(_${vector.id}_space, _newSpace)];
+_space_transform& _transform = _${vector.id}_plan_map[_spaces_pair(_currentSpace, _newSpace)];
 if (_transform._plans.size() == 0) {
   _LOG(_ERROR_LOG_LEVEL, "Error: It looks like we tried to create plans for this transform, but failed.\n"
-                         "       The transform was for the vector '${vector.id}' from space %li to space %li\n.",
-                         _${vector.id}_space, _newSpace);
+                         "       The transform was for the vector '${vector.id}' from space %li to space %li.\n",
+                         _currentSpace, _newSpace);
 }
 
 
@@ -462,8 +433,6 @@ for (vector<_plan_pair>::iterator _it = _transform._plans.begin(); _it != _trans
   }
 }
 _c = _transform._c;
-
-_${vector.id}_space = _newSpace;
 
 ${loopOverVectorsWithInnerContentTemplate([$vector], '_active_${vector.id}[$index] *= _c;')}@slurp
   @#

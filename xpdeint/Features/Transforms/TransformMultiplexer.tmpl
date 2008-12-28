@@ -1,0 +1,40 @@
+@*
+TransformMultiplexer.tmpl
+
+Created by Graham Dennis on 2008-12-23.
+Copyright (c) 2008 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.Features.Transforms._TransformMultiplexer
+@def description: Transform Multiplexer
+
+@def goSpaceFunctionContentsBegin($dict)
+@*doc:
+Returns the ``go_space`` function implementation for vector `vector`.
+
+This writes the function that does the fourier transforming of a specific vector
+to and from arbitrary combinations of fourier-space and normal-space.
+*@
+  @#
+  @set $function = dict['function']
+  @set $vector = dict['caller']
+newSpace &= _${vector.field.name}_full_kspace_mask;
+if (_${vector.id}_space == newSpace)
+  return;
+
+  @for t in $transformsForVector(vector)
+// ${t.transformName}
+    @set $transformMask = t.transformMaskForVector(vector)
+if ((_${vector.id}_space & ${transformMask}) != (newSpace & ${transformMask}))
+{
+  long _newSpace = newSpace & ${transformMask};
+  long _currentSpace = _${vector.id}_space & ${transformMask};
+  ${t.goSpaceFunctionContentsForVector(function, vector), autoIndent=True}@slurp
+  // Clear bits for ${t.transformName}
+  newSpace &= ~${transformMask};
+  // Set bits for ${t.transformName}
+  newSpace |= _newSpace;
+}
+  @end for
+_${vector.id}_space = newSpace;
+  @#
+@end def

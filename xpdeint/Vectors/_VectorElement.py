@@ -53,7 +53,7 @@ class _VectorElement (ScriptElement):
     
     goSpaceFunctionName = ''.join(['_', self.id, '_go_space'])
     goSpaceFunction = Function(name = goSpaceFunctionName,
-                               args = [('unsigned long', '_newSpace')],
+                               args = [('unsigned long', 'newSpace')],
                                implementation = self.goSpaceFunctionContents,
                                predicate = lambda: self.needsTransforms)
     self.functions['goSpace'] = goSpaceFunction

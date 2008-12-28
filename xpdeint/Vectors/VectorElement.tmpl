@@ -55,7 +55,9 @@ _${id}_space = $initialSpace;
 
 @def goSpaceFunctionContents($function)
   @#
-${features['FourierTransform'].goSpaceFunctionContentsForVector(function, self)}@slurp
+  @set $featureOrdering = ['TransformMultiplexer']
+  @set $dict = {'function': function}
+${insertCodeForFeatures('goSpaceFunctionContentsBegin', featureOrdering, dict)}@slurp
   @#
 @end def
 

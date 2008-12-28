@@ -46,8 +46,7 @@ def array_approx_equal(array1, array2, absTol, relTol):
   return numpy.logical_or(numpy.logical_or(numpy.abs(diff) <= relTol * array2, diff <= absTol), numpy.isnan(array2)).all()
 
 
-def scriptTestingFunction(root, scriptName, tempPath, absPath, self):
-  testDir = os.path.join(tempPath, root)
+def scriptTestingFunction(root, scriptName, testDir, absPath, self):
   if not os.path.exists(testDir):
     os.makedirs(testDir)
   
@@ -257,22 +256,30 @@ def main(argv=None):
     print >> sys.stderr, "\t for help use --help"
     return 2
   
-  tempPath = os.path.join(tempfile.gettempdir(), 'xpdeint')
-  if not os.path.exists(tempPath):
-    os.mkdir(tempPath)
+  basePath = os.path.dirname(__file__)
   
-  print "Saving test results in %(tempPath)s" % locals()
+  resultsPath = os.path.join(basePath, 'testsuite_results')
+  if not os.path.exists(resultsPath):
+    os.mkdir(resultsPath)
+  resultsPath = os.path.abspath(resultsPath)
+  
+  print "Saving test results in %(resultsPath)s" % locals()
   
   testsuites = {}
   baseSuiteName = 'testsuite'
+  baseSuitePath = os.path.join(basePath, baseSuiteName)
   
-  for root, dirs, files in os.walk(baseSuiteName):
+  for root, dirs, files in os.walk(baseSuitePath):
     # First remove directories we don't want to traverse
     for dirName in ['.svn']:
       if dirName in dirs:
         dirs.remove(dirName)
     # Remove the 'testsuite/' part of the path
-    dirRelativeToBase = root[(len(baseSuiteName)+1):]
+    dirRelativeToBase = root[(len(baseSuitePath)+1):]
+    if dirRelativeToBase:
+      testSuiteName = os.path.join(baseSuiteName, dirRelativeToBase)
+    else:
+      testSuiteName = baseSuiteName
     
     # If we have .xmds files in this path, then create a TestCase subclass
     xmdsTestScripts = [filename for filename in files if os.path.splitext(filename)[1].lower() == '.xmds']
@@ -284,19 +291,20 @@ def main(argv=None):
         for scriptName in xmdsTestScripts:
           prefix = os.path.splitext(scriptName)[0]
           absPath = os.path.abspath(os.path.join(root, scriptName))
-          locals()['test_' + prefix] = partial(scriptTestingFunction, root, scriptName, tempPath, absPath)
+          testDir = os.path.join(resultsPath, dirRelativeToBase)
+          locals()['test_' + prefix] = partial(scriptTestingFunction, root, scriptName, testDir, absPath)
           locals()['test_' + prefix].__doc__ = os.path.join(dirRelativeToBase, scriptName)
       
       # Create a TestSuite from that class
       suite = unittest.defaultTestLoader.loadTestsFromTestCase(ScriptTestCase)
-      testsuites[root] = suite
+      testsuites[testSuiteName] = suite
     
-    if not root in testsuites:
-      testsuites[root] = unittest.TestSuite()
+    if not testSuiteName in testsuites:
+      testsuites[testSuiteName] = unittest.TestSuite()
     
-    suite = testsuites[root]
+    suite = testsuites[testSuiteName]
     # Add our TestSuite as a sub-suite of all parent suites
-    head = root
+    head = testSuiteName
     while True:
       head, tail = os.path.split(head)
       if not head or not tail:

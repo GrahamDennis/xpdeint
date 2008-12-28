@@ -10,4 +10,4 @@ CFLAGS="-O3 -ffast-math -funroll-all-loops -fomit-frame-pointer"
 MPICC="mpic++"
 MPICFLAGS=""
 
-versionString = '0.5 "Are you thinking what I\'m thinking B1?"'
+versionString = '0.6 "A Physicist is an atom\'s way of knowing about atoms."'

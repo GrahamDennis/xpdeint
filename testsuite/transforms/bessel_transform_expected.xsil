@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="bessel_transform.xsil" expected="bessel_transform_expected.xsil" absolute_tolerance="1e-6" relative_tolerance="1e-5" />
+  </testing>
+  
+  <name>bessel_transform</name>
+  <author>Graham Dennis</author>
+  <description>
+    Solve the wave equation on a disk of radius 1 utilising cylindrical symmetry
+    by using the Bessel function transform. The Bessel function transform implicitly
+    assumes Dirichlet boundary conditions at the edge of the disk.
+  </description>
+  
+  <features>
+    <benchmark />
+    <bing />
+    <mmt />
+    <globals>
+      <![CDATA[
+      const double T = 10.0;
+      const double mass = 1e-3;
+      const double length = 1.0;
+      const double mu = mass/length;
+      ]]>
+    </globals>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="x" lattice="100"  domain="(0, 1)" transform="bessel" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="main" initial_space="x" type="complex">
+    <components>
+      u uDot
+    </components>
+    <initialisation>
+      <![CDATA[
+        u = exp(-100.0*(x-0.25)*(x-0.25));
+        uDot = 0.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="ARK45" tolerance="1e-6" interval="8e-3" steps="400">
+      <samples>100 100</samples>
+      <operators>
+        <operator kind="ex" constant="yes" fourier_space="kx">
+          <operator_names>L</operator_names>
+          <![CDATA[
+            L = -T*kx*kx/mu;
+          ]]>
+        </operator>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+          du_dt = uDot;
+          duDot_dt = L[u];
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  <output format="binary">
+    <group>
+      <sampling initial_sample="yes">
+        <dimension name="x" fourier_space="no" />
+        <moments>amp</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          amp = u;
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling initial_sample="no">
+        <dimension name="x" fourier_space="yes" />
+        <moments>amp</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          amp = u.re;
+        
+        ]]>
+      </sampling>
+    </group>
+  </output>
+
+<info>
+Script compiled with xpdeint version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+See http://www.xmds.org for more information.
+</info>
+
+<XSIL Name="moment_group_1">
+  <Param Name="n_independent">2</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>3</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t x amp 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>101</Dim>
+    <Dim>100</Dim>
+    <Dim>3</Dim>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="BigEndian"/>
+bessel_transform_expected_mg0.dat
+    </Stream>
+  </Array>
+</XSIL>
+
+<XSIL Name="moment_group_2">
+  <Param Name="n_independent">2</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>3</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t kx amp 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>100</Dim>
+    <Dim>100</Dim>
+    <Dim>3</Dim>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="BigEndian"/>
+bessel_transform_expected_mg1.dat
+    </Stream>
+  </Array>
+</XSIL>
+</simulation>

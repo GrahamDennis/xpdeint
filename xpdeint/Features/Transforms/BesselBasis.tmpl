@@ -1,0 +1,70 @@
+@*
+BesselBasis.tmpl
+
+Created by Graham Dennis on 2008-12-14.
+Copyright (c) 2008 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.Features.Transforms.Basis
+
+@def description: Bessel function basis
+
+@def globalsForDim($dim)
+  @#
+const double _normbesseljzeros_${dim.name}[] = {${wrapArray($normalisedBesselJZeros($order, dim.inSpace(0).lattice))}};
+const double _besseljnorm_${dim.name} = ${besselJZeros($order, dim.inSpace(0).lattice+1)[-1]};
+  @#
+  @super(dim)
+  @#
+@end def
+
+@def besselJFunctionCall($order, $argument)
+  @if $order in [0, 1]
+j${order}($argument)@slurp
+  @else
+jn($order, $argument)@slurp
+  @end if
+@end def
+
+@def gridAndStepForDimRepAtIndex($dimRep, $index)
+  @#
+const double besselFactor = ${besselJFunctionCall($order + 1, c'_normbesseljzeros_${dimRep.parent.name}[${index}] * _besseljnorm_${dimRep.parent.name}')};
+const double ${dimRep.name}_max = @slurp
+  @if not dimRep.isTransformed
+${dimRep._maximum};
+  @else
+(_besseljnorm_${dimRep.parent.name}/((double)${dimRep._maximum}));
+  @end if
+  @#
+  @super(dimRep, index)
+  @#
+@end def
+
+
+@def gridForDimRepAtIndex($dimRep, $index)
+  @#
+_normbesseljzeros_${dimRep.parent.name}[$index] * ${dimRep.name}_max@slurp
+  @#
+@end def
+
+@def stepWeightForDimRepAtIndex($dimRep, $index)
+  @#
+2.0 / (besselFactor * besselFactor * _besseljnorm_${dimRep.parent.name} * _besseljnorm_${dimRep.parent.name}) * ${dimRep.name}_max * ${dimRep.name}_max@slurp
+  @#
+@end def
+
+@def transformMatricesForDimAtIndices($dim, $forwardIndex, $backwardIndex)
+  @#
+const double besselFactor = ${besselJFunctionCall($order, c'_normbesseljzeros_${dim.name}[${forwardIndex}] * _normbesseljzeros_${dim.name}[${backwardIndex}] * _besseljnorm_${dim.name}')};
+  @#
+  @super(dim, forwardIndex, backwardIndex)
+  @#
+@end def
+
+@def forwardMatrixForDimAtIndices($dim, $forwardIndex, $backwardIndex)
+besselFactor * ${dim.inSpace(0).stepSizeArrayName}[$forwardIndex]@slurp
+@end def
+
+@def backwardMatrixForDimAtIndices($dim, $forwardIndex, $backwardIndex)
+besselFactor * ${dim.inSpace(-1).stepSizeArrayName}[$backwardIndex]@slurp
+@end def
+
