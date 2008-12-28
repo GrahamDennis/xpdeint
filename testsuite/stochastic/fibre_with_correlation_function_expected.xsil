@@ -118,7 +118,7 @@ t kx mean_pow_dens stderr_pow_dens
     <Dim>51</Dim>
     <Dim>64</Dim>
     <Dim>4</Dim>
-    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="BigEndian"/>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
 fibre_with_correlation_function_expected_mg0.dat
     </Stream>
   </Array>
@@ -136,7 +136,7 @@ x xp mean_g1 mean_g2 stderr_g1 stderr_g2
     <Dim>64</Dim>
     <Dim>64</Dim>
     <Dim>6</Dim>
-    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="BigEndian"/>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
 fibre_with_correlation_function_expected_mg1.dat
     </Stream>
   </Array>
@@ -154,7 +154,7 @@ kx kxp mean_g1 mean_g2 mean_g2minus stderr_g1 stderr_g2 stderr_g2minus
     <Dim>64</Dim>
     <Dim>64</Dim>
     <Dim>8</Dim>
-    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="BigEndian"/>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
 fibre_with_correlation_function_expected_mg2.dat
     </Stream>
   </Array>
