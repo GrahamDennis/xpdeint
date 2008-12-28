@@ -216,6 +216,9 @@ class XMDS2Parser(ScriptParser):
     if not featuresParentElement:
       featuresParentElement = simulationElement
     
+    transformMultiplexer = Transforms.TransformMultiplexer.TransformMultiplexer(parent = self.simulation,
+                                                                                **self.argumentsToTemplateConstructors)
+    
     def parseSimpleFeature(tagName, featureClass):
       featureElement = featuresParentElement.getChildElementByTagName(tagName, optional=True)
       feature = None
@@ -234,7 +237,7 @@ class XMDS2Parser(ScriptParser):
     parseSimpleFeature('openmp', Features.OpenMP.OpenMP)
     parseSimpleFeature('halt_non_finite', Features.HaltNonFinite.HaltNonFinite)
     parseSimpleFeature('diagnostics', Features.Diagnostics.Diagnostics)
-    
+    parseSimpleFeature('mmt', Transforms.MMT.MMT)
     
     validationFeatureElement = featuresParentElement.getChildElementByTagName('validation', optional=True)
     if validationFeatureElement and validationFeatureElement.hasAttribute('kind'):
@@ -592,11 +595,20 @@ class XMDS2Parser(ScriptParser):
                                                      "It must be one of 'real'/'double' (default & synonyms) or "
                                                      "'integer'/'int'/'long' (synonyms)." % locals())
         
-        ## Grab the domain strings
-        domainString = parseAttribute('domain')
         
-        ## Returns two strings for the end points
-        minimumString, maximumString = self.domainPairFromString(domainString, dimensionElement)
+        if dimensionElement.hasAttribute('domain'):
+          ## Grab the domain strings
+          
+          domainString = parseAttribute('domain')
+          
+          ## Returns two strings for the end points
+          minimumString, maximumString = self.domainPairFromString(domainString, dimensionElement)
+        elif dimensionElement.hasAttribute('length_scale'):
+          minimumString = '0'
+          maximumString = dimensionElement.getAttribute('length_scale').strip()
+        else:
+          raise ParserException(dimensionElement, "Each dimension element must have a non-empty 'domain' attribute\n"
+                                                  "(or in the case of the 'hermite-gauss' transform a 'length_scale' attribute).")
         
         if dimensionType == 'double':
           domainPairType = float

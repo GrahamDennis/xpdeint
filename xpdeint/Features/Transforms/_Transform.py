@@ -7,21 +7,39 @@ Created by Graham Dennis on 2008-07-30.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
-from xpdeint.Features._Feature import _Feature
+from xpdeint.ScriptElement import ScriptElement
 from xpdeint.Geometry._Dimension import _Dimension
 from xpdeint.Utilities import lazy_property
 import operator
 
-class _Transform (_Feature):
+class _Transform (ScriptElement):
   mpiCapableSubclass = None
   
   def __init__(self, *args, **KWs):
-    _Feature.__init__(self, *args, **KWs)
+    ScriptElement.__init__(self, *args, **KWs)
+    # Register ourselves with the transform multiplexer
+    self.getVar('features')['TransformMultiplexer'].transforms.add(self)
     self.transformMask = 0
+  
+  def __hash__(self):
+    """
+    Returns a hash of the transform.
+    This is used to ensure the ordering of transforms in sets remains the same between invocations.
+    """
+    return hash(self.transformName)
   
   @lazy_property
   def isMPICapable(self):
     return bool(self.mpiCapableSubclass)
+  
+  def transformMaskForVector(self, vector):
+    return reduce(operator.__or__, [d.transformMask for d in vector.field.dimensions if d.transform == self], 0)
+  
+  @property
+  def vectorsNeedingThisTransform(self):
+    vectors = set()
+    for f in self.getVar('fields'): vectors.update(f.vectors)
+    return set([v for v in vectors if v.needsTransforms and any([d.transform == self for d in v.field.dimensions])])
   
   def initialiseForMPIWithDimensions(self, dimensions):
     """Upgrade the current class to support MPI."""
@@ -56,6 +74,7 @@ class _Transform (_Feature):
   
   
   def preflight(self):
+    super(_Transform, self).preflight()
     self.transformMask = reduce(operator.__or__, [d.transformMask for d in self.getVar('geometry').dimensions if d.transform == self], 0)
   
 

@@ -17,6 +17,7 @@ import subprocess
 from pkg_resources import resource_filename
 
 import imp
+import cPickle
 
 # Hack for Leopard so it doesn't import the web rendering
 # framework WebKit when Cheetah tries to import the Python
@@ -85,10 +86,7 @@ def main(argv=None):
   from Preferences import versionString
   from Version import subversionRevisionString
   
-  if noVersionInformation:
-    versionString = "VERSION_PLACEHOLDER"
-    subversionRevisionString = "SUBVERSION_REVISION_PLACEHOLDER"
-  
+  xpdeintUserDataPath = os.path.join(os.path.expanduser('~'), '.xmds')
   
   print "xpdeint version %(versionString)s (%(subversionRevisionString)s)" % locals()
   
@@ -134,6 +132,9 @@ def main(argv=None):
   # templates
   globalNameSpace = {'scriptName': scriptName}
   
+  if noVersionInformation:
+    versionString = "VERSION_PLACEHOLDER"
+    subversionRevisionString = "SUBVERSION_REVISION_PLACEHOLDER"
   
   # Open the script file
   try:
@@ -170,6 +171,19 @@ def main(argv=None):
                              'subversionRevision': subversionRevisionString}
   globalNameSpace['templates'] = set()
   globalNameSpace['transforms'] = {}
+  
+  xpdeintDataCachePath = os.path.join(xpdeintUserDataPath, 'xpdeint_cache')
+  dataCache = {}
+  if os.path.isfile(xpdeintDataCachePath):
+    try:
+      dataCacheFile = open(xpdeintDataCachePath, 'rb')
+      dataCache = cPickle.load(dataCacheFile)
+      dataCacheFile.close()
+      del dataCacheFile
+    except Exception, err:
+      print >> sys.stderr, "Warning: Unable to load xpdeint data cache."
+      if debug: raise
+  globalNameSpace['dataCache'] = dataCache
   
   # We need the anyObject function in a few templates, so
   # we add it to the globalNameSpace, so that the function can
@@ -233,6 +247,8 @@ def main(argv=None):
     # Clear the guards that will have been set up
     _ScriptElement.resetGuards()
     
+    # Final conversion to string
+    simulationContents = str(simulationTemplate)
     
   # If there was an exception during parsing or preflight, a ParserException should have been
   # raised. The ParserException knows the XML element that triggered the exception, and the 
@@ -266,6 +282,18 @@ def main(argv=None):
       raise
     
     return -1
+  finally:
+    dataCache = globalNameSpace['dataCache']
+    if dataCache:
+      try:
+        dataCacheFile = file(xpdeintDataCachePath, 'w')
+      except Exception, err:
+        print >> sys.stderr, "Warning: Unable to write xpdeint data cache. " \
+                             "Ensure '%(xpdeintUserDataPath)s' exists and is writable." % locals()
+      else:
+        cPickle.dump(dataCache, dataCacheFile, protocol = 2)
+        dataCacheFile.close()
+      
   
   # Attempt to import lxml and run the script through
   # the schema
@@ -292,7 +320,6 @@ def main(argv=None):
     output = globalNameSpace['simulationName']
   sourceFileName = output + '.cc'
   myfile = file(sourceFileName, "w")
-  simulationContents = str(simulationTemplate)
   if not debug:
     lines = simulationContents.splitlines(True)
     for lineNumber, line in enumerate(lines[:]):
@@ -313,9 +340,8 @@ def main(argv=None):
   
   # Load user preferences. This will be a file called
   # "xpdeint_prefs.py" in ~/.xmds
-  preferencesSearchPath = os.path.join(os.environ['HOME'], '.xmds')
   try:
-    fd, pathname, description = imp.find_module('xpdeint_prefs', [preferencesSearchPath])
+    fd, pathname, description = imp.find_module('xpdeint_prefs', [xpdeintUserDataPath])
   except ImportError, err:
     # We didn't find the preferences file, no problem.
     pass

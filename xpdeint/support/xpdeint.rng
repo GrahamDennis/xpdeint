@@ -114,6 +114,12 @@
               <empty/>
             </choice>
           </element>
+          <element name="mmt">
+            <choice>
+              <ref name="Bool"/>
+              <empty/>
+            </choice>
+          </element>
           <element name="openmp">
             <choice>
               <ref name="Bool"/>
@@ -223,9 +229,15 @@
       <optional>
         <attribute name="lattice"/>
       </optional>
-      <attribute name="domain"/>
+      <choice>
+        <attribute name="domain"/>
+        <attribute name="length_scale"/>
+      </choice>
       <optional>
         <attribute name="transform"/>
+      </optional>
+      <optional>
+        <attribute name="order"/>
       </optional>
       <optional>
         <attribute name="aliases"/>

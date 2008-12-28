@@ -1,0 +1,68 @@
+@*
+HermiteGaussEPBasis.tmpl
+
+Hermite-Gauss basis using the definite parity of the basis functions to remove
+half the work.
+
+Created by Graham Dennis on 2008-12-28.
+Copyright (c) 2008 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.Features.Transforms.EPBasis
+
+@def description: Hermite-Gauss basis (Harmonic oscillator)
+
+@def globalsForDim($dim)
+  @#
+const double _hermite_zeros_${dim.name}[] = {${wrapArray($hermiteZeros(dim.inSpace(0).lattice))}};
+const double _hermite_gauss_weights_${dim.name}[] = {${wrapArray($hermiteGaussWeights(dim.inSpace(0).lattice))}};
+  @#
+  @super(dim)
+  @#
+@end def
+
+@def gridForDimRepAtIndex($dimRep, $index)
+  @#
+_hermite_zeros_${dimRep.parent.name}[$index] * ${dimRep._maximum}@slurp
+  @#
+@end def
+
+@def stepWeightForDimRepAtIndex($dimRep, $index)
+  @#
+_hermite_gauss_weights_${dimRep.parent.name}[$index] * ${dimRep._maximum}@slurp
+  @#
+@end def
+
+
+@def transformMatricesForwardDimConstantsAtIndex($dim, $forwardIndex)
+double hermiteGaussMinusOne = 0.0;
+double hermiteGaussMinusTwo = 0.0;
+const double _root = _hermite_zeros_${dim.name}[${forwardIndex}];
+@end def
+
+@def transformMatricesForDimAtIndices($dim, $forwardIndex, $backwardIndex)
+  @#
+  @set $forwardDimRep = dim.inSpace(0)
+  @set $backwardDimRep = dim.inSpace(-1)
+double hermiteGauss;
+if (${backwardIndex} == 0)
+  hermiteGauss = pow(M_PI, -0.25) * exp(-0.5* _root * _root) / sqrt(${forwardDimRep._maximum});
+else if (${backwardIndex} == 1)
+  hermiteGauss = sqrt(2.0) * _root * hermiteGaussMinusOne;
+else
+  hermiteGauss = sqrt(2.0/${backwardIndex}) * _root * hermiteGaussMinusOne - sqrt((${backwardIndex}-1.0)/${backwardIndex}) * hermiteGaussMinusTwo;
+
+  @super(dim, forwardIndex, backwardIndex)
+
+hermiteGaussMinusTwo = hermiteGaussMinusOne;
+hermiteGaussMinusOne = hermiteGauss;
+  @#
+@end def
+
+@def forwardMatrixForDimAtIndices($dim, $forwardIndex, $backwardIndex)
+hermiteGauss * ${dim.inSpace(0).stepSizeArrayName}[$forwardIndex]@slurp
+@end def
+
+@def backwardMatrixForDimAtIndices($dim, $forwardIndex, $backwardIndex)
+hermiteGauss@slurp
+@end def
+

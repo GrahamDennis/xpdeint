@@ -10,6 +10,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 """
 
 import sys
+import textwrap
 
 from Cheetah.Template import Template
 from xpdeint.ParserException import ParserException
@@ -426,7 +427,7 @@ class _ScriptElement (Template):
                   "Cannot satisfy dependence on vector '%s' because it cannot "
                   "be transformed to the appropriate space (%i). The vector's initial space is %i." % (vector.name, space, vector.initialSpace))
       if vector.needsTransforms:
-        result.extend([vector.functions['goSpace'].call(_newSpace=space), '\n'])
+        result.extend([vector.functions['goSpace'].call(newSpace=space), '\n'])
       # Add space $space to the set of spaces in which this vector is needed
       vector.spacesNeeded.add(space & vector.field.spaceMask)
     return ''.join(result)
@@ -536,4 +537,7 @@ class _ScriptElement (Template):
         del KWs[key]
     return result
     
+  
+  def wrapArray(self, array):
+    return '\n  ' + textwrap.fill(', '.join(map(str, array)), subsequent_indent='  ') + '\n  '
   

@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <name>hermitegauss_groundstate</name>
+  <author>Graham Dennis</author>
+  <description>
+    Solve for the groundstate of the Gross-Pitaevskii equation using the hermite-Gauss basis.
+  </description>
+  
+  <features>
+    <benchmark />
+    <!-- <error_check /> -->
+    <bing />
+    <!-- <fftw version="3" plan="estimate" /> -->
+    <mmt />
+    <validation kind="run-time" />
+    <globals>
+      <![CDATA[
+        const double omegaz = 2*M_PI*20;
+        const double omegarho = 2*M_PI*200;
+        const double hbar = 1.05457148e-34;
+        const double M = 1.409539200000000e-25;
+        const double g = 9.8;
+        const double scatteringLength = 5.57e-9;
+        const double transverseLength = 1e-5;
+        const double Uint = 4.0*M_PI*hbar*hbar*scatteringLength/M/transverseLength/transverseLength;
+        const double Nparticles = 5.0e5;
+        
+        /* offset constants */
+        const double EnergyOffset = pow(pow(3.0*Nparticles/4*omegarho*Uint,2.0)*M/2.0,1/3.0); // 1D
+        
+      ]]>
+    </globals>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="x" lattice="100" length_scale="sqrt(hbar/(M*omegarho))" transform="hermite-gauss" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="wavefunction" initial_space="x" type="complex">
+    <components>
+      phi
+    </components>
+    <initialisation>
+      <![CDATA[
+      phi = sqrt(Nparticles) * pow(M*omegarho/(hbar*M_PI), 0.25) * exp(-0.5*(M*omegarho/hbar)*x*x);
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <computed_vector name="normalisation" dimensions="" type="double">
+    <components>
+      Ncalc
+    </components>
+    <evaluation>
+      <dependencies fourier_space="x">wavefunction</dependencies>
+      <![CDATA[
+        // Calculate the current normalisation of the wave function.
+        Ncalc = mod2(phi);
+      ]]>
+    </evaluation>
+  </computed_vector>
+  
+  
+  <sequence>
+    <breakpoint filename="break.xsil">
+      <dependencies>normalisation</dependencies>
+    </breakpoint>
+    <integrate algorithm="RK4" interval="1e-2" steps="10000">
+      <samples>100 100</samples>
+      <filters>
+        <filter>
+          <dependencies>wavefunction normalisation</dependencies>
+          <![CDATA[
+            // Correct normalisation of the wavefunction
+            phi *= sqrt(Nparticles/Ncalc);
+          ]]>
+        </filter>
+      </filters>
+      <operators>
+        <operator kind="ip" constant="yes">
+          <operator_names>L</operator_names>
+          <![CDATA[
+            L = -(nx + 0.5)*omegarho;
+          ]]>
+        </operator>
+        <integration_vectors>wavefunction</integration_vectors>
+        <![CDATA[
+          dphi_dt = L[phi] - Uint/hbar*mod2(phi)*phi;
+        ]]>
+      </operators>
+    </integrate>
+    <breakpoint filename="hermitegauss_groundstate_break.xsil">
+      <dependencies fourier_space="nx">wavefunction</dependencies>
+    </breakpoint>
+  </sequence>
+  <output format="binary">
+    <group>
+      <sampling initial_sample="yes">
+        <dimension name="x" fourier_space="no" />
+        <moments>dens</moments>
+        <dependencies>wavefunction</dependencies>
+        <![CDATA[
+          dens = mod2(phi);
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling initial_sample="yes">
+        <dimension name="x" fourier_space="yes" />
+        <moments>dens</moments>
+        <dependencies>wavefunction</dependencies>
+        <![CDATA[
+          dens = mod2(phi);
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>

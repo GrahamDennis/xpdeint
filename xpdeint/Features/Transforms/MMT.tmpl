@@ -1,0 +1,163 @@
+@*
+MMT.tmpl
+
+Created by Graham Dennis on 2008-12-12.
+Copyright (c) 2008 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.Features.Transforms._MMT
+
+@from xpdeint.Geometry.NonUniformDimensionRepresentation import NonUniformDimensionRepresentation
+
+@def description: MMT
+
+@def cflags
+@*doc:
+Return the options that need to be added to ``CFLAG``.
+*@
+  @#
+-lcblas -I/System/Library/Frameworks/vecLib.framework/Versions/A/Headers/@slurp
+  @#
+@end def
+
+@def includes
+  @#
+  @super
+  @#
+#include <cblas.h>
+@end def
+
+@def globals
+  @#
+  @for dimName, basis in $basisMap.items()
+${basis.globalsForDim($geometry.dimensionWithName(dimName))}@slurp
+
+  @end for
+double *_mmt_scratch_space;
+  @#
+@end def
+
+
+@def mainBegin($dict)
+  @#
+  @set $vectorsAndSizes = [(vector.maxSizeInReals, vector) for vector in $vectorsNeedingThisTransform]
+  @if not vectorsAndSizes
+    @return
+  @end if
+  @set $maxVector = max(vectorsAndSizes)[1]
+
+_LOG(_SIMULATION_LOG_LEVEL, "Constructing transform matrices\n");
+
+  @for dimName, basis in $basisMap.items()
+    @for dimRep in [rep for rep in $geometry.dimensionWithName(dimName).representations if isinstance(rep, NonUniformDimensionRepresentation)]
+${basis.gridAndStepForDimRep(dimRep)}@slurp
+    @end for
+    @for field in [field for field in $fields if field.hasDimensionName(dimName)]
+      @if field == $geometry
+        @continue
+      @end if
+      @for fieldDimRep in [rep for rep in field.dimensionWithName(dimName).representations if isinstance(rep, NonUniformDimensionRepresentation)]
+        @if not fieldDimRep
+          @continue
+        @end if
+        @if fieldDimRep.isTransformed
+          @set $space = -1
+        @else
+          @set $space = 0
+        @end if
+        @set $geometryDimRep = $geometry.dimensionWithName(dimName).inSpace(space)
+        @assert (geometryDimRep.lattice % fieldDimRep.lattice) == 0
+        @if geometryDimRep.lattice == fieldDimRep.lattice
+memcpy(${fieldDimRep.arrayName}, ${geometryDimRep.arrayName}, sizeof(double)*${geometryDimRep.globalLattice});
+memcpy(${fieldDimRep.stepSizeArrayName}, ${geometryDimRep.stepSizeArrayName}, sizeof(double) * ${geometryDimRep.globalLattice});
+        @else
+for (long _i0=0; _i0 < $fieldDimRep.globalLattice; _i0++) {
+  ${fieldDimRep.arrayName}[_i0] = ${geometryDimRep.arrayName}[_i0 * ($geometryDimRep.globalLattice / $fieldDimRep.globalLattice)];
+  ${fieldDimRep.stepSizeArrayName}[_i0] = ${geometryDimRep.stepSizeArrayName}[_i0 * ($geometryDimRep.globalLattice / $fieldDimRep.globalLattice)];
+}
+        @end if
+      @end for
+    @end for
+
+  @end for
+
+_mmt_scratch_space = (double *)xmds_malloc(sizeof(${maxVector.type}) * ${maxVector.allocSize});
+
+// Matrices are stored in row-major format
+  @for dimName, basis in $basisMap.items()
+    @set $dim = $geometry.dimensionWithName(dimName)
+${basis.transformMatricesForDim(dim)}@slurp
+  @end for
+
+_LOG(_SIMULATION_LOG_LEVEL, "Matrix construction complete\n");
+@end def
+
+
+@def mainEnd($dict)
+  @#
+// destroy matrices
+xmds_free(_mmt_scratch_space);
+  @for dimName, basis in $basisMap.items()
+    @set $dim = $geometry.dimensionWithName(dimName)
+${basis.destroyTransformMatricesForDim(dim)}@slurp
+  @end for
+  @#
+@end def
+
+@def goSpaceFunctionContentsForVector($function, $vector)
+@*doc:
+Returns the ``go_space`` function implementation for vector `vector`.
+
+This writes the function that does the fourier transforming of a specific vector
+to and from arbitrary combinations of fourier-space and normal-space.
+*@
+  @#
+double *source_${vector.id} = reinterpret_cast<double*>(_active_${vector.id});
+double *dest_${vector.id} = _mmt_scratch_space;
+double *temp = NULL;
+
+  @for $dimName, $basis in $basisMap.items()
+    @set $dim = vector.field.dimensionWithName(dimName)
+    @set $forwardDimRep = dim.inSpace(0)
+    @set $backwardDimRep = dim.inSpace(-1)
+    @# This is safe because the only place where distributed MPI dimensions can occur is at the start
+    @# and either we are responsible for that, or there isn't one. The only case we have to worry
+    @# about is distributed MPI dimensions *before* this dimension.
+    @set $nelemForward = $vector.field.localPointsInDimensionsAfterDimensionInSpace(dim, 0)
+    @set $nelemBackward = $vector.field.localPointsInDimensionsAfterDimensionInSpace(dim, -1)
+    @if $vector.type == 'complex'
+      @set $nelemForward = '2 * ' + nelemForward
+      @set $nelemBackward = '2 * ' + nelemBackward
+    @end if
+if ((_newSpace ^ _${vector.id}_space) & ${dim.transformMask}) {
+  @set $indices = range(vector.field.indexOfDimension(dim))
+  const long outerLoopSize = ${vector.field.localPointsInDimensionsWithIndicesInSpace(indices, c'_${vector.id}_space')};
+  @set $indices = range(vector.field.indexOfDimension(dim)+1, len(vector.field.dimensions))
+  @set $sizePrefix = ''
+  @if vector.type == 'complex'
+    @set $sizePrefix = '2 * '
+  @end if
+  const long innerLoopSize = ${sizePrefix}${vector.field.localPointsInDimensionsWithIndicesInSpace(indices, c'_${vector.id}_space')} * _${vector.id}_ncomponents;
+  if (_newSpace & ${dim.transformMask}) {
+    // Forward transform for dimension $dimName
+    @# We have to loop over all dimensions before this dimension
+    for (long _i0 = 0; _i0 < outerLoopSize; _i0++) {
+      ${basis.performTransformForVector(forwardDimRep, backwardDimRep, vector), autoIndent=True}@slurp
+    }
+  } else {
+    // Backward transform for dimension $dimName
+    for (long _i0 = 0; _i0 < outerLoopSize; _i0++) {
+      ${basis.performTransformForVector(backwardDimRep, forwardDimRep, vector), autoIndent=True}@slurp
+    }
+  }
+  // swap source and destination
+  temp = source_${vector.id}; source_${vector.id} = dest_${vector.id}; dest_${vector.id} = temp;
+}
+  @end for
+
+if (source_${vector.id} != reinterpret_cast<double*>(_active_${vector.id})) {
+  ${copyVectors([vector], '_active', 'source')}@slurp
+}
+
+  @#
+@end def
+
