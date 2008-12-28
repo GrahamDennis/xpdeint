@@ -121,7 +121,7 @@ def besselJZeros(m, a, b):
   besseljn = lambda x: mpmath.besselj(m, x)
   results = [mpmath.findroot(besseljn, mpmath.pi*(kp - 1./4 + 0.5*m)) for kp in range(a, b+1)]
   # Check that we haven't found double roots or missed a root. All roots should be separated by approximately pi
-  assert all([0.6*mpmath.pi < (b - a) < 1.4*mpmath.pi for a, b in zip(result[:-1], result[1:])]), "Separation of Bessel zeros was incorrect."
+  assert all([0.6*mpmath.pi < (b - a) < 1.4*mpmath.pi for a, b in zip(results[:-1], results[1:])]), "Separation of Bessel zeros was incorrect."
   return results
 
 def besselJWeightsFromZeros(m, roots):
