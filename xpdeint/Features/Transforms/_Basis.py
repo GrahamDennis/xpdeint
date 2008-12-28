@@ -17,14 +17,17 @@ mpmath = None
 
 def require_mpmath():
   global mpmath
-  if not mpmath: import mpmath
+  if not mpmath:
+    import mpmath
+    if not hasattr(mpmath, 'besselj'):
+      mpmath.besselj = mpmath.jn
 
 def normalisedHermite(n, x):
   """Evaluate the normalised Hermite polynomial H_n(x)/(sqrt(n! 2^n sqrt(pi)))."""
   require_mpmath()
   orig = mpmath.mp.prec
   assert isinstance(n, int)
-  x = mpmath.mpmathify(x)
+  x = mpmath.mpf(x)
   try:
     mpmath.mp.prec += 10
     hermites = [None, mpmath.mpf('0.0'), mpmath.power(mpmath.pi, -0.25)]
