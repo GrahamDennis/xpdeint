@@ -83,8 +83,9 @@
       <dependencies>wavefunction</dependencies>
       <![CDATA[
         // Calculate the current normalisation of the wave function.
-        Ncalc = 2.0*mod2(phi);
+        Ncalc = 2.0*(2.0*M_PI)*mod2(phi);
         // Factor of two is there due to z axis only covering half the condensate.
+        // Factor of two-pi is there for integration over the angular coordinate.
       ]]>
     </evaluation>
   </computed_vector>
