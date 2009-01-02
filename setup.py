@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 
 setup(name="xpdeint",
-      version="0.5",
+      version="0.6",
       description="Stochastic ODE/PDE integrator",
       url="http://xmds.sourceforge.net",
       license="GPL2",

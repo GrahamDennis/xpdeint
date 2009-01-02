@@ -22,8 +22,12 @@ def require_mpmath():
     if not hasattr(mpmath, 'besselj'):
       mpmath.besselj = mpmath.jn
 
-def normalisedHermite(n, x):
-  """Evaluate the normalised Hermite polynomial H_n(x)/(sqrt(n! 2^n sqrt(pi)))."""
+def _normalisedHermite(n, x):
+  """
+  Evaluate the normalised Hermite polynomial H_n(x)/(sqrt(n! 2^n sqrt(pi))).
+  Returns a list of H_{n-2}(x), H_{n-1}(x), H_n(x) (all normalised with the above
+  normalisation).
+  """
   require_mpmath()
   orig = mpmath.mp.prec
   assert isinstance(n, int)
@@ -37,7 +41,27 @@ def normalisedHermite(n, x):
                     - mpmath.sqrt(mpmath.mpf(j-1)/j) * hermites[0]
   finally:
     mpmath.mp.prec = orig
-  return hermites[2]
+  return hermites
+
+def normalisedHermite(n, x):
+  """Evaluate the normalised Hermite polynomial H_n(x)/(sqrt(n! 2^n sqrt(pi)))."""
+  return _normalisedHermite(n, x)[2]
+
+def cachedNormalisedHermite(n, x, _cache = {}):
+  """Evaluate the normalised Hermite polynomial using cached results if possible."""
+  if not (n, x) in _cache:
+    # Hermites is a list of H_{n-2}(x), H_{n-1}(x), H_{n}(x)
+    hermites = _normalisedHermite(n, x)
+    # Dump these into the cache with (n, x) as the key
+    _cache.update([((n - 2 + i, x), value) for i, value in enumerate(hermites)])
+  return _cache[(n, x)]
+
+def hermiteMaxZeroEstimate(n):
+  """Return an estimate for the largest zero for the Hermite polynomial H_n(x)."""
+  require_mpmath()
+  assert isinstance(n, int)
+  return mpmath.sqrt(2*n + 1) - 1.85575*mpmath.power(2*n+1, -mpmath.mpf('1')/6)
+
 
 def hermiteZeros(n):
   """Return the n zeros of the nth Hermite polynomial H_n(x)."""
@@ -48,7 +72,7 @@ def hermiteZeros(n):
     # Determine the precision necessary to accurately determine the zeros.
     # The precision needed is equal to the precision needed to represent the amplitude
     # of the nth Hermite polynomial around its largest root.
-    maxZeroGuess = mpmath.sqrt(2*n + 1) - 1.85575*mpmath.power(2*n+1, -mpmath.mpf('1')/6)
+    maxZeroGuess = hermiteMaxZeroEstimate(n)
     mpmath.mp.dps = int(2*mpmath.log10(mpmath.exp(0.5*maxZeroGuess*maxZeroGuess)))
     
     # Because the roots are symmetric, only bother locating the positive roots.
@@ -59,7 +83,7 @@ def hermiteZeros(n):
     for j in range(positiveRoots):
       if j == 0:
         # Initial guess for largest root as per Numerical Recipes
-        guess = mpmath.sqrt(2*n+1)-1.85575*mpmath.power(2*n+1, -mpmath.mpf('1')/6)
+        guess = hermiteMaxZeroEstimate(n)
       elif j == 1:
         # Initial guess for second largest root assuming all roots equally spaced between the
         # maximum roots. Actually, they are more dense at the origin so this will be an upper bound.
@@ -75,21 +99,21 @@ def hermiteZeros(n):
         # any numerical errors, we use the root of H_n(x)/(x-x0) only as a very good initial guess
         # for finding a root of H_n(x)
         def f(x):
-          return normalisedHermite(n, x)/(x-roots[j-1])
+          return cachedNormalisedHermite(n, x)/(x-roots[j-1])
         
         def df(x):
-          return mpmath.sqrt(2*n) * normalisedHermite(n-1, x)/(x-roots[j-1]) \
-                 - normalisedHermite(n, x)/(x-roots[j-1])**2
+          return mpmath.sqrt(2*n) * cachedNormalisedHermite(n-1, x)/(x-roots[j-1]) \
+                 - cachedNormalisedHermite(n, x)/(x-roots[j-1])**2
         
         def d2f(x):
-          return 2*mpmath.sqrt(n*(n-1)) * normalisedHermite(n-2, x)/(x-roots[j-1]) \
-                 - mpmath.sqrt(2*n) * normalisedHermite(n-1, x)/(x-roots[j-1])**2  \
-                 + 2 * normalisedHermite(n, x)/(x-roots[j-1])**3
+          return 2*mpmath.sqrt(n*(n-1)) * cachedNormalisedHermite(n-2, x)/(x-roots[j-1]) \
+                 - mpmath.sqrt(2*n) * cachedNormalisedHermite(n-1, x)/(x-roots[j-1])**2  \
+                 + 2 * cachedNormalisedHermite(n, x)/(x-roots[j-1])**3
         
         guess = mpmath.findroot(f, guess, df = df, d2f = d2f, solver = 'halley')
-      roots[j] = mpmath.findroot(lambda x: normalisedHermite(n, x), guess,
-                                 df = lambda x: mpmath.sqrt(2*n) * normalisedHermite(n-1, x),
-                                 d2f = lambda x: 2*mpmath.sqrt(n*(n-1)) * normalisedHermite(n-2, x),
+      roots[j] = mpmath.findroot(lambda x: cachedNormalisedHermite(n, x), guess,
+                                 df = lambda x: mpmath.sqrt(2*n) * cachedNormalisedHermite(n-1, x),
+                                 d2f = lambda x: 2*mpmath.sqrt(n*(n-1)) * cachedNormalisedHermite(n-2, x),
                                  solver = 'halley')
       assert roots[j] > 0.0, "Failed to find Hermite roots"
     roots.extend([-root for root in roots])
@@ -111,7 +135,7 @@ def hermiteGaussWeightsFromZeros(n, roots):
     maxRoot = max(roots)
     mpmath.mp.dps = int(2*mpmath.log10(mpmath.exp(0.5*maxRoot*maxRoot)))
     
-    weights = [mpmath.exp(root * root) / (n * (normalisedHermite(n-1, root) ** 2)) for root in roots]
+    weights = [mpmath.exp(root * root) / (n * (cachedNormalisedHermite(n-1, root) ** 2)) for root in roots]
   finally:
     mpmath.mp.prec = orig
   return weights
