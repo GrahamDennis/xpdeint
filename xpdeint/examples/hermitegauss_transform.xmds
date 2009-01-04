@@ -10,8 +10,6 @@
     <benchmark />
     <!-- <error_check /> -->
     <bing />
-    <!-- <fftw version="3" plan="estimate" /> -->
-    <mmt />
     <globals>
       <![CDATA[
         const double offset = 1.0;

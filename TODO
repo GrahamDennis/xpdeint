@@ -75,7 +75,7 @@
   that should be considered should include:
   - Discrete Cosine / Sine Transforms (for even/odd symmetric boundary conditions): Done
   - General matrix transforms. For example, Hankel transforms (require non-uniform dimensions) 
-    and hermite-gaussian basis decomposition (may require non-square transforms).
+    and hermite-gaussian basis decomposition (may require non-square transforms): Done
   - We need a differentiation operator D[phi, x, x, y, y] = d^4phi/(dx^2 dy^2) (better syntax needed) to represent derivatives of variables.
     Another option for the syntax could be D_x[phi], D_x2[phi], D_theta[phi], D_x_y[phi]. This way only symbols starting with 'D_' would be banned
     instead of all beginning with 'D' which would be a little restrictive. Also, we won't introduce a new kind of operator notation that could be confused
@@ -136,3 +136,5 @@ Lower priority, but still nice:
 Testcases needed:
 * MPI with Fourier transforms testing looping over both MPI dimensions with a vector that only has one of the two MPI dimensions.
 * Various tests using nonlocal dimension access
+
+Consider alternative syntax for nonlocal access: Perhaps phi(j := j+1) instead of phi(j: j+1) or phi(j => j+1)?

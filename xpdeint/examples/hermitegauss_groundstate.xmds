@@ -10,8 +10,6 @@
     <benchmark />
     <!-- <error_check /> -->
     <bing />
-    <!-- <fftw version="3" plan="estimate" /> -->
-    <mmt />
     <validation kind="run-time" />
     <globals>
       <![CDATA[
@@ -80,7 +78,7 @@
         </filter>
       </filters>
       <operators>
-        <operator kind="ip" constant="yes">
+        <operator kind="ip" constant="yes" type="double">
           <operator_names>L</operator_names>
           <![CDATA[
             L = -(nx + 0.5)*omegarho;

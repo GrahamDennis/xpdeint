@@ -1,7 +1,8 @@
 @*
 EPBasis.tmpl
 
-Base class for a Basis with explicit parity.
+Base class for a Basis where each basis function has definite parity
+and the parity alternates between successive basis functions.
 Bases inheriting from this class will use the faster Parity Matrix Multiplication Transform (PMMT).
 
 Created by Graham Dennis on 2008-12-27.
@@ -86,17 +87,16 @@ _mmt_matrix_${backwardDimRep.name}_${forwardDimRep.name}_${kind}[${actualForward
 @def performTransformForVector($sourceDimRep, $destDimRep, $vector)
   @#
   @if $destDimRep.isTransformed
-    @# We need to think of a way to vectorise this
 // Loop to create symmetric and antisymmetric components.
 double _temp;
 long outerOffset = _i0 * innerLoopSize * ${sourceDimRep.globalLattice};
 for (long _i1 = 0; _i1 < ${sourceDimRep.globalLattice}/2; _i1++) {
+  double* __restrict__ _low = &source_${vector.id}[outerOffset + _i1 * innerLoopSize];
+  double* __restrict__ _high = &source_${vector.id}[outerOffset + (${sourceDimRep.globalLattice} - 1 - _i1) * innerLoopSize];
   for (long _i2 = 0; _i2 < innerLoopSize; _i2++) {
-    double& _low  = source_${vector.id}[outerOffset + _i1 * innerLoopSize + _i2];
-    double& _high = source_${vector.id}[outerOffset + (${sourceDimRep.globalLattice} - 1 - _i1) * innerLoopSize + _i2];
-    _temp = _low;
-    _low += _high;  // _low stores the symmetric component
-    _high -= _temp; // _high stores the antisymmetric component
+    _temp = _low[_i2];
+    _low[_i2] += _high[_i2];  // _low stores the symmetric component
+    _high[_i2] -= _temp; // _high stores the antisymmetric component
   }
 }
 // Symmetric component of the transform
@@ -148,21 +148,20 @@ cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
             /* beta */ 0.0,
             /* C */ dest_${vector.id} + (_i0 * ${destDimRep.globalLattice} + (${sourceDimRep.globalLattice}+1)/2) * innerLoopSize,
             innerLoopSize);
-    @# We need to think of a way to vectorise this
 // Loop to unravel symmetric and antisymmetric components.
 double _temp;
 long outerOffset = _i0 * innerLoopSize * ${destDimRep.globalLattice};
 for (long _i1 = 0; _i1 < ${destDimRep.globalLattice}/2; _i1++) {
+  // _low stored the symmetric component
+  double* __restrict__ _low = &dest_${vector.id}[outerOffset + _i1 * innerLoopSize];
+  // _high stored the antisymmetric component
+  double* __restrict__ _high = &dest_${vector.id}[outerOffset + (${destDimRep.globalLattice} - 1 - _i1) * innerLoopSize];
   for (long _i2 = 0; _i2 < innerLoopSize; _i2++) {
-    // _low stored the symmetric component
-    double& _low  = dest_${vector.id}[outerOffset + _i1 * innerLoopSize + _i2];
-    // _high stored the antisymmetric component
-    double& _high = dest_${vector.id}[outerOffset + (${destDimRep.globalLattice} - 1 - _i1) * innerLoopSize + _i2];
-    _temp = _low;
+    _temp = _low[_i2];
     // _low is the negative domain
-    _low -= _high;
+    _low[_i2] -= _high[_i2];
     // _high is the positive domain
-    _high += _temp;
+    _high[_i2] += _temp;
   }
 }
   @end if

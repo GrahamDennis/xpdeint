@@ -12,8 +12,6 @@
   
   <features>
     <benchmark />
-    <fftw version="none" />
-    <!-- That's right, this script breaks the shackles with FFTW! -->
     <globals>
       <![CDATA[
       double sigma = 10.0;

@@ -9,7 +9,6 @@
   
   <features>
     <benchmark />
-    <fftw version="none" />
     <halt_non_finite />
     <globals>
       <![CDATA[

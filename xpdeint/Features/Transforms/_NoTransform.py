@@ -16,8 +16,6 @@ class _NoTransform (_Transform):
   
   def __init__(self, *args, **KWs):
     _Transform.__init__(self, *args, **KWs)
-    
-    self.getVar('transforms')['none'] = self
   
   def newDimension(self, name, lattice, minimum, maximum,
                    parent, transformName, aliases = set(),

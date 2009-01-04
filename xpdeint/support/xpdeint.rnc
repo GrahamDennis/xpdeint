@@ -96,8 +96,7 @@ NoiseAttributes =
     )
 
 FFTW = element fftw {
-    attribute version { text }?
-    , attribute plan { text }?
+    attribute plan { text }?
     , attribute threads { text }?
     , empty
 }

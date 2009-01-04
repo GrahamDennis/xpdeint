@@ -12,6 +12,7 @@ from xpdeint.Utilities import lazy_property
 
 class _TransformMultiplexer (_Feature):
   featureName = 'TransformMultiplexer'
+  transformClasses = dict()
   
   def __init__(self, *args, **KWs):
     _Feature.__init__(self, *args, **KWs)
@@ -19,6 +20,17 @@ class _TransformMultiplexer (_Feature):
   
   def transformsForVector(self, vector):
     return set([dim.transform for dim in vector.field.dimensions if dim.transform.hasattr('goSpaceFunctionContentsForVector')])
+  
+  def transformWithName(self, name):
+    if not name in self.transformClasses:
+      return None
+    cls = self.transformClasses[name]
+    transformWithClass = [t for t in self.transforms if isinstance(t, cls)]
+    assert 0 <= len(transformWithClass) <= 1
+    if transformWithClass:
+      return transformWithClass[0]
+    else:
+      return cls(parent = self.getVar('simulation'), **self.argumentsToTemplateConstructors)
   
   def __getattribute__(self, name):
     """

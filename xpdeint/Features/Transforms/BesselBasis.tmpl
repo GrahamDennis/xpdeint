@@ -6,12 +6,15 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 *@
 @extends xpdeint.Features.Transforms.Basis
 
+@attr $besselOrderOffset = 0
+
 @def description: Bessel function basis
 
 @def globalsForDim($dim)
   @#
-const double _normbesseljzeros_${dim.name}[] = {${wrapArray($normalisedBesselJZeros($order, dim.inSpace(0).lattice))}};
-const double _besseljnorm_${dim.name} = ${besselJZeros($order, dim.inSpace(0).lattice+1)[-1]};
+  @set $besselOrder = $order + $besselOrderOffset
+const double _normbesseljzeros_${dim.name}[] = {${wrapArray($normalisedBesselJZeros($besselOrder, dim.inSpace(0).lattice))}};
+const double _besseljnorm_${dim.name} = ${besselJZeros($besselOrder, dim.inSpace(0).lattice+1)[-1]};
   @#
   @super(dim)
   @#

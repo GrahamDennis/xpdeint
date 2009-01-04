@@ -409,13 +409,10 @@ class XMDS2Parser(ScriptParser):
     
     fftwElement = featuresParentElement.getChildElementByTagName('fftw', optional=True)
     
-    fourierTransformClass = None
-    
-    fftAttributeDictionary = dict()
-    
-    if not fftwElement:
-      fourierTransformClass = Transforms._NoTransform._NoTransform
-    else:
+    if fftwElement:
+      fourierTransformClass = Transforms.FourierTransformFFTW3.FourierTransformFFTW3
+      fftAttributeDictionary = dict()
+      
       threadCount = 1
       if fftwElement.hasAttribute('threads'):
         try:
@@ -427,16 +424,6 @@ class XMDS2Parser(ScriptParser):
         
         if threadCount <= 0:
           raise ParserException(fftwElement, "The number of threads must be greater than 0.")
-      
-      if not fftwElement.hasAttribute('version'):
-        # FIXME: We need to determine the default FFTW version based on what is available
-        fourierTransformClass = Transforms.FourierTransformFFTW3.FourierTransformFFTW3
-      elif fftwElement.getAttribute('version').strip() == '3':
-        fourierTransformClass = Transforms.FourierTransformFFTW3.FourierTransformFFTW3
-      elif fftwElement.getAttribute('version').strip().lower() == 'none':
-        fourierTransformClass = Transforms._NoTransform._NoTransform
-      else:
-        raise ParserException(fftwElement, "The version attribute must be either 'none' or '3'.")
       
       planType = None
       if not fftwElement.hasAttribute('plan'):
@@ -465,10 +452,10 @@ class XMDS2Parser(ScriptParser):
           raise ParserException(fftwElement, "Internal consistency error.")
         
         fftAttributeDictionary['threadCount'] = threadCount
-    
-    fourierTransform = fourierTransformClass(parent = self.simulation, **self.argumentsToTemplateConstructors)
-    
-    self.applyAttributeDictionaryToObject(fftAttributeDictionary, fourierTransform)
+      
+      fourierTransform = fourierTransformClass(parent = self.simulation, **self.argumentsToTemplateConstructors)
+      
+      self.applyAttributeDictionaryToObject(fftAttributeDictionary, fourierTransform)
   
   def parseFeatureAttributes(self, someElement, someTemplate):
     self.parseNoisesAttribute(someElement, someTemplate)
@@ -527,10 +514,7 @@ class XMDS2Parser(ScriptParser):
     self.globalNameSpace['globalPropagationDimension'] = propagationDimensionName
     self.globalNameSpace['symbolNames'].add(propagationDimensionName)
     
-    if 'none' in self.globalNameSpace['transforms']:
-      noTransform = self.globalNameSpace['transforms']['none']
-    else:
-      noTransform = Transforms._NoTransform._NoTransform(parent = self.simulation, **self.argumentsToTemplateConstructors)
+    noTransform = self.globalNameSpace['features']['TransformMultiplexer'].transformWithName('none')
     
     propagationDimension = Dimension(name = propagationDimensionName,
                                      transverse = False,
@@ -661,28 +645,22 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
         
         transform = None
         transformName = 'none'
+        transformMultiplexer = self.globalNameSpace['features']['TransformMultiplexer']
         
         if dimensionType == 'double' and dimensionElement.hasAttribute('transform'):
           transformName = dimensionElement.getAttribute('transform').strip()
-          if not transformName.lower() in self.globalNameSpace['transforms']:
+          transform = transformMultiplexer.transformWithName(transformName.lower())
+          if not transform:
             raise ParserException(dimensionElement, "Unknown transform of type '%(transformName)s'." % locals())
-          transform = self.globalNameSpace['transforms'][transformName.lower()]
         
         if dimensionType == 'long':
-          if 'none' in self.globalNameSpace['transforms']:
-            transform = self.globalNameSpace['transforms']['none']
-          else:
-            transform = Transforms._NoTransform._NoTransform(**self.argumentsToTemplateConstructors)
+          transform = transformMultiplexer.transformWithName('none')
         
         if not transform:
           # default to 'dft'
-          if 'dft' in self.globalNameSpace['transforms']:
-            transform = self.globalNameSpace['transforms']['dft']
-            transformName = 'dft'
-          elif 'none' in self.globalNameSpace['transforms']:
-            transform = self.globalNameSpace['transforms']['none']
-          else:
-            transform = Transforms._NoTransform._NoTransform(**self.argumentsToTemplateConstructors)
+          # FIXME: This is debatable. Perhaps a default of 'none' is more sensible.
+          transformName = 'dft'
+          transform = transformMultiplexer.transformWithName('dft')
         
         aliasNames.add(dimensionName)
         
@@ -700,7 +678,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       transverseDimensions = geometryTemplate.dimensions[1:]
       mpiTransform = transverseDimensions[0].transform
       if not mpiTransform.isMPICapable:
-        raise ParserException(mpiTransform.xmlElement, "The '%s' transform cannot be used with the 'distributed-mpi' driver." % mpiTransform.featureName)
+        raise ParserException(mpiTransform.xmlElement, "The '%s' transform for the '%s' dimension cannot be used with the 'distributed-mpi' driver." % (transverseDimensions[0].name, mpiTransform.transformName))
       mpiTransform.initialiseForMPIWithDimensions(transverseDimensions)
     
     return geometryTemplate
@@ -1640,16 +1618,19 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
           sampleCount = 1
       
       sampleSpace = 0
+      transformMultiplexer = self.globalNameSpace['features']['TransformMultiplexer']
       samplingDimension = Dimension(name = self.globalNameSpace['globalPropagationDimension'],
                                     transverse = False,
-                                    transform = self.globalNameSpace['transforms']['none'],
+                                    transform = transformMultiplexer.transformWithName('none'),
                                     parent = momentGroupTemplate.outputField,
                                     **self.argumentsToTemplateConstructors)
-      samplingDimension.addRepresentation(NonUniformDimensionRepresentation(name = self.globalNameSpace['globalPropagationDimension'],
-                                                                            type = 'double',
-                                                                            lattice = sampleCount,
-                                                                            parent = samplingDimension,
-                                                                            **self.argumentsToTemplateConstructors))
+      
+      propagationDimRep = NonUniformDimensionRepresentation(name = self.globalNameSpace['globalPropagationDimension'],
+                                                            type = 'double',
+                                                            lattice = sampleCount,
+                                                            parent = samplingDimension,
+                                                            **self.argumentsToTemplateConstructors)
+      samplingDimension.addRepresentation(propagationDimRep)
       
       momentGroupTemplate.outputField.dimensions = [samplingDimension]
       
