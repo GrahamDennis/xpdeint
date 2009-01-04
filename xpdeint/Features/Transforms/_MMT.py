@@ -24,12 +24,6 @@ class _MMT (_Transform):
   
   def __init__(self, *args, **KWs):
     _Transform.__init__(self, *args, **KWs)
-    
-    transforms = self.getVar('transforms')
-    transforms['bessel'] = self
-    transforms['spherical-bessel'] = self
-    transforms['hermite-gauss'] = self
-    
     self.basisMap = {}
   
   @property

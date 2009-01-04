@@ -10,6 +10,8 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 
 @from xpdeint.CallOnceGuards import callOnceGuard
 
+@attr $besselOrderOffset = 0.5
+
 @def cflags
 -lgsl@slurp
 @end def
@@ -17,15 +19,6 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 @@callOnceGuard
 @def includes
 #include <gsl/gsl_sf_bessel.h>
-@end def
-
-@def globalsForDim($dim)
-  @#
-const double _normbesseljzeros_${dim.name}[] = {${wrapArray($normalisedBesselJZeros($order + 0.5, dim.inSpace(0).lattice))}};
-const double _besseljnorm_${dim.name} = ${besselJZeros($order + 0.5, dim.inSpace(0).lattice+1)[-1]};
-  @#
-  @super(dim)
-  @#
 @end def
 
 @def besselJFunctionCall($order, $argument)

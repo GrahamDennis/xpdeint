@@ -10,7 +10,6 @@
     <benchmark />
     <error_check />
     <bing />
-    <fftw version="none" />
   </features>
   
   <geometry>

@@ -19,11 +19,6 @@ class _FourierTransformFFTW3 (_Transform):
   
   def __init__(self, *args, **KWs):
     _Transform.__init__(self, *args, **KWs)
-    
-    self.getVar('transforms')['dft'] = self
-    self.getVar('transforms')['dct'] = self
-    self.getVar('transforms')['dst'] = self
-    
     self.transformNameMap = {}
   
   def newDimension(self, name, lattice, minimum, maximum,

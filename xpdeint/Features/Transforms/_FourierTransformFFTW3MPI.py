@@ -69,9 +69,6 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
     self._driver.distributedDimensionNames = [dim.name for dim in dimensions[0:2]]
     self.mpiDimensions = dimensions[0:2]
     self.swappedSpace = reduce(operator.__or__, [dim.transformMask for dim in self.mpiDimensions])
-    self.getVar('transforms')['mpi-dft'] = self
-    self.getVar('transforms')['mpi-dct'] = self
-    self.getVar('transforms')['mpi-dst'] = self
     
     firstMPIDimension = dimensions[0]
     secondMPIDimension = dimensions[1]

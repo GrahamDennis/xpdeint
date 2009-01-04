@@ -170,7 +170,6 @@ def main(argv=None):
   globalNameSpace['xmds'] = {'versionString': versionString,
                              'subversionRevision': subversionRevisionString}
   globalNameSpace['templates'] = set()
-  globalNameSpace['transforms'] = {}
   
   xpdeintDataCachePath = os.path.join(xpdeintUserDataPath, 'xpdeint_cache')
   dataCache = {}

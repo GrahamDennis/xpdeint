@@ -11,8 +11,6 @@
     <benchmark />
     <!-- <error_check /> -->
     <bing />
-    <!-- <fftw version="3" plan="estimate" /> -->
-    <mmt />
     <validation kind="run-time" />
     <globals>
       <![CDATA[
@@ -47,7 +45,7 @@
     <integrate algorithm="ARK45" tolerance="1e-6" interval="40e-3" steps="400">
       <samples>100 100</samples>
       <operators>
-        <operator kind="ex" constant="yes" fourier_space="kx">
+        <operator kind="ex" constant="yes" fourier_space="kx" type="double">
           <operator_names>L</operator_names>
           <![CDATA[
             L = -T*kx*kx/mu;

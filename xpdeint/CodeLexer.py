@@ -21,7 +21,7 @@ from pygments.token import Token
 
 from itertools import ifilter
 
-cppLexer = lexers.get_lexer_by_name('c++')
+cLexer = lexers.get_lexer_by_name('c')
 
 from xpdeint.ParserException import ParserException, parserWarning
 
@@ -129,7 +129,7 @@ def targetComponentsForOperatorsInString(operatorNames, codeBlock):
   then in the code ``L[phi]`` the return value would be ``('L', 'phi', slice(firstCharacterIndex, lastCharacterIndex))``.
   """
   results = []
-  tokenGenerator = cppLexer.get_tokens_unprocessed(codeBlock.codeString)
+  tokenGenerator = cLexer.get_tokens_unprocessed(codeBlock.codeString)
   for charIndex, tokenKind, string in tokenGenerator:
     if tokenKind in Token.Name and string in operatorNames:
       operatorName = string
@@ -263,7 +263,7 @@ def nonlocalDimensionAccessForComponents(components, codeBlock):
   to be used when `components` are components of vectors.
   """
   results = []
-  tokenGenerator = cppLexer.get_tokens_unprocessed(codeBlock.codeString)
+  tokenGenerator = cLexer.get_tokens_unprocessed(codeBlock.codeString)
   for charIndex, tokenKind, string in tokenGenerator:
     if tokenKind in Token.Name and string in components:
       componentName = string
@@ -289,7 +289,7 @@ def performIPOperatorSanityCheck(componentName, propagationDimension, operatorCo
   statementStartIndex = 0
   statementStopIndex = None
   derivativeStringAppearedInCurrentStatement = False
-  tokenGenerator = cppLexer.get_tokens_unprocessed(codeBlock.codeString)
+  tokenGenerator = cLexer.get_tokens_unprocessed(codeBlock.codeString)
   for charIndex, tokenKind, string in tokenGenerator:
     if tokenKind in Token.Punctuation and string == ';':
       statementStopIndex = charIndex + len(string)

@@ -19,7 +19,6 @@
     <benchmark />
     <error_check />
     <bing />
-    <fftw version="none" />
     <!-- That's right, this script breaks the shackles with FFTW! -->
     <validation kind="run-time" />
   </features>
