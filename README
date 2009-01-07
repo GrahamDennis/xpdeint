@@ -59,8 +59,8 @@ Build instructions:
 
 7. Run the generated program, which will produce XSIL output exactly as XMDS-1
 
-   Note that xpdeint currently requires xmds-1 to be installed for libxmds when loading
-   XSIL files.
+   Note that xpdeint currently requires xmds-1 to be installed for libxmds when loading XSIL files.
+   It also currently uses the xsil2graphics program bundled with xmds-1.
 
 This should mostly work.
 
@@ -70,8 +70,9 @@ So far the feature list includes:
   can have both IP and EX operators in a single integrate block. Also,
   EX operators can act on arbitrary code, not just vector components.
 * The ability to have more than one noise kind in a simulation.
-* Adaptive integrators that are stochastic-safe for poissonian noises
-  as well as gaussian noises.
+* Adaptive integrators that are stochastic-safe for Poissonian noises
+  as well as gaussian noises.  Not that the RK algorithms are technically not safe, however.
+  You may still obtain good results if the deterministic evolution limits the timestep.
 * Cross propagation in the increasing direction of a given dimension
   or in the decreasing dimension. And you can have more than one
   cross-propagator in a given integrator (going in different directions
@@ -81,7 +82,9 @@ So far the feature list includes:
   now simultaneously integrate a PDE and a coupled ODE
 * OpenMP support
 * From a developer point of view, many things have been abstracted, so  
-  adding a new fourier transform library shouldn't be difficult.
+  adding a new Fourier transform library shouldn't be difficult.
+* Non-Fourier transformations have been included.  These include the Bessel basis, 
+  Spherical Bessel basis and the Hermitee-Gauss basis.
 * Output moment groups use less memory when there isn't a  
   post_processing element
 * Generated source is indented correctly

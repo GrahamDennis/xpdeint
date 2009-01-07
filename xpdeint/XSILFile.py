@@ -48,7 +48,7 @@ class XSILDataASCII(XSILData):
 
 
 class XSILDataBinary(XSILData):
-  def __init__(self, independentVariables, dependentVariables, uLong, precision, encoding, dataFile):
+  def __init__(self, independentVariables, dependentVariables, uLong, precision, encoding, dataFile, loadASCIIOnly =False):
     XSILData.__init__(self, independentVariables, dependentVariables)
     self.dataFilename = os.path.split(dataFile)[1]
     self.parseDataFile(uLong, precision, encoding, dataFile)
@@ -84,22 +84,43 @@ class XSILDataBinary(XSILData):
       a = numpy.fromfile(fd, dtype=floatDType, count=size)
       assert a.size == size, "Data file %s has incorrect size. Variable '%s' wasn't written completely." % (dataFile, dependentVariable['name'])
       dependentVariable['array'] = a.reshape(*independentGeometry)
+
+      
+class XSILMetaDataBinary(XSILData):
+  def __init__(self, independentVariables, dependentVariables, uLong, precision, encoding, dataFile):
+    XSILData.__init__(self, independentVariables, dependentVariables)
+    self.dataFilename = os.path.split(dataFile)[1]
+
+    assert uLong in ['uint32', 'uint64']
+    assert precision in ['single', 'double']
+    assert encoding in ['BigEndian', 'LittleEndian']
+    self.uLong = uLong
+    self.precision = precision
+    self.encoding = encoding
+    self.dataFileName = dataFile
+
     
 
 class XSILObject(object):
-  def __init__(self, name, dataObject, filename = None):
+  def __init__(self, name, dataObject, filename = None, loadASCIIOnly=False):
     self.name = name
     self.dataObject = dataObject
     if dataObject:
       self.independentVariables = dataObject.independentVariables
       self.dependentVariables = dataObject.dependentVariables
+      if loadASCIIOnly:
+        self.uLong = dataObject.uLong
+        self.precision = dataObject.precision
+        self.encoding = dataObject.encoding
+        self.dataFileName = dataObject.dataFileName
     self.filename = filename
 
 
 class XSILFile(object):
-  def __init__(self, filename, loadData=True):
+  def __init__(self, filename, loadData=True, loadASCIIOnly=False):
     self.filename = filename
     self.xsilObjects = []
+    self.dataFormat = ''
     
     xmlDocument = minidom.parse(filename)
     simulationElement = xmlDocument.getChildElementByTagName('simulation')
@@ -145,6 +166,7 @@ class XSILFile(object):
       streamElement = dataArrayElement.getChildElementByTagName('Stream')
       metalinkElement = streamElement.getChildElementByTagName('Metalink')
       format = metalinkElement.getAttribute('Format').strip()
+      self.dataFormat = format
       # assert format == 'Binary', "ASCII format output currently unsupported"
       
       dataObject = None
@@ -157,13 +179,15 @@ class XSILFile(object):
         encoding = metalinkElement.getAttribute('Encoding').strip()
         objectFilename = streamElement.innerText().strip()
         dataFileName = os.path.join(os.path.split(filename)[0], objectFilename)
-        if loadData:
+        if loadASCIIOnly:
+          dataObject = XSILMetaDataBinary(independentVariables, dependentVariables, uLong, precision, encoding, dataFileName)
+        elif loadData:
           dataObject = XSILDataBinary(independentVariables, dependentVariables, uLong, precision, encoding, dataFileName)
       elif format == 'Text':
         if loadData:
           dataObject = XSILDataASCII(independentVariables, dependentVariables, streamElement.innerText().strip())
       
-      self.xsilObjects.append(XSILObject(xsilName, dataObject, objectFilename))
+      self.xsilObjects.append(XSILObject(xsilName, dataObject, objectFilename, format=='Binary' and loadASCIIOnly))
     
   
 
