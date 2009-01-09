@@ -28,7 +28,7 @@ $listOrElement@slurp
        @set varName = var["name"].replace('_','') + str(objectNum + 1)
        @silent declaredVars.append(varName)
 Clear[$varName]
-$varName = {${', '.join(map(str, var["array"]))}};
+$varName = {${', '.join([repr(float(e)) for e in var["array"]])}};
      @end for
 
      @for varD in xsilObject.dependentVariables:

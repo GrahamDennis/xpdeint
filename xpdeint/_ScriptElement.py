@@ -539,5 +539,5 @@ class _ScriptElement (Template):
     
   
   def wrapArray(self, array):
-    return '\n  ' + textwrap.fill(', '.join(map(str, array)), subsequent_indent='  ') + '\n  '
+    return '\n  ' + textwrap.fill(', '.join([repr(float(e)) for e in array]), subsequent_indent='  ') + '\n  '
   
