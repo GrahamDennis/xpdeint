@@ -7,59 +7,48 @@ Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 
 @def description: Creates text to import data from XSIL files into Mathematica.
 
+@attr $defaultExtension = 'nb'
+
 @def printMathematicaListOrElement(listOrElement)
   @# This is a function to turn an array into a Mathematica list.  Called recursively, and assumes the elements are floats or lists.
   @if isinstance(listOrElement,float):
 $listOrElement@slurp
   @else:
-{@slurp
-    @for element in listOrElement[0:-1]
-$printMathematicaListOrElement($element), @slurp
-    @end for
-$printMathematicaListOrElement($listOrElement[-1])}@slurp
+{${', '.join([$printMathematicaListOrElement(element) for element in listOrElement])}}@slurp
   @end if
 @end def
 
 @def loadXSILFile($xsilFile)
 
  @set declaredVars=[]
- @for objectNum, xsilObject in enumerate(xsilFile.xsilObjects)  
-   @if xsilObject.dataFormat == 'Text':
+ @for objectNum, xsilObject in enumerate(xsilFile.xsilObjects):
+   @if xsilObject.data.format == 'ascii':
      @set nIndepVar = len(xsilObject.independentVariables)
      @for var in xsilObject.independentVariables
-       @set varName = var["name"].replace('_','')
-       <% declaredVars.append(varName+str(objectNum+1)) %>
-Clear[$varName$(objectNum+1)]
-$varName$(objectNum+1) = {@slurp
-       @for arrayValue in $var["array"][0:-1]
-$arrayValue, @slurp
-       @end for
-$var["array"][-1]};
+       @set varName = var["name"].replace('_','') + str(objectNum + 1)
+       @silent declaredVars.append(varName)
+Clear[$varName]
+$varName = {${', '.join(map(str, var["array"]))}};
      @end for
-   
-     @for varD in xsilObject.dependentVariables
-       @set varName = varD["name"].replace('_','')
-       <% declaredVars.append(varName+str(objectNum+1)) %>
-Clear[$varName$(objectNum+1)]
-$varName$(objectNum+1) = $printMathematicaListOrElement($varD["array"]);      
+
+     @for varD in xsilObject.dependentVariables:
+       @set varName = varD["name"].replace('_','') + str(objectNum + 1)
+       @silent declaredVars.append(varName)
+Clear[$varName]
+$varName = $printMathematicaListOrElement($varD["array"]);
      @end for 
-      
+
    @elif xsilObject.dataFormat == 'Binary':
-   
-Binary!   
+
+Binary!
 
    @else:
-The data format is neither 'Text' nor 'Binary'.  xsil2graphics2 is confused, and I think ther might be someone standing RIGHT BEHIND YOU!
+The data format is neither 'Text' nor 'Binary'.  xsil2graphics2 is confused, and I think there might be someone standing RIGHT BEHIND YOU!
    @end if
-   
+
  @end for
 
-@# I'd rather use my function above, but it doesn't play nice with strings. 
-declaredVariables={@slurp
-  @for dV in declaredVars[0:-1]
-"$dV", @slurp
-  @end for
-"$declaredVars[-1]"};
+declaredVariables={${', '.join([c'"$dV"' for dV in declaredVars])}};
 @*
 #  print "Joe is great"  
 #  print inputXSILFile

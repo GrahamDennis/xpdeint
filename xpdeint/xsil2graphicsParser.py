@@ -94,14 +94,9 @@ def main(argv=None):
   # where the error occurred.
   debug = False
   
-  plotFlag = False
-  outputFormat = 'matlab'
-  
   # Import version information
   from Preferences import versionString
   from Version import subversionRevisionString
-  
-  xpdeintUserDataPath = os.path.join(os.path.expanduser('~'), '.xmds')
   
   print "xsil2graphics2 from xpdeint version %(versionString)s (%(subversionRevisionString)s)" % locals()
   
@@ -114,30 +109,33 @@ def main(argv=None):
     except getopt.error, msg:
       raise Usage(msg)
     
-    output=''
+    plotFlag = False
+    outputFilename = None
+    defaultExtension = None
+    outputTemplateClass = MatlabImport
     # option processing
     for option, value in opts:
       if option in ("-h", "--help"):
         raise Usage(help_message)
       if option in ("-o", "--outfile"):
-        output = value
+        outputFilename = value
       if option in ("-p", "--plot"):
         plotFlag = True
       if option in ("-m", "--matlab"):
-        outputFormat = 'matlab'
+        outputTemplateClass = MatlabImport
       if option in ("-s", "--scilab"):
-        outputFormat = 'scilab'
+        outputTemplateClass = ScilabImport
       if option in ("-a", "--mathmFive"):
-        outputFormat = 'mathmFive'
+        outputTemplateClass = MathematicaFiveImport
       if option in ("-e", "--mathematica"):
-        outputFormat = 'mathematica'
+        outputTemplateClass = MathematicaImport
       if option in ("-g", "--gnuplot"):
-        outputFormat = 'gnuplot'
+        outputTemplateClass = GnuplotImport
       if option in ("-r", "--R"):
-        outputFormat = 'R'
+        outputTemplateClass = RImport
         
     # argument processing
-    if len(args)==1:
+    if len(args)==1 and outputTemplateClass:
         xsilInputName = args[0]
     else:
         raise Usage(help_message)
@@ -148,48 +146,23 @@ def main(argv=None):
     return 2
     
   try:
-    inputXSILFile = XSILFile(xsilInputName, loadASCIIOnly=True)
+    inputXSILFile = XSILFile(xsilInputName, loadData='ascii')
   except Exception, err:
     print >> sys.stderr, "Exception raised while trying to read xsil file:", err
     return
     
-# print dir(inputXSILFile)
+  # If an output name wasn't specified, construct a default
+  if not outputFilename:
+    # Strip off the '.xsil' extension
+    baseName = os.path.splitext(xsilInputName)[0]
+    # Grab the default extension from the output template
+    outputFilename = baseName + '.' + outputTemplateClass.defaultExtension
   
-  if outputFormat == 'R':
-    templateClass = RImport
-    if output=='':
-      output=xsilInputName[0:-5]+'.R'
-  
-  if outputFormat == 'gnuplot':
-    templateClass = GnuplotImport
-    if output=='':
-      output=xsilInputName[0:-5]+'.gnu'
-  
-  if outputFormat == 'matlab':
-    templateClass = MatlabImport
-    if output=='':
-      output=xsilInputName[0:-5]+'.m'
-  
-  if outputFormat == 'mathmFive':
-    templateClass = MathematicaFiveImport
-    if output=='':
-      output=xsilInputName[0:-5]+'.nb'
-
-  if outputFormat == 'scilab':
-    templateClass = ScilabImport
-    if output=='':
-      output=xsilInputName[0:-5]+'.sci'
-    
-  if outputFormat == 'mathematica':
-    templateClass = MathematicaImport
-    if output=='':
-      output=xsilInputName[0:-5]+'.nb'
-  
-  outputTemplate = templateClass()
+  outputTemplate = outputTemplateClass()
   
   # Now actually write the simulation to disk.
   
-  outputFile = file(output, "w")
+  outputFile = file(outputFilename, "w")
   print >> outputFile, outputTemplate.loadXSILFile(inputXSILFile)  
   print outputTemplate.loadXSILFile(inputXSILFile)  
   outputFile.close()

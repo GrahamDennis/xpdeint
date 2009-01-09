@@ -21,9 +21,11 @@ class XSILData(object):
   
 
 class XSILDataASCII(XSILData):
+  format = 'ascii'
+  
   def __init__(self, independentVariables, dependentVariables, dataString):
     XSILData.__init__(self, independentVariables, dependentVariables)
-    self.parseDataString(dataString)
+    if dataString: self.parseDataString(dataString)
   
   def parseDataString(self, dataString):
     lines = dataString.splitlines()
@@ -45,13 +47,26 @@ class XSILDataASCII(XSILData):
     for varNum, dvar in enumerate(self.dependentVariables):
       a = result[:, varNum + len(self.independentVariables)]
       dvar['array'] = a.reshape(*independentGeometry)
-
+    
+  
 
 class XSILDataBinary(XSILData):
-  def __init__(self, independentVariables, dependentVariables, uLong, precision, encoding, dataFile, loadASCIIOnly =False):
+  """Class representing the binary data."""
+  
+  format = 'binary'
+  
+  def __init__(self, independentVariables, dependentVariables, uLong, precision, encoding, dataFile, loadData = True):
     XSILData.__init__(self, independentVariables, dependentVariables)
-    self.dataFilename = os.path.split(dataFile)[1]
-    self.parseDataFile(uLong, precision, encoding, dataFile)
+    self.filename = os.path.split(dataFile)[1]
+    
+    assert uLong in ['uint32', 'uint64']
+    assert precision in ['single', 'double']
+    assert encoding in ['BigEndian', 'LittleEndian']
+    self.uLong = uLong
+    self.precision = precision
+    self.encoding = encoding
+    
+    if loadData: self.parseDataFile(uLong, precision, encoding, dataFile)
   
   def parseDataFile(self, uLong, precision, encoding, dataFile):
     assert uLong in ['uint32', 'uint64']
@@ -84,42 +99,36 @@ class XSILDataBinary(XSILData):
       a = numpy.fromfile(fd, dtype=floatDType, count=size)
       assert a.size == size, "Data file %s has incorrect size. Variable '%s' wasn't written completely." % (dataFile, dependentVariable['name'])
       dependentVariable['array'] = a.reshape(*independentGeometry)
-
-      
-class XSILMetaDataBinary(XSILData):
-  def __init__(self, independentVariables, dependentVariables, uLong, precision, encoding, dataFile):
-    XSILData.__init__(self, independentVariables, dependentVariables)
-    self.dataFilename = os.path.split(dataFile)[1]
-
-    assert uLong in ['uint32', 'uint64']
-    assert precision in ['single', 'double']
-    assert encoding in ['BigEndian', 'LittleEndian']
-    self.uLong = uLong
-    self.precision = precision
-    self.encoding = encoding
-    self.dataFileName = dataFile
-
     
+  
 
 class XSILObject(object):
-  def __init__(self, name, dataObject, filename = None, dataFormat = None, loadMetaData=False):
+  def __init__(self, name, data):
     self.name = name
-    self.dataObject = dataObject
-    if dataFormat:
-      self.dataFormat = dataFormat
-    if dataObject:
-      self.independentVariables = dataObject.independentVariables
-      self.dependentVariables = dataObject.dependentVariables
-      if loadMetaData:
-        self.uLong = dataObject.uLong
-        self.precision = dataObject.precision
-        self.encoding = dataObject.encoding
-        self.dataFileName = dataObject.dataFileName
-    self.filename = filename
+    self.data = data
+    if data:
+      self.independentVariables = data.independentVariables
+      self.dependentVariables = data.dependentVariables
+  
 
 
 class XSILFile(object):
-  def __init__(self, filename, loadData=True, loadASCIIOnly=False):
+  def __init__(self, filename, loadData=True):
+    """Create an `XSILFile` object.
+    `filename` is the filename of the XSIL file, and `loadData` specifies whether or not the
+    data in the XSIL file should be loaded (if not, just the metadata is loaded).
+    `loadData` can have one of the following values:
+      - ``True`` or ``'all'``: load all data
+      - ``False`` or ``'none'``: load no data
+      - ``'ascii'``: load only data stored in ASCII format
+      - ``'binary'``: load only data stored in binary format
+    """
+    if not isinstance(loadData, basestring):
+      # loadData is True or False
+      loadData = {True: 'all', False: 'none'}[loadData]
+    else:
+      loadData = loadData.lower()
+    assert loadData in ['all', 'ascii', 'binary', 'none']
     self.filename = filename
     self.xsilObjects = []
     
@@ -170,7 +179,7 @@ class XSILFile(object):
       
       # assert format == 'Binary', "ASCII format output currently unsupported"
       
-      dataObject = None
+      data = None
       
       objectFilename = None
       
@@ -179,15 +188,19 @@ class XSILFile(object):
         precision = metalinkElement.getAttribute('precision').strip()
         encoding = metalinkElement.getAttribute('Encoding').strip()
         objectFilename = streamElement.innerText().strip()
-        dataFileName = os.path.join(os.path.split(filename)[0], objectFilename)
-        if loadASCIIOnly:
-          dataObject = XSILMetaDataBinary(independentVariables, dependentVariables, uLong, precision, encoding, dataFileName)
-        elif loadData:
-          dataObject = XSILDataBinary(independentVariables, dependentVariables, uLong, precision, encoding, dataFileName)
+        filename = os.path.join(os.path.split(filename)[0], objectFilename)
+        loadBinaryData = False
+        if loadData in ['all', 'binary']: loadBinaryData = True
+        data = XSILDataBinary(independentVariables, dependentVariables, uLong, precision, encoding, filename,
+                                    loadData = loadBinaryData)
       elif format == 'Text':
-        if loadData:
-          dataObject = XSILDataASCII(independentVariables, dependentVariables, streamElement.innerText().strip())
+        dataString = None
+        if loadData in ['all', 'ascii']: dataString = streamElement.innerText().strip()
+        
+        data = XSILDataASCII(independentVariables, dependentVariables, dataString)
       
-      self.xsilObjects.append(XSILObject(xsilName, dataObject, objectFilename, dataFormat = format, loadMetaData=(format=='Binary' and loadASCIIOnly)))
+      self.xsilObjects.append(XSILObject(xsilName, data))
+    
+  
 
 
