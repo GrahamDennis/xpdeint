@@ -72,7 +72,7 @@ def hermiteZeros(n):
   #
   # For even n, the recurrence relation for J_n is defined by a_n = 2n - 3/2, b_n = sqrt( n (n - 1/2) ).
   # For odd n, the recurrence relation for K_n is defined by a_n = 2n - 1/2, b_n = sqrt( n (n + 1/2) ).
-
+  
   require_numpy()
   assert isinstance(n, int)
   positiveRoots = n//2
@@ -123,8 +123,6 @@ class _Basis (ScriptElement):
     dataCache = self.getVar('dataCache')
     
     self.besselJZeroCache = dataCache.setdefault('besselJZeros', {})
-    self.hermiteZeroCache = dataCache.setdefault('hermiteZeros', {})
-    self.hermiteGaussWeightsCache = dataCache.setdefault('hermiteGaussWeights', {})
   
   def besselJZeros(self, m, k):
     if not m in self.besselJZeroCache:
@@ -143,14 +141,14 @@ class _Basis (ScriptElement):
   def besselJWeights(self, m, k):
     return besselJWeightsFromZeros(m, self.besselJZeros(m, k+1))
   
-  def hermiteZeros(self, n):
-    if not n in self.hermiteZeroCache:
-      self.hermiteZeroCache[n] = hermiteZeros(n)
-    return self.hermiteZeroCache[n]
+  def hermiteZeros(self, n, _cache = {}):
+    if not n in _cache:
+      _cache[n] = hermiteZeros(n)
+    return _cache[n]
   
-  def hermiteGaussWeights(self, n):
-    if not n in self.hermiteGaussWeightsCache:
-      self.hermiteGaussWeightsCache[n] = hermiteGaussWeightsFromZeros(n, self.hermiteZeros(n))
-    return self.hermiteGaussWeightsCache[n]
+  def hermiteGaussWeights(self, n, _cache = {}):
+    if not n in _cache:
+      _cache[n] = hermiteGaussWeightsFromZeros(n, self.hermiteZeros(n))
+    return _cache[n]
   
 

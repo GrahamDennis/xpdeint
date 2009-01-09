@@ -34,9 +34,14 @@ _hermite_gauss_weights_${dimRep.parent.name}[$index] * ${dimRep._maximum}@slurp
 
 
 @def transformMatricesForwardDimConstantsAtIndex($dim, $forwardIndex)
+  @set $forwardDimRep = dim.inSpace(0)
+  @set $backwardDimRep = dim.inSpace(-1)
 double hermiteGaussMinusOne = 0.0;
 double hermiteGaussMinusTwo = 0.0;
 const double _root = _hermite_zeros_${dim.name}[${forwardIndex}];
+const double expFactor = exp(-0.5 * _root * _root / ${backwardDimRep.globalLattice});
+const double expFactor2 = exp(-_root * _root / ${backwardDimRep.globalLattice});
+const double normalisation = 1.0/sqrt(${forwardDimRep._maximum});
 @end def
 
 @def transformMatricesForDimAtIndices($dim, $forwardIndex, $backwardIndex)
@@ -44,12 +49,14 @@ const double _root = _hermite_zeros_${dim.name}[${forwardIndex}];
   @set $forwardDimRep = dim.inSpace(0)
   @set $backwardDimRep = dim.inSpace(-1)
 double hermiteGauss;
+const double correctionFactor = exp( -0.5 * _root * _root * (${backwardDimRep.globalLattice} - ${backwardIndex} - 1) / ${backwardDimRep.globalLattice}) * normalisation;
 if (${backwardIndex} == 0)
-  hermiteGauss = pow(M_PI, -0.25) * exp(-0.5* _root * _root) / sqrt(${forwardDimRep._maximum});
+  hermiteGauss = pow(M_PI, -0.25) * expFactor;
 else if (${backwardIndex} == 1)
-  hermiteGauss = sqrt(2.0) * _root * hermiteGaussMinusOne;
+  hermiteGauss = sqrt(2.0) * _root * hermiteGaussMinusOne * expFactor;
 else
-  hermiteGauss = sqrt(2.0/${backwardIndex}) * _root * hermiteGaussMinusOne - sqrt((${backwardIndex}-1.0)/${backwardIndex}) * hermiteGaussMinusTwo;
+  hermiteGauss = sqrt(2.0/${backwardIndex}) * _root * hermiteGaussMinusOne * expFactor \
+                 - sqrt((${backwardIndex}-1.0)/${backwardIndex}) * hermiteGaussMinusTwo * expFactor2;
 
   @super(dim, forwardIndex, backwardIndex)
 
@@ -59,10 +66,10 @@ hermiteGaussMinusOne = hermiteGauss;
 @end def
 
 @def forwardMatrixForDimAtIndices($dim, $forwardIndex, $backwardIndex)
-hermiteGauss * ${dim.inSpace(0).stepSizeArrayName}[$forwardIndex]@slurp
+hermiteGauss * correctionFactor * ${dim.inSpace(0).stepSizeArrayName}[$forwardIndex]@slurp
 @end def
 
 @def backwardMatrixForDimAtIndices($dim, $forwardIndex, $backwardIndex)
-hermiteGauss@slurp
+hermiteGauss * correctionFactor@slurp
 @end def
 
