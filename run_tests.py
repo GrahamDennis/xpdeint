@@ -108,7 +108,7 @@ def scriptTestingFunction(root, scriptName, testDir, absPath, self):
     name = inputXSILElement.getAttribute('name').strip()
     filesToCopy.append(name)
     inputXSILFile = XSILFile(os.path.join(os.path.split(absPath)[0], name), loadData=False)
-    filesToCopy.extend([xsilObject.filename for xsilObject in inputXSILFile.xsilObjects if xsilObject.filename])
+    filesToCopy.extend([xsil.data.filename for xsil in inputXSILFile.xsilObjects if hasattr(xsil.data, 'filename')])
   
   for fileToCopy in filesToCopy:
     sourceFile = os.path.join(os.path.split(absPath)[0], fileToCopy)
@@ -166,13 +166,13 @@ def scriptTestingFunction(root, scriptName, testDir, absPath, self):
       resultsFileContents = file(resultsFullPath).read()
       
       for xsilObject in results.xsilObjects:
-        if hasattr(xsilObject.dataObject, 'dataFilename'):
+        if hasattr(xsilObject.data, 'filename'):
           # If the moment group has a data file name, then we need to copy it to the expected results file
-          newDataFilename = xsilObject.dataObject.dataFilename.replace(os.path.splitext(sourceFile)[0], os.path.splitext(expectedResultsFile)[0], 1)
+          newDataFilename = xsilObject.data.filename.replace(os.path.splitext(sourceFile)[0], os.path.splitext(expectedResultsFile)[0], 1)
           
-          resultsFileContents = resultsFileContents.replace(xsilObject.dataObject.dataFilename, newDataFilename)
+          resultsFileContents = resultsFileContents.replace(xsilObject.data.filename, newDataFilename)
           
-          shutil.copyfile(os.path.join(testDir, xsilObject.dataObject.dataFilename),
+          shutil.copyfile(os.path.join(testDir, xsilObject.data.filename),
                           os.path.join(os.path.split(absPath)[0], newDataFilename))
       
       file(expectedResultsFullPath, 'w').write(resultsFileContents)
