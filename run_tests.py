@@ -177,7 +177,6 @@ def scriptTestingFunction(root, scriptName, testDir, absPath, self):
       
       file(expectedResultsFullPath, 'w').write(resultsFileContents)
     else:
-      # Run check. Currently assume that this passes if we can load the XSIL file
       expectedResults = XSILFile(expectedResultsFullPath)
       
       self.assert_(len(results.xsilObjects) == len(expectedResults.xsilObjects))

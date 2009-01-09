@@ -194,9 +194,6 @@
   <define name="FFTW">
     <element name="fftw">
       <optional>
-        <attribute name="version"/>
-      </optional>
-      <optional>
         <attribute name="plan"/>
       </optional>
       <optional>
