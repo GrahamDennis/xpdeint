@@ -51,17 +51,18 @@
     </integrate>
   </sequence>
   
-  <output format="binary" filename="diffusion.xsil">
+  <output format="ascii" filename="diffusion.xsil">
     <group>
       <sampling initial_sample="yes">
         <!-- Any dimension not mentioned is assumed to be in real space and its middle element will be sampled -->
         <!-- Note that dimensions can be in any order. Not that I can think of a reason why you would want to do that -->
-        <dimension name="x" lattice="0" fourier_space="x" />
-        <dimension name="y" lattice="128" fourier_space="y" />
-        <moments>dens</moments>
+        <dimension name="x" lattice="4" fourier_space="x" />
+        <dimension name="y" lattice="8" fourier_space="y" />
+        <moments>dens empty</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           dens = mod2(phi);
+          empty = x+100*y;
         ]]>
       </sampling>
     </group>

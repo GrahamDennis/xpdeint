@@ -102,13 +102,15 @@ class XSILMetaDataBinary(XSILData):
     
 
 class XSILObject(object):
-  def __init__(self, name, dataObject, filename = None, loadASCIIOnly=False):
+  def __init__(self, name, dataObject, filename = None, dataFormat = None, loadMetaData=False):
     self.name = name
     self.dataObject = dataObject
+    if dataFormat:
+      self.dataFormat = dataFormat
     if dataObject:
       self.independentVariables = dataObject.independentVariables
       self.dependentVariables = dataObject.dependentVariables
-      if loadASCIIOnly:
+      if loadMetaData:
         self.uLong = dataObject.uLong
         self.precision = dataObject.precision
         self.encoding = dataObject.encoding
@@ -120,7 +122,6 @@ class XSILFile(object):
   def __init__(self, filename, loadData=True, loadASCIIOnly=False):
     self.filename = filename
     self.xsilObjects = []
-    self.dataFormat = ''
     
     xmlDocument = minidom.parse(filename)
     simulationElement = xmlDocument.getChildElementByTagName('simulation')
@@ -166,7 +167,7 @@ class XSILFile(object):
       streamElement = dataArrayElement.getChildElementByTagName('Stream')
       metalinkElement = streamElement.getChildElementByTagName('Metalink')
       format = metalinkElement.getAttribute('Format').strip()
-      self.dataFormat = format
+      
       # assert format == 'Binary', "ASCII format output currently unsupported"
       
       dataObject = None
@@ -187,9 +188,6 @@ class XSILFile(object):
         if loadData:
           dataObject = XSILDataASCII(independentVariables, dependentVariables, streamElement.innerText().strip())
       
-      self.xsilObjects.append(XSILObject(xsilName, dataObject, objectFilename, format=='Binary' and loadASCIIOnly))
-    
-  
-
+      self.xsilObjects.append(XSILObject(xsilName, dataObject, objectFilename, dataFormat = format, loadMetaData=(format=='Binary' and loadASCIIOnly)))
 
 
