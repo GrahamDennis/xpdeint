@@ -118,10 +118,11 @@ class XSILFile(object):
     `filename` is the filename of the XSIL file, and `loadData` specifies whether or not the
     data in the XSIL file should be loaded (if not, just the metadata is loaded).
     `loadData` can have one of the following values:
-      - ``True`` or ``'all'``: load all data
-      - ``False`` or ``'none'``: load no data
-      - ``'ascii'``: load only data stored in ASCII format
-      - ``'binary'``: load only data stored in binary format
+    
+    - ``True`` or ``'all'``: load all data
+    - ``False`` or ``'none'``: load no data
+    - ``'ascii'``: load only data stored in ASCII format
+    - ``'binary'``: load only data stored in binary format
     """
     if not isinstance(loadData, basestring):
       # loadData is True or False
