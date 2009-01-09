@@ -4,10 +4,8 @@
 xsil2graphicsParser.py
 
 Created by Joe Hope on 2009-01-06.
-Copyright (c) 2008 __MyCompanyName__. All rights reserved.
+Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 
-This is starting as a straight clone of the original parser, hence the long list of imports.  
-I'll be able to strip out unnecessary stuff later, when I understand WTH I'm doing.
 """
 import os
 import sys
@@ -16,10 +14,6 @@ import xpdeint.Python24Support
 import xml
 from xml.dom import minidom
 import xpdeint.minidom_extras
-import subprocess
-from pkg_resources import resource_filename
-
-import tempfile
 
 from xml.dom import minidom
 import xpdeint.minidom_extras
@@ -28,7 +22,13 @@ from xpdeint.XSILFile import XSILFile
 
 import numpy
 import imp
-import cPickle
+
+from xpdeint.xsil2graphics2.MathematicaImport import MathematicaImport
+from xpdeint.xsil2graphics2.RImport import RImport
+from xpdeint.xsil2graphics2.MathematicaFiveImport import MathematicaFiveImport
+from xpdeint.xsil2graphics2.GnuplotImport import GnuplotImport
+from xpdeint.xsil2graphics2.MatlabImport import MatlabImport
+from xpdeint.xsil2graphics2.ScilabImport import ScilabImport
 
 # Hack for Leopard so it doesn't import the web rendering
 # framework WebKit when Cheetah tries to import the Python
@@ -41,18 +41,7 @@ if sys.platform == 'darwin':
 
 # Import the parser stuff
 from xpdeint.ParserException import ParserException, parserWarning
-from xpdeint.XMDS2Parser import XMDS2Parser
 
-# Import the top level template
-from xpdeint.Simulation import Simulation as SimulationTemplate
-
-# Import the IndentFilter. The IndentFilter is the magic filter
-# that when used correctly makes the generated source correctly
-# indented. See the comments in IndentFilter.py for more info.
-from xpdeint.IndentFilter import IndentFilter
-
-# Import the root class for all templates
-from xpdeint._ScriptElement import _ScriptElement
 
 # The help message printed when --help is used as an argument
 help_message = '''
@@ -159,37 +148,51 @@ def main(argv=None):
     return 2
     
   try:
-    #    inputXSILFile = XSILFile(os.path.join(os.path.split(absPath)[0], xsilInputName))
     inputXSILFile = XSILFile(xsilInputName, loadASCIIOnly=True)
   except Exception, err:
     print >> sys.stderr, "Exception raised while trying to read xsil file:", err
     return
     
-#  print "Joe is great"  
-#  print inputXSILFile
-#  print type(inputXSILFile)
-#  print len(inputXSILFile.xsilObjects)
-#  print inputXSILFile.xsilObjects[0]
-#  print inputXSILFile.xsilObjects[0].name  
-#  print len(inputXSILFile.xsilObjects[0].independentVariables)
-#  print inputXSILFile.xsilObjects[0].independentVariables[0]["name"]
-#  print len(inputXSILFile.xsilObjects[0].dependentVariables)
-#  print inputXSILFile.xsilObjects[0].dependentVariables[0]["name"]
-#  print inputXSILFile.xsilObjects[0].dependentVariables[0]["array"]
-#  print inputXSILFile.xsilObjects[0].uLong
-#  print inputXSILFile.xsilObjects[0].precision
-#  print inputXSILFile.xsilObjects[0].encoding
-#  print inputXSILFile.xsilObjects[0].dependentVariables[0]["array"]
+# print dir(inputXSILFile)
+  
+  if outputFormat == 'R':
+    templateClass = RImport
+    if output=='':
+      output=xsilInputName[0:-5]+'.R'
+  
+  if outputFormat == 'gnuplot':
+    templateClass = GnuplotImport
+    if output=='':
+      output=xsilInputName[0:-5]+'.gnu'
   
   if outputFormat == 'matlab':
-    print 'matlab, baby!'
+    templateClass = MatlabImport
+    if output=='':
+      output=xsilInputName[0:-5]+'.m'
   
+  if outputFormat == 'mathmFive':
+    templateClass = MathematicaFiveImport
+    if output=='':
+      output=xsilInputName[0:-5]+'.nb'
+
   if outputFormat == 'scilab':
-    print 'scilab, baby!'
+    templateClass = ScilabImport
+    if output=='':
+      output=xsilInputName[0:-5]+'.sci'
     
   if outputFormat == 'mathematica':
-    print 'mathematica, baby!'
-    loadXSILObjectMathematica(inputXSILFile)
-    
+    templateClass = MathematicaImport
+    if output=='':
+      output=xsilInputName[0:-5]+'.nb'
+  
+  outputTemplate = templateClass()
+  
+  # Now actually write the simulation to disk.
+  
+  outputFile = file(output, "w")
+  print >> outputFile, outputTemplate.loadXSILFile(inputXSILFile)  
+  print outputTemplate.loadXSILFile(inputXSILFile)  
+  outputFile.close()
+
 if __name__ == "__main__":
   sys.exit(main())

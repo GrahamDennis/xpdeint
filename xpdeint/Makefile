@@ -1,7 +1,7 @@
 templates = $(wildcard *.tmpl)
 include CheetahTemplateOptions.mk
 
-SUBDIRS = SimulationDrivers Geometry Vectors Segments Operators Features
+SUBDIRS = SimulationDrivers Geometry Vectors Segments Operators Features xsil2graphics2
 
 .PHONY: all compile clean check
 
