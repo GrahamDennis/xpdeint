@@ -51,7 +51,7 @@
     </integrate>
   </sequence>
   
-  <output format="ascii" filename="diffusion.xsil">
+  <output format="binary" filename="diffusion.xsil">
     <group>
       <sampling initial_sample="yes">
         <!-- Any dimension not mentioned is assumed to be in real space and its middle element will be sampled -->
