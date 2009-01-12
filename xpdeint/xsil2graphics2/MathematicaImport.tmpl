@@ -19,54 +19,78 @@ $listOrElement@slurp
 @end def
 
 @def loadXSILFile($xsilFile)
-
  @set declaredVars=[]
  @for objectNum, xsilObject in enumerate(xsilFile.xsilObjects):
    @if xsilObject.data.format == 'ascii':
      @set nIndepVar = len(xsilObject.independentVariables)
-     @for var in xsilObject.independentVariables
+     @for var in xsilObject.independentVariables:
        @set varName = var["name"].replace('_','') + str(objectNum + 1)
        @silent declaredVars.append(varName)
 Clear[$varName]
 $varName = {${', '.join([repr(float(e)) for e in var["array"]])}};
      @end for
-
      @for varD in xsilObject.dependentVariables:
        @set varName = varD["name"].replace('_','') + str(objectNum + 1)
        @silent declaredVars.append(varName)
 Clear[$varName]
-$varName = $printMathematicaListOrElement($varD["array"]);
+$varName = $printMathematicaListOrElement($varD["array"]);      
      @end for 
-
-   @elif xsilObject.dataFormat == 'Binary':
-
-Binary!
-
+@# Binary output, so we merely link to the requisite data file and write a script ot import it
+   @elif xsilObject.data.format == 'binary':
+     @set nIndepVar = len(xsilObject.independentVariables)
+     @if xsilObject.data.encoding == 'BigEndian':
+        @set machineFormat = '1'
+     @elif xsilObject.data.encoding == 'LittleEndian':
+        @set machineFormat = '-1'
+     @else:
+        @set machineFormat = '$ByteOrdering'
+     @end if
+     @if xsilObject.data.uLong == 'uint32':
+        @set uLongFormat = 'UnsignedInteger32'
+     @elif xsilObject.data.uLong == 'uint64':
+        @set uLongFormat = 'UnsignedInteger64'
+     @else:
+        @# We have to guess
+        @set uLongFormat = 'UnsignedInteger32'
+     @end if
+     @if xsilObject.data.precision == 'single':
+        @set outputPrecision = 'Real32'
+     @elif xsilObject.data.precision == 'double':
+        @set outputPrecision = 'Real64'
+     @else:
+        @# We have to guess
+        @set outputPrecision = 'Real64'
+     @end if
+fpDat = OpenRead["$xsilObject.data.filename",BinaryFormat -> True];
+     @for var in xsilObject.independentVariables:
+        @set varName = var["name"].replace('_','') + str(objectNum + 1)
+        @silent declaredVars.append(varName)
+$(varName)Len = BinaryRead[fpDat, "$uLongFormat", ByteOrdering->$machineFormat];
+$(varName) = BinaryReadList[fpDat, {"$outputPrecision"}, $(varName)Len, ByteOrdering->$machineFormat];
+     @end for
+     @for varD in xsilObject.dependentVariables:
+        @set varName = varD["name"].replace('_','') + str(objectNum + 1)
+        @silent declaredVars.append(varName)
+$(varName)Len = BinaryRead[fpDat, "$uLongFormat", ByteOrdering->$machineFormat];
+        @if nIndepVar==1:
+$varName = BinaryReadList[fpDat, {"$outputPrecision"}, $(varName)Len, ByteOrdering->$machineFormat];
+        @else:
+$varName = Flatten[Table[BinaryReadList[fpDat, {"$outputPrecision"}, $(xsilObject.independentVariables[-1]["name"])$(objectNum+1)Len, ByteOrdering->$machineFormat]@slurp
+          @for varIndex, varI in enumerate(xsilObject.independentVariables[0:-1])
+,{j$(varIndex+1),1,$(varI["name"].replace('_',''))$(objectNum+1)Len}@slurp
+          @end for
+],{@slurp
+          @for varIndex, varI2 in enumerate(xsilObject.independentVariables[0:-1]):
+{$(varIndex+1)},@slurp
+          @end for
+{$nIndepVar,$(nIndepVar+1)}}];
+        @end if
+     @end for
+Close[fpDat];
    @else:
-The data format is neither 'Text' nor 'Binary'.  xsil2graphics2 is confused, and I think there might be someone standing RIGHT BEHIND YOU!
+@raise "The data format is neither 'Text' nor 'Binary'.  xsil2graphics2 is confused, and I think there might be someone standing RIGHT BEHIND YOU!"
    @end if
-
  @end for
 
-declaredVariables={${', '.join([c'"$dV"' for dV in declaredVars])}};
-@*
-#  print "Joe is great"  
-#  print inputXSILFile
-#  print type(inputXSILFile)
-#  print len(inputXSILFile.xsilObjects)
-#  print inputXSILFile.xsilObjects[0]
-#  print inputXSILFile.xsilObjects[0].name  
-#  print len(inputXSILFile.xsilObjects[0].independentVariables)
-#  print inputXSILFile.xsilObjects[0].independentVariables[0]["name"]
-#  print len(inputXSILFile.xsilObjects[0].dependentVariables)
-#  print inputXSILFile.xsilObjects[0].dependentVariables[0]["name"]
-#  print inputXSILFile.xsilObjects[0].dependentVariables[0]["array"]
-#  print inputXSILFile.xsilObjects[0].uLong
-#  print inputXSILFile.xsilObjects[0].precision
-#  print inputXSILFile.xsilObjects[0].encoding
-#  print inputXSILFile.xsilObjects[0].dataFormat
-#  print inputXSILFile.xsilObjects[0].dependentVariables[0]["array"]
-
-*@
+declaredVariables={${', '.join([c'"$dV"' for dV in declaredVars])}}
 @end def
-
