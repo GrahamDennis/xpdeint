@@ -15,7 +15,13 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 Return the options that need to be added to ``CFLAG``.
 *@
   @#
+  @if $platform == 'darwin'
+    @# Use vecLib
 -lcblas -I/System/Library/Frameworks/vecLib.framework/Versions/A/Headers/@slurp
+  @else
+    @# Use GSL CBLAS until we get ATLAS working
+-lgslcblas@slurp
+  @end if
   @#
 @end def
 
@@ -23,7 +29,11 @@ Return the options that need to be added to ``CFLAG``.
   @#
   @super
   @#
+  @if $platform == 'darwin'
 #include <cblas.h>
+  @else
+#include <gsl/gsl_cblas.h>
+  @end if
 @end def
 
 @def globals
