@@ -160,6 +160,9 @@ def main(argv=None):
     print >> sys.stderr, "Exception raised during parsing xmds script:", err
     return
   
+  # FIXME: Dodgy hack until we have a autoconf-style system
+  globalNameSpace['platform'] = sys.platform
+  
   globalNameSpace['debug'] = debug
   globalNameSpace['xmlDocument'] = xmlDocument
   globalNameSpace['features'] = {}
