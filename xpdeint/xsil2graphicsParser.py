@@ -10,18 +10,8 @@ Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 import os
 import sys
 import getopt
-import xpdeint.Python24Support
-import xml
-from xml.dom import minidom
-import xpdeint.minidom_extras
-
-from xml.dom import minidom
-import xpdeint.minidom_extras
 
 from xpdeint.XSILFile import XSILFile
-
-import numpy
-import imp
 
 from xpdeint.xsil2graphics2.MathematicaImport import MathematicaImport
 from xpdeint.xsil2graphics2.RImport import RImport
@@ -37,23 +27,17 @@ if sys.platform == 'darwin':
   module = type(sys)
   sys.modules['WebKit'] = module('WebKit')
 
-# This is where we'll diverge when this isn't xpdeint any more.
-
-# Import the parser stuff
-from xpdeint.ParserException import ParserException, parserWarning
-
 
 # The help message printed when --help is used as an argument
 help_message = '''
-usage: xsil2graphics2 [options] fileToBeParsed
+usage: xsil2graphics2 [options] filenames [...]
 
 Options and arguments for xpdeint:
 -h          : Print this message (also --help)
 -o filename : This overrides the name of the output file to be generated (also --output)
 -d          : Debug mode (also --debug)
--n          : Only generate a source file, don't compile (also --no-compile)
 
-Options:  (none of which are actually implemented)
+Options:  (Only Mathematica has been implemented)
   infile(s):        required, the input xsil file or files
   -h/--help:        optional, display this information
   -m/--matlab:      optional, produce matlab/octave output (default)
@@ -67,16 +51,6 @@ Options:  (none of which are actually implemented)
 
 For further help, please see http://www.xmds.org
 '''
-
-def anyObject(iterable):
-  """
-  Return an object from an iterable. This is designed to be used with sets
-  because I can't work out any other way of doing this, but it will work
-  with any iterable.
-  """
-  for obj in iterable:
-    return obj
-
 
 class Usage(Exception):
   """
@@ -110,7 +84,7 @@ def main(argv=None):
       raise Usage(msg)
     
     plotFlag = False
-    outputFilename = None
+    userSpecifiedFilename = None
     defaultExtension = None
     outputTemplateClass = MatlabImport
     # option processing
@@ -118,7 +92,7 @@ def main(argv=None):
       if option in ("-h", "--help"):
         raise Usage(help_message)
       if option in ("-o", "--outfile"):
-        outputFilename = value
+        userSpecifiedFilename = value
       if option in ("-p", "--plot"):
         plotFlag = True
       if option in ("-m", "--matlab"):
@@ -134,38 +108,45 @@ def main(argv=None):
       if option in ("-r", "--R"):
         outputTemplateClass = RImport
         
-    # argument processing
-    if len(args)==1 and outputTemplateClass:
-        xsilInputName = args[0]
-    else:
-        raise Usage(help_message)
+    if userSpecifiedFilename and len(args) > 1:
+      print >> sys.stderr, "The '-o' option cannot be used when processing multiple xsil files."
+    if not args:
+      # No xsil files to process
+      raise Usage(help_message)
   
   except Usage, err:
     print >> sys.stderr, sys.argv[0].split("/")[-1] + ": " + str(err.msg)
     print >> sys.stderr, "\t for help use --help"
     return 2
     
-  try:
-    inputXSILFile = XSILFile(xsilInputName, loadData='ascii')
-  except Exception, err:
-    print >> sys.stderr, "Exception raised while trying to read xsil file:", err
-    return
-    
-  # If an output name wasn't specified, construct a default
-  if not outputFilename:
-    # Strip off the '.xsil' extension
-    baseName = os.path.splitext(xsilInputName)[0]
-    # Grab the default extension from the output template
-    outputFilename = baseName + '.' + outputTemplateClass.defaultExtension
-  
   outputTemplate = outputTemplateClass()
+  print "Generating output for %s." % outputTemplate.name
   
-  # Now actually write the simulation to disk.
   
-  outputFile = file(outputFilename, "w")
-  print >> outputFile, outputTemplate.loadXSILFile(inputXSILFile)  
-  print outputTemplate.loadXSILFile(inputXSILFile)  
-  outputFile.close()
+  for xsilInputName in args:
+    # If an output name wasn't specified, construct a default
+    if not userSpecifiedFilename:
+      # Strip off the '.xsil' extension
+      baseName = os.path.splitext(xsilInputName)[0]
+      # Grab the default extension from the output template
+      outputFilename = baseName + '.' + outputTemplateClass.defaultExtension
+    else:
+      outputFilename = userSpecifiedFilename
+    
+    print "Writing import script for '%(xsilInputName)s' to '%(outputFilename)s'." % locals()
+    
+    try:
+      inputXSILFile = XSILFile(xsilInputName, loadData='ascii')
+    except Exception, err:
+      print >> sys.stderr, "Exception raised while trying to read xsil file:", err
+      return
+    
+    # Now actually write the simulation to disk.
+    
+    outputFile = file(outputFilename, "w")
+    print >> outputFile, outputTemplate.loadXSILFile(inputXSILFile)  
+    outputFile.close()
+  
 
 if __name__ == "__main__":
   sys.exit(main())

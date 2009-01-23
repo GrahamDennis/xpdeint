@@ -6,6 +6,7 @@ Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 *@
 
 @def description: Creates text to import data from XSIL files into Mathematica.
+@attr $name = 'Mathematica 6+'
 
 @attr $defaultExtension = 'nb'
 
@@ -38,29 +39,10 @@ $varName = $printMathematicaListOrElement($varD["array"]);
 @# Binary output, so we merely link to the requisite data file and write a script ot import it
    @elif xsilObject.data.format == 'binary':
      @set nIndepVar = len(xsilObject.independentVariables)
-     @if xsilObject.data.encoding == 'BigEndian':
-        @set machineFormat = '1'
-     @elif xsilObject.data.encoding == 'LittleEndian':
-        @set machineFormat = '-1'
-     @else:
-        @set machineFormat = '$ByteOrdering'
-     @end if
-     @if xsilObject.data.uLong == 'uint32':
-        @set uLongFormat = 'UnsignedInteger32'
-     @elif xsilObject.data.uLong == 'uint64':
-        @set uLongFormat = 'UnsignedInteger64'
-     @else:
-        @# We have to guess
-        @set uLongFormat = 'UnsignedInteger32'
-     @end if
-     @if xsilObject.data.precision == 'single':
-        @set outputPrecision = 'Real32'
-     @elif xsilObject.data.precision == 'double':
-        @set outputPrecision = 'Real64'
-     @else:
-        @# We have to guess
-        @set outputPrecision = 'Real64'
-     @end if
+     @set machineFormat = {'BigEndian': '1', 'LittleEndian': '-1'}.get(xsilObject.data.encoding, '$ByteOrdering')
+     @set uLongFormat = {'uint32': 'UnsignedInteger32', 'uint64': 'UnsignedInteger64'}.get(xsilObject.data.uLong, 'UnsignedInteger32')
+     @set outputPrecision = {'single': 'Real32', 'double': 'Real64'}.get(xsilObject.data.precision, 'Real64')
+SetDirectory[NotebookDirectory[]];
 fpDat = OpenRead["$xsilObject.data.filename",BinaryFormat -> True];
      @for var in xsilObject.independentVariables:
         @set varName = var["name"].replace('_','') + str(objectNum + 1)
@@ -72,7 +54,7 @@ $(varName) = BinaryReadList[fpDat, {"$outputPrecision"}, $(varName)Len, ByteOrde
         @set varName = varD["name"].replace('_','') + str(objectNum + 1)
         @silent declaredVars.append(varName)
 $(varName)Len = BinaryRead[fpDat, "$uLongFormat", ByteOrdering->$machineFormat];
-        @if nIndepVar==1:
+        @if nIndepVar<=1:
 $varName = BinaryReadList[fpDat, {"$outputPrecision"}, $(varName)Len, ByteOrdering->$machineFormat];
         @else:
 $varName = Flatten[Table[BinaryReadList[fpDat, {"$outputPrecision"}, $(xsilObject.independentVariables[-1]["name"])$(objectNum+1)Len, ByteOrdering->$machineFormat]@slurp
@@ -87,6 +69,7 @@ $varName = Flatten[Table[BinaryReadList[fpDat, {"$outputPrecision"}, $(xsilObjec
         @end if
      @end for
 Close[fpDat];
+ResetDirectory[];
    @else:
 @raise "The data format is neither 'Text' nor 'Binary'.  xsil2graphics2 is confused, and I think there might be someone standing RIGHT BEHIND YOU!"
    @end if
