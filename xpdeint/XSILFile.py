@@ -178,8 +178,6 @@ class XSILFile(object):
       metalinkElement = streamElement.getChildElementByTagName('Metalink')
       format = metalinkElement.getAttribute('Format').strip()
       
-      # assert format == 'Binary', "ASCII format output currently unsupported"
-      
       data = None
       
       objectFilename = None

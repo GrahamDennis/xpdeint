@@ -49,5 +49,9 @@ class _BreakpointSegment (_Segment):
       spaceString = self.dependenciesEntity.xmlElement.getAttribute('fourier_space')
       self.breakpointSpace = self.field.spaceFromString(spaceString, xmlElement = self.dependenciesEntity.xmlElement)
     
+    # Use the output format used for output if one isn't specified
+    if not self.hasattr('outputFormat'):
+      self.outputFormat = self.getVar('features')['Output'].outputFormat
+    
   
 

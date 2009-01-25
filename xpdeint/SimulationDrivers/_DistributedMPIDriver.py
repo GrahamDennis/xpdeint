@@ -10,7 +10,6 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 from xpdeint.SimulationDrivers.SimulationDriver import SimulationDriver
 from xpdeint.SimulationDrivers.MPI import MPI
 
-from xpdeint.Features.BinaryOutput import BinaryOutput
 from xpdeint.ParserException import ParserException
 
 class _DistributedMPIDriver (SimulationDriver, MPI):
@@ -65,9 +64,11 @@ class _DistributedMPIDriver (SimulationDriver, MPI):
   def preflight(self):
     super(_DistributedMPIDriver, self).preflight()
     
-    outputFeature = self.getVar('features')['Output']
-    if not isinstance(outputFeature, BinaryOutput):
-      raise ParserException(outputFeature.xmlElement, "The 'ascii' output format cannot be used with the 'distributed-mpi' driver.")
+    outputFormat = self.getVar('features')['Output'].outputFormat
+    
+    # FIXME: This is dodgy
+    if not outputFormat.mpiSafe:
+      raise ParserException(outputFeature.xmlElement, "The '%s' output format cannot be used with the 'distributed-mpi' driver." % outputFormat.name)
   
   
   

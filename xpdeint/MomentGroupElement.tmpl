@@ -154,6 +154,7 @@ ${loopOverVectorsWithInnerContentTemplate([$processedVector], $result, space = $
                 'fp': '_outfile',
                 'dependentVariables': $dependentVariables,
                 'xsilElementName': c'moment_group_${number + 1}',
+                'groupID': $number+1
                 }
 ${insertCodeForFeatures('writeOutFunctionImplementationBody', $featureOrdering, $dict)}@slurp
   @#

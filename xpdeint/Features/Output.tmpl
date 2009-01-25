@@ -1,0 +1,118 @@
+@*
+Output.tmpl
+
+Created by Graham Dennis on 2007-08-26.
+Copyright (c) 2007 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.Features._Feature
+
+@def description: output
+@attr $featureName = 'Output'
+@*
+
+  Function prototypes
+*@
+@def functionPrototypes
+  @#
+  @super
+  @#
+void _write_output();
+  @#
+@end def
+@*
+
+  Function implementations
+*@
+@def functionImplementations
+  @#
+  @super
+  @#
+${writeOutFunctionImplementation}@slurp
+  @#
+@end def
+
+@def writeOutFunctionImplementation
+void _write_output()
+{
+  _LOG(_SIMULATION_LOG_LEVEL, "Generating output for ${simulationName}\n");
+  
+  @set $featureOrdering = ['Driver']
+  ${insertCodeForFeatures('writeOutBegin', featureOrdering), autoIndent=True}@slurp
+  
+  FILE* _outfile = _open_xsil_file("${filename}.xsil");
+  _write_xsil_header(_outfile);
+  
+  @set $args = {}
+  ${outputFormat.writeOutSetup(args, c'"$filename"'), autoIndent=True}@slurp
+  
+  @for $momentGroup in $momentGroups
+  ${momentGroup.functions['writeOut'].call(args, _outfile = '_outfile')}@slurp
+  @end for
+  
+  ${outputFormat.writeOutTearDown, autoIndent=True}@slurp
+  
+  _write_xsil_footer(_outfile);
+  
+  _close_xsil_file(_outfile);
+  _outfile = NULL;
+  
+  ${insertCodeForFeaturesInReverseOrder('writeOutEnd', featureOrdering), autoIndent=True}@slurp
+}
+@end def
+
+@def writeOutFunctionImplementationBody($dict)
+  @if not 'baseFilename' in dict:
+    @set caller = dict['caller']
+    @set dict['baseFilename'] = c'"${filename}_${caller.name}"'
+  @end if
+${outputFormat.writeOutFunctionImplementationBody(dict)}@slurp
+@end def
+
+@def mainEnd($dict)
+
+_write_output();
+@end def
+
+@def integrateFixedStepInnerLoopEnd($dict)
+  @#
+  @set $integrator = dict['caller']
+  @assert len($momentGroups) == len($integrator.samples)
+  @#
+  @for $momentGroupNumber, $sampleCount in enumerate($integrator.samples)
+    @if $sampleCount > 0
+      @assert ($integrator.stepCount % $sampleCount) == 0
+      @set $sampleEveryNthStep = $integrator.stepCount / $sampleCount
+if ((_istep % $sampleEveryNthStep) == ${sampleEveryNthStep - 1})
+  _mg${momentGroupNumber}_sample();
+    @end if
+  @end for
+  @#
+@end def
+
+@def integrateAdaptiveStepOuterLoopEnd($dict)
+  @#
+  @set $integrator = dict['caller']
+  @assert len($momentGroups) == len($integrator.samples)
+  @#
+if (_break_next) {
+  @for $momentGroupNumber, $sampleCount in enumerate($integrator.samples)
+  if (_next_sample_flag[$momentGroupNumber]) {
+    _mg${momentGroupNumber}_sample();
+    _next_sample_counter[$momentGroupNumber]++;
+  }
+  @end for
+  @set $momentGroupCount = len($integrator.samples)
+  if (_next_sample_flag[${momentGroupCount}])
+    _next_sample_flag[${momentGroupCount + 1}] = true;
+  else {
+    _break_next = false;
+    _${propagationDimension}_break_next = _${integrator.name}_setup_sampling(_next_sample_flag, _next_sample_counter);
+  }
+}
+
+if ( (${propagationDimension} - _${propagationDimension}_ini + _step)*(1.0 + _EPSILON) > _${propagationDimension}_break_next) {
+  _break_next = true;
+  _LOG(_SAMPLE_LOG_LEVEL, "Current timestep: %e\n", _old_step);
+  _step = _${propagationDimension}_break_next - ${propagationDimension} + _${propagationDimension}_ini;
+}
+@end def

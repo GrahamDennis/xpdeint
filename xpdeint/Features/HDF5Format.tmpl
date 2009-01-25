@@ -1,0 +1,207 @@
+@*
+HDF5Format.tmpl
+
+Created by Graham Dennis on 2009-01-24.
+Copyright (c) 2009 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.Features.OutputFormat
+@from xpdeint.Geometry.NonUniformDimensionRepresentation import NonUniformDimensionRepresentation
+@from xpdeint.Geometry.SplitUniformDimensionRepresentation import SplitUniformDimensionRepresentation
+@from xpdeint.CallOnceGuards import callOnceGuard
+
+@def description: HDF5 output format
+
+@attr $outputArguments = [('hid_t', 'hdf5_file'), ('const char*', '_dataFilename')]
+
+@def cflags
+-lhdf5 -lhdf5_hl@slurp
+@end def
+
+@attr $name = 'hdf5'
+@attr $mpiSafe = False
+
+@@callOnceGuard
+@def includes
+#include <hdf5.h>
+#include <hdf5_hl.h>
+@end def
+
+@def writeOutSetup($args, $filename)
+  @# Due to funkyness, the parameter name here must be the same as the variable name
+  @silent args.update({'hdf5_file': 'hdf5_file', '_dataFilename': '_dataFilename'})
+hid_t hdf5_file;
+herr_t status;
+
+char _dataFilename[200];
+strncpy(_dataFilename, ${filename}, 200);
+strcat(_dataFilename, ".h5");
+
+/* Create a HDF5 file */
+hdf5_file = H5Fcreate(_dataFilename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+@end def
+
+@def writeOutTearDown
+status = H5Fclose(hdf5_file);
+@end def
+
+@def writeOutFunctionImplementationBody($dict)
+  @#
+${writeOutFunctionImplementationBegin(dict)}@slurp
+
+  @set $featureOrdering = ['Driver']
+  @set $featureDict = dict.copy()
+  @set $featureDict['extraIndent'] = 0
+${insertCodeForFeatures('binaryWriteOutBegin', featureOrdering, featureDict)}@slurp
+  @set $extraIndent = featureDict['extraIndent']
+
+${writeOutFunctionContents(dict), extraIndent=extraIndent}@slurp
+
+${insertCodeForFeaturesInReverseOrder('binaryWriteOutEnd', featureOrdering, featureDict)}@slurp
+
+${writeOutFunctionImplementationEnd(dict)}@slurp
+  @#
+@end def
+
+@def writeOutFunctionContents($dict)
+  @#
+  @set $fp = dict['fp']
+  @set $baseFilename = dict['baseFilename']
+  @set $groupID = dict['groupID']
+  @set $field = dict['field']
+  @set $space = dict['space']
+  @set $dependentVariables = dict['dependentVariables']
+  @set $componentCount = 0
+  @for $variable in $dependentVariables
+    @set $componentCount += len($variable.vector.components)
+    @if $variable.vector.type == 'complex'
+      @set $componentCount += len($variable.vector.components)
+    @end if
+  @end for
+  @set dict['componentCount'] = componentCount
+  @#
+
+/* Create the group for this data */
+hid_t group = H5Gcreate(hdf5_file, "/${groupID}", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+fprintf($fp, "    <Stream><Metalink Format=\"HDF5\" Type=\"Remote\" Group=\"/${groupID}\"/>\n");
+fprintf($fp, "%s\n", _dataFilename);
+fprintf($fp, "    </Stream>\n");
+
+/* Create the coordinate data sets */
+hsize_t coordinate_length;
+hid_t coordinate_dataspace;
+  @for dim in field.dimensions
+    @set $dimRep = dim.inSpace(space)
+coordinate_length = ${dimRep.globalLattice};
+coordinate_dataspace = H5Screate_simple(1, &coordinate_length, NULL);
+    @set $dataType = {'double': 'H5T_NATIVE_DOUBLE', 'long': 'H5T_NATIVE_LONG'}[$dimRep.type]
+hid_t dataset_${dimRep.name} = H5Dcreate(hdf5_file, "/${groupID}/${dimRep.name}", ${dataType}, coordinate_dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    @if not isinstance(dimRep, NonUniformDimensionRepresentation)
+      @set $dimArrayName = c'${dimRep.name}_data'
+${dimRep.type} ${dimArrayName}[${dimRep.globalLattice}];
+for (long _i0 = 0; _i0 < ${dimRep.globalLattice}; _i0++) {
+  ${dimArrayName}[_i0] = ${dimRep.minimum} + ${dimRep.stepSize} * _i0;
+}
+    @else
+      @set $dimArrayName = dimRep.arrayName
+    @end if
+H5Dwrite(dataset_${dimRep.name}, $dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, ${dimArrayName});
+H5DSset_scale(dataset_${dimRep.name}, "${dimRep.name}");
+
+H5Sclose(coordinate_dataspace);
+  @end for
+
+/* Create the data space */
+  @set $fieldDimCount = len(field.dimensions)
+hsize_t file_dims[${fieldDimCount}] = {${', '.join(dim.inSpace(space).globalLattice for dim in field.dimensions)}};
+hsize_t file_start[${fieldDimCount+1}] = {${', '.join(['0']*(fieldDimCount+1))}};
+hsize_t mem_dims[${fieldDimCount+1}] = {${', '.join(dim.inSpace(space).globalLattice for dim in field.dimensions)}, 1};
+hsize_t mem_start[${fieldDimCount+1}] = {${', '.join(['0']*(fieldDimCount+1))}};
+hsize_t mem_stride[${fieldDimCount+1}] = {${', '.join(['1']*fieldDimCount + ['0'])}};
+hsize_t mem_count[${fieldDimCount+1}] = {${', '.join(dim.inSpace(space).globalLattice for dim in field.dimensions)}, 1};
+
+hid_t file_dataspace, mem_dataspace;
+file_dataspace = H5Screate_simple(${fieldDimCount}, file_dims, NULL);
+  @for variable in dependentVariables
+    @if $variable.vector.type == 'double'
+      @set $components = list(enumerate($variable.components))
+    @else
+      @set $components = []
+      @for offset, componentName in enumerate($variable.components)
+        @silent components.extend([(2*offset, componentName + 'R'), (2*offset+1, componentName + 'I')])
+      @end for
+    @end if
+mem_dims[${fieldDimCount}] = ${len(components)};
+mem_dataspace = H5Screate_simple(${fieldDimCount+1}, mem_dims, NULL);
+mem_stride[${fieldDimCount}] = ${len(components)};
+
+    @for offset, componentName in components
+hid_t dataset_${componentName} = H5Dcreate(hdf5_file, "/${groupID}/${componentName}", H5T_NATIVE_DOUBLE, file_dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+      @for dimNum, dim in enumerate(field.dimensions)
+H5DSattach_scale(dataset_${componentName}, dataset_${dim.inSpace(space).name}, ${dimNum});
+      @end for
+    @end for
+
+    @capture writeLoopContents
+      @for offset, componentName in components
+mem_start[${fieldDimCount}] = $offset;
+H5Sselect_hyperslab(mem_dataspace, H5S_SELECT_SET, mem_start, mem_stride, mem_count, NULL);
+        @# 
+        @#  This looks like a typo because 'mem_stride' and 'mem_count' are used with 'file_start' are used here.
+        @#  But it isn't a typo. The idea here is that the selection we want to make in the file has the same
+        @#  number of elements in each dimension and the same stride as in memory (but ignoring the last dimension).
+        @#  The only difference is the starting position for the selection.
+        @#
+H5Sselect_hyperslab(file_dataspace, H5S_SELECT_SET, file_start, mem_stride, mem_count, NULL);
+
+H5Dwrite(dataset_${componentName}, H5T_NATIVE_DOUBLE, mem_dataspace, file_dataspace, H5P_DEFAULT, ${variable.arrayName});
+      @end for
+    @end capture
+// Select hyperslabs of memory and file data spaces and then write
+${splitUniformDataSelect([(dimNum, dim.inSpace(space)) for dimNum, dim in enumerate(field.dimensions)], writeLoopContents)}@slurp
+
+    @for offset, componentName in components
+H5Dclose(dataset_${componentName});
+    @end for
+H5Sclose(mem_dataspace);
+  @end for
+  
+  @for dim in field.dimensions
+    @set $dimRep = dim.inSpace(space)
+H5Dclose(dataset_${dimRep.name});
+  @end for
+H5Sclose(file_dataspace);
+H5Gclose(group);
+
+  @#
+@end def
+
+@def splitUniformDataSelect(remainingDimReps, writeLoopContents)
+  @if not remainingDimReps
+${writeLoopContents}@slurp
+  @else
+    @set dimNum, dimRep = remainingDimReps.pop(0)
+    @if isinstance(dimRep, SplitUniformDimensionRepresentation)
+for (bool _positive_${dimRep.name} = true; ; _positive_${dimRep.name} = false) {
+  if (_positive_${dimRep.name}) {
+    mem_start[$dimNum] = 0;
+    mem_count[$dimNum] = ($dimRep.globalLattice-1)/2 +1;
+    file_start[$dimNum] = $dimRep.globalLattice/2;
+  } else {
+    file_start[$dimNum] = 0;
+    mem_start[$dimNum] = ($dimRep.globalLattice-1)/2+1;
+    mem_count[$dimNum] = $dimRep.globalLattice/2;
+  }
+  
+  ${splitUniformDataSelect(remainingDimReps, writeLoopContents), autoIndent=True}@slurp
+  
+  if (!_positive_${dimRep.name})
+    break;
+}
+file_start[$dimNum] = mem_start[$dimNum] = 0;
+mem_count[$dimNum] = $dimRep.globalLattice;
+    @else
+${splitUniformDataSelect(remainingDimReps, writeLoopContents)}@slurp
+    @end if
+  @end if
+@end def

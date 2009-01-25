@@ -99,6 +99,8 @@ class _MomentGroupElement (ScriptElement):
     self.codeBlocks['sampling'].loopArguments['indexOverrides'] = \
       {propagationDimension: {self.outputField: "_%(outputFieldID)s_index_%(propagationDimension)s" % locals()}}
     self.codeBlocks['sampling'].loopArguments['vectorOverrides'] = [self.rawVector]
+    
+    self.functions['writeOut'].args.extend(self.getVar('features')['Output'].outputFormat.outputArguments)
   
   
 
