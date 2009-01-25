@@ -14,6 +14,14 @@ import xpdeint.minidom_extras
 
 import numpy
 
+h5py = None
+
+def require_h5py():
+  global h5py
+  if not h5py:
+    import h5py
+
+
 class XSILData(object):
   def __init__(self, independentVariables, dependentVariables):
     self.independentVariables = independentVariables
@@ -102,6 +110,33 @@ class XSILDataBinary(XSILData):
     
   
 
+class XSILDataHDF5(XSILData):
+  """Class representing HDF5 data output."""
+  
+  format = 'hdf5'
+  
+  def __init__(self, independentVariables, dependentVariables, groupName, dataFile, loadData = True):
+    XSILData.__init__(self, independentVariables, dependentVariables)
+    self.filename = os.path.split(dataFile)[1]
+    
+    if loadData: self.parseDataFile(groupName, dataFile)
+  
+  def parseDataFile(self, groupName, dataFile):
+    require_h5py()
+    f = h5py.File(dataFile, 'r')
+    
+    subgroup = f[groupName]
+    
+    for independentVariable in self.independentVariables:
+      independentVariable['array'] = subgroup[independentVariable['name']].value
+    
+    for dependentVariable in self.dependentVariables:
+      dependentVariable['array'] = subgroup[dependentVariable['name']].value
+    
+    # Now wasn't that easy.
+  
+
+
 class XSILObject(object):
   def __init__(self, name, data):
     self.name = name
@@ -123,13 +158,14 @@ class XSILFile(object):
     - ``False`` or ``'none'``: load no data
     - ``'ascii'``: load only data stored in ASCII format
     - ``'binary'``: load only data stored in binary format
+    - ``'hdf5'``: load only data stored in HDF5 format
     """
     if not isinstance(loadData, basestring):
       # loadData is True or False
       loadData = {True: 'all', False: 'none'}[loadData]
     else:
       loadData = loadData.lower()
-    assert loadData in ['all', 'ascii', 'binary', 'none']
+    assert loadData in ['all', 'ascii', 'binary', 'hdf5', 'none']
     self.filename = filename
     self.xsilObjects = []
     
@@ -197,6 +233,13 @@ class XSILFile(object):
         if loadData in ['all', 'ascii']: dataString = streamElement.innerText().strip()
         
         data = XSILDataASCII(independentVariables, dependentVariables, dataString)
+      elif format == 'HDF5':
+        loadHDFData = False
+        if loadData in ['all', 'hdf5']: loadHDFData = True
+        objectFilename = streamElement.innerText().strip()
+        filename = os.path.join(os.path.split(filename)[0], objectFilename)
+        groupName = metalinkElement.getAttribute('Group').strip()
+        data = XSILDataHDF5(independentVariables, dependentVariables, groupName, filename, loadData = loadHDFData)
       
       self.xsilObjects.append(XSILObject(xsilName, data))
     
