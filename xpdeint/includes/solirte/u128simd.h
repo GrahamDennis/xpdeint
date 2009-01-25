@@ -40,6 +40,62 @@
 #endif
 
 // -----------------------------------------------------------------------------
+// SIMD operations
+// -----------------------------------------------------------------------------
+
+#if (CFG_HAVE_SSE1 == 1)
+inline __m128 SIMDOP_add(const __m128 LHS, const __m128 RHS)
+{ return _mm_add_ps(LHS, RHS); }
+
+inline __m128 SIMDOP_sub(const __m128 LHS, const __m128 RHS)
+{ return _mm_sub_ps(LHS, RHS); }
+
+inline __m128 SIMDOP_mul(const __m128 LHS, const __m128 RHS)
+{ return _mm_mul_ps(LHS, RHS); }
+
+inline __m128 SIMDOP_or(const __m128 LHS, const __m128 RHS)
+{ return _mm_or_ps(LHS, RHS); }
+
+inline __m128 SIMDOP_and(const __m128 LHS, const __m128 RHS)
+{ return _mm_and_ps(LHS, RHS); }
+
+inline __m128 SIMDOP_xor(const __m128 LHS, const __m128 RHS)
+{ return _mm_xor_ps(LHS, RHS); }
+#endif
+
+#if (CFG_HAVE_SSE2 == 1)
+
+inline __m128i SIMDOP_or(__m128i LHS, __m128i RHS)
+{ return _mm_or_si128(LHS, RHS); }
+
+inline __m128i SIMDOP_and(__m128i LHS, __m128i RHS)
+{ return _mm_and_si128(LHS, RHS); }
+
+inline __m128i SIMDOP_xor(__m128i LHS, __m128i RHS)
+{ return _mm_xor_si128(LHS, RHS); }
+
+#if (CFG_ONLY_INTEGER_SSE2 == 0)
+inline __m128d SIMDOP_add(const __m128d LHS, const __m128d RHS)
+{ return _mm_add_pd(LHS, RHS); }
+
+inline __m128d SIMDOP_sub(const __m128d LHS, const __m128d RHS)
+{ return _mm_sub_pd(LHS, RHS); }
+
+inline __m128d SIMDOP_mul(const __m128d LHS, const __m128d RHS)
+{ return _mm_mul_pd(LHS, RHS); }
+
+inline __m128d SIMDOP_or(const __m128d LHS, const __m128d RHS)
+{ return _mm_or_pd(LHS, RHS); }
+
+inline __m128d SIMDOP_and(const __m128d LHS, const __m128d RHS)
+{ return _mm_and_pd(LHS, RHS); }
+
+inline __m128d SIMDOP_xor(const __m128d LHS, const __m128d RHS)
+{ return _mm_xor_pd(LHS, RHS); }
+#endif
+#endif
+
+// -----------------------------------------------------------------------------
 // Common functions
 // -----------------------------------------------------------------------------
 
@@ -105,18 +161,6 @@ template<int Bits> struct U64_Shl32Mask
 #define CFG_HAVE_U128 CFG_SIMD_INTRINSIC
 
 typedef __m128i uint128_t;
-
-#if (CFG_COMPILER == CFG_COMPILER_MSVC) || (CFG_COMPILER == CFG_COMPILER_SUNCC)
-
-inline __m128i operator|(__m128i LHS, __m128i RHS)
-{ return _mm_or_si128(LHS, RHS); }
-
-inline __m128i operator&(__m128i LHS, __m128i RHS)
-{ return _mm_and_si128(LHS, RHS); }
-
-inline __m128i operator^(__m128i LHS, __m128i RHS)
-{ return _mm_xor_si128(LHS, RHS); }
-#endif
 
 namespace SIMDOps
 {
@@ -187,19 +231,19 @@ struct uint128_t
   __m64 VecData[2];
 };
 
-inline uint128_t operator|(const uint128_t &LHS, const uint128_t &RHS)
+inline uint128_t SIMDOP_or(const uint128_t &LHS, const uint128_t &RHS)
 {
   uint128_t RetVal = {{_mm_or_si64(LHS.VecData[0], RHS.VecData[0]), _mm_or_si64(LHS.VecData[1], RHS.VecData[1])}};
   return RetVal;
 }
 
-inline uint128_t operator&(const uint128_t &LHS, const uint128_t &RHS)
+inline uint128_t SIMDOP_and(const uint128_t &LHS, const uint128_t &RHS)
 {
   uint128_t RetVal = {{_mm_and_si64(LHS.VecData[0], RHS.VecData[0]), _mm_and_si64(LHS.VecData[1], RHS.VecData[1])}};
   return RetVal;
 }
 
-inline uint128_t operator^(const uint128_t &LHS, const uint128_t &RHS)
+inline uint128_t SIMDOP_xor(const uint128_t &LHS, const uint128_t &RHS)
 {
   uint128_t RetVal = {{_mm_xor_si64(LHS.VecData[0], RHS.VecData[0]), _mm_xor_si64(LHS.VecData[1], RHS.VecData[1])}};
   return RetVal;
@@ -328,19 +372,19 @@ struct uint128_t
   { VecData[EndianFix_static<1, Idx>::Value] = x; }
 };
 
-inline uint128_t operator|(const uint128_t &LHS, const uint128_t &RHS)
+inline uint128_t SIMDOP_or(const uint128_t &LHS, const uint128_t &RHS)
 {
   uint128_t RetVal = {{LHS.VecData[0] | RHS.VecData[0], LHS.VecData[1] | RHS.VecData[1]}};
   return RetVal;
 }
 
-inline uint128_t operator&(const uint128_t &LHS, const uint128_t &RHS)
+inline uint128_t SIMDOP_and(const uint128_t &LHS, const uint128_t &RHS)
 {
   uint128_t RetVal = {{LHS.VecData[0] & RHS.VecData[0], LHS.VecData[1] & RHS.VecData[1]}};
   return RetVal;
 }
 
-inline uint128_t operator^(const uint128_t &LHS, const uint128_t &RHS)
+inline uint128_t SIMDOP_xor(const uint128_t &LHS, const uint128_t &RHS)
 {
   uint128_t RetVal = {{LHS.VecData[0] ^ RHS.VecData[0], LHS.VecData[1] ^ RHS.VecData[1]}};
   return RetVal;
@@ -456,7 +500,7 @@ struct uint128_t
   uint32_t VecData[4];
 };
 
-inline uint128_t operator|(const uint128_t &LHS, const uint128_t &RHS)
+inline uint128_t SIMDOP_or(const uint128_t &LHS, const uint128_t &RHS)
 {
   uint128_t RetVal = {{
     LHS.VecData[0] | RHS.VecData[0], LHS.VecData[1] | RHS.VecData[1],
@@ -464,7 +508,7 @@ inline uint128_t operator|(const uint128_t &LHS, const uint128_t &RHS)
   return RetVal;
 }
 
-inline uint128_t operator&(const uint128_t &LHS, const uint128_t &RHS)
+inline uint128_t SIMDOP_and(const uint128_t &LHS, const uint128_t &RHS)
 {
   uint128_t RetVal = {{
     LHS.VecData[0] & RHS.VecData[0], LHS.VecData[1] & RHS.VecData[1],
@@ -472,7 +516,7 @@ inline uint128_t operator&(const uint128_t &LHS, const uint128_t &RHS)
   return RetVal;
 }
 
-inline uint128_t operator^(const uint128_t &LHS, const uint128_t &RHS)
+inline uint128_t SIMDOP_xor(const uint128_t &LHS, const uint128_t &RHS)
 {
   uint128_t RetVal = {{
     LHS.VecData[0] ^ RHS.VecData[0], LHS.VecData[1] ^ RHS.VecData[1],
@@ -620,26 +664,6 @@ namespace SIMDOps
 
 typedef __m128 uint128fp32_t;
 
-#if (CFG_COMPILER == CFG_COMPILER_MSVC) || (CFG_COMPILER == CFG_COMPILER_SUNCC)
-inline __m128 operator+(const __m128 LHS, const __m128 RHS)
-{ return _mm_add_ps(LHS, RHS); }
-
-inline __m128 operator-(const __m128 LHS, const __m128 RHS)
-{ return _mm_sub_ps(LHS, RHS); }
-
-inline __m128 operator*(const __m128 LHS, const __m128 RHS)
-{ return _mm_mul_ps(LHS, RHS); }
-
-inline __m128 operator|(const __m128 LHS, const __m128 RHS)
-{ return _mm_or_ps(LHS, RHS); }
-
-inline __m128 operator&(const __m128 LHS, const __m128 RHS)
-{ return _mm_and_ps(LHS, RHS); }
-
-inline __m128 operator^(const __m128 LHS, const __m128 RHS)
-{ return _mm_xor_ps(LHS, RHS); }
-#endif
-
 namespace SIMDOps
 {
   #if (CFG_HAVE_U128 == CFG_SIMD_INTRINSIC)
@@ -703,7 +727,7 @@ struct uint128fp32_t
   float VecData[4];
 };
 
-inline uint128fp32_t operator+(const uint128fp32_t &LHS, const uint128fp32_t &RHS)
+inline uint128fp32_t SIMDOP_add(const uint128fp32_t &LHS, const uint128fp32_t &RHS)
 {
   uint128fp32_t RetVal = {{
     LHS.VecData[0] + RHS.VecData[0], LHS.VecData[1] + RHS.VecData[1],
@@ -711,7 +735,7 @@ inline uint128fp32_t operator+(const uint128fp32_t &LHS, const uint128fp32_t &RH
   return RetVal;
 }
 
-inline uint128fp32_t operator-(const uint128fp32_t &LHS, const uint128fp32_t &RHS)
+inline uint128fp32_t SIMDOP_sub(const uint128fp32_t &LHS, const uint128fp32_t &RHS)
 {
   uint128fp32_t RetVal = {{
     LHS.VecData[0] - RHS.VecData[0], LHS.VecData[1] - RHS.VecData[1],
@@ -719,7 +743,7 @@ inline uint128fp32_t operator-(const uint128fp32_t &LHS, const uint128fp32_t &RH
   return RetVal;
 }
 
-inline uint128fp32_t operator*(const uint128fp32_t &LHS, const uint128fp32_t &RHS)
+inline uint128fp32_t SIMDOP_mul(const uint128fp32_t &LHS, const uint128fp32_t &RHS)
 {
   uint128fp32_t RetVal = {{
     LHS.VecData[0] * RHS.VecData[0], LHS.VecData[1] * RHS.VecData[1],
@@ -727,7 +751,7 @@ inline uint128fp32_t operator*(const uint128fp32_t &LHS, const uint128fp32_t &RH
   return RetVal;
 }
 
-inline uint128fp32_t operator|(const uint128fp32_t &LHS, const uint128fp32_t &RHS)
+inline uint128fp32_t SIMDOP_or(const uint128fp32_t &LHS, const uint128fp32_t &RHS)
 {
   union
   {
@@ -735,11 +759,11 @@ inline uint128fp32_t operator|(const uint128fp32_t &LHS, const uint128fp32_t &RH
     uint128_t AsU128[2];
   } ConvData;
   ConvData.AsU128FP32[0] = LHS; ConvData.AsU128FP32[1] = RHS;
-  ConvData.AsU128[0] = ConvData.AsU128[0] | ConvData.AsU128[1];
+  ConvData.AsU128[0] = SIMDOP_or(ConvData.AsU128[0], ConvData.AsU128[1]);
   return ConvData.AsU128FP32[0];
 }
 
-inline uint128fp32_t operator&(const uint128fp32_t &LHS, const uint128fp32_t &RHS)
+inline uint128fp32_t SIMDOP_and(const uint128fp32_t &LHS, const uint128fp32_t &RHS)
 {
   union
   {
@@ -747,11 +771,11 @@ inline uint128fp32_t operator&(const uint128fp32_t &LHS, const uint128fp32_t &RH
     uint128_t AsU128[2];
   } ConvData;
   ConvData.AsU128FP32[0] = LHS; ConvData.AsU128FP32[1] = RHS;
-  ConvData.AsU128[0] = ConvData.AsU128[0] & ConvData.AsU128[1];
+  ConvData.AsU128[0] = SIMDOP_and(ConvData.AsU128[0], ConvData.AsU128[1]);
   return ConvData.AsU128FP32[0];
 }
 
-inline uint128fp32_t operator^(const uint128fp32_t &LHS, const uint128fp32_t &RHS)
+inline uint128fp32_t SIMDOP_xor(const uint128fp32_t &LHS, const uint128fp32_t &RHS)
 {
   union
   {
@@ -759,7 +783,7 @@ inline uint128fp32_t operator^(const uint128fp32_t &LHS, const uint128fp32_t &RH
     uint128_t AsU128[2];
   } ConvData;
   ConvData.AsU128FP32[0] = LHS; ConvData.AsU128FP32[1] = RHS;
-  ConvData.AsU128[0] = ConvData.AsU128[0] ^ ConvData.AsU128[1];
+  ConvData.AsU128[0] = SIMDOP_xor(ConvData.AsU128[0], ConvData.AsU128[1]);
   return ConvData.AsU128FP32[0];
 }
 
@@ -800,31 +824,11 @@ namespace SIMDOps
 // A vector of 2 FP64's.
 // -----------------------------------------------------------------------------
 
-#if (CFG_HAVE_SSE2 == 1)
+#if (CFG_HAVE_SSE2 == 1) && (CFG_ONLY_INTEGER_SSE2 == 0)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // SSE2 implementation.
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #define CFG_HAVE_U128FP64 CFG_SIMD_INTRINSIC
-
-#if (CFG_COMPILER == CFG_COMPILER_MSVC) || (CFG_COMPILER == CFG_COMPILER_SUNCC)
-inline __m128d operator+(__m128d LHS, __m128d RHS)
-{ return _mm_add_pd(LHS, RHS); }
-
-inline __m128d operator-(__m128d LHS, __m128d RHS)
-{ return _mm_sub_pd(LHS, RHS); }
-
-inline __m128d operator*(__m128d LHS, __m128d RHS)
-{ return _mm_mul_pd(LHS, RHS); }
-
-inline __m128d operator|(__m128d LHS, __m128d RHS)
-{ return _mm_or_pd(LHS, RHS); }
-
-inline __m128d operator&(__m128d LHS, __m128d RHS)
-{ return _mm_and_pd(LHS, RHS); }
-
-inline __m128d operator^(__m128d LHS, __m128d RHS)
-{ return _mm_xor_pd(LHS, RHS); }
-#endif
 
 typedef __m128d uint128fp64_t;
 
@@ -882,28 +886,28 @@ struct uint128fp64_t
   double VecData[2];
 };
 
-inline uint128fp64_t operator+(const uint128fp64_t &LHS, const uint128fp64_t &RHS)
+inline uint128fp64_t SIMDOP_add(const uint128fp64_t &LHS, const uint128fp64_t &RHS)
 {
   uint128fp64_t RetVal = {{
     LHS.VecData[0] + RHS.VecData[0], LHS.VecData[1] + RHS.VecData[1]}};
   return RetVal;
 }
 
-inline uint128fp64_t operator-(const uint128fp64_t &LHS, const uint128fp64_t &RHS)
+inline uint128fp64_t SIMDOP_sub(const uint128fp64_t &LHS, const uint128fp64_t &RHS)
 {
   uint128fp64_t RetVal = {{
     LHS.VecData[0] - RHS.VecData[0], LHS.VecData[1] - RHS.VecData[1]}};
   return RetVal;
 }
 
-inline uint128fp64_t operator*(const uint128fp64_t &LHS, const uint128fp64_t &RHS)
+inline uint128fp64_t SIMDOP_mul(const uint128fp64_t &LHS, const uint128fp64_t &RHS)
 {
   uint128fp64_t RetVal = {{
     LHS.VecData[0] * RHS.VecData[0], LHS.VecData[1] * RHS.VecData[1]}};
   return RetVal;
 }
 
-inline uint128fp64_t operator|(const uint128fp64_t &LHS, const uint128fp64_t &RHS)
+inline uint128fp64_t SIMDOP_or(const uint128fp64_t &LHS, const uint128fp64_t &RHS)
 {
   union
   {
@@ -911,11 +915,11 @@ inline uint128fp64_t operator|(const uint128fp64_t &LHS, const uint128fp64_t &RH
     uint128_t AsU128[2];
   } ConvData;
   ConvData.AsU128FP64[0] = LHS; ConvData.AsU128FP64[1] = RHS;
-  ConvData.AsU128[0] = ConvData.AsU128[0] | ConvData.AsU128[1];
+  ConvData.AsU128[0] = SIMDOP_or(ConvData.AsU128[0], ConvData.AsU128[1]);
   return ConvData.AsU128FP64[0];
 }
 
-inline uint128fp64_t operator&(const uint128fp64_t &LHS, const uint128fp64_t &RHS)
+inline uint128fp64_t SIMDOP_and(const uint128fp64_t &LHS, const uint128fp64_t &RHS)
 {
   union
   {
@@ -923,11 +927,11 @@ inline uint128fp64_t operator&(const uint128fp64_t &LHS, const uint128fp64_t &RH
     uint128_t AsU128[2];
   } ConvData;
   ConvData.AsU128FP64[0] = LHS; ConvData.AsU128FP64[1] = RHS;
-  ConvData.AsU128[0] = ConvData.AsU128[0] & ConvData.AsU128[1];
+  ConvData.AsU128[0] = SIMDOP_and(ConvData.AsU128[0], ConvData.AsU128[1]);
   return ConvData.AsU128FP64[0];
 }
 
-inline uint128fp64_t operator^(const uint128fp64_t &LHS, const uint128fp64_t &RHS)
+inline uint128fp64_t SIMDOP_xor(const uint128fp64_t &LHS, const uint128fp64_t &RHS)
 {
   union
   {
@@ -935,7 +939,7 @@ inline uint128fp64_t operator^(const uint128fp64_t &LHS, const uint128fp64_t &RH
     uint128_t AsU128[2];
   } ConvData;
   ConvData.AsU128FP64[0] = LHS; ConvData.AsU128FP64[1] = RHS;
-  ConvData.AsU128[0] = ConvData.AsU128[0] ^ ConvData.AsU128[1];
+  ConvData.AsU128[0] = SIMDOP_xor(ConvData.AsU128[0], ConvData.AsU128[1]);
   return ConvData.AsU128FP64[0];
 }
 
@@ -1071,7 +1075,9 @@ template<int NumBytes> class CDataBuffer
     {
       #if (CFG_HAVE_SSE2 == 1)
       __m128i     AsM128I[NumBytes / 16];
+      #if (CFG_ONLY_INTEGER_SSE2 == 0)
       __m128d     AsM128D[NumBytes / 16];
+      #endif
       #endif
       #if (CFG_HAVE_SSE1 == 1)
       __m128    AsM128[NumBytes / 16];
@@ -1088,7 +1094,7 @@ template<int NumBytes> class CDataBuffer
       uint64_t  AsU64[NumBytes / 8];
        int64_t  AsI64[NumBytes / 8];
       double    AsFP64[NumBytes / 8];
-      double    AsFP32[NumBytes / 4];
+      float     AsFP32[NumBytes / 4];
       uint128_t AsU128[NumBytes / 16];
       uint128fp32_t AsU128FP32[NumBytes / 16];
       uint128fp64_t AsU128FP64[NumBytes / 16];
@@ -1143,8 +1149,10 @@ template<int NumBytes> class CDataBuffer
       #if (CFG_HAVE_SSE2 == 1)
       inline __m128i LoadM128I(size_t Idx) const { return FVecData.AsM128I[Idx]; }
       inline void StoreM128I(size_t Idx, const __m128i Src) { FVecData.AsM128I[Idx] = Src; }
+      #if (CFG_ONLY_INTEGER_SSE2 == 0)
       inline __m128d LoadM128D(size_t Idx) const { return FVecData.AsM128D[Idx]; }
       inline void StoreM128D(size_t Idx, const __m128d Src) { FVecData.AsM128D[Idx] = Src; }
+      #endif
       #endif
 
       inline void *GetPointerVoid(void) { return FVecData.AsU8; }
@@ -1189,9 +1197,10 @@ template<int NumBytes> class CDataBuffer
       #if (CFG_HAVE_SSE2 == 1)
       inline __m128i *GetPointerM128I(void) { return FVecData.AsM128I; };
       inline const __m128i *GetPointerM128I(void) const { return FVecData.AsM128I; };
-
+      #if (CFG_ONLY_INTEGER_SSE2 == 0)
       inline __m128d *GetPointerM128D(void) { return FVecData.AsM128D; };
       inline const __m128d *GetPointerM128D(void) const { return FVecData.AsM128D; };
+      #endif
       #endif
 
       inline uint128_t *GetPointerU128(void) { return FVecData.AsU128; };

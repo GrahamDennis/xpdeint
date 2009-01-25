@@ -55,10 +55,14 @@
   step error-calculation routine have been made.
   
 * Fix XSIL import to not depend on libxmds, or do something equivalent.
+  - The something equivalent that we will do is support loading of HDF5 breakpoints.
+    I do not plan on replacing libxmds. If someone wants to load binary XSIL data,
+    they can have xmds-1 installed or HDF5 installed.
 
 * Add a 'moment group 0' which contains simulation constants. This moment group would be zero-d and would contain various constants depending on the
   exact simulation. Constants that should be included are: the final value of the propagation dimension, any passed-in arguments, the number of paths
   (if appropriate), and anything else appropriate.
+  - This can be added in the HDF5 output file.
 
 * Add support for moment post-processing. This is only necessary for multi-path simulations where a temporal fourier transform needs to be averaged.
   Currently you can probably get around this limitation by using cross-propagation for the integration. I *think* you can have noises in cross-propagation

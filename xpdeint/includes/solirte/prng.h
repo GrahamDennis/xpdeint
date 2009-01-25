@@ -13,6 +13,7 @@
 #include "randpool.h"
 #include "ziggurat.h"
 #include <math.h>
+
 #ifndef CFG_TIMETRACK_DISABLE
 #include "../platform/timetrack.h"
 #endif
@@ -34,6 +35,8 @@ class CPRNG
     {
       static THREADVAR uint32_t uniform_FP64_refill_count;
       static THREADVAR uint64_t uniform_FP64_refill_time;
+      static THREADVAR uint32_t uniform_FP32_refill_count;
+      static THREADVAR uint64_t uniform_FP32_refill_time;
       static THREADVAR uint32_t gaussiantail_FP64_refill_count;
       static THREADVAR uint64_t gaussiantail_FP64_refill_time;
       static THREADVAR uint32_t gaussian_FP64_refill_count;
@@ -42,11 +45,16 @@ class CPRNG
       static THREADVAR uint32_t exponential_FP64_refill_count;
       static THREADVAR uint64_t exponential_FP64_refill_time;
       static THREADVAR uint64_t exponential_FP64_numgen;
+      static THREADVAR uint32_t exponential_FP32_refill_count;
+      static THREADVAR uint64_t exponential_FP32_refill_time;
+      static THREADVAR uint64_t exponential_FP32_numgen;
 
       TMetrics(void)
       {
         CPerfCounters::SetName(uniform_FP64_refill_count, "CPRNG<" + GenToString(SFMTParams::MEXP) + ">.uniform.FP64.refill.count");
         CPerfCounters::SetName(uniform_FP64_refill_time, "CPRNG<" + GenToString(SFMTParams::MEXP) + ">.uniform.FP64.refill.time");
+        CPerfCounters::SetName(uniform_FP32_refill_count, "CPRNG<" + GenToString(SFMTParams::MEXP) + ">.uniform.FP32.refill.count");
+        CPerfCounters::SetName(uniform_FP32_refill_time, "CPRNG<" + GenToString(SFMTParams::MEXP) + ">.uniform.FP32.refill.time");
         CPerfCounters::SetName(gaussiantail_FP64_refill_count, "CPRNG<" + GenToString(SFMTParams::MEXP) + ">.gaussiantail.FP64.refill.count");
         CPerfCounters::SetName(gaussiantail_FP64_refill_time, "CPRNG<" + GenToString(SFMTParams::MEXP) + ">.gaussiantail.FP64.refill.time");
         CPerfCounters::SetName(gaussian_FP64_refill_count, "CPRNG<" + GenToString(SFMTParams::MEXP) + ">.gaussian.FP64.refill.count");
@@ -55,6 +63,9 @@ class CPRNG
         CPerfCounters::SetName(exponential_FP64_refill_count, "CPRNG<" + GenToString(SFMTParams::MEXP) + ">.exponential.FP64.refill.count");
         CPerfCounters::SetName(exponential_FP64_refill_time, "CPRNG<" + GenToString(SFMTParams::MEXP) + ">.exponential.FP64.refill.time");
         CPerfCounters::SetName(exponential_FP64_numgen, "CPRNG<" + GenToString(SFMTParams::MEXP) + ">.exponential.FP64.numgen");
+        CPerfCounters::SetName(exponential_FP32_refill_count, "CPRNG<" + GenToString(SFMTParams::MEXP) + ">.exponential.FP32.refill.count");
+        CPerfCounters::SetName(exponential_FP32_refill_time, "CPRNG<" + GenToString(SFMTParams::MEXP) + ">.exponential.FP32.refill.time");
+        CPerfCounters::SetName(exponential_FP32_numgen, "CPRNG<" + GenToString(SFMTParams::MEXP) + ">.exponential.FP32.numgen");
       }
 
       void ForceConstruction(void) { }
@@ -65,6 +76,10 @@ class CPRNG
     // Uniform random doubles on [0,1)
     static const size_t FBufLen_uniform_FP64 = BufSize * 2;
     CDataBuffer<BufSize * 16> FBuffer_uniform_FP64;
+    // Uniform random singles on [0,1)
+    static const size_t FBufLen_uniform_FP32 = BufSize * 4;
+    CDataBuffer<BufSize * 16> FBuffer_uniform_FP32;
+
     // Gaussian tail random doubles (for Ziggurat). Note 2:1 reduction ratio
     // (needs 2 u128's to generate 2 doubles).
     static const size_t FBufLen_gaussiantail_FP64 = (BufSize / 2) * 2;
@@ -73,25 +88,33 @@ class CPRNG
     CDataBuffer<BufSize * 16> FBuffer_gaussian_FP64;
     // Exponential random doubles.
     CDataBuffer<BufSize * 16> FBuffer_exponential_FP64;
+    // Exponential random singles.
+    CDataBuffer<BufSize * 16> FBuffer_exponential_FP32;
     // Generic integer pool
     CDataBuffer<BufSize * 16> FBuffer_integer;
     // The randpool itself.
     CRandPool<SFMTParams> FRandPool;
     // Positions and lengths.
     size_t FBufPos_uniform_FP64;
+    size_t FBufPos_uniform_FP32;
     size_t FBufPos_gaussiantail_FP64;
     size_t FBufLen_gaussian_FP64;
     size_t FBufPos_gaussian_FP64;
     size_t FBufLen_exponential_FP64;
     size_t FBufPos_exponential_FP64;
+    size_t FBufLen_exponential_FP32;
+    size_t FBufPos_exponential_FP32;
     double FScaleFactor_exponential_FP64;
+    float FScaleFactor_exponential_FP32;
     size_t FBufPos_integer;
     int RefCount;
   protected:
     void RefillBuf_uniform_FP64(void);
+    void RefillBuf_uniform_FP32(void);
     void RefillBuf_gaussiantail_FP64(void);
     void RefillBuf_gaussian_FP64(void);
     void RefillBuf_exponential_FP64(void);
+    void RefillBuf_exponential_FP32(void);
     void RefillBuf_integer(void);
   public:
     static std::string GetIDString(void) { return CRandPool<SFMTParams>::GetIDString(); }
@@ -100,12 +123,16 @@ class CPRNG
     {
       FRandPool.init_gen_rand(seed);
       FBufPos_uniform_FP64 = BufSize * 2;
+      FBufPos_uniform_FP32 = BufSize * 4;
       FBufPos_gaussiantail_FP64 = BufSize;
       FBufPos_gaussian_FP64 = 0;
       FBufLen_gaussian_FP64 = 0;
       FBufPos_exponential_FP64 = 0;
       FBufLen_exponential_FP64 = 0;
       FScaleFactor_exponential_FP64 = 0;
+      FBufPos_exponential_FP32 = 0;
+      FBufLen_exponential_FP32 = 0;
+      FScaleFactor_exponential_FP32 = 0;
       FBufPos_integer = BufSize * 16;
     }
 
@@ -125,15 +152,25 @@ class CPRNG
     int GetRefCount(void) { return RefCount; }
 
     double Random_uniform_FP64(void);
+    float Random_uniform_FP32(void);
     double Random_gaussiantail_FP64(void);
     double Random_gaussian_FP64(void);
     double Random_exponential_FP64(void);
+    float Random_exponential_FP32(void);
     uint32_t Random_u32(void);
+    uint32_t Random_u32(uint32_t MaxVal);
+
+    void Random_uniform_FP(float &x) { x = Random_uniform_FP32(); }
+    void Random_uniform_FP(double &x) { x = Random_uniform_FP64(); }
+    void Random_exponential_FP(double &x) { x = Random_exponential_FP64(); }
+    void Random_exponential_FP(float &x) { x = Random_exponential_FP32(); }
 
     void RandFill_uniform_FP64(double *Buffer, size_t NumDoubles);
+    void RandFill_uniform_FP32(float *Buffer, size_t NumFloats);
     void RandFill_gaussian_FP64(double *Buffer, size_t NumDoubles);
     void RandFill_gaussiantail_FP64(double *Buffer, size_t NumDoubles);
     void RandFill_exponential_FP64(double *Buffer, size_t NumDoubles);
+    void RandFill_exponential_FP32(float *Buffer, size_t NumFloats);
     void RandFill_u32(uint32_t *Buffer, size_t NumU32s);
 
     typedef typename CRandPool<SFMTParams>::CRandomBlockPtr CRandomBlockPtr;
@@ -151,7 +188,202 @@ class CPRNG
 };
 
 // -----------------------------------------------------------------------------
-// Uniform random numbers.
+// Uniform random singles.
+// -----------------------------------------------------------------------------
+template<class SFMTParams>
+NOINLINE void CPRNG<SFMTParams>::RefillBuf_uniform_FP32(void)
+{
+  #ifndef CFG_TIMETRACK_DISABLE
+  CTimedScope ScopeTimer(Metrics.uniform_FP32_refill_time);
+  Metrics.uniform_FP32_refill_count++;
+  #endif
+
+  typename CRandPool<SFMTParams>::CRandomBlockPtr RandomBlock = FRandPool.GetRandomBlock();
+
+#if (CFG_HAVE_U128FP32 == CFG_SIMD_INTRINSIC)
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// FP32-intrinsic implementation
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  CDataBuffer_ConstView<uint128fp32_t, BufSize * 16> SrcPtr = RandomBlock.template GetConstView<uint128fp32_t>();
+  CDataBuffer_VarView<uint128fp32_t, BufSize * 16> DstPtr = FBuffer_uniform_FP32.template GetVarView<uint128fp32_t>();
+
+  uint128fp32_t AndMask = SIMDOps::uint128fp32_t_const<0x007FFFFF, 0x007FFFFF, 0x007FFFFF, 0x007FFFFF>::Value();
+  uint128fp32_t One = SIMDOps::uint128fp32_t_const<0x3F800000, 0x3F800000, 0x3F800000, 0x3F800000>::Value();
+
+  size_t CopyLoop;
+  for (CopyLoop = 0; CopyLoop < BufSize - (BufSize % 4); CopyLoop += 4)
+  {
+    DstPtr.Store(CopyLoop + 0, SIMDOP_sub(SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 0), AndMask), One), One));
+    DstPtr.Store(CopyLoop + 1, SIMDOP_sub(SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 1), AndMask), One), One));
+    DstPtr.Store(CopyLoop + 2, SIMDOP_sub(SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 2), AndMask), One), One));
+    DstPtr.Store(CopyLoop + 3, SIMDOP_sub(SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 3), AndMask), One), One));
+  }
+
+  // Unrolling tail.
+  if ((BufSize % 4) == 3)
+  {
+    DstPtr.Store(CopyLoop + 0, SIMDOP_sub(SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 0), AndMask), One), One));
+    DstPtr.Store(CopyLoop + 1, SIMDOP_sub(SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 1), AndMask), One), One));
+    DstPtr.Store(CopyLoop + 2, SIMDOP_sub(SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 2), AndMask), One), One));
+  }
+  if ((BufSize % 4) == 2)
+  {
+    DstPtr.Store(CopyLoop + 0, SIMDOP_sub(SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 0), AndMask), One), One));
+    DstPtr.Store(CopyLoop + 1, SIMDOP_sub(SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 1), AndMask), One), One));
+  }
+  if ((BufSize % 4) == 1)
+  {
+    DstPtr.Store(CopyLoop + 0, SIMDOP_sub(SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 0), AndMask), One), One));
+  }
+#elif (CFG_HAVE_U128 == CFG_SIMD_MMX)
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// U128-mmx, fp32-scalar two-pass implementation
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  {
+    // Integer pass.
+    CDataBuffer_ConstView<__m64, BufSize * 16> SrcPtr = RandomBlock.template GetConstView<__m64>();
+    CDataBuffer_VarView<__m64, BufSize * 16> DstPtr = FBuffer_uniform_FP32.template GetVarView<__m64>();
+
+    __m64 AndMask = SIMDOps::__m64_const<0x007FFFFF, 0x007FFFFF>::Value();
+    __m64 OrMask = SIMDOps::__m64_const<0x3F800000, 0x3F800000>::Value();
+
+    size_t CopyLoop;
+    for (CopyLoop = 0; CopyLoop < BufSize - BufSize % 2; CopyLoop += 2)
+    {
+      DstPtr.Store(CopyLoop * 2 + 0, _mm_or_si64(_mm_and_si64(SrcPtr.Load(CopyLoop * 2 + 0), AndMask), OrMask));
+      DstPtr.Store(CopyLoop * 2 + 1, _mm_or_si64(_mm_and_si64(SrcPtr.Load(CopyLoop * 2 + 1), AndMask), OrMask));
+      DstPtr.Store(CopyLoop * 2 + 2, _mm_or_si64(_mm_and_si64(SrcPtr.Load(CopyLoop * 2 + 2), AndMask), OrMask));
+      DstPtr.Store(CopyLoop * 2 + 3, _mm_or_si64(_mm_and_si64(SrcPtr.Load(CopyLoop * 2 + 3), AndMask), OrMask));
+    }
+    if ((BufSize % 2) == 1)
+    {
+      DstPtr.Store(CopyLoop * 2 + 0, _mm_or_si64(_mm_and_si64(SrcPtr.Load(CopyLoop * 2 + 0), AndMask), OrMask));
+      DstPtr.Store(CopyLoop * 2 + 1, _mm_or_si64(_mm_and_si64(SrcPtr.Load(CopyLoop * 2 + 1), AndMask), OrMask));
+    }
+
+    SIMDOps::EmptyForFP();
+  }
+  {
+    // Floating point pass.
+    CDataBuffer_VarView<float, BufSize * 16> DstPtr = FBuffer_uniform_FP32.template GetVarView<float>();
+
+    size_t CopyLoop;
+    for (CopyLoop = 0; CopyLoop < BufSize - BufSize % 2; CopyLoop += 2)
+    {
+      DstPtr.Store(CopyLoop * 4 + 0, DstPtr.Load(CopyLoop * 4 + 0) - 1.0f);
+      DstPtr.Store(CopyLoop * 4 + 1, DstPtr.Load(CopyLoop * 4 + 1) - 1.0f);
+      DstPtr.Store(CopyLoop * 4 + 2, DstPtr.Load(CopyLoop * 4 + 2) - 1.0f);
+      DstPtr.Store(CopyLoop * 4 + 3, DstPtr.Load(CopyLoop * 4 + 3) - 1.0f);
+      DstPtr.Store(CopyLoop * 4 + 4, DstPtr.Load(CopyLoop * 4 + 4) - 1.0f);
+      DstPtr.Store(CopyLoop * 4 + 5, DstPtr.Load(CopyLoop * 4 + 5) - 1.0f);
+      DstPtr.Store(CopyLoop * 4 + 6, DstPtr.Load(CopyLoop * 4 + 6) - 1.0f);
+      DstPtr.Store(CopyLoop * 4 + 7, DstPtr.Load(CopyLoop * 4 + 7) - 1.0f);
+    }
+    if ((BufSize % 2) == 1)
+    {
+      DstPtr.Store(CopyLoop * 4 + 0, DstPtr.Load(CopyLoop * 4 + 0) - 1.0f);
+      DstPtr.Store(CopyLoop * 4 + 1, DstPtr.Load(CopyLoop * 4 + 1) - 1.0f);
+      DstPtr.Store(CopyLoop * 4 + 2, DstPtr.Load(CopyLoop * 4 + 2) - 1.0f);
+      DstPtr.Store(CopyLoop * 4 + 3, DstPtr.Load(CopyLoop * 4 + 3) - 1.0f);
+    }
+  }
+#elif (CFG_BITS == 64)
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// U128-scalar, fp32-scalar 64-bit one-pass implementation
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  CDataBuffer_ConstView<uint64_t, BufSize * 16> SrcPtr = RandomBlock.template GetConstView<uint64_t>();
+  CDataBuffer_VarView<float, BufSize * 16> DstPtr = FBuffer_uniform_FP32.template GetVarView<float>();
+
+  uint64_t AndMask = UINT64_C(0x007FFFFF007FFFFF);
+  uint64_t OrMask = UINT64_C(0x3F8000003F800000);
+
+  // The main conversion loop.
+  union
+  {
+    uint64_t AsU64;
+    float AsFP32[2];
+  } FPConv[2];
+
+  for (size_t CopyLoop = 0; CopyLoop < BufSize; CopyLoop++)
+  {
+    FPConv[0].AsU64 = (SrcPtr.Load(CopyLoop * 2 + 0) & AndMask) | OrMask;
+    DstPtr.Store(CopyLoop * 4 + 0, FPConv[0].AsFP32[0] - 1.0f);
+    DstPtr.Store(CopyLoop * 4 + 1, FPConv[0].AsFP32[1] - 1.0f);
+    FPConv[1].AsU64 = (SrcPtr.Load(CopyLoop * 2 + 1) & AndMask) | OrMask;
+    DstPtr.Store(CopyLoop * 4 + 2, FPConv[1].AsFP32[0] - 1.0f);
+    DstPtr.Store(CopyLoop * 4 + 3, FPConv[1].AsFP32[1] - 1.0f);
+  }
+#else
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// U128-scalar, fp32-scalar 32-bit one-pass implementation
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  CDataBuffer_ConstView<uint32_t, BufSize * 16> SrcPtr = RandomBlock.template GetConstView<uint32_t>();
+  CDataBuffer_VarView<float, BufSize * 16> DstPtr = FBuffer_uniform_FP32.template GetVarView<float>();
+
+  uint32_t AndMask = 0x007FFFFF;
+  uint32_t OrMask = 0x3F800000;
+
+  // The main conversion loop.
+  union
+  {
+    uint32_t AsU32;
+    float AsFP32;
+  } FPConv[4];
+
+  for (size_t CopyLoop = 0; CopyLoop < BufSize; CopyLoop++)
+  {
+    FPConv[0].AsU32 = (SrcPtr.Load(CopyLoop * 4 + 0) & AndMask) | OrMask;
+    DstPtr.Store(CopyLoop * 4 + 0, FPConv[0].AsFP32 - 1.0f);
+    FPConv[1].AsU32 = (SrcPtr.Load(CopyLoop * 4 + 1) & AndMask) | OrMask;
+    DstPtr.Store(CopyLoop * 4 + 1, FPConv[1].AsFP32 - 1.0f);
+    FPConv[2].AsU32 = (SrcPtr.Load(CopyLoop * 4 + 2) & AndMask) | OrMask;
+    DstPtr.Store(CopyLoop * 4 + 2, FPConv[2].AsFP32 - 1.0f);
+    FPConv[3].AsU32 = (SrcPtr.Load(CopyLoop * 4 + 3) & AndMask) | OrMask;
+    DstPtr.Store(CopyLoop * 4 + 3, FPConv[3].AsFP32 - 1.0f);
+  }
+#endif
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Common code.
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  FBufPos_uniform_FP32 = 0;
+}
+
+template<class SFMTParams>
+inline float CPRNG<SFMTParams>::Random_uniform_FP32(void)
+{
+  if (FBufPos_uniform_FP32 == FBufLen_uniform_FP32) RefillBuf_uniform_FP32();
+  return FBuffer_uniform_FP32.LoadFP32(EndianFix<2>(FBufPos_uniform_FP32++));
+}
+
+template<class SFMTParams>
+inline void CPRNG<SFMTParams>::RandFill_uniform_FP32(float *Buffer, size_t NumFloats)
+{
+  size_t NumToGo = NumFloats;
+  while (NumToGo > 0)
+  {
+    // Round up to the next 128-bit boundary.
+    FBufPos_uniform_FP32 = (FBufPos_uniform_FP32 + 3) & ~3;
+
+    // Make sure there's something to copy from.
+    while (FBufLen_uniform_FP32 == FBufPos_uniform_FP32)
+      RefillBuf_uniform_FP32();
+
+    // See how many to do.
+    size_t NumInBuf = FBufLen_uniform_FP32 - FBufPos_uniform_FP32;
+    size_t NumToDo = (NumToGo > NumInBuf) ? NumInBuf : NumToGo;
+
+    // Copy.
+    memcpy(Buffer, FBuffer_uniform_FP32.GetPointerFP32() + FBufPos_uniform_FP32, NumToDo * sizeof(float));
+
+    // Update pointers, etc.
+    Buffer += NumToDo;
+    NumToGo -= NumToDo;
+    FBufPos_uniform_FP32 += NumToDo;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Uniform random doubles.
 // -----------------------------------------------------------------------------
 template<class SFMTParams>
 NOINLINE void CPRNG<SFMTParams>::RefillBuf_uniform_FP64(void)
@@ -163,7 +395,7 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_uniform_FP64(void)
 
   typename CRandPool<SFMTParams>::CRandomBlockPtr RandomBlock = FRandPool.GetRandomBlock();
 
-#if (CFG_HAVE_U128 == CFG_SIMD_INTRINSIC) && (CFG_HAVE_U128FP64 == CFG_SIMD_INTRINSIC)
+#if (CFG_HAVE_U128FP64 == CFG_SIMD_INTRINSIC)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // FP64-intrinsic implementation
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -176,33 +408,33 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_uniform_FP64(void)
   size_t CopyLoop;
   for (CopyLoop = 0; CopyLoop < BufSize - (BufSize % 4); CopyLoop += 4)
   {
-    DstPtr.Store(CopyLoop + 0, ((SrcPtr.Load(CopyLoop + 0) & AndMask) | One) - One);
-    DstPtr.Store(CopyLoop + 1, ((SrcPtr.Load(CopyLoop + 1) & AndMask) | One) - One);
-    DstPtr.Store(CopyLoop + 2, ((SrcPtr.Load(CopyLoop + 2) & AndMask) | One) - One);
-    DstPtr.Store(CopyLoop + 3, ((SrcPtr.Load(CopyLoop + 3) & AndMask) | One) - One);
+    DstPtr.Store(CopyLoop + 0, SIMDOP_sub(SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 0), AndMask), One), One));
+    DstPtr.Store(CopyLoop + 1, SIMDOP_sub(SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 1), AndMask), One), One));
+    DstPtr.Store(CopyLoop + 2, SIMDOP_sub(SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 2), AndMask), One), One));
+    DstPtr.Store(CopyLoop + 3, SIMDOP_sub(SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 3), AndMask), One), One));
   }
 
   // Unrolling tail.
   if ((BufSize % 4) == 3)
   {
-    DstPtr.Store(CopyLoop + 0, ((SrcPtr.Load(CopyLoop + 0) & AndMask) | One) - One);
-    DstPtr.Store(CopyLoop + 1, ((SrcPtr.Load(CopyLoop + 1) & AndMask) | One) - One);
-    DstPtr.Store(CopyLoop + 2, ((SrcPtr.Load(CopyLoop + 2) & AndMask) | One) - One);
+    DstPtr.Store(CopyLoop + 0, SIMDOP_sub(SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 0), AndMask), One), One));
+    DstPtr.Store(CopyLoop + 1, SIMDOP_sub(SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 1), AndMask), One), One));
+    DstPtr.Store(CopyLoop + 2, SIMDOP_sub(SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 2), AndMask), One), One));
   }
   if ((BufSize % 4) == 2)
   {
-    DstPtr.Store(CopyLoop + 0, ((SrcPtr.Load(CopyLoop + 0) & AndMask) | One) - One);
-    DstPtr.Store(CopyLoop + 1, ((SrcPtr.Load(CopyLoop + 1) & AndMask) | One) - One);
+    DstPtr.Store(CopyLoop + 0, SIMDOP_sub(SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 0), AndMask), One), One));
+    DstPtr.Store(CopyLoop + 1, SIMDOP_sub(SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 1), AndMask), One), One));
   }
   if ((BufSize % 4) == 1)
   {
-    DstPtr.Store(CopyLoop + 0, ((SrcPtr.Load(CopyLoop + 0) & AndMask) | One) - One);
+    DstPtr.Store(CopyLoop + 0, SIMDOP_sub(SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 0), AndMask), One), One));
   }
 #elif (CFG_HAVE_U128 == CFG_SIMD_INTRINSIC)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // U128-intrinsic, fp64-scalar implementation
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  CDataBuffer_ConstView<uint128fp64_t, BufSize * 16> SrcPtr = RandomBlock.template GetConstView<uint128fp64_t>();
+  CDataBuffer_ConstView<uint128_t, BufSize * 16> SrcPtr = RandomBlock.template GetConstView<uint128_t>();
   CDataBuffer_VarView<double, BufSize * 16> DstPtr = FBuffer_uniform_FP64.template GetVarView<double>();
 
   uint128_t AndMask = SIMDOps::uint128_t_const<0xFFFFFFFF, 0x000FFFFF, 0xFFFFFFFF, 0x000FFFFF>::Value();
@@ -218,45 +450,45 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_uniform_FP64(void)
   size_t CopyLoop;
   for (CopyLoop = 0; CopyLoop < BufSize - (BufSize % 4); CopyLoop += 4)
   {
-    TempBuf[0].AsU128 = (SrcPtr.Load(CopyLoop + 0) & AndMask) | OrMask;
+    TempBuf[0].AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 0), AndMask), OrMask);
     DstPtr.Store(CopyLoop * 2 + 0, TempBuf[0].AsFP64[0] - 1.0);
     DstPtr.Store(CopyLoop * 2 + 1, TempBuf[0].AsFP64[1] - 1.0);
-    TempBuf[1].AsU128 = (SrcPtr.Load(CopyLoop + 1) & AndMask) | OrMask;
-    DstPtr.Store(CopyLoop * 2 + 2, TempBuf[0].AsFP64[0] - 1.0);
-    DstPtr.Store(CopyLoop * 2 + 3, TempBuf[0].AsFP64[1] - 1.0);
-    TempBuf[2].AsU128 = (SrcPtr.Load(CopyLoop + 2) & AndMask) | OrMask;
-    DstPtr.Store(CopyLoop * 2 + 4, TempBuf[0].AsFP64[0] - 1.0);
-    DstPtr.Store(CopyLoop * 2 + 5, TempBuf[0].AsFP64[1] - 1.0);
-    TempBuf[3].AsU128 = (SrcPtr.Load(CopyLoop + 3) & AndMask) | OrMask;
-    DstPtr.Store(CopyLoop * 2 + 6, TempBuf[0].AsFP64[0] - 1.0);
-    DstPtr.Store(CopyLoop * 2 + 7, TempBuf[0].AsFP64[1] - 1.0);
+    TempBuf[1].AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 1), AndMask), OrMask);
+    DstPtr.Store(CopyLoop * 2 + 2, TempBuf[1].AsFP64[0] - 1.0);
+    DstPtr.Store(CopyLoop * 2 + 3, TempBuf[1].AsFP64[1] - 1.0);
+    TempBuf[2].AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 2), AndMask), OrMask);
+    DstPtr.Store(CopyLoop * 2 + 4, TempBuf[2].AsFP64[0] - 1.0);
+    DstPtr.Store(CopyLoop * 2 + 5, TempBuf[2].AsFP64[1] - 1.0);
+    TempBuf[3].AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 3), AndMask), OrMask);
+    DstPtr.Store(CopyLoop * 2 + 6, TempBuf[3].AsFP64[0] - 1.0);
+    DstPtr.Store(CopyLoop * 2 + 7, TempBuf[3].AsFP64[1] - 1.0);
   }
 
   // Unrolling tail.
   if ((BufSize % 4) == 3)
   {
-    TempBuf[0].AsU128 = (SrcPtr.Load(CopyLoop + 0) & AndMask) | OrMask;
+    TempBuf[0].AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 0), AndMask), OrMask);
     DstPtr.Store(CopyLoop * 2 + 0, TempBuf[0].AsFP64[0] - 1.0);
     DstPtr.Store(CopyLoop * 2 + 1, TempBuf[0].AsFP64[1] - 1.0);
-    TempBuf[1].AsU128 = (SrcPtr.Load(CopyLoop + 1) & AndMask) | OrMask;
-    DstPtr.Store(CopyLoop * 2 + 2, TempBuf[0].AsFP64[0] - 1.0);
-    DstPtr.Store(CopyLoop * 2 + 3, TempBuf[0].AsFP64[1] - 1.0);
-    TempBuf[2].AsU128 = (SrcPtr.Load(CopyLoop + 2) & AndMask) | OrMask;
-    DstPtr.Store(CopyLoop * 2 + 4, TempBuf[0].AsFP64[0] - 1.0);
-    DstPtr.Store(CopyLoop * 2 + 5, TempBuf[0].AsFP64[1] - 1.0);
+    TempBuf[1].AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 1), AndMask), OrMask);
+    DstPtr.Store(CopyLoop * 2 + 2, TempBuf[1].AsFP64[0] - 1.0);
+    DstPtr.Store(CopyLoop * 2 + 3, TempBuf[1].AsFP64[1] - 1.0);
+    TempBuf[2].AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 2), AndMask), OrMask);
+    DstPtr.Store(CopyLoop * 2 + 4, TempBuf[2].AsFP64[0] - 1.0);
+    DstPtr.Store(CopyLoop * 2 + 5, TempBuf[2].AsFP64[1] - 1.0);
   }
   if ((BufSize % 4) == 2)
   {
-    TempBuf[0].AsU128 = (SrcPtr.Load(CopyLoop + 0) & AndMask) | OrMask;
+    TempBuf[0].AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 0), AndMask), OrMask);
     DstPtr.Store(CopyLoop * 2 + 0, TempBuf[0].AsFP64[0] - 1.0);
     DstPtr.Store(CopyLoop * 2 + 1, TempBuf[0].AsFP64[1] - 1.0);
-    TempBuf[1].AsU128 = (SrcPtr.Load(CopyLoop + 1) & AndMask) | OrMask;
-    DstPtr.Store(CopyLoop * 2 + 2, TempBuf[0].AsFP64[0] - 1.0);
-    DstPtr.Store(CopyLoop * 2 + 3, TempBuf[0].AsFP64[1] - 1.0);
+    TempBuf[1].AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 1), AndMask), OrMask);
+    DstPtr.Store(CopyLoop * 2 + 2, TempBuf[1].AsFP64[0] - 1.0);
+    DstPtr.Store(CopyLoop * 2 + 3, TempBuf[1].AsFP64[1] - 1.0);
   }
   if ((BufSize % 4) == 1)
   {
-    TempBuf[0].AsU128 = (SrcPtr.Load(CopyLoop + 0) & AndMask) | OrMask;
+    TempBuf[0].AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 0), AndMask), OrMask);
     DstPtr.Store(CopyLoop * 2 + 0, TempBuf[0].AsFP64[0] - 1.0);
     DstPtr.Store(CopyLoop * 2 + 1, TempBuf[0].AsFP64[1] - 1.0);
   }
@@ -433,8 +665,8 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_gaussiantail_FP64(void)
   {
     // From the first uint128_t, extract two fp64's (and two signs later).
     uint128fp64_t Src = SrcPtr.Load(SrcIdx * 2);
-    uint128fp64_t u1 = ((Src & FPAndMask) | FPOrMask) - FPOrMask;
-    uint128fp64_t SignBit = Src & SignAndMask;
+    uint128fp64_t u1 = SIMDOP_sub(SIMDOP_or(SIMDOP_and(Src, FPAndMask), FPOrMask), FPOrMask);
+    uint128fp64_t SignBit = SIMDOP_and(Src, SignAndMask);
 
     // Transform u1
     union
@@ -447,11 +679,11 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_gaussiantail_FP64(void)
 
     // Calculate the compare result (u2 < a / Test) ie: Test * u2 < a
     // Accept if Test * u2 < a
-    uint128fp64_t u2 = ((SrcPtr.Load(SrcIdx * 2 + 1) & FPAndMask) | FPOrMask) - FPOrMask;
-    uint128fp64_t CompareResult = SIMDOps::CmpGE(Test.AsU128 * u2, a128);
+    uint128fp64_t u2 = SIMDOP_sub(SIMDOP_or(SIMDOP_and(SrcPtr.Load(SrcIdx * 2 + 1), FPAndMask), FPOrMask), FPOrMask);
+    uint128fp64_t CompareResult = SIMDOps::CmpGE(SIMDOP_mul(Test.AsU128, u2), a128);
 
     // Store the transformed u1.
-    DstPtr.Store(SrcIdx, Test.AsU128 | SignBit | CompareResult);
+    DstPtr.Store(SrcIdx, SIMDOP_or(SIMDOP_or(Test.AsU128, SignBit), CompareResult));
   }
 #elif (CFG_HAVE_U128 == CFG_SIMD_INTRINSIC) // Note: No mmx due to emms overhead.
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -471,13 +703,13 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_gaussiantail_FP64(void)
 
   union
   {
-    uint128fp64_t AsU128;
+    uint128_t AsU128;
     double AsFP64[2];
   } u1;
 
   union
   {
-    uint128fp64_t AsU128;
+    uint128_t AsU128;
     double AsFP64[2];
   } u2;
 
@@ -485,11 +717,11 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_gaussiantail_FP64(void)
   {
     // Extract (u1 + 1) and the sign bit.
     uint128_t TempSrc = SrcPtr.Load(SrcIdx * 2);
-    u1.AsU128 = (TempSrc & FPAndMask) | FPOrMask;
-    uint128_t SignBit = TempSrc & SignMask;
+    u1.AsU128 = SIMDOP_or(SIMDOP_and(TempSrc, FPAndMask), FPOrMask);
+    uint128_t SignBit = SIMDOP_and(TempSrc, SignAndMask);
 
     // Extract (u2 + 1).
-    u1.AsU128 = (SrcPtr.Load(SrcIdx * 2 + 1) & FPAndMask) | FPOrMask;
+    u1.AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(SrcIdx * 2 + 1), FPAndMask), FPOrMask);
 
     // Transform u1.
     double Test0 = sqrt(a2 - 2 * log(u1.AsFP64[0] - 1.0));
@@ -498,21 +730,21 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_gaussiantail_FP64(void)
     {
       double AsFP64[2];
       uint128_t AsU128;
-    } CompareResult = {Test0, Test1};
+    } Test = {Test0, Test1};
 
     // Calculate the compare results (u2 < a / Test) ie: Test * u2 < a
     // Accept if Test * u2 < a
     #if (CFG_BITS == 64)
-    uint64_t Compare0 = ((Test0 * (a2.AsFP64[0] - 1.0)) >= a) ? UINT64_C(0xFFFFFFFFFFFFFFFF) : 0;
-    uint64_t Compare1 = ((Test1 * (a2.AsFP64[1] - 1.0)) >= a) ? UINT64_C(0xFFFFFFFFFFFFFFFF) : 0;
+    uint64_t Compare0 = ((Test0 * (u2.AsFP64[0] - 1.0)) >= a) ? UINT64_C(0xFFFFFFFFFFFFFFFF) : 0;
+    uint64_t Compare1 = ((Test1 * (u2.AsFP64[1] - 1.0)) >= a) ? UINT64_C(0xFFFFFFFFFFFFFFFF) : 0;
     union
     {
       uint64_t AsU64[2];
       uint128_t AsU128;
     } CompareResult = {Compare0, Compare1};
     #else
-    uint32_t Compare0 = ((Test0 * (a2.AsFP64[0] - 1.0)) >= a) ? 0xFFFFFFFF : 0;
-    uint32_t Compare1 = ((Test1 * (a2.AsFP64[1] - 1.0)) >= a) ? 0xFFFFFFFF : 0;
+    uint32_t Compare0 = ((Test0 * (u2.AsFP64[0] - 1.0)) >= a) ? 0xFFFFFFFF : 0;
+    uint32_t Compare1 = ((Test1 * (u2.AsFP64[1] - 1.0)) >= a) ? 0xFFFFFFFF : 0;
     union
     {
       uint32_t AsU32[4];
@@ -521,7 +753,7 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_gaussiantail_FP64(void)
     #endif
 
     // Store the transformed u1.
-    DstPtr.Store(SrcIdx * 2 + 0, Test.AsU128 | SignBit | CompareResult.AsU128);
+    DstPtr.Store(SrcIdx * 2 + 0, SIMDOP_or(SIMDOP_or(Test.AsU128, SignBit), CompareResult.AsU128));
   }
 #elif (CFG_BITS == 64)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -740,20 +972,22 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_gaussian_FP64(void)
     // should (due to +/- 0). It's small enough to be irrelevant though.
     // Also get the integer representation.
     uint128_t SrcU128 = SrcPtr.Load(SrcPos);
-    uint128_t TempRes = SrcU128 & FPAndMask;
-    uint128fp64_t FPTemp = ((SIMDOps::simdcast_fp64(TempRes) | FPOrMask) - FPOrMask) | (SIMDOps::simdcast_fp64(SrcU128) & FPSignMask);
+    uint128_t TempRes = SIMDOP_and(SrcU128, FPAndMask);
+    uint128fp64_t FPTemp = SIMDOP_or(
+      SIMDOP_sub(SIMDOP_or(SIMDOps::simdcast_fp64(TempRes), FPOrMask), FPOrMask),
+      SIMDOP_and(SIMDOps::simdcast_fp64(SrcU128), FPSignMask));
 
     BinPos.AsU128 = TempRes;
 
     // Get the bin number. Bin 0 is in EndianFix<2>(1), Bin 1 is in
     // EndianFix<2>(1) + 2.
-    BinIndex.AsU128 = SIMDOps::Shr_u32<20>(SrcU128 & BinAndMask);
+    BinIndex.AsU128 = SIMDOps::Shr_u32<20>(SIMDOP_and(SrcU128, BinAndMask));
 
     // Pack the two multiplies together.
     FPScale.AsFP64[0] = CZigguratGaussian_FP64::Bins[BinIndex.AsU32[EndianFix_static<1, 1>::Value + 0]].XScale;
     FPScale.AsFP64[1] = CZigguratGaussian_FP64::Bins[BinIndex.AsU32[EndianFix_static<1, 1>::Value + 2]].XScale;
     
-    FPScale.AsU128 = FPScale.AsU128 * FPTemp;
+    FPScale.AsU128 = SIMDOP_mul(FPScale.AsU128, FPTemp);
 
     // Handle the first result
     uint32_t CurBinIndex = BinIndex.AsU32[EndianFix_static<2, 1>::Value];
@@ -957,13 +1191,28 @@ inline uint32_t CPRNG<SFMTParams>::Random_u32(void)
   size_t BufPos32 = (FBufPos_integer + 3) / 4;
 
   // Refill the buffer if need be.
-  if (BufPos32 == BufSize * 4) RefillBuf_integer();
+  if (BufPos32 == BufSize * 4)
+  {
+    RefillBuf_integer();
+    BufPos32 = 0;
+  }
 
   // Get the value.
   CDataBuffer_ConstView<uint32_t, BufSize * 16> SrcView = FBuffer_integer.template GetConstView<uint32_t>();
   uint32_t RetVal = SrcView.Load(EndianFix<2>(BufPos32));
   FBufPos_integer = (BufPos32 + 1) * 4;
   return RetVal;
+}
+
+template<class SFMTParams>
+inline uint32_t CPRNG<SFMTParams>::Random_u32(uint32_t MaxVal)
+{
+  if (MaxVal == 0x0FFFFFFFF) return Random_u32();
+
+  uint32_t MaxOK = 0x0FFFFFFFF - (0x0FFFFFFFF % (MaxVal + 1)) - 1;
+  uint32_t TestVal = Random_u32();
+  while (TestVal > MaxOK) TestVal = Random_u32();
+  return TestVal % (MaxVal + 1);
 }
 
 template<class SFMTParams>
@@ -1019,7 +1268,7 @@ inline void CPRNG<SFMTParams>::RandFill_u32(uint32_t *Buffer, size_t NumU32s)
 }
 
 // -----------------------------------------------------------------------------
-// Exponential random numbers.
+// Exponential random doubles.
 // -----------------------------------------------------------------------------
 template<class SFMTParams>
 NOINLINE void CPRNG<SFMTParams>::RefillBuf_exponential_FP64(void)
@@ -1048,8 +1297,8 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_exponential_FP64(void)
   {
     // Get a random number, uniform over [0, 1). Also get the integer representation.
     uint128_t SrcU128 = SrcPtr.Load(SrcPos);
-    uint128_t TempRes = SrcU128 & FPAndMask;
-    uint128fp64_t FPTemp = (SIMDOps::simdcast_fp64(TempRes) | FPOrMask) - FPOrMask;
+    uint128_t TempRes = SIMDOP_and(SrcU128, FPAndMask);
+    uint128fp64_t FPTemp = SIMDOP_sub(SIMDOP_or(SIMDOps::simdcast_fp64(TempRes), FPOrMask), FPOrMask);
 
     union
     {
@@ -1063,7 +1312,7 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_exponential_FP64(void)
     {
       uint128_t AsU128;
       uint32_t AsU32[4];
-    } BinIndex = {SIMDOps::Shr_u32<20>(SrcU128 & BinAndMask)};
+    } BinIndex = {SIMDOps::Shr_u32<20>(SIMDOP_and(SrcU128, BinAndMask))};
 
     // Pack the two multiplies together.
     union
@@ -1078,7 +1327,7 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_exponential_FP64(void)
     {
       uint128fp64_t AsU128;
       double AsFP64[2];
-    } FPResult = {FPTemp * FPScale.AsU128};
+    } FPResult = {SIMDOP_mul(FPTemp, FPScale.AsU128)};
 
     // Handle the first result
     uint32_t CurBinIndex = BinIndex.AsU32[EndianFix_static<2, 1>::Value];
@@ -1265,10 +1514,373 @@ inline void CPRNG<SFMTParams>::RandFill_exponential_FP64(double *Buffer, size_t 
   if (NumDoubles % 2 == 1) *Buffer = Random_exponential_FP64();
 }
 
+// -----------------------------------------------------------------------------
+// Exponential random singles.
+// -----------------------------------------------------------------------------
+template<class SFMTParams>
+NOINLINE void CPRNG<SFMTParams>::RefillBuf_exponential_FP32(void)
+{
+  #ifndef CFG_TIMETRACK_DISABLE
+  CTimedScope ScopeTimer(Metrics.exponential_FP32_refill_time);
+  Metrics.exponential_FP32_refill_count++;
+  #endif
+
+  typename CRandPool<SFMTParams>::CRandomBlockPtr RandomBlock = FRandPool.GetRandomBlock();
+  SIMDOps::EmptyForFP();
+
+  float ScaleFactor = FScaleFactor_exponential_FP32;
+  size_t DstPos = 0;
+
+#if (CFG_HAVE_U128 == CFG_SIMD_INTRINSIC) && (CFG_HAVE_U128FP32 == CFG_SIMD_INTRINSIC)
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// U128-intrinsic, fp32-intrinsic implementation
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  CDataBuffer_ConstView<uint128_t, BufSize * 16> SrcPtr = RandomBlock.template GetConstView<uint128_t>();
+  CDataBuffer_VarView<float, BufSize * 16> DstPtr = FBuffer_exponential_FP32.template GetVarView<float>();
+
+  // Load a few constants.
+  uint128_t FPAndMask = SIMDOps::uint128_t_const<0x007FFFFF, 0x007FFFFF, 0x007FFFFF, 0x007FFFFF>::Value();
+  uint128fp32_t FPOrMask = SIMDOps::uint128fp32_t_const<0x3F800000, 0x3F800000, 0x3F800000, 0x3F800000>::Value();
+  uint128_t BinAndMask = SIMDOps::uint128_t_const<0x7F800000, 0x7F800000, 0x7F800000, 0x7F800000>::Value();
+
+  for (size_t SrcPos = 0; SrcPos < BufSize; SrcPos++)
+  {
+    // Get a random number, uniform over [0, 1). Also get the integer representation.
+    uint128_t SrcU128 = SrcPtr.Load(SrcPos);
+    uint128_t TempRes = SIMDOP_and(SrcU128, FPAndMask);
+    uint128fp32_t FPTemp = SIMDOP_sub(SIMDOP_or(SIMDOps::simdcast_fp32(TempRes), FPOrMask), FPOrMask);
+
+    union
+    {
+      uint128_t AsU128;
+      uint32_t AsU32[4];
+    } BinPos = {TempRes};
+
+    // Get the bin number.
+    union
+    {
+      uint128_t AsU128;
+      uint32_t AsU32[4];
+    } BinIndex = {SIMDOps::Shr_u32<23>(SIMDOP_and(SrcU128, BinAndMask))};
+
+    // Pack the four multiplies together.
+    union
+    {
+      float AsFP32[4];
+      uint128fp32_t AsU128;
+    } FPScale = {{
+      CZigguratExponential_FP32::Bins[BinIndex.AsU32[0]].XScale,
+      CZigguratExponential_FP32::Bins[BinIndex.AsU32[1]].XScale,
+      CZigguratExponential_FP32::Bins[BinIndex.AsU32[2]].XScale,
+      CZigguratExponential_FP32::Bins[BinIndex.AsU32[3]].XScale}};
+
+    union
+    {
+      uint128fp32_t AsU128;
+      float AsFP32[4];
+    } FPResult = {SIMDOP_mul(FPTemp, FPScale.AsU128)};
+
+    // Handle the first result
+    uint32_t CurBinIndex = BinIndex.AsU32[EndianFix_static<2, 0>::Value];
+    float CurFPResult = FPResult.AsFP32[EndianFix_static<2, 0>::Value];
+
+    if (BinPos.AsU32[EndianFix_static<2, 0>::Value] < CZigguratExponential_FP32::Bins[CurBinIndex].THold)
+    {
+      // Accept.
+      DstPtr.Store(DstPos++, CurFPResult + ScaleFactor);
+      ScaleFactor = 0;
+    }
+    else
+    {
+      if (CurBinIndex == 0)
+      {
+        // Sample from the tail. Actually, this is just another sample with a scalefactor!
+        ScaleFactor += CZigguratExponential_FP32::Bins[1].XScale;
+      }
+      else
+      {
+        // Intermediate region.
+        float yval = exp(-CurFPResult);
+        float ysample = CZigguratExponential_FP32::Bins[CurBinIndex].YOffset + CZigguratExponential_FP32::Bins[CurBinIndex].YScale * Random_uniform_FP32();
+        if (ysample < yval)
+        {
+          // Accept.
+          DstPtr.Store(DstPos++, CurFPResult + ScaleFactor);
+          ScaleFactor = 0;
+        }
+      }
+    }
+
+    // Handle the second result
+    CurBinIndex = BinIndex.AsU32[EndianFix_static<2, 1>::Value];
+    CurFPResult = FPResult.AsFP32[EndianFix_static<2, 1>::Value];
+
+    if (BinPos.AsU32[EndianFix_static<2, 1>::Value] < CZigguratExponential_FP32::Bins[CurBinIndex].THold)
+    {
+      // Accept.
+      DstPtr.Store(DstPos++, CurFPResult + ScaleFactor);
+      ScaleFactor = 0;
+    }
+    else
+    {
+      if (CurBinIndex == 0)
+      {
+        // Sample from the tail. Actually, this is just another sample with a scalefactor!
+        ScaleFactor += CZigguratExponential_FP32::Bins[1].XScale;
+      }
+      else
+      {
+        // Intermediate region.
+        float yval = exp(-CurFPResult);
+        float ysample = CZigguratExponential_FP32::Bins[CurBinIndex].YOffset + CZigguratExponential_FP32::Bins[CurBinIndex].YScale * Random_uniform_FP32();
+        if (ysample < yval)
+        {
+          // Accept.
+          DstPtr.Store(DstPos++, CurFPResult + ScaleFactor);
+          ScaleFactor = 0;
+        }
+      }
+    }
+
+    // Handle the third result
+    CurBinIndex = BinIndex.AsU32[EndianFix_static<2, 2>::Value];
+    CurFPResult = FPResult.AsFP32[EndianFix_static<2, 2>::Value];
+
+    if (BinPos.AsU32[EndianFix_static<2, 2>::Value] < CZigguratExponential_FP32::Bins[CurBinIndex].THold)
+    {
+      // Accept.
+      DstPtr.Store(DstPos++, CurFPResult + ScaleFactor);
+      ScaleFactor = 0;
+    }
+    else
+    {
+      if (CurBinIndex == 0)
+      {
+        // Sample from the tail. Actually, this is just another sample with a scalefactor!
+        ScaleFactor += CZigguratExponential_FP32::Bins[1].XScale;
+      }
+      else
+      {
+        // Intermediate region.
+        float yval = exp(-CurFPResult);
+        float ysample = CZigguratExponential_FP32::Bins[CurBinIndex].YOffset + CZigguratExponential_FP32::Bins[CurBinIndex].YScale * Random_uniform_FP32();
+        if (ysample < yval)
+        {
+          // Accept.
+          DstPtr.Store(DstPos++, CurFPResult + ScaleFactor);
+          ScaleFactor = 0;
+        }
+      }
+    }
+
+    // Handle the fourth result
+    CurBinIndex = BinIndex.AsU32[EndianFix_static<2, 3>::Value];
+    CurFPResult = FPResult.AsFP32[EndianFix_static<2, 3>::Value];
+
+    if (BinPos.AsU32[EndianFix_static<2, 3>::Value] < CZigguratExponential_FP32::Bins[CurBinIndex].THold)
+    {
+      // Accept.
+      DstPtr.Store(DstPos++, CurFPResult + ScaleFactor);
+      ScaleFactor = 0;
+    }
+    else
+    {
+      if (CurBinIndex == 0)
+      {
+        // Sample from the tail. Actually, this is just another sample with a scalefactor!
+        ScaleFactor += CZigguratExponential_FP32::Bins[1].XScale;
+      }
+      else
+      {
+        // Intermediate region.
+        float yval = exp(-CurFPResult);
+        float ysample = CZigguratExponential_FP32::Bins[CurBinIndex].YOffset + CZigguratExponential_FP32::Bins[CurBinIndex].YScale * Random_uniform_FP32();
+        if (ysample < yval)
+        {
+          // Accept.
+          DstPtr.Store(DstPos++, CurFPResult + ScaleFactor);
+          ScaleFactor = 0;
+        }
+      }
+    }
+  }
+#else
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// U128-scalar, fp32-scalar 32/64-bit implementation
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  CDataBuffer_ConstView<uint64_t, BufSize * 16> SrcPtr = RandomBlock.template GetConstView<uint64_t>();
+  CDataBuffer_VarView<float, BufSize * 16> DstPtr = FBuffer_exponential_FP32.template GetVarView<float>();
+
+  // Load a few constants.
+  const uint64_t FPAndMask = UINT64_C(0x007FFFFF007FFFFF);
+  const uint64_t FPOrMask = UINT64_C(0x3F8000003F800000);
+  const uint32_t BinAndMask = 0x000000FF;
+
+  union
+  {
+    uint64_t AsU64;
+    float AsFP32[2];
+  } u1;
+
+  for (size_t SrcPos = 0; SrcPos < BufSize * 2; SrcPos++)
+  {
+    // Get a random number, uniform over [1, 2). Also get the integer representation.
+    uint64_t TmpSrc = SrcPtr.Load(EndianFix<1>(SrcPos));
+    uint64_t IntBinPos64 = (TmpSrc & FPAndMask);
+    u1.AsU64 = IntBinPos64 | FPOrMask;
+
+    // Handle the first result.
+    // Get the bin number and position.
+    uint32_t BinIdx = static_cast<uint32_t>(TmpSrc >> 23) & BinAndMask;
+
+    // Scale
+    float FPResult = (u1.AsFP32[EndianFix_static<1, 0>::Value] - 1.0f) * CZigguratExponential_FP32::Bins[BinIdx].XScale;
+
+    // Store if we should.
+    uint32_t IntBinPos = static_cast<uint32_t>(IntBinPos64);
+    if (IntBinPos < CZigguratExponential_FP32::Bins[BinIdx].THold)
+    {
+      // Accept.
+      DstPtr.Store(DstPos++, FPResult + ScaleFactor);
+      ScaleFactor = 0;
+    }
+    else
+    {
+      if (BinIdx == 0)
+      {
+        // Sample from the tail. Actually, this is just another sample with a scalefactor!
+        ScaleFactor += CZigguratExponential_FP32::Bins[1].XScale;
+      }
+      else
+      {
+        // Intermediate region.
+        float yval = expf(-FPResult);
+        float ysample = CZigguratExponential_FP32::Bins[BinIdx].YOffset + CZigguratExponential_FP32::Bins[BinIdx].YScale * Random_uniform_FP32();
+        if (ysample < yval)
+        {
+          // Accept.
+          DstPtr.Store(DstPos++, FPResult + ScaleFactor);
+          ScaleFactor = 0;
+        }
+      }
+    }
+
+    // Handle the second result.
+    // Get the bin number and position.
+    BinIdx = static_cast<uint32_t>(TmpSrc >> (23 + 32)) & BinAndMask;
+
+    // Scale
+    FPResult = (u1.AsFP32[EndianFix_static<1, 1>::Value] - 1.0f) * CZigguratExponential_FP32::Bins[BinIdx].XScale;
+
+    // Store if we should.
+    IntBinPos = static_cast<uint32_t>(IntBinPos64 >> 32);
+    if (IntBinPos < CZigguratExponential_FP32::Bins[BinIdx].THold)
+    {
+      // Accept.
+      DstPtr.Store(DstPos++, FPResult + ScaleFactor);
+      ScaleFactor = 0;
+    }
+    else
+    {
+      if (BinIdx == 0)
+      {
+        // Sample from the tail. Actually, this is just another sample with a scalefactor!
+        ScaleFactor += CZigguratExponential_FP32::Bins[1].XScale;
+      }
+      else
+      {
+        // Intermediate region.
+        float yval = expf(-FPResult);
+        float ysample = CZigguratExponential_FP32::Bins[BinIdx].YOffset + CZigguratExponential_FP32::Bins[BinIdx].YScale * Random_uniform_FP32();
+        if (ysample < yval)
+        {
+          // Accept.
+          DstPtr.Store(DstPos++, FPResult + ScaleFactor);
+          ScaleFactor = 0;
+        }
+      }
+    }
+  }
+#endif
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Common code
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  // Store the number of numbers we actually generated.
+  FBufLen_exponential_FP32 = DstPos;
+  FBufPos_exponential_FP32 = 0;
+  FScaleFactor_exponential_FP32 = ScaleFactor;
+  #ifndef CFG_TIMETRACK_DISABLE
+  Metrics.exponential_FP32_numgen += DstPos;
+  #endif
+}
+
+template<class SFMTParams>
+inline float CPRNG<SFMTParams>::Random_exponential_FP32(void)
+{
+  CDataBuffer_ConstView<float, BufSize * 16> SrcView = FBuffer_exponential_FP32.template GetConstView<float>();
+  for (;;)
+  {
+    if (FBufPos_exponential_FP32 < FBufLen_exponential_FP32)
+      return SrcView.Load(EndianFix<2>(FBufPos_exponential_FP32++));
+    RefillBuf_exponential_FP32();
+  }
+}
+
+template<class SFMTParams>
+inline void CPRNG<SFMTParams>::RandFill_exponential_FP32(float *Buffer, size_t NumFloats)
+{
+  CDataBuffer_ConstView<float, BufSize * 16> SrcView = FBuffer_exponential_FP32.template GetConstView<float>();
+
+  // Round the source offset up to the next 128-bit boundary.
+  size_t BufPos128 = (FBufPos_exponential_FP32 + 3) / 4;
+  size_t NumToGo128 = NumFloats / 4;
+
+  while (NumToGo128 > 0)
+  {
+    // Make sure there's something to copy from.
+    if (BufPos128 >= FBufLen_exponential_FP32 / 4)
+    {
+      RefillBuf_exponential_FP32();
+      BufPos128 = 0;
+    }
+
+    // See how many to do.
+    size_t NumInBuf128 = (FBufLen_exponential_FP32 / 4) - BufPos128;
+    size_t NumToDo128 = (NumToGo128 > NumInBuf128) ? NumInBuf128 : NumToGo128;
+
+    // Copy.
+    memcpy(Buffer, SrcView.GetPointer() + BufPos128 * 4, NumToDo128 * 16);
+
+    // Update pointers, etc.
+    Buffer += NumToDo128 * 4;
+    NumToGo128 -= NumToDo128;
+    BufPos128 += NumToDo128;
+  }
+
+  // Store the position back.
+  FBufPos_exponential_FP32 = BufPos128 * 4;
+
+  // If there's one left, transfer it by itself.
+  switch(NumFloats % 4)
+  {
+    case 3:
+      *(Buffer++) = Random_exponential_FP32();
+    case 2:
+      *(Buffer++) = Random_exponential_FP32();
+    case 1:
+      *(Buffer++) = Random_exponential_FP32();
+    case 0:
+      // Do nothing.
+      break;
+  }
+}
+
 #ifndef CFG_TIMETRACK_DISABLE
 template<class SFMTParams> typename CPRNG<SFMTParams>::TMetrics CPRNG<SFMTParams>::Metrics;
 template<class SFMTParams> THREADVAR uint32_t CPRNG<SFMTParams>::TMetrics::uniform_FP64_refill_count = 0;
 template<class SFMTParams> THREADVAR uint64_t CPRNG<SFMTParams>::TMetrics::uniform_FP64_refill_time = 0;
+template<class SFMTParams> THREADVAR uint32_t CPRNG<SFMTParams>::TMetrics::uniform_FP32_refill_count = 0;
+template<class SFMTParams> THREADVAR uint64_t CPRNG<SFMTParams>::TMetrics::uniform_FP32_refill_time = 0;
 template<class SFMTParams> THREADVAR uint32_t CPRNG<SFMTParams>::TMetrics::gaussiantail_FP64_refill_count = 0;
 template<class SFMTParams> THREADVAR uint64_t CPRNG<SFMTParams>::TMetrics::gaussiantail_FP64_refill_time = 0;
 template<class SFMTParams> THREADVAR uint32_t CPRNG<SFMTParams>::TMetrics::gaussian_FP64_refill_count = 0;
@@ -1277,6 +1889,9 @@ template<class SFMTParams> THREADVAR uint64_t CPRNG<SFMTParams>::TMetrics::gauss
 template<class SFMTParams> THREADVAR uint32_t CPRNG<SFMTParams>::TMetrics::exponential_FP64_refill_count = 0;
 template<class SFMTParams> THREADVAR uint64_t CPRNG<SFMTParams>::TMetrics::exponential_FP64_refill_time = 0;
 template<class SFMTParams> THREADVAR uint64_t CPRNG<SFMTParams>::TMetrics::exponential_FP64_numgen = 0;
+template<class SFMTParams> THREADVAR uint32_t CPRNG<SFMTParams>::TMetrics::exponential_FP32_refill_count = 0;
+template<class SFMTParams> THREADVAR uint64_t CPRNG<SFMTParams>::TMetrics::exponential_FP32_refill_time = 0;
+template<class SFMTParams> THREADVAR uint64_t CPRNG<SFMTParams>::TMetrics::exponential_FP32_numgen = 0;
 #endif
 
 #endif

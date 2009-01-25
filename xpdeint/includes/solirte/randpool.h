@@ -17,6 +17,7 @@
 #include <string.h>
 
 #include "u128simd.h"
+
 #ifndef CFG_TIMETRACK_DISABLE
 #include "../platform/timetrack.h"
 #endif
@@ -419,12 +420,12 @@ class CRandPool
     {
       uint128_t ValA = *BufA;
       
-      ValA =
-        ValA ^
-        SIMDOps::Shl8<SFMTConsts::SL2>(ValA) ^
-        (SIMDOps::Shr_u32<SFMTConsts::SR1>(BufB[0]) & Mask) ^
-        SIMDOps::Shr8<SFMTConsts::SR2>(ValC) ^
-        SIMDOps::Shl_u32<SFMTConsts::SL1>(ValD);
+      ValA = SIMDOP_xor(SIMDOP_xor(SIMDOP_xor(SIMDOP_xor(
+        ValA,
+        SIMDOps::Shl8<SFMTConsts::SL2>(ValA)),
+        SIMDOP_and(SIMDOps::Shr_u32<SFMTConsts::SR1>(BufB[0]), Mask)),
+        SIMDOps::Shr8<SFMTConsts::SR2>(ValC)),
+        SIMDOps::Shl_u32<SFMTConsts::SL1>(ValD));
       *BufA = ValA;
       return ValA;
     }
@@ -527,13 +528,14 @@ class CRandPool
     void PeriodCertification(void)
     {
       CDataBuffer_VarView<uint128_t, N * 16> PoolU128 = FPool.template GetVarView<uint128_t>();
-      uint128_t ParityCheck = SIMDOps::Parity(SIMDOps::uint128_t_const<SFMTConsts::PARITY1, SFMTConsts::PARITY2, SFMTConsts::PARITY3, SFMTConsts::PARITY4>::Value() & PoolU128.Load(0));
-      PoolU128.Store(0, PoolU128.Load(0) ^ SIMDOps::AndNot(SIMDOps::uint128_t_const<
+      uint128_t ParityCheck = SIMDOps::Parity(SIMDOP_and(
+        SIMDOps::uint128_t_const<SFMTConsts::PARITY1, SFMTConsts::PARITY2, SFMTConsts::PARITY3, SFMTConsts::PARITY4>::Value(), PoolU128.Load(0)));
+      PoolU128.Store(0, SIMDOP_xor(PoolU128.Load(0), SIMDOps::AndNot(SIMDOps::uint128_t_const<
         lowestbit_u128<SFMTConsts::PARITY1, SFMTConsts::PARITY2, SFMTConsts::PARITY3, SFMTConsts::PARITY4>::y0,
         lowestbit_u128<SFMTConsts::PARITY1, SFMTConsts::PARITY2, SFMTConsts::PARITY3, SFMTConsts::PARITY4>::y1,
         lowestbit_u128<SFMTConsts::PARITY1, SFMTConsts::PARITY2, SFMTConsts::PARITY3, SFMTConsts::PARITY4>::y2,
         lowestbit_u128<SFMTConsts::PARITY1, SFMTConsts::PARITY2, SFMTConsts::PARITY3, SFMTConsts::PARITY4>::y3>::Value(),
-        ParityCheck));
+        ParityCheck)));
     }
   public:
     CRandPool(void)

@@ -22,7 +22,6 @@
     <auto_vectorise />
     <benchmark />
     <bing />
-    <fftw version="3" />
     <!-- <openmp /> -->
     <stochastic>
       <noise kind="gaussian-solirte" prefix="n" num="2" seed="293485"/>
