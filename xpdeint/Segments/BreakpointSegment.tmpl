@@ -59,28 +59,31 @@ snprintf(_baseFilename, 100, "%li", _breakpointAutoNameCounter);
 const char *_baseFilename = "$baseFilename";
   @end if
   
-char *_xsilFilename = (char*)malloc(200);
-char *_datFilename  = (char*)malloc(200);
-strncpy(_xsilFilename, _baseFilename, 200);
-strncpy(_datFilename, _baseFilename, 200);
+char *_xsilFilename = (char*)malloc(256);
+strncpy(_xsilFilename, _baseFilename, 256);
 strcat(_xsilFilename, ".xsil");
-strcat(_datFilename, ".dat");
 
   @set featureOrdering = ['Output']
-FILE *_outfile = _write_xsil_header(_xsilFilename);
+FILE* _outfile = _open_xsil_file(_xsilFilename);
+_write_xsil_header(_outfile);
+
+${outputFormat.writeOutSetup({}, '_baseFilename')}@slurp
 
   @set $dependentVariables = [{'vector': vector, 'arrayName': c'_active_${vector.id}', 'components': vector.components} for vector in $dependencies]
   @set $writeOutDict = {'field': $field,
                         'space': $breakpointSpace,
                         'fp': '_outfile',
-                        'datFilename': "_datFilename",
+                        'baseFilename': "_baseFilename",
                         'dependentVariables': dependentVariables,
                         'xsilElementName': "breakpoint",
+                        'groupID': 1
                        }
-  @set $featureOrdering = ['Output']
-${insertCodeForFeatures('writeOutFunctionImplementationBody', $featureOrdering, $writeOutDict)}@slurp
+${outputFormat.writeOutFunctionImplementationBody(writeOutDict)}@slurp
+
+${outputFormat.writeOutTearDown}@slurp
 
 _write_xsil_footer(_outfile);
+_close_xsil_file(_outfile);
 
   @#
 @end def

@@ -1,22 +1,20 @@
 @*
-BinaryOutput.tmpl
+BinaryFormat.tmpl
 
 Created by Graham Dennis on 2007-09-20.
-Copyright (c) 2007-2008 __MyCompanyName__. All rights reserved.
+Copyright (c) 2007-2009 __MyCompanyName__. All rights reserved.
 *@
-@extends xpdeint.Features.OutputFeature
+@extends xpdeint.Features.OutputFormat
 @from xpdeint.Geometry.NonUniformDimensionRepresentation import NonUniformDimensionRepresentation
 
-@def description: binary output
+@def description: binary output format
+@attr $name = 'binary'
+@attr $mpiSafe = True
 
 @def writeOutFunctionImplementationBody($dict)
   @#
 ${writeOutFunctionImplementationBegin(dict)}@slurp
 
-  @if not 'datFilename' in dict:
-    @set caller = dict['caller']
-    @set dict['datFilename'] = c'"${filename}_${caller.name}.dat"'
-  @end if
   @#
   @set $featureOrdering = ['Driver']
   @set $featureDict = dict.copy()
@@ -35,7 +33,7 @@ ${writeOutFunctionImplementationEnd(dict)}@slurp
 @def writeOutFunctionContents($dict)
   @#
   @set $fp = dict['fp']
-  @set $datFilename = dict['datFilename']
+  @set $baseFilename = dict['baseFilename']
   @set $field = dict['field']
   @set $space = dict['space']
   @set $dependentVariables = dict['dependentVariables']
@@ -55,6 +53,10 @@ const char *encoding = NULL;
   encoding = "LittleEndian";
 #endif
 
+char _datFilename[200];
+strncpy(_datFilename, ${baseFilename}, 200);
+strcat(_datFilename, ".dat");
+
 const char *unsignedLongType = NULL;
 if (sizeof(unsigned long) == 4)
   unsignedLongType = "uint32";
@@ -65,13 +67,13 @@ else
 
 fprintf($fp, "    <Stream><Metalink Format=\"Binary\" UnsignedLong=\"%s\" precision=\"double\" Type=\"Remote\" Encoding=\"%s\"/>\n",
         unsignedLongType, encoding);
-fprintf($fp, "%s\n", ${datFilename});
+fprintf($fp, "%s\n", _datFilename);
 
 FILE* fpBinary;
-if ((fpBinary = fopen(${datFilename}, "wb")) == NULL)
+if ((fpBinary = fopen(_datFilename, "wb")) == NULL)
   // _LOG will cause the simulation to exit
   _LOG(_ERROR_LOG_LEVEL, "Unable top open output file %s\n"
-                         "Chucking a spack...\n", ${datFilename});
+                         "Chucking a spack...\n", _datFilename);
 
 unsigned long dataSize;
 off_t fieldOffset = 0;
@@ -81,17 +83,17 @@ double coordinate;
     @set $dimRep = $dim.inSpace(space)
 dataSize = ${dimRep.globalLattice};
 if (fwrite(&dataSize, sizeof(unsigned long), 1, fpBinary) != 1) {
-  _LOG(_ERROR_LOG_LEVEL, "Error writing size of dimension '${dimRep.name}' to binary data file '%s'.\n", ${datFilename});
+  _LOG(_ERROR_LOG_LEVEL, "Error writing size of dimension '${dimRep.name}' to binary data file '%s'.\n", _datFilename);
 }
     @if isinstance(dimRep, NonUniformDimensionRepresentation)
 if (fwrite(${dimRep.arrayName}, sizeof(double), dataSize, fpBinary) != dataSize) {
-  _LOG(_ERROR_LOG_LEVEL, "Error writing coordinate values for dimension '${dimRep.name}' to binary data file '%s'.\n", ${datFilename});
+  _LOG(_ERROR_LOG_LEVEL, "Error writing coordinate values for dimension '${dimRep.name}' to binary data file '%s'.\n", _datFilename);
 }
     @else
 coordinate = ${dimRep.minimum};
 for (long _i0 = 0; _i0 < dataSize; _i0++, coordinate += ${dimRep.stepSize}) {
   if (fwrite(&coordinate, sizeof(double), 1, fpBinary) != 1) {
-    _LOG(_ERROR_LOG_LEVEL, "Error writing coordinate values for dimension '${dimRep.name}' to binary data file '%s'.\n", ${datFilename});
+    _LOG(_ERROR_LOG_LEVEL, "Error writing coordinate values for dimension '${dimRep.name}' to binary data file '%s'.\n", _datFilename);
   }
 }
     @end if
@@ -104,7 +106,7 @@ dataSize = _${field.name}_size;
 for (int _i = 0; _i < ${componentCount}; _i++) {
   fseeko(fpBinary, fieldOffset + _i * vectorFieldSize, SEEK_SET);
   if (fwrite(&dataSize, sizeof(unsigned long), 1, fpBinary) != 1) {
-    _LOG(_ERROR_LOG_LEVEL, "Error writing vector size to binary data file '%s'.\n", ${datFilename});
+    _LOG(_ERROR_LOG_LEVEL, "Error writing vector size to binary data file '%s'.\n", _datFilename);
   }
 }
 

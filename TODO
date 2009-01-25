@@ -54,11 +54,6 @@
 * Check that all bug fixes to xmds-1 since September 1, 2007 have been added to xpdeint. In particular, I don't think the changes to the adaptive
   step error-calculation routine have been made.
   
-* Shift the output code into its own directory and make the ASCII and Binary output type classes not inherit from _Feature. These need to be separate
-  things that either are delegated to or are inherited from themselves. The better option is probably delegation in a similar manner to how Vectors
-  delegate initialisation to a VectorInitialisation instance.
-  The point of this is to make the output format of a breakpoint independent of the output format for the whole simulation.
-
 * Fix XSIL import to not depend on libxmds, or do something equivalent.
 
 * Add a 'moment group 0' which contains simulation constants. This moment group would be zero-d and would contain various constants depending on the
@@ -110,10 +105,6 @@
   - diffusion_win works fine on windows.
   - Next priorities: getting fftw3 working and porting the benchmark code...
   - Investigate MinGW GCC 4.3 performance versus Visual Studio performance.
-
-* Allow IP operators to have reduced dimensionality. This is an important optimisation for adaptive step integrators in higher dimensions where the derivative
-  operators are typically separable, i.e. of the form kx*kx + ky*ky. This will allow significantly fewer complex exponentials to be calculated. O(2N) instead of
-  O(N^2) for 2 dimensions
 
 * Permit general Dirichlet boundary conditions to be specified as a special kind of filter that automatically prevents amplitude from
   straying into these regions. It would also perform optimisations in the looping code to only loop over the parts of the grid that

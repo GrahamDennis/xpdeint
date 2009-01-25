@@ -1,36 +1,59 @@
 @*
-OutputFeature.tmpl
+OutputFormat.tmpl
 
-Created by Graham Dennis on 2007-08-26.
-Copyright (c) 2007 __MyCompanyName__. All rights reserved.
+Created by Graham Dennis on 2009-01-24.
+Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 *@
-@extends xpdeint.Features._Feature
+@extends xpdeint.ScriptElement.ScriptElement
 @from xpdeint.PrintfSafeFilter import PrintfSafeFilter
+@from xpdeint.CallOnceGuards import callOnceGuard
 
-@def description: output
-@attr $featureName = 'Output'
-@*
+@def description: Unnamed Output Format
+@attr $outputFormatClasses = {}
+@attr $precision = 'double'
+@attr $outputFormat = False
+@attr $outputArguments = []
 
-  Function prototypes
-*@
+@@callOnceGuard
 @def functionPrototypes
   @#
   @super
   @#
-void _write_output();
-FILE* _write_xsil_header(const char* _filename);
+FILE* _open_xsil_file(const char* _filename);
+void _close_xsil_file(FILE*& fp);
+void _write_xsil_header(FILE* fp);
 void _write_xsil_footer(FILE* fp);
   @#
 @end def
-@*
 
-  Function implementations
-*@
 @def functionImplementations
   @#
   @super
   @#
-${writeOutFunctionImplementation}@slurp
+
+FILE* _open_xsil_file(const char* _filename)
+{
+  @set $featureOrdering = ['Driver']
+  ${insertCodeForFeatures('openXSILFile', featureOrdering), autoIndent=True}@slurp
+  
+  FILE* fp = fopen(_filename, "w");
+  
+  if (fp == NULL)
+    // _LOG will cause the simulation to exit
+    _LOG(_ERROR_LOG_LEVEL, "Unable to open output file '%s'.\n"
+                           "Exiting.\n", _filename);
+  
+  return fp;
+}
+
+void _close_xsil_file(FILE*& fp)
+{
+  if (fp)
+    fclose(fp);
+  fp = NULL;
+  
+  ${insertCodeForFeaturesInReverseOrder('closeXSILFile', featureOrdering), autoIndent=True}@slurp
+}
 
 ${writeXSILHeaderFunctionImplementation}@slurp
 
@@ -38,42 +61,11 @@ ${writeXSILFooterFunctionImplementation}@slurp
   @#
 @end def
 
-@def writeOutFunctionImplementation
-void _write_output()
-{
-  _LOG(_SIMULATION_LOG_LEVEL, "Generating output for ${simulationName}\n");
-  
-  @set $featureOrdering = ['Driver']
-  ${insertCodeForFeatures('writeOutBegin', featureOrdering), autoIndent=True}@slurp
-  
-  FILE* _outfile = _write_xsil_header("${filename}.xsil");
-  
-  @for $momentGroup in $momentGroups
-  _${momentGroup.name}_write_out(_outfile);
-  @end for
-  
-  _write_xsil_footer(_outfile);
-  
-  ${insertCodeForFeaturesInReverseOrder('writeOutEnd', featureOrdering), autoIndent=True}@slurp
-}
-@end def
-
 @def writeXSILHeaderFunctionImplementation
-// In addition to writing the XSIL header, this file actually opens
-// the file '_filename' for writing and returns the file pointer.
-FILE* _write_xsil_header(const char* _filename)
+void _write_xsil_header(FILE* fp)
 {
-  FILE* fp = NULL;
-  @set $featureOrdering = ['Driver']
-  ${insertCodeForFeatures('writeXSILHeaderBegin', featureOrdering), autoIndent=True}@slurp
-  
-  fp = fopen(_filename, "w");
-  
-  if (fp == NULL)
-    // _LOG will cause the simulation to exit
-    _LOG(_ERROR_LOG_LEVEL, "Unable to open output file '%s'.\n"
-                           "Exiting.\n", _filename);
-  
+  if (!fp)
+    return;
   @# Find the end tag in a case-insensitive way
   @set $indexForEndTag = $inputScript.lower().rfind('</simulation>')
   @set $xsilOutputHeader = $inputScript[0:$indexForEndTag]
@@ -91,9 +83,6 @@ FILE* _write_xsil_header(const char* _filename)
   ${insertCodeForFeatures('xsilOutputInfo', $featureOrderingXSILInfo, {'fp': 'fp'}), autoIndent=True}@slurp
   fprintf(fp, "</info>\n");
   
-  ${insertCodeForFeaturesInReverseOrder('writeXSILHeaderEnd', featureOrdering), autoIndent=True}@slurp
-  
-  return fp;
 }
 @end def
 
@@ -110,6 +99,12 @@ void _write_xsil_footer(FILE* fp)
   }
 }
   @#
+@end def
+
+@def writeOutSetup($args, $filename)
+@end def
+
+@def writeOutTearDown
 @end def
 
 @def writeOutFunctionImplementationBegin($dict)
@@ -178,51 +173,3 @@ if ($fp) {
   @#
 @end def
 
-@def mainEnd($dict)
-
-_write_output();
-@end def
-
-@def integrateFixedStepInnerLoopEnd($dict)
-  @#
-  @set $integrator = dict['caller']
-  @assert len($momentGroups) == len($integrator.samples)
-  @#
-  @for $momentGroupNumber, $sampleCount in enumerate($integrator.samples)
-    @if $sampleCount > 0
-      @assert ($integrator.stepCount % $sampleCount) == 0
-      @set $sampleEveryNthStep = $integrator.stepCount / $sampleCount
-if ((_istep % $sampleEveryNthStep) == ${sampleEveryNthStep - 1})
-  _mg${momentGroupNumber}_sample();
-    @end if
-  @end for
-  @#
-@end def
-
-@def integrateAdaptiveStepOuterLoopEnd($dict)
-  @#
-  @set $integrator = dict['caller']
-  @assert len($momentGroups) == len($integrator.samples)
-  @#
-if (_break_next) {
-  @for $momentGroupNumber, $sampleCount in enumerate($integrator.samples)
-  if (_next_sample_flag[$momentGroupNumber]) {
-    _mg${momentGroupNumber}_sample();
-    _next_sample_counter[$momentGroupNumber]++;
-  }
-  @end for
-  @set $momentGroupCount = len($integrator.samples)
-  if (_next_sample_flag[${momentGroupCount}])
-    _next_sample_flag[${momentGroupCount + 1}] = true;
-  else {
-    _break_next = false;
-    _${propagationDimension}_break_next = _${integrator.name}_setup_sampling(_next_sample_flag, _next_sample_counter);
-  }
-}
-
-if ( (${propagationDimension} - _${propagationDimension}_ini + _step)*(1.0 + _EPSILON) > _${propagationDimension}_break_next) {
-  _break_next = true;
-  _LOG(_SAMPLE_LOG_LEVEL, "Current timestep: %e\n", _old_step);
-  _step = _${propagationDimension}_break_next - ${propagationDimension} + _${propagationDimension}_ini;
-}
-@end def

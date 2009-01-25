@@ -55,7 +55,7 @@ if (logLevel & _ERROR_LOG_LEVEL) \
   @#
 @end def
 
-@def writeXSILHeaderBegin($dict)
+@def openXSILFile($dict)
   @#
 // Only let rank 0 do the writing to disk
 if (_rank != 0)

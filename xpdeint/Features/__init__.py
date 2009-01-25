@@ -12,6 +12,17 @@ import Globals
 import HaltNonFinite
 import MaxIterations
 import OpenMP
+import Output
 import Stochastic
 import Validation
+
+import OutputFormat
+from BinaryFormat import BinaryFormat
+from AsciiFormat import AsciiFormat
+from HDF5Format import HDF5Format
+
+formatMapping = [(f.name, f) for f in [BinaryFormat, AsciiFormat, HDF5Format]]
+del BinaryFormat, AsciiFormat, HDF5Format
+
+OutputFormat.OutputFormat.outputFormatClasses.update(formatMapping)
 

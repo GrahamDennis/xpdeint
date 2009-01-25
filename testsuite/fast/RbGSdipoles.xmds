@@ -19,7 +19,7 @@
     <benchmark />
     <bing />
     <!-- <openmp /> -->
-    <fftw version="3" plan="measure" />
+    <fftw plan="measure" />
     <!-- <diagnostics /> -->
 	<globals>
 		<![CDATA[

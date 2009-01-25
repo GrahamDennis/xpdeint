@@ -54,8 +54,6 @@ from xpdeint.Operators.CrossPropagationOperator import CrossPropagationOperator 
 from xpdeint.Operators.FunctionsOperator import FunctionsOperator as FunctionsOperatorTemplate
 
 
-from xpdeint.Features.BinaryOutput import BinaryOutput as BinaryOutputTemplate
-from xpdeint.Features.AsciiOutput import AsciiOutput as AsciiOutputTemplate
 from xpdeint.MomentGroupElement import MomentGroupElement as MomentGroupTemplate
 
 from xpdeint.Features import Transforms
@@ -969,7 +967,8 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
         sequenceTemplate.addSegment(integrateTemplate)
       elif tagName == 'filter':
         # Construct the filter segment
-        filterSegmentTemplate = FilterSegmentTemplate(**self.argumentsToTemplateConstructors)
+        filterSegmentTemplate = FilterSegmentTemplate(xmlElement = childNode,
+                                                      **self.argumentsToTemplateConstructors)
         # Add it to the sequence element as a child segment
         sequenceTemplate.addSegment(filterSegmentTemplate)
         # Create an operator container to house the filter operator
@@ -981,7 +980,8 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
         filterOperator = self.parseFilterOperator(childNode, operatorContainer)
       elif tagName == 'breakpoint':
         # Construct the breakpoint segment
-        breakpointSegmentTemplate = BreakpointSegmentTemplate(**self.argumentsToTemplateConstructors)
+        breakpointSegmentTemplate = BreakpointSegmentTemplate(xmlElement = childNode,
+                                                              **self.argumentsToTemplateConstructors)
         # Add it to the sequence element as a child segment
         sequenceTemplate.addSegment(breakpointSegmentTemplate)
         # parse a dependencies element
@@ -991,6 +991,18 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
           breakpointSegmentTemplate.filename = childNode.getAttribute('filename').strip()
         else:
           parserWarning(childNode, "Breakpoint names defaulting to the sequence 1.xsil, 2.xsil, etc.")
+        
+        if childNode.hasAttribute('format'):
+          formatString = childNode.getAttribute('format').strip().lower()
+          outputFormatClass = Features.OutputFormat.OutputFormat.outputFormatClasses.get(formatString)
+          if not outputFormatClass:
+            validFormats = ', '.join(["'%s'" % formatName for formatName in Features.OutputFormat.OutputFormat.outputFormatClasses.keys()])
+            raise ParserException(outputElement, "Breakpoint format attribute '%(formatString)s' unknown.\n"
+                                                 "The valid formats are %(validFormats)s." % locals())
+          outputFormat = outputFormatClass(parent = breakpointSegmentTemplate, **self.argumentsToTemplateConstructors)
+          
+          breakpointSegmentTemplate.outputFormat = outputFormat
+      
       elif tagName == 'sequence':
         # Construct the sequence segment
         sequenceSegmentTemplate = SequenceSegmentTemplate(**self.argumentsToTemplateConstructors)
@@ -1562,17 +1574,19 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
   def parseOutputElement(self, simulationElement):
     outputElement = simulationElement.getChildElementByTagName('output')
     
-    outputTemplateClass = AsciiOutputTemplate
+    outputFeature = Features.Output.Output(parent = self.simulation, xmlElement = outputElement,
+                                           **self.argumentsToTemplateConstructors)
+    
+    formatName = 'ascii'
     
     if outputElement.hasAttribute('format'):
-      formatString = outputElement.getAttribute('format').strip().lower()
-      if formatString == 'binary':
-        outputTemplateClass = BinaryOutputTemplate
-      elif formatString == 'ascii':
-        outputTemplateClass = AsciiOutputTemplate
-      else:
-        raise ParserException(outputElement, "Output format attribute '%(formatString)s' unknown.\n"
-                                             "The valid formats are 'binary' and 'ascii'." % locals())
+      formatName = outputElement.getAttribute('format').strip().lower()
+    
+    outputFormatClass = Features.OutputFormat.OutputFormat.outputFormatClasses.get(formatName)
+    if not outputFormatClass:
+      validFormats = ', '.join(["'%s'" % formatName for formatName in Features.OutputFormat.OutputFormat.outputFormatClasses.keys()])
+      raise ParserException(outputElement, "Breakpoint format attribute '%(formatString)s' unknown.\n"
+                                           "The valid formats are %(validFormats)s." % locals())
     
     if not outputElement.hasAttribute('filename'):
       filename = self.globalNameSpace['simulationName']
@@ -1585,10 +1599,11 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       index = filename.lower().rindex('.xsil')
       filename = filename[0:index]
     
-    outputTemplate = outputTemplateClass(parent = self.simulation, xmlElement = outputElement,
-                                         **self.argumentsToTemplateConstructors)
-    outputTemplate.precision = 'double'
-    outputTemplate.filename = filename
+    outputFormat = outputFormatClass(parent = outputFeature, xmlElement = outputElement,
+                                     **self.argumentsToTemplateConstructors)
+    outputFeature.filename = filename
+    outputFeature._children.append(outputFormat)
+    outputFeature.outputFormat = outputFormat
     
     geometryTemplate = self.globalNameSpace['geometry']
     

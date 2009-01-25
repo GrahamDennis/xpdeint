@@ -10,7 +10,7 @@
     <benchmark />
     <error_check />
     <bing />
-    <fftw version="3" plan="estimate" />
+    <fftw plan="estimate" />
     <openmp />
     <globals>
       <![CDATA[
@@ -69,8 +69,11 @@
         ]]>
       </operators>
     </integrate>
+    <breakpoint filename="vibstring_break.xsil">
+      <dependencies>main</dependencies>
+    </breakpoint>
   </sequence>
-  <output format="binary" filename="vibstring.xsil">
+  <output format="hdf5" filename="vibstring.xsil">
     <group>
       <sampling initial_sample="yes">
         <!-- Any dimension not mentioned is assumed to be in real space and its middle element will be sampled -->
