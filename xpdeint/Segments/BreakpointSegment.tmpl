@@ -59,14 +59,7 @@ snprintf(_baseFilename, 100, "%li", _breakpointAutoNameCounter);
 const char *_baseFilename = "$baseFilename";
   @end if
   
-char *_xsilFilename = (char*)malloc(256);
-strncpy(_xsilFilename, _baseFilename, 256);
-strcat(_xsilFilename, ".xsil");
-
   @set featureOrdering = ['Output']
-FILE* _outfile = _open_xsil_file(_xsilFilename);
-_write_xsil_header(_outfile);
-
 ${outputFormat.writeOutSetup({}, '_baseFilename')}@slurp
 
   @set $dependentVariables = [{'vector': vector, 'arrayName': c'_active_${vector.id}', 'components': vector.components} for vector in $dependencies]
@@ -81,9 +74,6 @@ ${outputFormat.writeOutSetup({}, '_baseFilename')}@slurp
 ${outputFormat.writeOutFunctionImplementationBody(writeOutDict)}@slurp
 
 ${outputFormat.writeOutTearDown}@slurp
-
-_write_xsil_footer(_outfile);
-_close_xsil_file(_outfile);
 
   @#
 @end def

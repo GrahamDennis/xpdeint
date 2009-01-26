@@ -27,21 +27,24 @@ Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 @end def
 
 @def writeOutSetup($args, $filename)
+  @super(args, filename)
   @# Due to funkyness, the parameter name here must be the same as the variable name
   @silent args.update({'hdf5_file': 'hdf5_file', '_dataFilename': '_dataFilename'})
 hid_t hdf5_file;
-herr_t status;
 
 char _dataFilename[200];
 strncpy(_dataFilename, ${filename}, 200);
 strcat(_dataFilename, ".h5");
 
 /* Create a HDF5 file */
-hdf5_file = H5Fcreate(_dataFilename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+if (_outfile)
+  hdf5_file = H5Fcreate(_dataFilename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
 @end def
 
 @def writeOutTearDown
-status = H5Fclose(hdf5_file);
+if (_outfile)
+  H5Fclose(hdf5_file);
+  @super
 @end def
 
 @def writeOutFunctionImplementationBody($dict)
@@ -111,36 +114,81 @@ H5DSset_scale(dataset_${dimRep.name}, "${dimRep.name}");
 H5Sclose(coordinate_dataspace);
   @end for
 
-/* Create the data space */
-  @set $fieldDimCount = len(field.dimensions)
-hsize_t file_dims[${fieldDimCount}] = {${', '.join(dim.inSpace(space).globalLattice for dim in field.dimensions)}};
-hsize_t file_start[${fieldDimCount+1}] = {${', '.join(['0']*(fieldDimCount+1))}};
-hsize_t mem_dims[${fieldDimCount+1}] = {${', '.join(dim.inSpace(space).globalLattice for dim in field.dimensions)}, 1};
-hsize_t mem_start[${fieldDimCount+1}] = {${', '.join(['0']*(fieldDimCount+1))}};
-hsize_t mem_stride[${fieldDimCount+1}] = {${', '.join(['1']*fieldDimCount + ['0'])}};
-hsize_t mem_count[${fieldDimCount+1}] = {${', '.join(dim.inSpace(space).globalLattice for dim in field.dimensions)}, 1};
-
-hid_t file_dataspace, mem_dataspace;
-file_dataspace = H5Screate_simple(${fieldDimCount}, file_dims, NULL);
+hsize_t file_dims[] = {${', '.join(dim.inSpace(space).globalLattice for dim in field.dimensions)}};
+hid_t file_dataspace;
+file_dataspace = H5Screate_simple(${len(field.dimensions)}, file_dims, NULL);
   @for variable in dependentVariables
     @if $variable.vector.type == 'double'
-      @set $components = list(enumerate($variable.components))
+      @set $variable.separatedComponents = list(enumerate($variable.components))
     @else
       @set $components = []
+      @set variable['separatedComponents'] = components
       @for offset, componentName in enumerate($variable.components)
         @silent components.extend([(2*offset, componentName + 'R'), (2*offset+1, componentName + 'I')])
       @end for
     @end if
-mem_dims[${fieldDimCount}] = ${len(components)};
-mem_dataspace = H5Screate_simple(${fieldDimCount+1}, mem_dims, NULL);
-mem_stride[${fieldDimCount}] = ${len(components)};
-
-    @for offset, componentName in components
+    @for offset, componentName in $variable.separatedComponents
 hid_t dataset_${componentName} = H5Dcreate(hdf5_file, "/${groupID}/${componentName}", H5T_NATIVE_DOUBLE, file_dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
       @for dimNum, dim in enumerate(field.dimensions)
 H5DSattach_scale(dataset_${componentName}, dataset_${dim.inSpace(space).name}, ${dimNum});
       @end for
     @end for
+  @end for
+  @for dim in field.dimensions
+    @set $dimRep = dim.inSpace(space)
+H5Dclose(dataset_${dimRep.name});
+  @end for
+
+  @# This is where all of the magic MPI code goes
+  @set $featureOrdering = ['Driver']
+  @set $featureDict = dict.copy()
+  @set $featureDict['extraIndent'] = 0
+${insertCodeForFeatures('binaryWriteOutWriteDataBegin', $featureOrdering, featureDict)}@slurp
+  @set $extraIndent = featureDict['extraIndent']
+
+${writeData(dict), extraIndent=extraIndent}@slurp
+
+  @# This is where the rest of the magic MPI code goes
+${insertCodeForFeaturesInReverseOrder('binaryWriteOutWriteDataEnd', $featureOrdering, featureDict)}@slurp
+
+  @for variable in dependentVariables
+    @for offset, componentName in $variable.separatedComponents
+H5Dclose(dataset_${componentName});
+    @end for
+  @end for
+
+H5Sclose(file_dataspace);
+H5Gclose(group);
+
+  @#
+@end def
+
+@def writeData(dict)
+  @set $field = dict['field']
+  @set $space = dict['space']
+  @set $dependentVariables = dict['dependentVariables']
+  @set $componentCount = 0
+  @for $variable in $dependentVariables
+    @set $componentCount += len($variable.vector.components)
+    @if $variable.vector.type == 'complex'
+      @set $componentCount += len($variable.vector.components)
+    @end if
+  @end for
+  @set dict['componentCount'] = componentCount
+/* Create the data space */
+  @set $fieldDimCount = len(field.dimensions)
+hsize_t file_start[${fieldDimCount}] = {${', '.join(dim.inSpace(space).localOffset for dim in field.dimensions)}};
+hsize_t mem_dims[${fieldDimCount+1}] = {${', '.join(dim.inSpace(space).localLattice for dim in field.dimensions)}, 1};
+hsize_t mem_start[${fieldDimCount+1}] = {${', '.join(['0']*(fieldDimCount+1))}};
+hsize_t mem_stride[${fieldDimCount+1}] = {${', '.join(['1']*fieldDimCount + ['0'])}};
+hsize_t mem_count[${fieldDimCount+1}] = {${', '.join(dim.inSpace(space).localLattice for dim in field.dimensions)}, 1};
+
+hid_t mem_dataspace;
+  @for variable in dependentVariables
+    @set $components = $variable.separatedComponents
+mem_dims[${fieldDimCount}] = ${len(components)};
+mem_dataspace = H5Screate_simple(${fieldDimCount+1}, mem_dims, NULL);
+mem_stride[${fieldDimCount}] = ${len(components)};
 
     @capture writeLoopContents
       @for offset, componentName in components
@@ -160,20 +208,8 @@ H5Dwrite(dataset_${componentName}, H5T_NATIVE_DOUBLE, mem_dataspace, file_datasp
 // Select hyperslabs of memory and file data spaces and then write
 ${splitUniformDataSelect([(dimNum, dim.inSpace(space)) for dimNum, dim in enumerate(field.dimensions)], writeLoopContents)}@slurp
 
-    @for offset, componentName in components
-H5Dclose(dataset_${componentName});
-    @end for
 H5Sclose(mem_dataspace);
   @end for
-  
-  @for dim in field.dimensions
-    @set $dimRep = dim.inSpace(space)
-H5Dclose(dataset_${dimRep.name});
-  @end for
-H5Sclose(file_dataspace);
-H5Gclose(group);
-
-  @#
 @end def
 
 @def splitUniformDataSelect(remainingDimReps, writeLoopContents)
@@ -185,12 +221,19 @@ ${writeLoopContents}@slurp
 for (bool _positive_${dimRep.name} = true; ; _positive_${dimRep.name} = false) {
   if (_positive_${dimRep.name}) {
     mem_start[$dimNum] = 0;
-    mem_count[$dimNum] = ($dimRep.globalLattice-1)/2 +1;
-    file_start[$dimNum] = $dimRep.globalLattice/2;
+    mem_count[$dimNum] = (($dimRep.globalLattice-1)/2 +1) - $dimRep.localOffset;
+    if (mem_count[$dimNum] <= 0) // No positive values are stored in this rank.
+      continue;
+    mem_count[$dimNum] = MIN(mem_count[$dimNum], $dimRep.localLattice);
+    file_start[$dimNum] = $dimRep.globalLattice/2 + $dimRep.localOffset;
   } else {
-    file_start[$dimNum] = 0;
-    mem_start[$dimNum] = ($dimRep.globalLattice-1)/2+1;
-    mem_count[$dimNum] = $dimRep.globalLattice/2;
+    mem_start[$dimNum] = ($dimRep.globalLattice-1)/2+1 - $dimRep.localOffset;
+    if (mem_start[$dimNum] < 0) // Only negative values are stored in this rank.
+      mem_start[$dimNum] = 0;
+    file_start[$dimNum] = mem_start[$dimNum] + $dimRep.localOffset - (($dimRep.globalLattice-1)/2+1);
+    mem_count[$dimNum] = $dimRep.localLattice - mem_start[$dimNum]; // To the end of this dimension
+    if (mem_count[$dimNum] <= 0) // No negative values are stored in this rank.
+      break; // end loop over this dimension
   }
   
   ${splitUniformDataSelect(remainingDimReps, writeLoopContents), autoIndent=True}@slurp
@@ -198,8 +241,6 @@ for (bool _positive_${dimRep.name} = true; ; _positive_${dimRep.name} = false) {
   if (!_positive_${dimRep.name})
     break;
 }
-file_start[$dimNum] = mem_start[$dimNum] = 0;
-mem_count[$dimNum] = $dimRep.globalLattice;
     @else
 ${splitUniformDataSelect(remainingDimReps, writeLoopContents)}@slurp
     @end if

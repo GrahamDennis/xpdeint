@@ -64,7 +64,8 @@ class _DistributedMPIDriver (SimulationDriver, MPI):
   def preflight(self):
     super(_DistributedMPIDriver, self).preflight()
     
-    outputFormat = self.getVar('features')['Output'].outputFormat
+    outputFeature = self.getVar('features')['Output']
+    outputFormat = outputFeature.outputFormat
     
     # FIXME: This is dodgy
     if not outputFormat.mpiSafe:

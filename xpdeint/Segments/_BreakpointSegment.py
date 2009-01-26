@@ -52,6 +52,8 @@ class _BreakpointSegment (_Segment):
     # Use the output format used for output if one isn't specified
     if not self.hasattr('outputFormat'):
       self.outputFormat = self.getVar('features')['Output'].outputFormat
+    else:
+      self._children.append(self.outputFormat)
     
   
 
