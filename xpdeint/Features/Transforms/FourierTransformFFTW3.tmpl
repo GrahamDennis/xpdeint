@@ -264,9 +264,10 @@ if ( (_wisdomFile = fopen(_wisdomPath.c_str(), "w")) != NULL) {
 unsigned long _spaces_needed_for_${vector.id}[] = {${', '.join([str(space) for space in spacesNeeded])}};
 
 for (int _from_space_index = 0; _from_space_index < ${numberOfSpacesNeeded}; _from_space_index++) {
-  unsigned long _from_space = _spaces_needed_for_${vector.id}[_from_space_index];
+  const unsigned long _the_from_space = _spaces_needed_for_${vector.id}[_from_space_index];
   for (int _to_space_index = 0; _to_space_index < ${numberOfSpacesNeeded}; _to_space_index++) {
-    unsigned long _to_space = _spaces_needed_for_${vector.id}[_to_space_index];
+    unsigned long _from_space = _the_from_space;
+    const unsigned long _to_space = _spaces_needed_for_${vector.id}[_to_space_index];
     if (_from_space == _to_space)
       continue;
     

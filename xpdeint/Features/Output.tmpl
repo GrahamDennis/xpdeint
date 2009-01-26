@@ -39,9 +39,6 @@ void _write_output()
   @set $featureOrdering = ['Driver']
   ${insertCodeForFeatures('writeOutBegin', featureOrdering), autoIndent=True}@slurp
   
-  FILE* _outfile = _open_xsil_file("${filename}.xsil");
-  _write_xsil_header(_outfile);
-  
   @set $args = {}
   ${outputFormat.writeOutSetup(args, c'"$filename"'), autoIndent=True}@slurp
   
@@ -50,11 +47,6 @@ void _write_output()
   @end for
   
   ${outputFormat.writeOutTearDown, autoIndent=True}@slurp
-  
-  _write_xsil_footer(_outfile);
-  
-  _close_xsil_file(_outfile);
-  _outfile = NULL;
   
   ${insertCodeForFeaturesInReverseOrder('writeOutEnd', featureOrdering), autoIndent=True}@slurp
 }

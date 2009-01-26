@@ -26,6 +26,7 @@ void _write_xsil_footer(FILE* fp);
   @#
 @end def
 
+@@callOnceGuard
 @def functionImplementations
   @#
   @super
@@ -102,9 +103,18 @@ void _write_xsil_footer(FILE* fp)
 @end def
 
 @def writeOutSetup($args, $filename)
+char *_xsilFilename = (char*)malloc(256);
+strncpy(_xsilFilename, $filename, 256);
+strcat(_xsilFilename, ".xsil");
+
+FILE* _outfile = _open_xsil_file(_xsilFilename);
+_write_xsil_header(_outfile);
 @end def
 
 @def writeOutTearDown
+_write_xsil_footer(_outfile);
+_close_xsil_file(_outfile);
+_outfile = NULL;
 @end def
 
 @def writeOutFunctionImplementationBegin($dict)
