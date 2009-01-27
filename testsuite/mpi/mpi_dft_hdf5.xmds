@@ -59,7 +59,7 @@
     <breakpoint filename="mpi_dft_hdf5_xspace1.xsil" format="hdf5">
       <dependencies>main</dependencies>
     </breakpoint>
-    <breakpoint filename="mpi_dft_hdf5_kspace.xsil"> <!-- HDF5 doesn't yet support swapped dimensions -->
+    <breakpoint filename="mpi_dft_hdf5_kspace.xsil" format="hdf5">
       <dependencies fourier_space="ky kx">main</dependencies>
     </breakpoint>
     <breakpoint filename="mpi_dft_hdf5_kspace2.xsil" format="hdf5">
