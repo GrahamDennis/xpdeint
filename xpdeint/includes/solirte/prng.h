@@ -13,6 +13,8 @@
 #include "randpool.h"
 #include "ziggurat.h"
 #include <math.h>
+#include <string>
+#include <vector>
 
 #ifndef CFG_TIMETRACK_DISABLE
 #include "../platform/timetrack.h"
@@ -189,6 +191,7 @@ class CPRNG
 
 // -----------------------------------------------------------------------------
 // Uniform random singles.
+// PATHDEF UniformFP32
 // -----------------------------------------------------------------------------
 template<class SFMTParams>
 NOINLINE void CPRNG<SFMTParams>::RefillBuf_uniform_FP32(void)
@@ -203,6 +206,7 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_uniform_FP32(void)
 #if (CFG_HAVE_U128FP32 == CFG_SIMD_INTRINSIC)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // FP32-intrinsic implementation
+// PATHNAME u128fp32intrinsic
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   CDataBuffer_ConstView<uint128fp32_t, BufSize * 16> SrcPtr = RandomBlock.template GetConstView<uint128fp32_t>();
   CDataBuffer_VarView<uint128fp32_t, BufSize * 16> DstPtr = FBuffer_uniform_FP32.template GetVarView<uint128fp32_t>();
@@ -235,9 +239,93 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_uniform_FP32(void)
   {
     DstPtr.Store(CopyLoop + 0, SIMDOP_sub(SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 0), AndMask), One), One));
   }
+#elif (CFG_HAVE_U128 == CFG_SIMD_INTRINSIC)
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// U128-intrinsic, fp32-scalar implementation
+// PATHNAME u128intrinsic-fp32scalar
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  CDataBuffer_ConstView<uint128_t, BufSize * 16> SrcPtr = RandomBlock.template GetConstView<uint128_t>();
+  CDataBuffer_VarView<float, BufSize * 16> DstPtr = FBuffer_uniform_FP32.template GetVarView<float>();
+
+  uint128_t AndMask = SIMDOps::uint128_t_const<0x007FFFFF, 0x007FFFFF, 0x007FFFFF, 0x007FFFFF>::Value();
+  uint128_t OrMask = SIMDOps::uint128_t_const<0x3F800000, 0x3F800000, 0x3F800000, 0x3F800000>::Value();
+
+  // Unrolled part
+  union 
+  {
+    uint128_t AsU128;
+    float AsFP32[4];
+  } TempBuf[4];
+
+  size_t CopyLoop;
+  for (CopyLoop = 0; CopyLoop < BufSize - (BufSize % 4); CopyLoop += 4)
+  {
+    TempBuf[0].AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 0), AndMask), OrMask);
+    DstPtr.Store(CopyLoop * 4 + 0, TempBuf[0].AsFP32[0] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 1, TempBuf[0].AsFP32[1] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 2, TempBuf[0].AsFP32[2] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 3, TempBuf[0].AsFP32[3] - 1.0);
+    TempBuf[1].AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 1), AndMask), OrMask);
+    DstPtr.Store(CopyLoop * 4 + 4, TempBuf[1].AsFP32[0] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 5, TempBuf[1].AsFP32[1] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 6, TempBuf[1].AsFP32[2] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 7, TempBuf[1].AsFP32[3] - 1.0);
+    TempBuf[2].AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 2), AndMask), OrMask);
+    DstPtr.Store(CopyLoop * 4 + 8, TempBuf[2].AsFP32[0] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 9, TempBuf[2].AsFP32[1] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 10, TempBuf[2].AsFP32[2] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 11, TempBuf[2].AsFP32[3] - 1.0);
+    TempBuf[3].AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 3), AndMask), OrMask);
+    DstPtr.Store(CopyLoop * 4 + 12, TempBuf[3].AsFP32[0] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 13, TempBuf[3].AsFP32[1] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 14, TempBuf[3].AsFP32[2] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 15, TempBuf[3].AsFP32[3] - 1.0);
+  }
+
+  // Unrolling tail.
+  if ((BufSize % 4) == 3)
+  {
+    TempBuf[0].AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 0), AndMask), OrMask);
+    DstPtr.Store(CopyLoop * 4 + 0, TempBuf[0].AsFP32[0] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 1, TempBuf[0].AsFP32[1] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 2, TempBuf[0].AsFP32[2] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 3, TempBuf[0].AsFP32[3] - 1.0);
+    TempBuf[1].AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 1), AndMask), OrMask);
+    DstPtr.Store(CopyLoop * 4 + 4, TempBuf[1].AsFP32[0] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 5, TempBuf[1].AsFP32[1] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 6, TempBuf[1].AsFP32[2] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 7, TempBuf[1].AsFP32[3] - 1.0);
+    TempBuf[2].AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 2), AndMask), OrMask);
+    DstPtr.Store(CopyLoop * 4 + 8, TempBuf[2].AsFP32[0] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 9, TempBuf[2].AsFP32[1] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 10, TempBuf[2].AsFP32[2] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 11, TempBuf[2].AsFP32[3] - 1.0);
+  }
+  if ((BufSize % 4) == 2)
+  {
+    TempBuf[0].AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 0), AndMask), OrMask);
+    DstPtr.Store(CopyLoop * 4 + 0, TempBuf[0].AsFP32[0] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 1, TempBuf[0].AsFP32[1] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 2, TempBuf[0].AsFP32[2] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 3, TempBuf[0].AsFP32[3] - 1.0);
+    TempBuf[1].AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 1), AndMask), OrMask);
+    DstPtr.Store(CopyLoop * 4 + 4, TempBuf[1].AsFP32[0] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 5, TempBuf[1].AsFP32[1] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 6, TempBuf[2].AsFP32[2] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 7, TempBuf[2].AsFP32[3] - 1.0);
+  }
+  if ((BufSize % 4) == 1)
+  {
+    TempBuf[0].AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 0), AndMask), OrMask);
+    DstPtr.Store(CopyLoop * 4 + 0, TempBuf[0].AsFP32[0] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 1, TempBuf[0].AsFP32[1] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 2, TempBuf[0].AsFP32[2] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 3, TempBuf[0].AsFP32[3] - 1.0);
+  }
 #elif (CFG_HAVE_U128 == CFG_SIMD_MMX)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // U128-mmx, fp32-scalar two-pass implementation
+// PATHNAME u128mmx-fp32scalar-2pass
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   {
     // Integer pass.
@@ -290,6 +378,7 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_uniform_FP32(void)
 #elif (CFG_BITS == 64)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // U128-scalar, fp32-scalar 64-bit one-pass implementation
+// PATHNAME u128scalar-fp32scalar-64bit
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   CDataBuffer_ConstView<uint64_t, BufSize * 16> SrcPtr = RandomBlock.template GetConstView<uint64_t>();
   CDataBuffer_VarView<float, BufSize * 16> DstPtr = FBuffer_uniform_FP32.template GetVarView<float>();
@@ -316,6 +405,7 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_uniform_FP32(void)
 #else
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // U128-scalar, fp32-scalar 32-bit one-pass implementation
+// PATHNAME u128scalar-fp32scalar-32bit
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   CDataBuffer_ConstView<uint32_t, BufSize * 16> SrcPtr = RandomBlock.template GetConstView<uint32_t>();
   CDataBuffer_VarView<float, BufSize * 16> DstPtr = FBuffer_uniform_FP32.template GetVarView<float>();
@@ -384,6 +474,7 @@ inline void CPRNG<SFMTParams>::RandFill_uniform_FP32(float *Buffer, size_t NumFl
 
 // -----------------------------------------------------------------------------
 // Uniform random doubles.
+// PATHDEF UniformFP64
 // -----------------------------------------------------------------------------
 template<class SFMTParams>
 NOINLINE void CPRNG<SFMTParams>::RefillBuf_uniform_FP64(void)
@@ -398,6 +489,7 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_uniform_FP64(void)
 #if (CFG_HAVE_U128FP64 == CFG_SIMD_INTRINSIC)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // FP64-intrinsic implementation
+// PATHNAME u128fp64intrinsic
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   CDataBuffer_ConstView<uint128fp64_t, BufSize * 16> SrcPtr = RandomBlock.template GetConstView<uint128fp64_t>();
   CDataBuffer_VarView<uint128fp64_t, BufSize * 16> DstPtr = FBuffer_uniform_FP64.template GetVarView<uint128fp64_t>();
@@ -433,6 +525,7 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_uniform_FP64(void)
 #elif (CFG_HAVE_U128 == CFG_SIMD_INTRINSIC)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // U128-intrinsic, fp64-scalar implementation
+// PATHNAME u128intrinsic-fp64scalar
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   CDataBuffer_ConstView<uint128_t, BufSize * 16> SrcPtr = RandomBlock.template GetConstView<uint128_t>();
   CDataBuffer_VarView<double, BufSize * 16> DstPtr = FBuffer_uniform_FP64.template GetVarView<double>();
@@ -495,6 +588,7 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_uniform_FP64(void)
 #elif (CFG_HAVE_U128 == CFG_SIMD_MMX)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // U128-mmx, fp64-scalar two-pass implementation
+// PATHNAME u128mmx-fp64scalar-2pass
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   {
     // Integer pass.
@@ -541,6 +635,7 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_uniform_FP64(void)
 #elif (CFG_BITS == 64)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // U128-scalar, fp64-scalar 64-bit one-pass implementation
+// PATHNAME u128scalar-fp64scalar-64bit
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   CDataBuffer_ConstView<uint64_t, BufSize * 16> SrcPtr = RandomBlock.template GetConstView<uint64_t>();
   CDataBuffer_VarView<double, BufSize * 16> DstPtr = FBuffer_uniform_FP64.template GetVarView<double>();
@@ -565,6 +660,7 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_uniform_FP64(void)
 #else
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // U128-scalar, fp64-scalar 32-bit one-pass implementation
+// PATHNAME u128scalar-fp64scalar-32bit
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   CDataBuffer_ConstView<uint32_t, BufSize * 16> SrcPtr = RandomBlock.template GetConstView<uint32_t>();
   CDataBuffer_VarView<double, BufSize * 16> DstPtr = FBuffer_uniform_FP64.template GetVarView<double>();
@@ -632,6 +728,7 @@ inline void CPRNG<SFMTParams>::RandFill_uniform_FP64(double *Buffer, size_t NumD
 
 // -----------------------------------------------------------------------------
 // Gaussian tail random numbers.
+// PATHDEF GaussianTailFP64
 // -----------------------------------------------------------------------------
 template<class SFMTParams>
 NOINLINE void CPRNG<SFMTParams>::RefillBuf_gaussiantail_FP64(void)
@@ -647,6 +744,7 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_gaussiantail_FP64(void)
 #if (CFG_HAVE_U128 == CFG_SIMD_INTRINSIC) && (CFG_HAVE_U128FP64 == CFG_SIMD_INTRINSIC)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // U128-intrinsic, fp64-intrinsic implementation
+// PATHNAME u128fp64intrinsic
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // Some constants.
   uint128fp64_t SignAndMask = SIMDOps::uint128fp64_t_const<0x00000000, 0x80000000, 0x00000000, 0x80000000>::Value();
@@ -688,6 +786,7 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_gaussiantail_FP64(void)
 #elif (CFG_HAVE_U128 == CFG_SIMD_INTRINSIC) // Note: No mmx due to emms overhead.
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // U128-intrinsic, fp64-scalar implementation
+// PATHNAME u128intrinsic-fp64scalar
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // Some constants.
   uint128_t SignAndMask = SIMDOps::uint128_t_const<0x00000000, 0x80000000, 0x00000000, 0x80000000>::Value();
@@ -721,7 +820,7 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_gaussiantail_FP64(void)
     uint128_t SignBit = SIMDOP_and(TempSrc, SignAndMask);
 
     // Extract (u2 + 1).
-    u1.AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(SrcIdx * 2 + 1), FPAndMask), FPOrMask);
+    u2.AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(SrcIdx * 2 + 1), FPAndMask), FPOrMask);
 
     // Transform u1.
     double Test0 = sqrt(a2 - 2 * log(u1.AsFP64[0] - 1.0));
@@ -753,11 +852,12 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_gaussiantail_FP64(void)
     #endif
 
     // Store the transformed u1.
-    DstPtr.Store(SrcIdx * 2 + 0, SIMDOP_or(SIMDOP_or(Test.AsU128, SignBit), CompareResult.AsU128));
+    DstPtr.Store(SrcIdx, SIMDOP_or(SIMDOP_or(Test.AsU128, SignBit), CompareResult.AsU128));
   }
 #elif (CFG_BITS == 64)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // U128-scalar, fp64-scalar 64-bit implementation
+// PATHNAME u128scalar-fp64scalar-64bit
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // Some constants.
   const uint64_t FPAndMask = UINT64_C(0x000FFFFFFFFFFFFF);
@@ -814,6 +914,7 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_gaussiantail_FP64(void)
 #else
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // U128-scalar, fp64-scalar 32-bit implementation
+// PATHNAME u128scalar-fp64scalar-32bit
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // Some constants.
   const uint32_t FPAndMask = 0x000FFFFF;
@@ -921,6 +1022,7 @@ inline void CPRNG<SFMTParams>::RandFill_gaussiantail_FP64(double *Buffer, size_t
 
 // -----------------------------------------------------------------------------
 // Gaussian random numbers.
+// PATHDEF GaussianFP64
 // -----------------------------------------------------------------------------
 template<class SFMTParams>
 NOINLINE void CPRNG<SFMTParams>::RefillBuf_gaussian_FP64(void)
@@ -937,6 +1039,7 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_gaussian_FP64(void)
 #if (CFG_HAVE_U128 == CFG_SIMD_INTRINSIC) && (CFG_HAVE_U128FP64 == CFG_SIMD_INTRINSIC)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // U128-intrinsic, fp64-intrinsic implementation
+// PATHNAME u128fp64intrinsic
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   CDataBuffer_ConstView<uint128_t, BufSize * 16> SrcPtr = RandomBlock.template GetConstView<uint128_t>();
   CDataBuffer_VarView<double, BufSize * 16> DstPtr = FBuffer_gaussian_FP64.template GetVarView<double>();
@@ -1050,6 +1153,7 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_gaussian_FP64(void)
 #else
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // U128-scalar, fp64-scalar 32/64-bit implementation
+// PATHNAME u128scalar-fp64scalar
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   CDataBuffer_ConstView<uint64_t, BufSize * 16> SrcPtr = RandomBlock.template GetConstView<uint64_t>();
   CDataBuffer_VarView<uint64_t, BufSize * 16> DstPtr = FBuffer_gaussian_FP64.template GetVarView<uint64_t>();
@@ -1269,6 +1373,7 @@ inline void CPRNG<SFMTParams>::RandFill_u32(uint32_t *Buffer, size_t NumU32s)
 
 // -----------------------------------------------------------------------------
 // Exponential random doubles.
+// PATHDEF ExponentialFP64
 // -----------------------------------------------------------------------------
 template<class SFMTParams>
 NOINLINE void CPRNG<SFMTParams>::RefillBuf_exponential_FP64(void)
@@ -1285,6 +1390,10 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_exponential_FP64(void)
   size_t DstPos = 0;
 
 #if (CFG_HAVE_U128 == CFG_SIMD_INTRINSIC) && (CFG_HAVE_U128FP64 == CFG_SIMD_INTRINSIC)
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// U128-intrinsic, fp64-intrinsic implementation
+// PATHNAME u128fp64intrinsic
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   CDataBuffer_ConstView<uint128_t, BufSize * 16> SrcPtr = RandomBlock.template GetConstView<uint128_t>();
   CDataBuffer_VarView<double, BufSize * 16> DstPtr = FBuffer_exponential_FP64.template GetVarView<double>();
 
@@ -1394,6 +1503,7 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_exponential_FP64(void)
 #else
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // U128-scalar, fp64-scalar 32/64-bit implementation
+// PATHNAME u128scalar-fp64scalar
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   CDataBuffer_ConstView<uint64_t, BufSize * 16> SrcPtr = RandomBlock.template GetConstView<uint64_t>();
   CDataBuffer_VarView<double, BufSize * 16> DstPtr = FBuffer_exponential_FP64.template GetVarView<double>();
@@ -1516,6 +1626,7 @@ inline void CPRNG<SFMTParams>::RandFill_exponential_FP64(double *Buffer, size_t 
 
 // -----------------------------------------------------------------------------
 // Exponential random singles.
+// PATHDEF ExponentialFP32
 // -----------------------------------------------------------------------------
 template<class SFMTParams>
 NOINLINE void CPRNG<SFMTParams>::RefillBuf_exponential_FP32(void)
@@ -1534,6 +1645,7 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_exponential_FP32(void)
 #if (CFG_HAVE_U128 == CFG_SIMD_INTRINSIC) && (CFG_HAVE_U128FP32 == CFG_SIMD_INTRINSIC)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // U128-intrinsic, fp32-intrinsic implementation
+// PATHNAME u128fp32intrinsic
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   CDataBuffer_ConstView<uint128_t, BufSize * 16> SrcPtr = RandomBlock.template GetConstView<uint128_t>();
   CDataBuffer_VarView<float, BufSize * 16> DstPtr = FBuffer_exponential_FP32.template GetVarView<float>();
@@ -1707,6 +1819,7 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_exponential_FP32(void)
 #else
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // U128-scalar, fp32-scalar 32/64-bit implementation
+// PATHNAME u128scalar-fp32scalar
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   CDataBuffer_ConstView<uint64_t, BufSize * 16> SrcPtr = RandomBlock.template GetConstView<uint64_t>();
   CDataBuffer_VarView<float, BufSize * 16> DstPtr = FBuffer_exponential_FP32.template GetVarView<float>();
