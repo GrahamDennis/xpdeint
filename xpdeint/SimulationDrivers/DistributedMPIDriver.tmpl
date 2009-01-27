@@ -193,6 +193,53 @@ ${variable.arrayName} = _backup${variable.arrayName};
   @#
 @end def
 
+@def writeDataHDF5ModifyLoopContents($dict)
+  @#
+  @set $dimRepOrdering = dict['dimRepOrdering']
+  @# We only care about elements that are reordered
+  @set $dimRepOrdering = [(fileDimIndex, memDimIndex, dimRep) \
+                          for fileDimIndex, memDimIndex, dimRep in dimRepOrdering if fileDimIndex != memDimIndex]
+  @# If dimRepOrdering is empty, we have nothing to do
+  @if not dimRepOrdering
+    @return
+  @end if
+  @#
+  @set $writeLoopContents = dict['writeLoopContents']
+  @capture newWriteLoopContents
+    @for fileDimIndex, memDimIndex, dimRep in dimRepOrdering
+hsize_t file_start_${dimRep.name} = file_start[$fileDimIndex];
+hsize_t mem_start_${dimRep.name} = mem_start[$memDimIndex];
+hsize_t count_${dimRep.name} = mem_count[$memDimIndex];
+mem_count[$memDimIndex] = 1;
+
+    @end for
+    @#
+${hdf5DataCopyLoops(dimRepOrdering[:], writeLoopContents)}@slurp
+    @for fileDimIndex, memDimIndex, dimRep in dimRepOrdering
+
+file_start[$fileDimIndex] = file_start_${dimRep.name};
+mem_start[$memDimIndex] = mem_start_${dimRep.name};
+mem_count[$memDimIndex] = count_${dimRep.name};
+    @end for
+  @end capture
+  @#
+  @silent dict['writeLoopContents'] = newWriteLoopContents
+  @#
+@end def
+
+@def hdf5DataCopyLoops(remainingDimReps, writeLoopContents)
+  @if not remainingDimReps
+${writeLoopContents}@slurp
+  @else
+    @set fileDimIndex, memDimIndex, dimRep = remainingDimReps.pop(0)
+for (hsize_t _i${dimRep.name} = 0; _i${dimRep.name} < count_${dimRep.name}; _i${dimRep.name}++) {
+  file_start[$fileDimIndex] = file_start_${dimRep.name} + _i${dimRep.name};
+  mem_start[$memDimIndex] = mem_start_${dimRep.name} + _i${dimRep.name};
+  
+  ${hdf5DataCopyLoops(remainingDimReps, writeLoopContents), autoIndent=True}@slurp
+}
+  @end if
+@end def
 
 @def generateNoisesBegin($dict)
   @#
