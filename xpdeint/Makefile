@@ -8,7 +8,7 @@ SUBDIRS = SimulationDrivers Geometry Vectors Segments Operators Features xsil2gr
 MYMAKEFLAGS = 'cheetah_settings=$(cheetah_settings)'
 
 all: compile
-	@./version.sh
+	@sh version.sh
 	@for i in $(SUBDIRS); do \
 	(cd $$i; env $(MYMAKEFLAGS) $(MAKE) $(MFLAGS) all); done
 
