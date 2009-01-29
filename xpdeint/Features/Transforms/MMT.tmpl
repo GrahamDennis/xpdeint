@@ -17,7 +17,7 @@ Return the options that need to be added to ``CFLAG``.
   @#
   @if $platform == 'darwin'
     @# Use vecLib
--lcblas -I/System/Library/Frameworks/vecLib.framework/Versions/A/Headers/@slurp
+-lcblas -framework vecLib@slurp
   @else
     @# Use GSL CBLAS until we get ATLAS working
 -lgslcblas@slurp
@@ -30,7 +30,7 @@ Return the options that need to be added to ``CFLAG``.
   @super
   @#
   @if $platform == 'darwin'
-#include <cblas.h>
+#include <vecLib/cblas.h>
   @else
 #include <gsl/gsl_cblas.h>
   @end if

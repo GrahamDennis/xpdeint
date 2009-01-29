@@ -119,7 +119,7 @@ hid_t file_dataspace;
 file_dataspace = H5Screate_simple(${len(field.dimensions)}, file_dims, NULL);
   @for variable in dependentVariables
     @if $variable.vector.type == 'double'
-      @set $variable.separatedComponents = list(enumerate($variable.components))
+      @set $variable['separatedComponents'] = list(enumerate($variable.components))
     @else
       @set $components = []
       @set variable['separatedComponents'] = components
