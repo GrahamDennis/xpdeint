@@ -1,7 +1,8 @@
 @*
 MatlabImport.tmpl
 
-Created by Joe Hope on 2009-1-7.
+Created by Joe Hope on 2009-01-07.
+Modified by Graham Dennis on 2009-01-29
 Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 *@
 
@@ -11,9 +12,22 @@ Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 @attr $defaultExtension = 'm'
 
 @def loadXSILFile($xsilFile)
-
-Wow.  Wowee
-
-@# If only this worked properly
+  @for objectNum, xsilObject in enumerate(xsilFile.xsilObjects):
+    @if xsilObject.data.format == 'hdf5':
+      @set $filename = xsilObject.data.filename
+      @set $groupName = xsilObject.data.groupName
+      @for var in xsilObject.independentVariables:
+        @set $outName = c'${var.name}_${objectNum+1}'
+${outName} = hdf5read('${filename}', '${groupName}/${var.name}');
+      @end for
+      @for var in xsilObject.dependentVariables:
+        @set $outName = c'${var.name}_${objectNum+1}'
+${outName} = hdf5read('${filename}', '${groupName}/${var.name}');
+${outName} = permute(${outName}, ndims(${outName}):-1:1);
+      @end for
+    @else
+      @raise "No support for Matlab output for XSIL format '%s'." % xsilObject.data.format
+    @end if
+  @end for
 @end def
 
