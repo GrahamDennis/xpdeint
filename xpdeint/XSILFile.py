@@ -118,6 +118,7 @@ class XSILDataHDF5(XSILData):
   def __init__(self, independentVariables, dependentVariables, groupName, dataFile, loadData = True):
     XSILData.__init__(self, independentVariables, dependentVariables)
     self.filename = os.path.split(dataFile)[1]
+    self.groupName = groupName
     
     if loadData: self.parseDataFile(groupName, dataFile)
   

@@ -1,7 +1,8 @@
 @*
 MathematicaImport.tmpl
 
-Created by Joe Hope on 2009-1-7.
+Created by Joe Hope on 2009-01-07.
+Modified by Graham Dennis on 2009-01-29
 Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 *@
 
@@ -70,8 +71,20 @@ $varName = Flatten[Table[BinaryReadList[fpDat, {"$outputPrecision"}, $(xsilObjec
      @end for
 Close[fpDat];
 ResetDirectory[];
+   @elif xsilObject.data.format == 'hdf5'
+SetDirectory[NotebookDirectory[]];
+     @set $variables = xsilObject.independentVariables[:]
+     @silent variables.extend(xsilObject.dependentVariables)
+     @set $filename = xsilObject.data.filename
+     @set $groupName = xsilObject.data.groupName
+     @for var in variables
+       @set varName = var["name"].replace('_', '') + str(objectNum + 1)
+       @silent declaredVars.append(varName)
+${varName} = Import["${filename}", {"Datasets", "${groupName}/${var.name}"}];
+     @end for
+ResetDirectory[];
    @else:
-@raise "The data format is neither 'Text' nor 'Binary'.  xsil2graphics2 is confused, and I think there might be someone standing RIGHT BEHIND YOU!"
+    @raise "The data format is neither 'Text' nor 'Binary'.  xsil2graphics2 is confused, and I think there might be someone standing RIGHT BEHIND YOU!"
    @end if
  @end for
 
