@@ -64,6 +64,12 @@ Build instructions:
    Note that xpdeint currently requires xmds-1 to be installed for libxmds when loading XSIL files.
    It also currently uses the xsil2graphics program bundled with xmds-1.
 
+8. Sign up to the xmds-commit list at https://lists.sourceforge.net/lists/listinfo/xmds-commit.
+   This is a reasonably important step as xpdeint is still very much a moving target and things
+   can still change or bugs can be found. Signing up to this list means you can keep track of these
+   things. If you're not interested in the up-to-the-moment updates (most people won't be), sign up
+   for the 'daily digest' instead.
+
 This should mostly work.
 
 So far the feature list includes:
