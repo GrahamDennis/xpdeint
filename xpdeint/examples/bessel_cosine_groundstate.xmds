@@ -13,7 +13,7 @@
     <auto_vectorise />
     <benchmark />
     <bing />
-    <fftw version="3" plan="exhaustive" />
+    <fftw plan="exhaustive" />
     <mmt />
     <!-- <openmp /> -->
     <globals>

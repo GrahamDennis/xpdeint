@@ -16,7 +16,7 @@
   <features>
     <benchmark />
     <error_check />
-    <fftw version="3" plan="estimate" />
+    <fftw plan="estimate" />
   </features>
   
   <geometry>

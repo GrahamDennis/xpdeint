@@ -479,7 +479,8 @@ ${explicitIndexPointerTermForVectorAndDimensionWithFieldAndSpace(vector, dimensi
       @# value at k=0 (the first element in this dimension). If it isn't in fourier
       @# space, then we want to take its element in the middle.
       @#
-      @# Either way, this is handled by the dimension
+      @# Either way, this is handled by the dimension. But we can't have this dimension distributed.
+      @assert not dimension.isDistributed, "Can't do single point samples with the distributed-mpi driver."
    + ( ${dimRep.indexForSinglePointSample} )@slurp
   * $vector.field.localPointsInDimensionsAfterDimensionInSpace(dimension, space)@slurp
     @end if

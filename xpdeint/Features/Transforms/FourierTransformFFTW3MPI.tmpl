@@ -279,7 +279,7 @@ fftw_mpi_gather_wisdom(MPI_COMM_WORLD);
 _c = 1.0;
   @for i, dim in enumerate(transformDimensions)
 _fft_sizes[$i] = ${dim.inSpace(space).globalLattice};
-    @if 'mpi-dct' in $distributedMPIKinds
+    @if 'dct' in $distributedMPIKinds
 _r2r_kinds[$i]  = ${r2rKindForDimensionAndDirection(dim, direction)};
     @end if
 _c *= ${dim.inSpace(space).stepSize} * _inverse_sqrt_2pi;
@@ -301,7 +301,7 @@ _howmany *= ${dim.inSpace(space).globalLattice};
     @set $transposedState = 'FFTW_MPI_TRANSPOSED_IN'
   @end if
   @#
-  @if 'mpi-dft' in $distributedMPIKinds
+  @if 'dft' in $distributedMPIKinds
 _plan = fftw_mpi_plan_many_dft(${rank}, _fft_sizes, _howmany, ${inBlockSize}, ${outBlockSize}, 
                                reinterpret_cast<fftw_complex*>($arrayName),
                                reinterpret_cast<fftw_complex*>($arrayName),
@@ -314,7 +314,7 @@ _plan = fftw_mpi_plan_many_r2r(${rank}, _fft_sizes, _howmany, ${inBlockSize}, ${
   @end if
 if (!_plan)
   _LOG(_ERROR_LOG_LEVEL, "(%s: %i) Unable to create $direction plan for vector ${vector.id}.\n", __FILE__, __LINE__);
-  @if 'mpi-dft' in $distributedMPIKinds
+  @if 'dft' in $distributedMPIKinds
     @set $transformType = '_MPI_DFT_TRANSFORM'
   @else
     @set $transformType = '_MPI_R2R_TRANSFORM'
@@ -327,7 +327,7 @@ _space_transform _${vector.id}_${identifier}(_plan, $transformType, _c);
   @#
   @if not $vector.field.isDistributed
     @super(vector)
-    @return
+    @stop
   @end if
   @#
   @set $r2rMultiplier = 1
@@ -400,7 +400,7 @@ _forward_sizes_index = _backward_sizes_index = _r2r_sizes_index = 0;
 _forward_loop_sizes_index = _backward_loop_sizes_index = _r2r_loop_sizes_index = 0;
 
 //     Loop over the distributed dimension '$mpiDimensions[0].name'
-    @if 'mpi-dft' in $distributedMPIKinds
+    @if 'dft' in $distributedMPIKinds
 _forward_iodim_ptr = &_forward_loop_sizes[_forward_loop_sizes_index++];
 _backward_iodim_ptr = &_backward_loop_sizes[_backward_loop_sizes_index++];
 
@@ -417,7 +417,7 @@ _r2r_iodim_ptr->os = _r2r_iodim_ptr->is;
     @end if
 
 // Forward transform the local MPI dimension '$mpiDimensions[1].name'
-    @if 'mpi-dft' in $distributedMPIKinds
+    @if 'dft' in $distributedMPIKinds
 _forward_iodim_ptr = &_forward_sizes[_forward_sizes_index++];
 _backward_iodim_ptr = &_backward_sizes[_backward_sizes_index++];
 
@@ -455,7 +455,7 @@ _forward_sizes_index = _backward_sizes_index = _r2r_sizes_index = 0;
 _forward_loop_sizes_index = _backward_loop_sizes_index = _r2r_loop_sizes_index = 0;
 
 //     Loop over the distributed dimension '$mpiDimensions[1].name'
-    @if 'mpi-dft' in $distributedMPIKinds
+    @if 'dft' in $distributedMPIKinds
 _forward_iodim_ptr = &_forward_loop_sizes[_forward_loop_sizes_index++];
 _backward_iodim_ptr = &_backward_loop_sizes[_backward_loop_sizes_index++];
 
@@ -472,7 +472,7 @@ _r2r_iodim_ptr->os = _r2r_iodim_ptr->is;
     @end if
 
 //     Forward transform the local MPI dimension '$mpiDimensions[0].name'
-    @if 'mpi-dft' in $distributedMPIKinds
+    @if 'dft' in $distributedMPIKinds
 _forward_iodim_ptr = &_forward_sizes[_forward_sizes_index++];
 _backward_iodim_ptr = &_backward_sizes[_backward_sizes_index++];
 

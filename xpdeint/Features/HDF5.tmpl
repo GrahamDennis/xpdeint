@@ -1,0 +1,125 @@
+@*
+HDF5.tmpl
+
+Created by Graham Dennis on 2008-03-28.
+Copyright (c) 2008 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.ScriptElement
+
+@from xpdeint.Geometry.SplitUniformDimensionRepresentation import SplitUniformDimensionRepresentation
+
+@def includes
+  @#
+  @super
+  @#
+#include <hdf5.h>
+  @#
+@end def
+
+@def cflags
+-lhdf5@slurp
+@end def
+
+@def processData(dict)
+  @set $field = dict['field']
+  @set $space = dict['space']
+  @set $operation = dict['operation']
+  @assert operation in ['read', 'write']
+  @set $variables = dict['variables']
+  @set $componentCount = 0
+  @for $variable in $variables
+    @set $componentCount += len($variable.vector.components)
+    @if $variable.vector.type == 'complex'
+      @set $componentCount += len($variable.vector.components)
+    @end if
+  @end for
+  @set dict['componentCount'] = componentCount
+/* Create the data space */
+  @set $dimensionCount = len(field.dimensions)
+  @set $fileDimReps = [dim.inSpace(space) for dim in field.dimensions]
+  @set $memDimReps = [dim.inSpace(space) for dim in field.orderedDimensionsInSpace(space)]
+hsize_t file_start[${dimensionCount}] = {${', '.join(dimRep.localOffset for dimRep in fileDimReps)}};
+hsize_t mem_dims[${dimensionCount+1}] = {${', '.join(dimRep.localLattice for dimRep in memDimReps)}, 1};
+hsize_t mem_start[${dimensionCount+1}] = {${', '.join(['0']*(dimensionCount+1))}};
+hsize_t mem_stride[${dimensionCount+1}] = {${', '.join(['1']*(dimensionCount+1))}};
+hsize_t mem_count[${dimensionCount+1}] = {${', '.join(dimRep.localLattice for dimRep in memDimReps)}, 1};
+
+hid_t mem_dataspace;
+  @for variable in variables
+    @set $components = $variable.separatedComponents
+mem_dims[${dimensionCount}] = ${len(components)};
+mem_dataspace = H5Screate_simple(${dimensionCount+1}, mem_dims, NULL);
+mem_stride[${dimensionCount}] = ${len(components)};
+
+    @capture writeLoopContents
+      @for offset, componentName in components
+mem_start[${dimensionCount}] = $offset;
+H5Sselect_hyperslab(mem_dataspace, H5S_SELECT_SET, mem_start, mem_stride, mem_count, NULL);
+        @# 
+        @#  This looks like a typo because 'mem_stride' and 'mem_count' are used with 'file_start' are used here.
+        @#  But it isn't a typo. The idea here is that the selection we want to make in the file has the same
+        @#  number of elements in each dimension and the same stride as in memory (but ignoring the last dimension).
+        @#  The only difference is the starting position for the selection.
+        @#
+H5Sselect_hyperslab(file_dataspace, H5S_SELECT_SET, file_start, mem_stride, mem_count, NULL);
+
+H5D${operation}(dataset_${componentName}, H5T_NATIVE_DOUBLE, mem_dataspace, file_dataspace, H5P_DEFAULT, ${variable.arrayName});
+      @end for
+    @end capture
+    @#
+    @# Construct a list of (fileDimNum, memDimNum, dimRep) tuples. This is necessary
+    @# for the case where we are using a distributed MPI driver with FFT's
+    @# and the first two dimensions are transformed. In this situation, the
+    @# first and second dimensions are transposed.
+    @#
+    @set dimRepOrdering = [(fileDimNum, memDimReps.index(dimRep), dimRep) \
+                           for fileDimNum, dimRep in enumerate(fileDimReps)]
+    @# Permit the driver to modify the writeLoopContents
+    @set $featureOrdering = ['Driver']
+    @set $dict = {'writeLoopContents': writeLoopContents,
+                  'dimRepOrdering': dimRepOrdering}
+    @silent $insertCodeForFeatures('writeDataHDF5ModifyLoopContents', featureOrdering, dict)
+    @set $writeLoopContents = dict['writeLoopContents']
+    @#
+    @# The object passed as the first argument to this next call is a 
+// Select hyperslabs of memory and file data spaces and then write
+${splitUniformDataSelect(dimRepOrdering, writeLoopContents)}@slurp
+
+H5Sclose(mem_dataspace);
+  @end for
+@end def
+
+@def splitUniformDataSelect(remainingDimReps, writeLoopContents)
+  @if not remainingDimReps
+${writeLoopContents}@slurp
+  @else
+    @set fileDimNum, memDimNum, dimRep = remainingDimReps.pop(0)
+    @if isinstance(dimRep, SplitUniformDimensionRepresentation)
+for (bool _positive_${dimRep.name} = true; ; _positive_${dimRep.name} = false) {
+  if (_positive_${dimRep.name}) {
+    mem_start[$memDimNum] = 0;
+    if ($dimRep.localOffset >= (($dimRep.globalLattice-1)/2 +1)) // No positive values are stored in this rank.
+      continue;
+    mem_count[$memDimNum] = MIN((($dimRep.globalLattice-1)/2 +1) - $dimRep.localOffset, $dimRep.localLattice);
+    file_start[$fileDimNum] = $dimRep.globalLattice/2 + $dimRep.localOffset;
+  } else {
+    if (($dimRep.globalLattice-1)/2+1 < $dimRep.localOffset) // Only negative values are stored in this rank.
+      mem_start[$memDimNum] = 0;
+    else
+      mem_start[$memDimNum] = ($dimRep.globalLattice-1)/2+1 - $dimRep.localOffset;
+    file_start[$fileDimNum] = mem_start[$memDimNum] + $dimRep.localOffset - (($dimRep.globalLattice-1)/2+1);
+    if ($dimRep.localLattice <= mem_start[$memDimNum]) // No negative values are stored in this rank.
+      break; // end loop over this dimension
+    mem_count[$memDimNum] = $dimRep.localLattice - mem_start[$memDimNum]; // To the end of this dimension
+  }
+  
+  ${splitUniformDataSelect(remainingDimReps, writeLoopContents), autoIndent=True}@slurp
+  
+  if (!_positive_${dimRep.name})
+    break;
+}
+    @else
+${splitUniformDataSelect(remainingDimReps, writeLoopContents)}@slurp
+    @end if
+  @end if
+@end def

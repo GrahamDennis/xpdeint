@@ -17,7 +17,7 @@
     <benchmark />
     <!-- <error_check /> -->
     <bing />
-    <fftw version="3" plan="patient" />
+    <fftw plan="patient" />
     <openmp />
     <validation kind="run-time" />
     <globals>

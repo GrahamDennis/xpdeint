@@ -16,7 +16,7 @@
     
     <!-- <error_check /> -->
     <bing />
-    <!-- <fftw version="3" /> -->
+    <!-- <fftw /> -->
     <openmp />
     <stochastic>
       <noise kind="gaussian-dsfmt" prefix="n" num="1"/>

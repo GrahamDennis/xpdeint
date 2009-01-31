@@ -63,9 +63,6 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
       # Check that the dimension doesn't have any mapping rules yet
       assert not dim._mappingRules
     
-    for dim in dimensions[0:2]:
-      self.transformNameMap[dim.name] = 'mpi-' + self.transformNameMap[dim.name]
-    
     self._driver.distributedDimensionNames = [dim.name for dim in dimensions[0:2]]
     self.mpiDimensions = dimensions[0:2]
     self.swappedSpace = reduce(operator.__or__, [dim.transformMask for dim in self.mpiDimensions])
@@ -81,10 +78,8 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
     secondMPIDimension.inSpace(self.swappedSpace).setHasLocalOffset('swapped')
     
     self.distributedMPIKinds = set([self.transformNameMap[firstMPIDimension.name]])
-    if self.distributedMPIKinds.intersection(['mpi-dct', 'mpi-dst']):
-      self.distributedMPIKinds.update(['dct', 'dst', 'mpi-dct', 'mpi-dst'])
-    if 'mpi-dft' in self.distributedMPIKinds:
-      self.distributedMPIKinds.add('dft')
+    if self.distributedMPIKinds.intersection(['dct', 'dst']):
+      self.distributedMPIKinds.update(['dct', 'dst'])
     
   
   def mappingRulesForDimensionInField(self, dim, field):

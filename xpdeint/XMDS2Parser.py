@@ -29,6 +29,7 @@ from xpdeint.Vectors.ComputedVector import ComputedVector as ComputedVectorTempl
 from xpdeint.Vectors.VectorInitialisation import VectorInitialisation as VectorInitialisationZeroTemplate
 from xpdeint.Vectors.VectorInitialisationFromCDATA import VectorInitialisationFromCDATA as VectorInitialisationFromCDATATemplate
 from xpdeint.Vectors.VectorInitialisationFromXSIL import VectorInitialisationFromXSIL as VectorInitialisationFromXSILTemplate
+from xpdeint.Vectors.VectorInitialisationFromHDF5 import VectorInitialisationFromHDF5 as VectorInitialisationFromHDF5Template
 
 
 from xpdeint.Segments.TopLevelSequenceElement import TopLevelSequenceElement as TopLevelSequenceElementTemplate
@@ -794,22 +795,32 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
           raise ParserException(initialisationElement, "Empty initialisation code in 'code' initialisation element.")
       elif kindString == 'zero':
         initialisationTemplate = vectorTemplate.initialiser
-      elif kindString == 'xsil':
-        initialisationTemplate = VectorInitialisationFromXSILTemplate(parent = vectorTemplate, xmlElement=initialisationElement,
-                                                                      **self.argumentsToTemplateConstructors)
+      elif kindString in ['xsil', 'hdf5']:
+        if kindString == 'xsil':
+          initialisationTemplateClass = VectorInitialisationFromXSILTemplate
+        elif kindString == 'hdf5':
+          initialisationTemplateClass = VectorInitialisationFromHDF5Template
+        initialisationTemplate = initialisationTemplateClass(parent = vectorTemplate, xmlElement=initialisationElement,
+                                                             **self.argumentsToTemplateConstructors)
         geometryMatchingMode = 'strict'
         if initialisationElement.hasAttribute('geometry_matching_mode'):
           geometryMatchingMode = initialisationElement.getAttribute('geometry_matching_mode').strip().lower()
           if not geometryMatchingMode in ('strict', 'loose'):
-            raise ParserException(initialisationElement, "The geometry matching mode for XSIL import must either be 'strict' or 'loose'.")
+            raise ParserException(initialisationElement, "The geometry matching mode for XSIL/HDF5 import must either be 'strict' or 'loose'.")
         initialisationTemplate.geometryMatchingMode = geometryMatchingMode
         
         filenameElement = initialisationElement.getChildElementByTagName('filename')
-        momentGroupName = 'NULL'
-        if filenameElement.hasAttribute('moment_group'):
-          momentGroupName = 'moment_group_' + filenameElement.getAttribute('moment_group').strip()
         
-        initialisationTemplate.momentGroupName = momentGroupName
+        if kindString == 'xsil':
+          momentGroupName = 'NULL'
+          if filenameElement.hasAttribute('group'):
+            momentGroupName = 'moment_group_' + filenameElement.getAttribute('group').strip()
+          initialisationTemplate.momentGroupName = momentGroupName
+        elif kindString == 'hdf5':
+          groupName = '/1'
+          if filenameElement.hasAttribute('group'):
+            groupName = filenameElement.getAttribute('group').strip()
+          initialisationTemplate.groupName = groupName
         
         initialisationTemplate.codeBlocks['initialisation'] = createInitialisationCodeBlock()
         
@@ -821,7 +832,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
         
       else:
         raise ParserException(initialisationElement, "Initialisation kind '%(kindString)s' is unrecognised.\n"
-                                                     "The options are 'code' (default), 'xsil', or 'zero' "
+                                                     "The options are 'code' (default), 'hdf5', 'xsil', or 'zero' "
                                                      "(this is the same as having no initialisation element)." % locals())
       
       # Untie the old initialiser from the vector

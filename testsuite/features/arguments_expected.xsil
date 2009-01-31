@@ -16,7 +16,7 @@
   
   <features>
     <benchmark />
-    <fftw version="3" plan="exhaustive" />
+    <fftw plan="exhaustive" />
     <validation kind="run-time"/>
     <globals>
       <![CDATA[

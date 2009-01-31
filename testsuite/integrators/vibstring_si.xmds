@@ -17,7 +17,7 @@
   <features>
     <benchmark />
     <bing />
-    <fftw version="3" plan="estimate" />
+    <fftw plan="estimate" />
     <globals>
       <![CDATA[
       const double T = 10.0;

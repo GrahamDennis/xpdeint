@@ -14,7 +14,7 @@
     <auto_vectorise />
     <benchmark />
     <bing />
-    <fftw version="3" plan="patient" />
+    <fftw plan="patient" />
   </features>
   
   <geometry>
@@ -28,9 +28,9 @@
     <components>
       V1
     </components>
-    <initialisation kind="xsil">
+    <initialisation kind="hdf5">
       <!-- Use the same potential as the previous simulation -->
-      <filename>groundstate_gaussian_break.xsil</filename>
+      <filename>groundstate_gaussian_break.h5</filename>
     </initialisation>
   </vector>
   
@@ -50,8 +50,8 @@
   
   <vector name="groundstate" initial_space="y" type="complex">
     <components>phi</components>
-    <initialisation kind="xsil">
-      <filename>groundstate_gaussian_break.xsil</filename>
+    <initialisation kind="hdf5">
+      <filename>groundstate_gaussian_break.h5</filename>
     </initialisation>
   </vector>
   
@@ -115,7 +115,7 @@
       <dependencies>wavefunction</dependencies>
     </breakpoint>
   </sequence>
-  <output format="binary">
+  <output format="hdf5">
     <group>
       <sampling initial_sample="no">
         <dimension name="y" />

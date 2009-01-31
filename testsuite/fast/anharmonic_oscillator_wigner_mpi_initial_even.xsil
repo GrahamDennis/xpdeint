@@ -16,7 +16,7 @@
   <features>
     <benchmark />
     <bing />
-    <fftw version="3" plan="patient"/>
+    <fftw plan="patient"/>
     <globals>
       <![CDATA[
 

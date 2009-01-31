@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
   <testing>
-    <input_xsil_file name="breakpoints_kspace_expected.xsil" />
-    <input_xsil_file name="breakpoints_mixed_space2_expected.xsil" />
-    <xsil_file name="xsilloading.xsil" expected="xsilloading_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <input_xsil_file name="breakpoints_hdf5_kspace_expected.xsil" />
+    <input_xsil_file name="breakpoints_hdf5_mixed_space2_expected.xsil" />
+    <xsil_file name="xsilloading_hdf5.xsil" expected="xsilloading_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
   </testing>
   
-  <name>xsilloading</name>
+  <name>xsilloading_hdf5</name>
   <author>Graham Dennis</author>
   <description>
     Test loading xsil files in various spaces
@@ -26,15 +26,15 @@
   
   <vector name="oned" dimensions="x" initial_space="kx" type="complex">
     <components>u</components>
-    <initialisation kind="xsil">
-      <filename>breakpoints_kspace_expected.xsil</filename>
+    <initialisation kind="hdf5">
+      <filename>breakpoints_hdf5_kspace_expected.h5</filename>
     </initialisation>
   </vector>
   
   <vector name="twod" dimensions="x y" initial_space="kx y">
     <components>v</components>
-    <initialisation kind="xsil">
-      <filename>breakpoints_mixed_space2_expected.xsil</filename>
+    <initialisation kind="hdf5">
+      <filename>breakpoints_hdf5_mixed_space2_expected.h5</filename>
     </initialisation>
   </vector>
   
@@ -59,26 +59,4 @@
       </sampling>
     </group>
   </output>
-
-<info>
-Script compiled with xpdeint version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
-See http://www.xmds.org for more information.
-</info>
-
-<XSIL Name="moment_group_1">
-  <Param Name="n_independent">1</Param>
-  <Array Name="variables" Type="Text">
-    <Dim>2</Dim>
-    <Stream><Metalink Format="Text" Delimiter=" \n"/>
-x amp 
-    </Stream>
-  </Array>
-  <Array Name="data" Type="double">
-    <Dim>50</Dim>
-    <Dim>2</Dim>
-    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
-xsilloading_expected_mg0.dat
-    </Stream>
-  </Array>
-</XSIL>
 </simulation>

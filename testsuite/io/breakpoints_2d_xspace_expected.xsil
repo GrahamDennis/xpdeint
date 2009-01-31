@@ -15,7 +15,7 @@
   </description>
   
   <features>
-    <fftw version="3" plan="estimate" />
+    <fftw plan="estimate" />
   </features>
   
   <geometry>

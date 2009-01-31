@@ -12,7 +12,7 @@
   <features>
     <benchmark />
     <bing />
-    <fftw version="3" plan="exhaustive" />
+    <fftw plan="exhaustive" />
     <openmp />
     <validation kind="run-time"/>
     <globals>
