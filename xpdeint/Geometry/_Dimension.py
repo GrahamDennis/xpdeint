@@ -100,13 +100,13 @@ class _Dimension(ScriptElement):
   def invalidateRepresentationsOtherThan(self, mainRep):
     for idx, rep in enumerate(self.representations[:]):
       if id(rep) != id(mainRep):
-        rep.remove()
+        if rep: rep.remove()
         self.representations[idx] = None
   
   def invalidateRepresentation(self, oldRep):
     for idx, rep in enumerate(self.representations[:]):
       if id(rep) == id(oldRep):
-        rep.remove()
+        if rep: rep.remove()
         self.representations[idx] = None
   
   @lazy_property

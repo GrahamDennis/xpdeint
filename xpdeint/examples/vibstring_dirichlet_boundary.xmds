@@ -10,7 +10,7 @@
     <benchmark />
     <bing />
     <error_check />
-    <fftw version="3" plan="patient" />
+    <fftw plan="patient" />
     <openmp />
     <globals>
       <![CDATA[

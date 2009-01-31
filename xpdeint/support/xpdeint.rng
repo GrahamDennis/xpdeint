@@ -298,7 +298,7 @@
           <optional>
             <element name="filename">
               <optional>
-                <attribute name="moment_group"/>
+                <attribute name="group"/>
               </optional>
               <text/>
             </element>

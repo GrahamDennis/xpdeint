@@ -20,7 +20,7 @@
     <bing />
     <error_check />
     <!-- <openmp /> -->
-    <fftw version="3" plan="measure" />
+    <fftw plan="measure" />
     <!-- <diagnostics /> -->
 	<globals>
 		<![CDATA[

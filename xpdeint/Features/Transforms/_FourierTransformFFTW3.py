@@ -80,7 +80,7 @@ class _FourierTransformFFTW3 (_Transform):
     return result
   
   def r2rKindForDimensionAndDirection(self, dim, direction):
-    transformName = self.transformNameMap[dim.name][-3:] # strip off the mpi- prefix if it exists
+    transformName = self.transformNameMap[dim.name]
     return {'dct': {'forward': 'FFTW_REDFT10', 'backward': 'FFTW_REDFT01'},
             'dst': {'forward': 'FFTW_RODFT10', 'backward': 'FFTW_RODFT01'}}[transformName][direction]
   

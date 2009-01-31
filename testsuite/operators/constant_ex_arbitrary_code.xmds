@@ -14,7 +14,7 @@
   <features>
     <benchmark />
     <bing />
-    <fftw version="3" plan="estimate" />
+    <fftw plan="estimate" />
   </features>
   
   <geometry>

@@ -10,7 +10,7 @@
     <!--<benchmark /> -->
     <error_check />
     <bing />
-    <fftw version="3" plan="exhaustive"/>
+    <fftw plan="exhaustive"/>
     <!--<openmp /> -->
   </features>
   

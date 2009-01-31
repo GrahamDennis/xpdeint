@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
   <testing>
+    <command_line>mpirun -n 3 ./mpi_xsilloading</command_line>
     <input_xsil_file name="breakpoints_kspace_expected.xsil" />
     <input_xsil_file name="breakpoints_mixed_space2_expected.xsil" />
-    <xsil_file name="xsilloading.xsil" expected="xsilloading_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="mpi_xsilloading.xsil" expected="xsilloading_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
   </testing>
   
-  <name>xsilloading</name>
+  <name>mpi_xsilloading</name>
   <author>Graham Dennis</author>
   <description>
     Test loading xsil files in various spaces
@@ -15,6 +16,8 @@
   <features>
     <fftw plan="estimate" />
   </features>
+  
+  <driver name="distributed-mpi" />
   
   <geometry>
     <propagation_dimension> t </propagation_dimension>
@@ -59,26 +62,4 @@
       </sampling>
     </group>
   </output>
-
-<info>
-Script compiled with xpdeint version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
-See http://www.xmds.org for more information.
-</info>
-
-<XSIL Name="moment_group_1">
-  <Param Name="n_independent">1</Param>
-  <Array Name="variables" Type="Text">
-    <Dim>2</Dim>
-    <Stream><Metalink Format="Text" Delimiter=" \n"/>
-x amp 
-    </Stream>
-  </Array>
-  <Array Name="data" Type="double">
-    <Dim>50</Dim>
-    <Dim>2</Dim>
-    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
-xsilloading_expected_mg0.dat
-    </Stream>
-  </Array>
-</XSIL>
 </simulation>

@@ -10,7 +10,7 @@
     <benchmark />
     <error_check />
     <bing />
-    <!-- <fftw version="3" /> -->
+    <!-- <fftw /> -->
     <openmp />
     <stochastic>
       <noise kind="poissonian" prefix="n" mean-rate="5.0" num="1"/>

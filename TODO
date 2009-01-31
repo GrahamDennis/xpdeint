@@ -55,7 +55,7 @@
   step error-calculation routine have been made.
   
 * Fix XSIL import to not depend on libxmds, or do something equivalent.
-  - The something equivalent that we will do is support loading of HDF5 breakpoints.
+  - The something equivalent that we will do is support loading of HDF5 files.
     I do not plan on replacing libxmds. If someone wants to load binary XSIL data,
     they can have xmds-1 installed or HDF5 installed.
 
@@ -131,5 +131,9 @@ Lower priority, but still nice:
 Testcases needed:
 * MPI with Fourier transforms testing looping over both MPI dimensions with a vector that only has one of the two MPI dimensions.
 * Various tests using nonlocal dimension access
+* Tests of dumping fields with integer-valued dimensions using HDF5
+* Tests dumping fields where the testcase data was dumped on a big-endian machine (PPC)
+* More testcases doing stupid things with loading and dumping of various formats of data, including loading in MPI
+  simulations, writing of ascii/binary/HDF5 data and loading of binary/HDF5 data.
 
 Consider alternative syntax for nonlocal access: Perhaps phi(j := j+1) instead of phi(j: j+1) or phi(j => j+1)?

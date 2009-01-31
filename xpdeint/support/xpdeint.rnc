@@ -147,7 +147,7 @@ Vector = element vector {
         , attribute geometry_matching_mode { text }?
         , NoiseAttributes?
         , element filename { 
-            attribute moment_group { text }?
+            attribute group { text }?
             , text
         }?
         , Dependencies?
