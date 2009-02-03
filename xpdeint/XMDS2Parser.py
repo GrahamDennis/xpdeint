@@ -663,8 +663,19 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
         
         aliasNames.add(dimensionName)
         
+        if dimensionElement.hasAttribute('spectral_lattice'):
+          spectralLattice = dimensionElement.getAttribute('spectral_lattice').strip()
+          if not spectralLattice.isdigit():
+            raise ParserException(dimensionElement, "Could not understand spectral_lattice value of '%(spectralLattice)s' as a positive integer." % locals())
+          spectralLattice = int(spectralLattice)
+          if spectralLattice > lattice:
+            raise ParserException(dimensionElement, "The size of the spectral lattice must be equal or less than the size of the spatial lattice.")
+        else:
+          spectralLattice = lattice
+        
         for aliasName in aliasNames:
-          dim = transform.newDimension(name = aliasName, lattice = lattice, type = dimensionType,
+          dim = transform.newDimension(name = aliasName, lattice = lattice,
+                                       spectralLattice = spectralLattice, type = dimensionType,
                                        minimum = minimumString, maximum = maximumString,
                                        parent = geometryTemplate, transformName = transformName,
                                        aliases = aliasNames,

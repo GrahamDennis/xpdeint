@@ -228,6 +228,9 @@
       <optional>
         <attribute name="lattice"/>
       </optional>
+      <optional>
+        <attribute name="spectral_lattice"/>
+      </optional>
       <choice>
         <attribute name="domain"/>
         <attribute name="length_scale"/>

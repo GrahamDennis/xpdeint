@@ -35,13 +35,17 @@ class _MMT (_Transform):
   
   def newDimension(self, name, lattice, minimum, maximum,
                    parent, transformName, aliases = set(),
+                   spectralLattice = None,
                    type = 'double', xmlElement = None):
     assert type == 'double'
     assert transformName in ['bessel', 'spherical-bessel', 'hermite-gauss']
-    dim = super(_MMT, self).newDimension(name, lattice, minimum, maximum,
+    if not spectralLattice:
+      spectralLattice = lattice
+    dim = super(_MMT, self).newDimension(name, max(lattice, spectralLattice), minimum, maximum,
                                          parent, transformName, aliases, 
                                          type, xmlElement)
     self.basisMap[dim.name] = transformName # Needs to be constructed basis here
+    
     if transformName == 'chby':
       # Chebyshev polynomials
       self.basisMap[dim.name] = blah # Instantiate ChebyschevBasis
@@ -93,7 +97,7 @@ class _MMT (_Transform):
       xspace._maximum = maximum
       
       # Spectral space representation
-      kspace = NonUniformDimensionRepresentation(name = 'k' + name, type = type, lattice = lattice,
+      kspace = NonUniformDimensionRepresentation(name = 'k' + name, type = type, lattice = spectralLattice,
                                                  stepSizeArray = True, parent = dim,
                                                  **self.argumentsToTemplateConstructors)
       kspace._maximum = maximum
@@ -117,8 +121,8 @@ class _MMT (_Transform):
                                                  **self.argumentsToTemplateConstructors)
       xspace._maximum = maximum
       # Spectral space representation
-      kspace = UniformDimensionRepresentation(name = 'n' + name, type = 'long', lattice = lattice,
-                                              minimum = '0', maximum = lattice, stepSize = '1',
+      kspace = UniformDimensionRepresentation(name = 'n' + name, type = 'long', lattice = spectralLattice,
+                                              minimum = '0', maximum = spectralLattice, stepSize = '1',
                                               parent = dim,
                                               **self.argumentsToTemplateConstructors)
     dim.addRepresentation(xspace)
