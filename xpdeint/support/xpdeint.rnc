@@ -111,6 +111,7 @@ Dimension = element dimension {
     attribute name { text }
     , attribute type { text }?
     , attribute lattice { text }?
+    , attribute spectral_lattice { text}?
     , ( attribute domain { text } | attribute length_scale { text } )
     , attribute transform { text }?
     , attribute order { text }?

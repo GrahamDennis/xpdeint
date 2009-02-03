@@ -146,7 +146,7 @@ cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
             /* B */ source_${vector.id} + (_i0 * ${sourceDimRep.globalLattice} + 1) * innerLoopSize,
                     2 * innerLoopSize,
             /* beta */ 0.0,
-            /* C */ dest_${vector.id} + (_i0 * ${destDimRep.globalLattice} + (${sourceDimRep.globalLattice}+1)/2) * innerLoopSize,
+            /* C */ dest_${vector.id} + (_i0 * ${destDimRep.globalLattice} + (${destDimRep.globalLattice}+1)/2) * innerLoopSize,
             innerLoopSize);
 // Loop to unravel symmetric and antisymmetric components.
 double _temp;

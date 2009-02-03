@@ -20,7 +20,7 @@
   <geometry>
     <propagation_dimension> t </propagation_dimension>
     <transverse_dimensions>
-      <dimension name="x" lattice="20"  domain="(0, 1)" transform="hermite-gauss" />
+      <dimension name="x" lattice="30" spectral_lattice="20" length_scale="1.0" transform="hermite-gauss" />
     </transverse_dimensions>
   </geometry>
   
