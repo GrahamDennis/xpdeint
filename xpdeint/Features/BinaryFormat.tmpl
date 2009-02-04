@@ -100,8 +100,13 @@ for (long _i0 = 0; _i0 < dataSize; _i0++, coordinate += ${dimRep.stepSize}) {
 fieldOffset += sizeof(unsigned long) + sizeof(double) * dataSize;
 
   @end for
-off_t vectorFieldSize = _${field.name}_size * sizeof(double) + sizeof(unsigned long);
-dataSize = _${field.name}_size;
+  @#
+  @if field.dimensions
+dataSize = ${' * '.join([dim.inSpace(space).globalLattice for dim in field.dimensions])};
+  @else
+dataSize = 1;
+  @end if
+off_t vectorFieldSize = dataSize * sizeof(double) + sizeof(unsigned long);
 
 for (int _i = 0; _i < ${componentCount}; _i++) {
   fseeko(fpBinary, fieldOffset + _i * vectorFieldSize, SEEK_SET);

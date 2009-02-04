@@ -43,7 +43,7 @@ void _write_output()
   ${outputFormat.writeOutSetup(args, c'"$filename"'), autoIndent=True}@slurp
   
   @for $momentGroup in $momentGroups
-  ${momentGroup.functions['writeOut'].call(args, _outfile = '_outfile')}@slurp
+  ${momentGroup.functions['writeOut'].call(args, _outfile = '_outfile')}
   @end for
   
   ${outputFormat.writeOutTearDown, autoIndent=True}@slurp

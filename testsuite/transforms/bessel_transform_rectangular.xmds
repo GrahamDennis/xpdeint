@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
-  <name>bessel_transform</name>
+  <testing>
+    <xsil_file name="bessel_transform_rectangular.xsil" expected="bessel_transform_rectangular_expected.xsil" absolute_tolerance="1e-6" relative_tolerance="1e-5" />
+  </testing>
+  
+  <name>bessel_transform_rectangular</name>
   <author>Graham Dennis</author>
   <description>
-    Solve the wave equation on a sphere of radius 1 utilising spherical symmetry
-    by using the Spherical Bessel function transform.
+    Solve the wave equation on a disk of radius 1 utilising cylindrical symmetry
+    by using the Bessel function transform. The Bessel function transform implicitly
+    assumes Dirichlet boundary conditions at the edge of the disk.
   </description>
   
   <features>
     <benchmark />
-    <!-- <error_check /> -->
     <bing />
     <globals>
       <![CDATA[
@@ -24,7 +28,7 @@
   <geometry>
     <propagation_dimension> t </propagation_dimension>
     <transverse_dimensions>
-      <dimension name="x" lattice="100" spectral_lattice="50" domain="(0, 1)" transform="spherical-bessel" />
+      <dimension name="x" lattice="100" spectral_lattice="50" domain="(0, 1)" transform="bessel" />
     </transverse_dimensions>
   </geometry>
   
@@ -41,10 +45,10 @@
   </vector>
   
   <sequence>
-    <integrate algorithm="ARK45" tolerance="1e-6" interval="4e-3" steps="400">
-      <samples>100 100</samples>
+    <integrate algorithm="ARK45" tolerance="1e-6" interval="8e-3">
+      <samples>100 73</samples>
       <operators>
-        <operator kind="ex" constant="yes" fourier_space="kx" type="double">
+        <operator kind="ex" constant="yes" fourier_space="kx">
           <operator_names>L</operator_names>
           <![CDATA[
             L = -T*kx*kx/mu;
@@ -61,10 +65,6 @@
   <output format="binary">
     <group>
       <sampling initial_sample="yes">
-        <!-- Any dimension not mentioned is assumed to be in real space and its middle element will be sampled -->
-        <!-- Note that this is different default behaviour to the filter operator. To integrate, put in a dimension -->
-        <!-- with zero lattice points. -->
-        <!-- Note that dimensions can be in any order. Not that I can think of a reason why you would want to do that -->
         <dimension name="x" fourier_space="no" />
         <moments>amp</moments>
         <dependencies>main</dependencies>
