@@ -136,4 +136,7 @@ Testcases needed:
 * More testcases doing stupid things with loading and dumping of various formats of data, including loading in MPI
   simulations, writing of ascii/binary/HDF5 data and loading of binary/HDF5 data.
 
-Consider alternative syntax for nonlocal access: Perhaps phi(j := j+1) instead of phi(j: j+1) or phi(j => j+1)?
+* Consider alternative syntax for nonlocal access: Perhaps phi(j := j+1) instead of phi(j: j+1) or phi(j => j+1)?
+
+* pointsInDimensionsWithIndices should probably be renamed and most things that use it should probably be shifted to use
+  localPointsInDimensionsAfterDimensionInSpace

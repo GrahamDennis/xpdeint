@@ -23,6 +23,7 @@ class _FourierTransformFFTW3 (_Transform):
   
   def newDimension(self, name, lattice, minimum, maximum,
                    parent, transformName, aliases = set(),
+                   spectralLattice = None,
                    type = 'double', xmlElement = None):
     assert type == 'double'
     assert transformName in ['dft', 'dct', 'dst']
