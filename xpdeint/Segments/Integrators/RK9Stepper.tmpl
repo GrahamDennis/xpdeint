@@ -30,11 +30,11 @@ double _a_raw[16];
 double _a[16];
 double _b[16][16];
 double _c[16];
+double _d[16];
 
 for(unsigned long _i0=0; _i0 < 16; _i0++)
 {
-  _a_raw[_i0] = 0.0;
-  _c[_i0] = 0.0;
+  _a_raw[_i0] = _c[_i0] = _d[_i0] = 0.0;
   for(unsigned long _i1=0; _i1 < 16; _i1++)
    _b[_i0][_i1] = 0.0;
 }
@@ -148,6 +148,17 @@ _c[13] = 0.12691439652445903685643385312168037;
 _c[14] =-0.00052539244262118876455834655383035;
 _c[15] = 1.0/31.0;
 
+_d[0] = 1.0-_b[15][5]/_b[14][5];
+_d[1] = _b[15][0]-_b[14][0]*_b[15][5]/_b[14][5];
+_d[2] = _b[15][5]/_b[14][5];
+_d[3] = _b[15][6]-_b[14][6]*_b[15][5]/_b[14][5];
+_d[4] = _b[15][7]-_b[14][7]*_b[15][5]/_b[14][5];
+_d[5] = _b[15][8]-_b[14][8]*_b[15][5]/_b[14][5];
+_d[6] = _b[15][9]-_b[14][9]*_b[15][5]/_b[14][5];
+_d[7] = _b[15][10]-_b[14][10]*_b[15][5]/_b[14][5];
+_d[8] = _b[15][11]-_b[14][11]*_b[15][5]/_b[14][5];
+_d[9] = _b[15][12]-_b[14][12]*_b[15][5]/_b[14][5];
+_d[10] = _b[15][13]-_b[14][13]*_b[15][5]/_b[14][5];
   @#
 @end def
 
@@ -531,17 +542,17 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
     + _b[14][11]*_akffield_${vector.id}[$index] + _b[14][12]*_akgfield_${vector.id}[$index]
     + _b[14][13]*_akhfield_${vector.id}[$index];
     
-_akjfield_${vector.id}[$index] = (1-_b[15][5]/_b[14][5])*_${vector.id}[$index]
-    + (_b[15][0]-_b[14][0]*_b[15][5]/_b[14][5])*_akafield_${vector.id}[$index]
-    + (_b[15][5]/_b[14][5])*_akifield_${vector.id}[$index] 
-    + (_b[15][6]-_b[14][6]*_b[15][5]/_b[14][5])*_akjfield_${vector.id}[$index] 
-    + (_b[15][7]-_b[14][7]*_b[15][5]/_b[14][5])*_akbfield_${vector.id}[$index]
-    + (_b[15][8]-_b[14][8]*_b[15][5]/_b[14][5])*_akcfield_${vector.id}[$index]
-    + (_b[15][9]-_b[14][9]*_b[15][5]/_b[14][5])*_akdfield_${vector.id}[$index]
-    + (_b[15][10]-_b[14][10]*_b[15][5]/_b[14][5])*_akefield_${vector.id}[$index]
-    + (_b[15][11]-_b[14][11]*_b[15][5]/_b[14][5])*_akffield_${vector.id}[$index]
-    + (_b[15][12]-_b[14][12]*_b[15][5]/_b[14][5])*_akgfield_${vector.id}[$index]
-    + (_b[15][13]-_b[14][13]*_b[15][5]/_b[14][5])*_akhfield_${vector.id}[$index];
+  _akjfield_${vector.id}[$index] = _d[0]*_${vector.id}[$index]
+      + _d[1]*_akafield_${vector.id}[$index]
+      + _d[2]*_akifield_${vector.id}[$index] 
+      + _d[3]*_akjfield_${vector.id}[$index] 
+      + _d[4]*_akbfield_${vector.id}[$index]
+      + _d[5]*_akcfield_${vector.id}[$index]
+      + _d[6]*_akdfield_${vector.id}[$index]
+      + _d[7]*_akefield_${vector.id}[$index]
+      + _d[8]*_akffield_${vector.id}[$index]
+      + _d[9]*_akgfield_${vector.id}[$index]
+      + _d[10]*_akhfield_${vector.id}[$index];
 """, space = $homeSpace)}@slurp
 
 ${propagationDimension} += _a[14]*_step;
