@@ -141,12 +141,11 @@ double *temp = NULL;
 if ((_newSpace ^ _${vector.id}_space) & ${dim.transformMask}) {
   @set $indices = range(vector.field.indexOfDimension(dim))
   const long outerLoopSize = ${vector.field.localPointsInDimensionsWithIndicesInSpace(indices, c'_${vector.id}_space')};
-  @set $indices = range(vector.field.indexOfDimension(dim)+1, len(vector.field.dimensions))
   @set $sizePrefix = ''
   @if vector.type == 'complex'
     @set $sizePrefix = '2 * '
   @end if
-  const long innerLoopSize = ${sizePrefix}${vector.field.localPointsInDimensionsWithIndicesInSpace(indices, c'_${vector.id}_space')} * _${vector.id}_ncomponents;
+  const long innerLoopSize = ${sizePrefix}${vector.field.localPointsInDimensionsAfterDimensionInSpace(dim, c'_${vector.id}_space')} * _${vector.id}_ncomponents;
   if (_newSpace & ${dim.transformMask}) {
     // Forward transform for dimension $dimName
     @# We have to loop over all dimensions before this dimension
