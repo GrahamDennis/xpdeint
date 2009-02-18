@@ -35,12 +35,13 @@ ${mg.rawVector.functions['initialise'].call()}
     @silent fieldsNotToInitialise.add(mg.outputField)
   @end for
   @#
-  @for $field in filter(lambda f: f not in fieldsNotToInitialise, $fields)
-    @set $result = $field.initialise
-    @if $result
-
-${result}@slurp
-    @end if
+  @set $vectorsToInitialise = set()
+  @for field in [f for f in $fields if f not in fieldsNotToInitialise]
+    @silent vectorsToInitialise.update(field.managedVectors)
+  @end for
+  @#
+  @for vector in self.evaluationOrderForVectors(vectorsToInitialise)
+${vector.initialise}@slurp
   @end for
   @#
   @for $momentGroup in $momentGroups

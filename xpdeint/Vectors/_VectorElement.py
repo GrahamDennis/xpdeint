@@ -59,6 +59,13 @@ class _VectorElement (ScriptElement):
     self.functions['goSpace'] = goSpaceFunction
   
   @property
+  def dependencies(self):
+    try:
+      return self.initialiser.codeBlocks['initialisation'].dependencies
+    except:
+      return []
+  
+  @property
   def needsTransforms(self):
     if self.transformFree:
       return False
