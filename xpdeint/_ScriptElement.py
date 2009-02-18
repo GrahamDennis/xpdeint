@@ -466,7 +466,7 @@ class _ScriptElement (Template):
                     compilerSettings = settings)
   
   
-  def _computedVectorOrderingForVectors(self, vectors):
+  def evaluationOrderForVectors(self, vectors, predicate = lambda x: True):
     """
     Return the ordering for the computed vectors in `vectors` taking into account
     any dependencies between the computed vectors.
@@ -509,14 +509,14 @@ class _ScriptElement (Template):
         # Put v on the stack
         stack.append(v)
         # Add the dependencies for v at the end of my dependencies
-        orderedDependencies.extend(orderedDependenciesForVectors([u for u in v.dependencies if u.isComputed]))
+        orderedDependencies.extend(orderedDependenciesForVectors([u for u in v.dependencies if predicate(u)]))
         # Pop v off the stack and put it on our orderedDependencies
         orderedDependencies.append(stack.pop())
       
       return orderedDependencies
     
-    computedVectors = [v for v in vectors if v.isComputed]
-    return orderedDependenciesForVectors(computedVectors)
+    vectors = [v for v in vectors if predicate(v)]
+    return orderedDependenciesForVectors(vectors)
   
   def computedVectorsNeedingPrecalculationForOperatorContainers(self, operatorContainers):
     """

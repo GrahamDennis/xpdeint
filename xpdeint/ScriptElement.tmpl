@@ -542,7 +542,7 @@ _${vector.id}_index_pointer += $field.localPointsInDimensionsAfterDimensionInSpa
 @def evaluateComputedVectors($vectors)
 @#doc: Evaluate the computed vectors in an appropriate order taking into account dependencies
   @#
-  @for vector in self._computedVectorOrderingForVectors(vectors)
+  @for vector in self.evaluationOrderForVectors(vectors, predicate = lambda x: x.isComputed)
 ${vector.functions['evaluate'].call()}
   @end for
   @#
