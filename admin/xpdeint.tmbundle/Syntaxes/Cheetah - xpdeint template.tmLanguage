@@ -22,7 +22,7 @@
 		</dict>
 		<dict>
 			<key>match</key>
-			<string>@(if|end if|continue|break|for|end for|else if|else|pass|elif|while|end while)</string>
+			<string>@(if|end if|continue|break|for|end for|else if|else|pass|elif|while|end while).*</string>
 			<key>name</key>
 			<string>string.unquoted.keyword.control.flow.cheetah</string>
 		</dict>
