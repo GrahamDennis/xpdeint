@@ -63,7 +63,8 @@ H5Sselect_hyperslab(mem_dataspace, H5S_SELECT_SET, mem_start, mem_stride, mem_co
         @#
 H5Sselect_hyperslab(file_dataspace, H5S_SELECT_SET, file_start, mem_stride, mem_count, NULL);
 
-H5D${operation}(dataset_${componentName}, H5T_NATIVE_DOUBLE, mem_dataspace, file_dataspace, H5P_DEFAULT, ${variable.arrayName});
+if (dataset_${componentName})
+  H5D${operation}(dataset_${componentName}, H5T_NATIVE_DOUBLE, mem_dataspace, file_dataspace, H5P_DEFAULT, ${variable.arrayName});
       @end for
     @end capture
     @#

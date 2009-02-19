@@ -30,6 +30,7 @@ $insertCodeForFeatures('vectorInitialisationBegin', $featureOrdering, featureDic
   ${initialisationCodeBlock.loop(self.insideInitialisationLoops), autoIndent=True}@slurp
 }
 
+htri_t result;
 hid_t hdf5_file = H5Fopen("${filename}", H5F_ACC_RDONLY, H5P_DEFAULT);
 
   @set $dimCount = len(field.dimensions)
@@ -84,7 +85,14 @@ file_dataspace = H5Screate_simple(${len(field.dimensions)}, file_dims, NULL);
       @end for
     @end if
     @for offset, componentName in $variable.separatedComponents
-hid_t dataset_${componentName} = H5Dopen(hdf5_file, "${groupName}/${componentName}", H5P_DEFAULT);
+hid_t dataset_${componentName} = 0;
+      @set $identifier = c"${groupName}/${componentName}"
+if ((result = H5Lexists(hdf5_file, "${identifier}", H5P_DEFAULT))>0)
+  dataset_${componentName} = H5Dopen(hdf5_file, "${identifier}", H5P_DEFAULT);
+else if (!result)
+  _LOG(_WARNING_LOG_LEVEL, "Warning: Unable to find variable name '${componentName}' in HDF5 file.\n");
+else
+  _LOG(_WARNING_LOG_LEVEL, "Warning: Unable to determine if variable '${componentName}' exists in HDF5 file. Is the file corrupt?\n");
     @end for
   @end for
   @silent processingDict['variables'] = variables
@@ -93,7 +101,7 @@ ${processData(processingDict)}@slurp
 
   @for variable in variables
     @for offset, componentName in $variable.separatedComponents
-H5Dclose(dataset_${componentName});
+if (dataset_${componentName}) H5Dclose(dataset_${componentName});
     @end for
   @end for
 H5Sclose(file_dataspace);
