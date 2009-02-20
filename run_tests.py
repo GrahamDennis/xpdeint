@@ -43,8 +43,7 @@ def array_approx_equal(array1, array2, absTol, relTol):
   diff = array1-array2
   # NaN values would fail this test. So we have to exclude them. But only exclude them if array2 (the expected results)
   # have a NaN
-  return numpy.logical_or(numpy.logical_or(numpy.abs(diff) <= relTol * array2, diff <= absTol), numpy.isnan(array2)).all()
-
+  return numpy.logical_or(numpy.logical_or(numpy.abs(diff) <= relTol * array2, numpy.abs(diff) <= absTol), numpy.isnan(array2)).all()
 
 def scriptTestingFunction(root, scriptName, testDir, absPath, self):
   if not os.path.exists(testDir):
