@@ -2,7 +2,7 @@
 <simulation xmds-version="2">
   <testing>
     <command_line>mpirun -n 2 ./kubo_mpi_paths</command_line>
-    <xsil_file name="kubo_mpi_paths.xsil" expected="kubo_mpi_paths_expected.xsil" absolute_tolerance="5e-2" relative_tolerance="1e-1" />
+    <xsil_file name="kubo_mpi_paths.xsil" expected="kubo_mpi_paths_expected.xsil" absolute_tolerance="5e-2" relative_tolerance="1e-9" />
   </testing>
   
   <name>kubo_mpi_paths</name>

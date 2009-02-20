@@ -8,6 +8,9 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 
 @def description: Multipath Simulation Driver
 
+@attr $pathLoopStart = 0
+@attr $pathLoopStep = 1
+
 @def defines
   @#
   @super
@@ -59,7 +62,7 @@ ${topLevelSequence.allocate}@slurp
 ${o.initialise}@slurp
   @end for
 
-for (long _i0 = 0; _i0 < _n_paths; _i0++) {
+for (long _i0 = ${pathLoopStart}; _i0 < _n_paths; _i0+=${pathLoopStep}) {
   _LOG(_PATH_LOG_LEVEL, "Starting path %li\n", _i0 + 1);
   
   @for $mg in $momentGroups

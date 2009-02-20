@@ -10,7 +10,7 @@
     <propagation_dimension> t </propagation_dimension>
   </geometry>
   
-  <driver name="multi-path" paths="10240" />
+  <driver name="mpi-multi-path" paths="10240" />
   
   <features>
     
