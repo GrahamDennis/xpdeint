@@ -140,3 +140,9 @@ Testcases needed:
 
 * pointsInDimensionsWithIndices should probably be renamed and most things that use it should probably be shifted to use
   localPointsInDimensionsAfterDimensionInSpace
+
+* Replace 'space' with the more general notion of 'basis'. Change the transform system to not require transforms to define
+  how to perform every possible transform, but instead just the fundamental operations that can then be chained together as
+  necessary. This will enable more general bases like (r, theta) -> (kr, m) so that nonsymmetric polar problems can be treated
+  naturally. This will also permit the possibility of more than two representations for a given dimension, for example it 
+  could be useful to have a Hermite-Gauss with x, nx and kx representations.
