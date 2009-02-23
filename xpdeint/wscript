@@ -1,0 +1,41 @@
+#!/usr/bin/env python
+# encoding: utf-8
+"""
+wscript
+
+The waf build script to compile all Cheetah templates.
+
+Created by Graham Dennis on 2009-02-22.
+"""
+
+srcdir = '.'
+blddir = 'waf_build'
+
+import os
+
+def configure(conf):
+    conf.check_tool('cheetah', tooldir='../waf_extensions')
+    conf.env['CHEETAH_SETTINGS'] = 'directiveStartToken="@",commentStartToken="@#",multiLineCommentStartToken="@*",multiLineCommentEndToken="*@"'
+
+def build(bld):
+    bld.new_task_gen(
+        name='svnversion',
+        rule='sh version.sh',
+        always=True,
+        cwd=bld.path.abspath())
+    
+    source_dirs = ['.']
+    base = bld.path.abspath()
+    skip_dirs = set(['.svn', 'waf_build'])
+    for root, dirs, files in os.walk(bld.path.abspath()):
+        for dir_name in skip_dirs.intersection(dirs):
+            dirs.remove(dir_name)
+        source_dirs.append(root[len(os.path.commonprefix([base, root]))+1:])
+    
+    source_dirs = ' '.join(source_dirs)
+    
+    obj = bld.new_task_gen(
+        name = 'cheetah_compile',
+        features = 'cheetah',
+        cwd=bld.path.abspath())
+    obj.find_sources_in_dirs(source_dirs, exts=['.tmpl'])
