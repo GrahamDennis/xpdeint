@@ -1,35 +1,13 @@
-templates = $(wildcard *.tmpl)
-include CheetahTemplateOptions.mk
+.PHONY: all update configure clean check
 
-SUBDIRS = SimulationDrivers Geometry Vectors Segments Operators Features xsil2graphics2
+all: waf_build/config.log wscript ../waf
+	@../waf build
 
-.PHONY: all compile clean check
+update:
+	@(cd ..; $(MAKE) $(MFLAGS) update;)
 
-MYMAKEFLAGS = 'cheetah_settings=$(cheetah_settings)'
-
-all: compile
-	@sh version.sh
-	@for i in $(SUBDIRS); do \
-	(cd $$i; env $(MYMAKEFLAGS) $(MAKE) $(MFLAGS) all); done
-
-compile: .COMPILE
-
-# compile templates as needed
-# this is a bit of a hack. is there a better way?
-.COMPILE: $(templates)
-	@if test "$?"; then \
-	cheetah compile --settings='$(cheetah_settings)' $?; fi
-	@touch .COMPILE
-
-
-# remove all compiled files
-clean:
-	@rm -f .COMPILE
-	@rm -f *.pyc
-	@rm -f $(templates:.tmpl=.py)
-	@rm -f $(templates:.tmpl=.py.bak)
-	@for i in $(SUBDIRS); do \
-	(cd $$i; $(MAKE) $(MFLAGS) clean); done
+waf_build/config.log: wscript ../waf ../waf_extensions/cheetah.py
+	@../waf configure
 
 # check examples compile
 check:

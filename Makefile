@@ -1,10 +1,14 @@
 SUBDIRS = xpdeint
 
-.PHONY: all clean check
+.PHONY: all update clean check
 
 all:
 	@for i in $(SUBDIRS); do \
 	(cd $$i; $(MAKE) $(MFLAGS) all); done
+
+update:
+	@svn up
+	@$(MAKE) $(MFLAGS) all
 
 # remove all compiled files
 clean:
