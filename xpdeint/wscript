@@ -24,18 +24,19 @@ def build(bld):
         always=True,
         cwd=bld.path.abspath())
     
-    source_dirs = ['.']
+    sources = []
     base = bld.path.abspath()
     skip_dirs = set(['.svn', 'waf_build'])
     for root, dirs, files in os.walk(bld.path.abspath()):
         for dir_name in skip_dirs.intersection(dirs):
             dirs.remove(dir_name)
-        source_dirs.append(root[len(os.path.commonprefix([base, root]))+1:])
+        reldir = root[len(os.path.commonprefix([base, root]))+1:]
+        sources.extend([os.path.join(reldir, f) for f in files if f.endswith('.tmpl')])
     
-    source_dirs = ' '.join(source_dirs)
+    sources = ' '.join(sources)
     
     obj = bld.new_task_gen(
         name = 'cheetah_compile',
         features = 'cheetah',
-        cwd=bld.path.abspath())
-    obj.find_sources_in_dirs(source_dirs, exts=['.tmpl'])
+        cwd=bld.path.abspath(),
+        source=sources)
