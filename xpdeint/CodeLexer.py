@@ -313,3 +313,40 @@ def performIPOperatorSanityCheck(componentName, propagationDimension, operatorCo
       derivativeStringAppearedInCurrentStatement = True
   
 
+def checkForIntegerDivision(codeBlock):
+    class FSM(object):
+        LookingForFirstInteger = 0
+        LookingForDivisionOperator = 1
+        LookingForSecondInteger = 2
+    
+    state = FSM.LookingForFirstInteger
+    tokenGenerator = cLexer.get_tokens_unprocessed(codeBlock.codeString)
+    divisionStartIndex = 0
+    divisionStopIndex = None
+    for charIndex, tokenKind, string in tokenGenerator:
+        if tokenKind in Token.Comment or string.isspace():
+            continue
+        if state == FSM.LookingForFirstInteger:
+            if tokenKind in Token.Number.Integer:
+                divisionStartIndex = charIndex
+                state += 1
+                continue
+        elif state == FSM.LookingForDivisionOperator:
+            if tokenKind in Token.Operator and string == '/':
+                state += 1
+                continue
+        elif state == FSM.LookingForSecondInteger:
+            if tokenKind in Token.Number.Integer:
+                divisionStopIndex = charIndex + len(string)
+                raise LexerException(codeBlock, divisionStartIndex,
+                        "On this line, the code '%s' looks like the division of two integers.\n"
+                        "One of the oddities of the C language is that the result of such an expression\n"
+                        "is the floor of that division instead of the real value.\n"
+                        "For example '1/2' would give '0' instead of '0.5'.\n"
+                        "The way to fix this is to turn one or both of the integers into real numbers\n"
+                        "by adding a decimal point. For example, '1/2' should be written as '1.0/2.0'.\n"
+                        "If you feel this warning is given in error, send an email to xmds-devel@lists.sourceforge.net" % codeBlock.codeString[divisionStartIndex:divisionStopIndex]
+                )
+        state = FSM.LookingForFirstInteger
+    
+
