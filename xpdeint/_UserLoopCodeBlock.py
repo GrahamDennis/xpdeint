@@ -232,6 +232,9 @@ class _UserLoopCodeBlock(ScriptElement):
       # Deindent code and add '#line' compiler directives
       self.codeString = self.insertUserCodeFromEntity(self)
     
+    CodeLexer.checkForIntegerDivision(self)
+    
+  
   @callOncePerInstanceGuard
   def bindNamedVectors(self):
     # This function would be called twice otherwise because it gets called specially

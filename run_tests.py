@@ -11,7 +11,12 @@ import os
 import sys
 import getopt
 import shutil
-import hashlib
+try:
+    # Python 2.5+
+    from hashlib import sha1
+except:
+    # Python 2.4
+    from sha import new as sha1
 import unittest
 import tempfile
 import subprocess
@@ -72,7 +77,7 @@ def scriptTestingFunction(root, scriptName, testDir, absPath, self):
   sourceFilePath = os.path.join(testDir, simulationName + '.cc')
   checksumFilePath = os.path.join(testDir, simulationName + '_last_known_good.checksum')
   sourceContents = file(sourceFilePath).read()
-  h = hashlib.sha1()
+  h = sha1()
   h.update(sourceContents)
   currentChecksum = h.hexdigest()
   
