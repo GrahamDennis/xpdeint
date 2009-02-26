@@ -10,6 +10,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 from xml.dom import minidom
 from xml.dom import expatbuilder
 from xpdeint.ParserException import ParserException
+import xpdeint.Python24Support
 
 # These are additional functions that will be added to the XML
 # classes for convenience.
