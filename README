@@ -38,6 +38,8 @@ Build instructions:
 3. Install Cheetah version 2.0.1 or later, Pygments, and (optionally) lxml. 
    If you have root access, this is as easy as:
    "sudo easy_install Cheetah" or "sudo easy_install Pygments" or "sudo easy_install lxml"
+   Make sure you have 'libxml2' and 'libxslt' installed (and the development packages if
+   you're using a package manager) if you want to install lxml.
    
    If you don't have root access or want to install into your home directory, use:
    "easy_install --prefix=~ Cheetah" (etc.)
@@ -49,27 +51,41 @@ Build instructions:
    
    Pygments and Cheetah are required installs for xpdeint.
 
-4. Install xpdeint into your python path by running (in the xpdeint/ directory):
+4. Cheetah templates (*.tmpl) are compiled into python, to do this, run 'make' in the
+   xpdeint/ directory.
+
+5. Install xpdeint into your python path by running (in the xpdeint/ directory):
    sudo ./setup.py develop
    
    If you want to install it into your home directory, type "./setup.py develop --prefix=~"
 
-5. Cheetah templates (*.tmpl) are compiled into python, to do this, run 'make' in the
-   xpdeint/xpdeint/ directory.
-   
-6. Test xpdeint by running (in the xpdeint/xpdeint/examples/ directory):
-   xpdeint kubo.xmds
+6. a) Test xpdeint by running (in the xpdeint/xpdeint/examples/ directory):
+      xpdeint kubo.xmds
+6. b) If you have 'numpy' installed, type './run_tests.py' in the xpdeint/ directory
+      to run all the tests
 
 7. Run the generated program, which will produce XSIL output exactly as XMDS-1
 
    Note that xpdeint currently requires xmds-1 to be installed for libxmds when loading XSIL files.
    It also currently uses the xsil2graphics program bundled with xmds-1.
 
-8. Sign up to the xmds-commit list at https://lists.sourceforge.net/lists/listinfo/xmds-commit.
+8. Next time you want to update, just type 'make update' in the xpdeint/ directory.
+
+9. Sign up to the xmds-commit list at https://lists.sourceforge.net/lists/listinfo/xmds-commit.
    This is a reasonably important step as xpdeint is still very much a moving target and things
    can still change or bugs can be found. Signing up to this list means you can keep track of these
    things. If you're not interested in the up-to-the-moment updates (most people won't be), sign up
    for the 'daily digest' instead.
+
+Optional installs:
+* A Matrix library like ATLAS, or Intel's MKL
+* GNU Scientific library (GSL).
+* HDF5, A library for the Heirachical Data Format (http://www.hdfgroup.org/HDF5/)
+  and h5py (sudo easy_install h5py). This is needed for writing and reading the hdf5 file format.
+* numpy (sudo easy_install numpy)
+* fftw-3.3alpha. Needed for fourier transforms. The alpha version is required for MPI support.
+* OpenMPI. Needed to enable xpdeint to generate scripts that can be run across multiple machines.
+
 
 This should mostly work.
 
