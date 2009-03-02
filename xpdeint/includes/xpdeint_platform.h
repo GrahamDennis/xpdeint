@@ -332,7 +332,8 @@
   {
     void *RetVal;
     if (posix_memalign(&RetVal, alignment, size)) {
-      _LOG(_ERROR_LOG_LEVEL, "Couldn't allocate aligned memory!\n");
+      fprintf(stderr, "Couldn't allocate aligned memory!\nBarfing!\n");
+      exit(1);
     }
     return RetVal;
   }
