@@ -76,7 +76,6 @@ def run_reconfig(includePaths = None, libPaths = None):
     wafArguments.clear()
     
     if os.path.isfile(config_arg_cache_filename):
-        print "loading pickled results"
         wafArguments.update(cPickle.load(file(config_arg_cache_filename)))
     includePaths.extend(wafArguments.get('CPPPATH', []))
     libPaths.extend(wafArguments.get('LIBPATH', []))
