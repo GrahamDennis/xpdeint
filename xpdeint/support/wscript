@@ -1,0 +1,259 @@
+#!/usr/bin/env python
+# encoding: utf-8
+"""
+wscript
+
+The waf script to configure compilation of generated simulations.
+
+Created by Graham Dennis on 2009-03-01.
+"""
+
+import os
+
+import Task
+import TaskGen
+from TaskGen import feature
+from Constants import ASK_LATER, SKIP_ME, RUN_ME
+
+srcdir = '.'
+blddir = 'waf_build'
+
+
+def set_options(opt):
+    # options provided by modules
+    opt.tool_options('compiler_cxx')
+
+
+def configure(conf):
+    from xpdeint import Configuration
+    
+    for key, value in Configuration.wafArguments.iteritems():
+        conf.env[key] = value
+    
+    def check_cxx(**KWs):
+        result = conf.check_cxx(**KWs)
+        if result and 'uselib_store' in KWs:
+            conf.env['uselib'].add(KWs['uselib_store'])
+        return result
+    
+    mpi = conf.env.copy()
+    mpi.set_variant('mpi')
+    conf.set_env_name('mpi', mpi)
+    conf.setenv('default')
+    single = conf.env.copy()
+    single.set_variant('default')
+    conf.set_env_name('default', single)
+    conf.setenv('default')
+    
+    def configure_compiler():
+        conf.env['uselib'] = set()
+        conf.check_tool('compiler_cxx')
+        conf.check_tool('osx')
+        
+        if conf.env['CXX_NAME'] == 'gcc':
+            machine_optimisations = [
+                ("Trying to make compiler optimise for this machine", "-march=native"),
+                ("Checking for Altivec", "-maltivec"),
+                ("Checking for SSE3", ["-msse3", "-msse2", "-msse", "-mfpmath=sse"]),
+                ("Checking for SSE2", ["-msse2", "-msse", "-mfpmath=sse"]),
+                ("Checking for SSE", ["-msse", "-mfpmath=sse"]),
+            ]
+            
+            for msg, cxxflags in machine_optimisations:
+                result = check_cxx(
+                    cxxflags=cxxflags,
+                    uselib_store="optimise",
+                    msg = msg
+                )
+                if result: break
+            
+            check_cxx(
+                cxxflags='-mtune=native',
+                uselib_store="optimise",
+                msg = "Trying to make compiler tune for this machine"
+            )
+            
+            check_cxx(
+                cxxflags=['-O3', '-ffast-math', '-funroll-all-loops', '-fomit-frame-pointer'],
+                uselib_store="optimise",
+                msg = "Checking for compiler optimisation flags"
+            )
+            
+            check_cxx(
+                cxxflags=['-fno-unsafe-math-optimizations', '-fno-finite-math-only'],
+                uselib_store="safe_math",
+                uselib='optimise',
+                msg = "Checking for cautious math flags"
+            )
+            
+            check_cxx(
+                cxxflags='-ftree-vectorize',
+                uselib_store='vectorise',
+                uselib="optimise",
+                msg = "Checking for Autovectorisation"
+            )
+            
+            check_cxx(
+                cxxflags='-openmp',
+                uselib_store='openmp',
+                msg = "Checking for OpenMP"
+            )
+        
+        check_cxx(
+            cxxflags="-g",
+            uselib_store="debug",
+            msg = "Checking for compiler debug flags"
+        )
+        
+        check_cxx(
+            lib=['hdf5', 'hdf5_hl'],
+            header_name=['hdf5.h', 'hdf5_hl.h'],
+            function_name='H5check_version',
+            uselib_store='hdf5',
+            msg = 'Checking for HDF5'
+        )
+        
+        check_cxx(
+            lib='xmds',
+            # function_name='initialiseFieldFromXSILFile',
+            uselib_store='xmds',
+            msg = "Checking for libxmds"
+        )
+        
+        check_cxx(
+            lib='gsl',
+            header_name='gsl/gsl_sf.h',
+            function_name='gsl_sf_bessel_jl',
+            uselib_store='gsl',
+            msg = 'Checking for GSL'
+        )
+        
+        check_cxx(
+            lib=["guide", "vml"],
+            header_name='mkl_vsl',
+            function_name='vslNewStream',
+            uselib_store='mkl_vsl',
+            msg = "Checking for Intel's Vector Math Library"
+        )
+        
+        check_cxx(
+            cxxflags=["-finline-functions", "-fno-strict-aliasing", "--param", "max-inline-insns-single=1800"],
+            uselib_store="dsfmt",
+            msg = "Checking dSFMT's compile flags",
+        )
+        
+        # Find CBLAS
+        cblas_options = [
+            {# Apple vecLib
+                'defines': 'CBLAS_VECLIB',
+                'framework_name': 'vecLib',
+                'function_name': 'cblas_dgemm',
+                'msg': "Checking for Apple's vecLib framework",
+            },
+            {# GSL CBLAS
+                'defines': 'CBLAS_GSL',
+                'lib': 'gslcblas',
+                'header_name': 'gsl/gsl_cblas.h',
+                'function_name': 'cblas_dgemm',
+                'msg': "Checking for GSL's CBLAS",
+            }
+        ]
+        
+        for cblas_option in cblas_options:
+            result = check_cxx(
+                uselib_store='cblas',
+                **cblas_option
+            )
+            if result: break
+        
+        check_cxx(
+            lib='fftw3',
+            header_name='fftw3.h',
+            function_name='fftw_execute',
+            uselib_store='fftw3',
+            msg = "Checking for FFTW3"
+        )
+        
+        check_cxx(
+            lib='fftw3_threads',
+            header_name='fftw3.h',
+            function_name='fftw_init_threads',
+            uselib_store='fftw3_threads',
+            uselib='fftw3',
+            msg = "Checking for threading support in FFTW3",
+        )
+        
+    
+    print
+    print "Configuring for single-process scripts..."
+    configure_compiler()
+    
+    # Stuff for MPI variant
+    print
+    print "Configuring for MPI scripts..."
+    conf.setenv('mpi')
+    if conf.find_program('mpic++', var='MPICXX'):
+        
+        conf.env['CXX'] = conf.env['MPICXX']
+        conf.env['LINK_CXX'] = conf.env['MPICXX']
+        
+        configure_compiler()
+        
+        check_cxx(
+            lib='fftw3_mpi',
+            header_name='fftw3.h fftw3-mpi.h',
+            function_name='fftw_mpi_init',
+            uselib_store='fftw3_mpi',
+            uselib='fftw3',
+            msg = "Checking for FFTW3 with MPI"
+        )
+    else:
+        print "MPI not found. No scripts using MPI can be compiled on this system."
+        del conf.all_envs['mpi']
+    
+    # Restore default environment and check compiler flags
+    conf.setenv('default')
+
+def build(bld):
+    from xpdeint import Configuration
+    Configuration.availableUselib = bld.env_of_name(Configuration.buildVariant)['uselib']
+    Configuration.availableVariants = bld.all_envs.keys()
+    
+    if not Configuration.buildVariant in Configuration.availableVariants:
+        return
+    
+    obj = bld.new_task_gen(
+        features = 'cxx cprogram',
+        source=Configuration.xpdeintSourcePlaceholder,
+        target=Configuration.xpdeintTargetPlaceholder,
+        link = 'xpdeint_link',
+        env = bld.env_of_name(Configuration.buildVariant),
+        **Configuration.wafArguments
+    )
+    
+    obj.rule = '${CXX} ${CXX_SRC_F}${SRC} ${CXXFLAGS} ${CPPFLAGS} ${_CXXINCFLAGS} ${_CXXDEFFLAGS}'
+    
+    @feature('cxx')
+    def xpdeint_dodgy_hack(self):
+        
+        def dont_run(self):
+            self.run()
+            return SKIP_ME
+        def save_command(self, lst, cwd=None):
+            if self.__class__.__name__ == 'xpdeint_link':
+                Configuration.waf_link_command_callback(lst)
+            else:
+                Configuration.waf_compile_command_callback(lst)
+            
+        for task in self.tasks:
+            task.__class__.runnable_status = dont_run
+            task.__class__.exec_command = save_command
+    
+    
+    TaskGen.declare_order('apply_core', 'xpdeint_dodgy_hack')
+    
+
+xpdeint_link_str = '${LINKFLAGS} ${CXXLNK_TGT_F}${TGT}'
+cls = Task.simple_task_type('xpdeint_link', xpdeint_link_str, color='YELLOW')
+
+

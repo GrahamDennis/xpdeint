@@ -10,15 +10,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 
 @attr $planType = "FFTW_MEASURE"
 @attr $wisdomExtension = '.fftw3'
-
-@def cflags
-@*doc:
-Return the options that need to be added to ``CFLAG``.
-*@
-  @#
--lfftw3@slurp
-  @#
-@end def
+@attr $uselib = ['fftw3']
 
 @def includes
   @#

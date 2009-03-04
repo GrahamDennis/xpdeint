@@ -12,14 +12,6 @@ Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 
 @attr $outputArguments = [('hid_t', 'hdf5_file'), ('const char*', '_dataFilename')]
 
-@def cflags
-  @#
-  @super
-  @#
- -lhdf5_hl@slurp
-  @#
-@end def
-
 @attr $name = 'hdf5'
 @attr $mpiSafe = True
 

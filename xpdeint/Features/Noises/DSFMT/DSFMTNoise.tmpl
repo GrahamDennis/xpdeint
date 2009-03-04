@@ -9,22 +9,11 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 @from xpdeint.CallOnceGuards import callOnceGuard
 @import random
 
+@attr uselib = ['dsfmt']
+
 @def description: Generic dSFMT noise
 @def generatorType: dsfmt_t*
 
-@@callOnceGuard
-@def cflags
-@*doc:
-Return the options that need to be added to ``CFLAG``.
-*@
-  @#
--msse2 -finline-functions -fno-strict-aliasing --param max-inline-insns-single=1800 -DDSFMT_MEXP=19937@slurp
-  @#
-@end def
-
-@*
-  Static includes
-*@
 @@callOnceGuard
 @def static_includes
   @#
@@ -37,14 +26,13 @@ Return the options that need to be added to ``CFLAG``.
   #define HAVE_ALTIVEC
 #endif
 
+#define DSFMT_MEXP 19937
+
 #include <dSFMT/dSFMT.h>
 #include <dSFMT/dSFMT.c>
   @#
 @end def
 
-@*
-  Initialise seeds
-*@
 @def initialiseSeeds
   @#
   @set $featureOrdering = ['Driver']

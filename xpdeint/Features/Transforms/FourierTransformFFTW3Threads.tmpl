@@ -8,18 +8,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 
 @def description: FFTW3 with threads
 @attr $wisdomExtension = '.fftw3_threads'
-
-
-@def cflags
-@*doc:
-Return the options that need to be added to ``CFLAG``.
-*@
-  @super
-  @#
- -lfftw3_threads@slurp
-  @#
-@end def
-
+@attr $uselib = ['fftw3', 'fftw3_threads']
 
 @# defines
 @def defines

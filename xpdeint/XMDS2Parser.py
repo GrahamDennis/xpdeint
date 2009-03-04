@@ -57,9 +57,9 @@ from xpdeint.Operators.FunctionsOperator import FunctionsOperator as FunctionsOp
 
 from xpdeint.MomentGroupElement import MomentGroupElement as MomentGroupTemplate
 
-from xpdeint.Features import Transforms
-
 from xpdeint import Features
+
+from xpdeint.Features import Transforms
 
 from xpdeint.Features.Noises.POSIX.GaussianPOSIXNoise import GaussianPOSIXNoise
 from xpdeint.Features.Noises.POSIX.UniformPOSIXNoise import UniformPOSIXNoise

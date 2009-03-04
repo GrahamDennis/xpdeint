@@ -47,3 +47,12 @@ except AttributeError, err:
     return False
   sys.modules['__builtin__'].any = any
   
+
+try:
+  import hashlib
+except ImportError, err:
+  hashlib = module('hashlib')
+  sys.modules['hashlib'] = hashlib
+  from sha import new as sha1
+  hashlib.sha1 = sha1
+

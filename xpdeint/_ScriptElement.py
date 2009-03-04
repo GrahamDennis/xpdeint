@@ -373,7 +373,15 @@ class _ScriptElement (Template):
     has been called on all templates. This is where other post-parsing code goes before the simulation
     is converted to a C++ source file.
     """
-    pass
+    if hasattr(self, 'uselib'):
+      self.getVar('uselib').update(self.uselib)
+    if hasattr(self, 'buildVariant'):
+      buildVariant = self.getVar('buildVariant')
+      if buildVariant and not self.buildVariant in buildVariant:
+        raise ParserException(self, "Internal Error. More than one build variant is trying to be used.\n"
+                                    "Please report this error to xmds-devel@lists.sourceforge.net\n")
+      buildVariant.add(self.buildVariant)
+    
   
   def vectorsFromEntity(self, entity):
     """

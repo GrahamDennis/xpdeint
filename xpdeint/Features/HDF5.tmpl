@@ -8,16 +8,14 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 
 @from xpdeint.Geometry.SplitUniformDimensionRepresentation import SplitUniformDimensionRepresentation
 
+@attr $uselib = ['hdf5']
+
 @def includes
   @#
   @super
   @#
 #include <hdf5.h>
   @#
-@end def
-
-@def cflags
--lhdf5@slurp
 @end def
 
 @def processData(dict)

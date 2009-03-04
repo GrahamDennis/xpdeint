@@ -11,20 +11,8 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 
 @def description: Generic Intel MKL noise
 @def generatorType: VSLStreamStatePtr
+@attr uselib = ['mkl_vsl']
 
-@@callOnceGuard
-@def cflags
-@*doc:
-Return the options that need to be added to ``CFLAG``.
-*@
-  @#
--lguide -lvml@slurp
-  @#
-@end def
-
-@*
-  Static includes
-*@
 @@callOnceGuard
 @def static_includes
   @#
@@ -34,9 +22,6 @@ Return the options that need to be added to ``CFLAG``.
   @#
 @end def
 
-@*
-  Initialise seeds
-*@
 @def initialiseSeeds
   @#
   @set $featureOrdering = ['Driver']

@@ -15,17 +15,17 @@ from xml.dom import minidom
 import xpdeint.minidom_extras
 import subprocess
 from pkg_resources import resource_filename
+import hashlib
+import shutil
 
 import imp
 import cPickle
 
-# Hack for Leopard so it doesn't import the web rendering
-# framework WebKit when Cheetah tries to import the Python
-# web application framework WebKit
-if sys.platform == 'darwin':
-  module = type(sys)
-  sys.modules['WebKit'] = module('WebKit')
+from xpdeint.Utilities import leopardWebKitHack
 
+leopardWebKitHack()
+
+from xpdeint.Preferences import xpdeintUserDataPath
 
 # Import the parser stuff
 from xpdeint.ParserException import ParserException, parserWarning
@@ -42,16 +42,30 @@ from xpdeint.IndentFilter import IndentFilter
 # Import the root class for all templates
 from xpdeint._ScriptElement import _ScriptElement
 
+# Import the Configuration module
+from xpdeint import Configuration
+
 # The help message printed when --help is used as an argument
 help_message = '''
 usage: xpdeint [options] fileToBeParsed
 
 Options and arguments:
--h          : Print this message (also --help)
--o filename : This overrides the name of the output file to be generated (also --output)
--d          : Debug mode (also --debug)
--n          : Only generate a source file, don't compile (also --no-compile)
+-h                              : Print this message (also --help)
+-o filename                     : This overrides the name of the output file to be generated (also --output)
+-d                              : Debug mode (also --debug)
+-n                              : Only generate a source file, don't compile (also --no-compile)
+--configure                     : Run configuration checks for compiling simulations
+--reconfigure                   : Run configuration using the same options as used with the last
+                                  time --configure was run with the additional arguments specified
+--include-path /path/to/include : Add the path /path/to/include to the list of paths searched for include headers
+                                  This option is only meaningful when used with --(re)configure
+--lib-path /path/to/lib         : Add the path /path/to/lib to the list of paths searched for libraries
+                                  This option is only meaningful when used with --(re)configure
 '''
+
+def fileContentsHash(filename):
+  return hashlib.sha1(file(filename).read()).hexdigest()
+  
 
 def anyObject(iterable):
   """
@@ -86,39 +100,72 @@ def main(argv=None):
   from Preferences import versionString
   from Version import subversionRevisionString
   
-  xpdeintUserDataPath = os.path.join(os.path.expanduser('~'), '.xmds')
-  
   print "xpdeint version %(versionString)s (%(subversionRevisionString)s)" % locals()
+  
+  if not os.path.isdir(xpdeintUserDataPath):
+      os.mkdir(xpdeintUserDataPath)
   
   # Attempt to parse command line arguments
   if argv is None:
     argv = sys.argv
   try:
     try:
-      opts, args = getopt.gnu_getopt(argv[1:], "dhno:", ["debug", "help", "no-compile", "output=", "no-version"])
+      opts, args = getopt.gnu_getopt(
+                    argv[1:],
+                    "dhno:",
+                    [
+                      "debug",
+                      "help",
+                      "no-compile",
+                      "output=",
+                      "no-version",
+                      "configure",
+                      "reconfigure",
+                      "include-path=",
+                      "lib-path=",
+                    ]
+      )
     except getopt.error, msg:
       raise Usage(msg)
     
-    output=''
+    includePaths = []
+    libPaths = []
+    run_config = False
+    run_reconfig = False
+    
+    output = None
     # option processing
     for option, value in opts:
       if option in ("-d", "--debug"):
         debug = True
-      if option in ("-h", "--help"):
+      elif option in ("-h", "--help"):
         raise Usage(help_message)
-      if option in ("-o", "--output"):
+      elif option in ("-o", "--output"):
         output = value
-      if option in ("-n", "--no-compile"):
+      elif option in ("-n", "--no-compile"):
         compileScript = False
-      if option == "--no-version":
+      elif option == "--no-version":
         # This option is here for the test suite so that the generated source files don't
         # contain version information. This makes it easier to check if the source for a script
         # has changed as otherwise it would change every time the subversison revision number
         # increased
         noVersionInformation = True
+      elif option == "--configure":
+        run_config = True
+      elif option == '--reconfigure':
+        run_reconfig = True
+      elif option == '--include-path':
+        includePaths.append(value)
+      elif option == '--lib-path':
+        libPaths.append(value)
+    
+    if run_config:
+      return Configuration.run_config(includePaths, libPaths)
+    elif run_reconfig:
+      return Configuration.run_reconfig(includePaths, libPaths)
     
     # argument processing
-    if len(args)==1:
+    if len(args) == 1:
         scriptName = args[0]
     else:
         raise Usage(help_message)
@@ -127,7 +174,17 @@ def main(argv=None):
     print >> sys.stderr, sys.argv[0].split("/")[-1] + ": " + str(err.msg)
     print >> sys.stderr, "\t for help use --help"
     return 2
+  
+  if not os.path.isfile(os.path.join(xpdeintUserDataPath, 'wscript')) or \
+    fileContentsHash(os.path.join(xpdeintUserDataPath, 'wscript')) \
+       != fileContentsHash(resource_filename(__name__, 'support/wscript')):
+    print "Reconfiguring xpdeint (updated config script)..."
+    wscript_path = resource_filename(__name__, 'support/wscript')
+    dest_wscript_path = os.path.join(xpdeintUserDataPath, 'wscript')
+    shutil.copyfile(wscript_path, dest_wscript_path)
     
+    Configuration.run_reconfig()
+  
   # globalNameSpace is a dictionary of variables that are available in all
   # templates
   globalNameSpace = {'scriptName': scriptName}
@@ -173,6 +230,8 @@ def main(argv=None):
   globalNameSpace['xmds'] = {'versionString': versionString,
                              'subversionRevision': subversionRevisionString}
   globalNameSpace['templates'] = set()
+  globalNameSpace['buildVariant'] = set()
+  globalNameSpace['uselib'] = set()
   
   xpdeintDataCachePath = os.path.join(xpdeintUserDataPath, 'xpdeint_cache')
   dataCache = {}
@@ -318,7 +377,7 @@ def main(argv=None):
   
   # Now actually write the simulation to disk.
   
-  if output == '':
+  if not output:
     output = globalNameSpace['simulationName']
   sourceFileName = output + '.cc'
   myfile = file(sourceFileName, "w")
@@ -331,59 +390,27 @@ def main(argv=None):
   print >> myfile, simulationContents
   myfile.close()
   
+  if not set(['debug']).intersection(globalNameSpace['uselib']):
+    globalNameSpace['uselib'].add('optimise')
   
-  from Preferences import CC, CFLAGS, MPICC, MPICFLAGS
+  buildKWs = {
+    'includes': resource_filename(__name__, 'includes'),
+    'uselib': list(globalNameSpace['uselib']),
+  }
   
-  prefs = {}
-  prefs['CC'] = CC
-  prefs['CFLAGS'] = CFLAGS
-  prefs['MPICC'] = MPICC
-  prefs['MPICFLAGS'] = MPICFLAGS
+  variant = globalNameSpace['buildVariant']
+  if not variant:
+    variant.add('default')
   
-  # Load user preferences. This will be a file called
-  # "xpdeint_prefs.py" in ~/.xmds
-  try:
-    fd, pathname, description = imp.find_module('xpdeint_prefs', [xpdeintUserDataPath])
-  except ImportError, err:
-    # We didn't find the preferences file, no problem.
-    pass
-  else:
-    # We did find the preferences file
-    user_prefs = imp.load_module('xpdeint_prefs', fd, pathname, description)
-    for prefName in ['CC', 'CFLAGS', 'MPICC', 'MPICFLAGS']:
-      if hasattr(user_prefs, prefName):
-        prefs[prefName] = getattr(user_prefs, prefName)
+  compilerLine = Configuration.run_build(
+    sourceFileName,
+    output,
+    variant = anyObject(variant),
+    buildKWs = buildKWs
+  )
   
-  CC = prefs['CC']
-  CFLAGS = prefs['CFLAGS']
-  MPICC = prefs['MPICC']
-  MPICFLAGS = prefs['MPICFLAGS']
-  
-  pathToIncludeDirectory = resource_filename(__name__, 'includes')
-  
-  CFLAGS += ' -I"%(pathToIncludeDirectory)s"' % locals()
-  
-  # Now let the templates add anything they need to CFLAGS
-  templateCFLAGS = ['']
-  # Iterate through all the templates
-  for template in globalNameSpace['templates']:
-    # If the template has the function 'cflags', then call it, and add it to the list
-    if template.hasattr('cflags'):
-      templateCFLAGS.append(template.cflags())
-    # FIXME: This is very very dodgy
-    if template.hasattr('compiler'):
-      CC = template.compiler()
-  
-  # FIXME: DODGY DODGY
-  if CC == "mpic++":
-    CC = MPICC
-    CFLAGS += " " + MPICFLAGS
-  
-  # These compile variables are defined in Preferences.py
-  # We'll need some kind of check to choose which compiler and options, but not until we need varying options
-  
-  compilerLine = '%(CC)s -o "%(output)s" "%(output)s.cc" %(CFLAGS)s' % locals()
-  compilerLine += ' '.join(templateCFLAGS)
+  if not compilerLine:
+      return -1
   
   if compileScript:
     print "\n",compilerLine,"\n"

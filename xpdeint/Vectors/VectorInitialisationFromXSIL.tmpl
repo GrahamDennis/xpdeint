@@ -8,17 +8,9 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 
 @from xpdeint.CallOnceGuards import callOnceGuard
 
-@*
-  Description of initialisation method
-*@
-@def description: Vector initialisation from an XSIL file
+@attr $uselib = ['xmds']
 
-@@callOnceGuard
-@def cflags
-  @#
--lxmds@slurp
-  @#
-@end def
+@def description: Vector initialisation from an XSIL file
 
 @@callOnceGuard
 @def static_functionPrototypes

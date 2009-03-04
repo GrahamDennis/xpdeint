@@ -7,16 +7,13 @@ Created by Graham Dennis on 2008-06-15.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
+import xpdeint.Python24Support
+
 import os
 import sys
 import getopt
 import shutil
-try:
-    # Python 2.5+
-    from hashlib import sha1
-except:
-    # Python 2.4
-    from sha import new as sha1
+import hashlib
 import unittest
 import tempfile
 import subprocess
@@ -77,7 +74,7 @@ def scriptTestingFunction(root, scriptName, testDir, absPath, self):
   sourceFilePath = os.path.join(testDir, simulationName + '.cc')
   checksumFilePath = os.path.join(testDir, simulationName + '_last_known_good.checksum')
   sourceContents = file(sourceFilePath).read()
-  h = sha1()
+  h = hashlib.sha1()
   h.update(sourceContents)
   currentChecksum = h.hexdigest()
   
