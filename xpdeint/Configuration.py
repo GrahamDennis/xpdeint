@@ -6,7 +6,7 @@ Configuration.py
 Created by Graham Dennis on 2009-03-01.
 Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 """
-import os, sys, imp
+import os, sys, imp, shutil
 
 from pkg_resources import resource_filename
 from xpdeint.Preferences import xpdeintUserDataPath
@@ -34,7 +34,13 @@ def run_waf(command):
     # FIXME: In the future, xpdeint should recognise waf arguments
     sys.argv = ['./waf', command]
     
-    # Step three, call Scripting as in waf-light
+    # Step three, if the wscript doesn't exist, copy it in
+    if not os.path.isfile(os.path.join(xpdeintUserDataPath, 'wscript')):
+        wscript_path = resource_filename(__name__, 'support/wscript')
+        dest_wscript_path = os.path.join(xpdeintUserDataPath, 'wscript')
+        shutil.copyfile(wscript_path, dest_wscript_path)
+    
+    # Step four, call Scripting as in waf-light
     oldcwd = os.getcwd()
     os.chdir(xpdeintUserDataPath)
     import Scripting
