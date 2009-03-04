@@ -9,6 +9,13 @@ Created by Graham Dennis on 2009-02-28.
 import Task
 from TaskGen import taskgen, extension
 import os
+from xpdeint.Utilities import leopardWebKitHack
+leopardWebKitHack()
+try:
+    from Cheetah.Template import Template
+except ImportError:
+    Template = None
+
 
 EXT_CHEETAH = ['.tmpl']
 
@@ -22,17 +29,11 @@ def cheetah_hook(self, node):
 
 def detect(conf):
     conf.check_message_1("Checking for Cheetah module")
-    try:
-        from xpdeint.Utilities import leopardWebKitHack
-        leopardWebKitHack()
-        from Cheetah.Template import Template
-    except ImportError:
+    if not Template:
         conf.fatal('The Cheetah module for Python was not found.')
     conf.check_message_2("ok")
 
 def cheetah_build(task):
-    from Cheetah.Template import Template
-    
     env = task.env
     bld = task.generator.bld
     
