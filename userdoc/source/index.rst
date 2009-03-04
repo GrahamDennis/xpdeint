@@ -11,6 +11,10 @@ Contents:
    :maxdepth: 2
    
    tutorial
+   
+   optimisation_hints
+   
+   xsil2graphics2
 
 Indices and tables
 ==================

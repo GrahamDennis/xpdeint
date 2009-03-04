@@ -14,6 +14,7 @@ import MaxIterations
 import OpenMP
 import Output
 import Stochastic
+import Transforms
 import Validation
 
 import OutputFormat

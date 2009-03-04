@@ -5,9 +5,13 @@ Chief amongst them are the compile options.
 
 We start here just listing these preferences, and then later we can generate this file via some clever method.  Or autoconf."""
 
+import os
+
 CC="g++"
 CFLAGS="-O3 -ffast-math -funroll-all-loops -fomit-frame-pointer"
 MPICC="mpic++"
 MPICFLAGS=""
 
-versionString = '0.6 "A Physicist is an atom\'s way of knowing about atoms."'
+versionString = '0.7 "May the fish be with you"'
+
+xpdeintUserDataPath = os.path.join(os.path.expanduser('~'), '.xmds')

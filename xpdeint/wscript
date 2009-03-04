@@ -12,18 +12,21 @@ srcdir = '.'
 blddir = 'waf_build'
 
 import os
+import TaskGen
+from TaskGen import feature
+from Task import TaskBase
 
 def configure(conf):
-    conf.check_tool('cheetah', tooldir='../waf_extensions')
-    conf.env['CHEETAH_SETTINGS'] = 'directiveStartToken="@",commentStartToken="@#",multiLineCommentStartToken="@*",multiLineCommentEndToken="*@"'
+    conf.check_tool('cheetah', tooldir='waf_extensions')
+    conf.env['CHEETAH_SETTINGS'] = {
+        'directiveStartToken': '@',
+        'commentStartToken': '@#',
+        'multiLineCommentStartToken': '@*',
+        'multiLineCommentEndToken': '*@',
+    }
+    
 
 def build(bld):
-    bld.new_task_gen(
-        name='svnversion',
-        rule='sh version.sh',
-        always=True,
-        cwd=bld.path.abspath())
-    
     sources = []
     base = bld.path.abspath()
     skip_dirs = set(['.svn', 'waf_build'])
@@ -40,3 +43,5 @@ def build(bld):
         features = 'cheetah',
         cwd=bld.path.abspath(),
         source=sources)
+    
+

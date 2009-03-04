@@ -2,26 +2,28 @@
 
 from setuptools import setup, find_packages
 
+import os
+if not os.path.exists('xpdeint'):
+    raise Exception("setup.py must be run from the xpdeint main directory.")
+
+packages = []
+skip_dirs = set(['.svn', 'waf_build'])
+for root, dirs, files in os.walk('xpdeint'):
+    for d in skip_dirs.intersection(dirs):
+        dirs.remove(d)
+    if not '__init__.py' in files:
+        del dirs[:]
+    else:
+        packages.append(root.replace(os.sep, '.'))
+
 setup(name="xpdeint",
-      version="0.6",
+      version="0.7",
       description="Stochastic ODE/PDE integrator",
       url="http://xmds.sourceforge.net",
       license="GPL2",
       keywords="scientific/engineering simulation",
       platforms="OS Independent",
-      packages = ['xpdeint',
-                  'xpdeint.SimulationDrivers',
-                  'xpdeint.Geometry',
-                  'xpdeint.Vectors',
-                  'xpdeint.Segments',
-                  'xpdeint.Segments.Integrators',
-                  'xpdeint.Operators',
-                  'xpdeint.Features',
-                  'xpdeint.Features.Noises',
-                  'xpdeint.Features.Noises.DSFMT',
-                  'xpdeint.Features.Noises.MKL',
-                  'xpdeint.Features.Noises.POSIX',
-                  ],
+      packages = packages,
       
       scripts = ['bin/xpdeint', 'bin/xsil2graphics2'],
       
@@ -31,7 +33,14 @@ setup(name="xpdeint",
       install_requires = ['Cheetah>=2.0.1', 'Pygments'],
       
       package_data = {
-        '': ['includes/*.c', 'includes/*.h', 'includes/*.cc', 'examples/*.xmds', 'support/xpdeint.rng']
+        'xpdeint': ['examples/*.xmds',
+                    'includes/*.c',
+                    'includes/*.h',
+                    'includes/dSFMT/*',
+                    'includes/solirte/*',
+                    'support/xpdeint.rng',
+                    'support/wscript'
+                   ]
       },
       
       # We aren't zip safe because we will require access to

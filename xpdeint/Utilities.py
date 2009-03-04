@@ -7,8 +7,6 @@ Created by Graham Dennis on 2008-09-15.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
-from weakref import WeakKeyDictionary
-
 class lazy_property(object):
   """
   A data descriptor that provides a default value for the attribute
@@ -93,7 +91,7 @@ def greatestCommonFactor(num):
 
 def leastCommonMultiple(num):
     if len(num) == 0:
-      return 1
+        return 1
     t_val = num[0]
     for cnt in range(len(num)-1):
         num1 = t_val
@@ -101,4 +99,15 @@ def leastCommonMultiple(num):
         tmp = greatestCommonFactor([num1,num2])
         t_val = tmp * num1/tmp * num2/tmp
     return t_val
+
+def leopardWebKitHack():
+    """
+    Hack for Mac OS X Leopard and above so that it doesn't import
+    the web rendering framework WebKit when Cheetah tries to import
+    the Python web application framework WebKit.
+    """
+    import sys
+    if sys.platform == 'darwin' and not 'WebKit' in sys.modules:
+        module = type(sys)
+        sys.modules['WebKit'] = module('WebKit')
 

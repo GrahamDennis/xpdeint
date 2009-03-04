@@ -9,15 +9,7 @@ Based on code originally written by Gabriel McManus
 
 @def description: Halt simulation on non-finite results
 @attr featureName = 'HaltNonFinite'
-
-@def cflags
-@*doc:
-Return the options that need to be added to ``CFLAG``.
-*@
-  @#
--fno-unsafe-math-optimizations -fno-finite-math-only@slurp
-  @#
-@end def
+@attr uselib = ['safe_math']
 
 @def postSingleStep($dict)
   @#
