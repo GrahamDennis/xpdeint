@@ -116,6 +116,13 @@ def configure(conf):
                 uselib_store='openmp',
                 msg = "Checking for OpenMP"
             )
+            
+            check_cxx(
+                cxxflags="-pthread",
+                linkflags="-pthread",
+                uselib_store="threads",
+                msg = "Checking for pthreads",
+            )
         
         check_cxx(
             cxxflags="-g",
@@ -174,24 +181,26 @@ def configure(conf):
             {# Apple vecLib
                 'defines': 'CBLAS_VECLIB',
                 'framework_name': 'vecLib',
-                'function_name': 'cblas_dgemm',
                 'msg': "Checking for Apple's vecLib framework",
+            },
+            {# ATLAS CBLAS
+                'defines': 'CBLAS_ATLAS',
+                'lib': 'cblas',
+                'header_name': 'cblas.h',
+                'msg': "Checking for ATLAS's CBLAS."
             },
             {# GSL CBLAS
                 'defines': 'CBLAS_GSL',
                 'lib': 'gslcblas',
                 'header_name': 'gsl/gsl_cblas.h',
-                'function_name': 'cblas_dgemm',
                 'msg': "Checking for GSL's CBLAS",
             }
         ]
+        cblas_common = {
+            'function_name': 'cblas_dgemm',
+        }
         
-        for cblas_option in cblas_options:
-            result = check_cxx(
-                uselib_store='cblas',
-                **cblas_option
-            )
-            if result: break
+        try_options('cblas', cblas_options, cblas_common)
         
         check_cxx(
             lib='fftw3',
@@ -206,7 +215,7 @@ def configure(conf):
             header_name='fftw3.h',
             function_name='fftw_init_threads',
             uselib_store='fftw3_threads',
-            uselib='fftw3',
+            uselib=['fftw3', 'threads'],
             msg = "Checking for threading support in FFTW3",
         )
         

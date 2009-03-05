@@ -38,11 +38,11 @@
 * Documentation needs to be written (both user and developer). The developer documentation
   needs to be converted from current straight comments to use docstrings.
 
-* Licenses: The GPLv2 header needs to be put on all of the source files for this project.
+* Licenses: The BSD License header needs to be put on all of the source files for this project.
   I've been very lazy and have just used the default of the text editor I have been using
   which is simply "copyright (c) Graham Dennis" or the like. My intention is that the whole
-  project should be under GPL2 unless there is some compelling reason why it should be under
-  something else.
+  project should be under BSD (or modified BSD) unless there is some compelling reason why it
+  should be under something else.
 
 * Example library
 
