@@ -34,11 +34,10 @@ def run_waf(command):
     # FIXME: In the future, xpdeint should recognise waf arguments
     sys.argv = ['./waf', command]
     
-    # Step three, if the wscript doesn't exist, copy it in
-    if not os.path.isfile(os.path.join(xpdeintUserDataPath, 'wscript')):
-        wscript_path = resource_filename(__name__, 'support/wscript')
-        dest_wscript_path = os.path.join(xpdeintUserDataPath, 'wscript')
-        shutil.copyfile(wscript_path, dest_wscript_path)
+    # Step three, copy the wscript to its destination
+    wscript_path = resource_filename(__name__, 'support/wscript')
+    dest_wscript_path = os.path.join(xpdeintUserDataPath, 'wscript')
+    shutil.copyfile(wscript_path, dest_wscript_path)
     
     # Step four, call Scripting as in waf-light
     oldcwd = os.getcwd()
