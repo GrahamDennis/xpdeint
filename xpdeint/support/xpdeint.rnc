@@ -247,7 +247,7 @@ CrossPropagationOperatorContents =
       )+
 
 Filter = element filter {
-    Dependencies
+    Dependencies?
     , text
 }
 
