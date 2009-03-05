@@ -38,7 +38,7 @@ hsize_t file_dims[${dimCount}];
 
   @for dimNum, dim in enumerate(field.dimensions)
     @set $dimRep = dim.inSpace($vector.initialSpace)
-hid_t dataset_${dimRep.name} = H5Dopen(hdf5_file, "${groupName}/${dimRep.name}", H5P_DEFAULT);
+hid_t dataset_${dimRep.name} = H5Dopen(hdf5_file, "${groupName}/${dimRep.name}");
 hid_t dataspace_${dimRep.name} = H5Dget_space(dataset_${dimRep.name});
 file_dims[$dimNum] = H5Sget_simple_extent_npoints(dataspace_${dimRep.name});
 ${dimRep.type}* ${dimRep.name}_inputdata = (${dimRep.type}*)xmds_malloc(H5Sget_simple_extent_npoints(dataspace_${dimRep.name}) * sizeof(${dimRep.type}));
@@ -88,7 +88,7 @@ file_dataspace = H5Screate_simple(${len(field.dimensions)}, file_dims, NULL);
 hid_t dataset_${componentName} = 0;
       @set $identifier = c"${groupName}/${componentName}"
 if ((result = H5Lexists(hdf5_file, "${identifier}", H5P_DEFAULT))>0)
-  dataset_${componentName} = H5Dopen(hdf5_file, "${identifier}", H5P_DEFAULT);
+  dataset_${componentName} = H5Dopen(hdf5_file, "${identifier}");
 else if (!result)
   _LOG(_WARNING_LOG_LEVEL, "Warning: Unable to find variable name '${componentName}' in HDF5 file.\n");
 else

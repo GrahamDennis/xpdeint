@@ -132,11 +132,22 @@ def configure(conf):
         
         check_cxx(
             lib=['hdf5', 'hdf5_hl'],
-            header_name=['hdf5.h', 'hdf5_hl.h'],
+            header_name=['hdf5.h'],
             function_name='H5check_version',
             uselib_store='hdf5',
             msg = 'Checking for HDF5'
         )
+        
+        if 'hdf5' in conf.env['uselib']:
+            check_cxx(
+                defines='HAVE_HDF5_HL',
+                lib='hdf5_hl',
+                header_name=['hdf5.h', 'hdf5_hl.h'],
+                function_name='H5DSset_scale',
+                uselib_store='hdf5',
+                uselib = 'hdf5',
+                msg = "Checking for HDF5 High-level library"
+            )
         
         check_cxx(
             lib='xmds',
