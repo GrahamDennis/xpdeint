@@ -9,8 +9,17 @@ Created by Graham Dennis on 2009-02-28.
 import Task
 from TaskGen import taskgen, extension
 import os
-from xpdeint.Utilities import leopardWebKitHack
-leopardWebKitHack()
+
+"""
+Hack for Mac OS X Leopard and above so that it doesn't import
+the web rendering framework WebKit when Cheetah tries to import
+the Python web application framework WebKit.
+"""
+import sys
+if sys.platform == 'darwin' and not 'WebKit' in sys.modules:
+    module = type(sys)
+    sys.modules['WebKit'] = module('WebKit')
+
 try:
     from Cheetah.Template import Template
 except ImportError:
