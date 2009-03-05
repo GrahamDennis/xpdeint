@@ -109,7 +109,7 @@ H5Sclose(file_dataspace);
   @for dim in $vector.field.dimensions
     @set $dimRep = dim.inSpace($vector.initialSpace)
     @if not isinstance(dimRep, NonUniformDimensionRepresentation)
-xmds_free(${dimArrayName});
+xmds_free(${dimRep.name}_data);
     @end if
 xmds_free(${dimRep.name}_inputdata);
 H5Sclose(dataspace_${dimRep.name});

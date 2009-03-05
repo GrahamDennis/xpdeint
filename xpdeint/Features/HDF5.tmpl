@@ -7,15 +7,28 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 @extends xpdeint.ScriptElement
 
 @from xpdeint.Geometry.SplitUniformDimensionRepresentation import SplitUniformDimensionRepresentation
+@from xpdeint.CallOnceGuards import callOnceGuard
 
 @attr $uselib = ['hdf5']
 
+@@callOnceGuard
 @def includes
   @#
   @super
   @#
 #define H5_USE_16_API
 #include <hdf5.h>
+
+#if !defined(HAVE_H5LEXISTS)
+htri_t H5Lexists(hid_t loc_id, const char *name, hid_t lapl_id)
+{
+  herr_t err = H5Gget_objinfo(loc_id, name, false, NULL);
+  if (err >= 0)
+    return true;
+  else
+    return false;
+}
+#endif
   @#
 @end def
 
