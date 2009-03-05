@@ -45,6 +45,15 @@ def configure(conf):
     conf.set_env_name('default', single)
     conf.setenv('default')
     
+    def try_options(uselib_store, kwOptions, common = None):
+        common = common or {}
+        for kws in kwOptions:
+            allKWs = common.copy()
+            allKWs.update(kws)
+            if check_cxx(uselib_store=uselib_store, **allKWs):
+                break
+    
+    
     def configure_compiler():
         conf.env['uselib'] = set()
         conf.check_tool('compiler_cxx')
@@ -52,20 +61,29 @@ def configure(conf):
         
         if conf.env['CXX_NAME'] == 'gcc':
             machine_optimisations = [
-                ("Trying to make compiler optimise for this machine", "-march=native"),
-                ("Checking for Altivec", "-maltivec"),
-                ("Checking for SSE3", ["-msse3", "-msse2", "-msse", "-mfpmath=sse"]),
-                ("Checking for SSE2", ["-msse2", "-msse", "-mfpmath=sse"]),
-                ("Checking for SSE", ["-msse", "-mfpmath=sse"]),
+                {
+                    "msg": "Trying to make compiler optimise for this machine",
+                    "cxxflags": "-march=native",
+                },
+                {
+                    "msg": "Checking for Altivec",
+                    "cxxflags": '-maltivec',
+                },
+                {
+                    "msg": "Checking for SSE3",
+                    "cxxflags": ["-msse3", "-msse2", "-msse", "-mfpmath=sse"],
+                },
+                {
+                    "msg": "Checking for SSE2",
+                    "cxxflags": ["-msse2", "-msse", "-mfpmath=sse"],
+                },
+                {
+                    "msg": "Checking for SSE",
+                    "cxxflags": ["-msse", "-mfpmath=sse"]
+                }
             ]
             
-            for msg, cxxflags in machine_optimisations:
-                result = check_cxx(
-                    cxxflags=cxxflags,
-                    uselib_store="optimise",
-                    msg = msg
-                )
-                if result: break
+            try_options('optimise', machine_optimisations)
             
             check_cxx(
                 cxxflags='-mtune=native',
@@ -120,13 +138,22 @@ def configure(conf):
             msg = "Checking for libxmds"
         )
         
-        check_cxx(
-            lib='gsl',
-            header_name='gsl/gsl_sf.h',
-            function_name='gsl_sf_bessel_jl',
-            uselib_store='gsl',
-            msg = 'Checking for GSL'
-        )
+        # Ways of linking GSL
+        gsl_options = [
+            {
+                "lib": 'gsl',
+                "msg": "Checking for GSL",
+            },
+            {
+                "lib": ["gsl", "gslcblas"],
+                "msg": "Checking if GSL requires -lgslcblas",
+            }
+        ]
+        gsl_common = {
+            'header_name': 'gsl/gsl_sf.h',
+            'function_name': 'gsl_sf_bessel_jl',
+        }
+        try_options("gsl", gsl_options, gsl_common)
         
         check_cxx(
             lib=["guide", "vml"],
