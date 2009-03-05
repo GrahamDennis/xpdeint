@@ -131,7 +131,7 @@ def configure(conf):
         )
         
         check_cxx(
-            lib=['hdf5', 'hdf5_hl'],
+            lib='hdf5',
             header_name=['hdf5.h'],
             function_name='H5check_version',
             uselib_store='hdf5',
