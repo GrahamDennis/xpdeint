@@ -343,18 +343,18 @@ def main(argv=None):
       raise
     
     return -1
-  finally:
-    dataCache = globalNameSpace['dataCache']
-    if dataCache:
-      try:
-        dataCacheFile = file(xpdeintDataCachePath, 'w')
-      except Exception, err:
-        print >> sys.stderr, "Warning: Unable to write xpdeint data cache. " \
-                             "Ensure '%(xpdeintUserDataPath)s' exists and is writable." % locals()
-      else:
-        cPickle.dump(dataCache, dataCacheFile, protocol = 2)
-        dataCacheFile.close()
-      
+  
+  dataCache = globalNameSpace['dataCache']
+  if dataCache:
+    try:
+      dataCacheFile = file(xpdeintDataCachePath, 'w')
+    except Exception, err:
+      print >> sys.stderr, "Warning: Unable to write xpdeint data cache. " \
+                           "Ensure '%(xpdeintUserDataPath)s' exists and is writable." % locals()
+    else:
+      cPickle.dump(dataCache, dataCacheFile, protocol = 2)
+      dataCacheFile.close()
+  
   
   # Attempt to import lxml and run the script through
   # the schema
