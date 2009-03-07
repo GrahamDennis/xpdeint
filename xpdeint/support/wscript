@@ -91,11 +91,18 @@ def configure(conf):
                 msg = "Trying to make compiler tune for this machine"
             )
             
-            check_cxx(
-                cxxflags=['-O3', '-ffast-math', '-funroll-all-loops', '-fomit-frame-pointer'],
-                uselib_store="optimise",
-                msg = "Checking for compiler optimisation flags"
-            )
+            compiler_optimisations = [
+                {
+                    "msg": "Checking for the 'go fast' compiler option",
+                    "cxxflags": "-fast",
+                },
+                {
+                    "msg": "Checking for fallback optimisation flags",
+                    "cxxflags": ['-O3', '-ffast-math', '-funroll-all-loops', '-fomit-frame-pointer'],
+                }
+            ]
+            
+            try_options('optimise', compiler_optimisations)
             
             check_cxx(
                 cxxflags=['-fno-unsafe-math-optimizations', '-fno-finite-math-only'],
@@ -123,6 +130,47 @@ def configure(conf):
                 uselib_store="threads",
                 msg = "Checking for pthreads",
             )
+        elif conf.env['CXX_NAME'] == 'icc':
+            check_cxx(
+                cxxflags="-fast",
+                uselib_store="optimise",
+                msg = "Checking for the 'go fast' compiler option"
+            )
+            
+            check_cxx(
+                cxxflags="-fma",
+                uselib_store="optimise",
+                msg = "Trying to fuse multiply and add instructions"
+            )
+            
+            check_cxx(
+                cxxflags = ["-fp-model", "precise"],
+                uselib_store="safe_math",
+                uselib="optimise",
+                msg = "Checking for cautious math flags"
+            )
+            
+            check_cxx(
+                cxxflags = "-vec",
+                uselib_store="vectorise",
+                uselib="optimise",
+                msg = "Checking for Autovectorisation"
+            )
+            
+            check_cxx(
+                cxxflags='-openmp',
+                linkflags="-openmp",
+                uselib_store="openmp",
+                msg = "Checking for OpenMP"
+            )
+            
+            check_cxx(
+                cxxflags="-pthread",
+                linkflags="-pthread",
+                uselib_store="threads",
+                msg = "Checking for pthreads"
+            )
+        
         
         check_cxx(
             cxxflags="-g",
@@ -174,8 +222,8 @@ def configure(conf):
         try_options("gsl", gsl_options, gsl_common)
         
         check_cxx(
-            lib=["guide", "vml"],
-            header_name='mkl_vsl',
+            lib=["iomp", "vml"],
+            header_name='mkl_vsl.h',
             function_name='vslNewStream',
             uselib_store='mkl_vsl',
             msg = "Checking for Intel's Vector Math Library"
