@@ -232,6 +232,7 @@ def main(argv=None):
   globalNameSpace['templates'] = set()
   globalNameSpace['buildVariant'] = set()
   globalNameSpace['uselib'] = set()
+  globalNameSpace['bugReportAddress'] = 'xmds-devel@lists.sf.net'
   
   xpdeintDataCachePath = os.path.join(xpdeintUserDataPath, 'xpdeint_cache')
   dataCache = {}
@@ -334,7 +335,7 @@ def main(argv=None):
       if err.element:
         print >> sys.stderr, "    In element: " + err.element.userUnderstandableXPath()
       else:
-        print >> sys.stderr, "    Unknown element. Please report this error to xmds-devel@lists.sourceforge.net"
+        print >> sys.stderr, "    Unknown element. Please report this error to %s" % globalNameSpace['bugReportAddress']
     
     # If we have the debug option on, then in addition to the path to the XML element
     # that triggered the exception, print a traceback showing the list of Python function

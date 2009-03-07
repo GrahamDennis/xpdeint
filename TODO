@@ -146,3 +146,6 @@ Testcases needed:
   necessary. This will enable more general bases like (r, theta) -> (kr, m) so that nonsymmetric polar problems can be treated
   naturally. This will also permit the possibility of more than two representations for a given dimension, for example it 
   could be useful to have a Hermite-Gauss with x, nx and kx representations.
+  A 'basis' is an ordered list of dimensionRepresentations with possible local offsets for the dimReps. The dimReps should have
+  no notion of local offsets or local lattices. Each 'basis' has a unique identifying number, this becomes the equivalent of the
+  'space' number.

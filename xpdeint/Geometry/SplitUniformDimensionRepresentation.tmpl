@@ -9,6 +9,9 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 @def defines
   @#
   @super
+  @if $silent
+    @stop
+  @end if
   @#
 #define ${stepSize}        (2.0*M_PI/($_range))
 #define ${minimum}     (-(${globalLattice}/2) * ${stepSize})
@@ -16,28 +19,9 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
   @#
 @end def
 
-@def globals
-  @#
-  @super
-  @#
-  @if $hasLocalOffset
-ptrdiff_t $localLattice = 0;
-ptrdiff_t $localOffset = 0;
-  @end if
-  @#
-@end def
-
 @def openLoopMemoryOrder
   @#
-#define d${name} ${stepSize}
-$type $name = 0.0;
-  @if $hasLocalOffset
-if ($localOffset) {
-  $name += $localOffset * ${stepSize};
-  ${wrapCoordinateVariable, autoIndent=True}@slurp
-}
-  @end if
-
+#define ${name} ${arrayName}[${loopIndex} + ${localOffset}]
 #define d${name} ${stepSize}
 
 for (long ${loopIndex} = 0; ${loopIndex} < ${localLattice}; ${loopIndex}++) {
@@ -46,20 +30,15 @@ for (long ${loopIndex} = 0; ${loopIndex} < ${localLattice}; ${loopIndex}++) {
 
 @def closeLoopMemoryOrder
   @#
-  ${name} += ${stepSize};
-  ${wrapCoordinateVariable, autoIndent=True}@slurp
 }
+#undef ${name}
 #undef d${name}
   @#
 @end def
 
 @def openLoopAscending
   @#
-$type $name = ${minimum};
-  @if $hasLocalOffset
-#error "Cannot loop in k-space ascending order when the dimension is split with MPI (this error shouldn't be hit, please report it to xmds-devel@lists.sourceforge.net)"
-  @end if
-
+#define ${name} ${arrayName}[${loopIndex} + ${localOffset}]
 #define d${name} ${stepSize}
 
 for (long ${alternateLoopIndex} = -(${globalLattice}/2); ${alternateLoopIndex} < (${globalLattice} + 1)/2; ${alternateLoopIndex}++) {
@@ -71,16 +50,9 @@ for (long ${alternateLoopIndex} = -(${globalLattice}/2); ${alternateLoopIndex} <
 
 @def closeLoopAscending
   @#
-  ${name} += ${stepSize};
 }
+#undef ${name}
 #undef d${name}
-  @#
-@end def
-
-@def wrapCoordinateVariable
-  @#
-if ( ${name} > ((${globalLattice} - 1)/2 + 0.1) * ${stepSize})
-  ${name} -= ${globalLattice} * ${stepSize};
   @#
 @end def
 
@@ -112,6 +84,16 @@ lround(${name}/${stepSize}) + ${globalLattice}/2@slurp
 
 @def createCoordinateVariableForSinglePointSample
   @#
-  ${type} ${name} = 0.0;
+${type} ${name} = 0.0;
   @#
 @end def
+
+@def initialiseArray
+  @#
+for (long ${loopIndex} = 0; ${loopIndex} < (${globalLattice}+1)/2; ${loopIndex}++)
+  ${arrayName}[${loopIndex}] = ${loopIndex}*${stepSize};
+for (long ${loopIndex} = (${globalLattice}+1)/2; ${loopIndex} < ${globalLattice}; ${loopIndex}++)
+  ${arrayName}[${loopIndex}] = -(${globalLattice} - ${loopIndex}) * ${stepSize};
+  @#
+@end def
+

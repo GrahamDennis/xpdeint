@@ -51,6 +51,17 @@ class _Dimension(ScriptElement):
     children.extend([rep for rep in self.representations if rep])
     return children
   
+  def preflight(self):
+    # FIXME: DODGY. When we go to the 'basis' concept from the 'spaces' concept, this should go away
+    basisNameMap = dict([(rep.name, set()) for rep in self.representations if rep])
+    for rep in [rep for rep in self.representations if rep]:
+      basisNameMap[rep.name].add(rep)
+    for repName, repSet in basisNameMap.iteritems():
+      if len(repSet) > 1:
+        for rep in [rep for rep in repSet if not rep.hasLocalOffset]:
+          rep.silent = True
+    
+  
   @lazy_property
   def prefix(self):
     return self.parent.prefix

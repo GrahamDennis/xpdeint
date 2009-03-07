@@ -48,6 +48,8 @@ Options:  (Only Mathematica has been implemented)
   -r/--R:           optional, produce R output
   -p/--plot:        optional, generate plotting output (matlab/octave)
   -o/--outfile:     optional, alternate output file name (one input file only)
+  --debug:          Debug mode
+  
 
 For further help, please see http://www.xmds.org
 '''
@@ -79,7 +81,7 @@ def main(argv=None):
     argv = sys.argv
   try:
     try:
-      opts, args = getopt.gnu_getopt(argv[1:], "hmsaegrpo:", ["help", "matlab", "scilab", "mathmFive", "mathematica", "gnuplot", "R", "plot", "outfile="])
+      opts, args = getopt.gnu_getopt(argv[1:], "hmsaegrpo:", ["help", "matlab", "scilab", "mathmFive", "mathematica", "gnuplot", "R", "plot", "outfile=", "debug"])
     except getopt.error, msg:
       raise Usage(msg)
     
@@ -87,6 +89,16 @@ def main(argv=None):
     userSpecifiedFilename = None
     defaultExtension = None
     outputTemplateClass = MatlabImport
+    
+    optionList = [
+      ("-m", "--matlab", MatlabImport),
+      ("-s", "--scilab", ScilabImport),
+      ("-a", "--mathmFive", MathematicaFiveImport),
+      ("-e", "--mathematica", MathematicaImport),
+      ("-g", "--gnuplot", GnuplotImport),
+      ("-r", "--R", RImport),
+    ]
+    
     # option processing
     for option, value in opts:
       if option in ("-h", "--help"):
@@ -95,19 +107,12 @@ def main(argv=None):
         userSpecifiedFilename = value
       if option in ("-p", "--plot"):
         plotFlag = True
-      if option in ("-m", "--matlab"):
-        outputTemplateClass = MatlabImport
-      if option in ("-s", "--scilab"):
-        outputTemplateClass = ScilabImport
-      if option in ("-a", "--mathmFive"):
-        outputTemplateClass = MathematicaFiveImport
-      if option in ("-e", "--mathematica"):
-        outputTemplateClass = MathematicaImport
-      if option in ("-g", "--gnuplot"):
-        outputTemplateClass = GnuplotImport
-      if option in ("-r", "--R"):
-        outputTemplateClass = RImport
-        
+      if option == '--debug':
+        debug = True
+      for shortOpt, longOpt, importClass in optionList:
+        if option in (shortOpt, longOpt):
+          outputTemplateClass = importClass 
+    
     if userSpecifiedFilename and len(args) > 1:
       print >> sys.stderr, "The '-o' option cannot be used when processing multiple xsil files."
     if not args:
@@ -139,6 +144,8 @@ def main(argv=None):
       inputXSILFile = XSILFile(xsilInputName, loadData='ascii')
     except Exception, err:
       print >> sys.stderr, "Exception raised while trying to read xsil file:", err
+      if debug:
+        raise
       return
     
     # Now actually write the simulation to disk.

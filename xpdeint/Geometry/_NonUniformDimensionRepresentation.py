@@ -11,6 +11,22 @@ from xpdeint.Geometry.DimensionRepresentation import DimensionRepresentation
 from xpdeint.Utilities import lazy_property
 
 class _NonUniformDimensionRepresentation(DimensionRepresentation):
+  """
+  This class represents a dimension with non-uniform spacing. This corresponds
+  to two main possibilities.
+  
+  The first is the propagation dimension where each point in this dimension
+  corresponds to a time at which sampling occurred. This isn't necessarily
+  uniform.
+  
+  The second is a Gauss-Lobotto grid for a transverse dimension in the problem.
+  In this case, the points will not be equally spaced in order to optimise
+  integration across the dimension. Also, the 'step size' variable in this case
+  corresponds to the Gauss-Lobotto weight for each grid point and is not directly
+  related to the separation of two neighbouring grid points. This is perfectly
+  sensible as the step size is only used as a weight when integrating across
+  dimensions, which is exactly where the weight should be used.
+  """
   def __init__(self, **KWs):
     localKWs = self.extractLocalKWs(['stepSizeArray'], KWs)
     DimensionRepresentation.__init__(self, **KWs)
