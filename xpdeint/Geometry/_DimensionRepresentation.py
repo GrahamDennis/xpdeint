@@ -27,6 +27,7 @@ class _DimensionRepresentation(ScriptElement):
     self.type = localKWs['type']
     self.lattice = localKWs.get('lattice', 0)
     self._localVariablePrefix = localKWs.get('_localVariablePrefix')
+    self.silent = False
     
   
   def __eq__(self, other):
@@ -93,6 +94,10 @@ class _DimensionRepresentation(ScriptElement):
   @lazy_property
   def maximum(self):
     return self.prefix + '_max_' + self.name
+  
+  @lazy_property
+  def arrayName(self):
+    return self.prefix + '_' + self.name
   
   @lazy_property
   def stepSize(self):

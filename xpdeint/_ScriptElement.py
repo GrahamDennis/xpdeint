@@ -379,7 +379,7 @@ class _ScriptElement (Template):
       buildVariant = self.getVar('buildVariant')
       if buildVariant and not self.buildVariant in buildVariant:
         raise ParserException(self, "Internal Error. More than one build variant is trying to be used.\n"
-                                    "Please report this error to xmds-devel@lists.sourceforge.net\n")
+                                    "Please report this error to %s\n" % self.getVar('bugReportAddress'))
       buildVariant.add(self.buildVariant)
     
   

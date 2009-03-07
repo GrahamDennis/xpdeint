@@ -25,6 +25,18 @@ inline double XMDSSwapDouble(double __in);
 @end def
 
 @@callOnceGuard
+@def globals
+  @super
+  @#
+// This stuff is here because libxmds requires it.
+// That is because we need the XML parser in order to be able
+// to load XSIL files to initialise fields
+bool debugFlag = false;
+bool xmlDebugFlag =  false;
+  @#
+@end def
+
+@@callOnceGuard
 @def static_functionImplementations
   @#
   @super

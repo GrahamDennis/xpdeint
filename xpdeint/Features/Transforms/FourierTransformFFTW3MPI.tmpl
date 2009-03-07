@@ -110,7 +110,7 @@ if (   (${fieldMPIDim1.inSpace(0).localLattice} != ${firstMPIDim.inSpace(0).loca
     || (${fieldMPIDim2.inSpace($swappedSpace).localLattice} != ${secondMPIDim.inSpace($swappedSpace).localLattice})
     || (${fieldMPIDim2.inSpace($swappedSpace).localOffset} != ${secondMPIDim.inSpace($swappedSpace).localOffset})) {
   _LOG(_ERROR_LOG_LEVEL, "Local lattice/offset values returned for field '$field.name' aren't the same as the values for the full transform.\n"
-                         "Please report this error and the script that caused it to xmds-devel@lists.sourceforge.net\n"
+                         "Please report this error and the script that caused it to ${bugReportAddress}\n"
                          "Number of nodes: %i\n"
                          "${firstMPIDim.inSpace(0).localLattice}: %ti\n"
                          "${firstMPIDim.inSpace(0).localOffset}: %ti\n"

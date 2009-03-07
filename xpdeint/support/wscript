@@ -94,7 +94,7 @@ def configure(conf):
             compiler_optimisations = [
                 {
                     "msg": "Checking for the 'go fast' compiler option",
-                    "cxxflags": "-fast",
+                    "cxxflags": ["-fast", "-ffast-math"],
                 },
                 {
                     "msg": "Checking for fallback optimisation flags",

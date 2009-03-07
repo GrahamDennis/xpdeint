@@ -8,10 +8,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 
 @def description: output
 @attr $featureName = 'Output'
-@*
 
-  Function prototypes
-*@
 @def functionPrototypes
   @#
   @super
@@ -19,10 +16,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 void _write_output();
   @#
 @end def
-@*
 
-  Function implementations
-*@
 @def functionImplementations
   @#
   @super
@@ -36,19 +30,23 @@ void _write_output()
 {
   _LOG(_SIMULATION_LOG_LEVEL, "Generating output for ${simulationName}\n");
   
-  @set $featureOrdering = ['Driver']
+  @if not $momentGroups
+  _LOG(_SIMULATION_LOG_LEVEL, "Warning: No output moment groups.\n");
+  @else
+    @set $featureOrdering = ['Driver']
   ${insertCodeForFeatures('writeOutBegin', featureOrdering), autoIndent=True}@slurp
   
-  @set $args = {}
+    @set $args = {}
   ${outputFormat.writeOutSetup(args, c'"$filename"'), autoIndent=True}@slurp
   
-  @for $momentGroup in $momentGroups
+    @for $momentGroup in $momentGroups
   ${momentGroup.functions['writeOut'].call(args, _outfile = '_outfile')}
-  @end for
+    @end for
   
   ${outputFormat.writeOutTearDown, autoIndent=True}@slurp
   
   ${insertCodeForFeaturesInReverseOrder('writeOutEnd', featureOrdering), autoIndent=True}@slurp
+  @end if
 }
 @end def
 
