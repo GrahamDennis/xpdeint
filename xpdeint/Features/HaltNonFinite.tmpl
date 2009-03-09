@@ -32,8 +32,8 @@ ${separator}!isfinite(_active_${integrationVector.id}[0]${suffix})@slurp
   // One of the integration vectors has gone non-finite.
   // Sample any moment groups that have pending samples,
   // then leave the integrator.
-  _LOG(_WARNING_LOG_LEVEL, "WARNING: halt_non_finite: Integration halted.\n"
-                           "         Non-finite number in integration vector in segment ${integrator.segmentNumber}.\n");
+  _LOG(_WARNING_LOG_LEVEL, "WARNING: halt_non_finite: Integration halted at ${integrator.propagationDimension} = %e.\n"
+                           "         Non-finite number in integration vector in segment ${integrator.segmentNumber}.\n", $propagationDimension);
   
   ${integrator.earlyTerminationCode, autoIndent=True}@slurp
 }
