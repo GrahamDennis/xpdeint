@@ -17,7 +17,7 @@
     <globals>
       <![CDATA[
       const double x0 = 1.0;
-      const double t0 = 1.0;
+      const double t0 = 1.0123456789;
       ]]>
     </globals>
   </features>
