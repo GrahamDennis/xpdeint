@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
   <testing>
+    <command_line>mpirun -n 3 ./mpi_xsilloading</command_line>
     <input_xsil_file name="breakpoints_kspace_expected.xsil" />
     <input_xsil_file name="breakpoints_mixed_space2_expected.xsil" />
-    <xsil_file name="xsilloading.xsil" expected="xsilloading_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="mpi_xsilloading.xsil" expected="xsilloading_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
   </testing>
   
-  <name>xsilloading</name>
+  <name>mpi_xsilloading</name>
   <author>Graham Dennis</author>
   <description>
     Test loading xsil files in various spaces
@@ -15,6 +16,8 @@
   <features>
     <fftw plan="estimate" />
   </features>
+  
+  <driver name="distributed-mpi" />
   
   <geometry>
     <propagation_dimension> t </propagation_dimension>
