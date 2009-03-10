@@ -25,8 +25,8 @@
     </stochastic>
   </features>
   
-  <vector name="main">
-    <components type="complex">
+  <vector name="main" type="complex">
+    <components>
       z
     </components>
     <initialisation noises="">
@@ -41,7 +41,6 @@
       <samples>500 </samples>
       <operators noises="n">
         <integration_vectors>main</integration_vectors>
-        <dependencies>0d_noise</dependencies>
         <![CDATA[
           dz_dt = i*z*n_1;
         ]]>
@@ -55,8 +54,7 @@
         <moments>zR zI</moments>
         <dependencies>main 0d_noise</dependencies>
         <![CDATA[
-          zR = z.re;
-          zI = z.im;
+          _SAMPLE_COMPLEX(z);
         ]]>
       </sampling>
     </group>

@@ -70,11 +70,11 @@
       <dependencies>potential</dependencies>
       <![CDATA[
         phi1 = phi0 = 0.0;
-        if (eta*mu - V.re > 0.0) {
-          phi1 = sqrt((eta*mu - V.re)/Uint);
+        if (eta*mu - V.real() > 0.0) {
+          phi1 = sqrt((eta*mu - V.real())/Uint);
         }
-        if ((1.0-eta)*mu - V.re > 0.0) {
-          phi0 = sqrt(((1.0-eta)*mu - V.re)/Uint);
+        if ((1.0-eta)*mu - V.real() > 0.0) {
+          phi0 = sqrt(((1.0-eta)*mu - V.real())/Uint);
         }
       ]]>
     </initialisation>

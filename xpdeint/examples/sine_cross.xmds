@@ -110,10 +110,10 @@
         <moments>error_u error_v error_w error_x</moments>
         <dependencies>cross</dependencies>
         <![CDATA[
-          error_u = mod(u - sin(t));
-          error_v = mod(v - pcomplex(1.0, t));
-          error_w = mod(w - pcomplex(1.0, t));
-          error_x = mod(x - pcomplex(1.0, t));
+          error_u = abs(u - sin(t));
+          error_v = abs(v - polar(1.0, t));
+          error_w = abs(w - polar(1.0, t));
+          error_x = abs(x - polar(1.0, t));
         ]]>
       </sampling>
     </group>

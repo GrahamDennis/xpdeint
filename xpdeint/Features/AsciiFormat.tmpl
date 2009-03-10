@@ -78,7 +78,7 @@ fprintf($fp, "@slurp
       @if $variable.vector.type == 'double'
 , ${variable.arrayName}[_${variable.vector.id}_index_pointer + ${componentNumber}]@slurp
       @else
-, ${variable.arrayName}[_${variable.vector.id}_index_pointer + ${componentNumber}].re, ${variable.arrayName}[_${variable.vector.id}_index_pointer + ${componentNumber}].im@slurp
+, ${variable.arrayName}[_${variable.vector.id}_index_pointer + ${componentNumber}].real(), ${variable.arrayName}[_${variable.vector.id}_index_pointer + ${componentNumber}].imag()@slurp
       @end if
     @end for
   @end for

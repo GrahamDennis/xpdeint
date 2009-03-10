@@ -3,13 +3,6 @@
   * Implement noise vectors
   * Fix given recent discovery of limitations
 
-* Write a front-end to auto-configure preference file.
-  For reading the preferences file, look into using the Python module
-  ConfigParser. It seems to be part of the standard distribution.
-  For a more complete list of options for this, see http://wiki.python.org/moin/ConfigParserShootout
-    Other ideas for later persual:
-      SCons (http://www.scons.org) / Cons / pkg-config
-
 * Add ASCII/binary vector initialisation options
 
 * Add the ability to distribute stochastic simulations using MPI with the scheduling method
@@ -54,11 +47,6 @@
 * Check that all bug fixes to xmds-1 since September 1, 2007 have been added to xpdeint. In particular, I don't think the changes to the adaptive
   step error-calculation routine have been made.
   
-* Fix XSIL import to not depend on libxmds, or do something equivalent.
-  - The something equivalent that we will do is support loading of HDF5 files.
-    I do not plan on replacing libxmds. If someone wants to load binary XSIL data,
-    they can have xmds-1 installed or HDF5 installed.
-
 * Add a 'moment group 0' which contains simulation constants. This moment group would be zero-d and would contain various constants depending on the
   exact simulation. Constants that should be included are: the final value of the propagation dimension, any passed-in arguments, the number of paths
   (if appropriate), and anything else appropriate.
@@ -149,3 +137,9 @@ Testcases needed:
   A 'basis' is an ordered list of dimensionRepresentations with possible local offsets for the dimReps. The dimReps should have
   no notion of local offsets or local lattices. Each 'basis' has a unique identifying number, this becomes the equivalent of the
   'space' number.
+
+* Fix Linux testsuite failures
+
+* Permit single-precision simulations.
+
+* Loose geometry matching mode for HDF5.

@@ -124,7 +124,7 @@ double _segment${segmentNumber}_${vector.id}_timestep_error(${vector.type}* _che
       return 2.0*${tolerance};
     _cutoff[_i0] *= ${cutoff};
     @if $vector.type == 'complex'
-      @# multiply again because we are using mod2 for our complex vector and the cutoff should be interpreted in terms of
+      @# multiply again because we are using norm for our complex vector and the cutoff should be interpreted in terms of
       @# the absolute magnitude of the variables, not the mod-square
     _cutoff[_i0] *= ${cutoff};
     @end if
@@ -157,7 +157,7 @@ for (long _i1 = 0; _i1 < _${vector.id}_ncomponents; _i1++) {
   @if $vector.type == 'complex'
     @set $modFunction = 'mod2'
   @else
-    @set $modFunction = 'fabs'
+    @set $modFunction = 'abs'
   @end if
   _temp_mod = ${modFunction}(_${vector.id}[_${vector.id}_index_pointer + _i1]);
   if (!isfinite(_temp_mod))
@@ -175,7 +175,7 @@ for (long  _i1 = 0; _i1 < _${vector.id}_ncomponents; _i1++) {
   @if $vector.type == 'complex'
     @set $modCutoffFunction = 'mod2'
   @else
-    @set $modCutoffFunction = 'fabs'
+    @set $modCutoffFunction = 'abs'
   @end if
   @if len($vector.field.dimensions) > 0
   if (${modCutoffFunction}(_${vector.id}[_${vector.id}_index_pointer + _i1]) > _cutoff[_i1]) {
@@ -191,12 +191,7 @@ for (long  _i1 = 0; _i1 < _${vector.id}_ncomponents; _i1++) {
 
 @def updateMaximumError($vector)
   @#
-  @if $vector.type == 'complex'
-    @set $modErrorFunction  = 'mod'
-  @else
-    @set $modErrorFunction  = 'fabs'
-  @end if
-_temp_error = ${modErrorFunction}(_${vector.id}[_${vector.id}_index_pointer + _i1] - _checkfield[_${vector.id}_index_pointer + _i1]) / (0.5*${modErrorFunction}(_${vector.id}[_${vector.id}_index_pointer + _i1]) + 0.5*${modErrorFunction}(_checkfield[_${vector.id}_index_pointer + _i1]));
+_temp_error = abs(_${vector.id}[_${vector.id}_index_pointer + _i1] - _checkfield[_${vector.id}_index_pointer + _i1]) / (0.5*abs(_${vector.id}[_${vector.id}_index_pointer + _i1]) + 0.5*abs(_checkfield[_${vector.id}_index_pointer + _i1]));
 
 if (_error < _temp_error)
   _error = _temp_error;

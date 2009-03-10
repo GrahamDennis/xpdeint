@@ -64,15 +64,15 @@
         ]]>
       </operators>
     </integrate>
-    <!-- <breakpoint filename="fibre_integer_dimensions_mpi_xspace_hdf5.xsil" format='hdf5'>
+    <breakpoint filename="fibre_integer_dimensions_mpi_xspace_hdf5.xsil" format='hdf5'>
       <dependencies>main</dependencies>
-    </breakpoint> -->
+    </breakpoint>
     <breakpoint filename="fibre_integer_dimensions_mpi_xspace.xsil" format='binary'>
       <dependencies>main</dependencies>
     </breakpoint>
-    <!-- <breakpoint filename="fibre_integer_dimensions_mpi_kspace_hdf5.xsil" format='hdf5'>
+    <breakpoint filename="fibre_integer_dimensions_mpi_kspace_hdf5.xsil" format='hdf5'>
       <dependencies fourier_space="j kx">main</dependencies>
-    </breakpoint> -->
+    </breakpoint>
     <breakpoint filename="fibre_integer_dimensions_mpi_kspace.xsil" format='binary'>
       <dependencies fourier_space="j kx">main</dependencies>
     </breakpoint>

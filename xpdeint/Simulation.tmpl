@@ -50,8 +50,7 @@ Copyright (c) 2007-2008 __MyCompanyName__. All rights reserved.
 // simulation includes
 
 #include <xpdeint_platform.h>
-#include <math.h>
-#include <string.h>
+#include <cmath>
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -73,6 +72,16 @@ ${result}@slurp
 
   @end if
 @end for
+
+#define complex Complex
+#include <complex>
+#undef complex
+
+typedef std::Complex<${precision}> complex;
+typedef ${precision} real;
+
+const complex i(0.0, 1.0);
+
 #include <xpdeint.h>
 
 using namespace std;

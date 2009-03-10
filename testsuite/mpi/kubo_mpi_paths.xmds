@@ -55,8 +55,8 @@
         <moments>zR zI</moments>
         <dependencies>main</dependencies>
         <![CDATA[
-          zR = z.re;
-          zI = z.im;
+          zR = z.real();
+          zI = z.imag();
         ]]>
       </sampling>
     </group>

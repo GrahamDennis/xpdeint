@@ -633,7 +633,7 @@
   #elif CFG_COMPILER == CFG_COMPILER_MSVC
     #pragma message("Warning: lrint() not natively supported, replacing with slow alternative.")
   #endif
-  #include <math.h>
+  // #include <math.h>
   inline long int lrint(double x) { return static_cast<long int>(floor(x + 0.5)); }
 #endif
 
@@ -643,7 +643,7 @@
   #elif CFG_COMPILER == CFG_COMPILER_MSVC
     #pragma message("Warning: lrintf() not natively supported, replacing with slow alternative.")
   #endif
-  #include <math.h>
+  // #include <math.h>
   inline long int lrintf(float x) { return static_cast<long int>(floorf(x + 0.5f)); }
 #endif
 
