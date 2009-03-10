@@ -58,7 +58,7 @@
       <dependencies fourier_space="y">wavefunction</dependencies>
       <![CDATA[
         // Calculate the current normalisation of the wave function.
-        Ncalc = mod2(phi);
+        Ncalc = norm(phi);
       ]]>
     </evaluation>
   </computed_vector>
@@ -100,7 +100,7 @@
         <moments>dens</moments>
         <dependencies>wavefunction</dependencies>
         <![CDATA[
-          dens = mod2(phi);
+          dens = norm(phi);
         ]]>
       </sampling>
     </group>
@@ -119,7 +119,7 @@
         <dimension name="y" lattice="0" />
         <dependencies>wavefunction</dependencies>
         <![CDATA[
-          N = mod2(phi);
+          N = norm(phi);
         ]]>
       </sampling>
     </group>

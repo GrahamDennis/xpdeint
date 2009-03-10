@@ -110,7 +110,7 @@
         <moments>amp</moments>
         <dependencies>main</dependencies>
         <![CDATA[
-          amp = u;
+          amp = u.real();
         ]]>
       </sampling>
     </group>
@@ -125,7 +125,7 @@
         <moments>amp</moments>
         <dependencies>main</dependencies>
         <![CDATA[
-          amp = u;
+          amp = u.real();
         ]]>
       </sampling>
     </group>

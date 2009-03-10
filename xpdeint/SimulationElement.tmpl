@@ -20,11 +20,6 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 #define INFINITY HUGE_VAL
 #endif
 
-// Define an isfinite that should work on systems that don't have isfinite
-#ifndef isfinite
-#define isfinite(x) ((x) - (x) == 0)
-#endif
-
 #ifndef MAX
 #define MAX(a, b) \
   ({ typeof(a) _a = (a); \

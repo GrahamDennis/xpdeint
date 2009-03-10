@@ -79,7 +79,7 @@
               // cross-propagators. For normal cross-propagators, they start at the left edge
               // for SIC, they start half a step to the left (or right).
               u = sin(-0.5*_dt);
-              v = pcomplex(1.0, -0.5*_dt);
+              v = polar(1.0, -0.5*_dt);
             ]]>
           </boundary_condition>
           
@@ -103,8 +103,8 @@
         <moments>error_u error_v</moments>
         <dependencies>cross</dependencies>
         <![CDATA[
-          error_u = mod(u - sin(t));
-          error_v = mod(v - pcomplex(1.0, t));
+          error_u = abs(u - sin(t));
+          error_v = abs(v - polar(1.0, t));
         ]]>
       </sampling>
     </group>

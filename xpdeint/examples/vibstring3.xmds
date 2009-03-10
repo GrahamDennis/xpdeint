@@ -145,8 +145,8 @@
         <moments>momR momentR</moments>
         <dependencies>integrated_u filter1</dependencies>
         <![CDATA[
-          momR = mom;
-          momentR = moment;
+          momR = mom.real();
+          momentR = moment.real();
         ]]>
       </sampling>
     </group>

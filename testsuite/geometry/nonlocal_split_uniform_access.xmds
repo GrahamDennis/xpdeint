@@ -43,7 +43,7 @@
     </components>
     <initialisation>
       <![CDATA[
-        u = exp(-100.0*(x-0.5)*(x-0.5))*c_exp(i*200*x);
+        u = exp(-100.0*(x-0.5)*(x-0.5))*exp(i*200*x);
         uDot = u*i*200*sqrt(T_mu);
       ]]>
     </initialisation>

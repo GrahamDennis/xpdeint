@@ -57,7 +57,7 @@
         <moments>xR</moments>
         <dependencies>main</dependencies>
         <![CDATA[
-          xR = x;
+          xR = x.real();
         ]]>
       </sampling>
     </group>

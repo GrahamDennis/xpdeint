@@ -98,7 +98,7 @@
         <moments>amp</moments>
         <dependencies>main</dependencies>
         <![CDATA[
-          amp = u;
+          amp = real(u);
         ]]>
       </sampling>
     </group>

@@ -402,9 +402,9 @@ if (_isPrecisionDouble) {
 _active_${vector.id}[_${vector.id}_index_pointer + _component] = _value;
   @else
 if (_component & 1)
-  _active_${vector.id}[_${vector.id}_index_pointer + _component/2].im = _value;
+  _active_${vector.id}[_${vector.id}_index_pointer + _component/2].imag() = _value;
 else
-  _active_${vector.id}[_${vector.id}_index_pointer + _component/2].re = _value;
+  _active_${vector.id}[_${vector.id}_index_pointer + _component/2].real() = _value;
   @end if
   
 _ENDLOOP:

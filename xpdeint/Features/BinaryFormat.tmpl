@@ -186,11 +186,11 @@ if (fwrite(&${variable.arrayName}[_${variable.vector.id}_index_pointer + _compon
 }
   @else
 if (_component & 1) {
-  if (fwrite(&${variable.arrayName}[_${variable.vector.id}_index_pointer + _component/2].im, sizeof(double), 1, fpBinary) != 1) {
+  if (fwrite(&${variable.arrayName}[_${variable.vector.id}_index_pointer + _component/2].imag(), sizeof(double), 1, fpBinary) != 1) {
     _LOG(_ERROR_LOG_LEVEL, "Error writing output data.\n");
   }
 } else {
-  if (fwrite(&${variable.arrayName}[_${variable.vector.id}_index_pointer + _component/2].re, sizeof(double), 1, fpBinary) != 1) {
+  if (fwrite(&${variable.arrayName}[_${variable.vector.id}_index_pointer + _component/2].real(), sizeof(double), 1, fpBinary) != 1) {
     _LOG(_ERROR_LOG_LEVEL, "Error writing output data.\n");
   }
 }

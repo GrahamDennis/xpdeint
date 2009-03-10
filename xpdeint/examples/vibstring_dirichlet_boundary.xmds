@@ -92,7 +92,7 @@
         <moments>amp</moments>
         <dependencies>main</dependencies>
         <![CDATA[
-          amp = u;
+          amp = u.real();
         ]]>
       </sampling>
     </group>
@@ -102,10 +102,10 @@
         <moments>uR uI uDotR uDotI</moments>
         <dependencies>main</dependencies>
         <![CDATA[
-          uR = u.re;
-          uI = u.im;
-          uDotR = uDot.re;
-          uDotI = uDot.im;
+          uR = u.real();
+          uI = u.imag();
+          uDotR = uDot.real();
+          uDotI = uDot.imag();
         ]]>
       </sampling>
     </group>

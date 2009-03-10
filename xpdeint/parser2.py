@@ -230,6 +230,7 @@ def main(argv=None):
   globalNameSpace['xmds'] = {'versionString': versionString,
                              'subversionRevision': subversionRevisionString}
   globalNameSpace['templates'] = set()
+  globalNameSpace['precision'] = 'double'
   globalNameSpace['buildVariant'] = set()
   globalNameSpace['uselib'] = set()
   globalNameSpace['bugReportAddress'] = 'xmds-devel@lists.sf.net'

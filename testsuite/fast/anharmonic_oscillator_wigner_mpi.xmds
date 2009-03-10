@@ -80,7 +80,7 @@
     <evaluation>
       <dependencies>evens trig</dependencies>
       <![CDATA[
-        WE = hE.re*cos_me + hE.im*sin_me;
+        WE = hE.real()*cos_me + hE.imag()*sin_me;
       ]]>
     </evaluation>
   </computed_vector>
@@ -90,7 +90,7 @@
     <evaluation>
       <dependencies>odds trig</dependencies>
       <![CDATA[
-        WO = hO.re*cos_mo + hO.im*sin_mo;
+        WO = hO.real()*cos_mo + hO.imag()*sin_mo;
       ]]>
     </evaluation>
   </computed_vector>

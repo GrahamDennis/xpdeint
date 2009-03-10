@@ -12,7 +12,7 @@
 
 #include "randpool.h"
 #include "ziggurat.h"
-#include <math.h>
+// #include <math.h>
 #include <string>
 #include <vector>
 
