@@ -241,9 +241,9 @@
         <![CDATA[
           dens1 = mod2(phi1);
           densm1 = mod2(phim1);
-          phi1re = real(phi1);
+          phi1re = Re(phi1);
           dens0 = mod2(phi0);
-          phi1im = imag(phi1);
+          phi1im = Im(phi1);
         ]]>
       </sampling>
     </group>
@@ -291,8 +291,8 @@
         </operator>       
         <dependencies>wavefunction potential spins dipoles</dependencies>
         <![CDATA[
-          E1OnHbarRe =  real(conj(phi1)*(T2[phi1] + (-VtrapOnHbar)*phi1 -c0OnHbar*S0*phi1 -c2OnHbar*(Sz*phi1 + Sminus*phi0) +gamma1B*phi1 -cdOnHbar*(phi1*Dz + phi0*Dminus)));
-          E1OnHbarIm =  imag(conj(phi1)*(T2[phi1] + (-VtrapOnHbar)*phi1 -c0OnHbar*S0*phi1 -c2OnHbar*(Sz*phi1 + Sminus*phi0) +gamma1B*phi1 -cdOnHbar*(phi1*Dz + phi0*Dminus)));
+          E1OnHbarRe =  Re(conj(phi1)*(T2[phi1] + (-VtrapOnHbar)*phi1 -c0OnHbar*S0*phi1 -c2OnHbar*(Sz*phi1 + Sminus*phi0) +gamma1B*phi1 -cdOnHbar*(phi1*Dz + phi0*Dminus)));
+          E1OnHbarIm =  Im(conj(phi1)*(T2[phi1] + (-VtrapOnHbar)*phi1 -c0OnHbar*S0*phi1 -c2OnHbar*(Sz*phi1 + Sminus*phi0) +gamma1B*phi1 -cdOnHbar*(phi1*Dz + phi0*Dminus)));
         ]]>
       </sampling>
     </group>    
