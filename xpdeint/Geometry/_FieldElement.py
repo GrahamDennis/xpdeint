@@ -185,7 +185,7 @@ class _FieldElement (ScriptElement):
     result = []
     separator = ''
     result.append('(')
-    for rep in filter(lambda x: x.type == 'double', reps):
+    for rep in filter(lambda x: x.type == 'real', reps):
       result.extend([separator, rep.stepSize])
       separator = ' * '
     result.append(')')

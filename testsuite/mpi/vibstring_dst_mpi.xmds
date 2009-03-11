@@ -18,14 +18,14 @@
     <openmp />
     <globals>
       <![CDATA[
-      const double T = 10.0;
-      const double mass = 1e-3;
-      const double length = 1.0;
-      const double mu = mass/length;
+      const real T = 10.0;
+      const real mass = 1e-3;
+      const real length = 1.0;
+      const real mu = mass/length;
       
-      const double xmax = _xy_max_x;
-      const double width = 0.1;
-      const double absorb = 80.0;
+      const real xmax = _xy_max_x;
+      const real width = 0.1;
+      const real absorb = 80.0;
       ]]>
     </globals>
   </features>
@@ -40,7 +40,7 @@
   
   <driver name="distributed-mpi" />
   
-  <vector name="main" initial_space="x y" type="double">
+  <vector name="main" initial_space="x y" type="real">
     <components>
       u uDot
     </components>

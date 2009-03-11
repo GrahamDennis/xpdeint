@@ -107,8 +107,8 @@ class _IPOperator(Operator):
       else:
         self.operatorComponents[operatorName][targetVector].append(componentName)
       
-      if targetVector.type == 'double':
-        self.operatorVector.type = 'double'
+      if targetVector.type == 'real':
+        self.operatorVector.type = 'real'
       
       
       # Check the sanity of the integration code.

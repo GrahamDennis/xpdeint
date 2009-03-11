@@ -15,18 +15,18 @@
     <!-- <openmp /> -->
     <globals>
       <![CDATA[
-        const double omegaz = 2*M_PI*20;
-        const double omegarho = 2*M_PI*200;
-        const double hbar = 1.05457148e-34;
-        const double M = 1.409539200000000e-25;
-        const double g = 9.8;
-        const double scatteringLength = 5.57e-9;
-        const double transverseLength = 1e-5;
-        const double Uint = 4.0*M_PI*hbar*hbar*scatteringLength/M/transverseLength/transverseLength;
-        const double Nparticles = 5.0e5;
+        const real omegaz = 2*M_PI*20;
+        const real omegarho = 2*M_PI*200;
+        const real hbar = 1.05457148e-34;
+        const real M = 1.409539200000000e-25;
+        const real g = 9.8;
+        const real scatteringLength = 5.57e-9;
+        const real transverseLength = 1e-5;
+        const real Uint = 4.0*M_PI*hbar*hbar*scatteringLength/M/transverseLength/transverseLength;
+        const real Nparticles = 5.0e5;
 
         /* offset constants */
-        const double EnergyOffset = pow(pow(3.0*Nparticles/4*omegarho*Uint,2.0)*M/2.0,1/3.0); // 1D
+        const real EnergyOffset = pow(pow(3.0*Nparticles/4*omegarho*Uint,2.0)*M/2.0,1/3.0); // 1D
 
       ]]>
     </globals>
@@ -45,7 +45,7 @@
     </components>
     <initialisation>
       <![CDATA[
-        double Vtrap = 0.5*M*(omegarho*omegarho*y*y);
+        real Vtrap = 0.5*M*(omegarho*omegarho*y*y);
       
         V1  = -i/hbar*(Vtrap - EnergyOffset);
       
@@ -68,8 +68,8 @@
         }
       
         // This was the sensible initial state
-        // double E = pow(pow(3.0*Nparticles/4*omegarho*Uint,2.0)*M/2.0,1/3.0);
-        // double magnitudeSq = (E - 0.5*M*(omegarho*omegarho*y*y))/Uint;
+        // real E = pow(pow(3.0*Nparticles/4*omegarho*Uint,2.0)*M/2.0,1/3.0);
+        // real magnitudeSq = (E - 0.5*M*(omegarho*omegarho*y*y))/Uint;
         // if (magnitudeSq > 0.0)
         //   phi = sqrt(magnitudeSq);
         // else
@@ -79,7 +79,7 @@
     </initialisation>
   </vector>
   
-  <computed_vector name="normalisation" dimensions="" type="double">
+  <computed_vector name="normalisation" dimensions="" type="real">
     <components>
       Ncalc
     </components>

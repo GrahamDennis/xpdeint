@@ -67,7 +67,7 @@ class _Transform (ScriptElement):
   
   def newDimension(self, name, lattice, minimum, maximum,
                    parent, transformName, aliases = set(),
-                   type = 'double', xmlElement = None):
+                   type = 'real', xmlElement = None):
     dim = _Dimension(name = name, transform = self, aliases = aliases, parent = parent, xmlElement = xmlElement,
                      **self.argumentsToTemplateConstructors)
     return dim

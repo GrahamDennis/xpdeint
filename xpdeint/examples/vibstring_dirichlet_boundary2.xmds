@@ -13,13 +13,13 @@
     <openmp />
     <globals>
       <![CDATA[
-      const double T = 10.0;
-      const double mass = 1e-3;
-      const double length = 1.0;
-      const double mu = mass/length;
+      const real T = 10.0;
+      const real mass = 1e-3;
+      const real length = 1.0;
+      const real mu = mass/length;
       
-      const double xmax = _x_max_x;
-      const double width = 0.1;
+      const real xmax = _x_max_x;
+      const real width = 0.1;
       ]]>
     </globals>
   </features>
@@ -40,14 +40,14 @@
     </initialisation>
   </vector>
   
-  <vector name="boundary" initial_space="x" type="double">
+  <vector name="boundary" initial_space="x" type="real">
     <components>
       bc
     </components>
     <initialisation>
       <![CDATA[
-        double r = fabs(x);
-        double rright = xmax-width;
+        real r = fabs(x);
+        real rright = xmax-width;
 
         if ( r > rright)
           bc = 0.0;
@@ -89,7 +89,7 @@
         <moments>amp</moments>
         <dependencies>main</dependencies>
         <![CDATA[
-          amp = u.real();
+          amp = u.Re();
         ]]>
       </sampling>
     </group>

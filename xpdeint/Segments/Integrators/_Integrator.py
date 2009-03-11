@@ -41,7 +41,7 @@ class _Integrator (_Segment):
     functionNamePrefix = '_' + self.id
     
     self.functions['deltaA'] = Function(name = functionNamePrefix + '_calculate_delta_a',
-                                        args = [('double', '_step')], 
+                                        args = [('real', '_step')], 
                                         implementation = self.deltaAFunctionBody,
                                         returnType = 'inline void')
     
@@ -51,7 +51,7 @@ class _Integrator (_Segment):
                                           returnType = 'inline void')
     
     self.functions['nonconstantIPFields'] = Function(name = functionNamePrefix + '_calculate_nonconstant_ip_fields',
-                                                     args = [('double', '_step'), ('int', '_exponent'), ('int', '_arrayIndex')],
+                                                     args = [('real', '_step'), ('int', '_exponent'), ('int', '_arrayIndex')],
                                                      implementation = self.nonconstantIPFieldsFunctionBody,
                                                      returnType = 'inline void')
     
@@ -161,7 +161,7 @@ class _Integrator (_Segment):
     for oc in chain(self.stepStartOperatorContainers, self.stepEndOperatorContainers):
       for op in oc.operators:
         evaluateFunction = op.functions['evaluate']
-        if not ('double', '_step') in evaluateFunction.args:
-          evaluateFunction.args.append(('double', '_step'))
+        if not ('real', '_step') in evaluateFunction.args:
+          evaluateFunction.args.append(('real', '_step'))
     
   

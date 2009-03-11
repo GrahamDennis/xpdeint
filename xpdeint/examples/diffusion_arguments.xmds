@@ -17,19 +17,19 @@
     <validation kind="run-time"/>
     <globals>
       <![CDATA[
-      double minx;
-      double maxx;
-      double miny;
-      double maxy;
-      double width;
-      double time_interval;
+      real minx;
+      real maxx;
+      real miny;
+      real maxy;
+      real width;
+      real time_interval;
       ]]>
     </globals>
     <arguments>
-      <argument name="size" type="double" default_value="20.0"/>
-      <argument name="ratio" type="double" default_value="0.1"/>
-      <argument name="width_factor" type="double" default_value="1.0"/>
-      <argument name="time_factor" type="double" default_value="1.0"/>
+      <argument name="size" type="real" default_value="20.0"/>
+      <argument name="ratio" type="real" default_value="0.1"/>
+      <argument name="width_factor" type="real" default_value="1.0"/>
+      <argument name="time_factor" type="real" default_value="1.0"/>
       <![CDATA[
       minx = -0.5*size;
       maxx = 0.5*size;

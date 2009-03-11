@@ -42,7 +42,7 @@ hid_t dataset_${dimRep.name} = H5Dopen(hdf5_file, "${groupName}/${dimRep.name}")
 hid_t dataspace_${dimRep.name} = H5Dget_space(dataset_${dimRep.name});
 file_dims[$dimNum] = H5Sget_simple_extent_npoints(dataspace_${dimRep.name});
 ${dimRep.type}* ${dimRep.name}_inputdata = (${dimRep.type}*)xmds_malloc(H5Sget_simple_extent_npoints(dataspace_${dimRep.name}) * sizeof(${dimRep.type}));
-    @set $dataType = {'double': 'H5T_NATIVE_DOUBLE', 'long': 'H5T_NATIVE_LONG'}[$dimRep.type]
+    @set $dataType = {'real': 'H5T_NATIVE_' + $precision.upper(), 'long': 'H5T_NATIVE_LONG'}[$dimRep.type]
 H5Dread(dataset_${dimRep.name}, $dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, ${dimRep.name}_inputdata);
     @if not isinstance(dimRep, NonUniformDimensionRepresentation)
       @set $dimArrayName = c'${dimRep.name}_data'
@@ -75,7 +75,7 @@ for (long _i0 = 0; _i0 < ${dimRep.globalLattice}-1; _i0++) {
 hid_t file_dataspace;
 file_dataspace = H5Screate_simple(${len(field.dimensions)}, file_dims, NULL);
   @for variable in variables
-    @if $variable.vector.type == 'double'
+    @if $variable.vector.type == 'real'
       @set $variable['separatedComponents'] = list(enumerate($variable.components))
     @else
       @set $components = []

@@ -23,7 +23,7 @@ if (@slurp
     @set $suffix = ''
     @if integrationVector.type == 'complex'
       @# Check the real component
-      @set $suffix = '.real()'
+      @set $suffix = '.Re()'
     @end if
 ${separator}!isfinite(_active_${integrationVector.id}[0]${suffix})@slurp
     @set $separator = ' || '

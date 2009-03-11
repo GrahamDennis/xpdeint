@@ -24,26 +24,26 @@
 	<globals>
 		<![CDATA[
 		/*constants*/
-			const double hbar = 1.054e-34;
-			const double massRb = 1.44316e-25;
-			const double c0OnHbar = 5.16891e-51/hbar; 		//for Rb-87
-			const double c2OnHbar = -2.38868e-53/hbar;         
+			const real hbar = 1.054e-34;
+			const real massRb = 1.44316e-25;
+			const real c0OnHbar = 5.16891e-51/hbar; 		//for Rb-87
+			const real c2OnHbar = -2.38868e-53/hbar;         
 
-      const double cd = 2.1501769e-54;  // =mu0 * muB^2 *Gf^2 / 4pi --> this is for rubidium 
-      const double cdOnHbar = 2.1501769e-54/hbar;  // =mu0 * muB^2 *Gf^2 / 4pi --> this is for rubidium 
-      const double gamma1 = 4.39943e10;
+      const real cd = 2.1501769e-54;  // =mu0 * muB^2 *Gf^2 / 4pi --> this is for rubidium 
+      const real cdOnHbar = 2.1501769e-54/hbar;  // =mu0 * muB^2 *Gf^2 / 4pi --> this is for rubidium 
+      const real gamma1 = 4.39943e10;
 	
-			const double Sqrt2 = pow(2.0, 0.5); 			
-			const double a3dSqrt2 = 3.0/pow(2.0, 0.5); 
-			const double Pi = 3.141592654;   
+			const real Sqrt2 = pow(2.0, 0.5); 			
+			const real a3dSqrt2 = 3.0/pow(2.0, 0.5); 
+			const real Pi = 3.141592654;   
 
       /*experimental variables*/
-			const double ratio = 1.0/40.0;
-			const double omegap = 2*3.141592654*3000;
-			const double N0 = 1.0e5;                  //Note this change
-			const double B = 73.0e-7;        
-			const double gamma1B = gamma1*B;
-			const double muOnHbar = 0.0*24411.0;
+			const real ratio = 1.0/40.0;
+			const real omegap = 2*3.141592654*3000;
+			const real N0 = 1.0e5;                  //Note this change
+			const real B = 73.0e-7;        
+			const real gamma1B = gamma1*B;
+			const real muOnHbar = 0.0*24411.0;
 		]]>
     </globals>  
   </features>
@@ -76,7 +76,7 @@
     </initialisation>
   </vector>
   
-  <vector name="potential" type="double">
+  <vector name="potential" type="real">
     <components>
       VtrapOnHbar
     </components>
@@ -130,7 +130,7 @@
     <components>DA DB DC DCstar DE DEstar</components>
     <initialisation>
       <![CDATA[
-        double Ksqd = kx*kx + ky*ky + kz*kz;
+        real Ksqd = kx*kx + ky*ky + kz*kz;
         DA = Ksqd<1.0      ?     0.0*i     :     -4*Pi/3 * (1 - 3 * kz*kz /Ksqd) + 0.0*i;
         DB = Ksqd<1.0      ?     0.0*i     :     2*Pi/3 * (1 - 3 * kz*kz /Ksqd) + 0.0*i;
         DC = Ksqd<1.0      ?     0.0*i     :    2* 2*Pi/3 * (kx - i * ky)*kz/Ksqd;
@@ -156,7 +156,7 @@
 
 
   
-  <computed_vector name="normalisation" dimensions="" type="double">
+  <computed_vector name="normalisation" dimensions="" type="real">
     <components>
       Ncalc
     </components>

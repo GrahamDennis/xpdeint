@@ -24,17 +24,17 @@
     <!-- <openmp /> -->
     <globals>
       <![CDATA[
-        const double omegaz = 2*M_PI*20;
-        const double omegarho = 2*M_PI*200;
-        const double hbar = 1.05457148e-34;
-        const double M = 1.409539200000000e-25;
-        const double g = 9.8;
-        const double scatteringLength = 5.57e-9;
-        const double Uint = 4.0*M_PI*hbar*hbar*scatteringLength/M;
-        const double Nparticles = 5.0e5;
+        const real omegaz = 2*M_PI*20;
+        const real omegarho = 2*M_PI*200;
+        const real hbar = 1.05457148e-34;
+        const real M = 1.409539200000000e-25;
+        const real g = 9.8;
+        const real scatteringLength = 5.57e-9;
+        const real Uint = 4.0*M_PI*hbar*hbar*scatteringLength/M;
+        const real Nparticles = 5.0e5;
 
         /* offset constants */
-        const double EnergyOffset = pow(15.0*Nparticles*Uint*omegaz*omegarho*omegarho/(8*M_PI), 2.0/5.0)
+        const real EnergyOffset = pow(15.0*Nparticles*Uint*omegaz*omegarho*omegarho/(8*M_PI), 2.0/5.0)
                                     * pow(M/2.0, 3.0/5.0);
 
       ]]>
@@ -55,7 +55,7 @@
     </components>
     <initialisation>
       <![CDATA[
-        double Vtrap = 0.5*M*(omegarho*omegarho*r*r + omegaz*omegaz*z*z);
+        real Vtrap = 0.5*M*(omegarho*omegarho*r*r + omegaz*omegaz*z*z);
       
         V1  = -i/hbar*(Vtrap - EnergyOffset);
       
@@ -81,7 +81,7 @@
     </initialisation>
   </vector>
   
-  <computed_vector name="normalisation" dimensions="" type="double">
+  <computed_vector name="normalisation" dimensions="" type="real">
     <components>
       Ncalc
     </components>

@@ -13,15 +13,15 @@
     <openmp />
     <globals>
       <![CDATA[
-      const double T = 10.0;
-      const double mass = 1e-3;
-      const double length = 1.0;
-      const double mu = mass/length;
-      const double T_mu = T/mu;
+      const real T = 10.0;
+      const real mass = 1e-3;
+      const real length = 1.0;
+      const real mu = mass/length;
+      const real T_mu = T/mu;
       
-      const double ellipse_a = 0.9;
-      const double ellipse_b = 0.5;
-      const double ellipse_focus = sqrt(ellipse_a*ellipse_a - ellipse_b*ellipse_b);
+      const real ellipse_a = 0.9;
+      const real ellipse_b = 0.5;
+      const real ellipse_focus = sqrt(ellipse_a*ellipse_a - ellipse_b*ellipse_b);
       
       ]]>
     </globals>
@@ -47,13 +47,13 @@
     </initialisation>
   </vector>
   
-  <vector name="boundary" initial_space="x y" type="double">
+  <vector name="boundary" initial_space="x y" type="real">
     <components>
       bc
     </components>
     <initialisation>
       <![CDATA[
-        double r_norm = sqrt(x*x/ellipse_a/ellipse_a + y*y/ellipse_b/ellipse_b);
+        real r_norm = sqrt(x*x/ellipse_a/ellipse_a + y*y/ellipse_b/ellipse_b);
 
         if ( r_norm > 1.0)
           bc = 0.0;
@@ -70,7 +70,7 @@
         <operator kind="ex" constant="yes" fourier_space="x y">
           <operator_names>L</operator_names>
           <![CDATA[
-          double r_norm = sqrt(x*x/ellipse_a/ellipse_a + y*y/ellipse_b/ellipse_b);
+          real r_norm = sqrt(x*x/ellipse_a/ellipse_a + y*y/ellipse_b/ellipse_b);
 
           if ( r_norm > 1.0)
             L = 0.0;
@@ -98,7 +98,7 @@
         <moments>amp</moments>
         <dependencies>main</dependencies>
         <![CDATA[
-          amp = real(u);
+          amp = Re(u);
         ]]>
       </sampling>
     </group>

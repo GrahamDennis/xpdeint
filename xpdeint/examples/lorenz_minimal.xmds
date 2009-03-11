@@ -6,7 +6,7 @@
     <propagation_dimension> t </propagation_dimension>
   </geometry>
   
-  <vector name="main" type="double">
+  <vector name="main" type="real">
     <components>
       x y z
     </components>

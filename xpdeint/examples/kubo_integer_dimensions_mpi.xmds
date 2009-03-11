@@ -60,8 +60,8 @@
         <moments>zR zI</moments>
         <dependencies>main 0d_noise</dependencies>
         <![CDATA[
-          zR = z.real()/_lattice_j;
-          zI = z.imag()/_lattice_j;
+          zR = z.Re()/_lattice_j;
+          zI = z.Im()/_lattice_j;
         ]]>
       </sampling>
     </group>
@@ -71,8 +71,8 @@
         <moments>zR zI</moments>
         <dependencies>main</dependencies>
         <![CDATA[
-          zR = z.real();
-          zI = z.imag();
+          zR = z.Re();
+          zI = z.Im();
         ]]>
       </sampling>
     </group>

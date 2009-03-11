@@ -115,7 +115,7 @@ class _Stochastic (_Feature):
         noiseVector = VectorElement(name = '%s_noises' % noise.prefix, field = field,
                                     transformFree = True, # This attribute says that this vector is always in the right field.
                                     **self.argumentsToTemplateConstructors)
-        noiseVector.type = 'double'
+        noiseVector.type = 'real'
         noiseVector.needsInitialisation = False
         noiseVector.components = ['%s_%i' % (noise.prefix, i) for i in range(1, noise.noiseCount + 1)]
         field.managedVectors.add(noiseVector)

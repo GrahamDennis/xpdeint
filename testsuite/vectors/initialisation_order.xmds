@@ -20,27 +20,27 @@
     <globals>
       <![CDATA[
       /* physical constants  */
-       const double omegaz = 2*M_PI*55.0;
-       const double omegarho = 2*M_PI*1020.0;
-       const double hbar = 1.05457148e-34;
-       const double M = 4.0026032*1.66053886e-27;
-       const double scatteringLength = 7.51e-9;
-       const double Uint3 = 4.0*M_PI*hbar*hbar*scatteringLength/M;
-       const double Nparticles = 2.0e6;
-       const double mu = pow(15*Nparticles*Uint3*omegarho*omegarho*omegaz/(8.0*M_PI)*pow(M/2,3.0/2.0),2.0/5.0);
-       const double Uint = Uint3*5.0*omegarho*omegarho*M/(4.0*M_PI*mu);
-       const double Uint_hbar = Uint/hbar;
+       const real omegaz = 2*M_PI*55.0;
+       const real omegarho = 2*M_PI*1020.0;
+       const real hbar = 1.05457148e-34;
+       const real M = 4.0026032*1.66053886e-27;
+       const real scatteringLength = 7.51e-9;
+       const real Uint3 = 4.0*M_PI*hbar*hbar*scatteringLength/M;
+       const real Nparticles = 2.0e6;
+       const real mu = pow(15*Nparticles*Uint3*omegarho*omegarho*omegaz/(8.0*M_PI)*pow(M/2,3.0/2.0),2.0/5.0);
+       const real Uint = Uint3*5.0*omegarho*omegarho*M/(4.0*M_PI*mu);
+       const real Uint_hbar = Uint/hbar;
        const complex miUint_hbar = -i*Uint_hbar;
-       const double otherScatteringLength = 5.56e-9;
-       const double kappa = otherScatteringLength/scatteringLength;
-       const double eta = 0.5;
-       double Delta;
-       const double hbar_M = hbar/M;
+       const real otherScatteringLength = 5.56e-9;
+       const real kappa = otherScatteringLength/scatteringLength;
+       const real eta = 0.5;
+       real Delta;
+       const real hbar_M = hbar/M;
        
        /* absorbing boundary constants */
-        const double absorbleft = 5.0e4;
-        const double absorbright = 5.0e4;
-        const double widthPerp = 5.0e-6;
+        const real absorbleft = 5.0e4;
+        const real absorbright = 5.0e4;
+        const real widthPerp = 5.0e-6;
        
       ]]>
     </globals>
@@ -70,17 +70,17 @@
       <dependencies>potential</dependencies>
       <![CDATA[
         phi1 = phi0 = 0.0;
-        if (eta*mu - V.real() > 0.0) {
-          phi1 = sqrt((eta*mu - V.real())/Uint);
+        if (eta*mu - V.Re() > 0.0) {
+          phi1 = sqrt((eta*mu - V.Re())/Uint);
         }
-        if ((1.0-eta)*mu - V.real() > 0.0) {
-          phi0 = sqrt(((1.0-eta)*mu - V.real())/Uint);
+        if ((1.0-eta)*mu - V.Re() > 0.0) {
+          phi0 = sqrt(((1.0-eta)*mu - V.Re())/Uint);
         }
       ]]>
     </initialisation>
   </vector>
   
-  <computed_vector name="normalisation" dimensions="" type="double">
+  <computed_vector name="normalisation" dimensions="" type="real">
     <components>N1 N0</components>
     <evaluation>
       <dependencies>wavefunction</dependencies>

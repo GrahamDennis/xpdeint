@@ -36,8 +36,8 @@ class _MMT (_Transform):
   def newDimension(self, name, lattice, minimum, maximum,
                    parent, transformName, aliases = set(),
                    spectralLattice = None,
-                   type = 'double', xmlElement = None):
-    assert type == 'double'
+                   type = 'real', xmlElement = None):
+    assert type == 'real'
     assert transformName in ['bessel', 'spherical-bessel', 'hermite-gauss']
     if not spectralLattice:
       spectralLattice = lattice

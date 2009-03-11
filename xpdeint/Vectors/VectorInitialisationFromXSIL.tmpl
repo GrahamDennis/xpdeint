@@ -398,13 +398,13 @@ if (_isPrecisionDouble) {
   _value = (double)_temp;
 }
 
-  @if $vector.type == 'double'
+  @if $vector.type == 'real'
 _active_${vector.id}[_${vector.id}_index_pointer + _component] = _value;
   @else
 if (_component & 1)
-  _active_${vector.id}[_${vector.id}_index_pointer + _component/2].imag() = _value;
+  _active_${vector.id}[_${vector.id}_index_pointer + _component/2].Im() = _value;
 else
-  _active_${vector.id}[_${vector.id}_index_pointer + _component/2].real() = _value;
+  _active_${vector.id}[_${vector.id}_index_pointer + _component/2].Re() = _value;
   @end if
   
 _ENDLOOP:

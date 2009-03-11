@@ -38,7 +38,7 @@
     <integrate algorithm="RK4" interval="10.0" steps="2400" tolerance="1e-5">
       <samples>24</samples>
       <operators>
-        <operator kind="ip" constant="no" type="double">
+        <operator kind="ip" constant="no" type="real">
           <operator_names>L</operator_names>
           <![CDATA[
             L = -0.02*ky*ky;

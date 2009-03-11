@@ -237,7 +237,7 @@ if ( (_wisdomFile = fopen(_wisdomPath.c_str(), "w")) != NULL) {
   @set $dimensions = [dim for dim in vector.field.dimensions if not dim.isDistributed]
   @set $blankLineSeparator = ''
   @#
-  @if vector.type == 'double'
+  @if vector.type == 'real'
     @set $r2rMultiplier = 1
   @else
     @set $r2rMultiplier = 2

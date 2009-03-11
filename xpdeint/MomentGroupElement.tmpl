@@ -48,7 +48,7 @@ _LOG(_SAMPLE_LOG_LEVEL, "Sampled field (for moment group #${number + 1}) at ${pr
 @def insideSamplingLoops($codeString)
   @#
 #define _SAMPLE_COMPLEX(variable) \
-          variable ## R = variable.real(); variable ## I = variable.imag();
+          variable ## R = variable.Re(); variable ## I = variable.Im();
 
 // *************** Sampling code ****************
 ${codeString}@slurp

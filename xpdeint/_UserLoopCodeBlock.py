@@ -86,9 +86,9 @@ class _UserLoopCodeBlock(ScriptElement):
     specialTargetsVector.initialSpace = self.space
     
     # If all dependencies are of type double, then the special targets vector must be double too
-    if all([v.type == 'double' for v in self.dependencies]):
-      if not self.targetVector or self.targetVector.type == 'double':
-        specialTargetsVector.type = 'double'
+    if all([v.type == 'real' for v in self.dependencies]):
+      if not self.targetVector or self.targetVector.type == 'real':
+        specialTargetsVector.type = 'real'
     
     specialTargetsVector.evaluationSpace = self.space
     specialTargetsVector.integratingComponents = False

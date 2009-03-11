@@ -22,11 +22,11 @@
       <![CDATA[
 
       /* system constants */
-        const double omega = 0.0;
-        const double g = 1.0;
+        const real omega = 0.0;
+        const real g = 1.0;
         
       /* initial state constants */
-        const double alpha_0 = 3.0;
+        const real alpha_0 = 3.0;
         
       ]]>
     </globals>
@@ -63,7 +63,7 @@
     </initialisation>
   </vector>
   
-  <vector name="trig" dimensions="m theta" type="double">
+  <vector name="trig" dimensions="m theta" type="real">
     <components>cos_me sin_me cos_mo sin_mo</components>
     <initialisation>
       <![CDATA[
@@ -75,22 +75,22 @@
     </initialisation>
   </vector>
   
-  <computed_vector name="WignerEven" dimensions="r theta" type="double">
+  <computed_vector name="WignerEven" dimensions="r theta" type="real">
     <components>WE</components>
     <evaluation>
       <dependencies>evens trig</dependencies>
       <![CDATA[
-        WE = hE.real()*cos_me + hE.imag()*sin_me;
+        WE = hE.Re()*cos_me + hE.Im()*sin_me;
       ]]>
     </evaluation>
   </computed_vector>
   
-  <computed_vector name="WignerOdd" dimensions="s theta" type="double">
+  <computed_vector name="WignerOdd" dimensions="s theta" type="real">
     <components>WO</components>
     <evaluation>
       <dependencies>odds trig</dependencies>
       <![CDATA[
-        WO = hO.real()*cos_mo + hO.imag()*sin_mo;
+        WO = hO.Re()*cos_mo + hO.Im()*sin_mo;
       ]]>
     </evaluation>
   </computed_vector>
@@ -101,14 +101,14 @@
       <operators dimensions="r m">
         <integration_vectors>evens</integration_vectors>
         <![CDATA[
-          const double M = 2*m;
+          const real M = 2*m;
           dhE_dt = -i*omega*M*hE - i*g*(r*r-1.0)*M*hE;
         ]]>
       </operators>
       <operators dimensions="s m">
         <integration_vectors>odds</integration_vectors>
         <![CDATA[
-          const double M = 2*m+1.0;
+          const real M = 2*m+1.0;
           dhO_dt = -i*omega*M*hO - i*g*(s*s-1.0)*M*hO;
         ]]>
       </operators>

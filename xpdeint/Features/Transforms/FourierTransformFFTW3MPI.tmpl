@@ -354,7 +354,7 @@ ${createMPIPlansForVector(vector, 'backward', transformDimensions, space = $swap
 
 // 1b. Create plans for the 2D transpose operations.
     @set $transposeMultiplier = 2
-    @if vector.type == 'double'
+    @if vector.type == 'real'
       @set $transposeMultiplier = 1
     @end if
 _howmany = ${transposeMultiplier} * _${vector.id}_ncomponents;
