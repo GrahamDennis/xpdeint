@@ -85,7 +85,7 @@ class _UserLoopCodeBlock(ScriptElement):
     self.field.temporaryVectors.add(specialTargetsVector)
     specialTargetsVector.initialSpace = self.space
     
-    # If all dependencies are of type double, then the special targets vector must be double too
+    # If all dependencies are of type real, then the special targets vector must be real too
     if all([v.type == 'real' for v in self.dependencies]):
       if not self.targetVector or self.targetVector.type == 'real':
         specialTargetsVector.type = 'real'

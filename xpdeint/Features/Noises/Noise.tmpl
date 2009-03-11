@@ -26,7 +26,7 @@ ${generatorType} ${generatorName};
   @#
   @super
   @#
-inline void _make_${prefix}_noises(double _var, double* _noise_vector, unsigned long _n);
+inline void _make_${prefix}_noises(real _var, real* _noise_vector, unsigned long _n);
   @#
 @end def
 
@@ -37,7 +37,7 @@ inline void _make_${prefix}_noises(double _var, double* _noise_vector, unsigned 
   @#
   @super
   @#
-inline void _make_${prefix}_noises(double _var, double* _noise_vector, unsigned long _n)
+inline void _make_${prefix}_noises(real _var, real* _noise_vector, unsigned long _n)
 {
   ${makeNoises, autoIndent=True}@slurp
 }

@@ -25,16 +25,16 @@ Initialise all of the Cash-Karp coefficients, etc.
   @#
 
 // Cash-Karp coefficients
-double _a_raw[7];
-double _a[7];
-double _b[7][7];
-double _c[7];
-double _cs[7];
+real _a_raw[7];
+real _a[7];
+real _b[7][7];
+real _c[7];
+real _cs[7];
 // linear combinations for the (k_i)s
-double _d[4];
-double _e[5];
-double _f[6];
-double _g[7];
+real _d[4];
+real _e[5];
+real _f[6];
+real _g[7];
 
 _a_raw[0]=0.0;
 _a_raw[1]=0.0;
@@ -99,7 +99,7 @@ _f[3]=_b[5][2];
 _f[4]=_b[5][3]-_b[5][1]/_c[1]*_c[3];
 _f[5]=_b[5][4]-_b[5][1]/_c[1]*_c[4];
 
-double _den=_c[1]*_cs[4]-_cs[1]*_c[4];
+real _den=_c[1]*_cs[4]-_cs[1]*_c[4];
 _g[0]=0.0;
 _g[1]=( _b[6][4]*(_cs[1]-_c[1]) + _b[6][1]*(_c[4]-_cs[4]) )/_den + 1.0;
 _g[2]=  _b[6][2];

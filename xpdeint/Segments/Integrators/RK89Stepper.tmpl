@@ -31,12 +31,12 @@ Initialise all of the Cash-Karp coefficients, etc.
   @#
 
 // Runge Kutta method constants 
-double _a_raw[16];
-double _a[16];
-double _b[16][16];
-double _c[16];
-double _cs[16];
-double _d[16];
+real _a_raw[16];
+real _a[16];
+real _b[16][16];
+real _c[16];
+real _cs[16];
+real _d[16];
 
 for (unsigned long _i0 = 0; _i0 < 16; _i0++) {
   _a_raw[_i0] = _c[_i0] = _d[_i0] = 0.0;

@@ -55,8 +55,8 @@ for (long _i0 = 0; _i0 < ${dimRep.globalLattice}; _i0++) {
     @end if
     @if $geometryMatchingMode == 'strict' or isinstance(dimRep, NonUniformDimensionRepresentation)
 for (long _i0 = 0; _i0 < ${dimRep.globalLattice}-1; _i0++) {
-  double step = ${dimArrayName}[_i0+1] - ${dimArrayName}[_i0];
-  if (fabs(${dimArrayName}[_i0] - ${dimRep.name}_inputdata[_i0]) > 0.01 * step) {
+  real step = ${dimArrayName}[_i0+1] - ${dimArrayName}[_i0];
+  if (abs(${dimArrayName}[_i0] - ${dimRep.name}_inputdata[_i0]) > 0.01 * step) {
     // _LOG will cause the simulation to exit
     _LOG(_ERROR_LOG_LEVEL, "Geometry matching mode is strict for dimension '${dimRep.name}'.\n"
                            "This means that the coordinates must be the same as for the input grid.\n"

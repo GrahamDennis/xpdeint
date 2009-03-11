@@ -15,7 +15,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
   @super
   @#
 
-#define _MAKE_DBL_VARIABLE(x) double* const __restrict__ x ## _dbl = (double*) x
-#define _DBL(x) (x ## _dbl)
+#define _MAKE_AUTOVEC_VARIABLE(x) real* const __restrict__ x ## _autovec = (real*) x
+#define _AUTOVEC(x) (x ## _autovec)
   @#
 @end def

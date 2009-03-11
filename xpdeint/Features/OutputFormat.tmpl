@@ -157,7 +157,7 @@ ${componentName}R ${componentName}I @slurp
 \n");
   fprintf($fp, "    </Stream>\n");
   fprintf($fp, "  </Array>\n");
-  fprintf($fp, "  <Array Name=\"data\" Type=\"double\">\n");
+  fprintf($fp, "  <Array Name=\"data\" Type=\"${precision}\">\n");
   @#
   @# Now loop over the dimensions
   @for $dimension in $field.dimensions

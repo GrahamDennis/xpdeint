@@ -69,7 +69,7 @@ fprintf($fp, "@slurp
 \n"@slurp
   @#
   @for $dimension in $field.dimensions
-, (double)${dimension.inSpace(space).name}@slurp
+, (real)${dimension.inSpace(space).name}@slurp
   @end for
   @#
   @# Now loop over the (dependent) variables

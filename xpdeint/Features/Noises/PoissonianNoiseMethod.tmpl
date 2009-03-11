@@ -14,7 +14,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
   a poissonian noise
 *@
   @#
-const double _dVdt = 1.0/_var;
+const real _dVdt = 1.0/_var;
 for (long _i0 = 0; _i0 < _n; _i0++) {
   _noise_vector[_i0] = _var * _poidev(${noiseMeanRate} * _dVdt, ${generatorName});
 }
@@ -26,8 +26,8 @@ for (long _i0 = 0; _i0 < _n; _i0++) {
   @#
   @super
   @#
-double _poidev(double xm, unsigned short* _generator);
-double _poisplit(double pp, int n, unsigned short* _generator);
+real _poidev(real xm, unsigned short* _generator);
+real _poisplit(real pp, int n, unsigned short* _generator);
   @#
 @end def
 
@@ -35,7 +35,7 @@ double _poisplit(double pp, int n, unsigned short* _generator);
   @#
   @super
   @#
-inline void _split_${prefix}_noise(double _new_var, double _old_var, double* _new_noise_vector, double* _old_noise_vector, unsigned long _n);
+inline void _split_${prefix}_noise(real _new_var, real _old_var, real* _new_noise_vector, real* _old_noise_vector, unsigned long _n);
   @#
 @end def
 
@@ -43,7 +43,7 @@ inline void _split_${prefix}_noise(double _new_var, double _old_var, double* _ne
   @#
   @super
   @#
-inline void _split_${prefix}_noises(double _new_var, double _old_var, double* _new_noise_vector, double* _old_noise_vector, unsigned long _n)
+inline void _split_${prefix}_noises(real _new_var, real _old_var, real* _new_noise_vector, real* _old_noise_vector, unsigned long _n)
 {
   for (long _i0 = 0; _i0 < _n; _i0++) { 
     _new_noise_vector[_i0] = _new_var*_poisplit(_old_var/_new_var, lrint(_old_noise_vector[_i0]/_old_var), ${generatorName});
@@ -58,9 +58,9 @@ inline void _split_${prefix}_noises(double _new_var, double _old_var, double* _n
   @#
   @super
   @#
-double _poidev(double xm, ${generatorType} _generator)
+real _poidev(real xm, ${generatorType} _generator)
 {
-  double sq, alxm, g, em, t, y;
+  real sq, alxm, g, em, t, y;
   
   if (xm < 12.0) {        // Use direct method
     g = exp(-xm);
@@ -95,7 +95,7 @@ double _poidev(double xm, ${generatorType} _generator)
   return em;
 }
 
-double _poisplit(double pp, long n, ${generatorType} _generator)
+real _poisplit(real pp, long n, ${generatorType} _generator)
 {
   /*
   Returns as a floating-point number an integer value that is a random deviate drawn from
@@ -104,8 +104,8 @@ double _poisplit(double pp, long n, ${generatorType} _generator)
   */
   
   long j;
-  double am, em, g, p, bnl, sq, t, y;
-  static double pc, plog, pclog, en, oldg;
+  real am, em, g, p, bnl, sq, t, y;
+  static real pc, plog, pclog, en, oldg;
   
   // The binomial distribution is invariant under changing pp to 1-pp,
   // if we also change the answer to n minus itself; we do this at the end.

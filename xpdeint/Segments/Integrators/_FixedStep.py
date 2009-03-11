@@ -48,7 +48,7 @@ class _FixedStep (Integrator):
     # understand it myself. But after much fiddling, it seems that the last step in the 
     # integrator where the results from the integration step are copied back into the main
     # array does not sync with the last memory write in the step (as the last step with the
-    # auto-vectorisation feature would have been to a double*, so come time for the copy to
+    # auto-vectorisation feature would have been to a real*, so come time for the copy to
     # a complex variable, the CPU/compiler sees fit to reorder the stores causing all hell
     # to break loose). This isn't a particularly good explanation, but my understanding of
     # this isn't particularly strong.
@@ -67,7 +67,7 @@ class _FixedStep (Integrator):
   
   @lazy_property
   def step(self):
-    return ''.join([str(self.interval), '/(double)', str(self.stepCount)])
+    return ''.join([str(self.interval), '/(real)', str(self.stepCount)])
   
   
 

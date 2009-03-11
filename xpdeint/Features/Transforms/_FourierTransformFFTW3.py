@@ -43,7 +43,7 @@ class _FourierTransformFFTW3 (_Transform):
                                                    **self.argumentsToTemplateConstructors)
     else:
       # x-space representation
-      stepSize = '((double)%(maximum)s - %(minimum)s)/(%(lattice)s)' % locals()
+      stepSize = '((real)%(maximum)s - %(minimum)s)/(%(lattice)s)' % locals()
       xspace = UniformDimensionRepresentation(name = name, type = type, lattice = lattice,
                                               minimum = None, maximum = None, stepSize = stepSize,
                                               parent = dim, **self.argumentsToTemplateConstructors)
@@ -74,7 +74,7 @@ class _FourierTransformFFTW3 (_Transform):
     if result:
       transformName = self.transformNameMap[dim.name]
       # We can only transform complex vectors with dft.
-      # dct/dst can manage both complex and double
+      # dct/dst can manage both complex and real
       if transformName == 'dft' and not vector.type == 'complex':
         result = False
     

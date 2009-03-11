@@ -15,10 +15,10 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   @#
   @super
   @#
-double _segment${segmentNumber}_setup_sampling(bool* _next_sample_flag, long* _next_sample_counter);
+real _segment${segmentNumber}_setup_sampling(bool* _next_sample_flag, long* _next_sample_counter);
   @#
   @for $vector in $integrationVectors
-double _segment${segmentNumber}_${vector.id}_timestep_error(${vector.type}* _checkfield);
+real _segment${segmentNumber}_${vector.id}_timestep_error(${vector.type}* _checkfield);
 void _segment${segmentNumber}_${vector.id}_reset(${vector.type}* _reset_to);
   @end for
   @#
@@ -45,7 +45,7 @@ ${resetFunctionImplementation($vector)}@slurp
 
 @def setupSamplingFunctionImplementation
   @#
-double _segment${segmentNumber}_setup_sampling(bool* _next_sample_flag, long* _next_sample_counter)
+real _segment${segmentNumber}_setup_sampling(bool* _next_sample_flag, long* _next_sample_counter)
 {
   // The numbers of the moment groups that need to be sampled at the next sampling point.
   // An entry of N+1 means "reached end of integration interval"
@@ -55,7 +55,7 @@ double _segment${segmentNumber}_setup_sampling(bool* _next_sample_flag, long* _n
   long _previous_m = 1;
   long _previous_M = 1;
   
-  double _${propagationDimension}_break_next = (double)${interval};
+  real _${propagationDimension}_break_next = (real)${interval};
   _momentGroupNumbersNeedingSamplingNext[0] = ${len($samples)};
   
   // initialise all flags to false
@@ -74,7 +74,7 @@ double _segment${segmentNumber}_setup_sampling(bool* _next_sample_flag, long* _n
     _momentGroupNumbersNeedingSamplingNext[_numberOfMomentGroupsToBeSampledNext] = $momentGroupNumber;
     _numberOfMomentGroupsToBeSampledNext++;
   } else if (_next_sample_counter[$momentGroupNumber] * _previous_M < _previous_m * $sampleCount) {
-    _${propagationDimension}_break_next = _next_sample_counter[$momentGroupNumber] * ((double)$interval) / ((double)$sampleCount);
+    _${propagationDimension}_break_next = _next_sample_counter[$momentGroupNumber] * ((real)$interval) / ((real)$sampleCount);
     _numberOfMomentGroupsToBeSampledNext = 1;
     _momentGroupNumbersNeedingSamplingNext[0] = $momentGroupNumber;
     _previous_M = $sampleCount;
@@ -95,11 +95,11 @@ double _segment${segmentNumber}_setup_sampling(bool* _next_sample_flag, long* _n
 
 @def timestepErrorFunctionImplementation($vector)
   @#
-double _segment${segmentNumber}_${vector.id}_timestep_error(${vector.type}* _checkfield)
+real _segment${segmentNumber}_${vector.id}_timestep_error(${vector.type}* _checkfield)
 {
-  double _error = 1e-24;
-  double _temp_error = 0.0;
-  double _temp_mod = 0.0;
+  real _error = 1e-24;
+  real _temp_error = 0.0;
+  real _temp_mod = 0.0;
   
   @set $featureOrdering = ['Diagnostics']
   @set $dict = {'vector': vector}
@@ -108,7 +108,7 @@ double _segment${segmentNumber}_${vector.id}_timestep_error(${vector.type}* _che
   @if len($vector.field.dimensions) > 0
     @# FIXME: We need to have the capacity to have both a peak cutoff and an absolute cutoff
   // Find the peak value for each component of the field
-  double _cutoff[_${vector.id}_ncomponents];
+  real _cutoff[_${vector.id}_ncomponents];
   
   for (long _i0 = 0; _i0 < _${vector.id}_ncomponents; _i0++)
     _cutoff[_i0] = 0.0;
@@ -216,7 +216,7 @@ This function returns the code that will create a _step variable,
 including any modifications necessary due to the ErrorCheck feature.
 *@
   @#
-double _tolerance = ${tolerance};
+real _tolerance = ${tolerance};
   @#
   @set $featureOrdering = ['ErrorCheck']
 ${insertCodeForFeatures('createToleranceVariable', featureOrdering)}@slurp
@@ -225,10 +225,10 @@ ${insertCodeForFeatures('createToleranceVariable', featureOrdering)}@slurp
 
 @def segmentFunctionBody($function)
   @#
-double _step = ${interval}/(double)${stepCount};
-double _old_step = _step;
-double _min_step = _step;
-double _max_step = _step;
+real _step = ${interval}/(real)${stepCount};
+real _old_step = _step;
+real _min_step = _step;
+real _max_step = _step;
 long _attempted_steps = 0;
 long _unsuccessful_steps = 0;
 
@@ -237,9 +237,9 @@ ${createToleranceVariable}@slurp
   @set $featureOrderingOuter = ['Stochastic']
 ${insertCodeForFeatures('integrateAdaptiveStepBegin', featureOrderingOuter)}@slurp
 
-double _error, _last_norm_error = 1.0;
+real _error, _last_norm_error = 1.0;
   @for $vector in $integrationVectors
-double _${name}_${vector.id}_error;
+real _${name}_${vector.id}_error;
   @end for
 
 bool _discard = false;
@@ -254,9 +254,9 @@ long _next_sample_counter[$momentGroupCount];
 for (long _i0 = 0; _i0 < $momentGroupCount; _i0++)
   _next_sample_counter[_i0] = 1;
 
-const double _${propagationDimension}_ini = ${propagationDimension};
+const real _${propagationDimension}_ini = ${propagationDimension};
 
-double _${propagationDimension}_break_next = _${name}_setup_sampling(_next_sample_flag, _next_sample_counter);
+real _${propagationDimension}_break_next = _${name}_setup_sampling(_next_sample_flag, _next_sample_counter);
 
 if ( $propagationDimension - _${propagationDimension}_ini + _step >= _${propagationDimension}_break_next) {
   _break_next = true;
@@ -317,8 +317,8 @@ do {
     
     // Resize step
     if (_error < 0.5*_tolerance || _error > _tolerance) {
-      const double _safetyFactor = 0.98;
-      double _scalingFactor = _safetyFactor * pow(fabs(_error/_tolerance), -0.7/${integrationOrder}) * pow(_last_norm_error, 0.4/${integrationOrder});
+      const real _safetyFactor = 0.98;
+      real _scalingFactor = _safetyFactor * pow(fabs(_error/_tolerance), -0.7/${integrationOrder}) * pow(_last_norm_error, 0.4/${integrationOrder});
       _scalingFactor = MAX(_scalingFactor, 1.0/5.0);
       _scalingFactor = MIN(_scalingFactor, 7.0);
       if (_error > _tolerance && _scalingFactor > 1.0) {
