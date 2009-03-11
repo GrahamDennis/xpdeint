@@ -28,10 +28,10 @@ long _even_${forwardDimRep.name} = (${forwardDimRep.globalLattice} + 1)/2;
 long _odd_${forwardDimRep.name} = ${forwardDimRep.globalLattice}/2;
 long _even_${backwardDimRep.name} = (${backwardDimRep.globalLattice} + 1)/2;
 long _odd_${backwardDimRep.name} = ${backwardDimRep.globalLattice}/2;
-_mmt_matrix_${forwardDimRep.name}_${backwardDimRep.name}_even = (double *)xmds_malloc(sizeof(double) * _even_${forwardDimRep.name} * _even_${backwardDimRep.name});
-_mmt_matrix_${forwardDimRep.name}_${backwardDimRep.name}_odd  = (double *)xmds_malloc(sizeof(double) * _odd_${forwardDimRep.name} * _odd_${backwardDimRep.name});
-_mmt_matrix_${backwardDimRep.name}_${forwardDimRep.name}_even = (double *)xmds_malloc(sizeof(double) * _even_${backwardDimRep.name} * _even_${forwardDimRep.name});
-_mmt_matrix_${backwardDimRep.name}_${forwardDimRep.name}_odd  = (double *)xmds_malloc(sizeof(double) * _odd_${backwardDimRep.name} * _odd_${forwardDimRep.name});
+_mmt_matrix_${forwardDimRep.name}_${backwardDimRep.name}_even = (double *)xmds_malloc(sizeof(real) * _even_${forwardDimRep.name} * _even_${backwardDimRep.name});
+_mmt_matrix_${forwardDimRep.name}_${backwardDimRep.name}_odd  = (double *)xmds_malloc(sizeof(real) * _odd_${forwardDimRep.name} * _odd_${backwardDimRep.name});
+_mmt_matrix_${backwardDimRep.name}_${forwardDimRep.name}_even = (double *)xmds_malloc(sizeof(real) * _even_${backwardDimRep.name} * _even_${forwardDimRep.name});
+_mmt_matrix_${backwardDimRep.name}_${forwardDimRep.name}_odd  = (double *)xmds_malloc(sizeof(real) * _odd_${backwardDimRep.name} * _odd_${forwardDimRep.name});
 
 for (long _i0 = 0; _i0 < _even_${forwardDimRep.name}; _i0++) {
   long __i0 = ${forwardDimRep.globalLattice} - 1 - _i0;

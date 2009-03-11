@@ -12,7 +12,7 @@
     <bing />
     <globals>
       <![CDATA[
-        const double offset = 1.0;
+        const real offset = 1.0;
       ]]>
     </globals>
   </features>

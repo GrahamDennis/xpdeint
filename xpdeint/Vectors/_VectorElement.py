@@ -139,7 +139,7 @@ class _VectorElement (ScriptElement):
     return self.field.sizeInSpace(space) + ' * _' + self.id + '_ncomponents'
   
   def sizeInSpaceInReals(self, space):
-    if self.type == 'double':
+    if self.type == 'real':
       return self.sizeInSpace(space)
     else:
       return '2 * ' + self.sizeInSpace(space)

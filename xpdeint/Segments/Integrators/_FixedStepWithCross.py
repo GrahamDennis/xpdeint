@@ -28,11 +28,11 @@ class _FixedStepWithCross (FixedStep):
     functionNamePrefix = '_' + self.id
     
     self.functions['leftDeltaA'] = Function(name = functionNamePrefix + '_calculate_left_delta_a',
-                                            args = [('double', '_step')], 
+                                            args = [('real', '_step')], 
                                             implementation = self.leftDeltaAFunctionBody,
                                             predicate = lambda: bool(self.leftOperatorContainer))
     self.functions['rightDeltaA'] = Function(name = functionNamePrefix + '_calculate_right_delta_a',
-                                             args = [('double', '_step')], 
+                                             args = [('real', '_step')], 
                                              implementation = self.rightDeltaAFunctionBody,
                                              predicate = lambda: bool(self.rightOperatorContainer))
     

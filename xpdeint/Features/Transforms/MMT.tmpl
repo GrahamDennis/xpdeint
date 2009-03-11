@@ -66,8 +66,8 @@ ${basis.gridAndStepForDimRep(dimRep)}@slurp
         @set $geometryDimRep = $geometry.dimensionWithName(dimName).inSpace(space)
         @assert (geometryDimRep.lattice % fieldDimRep.lattice) == 0
         @if geometryDimRep.lattice == fieldDimRep.lattice
-memcpy(${fieldDimRep.arrayName}, ${geometryDimRep.arrayName}, sizeof(double)*${geometryDimRep.globalLattice});
-memcpy(${fieldDimRep.stepSizeArrayName}, ${geometryDimRep.stepSizeArrayName}, sizeof(double) * ${geometryDimRep.globalLattice});
+memcpy(${fieldDimRep.arrayName}, ${geometryDimRep.arrayName}, sizeof(real)*${geometryDimRep.globalLattice});
+memcpy(${fieldDimRep.stepSizeArrayName}, ${geometryDimRep.stepSizeArrayName}, sizeof(real) * ${geometryDimRep.globalLattice});
         @else
 for (long _i0=0; _i0 < $fieldDimRep.globalLattice; _i0++) {
   ${fieldDimRep.arrayName}[_i0] = ${geometryDimRep.arrayName}[_i0 * ($geometryDimRep.globalLattice / $fieldDimRep.globalLattice)];

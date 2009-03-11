@@ -10,10 +10,10 @@
   
   <features>
     <arguments>
-      <argument name="sigma" type="double" default_value="10.0" />
-      <argument name="b"     type="double" default_value="2.67" />
-      <argument name="r"     type="double" default_value="28.0" />
-      <argument name="time_arg" type="double" default_value="100.0" />
+      <argument name="sigma" type="real" default_value="10.0" />
+      <argument name="b"     type="real" default_value="2.67" />
+      <argument name="r"     type="real" default_value="28.0" />
+      <argument name="time_arg" type="real" default_value="100.0" />
       <argument name="outputFilename" type="string" default_value="myFilename" />
     </arguments>
     <benchmark />
@@ -27,7 +27,7 @@
     <propagation_dimension> t </propagation_dimension>
   </geometry>
   
-  <vector name="main" type="double">
+  <vector name="main" type="real">
     <components>
       x y z
     </components>

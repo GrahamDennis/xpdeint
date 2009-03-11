@@ -19,7 +19,7 @@ from xpdeint.ParserException import ParserException
 from xpdeint import CodeLexer
 
 class _DeltaAOperator (Operator):
-  evaluateOperatorFunctionArguments = [('double', '_step')]
+  evaluateOperatorFunctionArguments = [('real', '_step')]
   operatorKind = Operator.DeltaAOperatorKind
   
   defaultOperatorSpace = 0
@@ -249,7 +249,7 @@ class _DeltaAOperator (Operator):
     if self.deltaAField:
       copyDeltaAFunctionName = ''.join(['_', self.id, '_copy_delta_a'])
       loopingField = self.primaryCodeBlock.field
-      arguments = [('double', '_step')]
+      arguments = [('real', '_step')]
       arguments.extend([('long', '_' + dim.inSpace(self.operatorSpace).name + '_index') \
                             for dim in loopingField.dimensions if not self.deltaAField.hasDimension(dim)])
       copyDeltaAFunction = Function(name = copyDeltaAFunctionName,

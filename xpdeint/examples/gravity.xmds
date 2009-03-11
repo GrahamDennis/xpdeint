@@ -27,7 +27,7 @@
     </transverse_dimensions>
   </geometry>
   
-  <vector name="motion" type="double">
+  <vector name="motion" type="real">
     <components>
       x y vx vy
     </components>
@@ -41,7 +41,7 @@
     </initialisation>
   </vector>
   
-  <vector name="mass" type="double">
+  <vector name="mass" type="real">
     <components>
       m
     </components>
@@ -65,7 +65,7 @@
           dx_dt = vx;
           dy_dt = vy;
           for (long k = 0; k < j; k++) {
-            double inverseSeparationCubed = pow((x(j: k) - x(j: j))*(x(j: k) - x(j: j)) + (y(j: k) - y(j: j))*(y(j: k) - y(j: j)), -3.0/2.0);
+            real inverseSeparationCubed = pow((x(j: k) - x(j: j))*(x(j: k) - x(j: j)) + (y(j: k) - y(j: j))*(y(j: k) - y(j: j)), -3.0/2.0);
             // printf("j: %li k: %li    x[j]: %e x[k]: %e  y[j]: %e y[k]: %e\n", j, k, x[j], x[k], y[j], y[k]);
             // printf("separationSquared: %e inverseSeparationCubed: %e\n", (x[k] - x[j])*(x[k] - x[j]) + (y[k] - y[j])*(y[k] - y[j]), inverseSeparationCubed);
             dvx_dt(j: j) += m(j: k)*(x(j: k) - x(j: j))*inverseSeparationCubed;

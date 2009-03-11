@@ -14,10 +14,10 @@
     <openmp />
     <globals>
       <![CDATA[
-      const double T = 10.0;
-      const double mass = 1e-3;
-      const double length = 1.0;
-      const double mu = mass/length;
+      const real T = 10.0;
+      const real mass = 1e-3;
+      const real length = 1.0;
+      const real mu = mass/length;
       ]]>
     </globals>
   </features>
@@ -29,7 +29,7 @@
     </transverse_dimensions>
   </geometry>
   
-  <vector name="main" initial_space="x" type="double">
+  <vector name="main" initial_space="x" type="real">
     <components>
       u uDot
     </components>
@@ -44,7 +44,7 @@
   <sequence>
     <integrate algorithm="RK4" interval="2e-3" steps="100">
       <samples>50 50</samples>
-      <computed_vector name="moment_creator" dimensions="" type="double">
+      <computed_vector name="moment_creator" dimensions="" type="real">
         <components>moment</components>
         <evaluation>
           <dependencies fourier_space="kx"> main </dependencies>

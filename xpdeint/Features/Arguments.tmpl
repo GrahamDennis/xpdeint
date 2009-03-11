@@ -97,7 +97,7 @@ $argument.shortName:@slurp
       $argument.name = string(optarg);
     @elif $argument.type in ('int', 'long'):
       $argument.name = strtol(optarg, NULL, 10);
-    @elif $argument.type in 'double'
+    @elif $argument.type in 'real'
       $argument.name = strtod(optarg, NULL);
     @end if
       break;
@@ -126,7 +126,7 @@ ${insertUserCodeFromEntity($postArgumentsCodeEntity)}@slurp
   @set $formatSpecifierMap = {'string': ('s', '.c_str()'),
                               'int':    ('i', ''),
                               'long':   ('li', ''),
-                              'double': ('e', '')}
+                              'real': ('e', '')}
   @#
 fprintf($fp, "\nVariables that can be specified on the command line:\n");
   @for $argument in $argumentList

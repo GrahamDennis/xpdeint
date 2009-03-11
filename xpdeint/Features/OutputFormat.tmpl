@@ -10,7 +10,6 @@ Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 
 @def description: Unnamed Output Format
 @attr $outputFormatClasses = {}
-@attr $precision = 'double'
 @attr $outputFormat = False
 @attr $outputArguments = []
 
@@ -148,7 +147,7 @@ ${dimension.inSpace(space).name} @slurp
   @# Now loop over the dependent variables
   @for $variable in $dependentVariables
     @for $componentName in $variable.components
-      @if $variable.vector.type == 'double'
+      @if $variable.vector.type == 'real'
 ${componentName} @slurp
       @else
 ${componentName}R ${componentName}I @slurp

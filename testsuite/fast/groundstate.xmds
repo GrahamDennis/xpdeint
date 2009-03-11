@@ -31,7 +31,7 @@
     </components>
     <initialisation>
       <![CDATA[
-        double Vtrap = -exp(-y*y);
+        real Vtrap = -exp(-y*y);
       
         V1  = -i*Vtrap;
       
@@ -52,7 +52,7 @@
     </initialisation>
   </vector>
   
-  <computed_vector name="normalisation" dimensions="" type="double">
+  <computed_vector name="normalisation" dimensions="" type="real">
     <components> Ncalc </components>
     <evaluation>
       <dependencies fourier_space="y">wavefunction</dependencies>

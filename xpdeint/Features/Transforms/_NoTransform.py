@@ -19,7 +19,7 @@ class _NoTransform (_Transform):
   
   def newDimension(self, name, lattice, minimum, maximum,
                    parent, transformName, aliases = set(),
-                   type = 'double', spectralLattice = None, xmlElement = None):
+                   type = 'real', spectralLattice = None, xmlElement = None):
     assert transformName == 'none'
     dim = super(_NoTransform, self).newDimension(name, lattice, minimum, maximum,
                                                  parent, transformName, aliases,

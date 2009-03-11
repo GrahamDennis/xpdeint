@@ -86,18 +86,18 @@ if (fwrite(&dataSize, sizeof(unsigned long), 1, fpBinary) != 1) {
   _LOG(_ERROR_LOG_LEVEL, "Error writing size of dimension '${dimRep.name}' to binary data file '%s'.\n", _datFilename);
 }
     @if isinstance(dimRep, NonUniformDimensionRepresentation)
-if (fwrite(${dimRep.arrayName}, sizeof(double), dataSize, fpBinary) != dataSize) {
+if (fwrite(${dimRep.arrayName}, sizeof(real), dataSize, fpBinary) != dataSize) {
   _LOG(_ERROR_LOG_LEVEL, "Error writing coordinate values for dimension '${dimRep.name}' to binary data file '%s'.\n", _datFilename);
 }
     @else
 coordinate = ${dimRep.minimum};
 for (long _i0 = 0; _i0 < dataSize; _i0++, coordinate += ${dimRep.stepSize}) {
-  if (fwrite(&coordinate, sizeof(double), 1, fpBinary) != 1) {
+  if (fwrite(&coordinate, sizeof(real), 1, fpBinary) != 1) {
     _LOG(_ERROR_LOG_LEVEL, "Error writing coordinate values for dimension '${dimRep.name}' to binary data file '%s'.\n", _datFilename);
   }
 }
     @end if
-fieldOffset += sizeof(unsigned long) + sizeof(double) * dataSize;
+fieldOffset += sizeof(unsigned long) + sizeof(real) * dataSize;
 
   @end for
   @#
@@ -106,7 +106,7 @@ dataSize = ${' * '.join([dim.inSpace(space).globalLattice for dim in field.dimen
   @else
 dataSize = 1;
   @end if
-off_t vectorFieldSize = dataSize * sizeof(double) + sizeof(unsigned long);
+off_t vectorFieldSize = dataSize * sizeof(real) + sizeof(unsigned long);
 
 for (int _i = 0; _i < ${componentCount}; _i++) {
   fseeko(fpBinary, fieldOffset + _i * vectorFieldSize, SEEK_SET);
@@ -178,19 +178,19 @@ _outputfield_index_pointer += ($dim.inSpace(space).strictlyAscendingGlobalIndex)
   @end for
 
 if (_outputfield_index_pointer != _outputfield_old_index_pointer + 1)
-  fseeko(fpBinary, fieldOffset + _outputfield_index_pointer * sizeof(double) + (${variablesInEarlierVectors} + _component) * vectorFieldSize + sizeof(unsigned long), SEEK_SET);
+  fseeko(fpBinary, fieldOffset + _outputfield_index_pointer * sizeof(real) + (${variablesInEarlierVectors} + _component) * vectorFieldSize + sizeof(unsigned long), SEEK_SET);
 
-  @if $variable.vector.type == 'double'
-if (fwrite(&${variable.arrayName}[_${variable.vector.id}_index_pointer + _component], sizeof(double), 1, fpBinary) != 1) {
+  @if $variable.vector.type == 'real'
+if (fwrite(&${variable.arrayName}[_${variable.vector.id}_index_pointer + _component], sizeof(real), 1, fpBinary) != 1) {
   _LOG(_ERROR_LOG_LEVEL, "Error writing output data.\n");
 }
   @else
 if (_component & 1) {
-  if (fwrite(&${variable.arrayName}[_${variable.vector.id}_index_pointer + _component/2].imag(), sizeof(double), 1, fpBinary) != 1) {
+  if (fwrite(&${variable.arrayName}[_${variable.vector.id}_index_pointer + _component/2].Im(), sizeof(real), 1, fpBinary) != 1) {
     _LOG(_ERROR_LOG_LEVEL, "Error writing output data.\n");
   }
 } else {
-  if (fwrite(&${variable.arrayName}[_${variable.vector.id}_index_pointer + _component/2].real(), sizeof(double), 1, fpBinary) != 1) {
+  if (fwrite(&${variable.arrayName}[_${variable.vector.id}_index_pointer + _component/2].Re(), sizeof(real), 1, fpBinary) != 1) {
     _LOG(_ERROR_LOG_LEVEL, "Error writing output data.\n");
   }
 }

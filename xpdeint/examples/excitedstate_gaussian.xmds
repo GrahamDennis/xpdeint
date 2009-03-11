@@ -55,7 +55,7 @@
     </initialisation>
   </vector>
   
-  <computed_vector name="normalisation" dimensions="" type="double">
+  <computed_vector name="normalisation" dimensions="" type="real">
     <components>
       Ncalc
     </components>

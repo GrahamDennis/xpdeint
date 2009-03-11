@@ -13,10 +13,10 @@
     <validation kind="run-time" />
     <globals>
       <![CDATA[
-        const double M = 9.1e-31; // Mass of an electron
-        const double hbar = 1.05e-34;
-        const double omega = 2*M_PI*1e3;
-        const double offset = 1.0 * sqrt(hbar/(M*omega));
+        const real M = 9.1e-31; // Mass of an electron
+        const real hbar = 1.05e-34;
+        const real omega = 2*M_PI*1e3;
+        const real offset = 1.0 * sqrt(hbar/(M*omega));
         
       ]]>
     </globals>
@@ -42,7 +42,7 @@
     </initialisation>
   </vector>
   
-  <computed_vector name="normalisation" dimensions="" type="double">
+  <computed_vector name="normalisation" dimensions="" type="real">
     <components>N integral_y2</components>
     <evaluation>
       <dependencies>main</dependencies>

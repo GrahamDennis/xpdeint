@@ -12,7 +12,7 @@
     <bing />
     <!-- That's right, this script breaks the shackles with FFTW! -->
     <arguments>
-      <argument name="lambda" type="double" default_value="100.0" />
+      <argument name="lambda" type="real" default_value="100.0" />
       <![CDATA[
         _LOG(_SIMULATION_LOG_LEVEL, "lambda is %e\n", lambda);
       ]]>
@@ -23,7 +23,7 @@
     <propagation_dimension> t </propagation_dimension>
   </geometry>
   
-  <vector name="main" type="double">
+  <vector name="main" type="real">
     <components>
       y yDot
     </components>

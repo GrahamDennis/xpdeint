@@ -14,10 +14,10 @@
     <openmp />
     <globals>
       <![CDATA[
-      const double T = 10.0;
-      const double mass = 1e-3;
-      const double length = 1.0;
-      const double mu = mass/length;
+      const real T = 10.0;
+      const real mass = 1e-3;
+      const real length = 1.0;
+      const real mu = mass/length;
       ]]>
     </globals>
   </features>
@@ -111,8 +111,8 @@
         <moments>momR momentR</moments>
         <dependencies>integrated_u filter1</dependencies>
         <![CDATA[
-          momR = mom.real();
-          momentR = moment.real();
+          momR = mom.Re();
+          momentR = moment.Re();
         ]]>
       </sampling>
     </group>

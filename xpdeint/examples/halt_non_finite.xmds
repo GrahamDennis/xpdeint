@@ -12,8 +12,8 @@
     <halt_non_finite />
     <globals>
       <![CDATA[
-      const double x0 = 1.0;
-      const double t0 = 1.0;
+      const real x0 = 1.0;
+      const real t0 = 1.0;
       ]]>
     </globals>
   </features>
@@ -22,7 +22,7 @@
     <propagation_dimension> t </propagation_dimension>
   </geometry>
   
-  <vector name="main" type="double">
+  <vector name="main" type="real">
     <components> x </components>
     <initialisation>
       <![CDATA[

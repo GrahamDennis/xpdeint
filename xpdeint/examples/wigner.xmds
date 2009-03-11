@@ -18,26 +18,26 @@
     <globals>
       <![CDATA[
       /* physical constants */
-        const double hbar = 1.05457148e-34;
+        const real hbar = 1.05457148e-34;
         
       /* system constants */
-        const double omega = 0.0;
-        const double Uint = 1.0*hbar;
+        const real omega = 0.0;
+        const real Uint = 1.0*hbar;
         
       /* initial state constants */
-        const double alpha_0 = 3.0;
+        const real alpha_0 = 3.0;
         
       /* used for calculating constants derived from arguments */
         bool firstTime = true;
         
       /* absorbing boundary constants */
-       const double absorb = 8.0;
-       const double width = 0.3;
+       const real absorb = 8.0;
+       const real width = 0.3;
        
       /* derived constants */
         const complex miOmega = -i*omega;
         const complex miUint_hbar = -i*Uint/hbar;
-        const double Uint_hbar = Uint/hbar;
+        const real Uint_hbar = Uint/hbar;
       ]]>
     </globals>
   </features>
@@ -61,11 +61,11 @@
     </initialisation>
   </vector>
   
-  <vector name="dampConstants" initial_space="x y" type="double">
+  <vector name="dampConstants" initial_space="x y" type="real">
     <components>damping</components>
     <initialisation>
       <![CDATA[
-      double r = sqrt(x*x + y*y);
+      real r = sqrt(x*x + y*y);
       
       if (r > _max_x-width)
         damping = 0.0;
@@ -116,8 +116,8 @@
         <moments>WR WI</moments>
         <dependencies>main</dependencies>
         <![CDATA[
-          WR = W.real();
-          WI = W.imag();
+          WR = W.Re();
+          WI = W.Im();
         ]]>
       </sampling>
     </group>

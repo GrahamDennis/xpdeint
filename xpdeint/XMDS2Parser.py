@@ -284,12 +284,9 @@ class XMDS2Parser(ScriptParser):
         if shortName == "":
           raise ParserException(argumentElement, "Unable to find a short (single character) name for command line option")        
         
-        if type == 'real':
-          type = 'double'
-        
-        if not type in ('int', 'long', 'double', 'string'):
+        if not type in ('int', 'long', 'real', 'string'):
           raise ParserException(argumentElement, "Invalid type name '%(type)s'.\n"
-                                                 "Valid options are 'int', 'long', 'double' or 'string'." % locals())
+                                                 "Valid options are 'int', 'long', 'real' or 'string'." % locals())
         
         argumentAttributeDictionary = dict()
         
@@ -522,7 +519,7 @@ class XMDS2Parser(ScriptParser):
                                      **self.argumentsToTemplateConstructors)
     
     propagationDimension.addRepresentation(NonUniformDimensionRepresentation(name = propagationDimensionName,
-                                                                             type = 'double',
+                                                                             type = 'real',
                                                                              parent = propagationDimension,
                                                                              xmlElement = propagationDimensionElement,
                                                                              **self.argumentsToTemplateConstructors))
@@ -566,16 +563,16 @@ class XMDS2Parser(ScriptParser):
         self.globalNameSpace['symbolNames'].add(dimensionName)
         
         # Work out the type of the dimension
-        dimensionType = 'double'
+        dimensionType = 'real'
         if dimensionElement.hasAttribute('type') and dimensionElement.getAttribute('type'):
           dimensionType = dimensionElement.getAttribute('type').strip().lower()
-          if dimensionType in ('double', 'real'):
-            dimensionType = 'double'
+          if dimensionType == 'real':
+            pass
           elif dimensionType in ('long', 'int', 'integer'):
             dimensionType = 'long'
           else:
             raise ParserException(dimensionElemment, "'%(dimensionType)s' is not a valid type for a dimension.\n"
-                                                     "It must be one of 'real'/'double' (default & synonyms) or "
+                                                     "It must be one of 'real' (default) or "
                                                      "'integer'/'int'/'long' (synonyms)." % locals())
         
         
@@ -593,7 +590,7 @@ class XMDS2Parser(ScriptParser):
           raise ParserException(dimensionElement, "Each dimension element must have a non-empty 'domain' attribute\n"
                                                   "(or in the case of the 'hermite-gauss' transform a 'length_scale' attribute).")
         
-        if dimensionType == 'double':
+        if dimensionType == 'real':
           domainPairType = float
         else:
           domainPairType = int
@@ -608,7 +605,7 @@ class XMDS2Parser(ScriptParser):
             if (%(minimumString)s >= %(maximumString)s)
               _LOG(_ERROR_LOG_LEVEL, "ERROR: The end point of the dimension '%(maximumString)s' must be "
                                      "greater than the start point.\\n"
-                                     "Start = %%e, End = %%e\\n", (double)%(minimumString)s, (double)%(maximumString)s);""" % locals())
+                                     "Start = %%e, End = %%e\\n", (real)%(minimumString)s, (real)%(maximumString)s);""" % locals())
           else:
             raise ParserException(dimensionElement, """Could not understand domain (%(minimumString)s, %(maximumString)s) as numbers.
 Use feature <validation/> to allow for arbitrary code.""" % locals() )
@@ -617,7 +614,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
             raise ParserException(dimensionElement, "The end point of the dimension, '%(maximumString)s', must be "
                                                     "greater than the start point, '%(minimumString)s'." % locals())
         
-        if dimensionType == 'double' or dimensionElement.hasAttribute('lattice'):
+        if dimensionType == 'real' or dimensionElement.hasAttribute('lattice'):
           ## Grab the number of lattice points and make sure it's a positive integer
           latticeString = parseAttribute('lattice')
           if not latticeString.isdigit():
@@ -646,7 +643,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
         transformName = 'none'
         transformMultiplexer = self.globalNameSpace['features']['TransformMultiplexer']
         
-        if dimensionType == 'double' and dimensionElement.hasAttribute('transform'):
+        if dimensionType == 'real' and dimensionElement.hasAttribute('transform'):
           transformName = dimensionElement.getAttribute('transform').strip()
           transform = transformMultiplexer.transformWithName(transformName.lower())
           if not transform:
@@ -755,12 +752,12 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     
     if typeString in (None, 'complex'):
       vectorTemplate.type = 'complex'
-    elif typeString in ('double', 'real'):
-      vectorTemplate.type = 'double'
+    elif typeString == 'real':
+      vectorTemplate.type = 'real'
     else:
       raise ParserException(componentsElement, "Unknown type '%(typeString)s'. "
                                                "Options are 'complex' (default), "
-                                               "or 'double' / 'real' (synonyms)" % locals())
+                                               "or 'real'" % locals())
     
     componentsString = componentsElement.innerText()
     if not componentsString:
@@ -921,12 +918,12 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     
     if typeString in (None, 'complex'):
       vectorTemplate.type = 'complex'
-    elif typeString in ('double', 'real'):
-      vectorTemplate.type = 'double'
+    elif typeString == 'real':
+      vectorTemplate.type = 'real'
     else:
       raise ParserException(componentsElement, "Unknown type '%(typeString)s'. "
                                                "Options are 'complex' (default), "
-                                               "or 'double' / 'real' (synonyms)" % locals())
+                                               "or 'real'" % locals())
     
     componentsString = componentsElement.innerText()
     if not componentsString:
@@ -1402,9 +1399,9 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     operatorVectorTemplate.type = 'complex'
     if operatorElement.hasAttribute('type'):
       typeString = operatorElement.getAttribute('type').strip().lower()
-      if not typeString in ['double', 'complex']:
+      if not typeString in ['real', 'complex']:
         raise ParserException(operatorElement, "Unknown IP operator type '%(typeString)s'.\n"
-                                               "The 'type' attribute must be either 'double' or 'complex'." % locals())
+                                               "The 'type' attribute must be either 'real' or 'complex'." % locals())
       operatorVectorTemplate.type = typeString
     
     operatorVectorTemplate.initialSpace = operatorTemplate.operatorSpace
@@ -1460,7 +1457,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       operatorVectorTemplate = VectorElementTemplate(name = vectorName, field = operatorTemplate.field,
                                                      parent = operatorTemplate,
                                                      **self.argumentsToTemplateConstructors)
-      operatorVectorTemplate.type = 'double'
+      operatorVectorTemplate.type = 'real'
       
       operatorVectorTemplate.initialSpace = operatorTemplate.operatorSpace
       operatorVectorTemplate.needsInitialisation = False
@@ -1473,7 +1470,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     resultVector = VectorElementTemplate(name = vectorName, field = operatorTemplate.field,
                                          parent = operatorTemplate,
                                          **self.argumentsToTemplateConstructors)
-    resultVector.type = 'double'
+    resultVector.type = 'real'
     
     resultVector.initialSpace = 0
     resultVector.needsInitialisation = False
@@ -1540,7 +1537,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     
     propDimRep = propagationDimension.inSpace(0)
     
-    if not propDimRep.type == 'double' or not isinstance(propagationDimension.inSpace(0), UniformDimensionRepresentation):
+    if not propDimRep.type == 'real' or not isinstance(propagationDimension.inSpace(0), UniformDimensionRepresentation):
       raise ParserException(operatorElement, "Cannot integrate in the '%(propagationDimensionName)s' direction as it is an integer-valued dimension.\n"
                                              "Cross-propagators can only integrate along normal dimensions." % locals())
     
@@ -1663,7 +1660,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
                                     **self.argumentsToTemplateConstructors)
       
       propagationDimRep = NonUniformDimensionRepresentation(name = self.globalNameSpace['globalPropagationDimension'],
-                                                            type = 'double',
+                                                            type = 'real',
                                                             lattice = sampleCount,
                                                             parent = samplingDimension,
                                                             **self.argumentsToTemplateConstructors)
@@ -1765,7 +1762,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       # end looping over dimension elements.  
       rawVectorTemplate = VectorElementTemplate(name = 'raw', field = momentGroupTemplate.outputField,
                                                 **self.argumentsToTemplateConstructors)
-      rawVectorTemplate.type = 'double'
+      rawVectorTemplate.type = 'real'
       rawVectorTemplate.initialSpace = sampleSpace
       momentGroupTemplate.rawVector = rawVectorTemplate
       
@@ -1827,14 +1824,14 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       
       processedVectorTemplate = VectorElementTemplate(name = 'processed', field = outputFieldTemplate,
                                                       **self.argumentsToTemplateConstructors)
-      processedVectorTemplate.type = 'double'
+      processedVectorTemplate.type = 'real'
       processedVectorTemplate.initialSpace = momentGroupTemplate.outputSpace
       momentGroupTemplate.processedVector = processedVectorTemplate
       
       if not processingElement:
         momentGroupTemplate.hasPostProcessing = False
         processedVectorTemplate.components = rawVectorTemplate.components[:]
-        rawVectorTemplate.type = 'double'
+        rawVectorTemplate.type = 'real'
       else:
         momentGroupTemplate.hasPostProcessing = True
   

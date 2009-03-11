@@ -20,7 +20,7 @@
     <globals>
       <![CDATA[
       
-        const double feedp = -1.35;
+        const real feedp = -1.35;
         
       ]]>
     </globals>
@@ -33,16 +33,16 @@
     </transverse_dimensions>
   </geometry>
     
-  <vector type="double" name="variables" dimensions="j">
+  <vector type="real" name="variables" dimensions="j">
     <components> x p </components>
     <initialisation>
       <![CDATA[
       
         //Coherent state initialisation
         
-        double x0 = sqrt(10.0);
-        double p0 = sqrt(10.0);
-        double sigma0 = sqrt(0.5);
+        real x0 = sqrt(10.0);
+        real p0 = sqrt(10.0);
+        real sigma0 = sqrt(0.5);
       
         x = x0 + n_1*sigma0;
         p = p0 + n_2*sigma0;
@@ -51,7 +51,7 @@
     </initialisation>
   </vector>
   
-  <computed_vector type="double" name="observables_evo" dimensions="">
+  <computed_vector type="real" name="observables_evo" dimensions="">
     <components>avg_x_evo avg_p_evo avg_pp_evo</components>
     <evaluation>
     <dependencies>variables</dependencies>
@@ -61,7 +61,7 @@
     </evaluation>
   </computed_vector>
   
-  <computed_vector type="double" name="observables" dimensions="">
+  <computed_vector type="real" name="observables" dimensions="">
     <components>avg_x avg_p avg_E avg_EE avg_exx avg_epp avg_eEE avg_eEEEE</components>
     <evaluation>
     <dependencies>variables</dependencies>

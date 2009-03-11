@@ -75,10 +75,10 @@ fprintf($fp, "@slurp
   @# Now loop over the (dependent) variables
   @for $variable in $dependentVariables
     @for $componentNumber, $component in enumerate($variable.components)
-      @if $variable.vector.type == 'double'
+      @if $variable.vector.type == 'real'
 , ${variable.arrayName}[_${variable.vector.id}_index_pointer + ${componentNumber}]@slurp
       @else
-, ${variable.arrayName}[_${variable.vector.id}_index_pointer + ${componentNumber}].real(), ${variable.arrayName}[_${variable.vector.id}_index_pointer + ${componentNumber}].imag()@slurp
+, ${variable.arrayName}[_${variable.vector.id}_index_pointer + ${componentNumber}].Re(), ${variable.arrayName}[_${variable.vector.id}_index_pointer + ${componentNumber}].Im()@slurp
       @end if
     @end for
   @end for

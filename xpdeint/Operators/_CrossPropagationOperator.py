@@ -209,8 +209,8 @@ class _CrossPropagationOperator (Operator):
     # self.crossPropagationIntegratorDeltaAOperator.codeBlocks['operatorDefinition'] = self.primaryCodeBlock
     
     # Allow the cross propagation dimension variable to exist in the delta a operator.
-    self.crossPropagationIntegrator.functions['deltaA'].args.append(('double', self.propagationDimension)) # Add it to the calculate_delta_a function
-    self.crossPropagationIntegratorDeltaAOperator.functions['evaluate'].args.append(('double', self.propagationDimension)) # Add it to the delta a operator
+    self.crossPropagationIntegrator.functions['deltaA'].args.append(('real', self.propagationDimension)) # Add it to the calculate_delta_a function
+    self.crossPropagationIntegratorDeltaAOperator.functions['evaluate'].args.append(('real', self.propagationDimension)) # Add it to the delta a operator
   
   
 

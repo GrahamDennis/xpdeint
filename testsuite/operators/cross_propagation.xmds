@@ -39,7 +39,7 @@
     </initialisation>
   </vector>
   
-  <vector name="constants" type="double">
+  <vector name="constants" type="real">
     <components>cosine</components>
     <initialisation>
       <![CDATA[
@@ -48,7 +48,7 @@
     </initialisation>
   </vector>
   
-  <vector name="zerodConstants" type="double">
+  <vector name="zerodConstants" type="real">
     <components>bar</components>
     <initialisation>
       <![CDATA[

@@ -57,7 +57,7 @@ ${evaluateOperatorFunctionContentsWithoutCodeBlock(function)}@slurp
     @# the loop
     @for $operatorComponentName, $operatorComponentDictionary in $operatorComponents.iteritems()
       @set $typeNamesSet = set([vector.type for vector in operatorComponentDictionary.iterkeys()])
-      @set $typeName = 'double'
+      @set $typeName = 'real'
       @if 'complex' in typeNamesSet
         @set $typeName = 'complex'
       @end if

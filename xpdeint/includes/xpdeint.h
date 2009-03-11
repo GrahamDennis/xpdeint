@@ -17,8 +17,6 @@
 
 inline complex::value_type mod(const complex& _t) { return std::abs(_t); }
 inline complex::value_type mod2(const complex& _t) { return std::norm(_t); }
-inline complex::value_type Re(const complex& _t) { return _t.real(); }
-inline complex::value_type Im(const complex& _t) { return _t.imag(); }
 
 namespace std {
   inline complex operator*(const complex& a, const int b)
