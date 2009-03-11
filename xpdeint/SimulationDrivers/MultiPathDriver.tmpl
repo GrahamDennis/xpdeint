@@ -25,7 +25,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
   @#
 // Arrays for standard error of moment group results
   @for mg in $momentGroups
-double* _${mg.outputField.name}_sd;
+real* _${mg.outputField.name}_sd;
   @end for
 @end def
 
@@ -144,10 +144,10 @@ The return value is the template string that will be
   @silent dependentVariables.append(newVariableDict)
   @#
 // Calculate the mean
-_active_\${vector.id}[\${index}] /= (double) _n_paths;
+_active_\${vector.id}[\${index}] /= (real) _n_paths;
 
 // Calculate the standard error
-_${fieldName}_sd[\${index}] /= (double) _n_paths;
+_${fieldName}_sd[\${index}] /= (real) _n_paths;
 _${fieldName}_sd[\${index}] -= _active_\${vector.id}[\${index}] * _active_\${vector.id}[\${index}];
 if (_${fieldName}_sd[\${index}] > 0.0) // UNVECTORISABLE
   _${fieldName}_sd[\${index}] = sqrt(_${fieldName}_sd[\${index}] / _n_paths);
@@ -158,7 +158,7 @@ else
 
 // Calculate other means
     @for arrayName in $otherArrayNames
-${arrayName}[\${index}] /= (double) _n_paths;
+${arrayName}[\${index}] /= (real) _n_paths;
     @end for
   @end if
   @#

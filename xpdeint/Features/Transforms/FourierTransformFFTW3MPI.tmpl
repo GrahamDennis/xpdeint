@@ -297,8 +297,8 @@ _plan = fftw_mpi_plan_many_dft(${rank}, _fft_sizes, _howmany, ${inBlockSize}, ${
                                MPI_COMM_WORLD, FFTW_${direction.upper}, ${planType} | ${transposedState});
   @else
 _plan = fftw_mpi_plan_many_r2r(${rank}, _fft_sizes, _howmany, ${inBlockSize}, ${outBlockSize},
-                               reinterpret_cast<double*>($arrayName),
-                               reinterpret_cast<double*>($arrayName),
+                               reinterpret_cast<real*>($arrayName),
+                               reinterpret_cast<real*>($arrayName),
                                MPI_COMM_WORLD, _r2r_kinds, ${planType} | ${transposedState});
   @end if
 if (!_plan)
@@ -365,8 +365,8 @@ _howmany *= ${dim.inSpace(0).globalLattice};
 _plan  = fftw_mpi_plan_many_transpose(${mpiDimensions[0].inSpace(0).globalLattice},
                                       ${mpiDimensions[1].inSpace(0).globalLattice},
                                       _howmany, _unswapped_block_size, _swapped_block_size,
-                                      reinterpret_cast<double*>($arrayName),
-                                      reinterpret_cast<double*>($arrayName),
+                                      reinterpret_cast<real*>($arrayName),
+                                      reinterpret_cast<real*>($arrayName),
                                       MPI_COMM_WORLD, ${planType});
 if (!_plan)
   _LOG(_ERROR_LOG_LEVEL, "Unable to create partial transpose plan for vector ${vector.id}\n");
@@ -376,8 +376,8 @@ _space_transform _${vector.id}_partial_transpose(_plan, _MPI_TRANSPOSE);
 _plan = fftw_mpi_plan_many_transpose(${mpiDimensions[1].inSpace(0).globalLattice},
                                      ${mpiDimensions[0].inSpace(0).globalLattice},
                                      _howmany, _swapped_block_size, _unswapped_block_size,
-                                     reinterpret_cast<double*>($arrayName),
-                                     reinterpret_cast<double*>($arrayName),
+                                     reinterpret_cast<real*>($arrayName),
+                                     reinterpret_cast<real*>($arrayName),
                                      MPI_COMM_WORLD, ${planType});
 if (!_plan)
   _LOG(_ERROR_LOG_LEVEL, "Unable to create partial untranspose plan for vector ${vector.id}\n");
@@ -612,8 +612,8 @@ else if ((_from_space & ${partial2DMask}) != (_to_space & ${partial2DMask})) {
 case _MPI_DFT_TRANSFORM:
 case _MPI_R2R_TRANSFORM:
 case _MPI_TRANSPOSE:
-  fftw_execute_r2r(_it->first, reinterpret_cast<double*>(_active_${vector.id}),
-                               reinterpret_cast<double*>(_active_${vector.id}));
+  fftw_execute_r2r(_it->first, reinterpret_cast<real*>(_active_${vector.id}),
+                               reinterpret_cast<real*>(_active_${vector.id}));
   break;
   @#
 @end def

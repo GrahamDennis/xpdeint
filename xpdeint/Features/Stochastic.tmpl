@@ -23,10 +23,10 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 // struct used to store step size and noise vector to ensure
 // stochastic convergence
 struct _dtdWstore {
-  double _step;
+  real _step;
   @for noise in noisesNeeded
     @for noiseVector in noise.noiseVectors.itervalues()
-  double* _${noiseVector.id};
+  real* _${noiseVector.id};
     @end for
   @end for
   _dtdWstore() {
@@ -94,7 +94,7 @@ ${insertCodeForFeatures('generateNoisesBegin', featureOrdering, featureDict)}@sl
   @set $extraIndent = featureDict['extraIndent']
   @#
   @capture result
-double _var = 1.0 / $field.volumeElementInSpace($space);
+real _var = 1.0 / $field.volumeElementInSpace($space);
 
     @for noise in noisesNeeded
       @set $noiseVector = noise.noiseVectorForField(field)
@@ -118,7 +118,7 @@ ${insertCodeForFeaturesInReverseOrder('generateNoisesEnd', featureOrdering, feat
   @for field in integrator.integrationFields
     @set $space = $deltaAOperatorSpaceForFieldInIntegrator(field, integrator)
     @#
-const double _${field.name}_var = 1.0/($field.volumeElementInSpace($space) * _noiseStep);
+const real _${field.name}_var = 1.0/($field.volumeElementInSpace($space) * _noiseStep);
   @end for
   @#
 @end def
@@ -134,7 +134,7 @@ const double _${field.name}_var = 1.0/($field.volumeElementInSpace($space) * _no
   @for field in integrator.integrationFields
     @set $space = $deltaAOperatorSpaceForFieldInIntegrator(field, integrator)
     @#
-const double _${field.name}_var = 1.0 / $field.volumeElementInSpace($space);
+const real _${field.name}_var = 1.0 / $field.volumeElementInSpace($space);
   @end for
 
 list<_dtdWstore> _noise_list;
@@ -241,7 +241,7 @@ _make_${noise.prefix}_noises(_${field.name}_var/_step, _active_${noiseVector.id}
   // then we should just use half the step size because we are going to have
   // to do the other half at some point too.
   
-  const double _old_smallest_step = _noise_list.begin()->_step;
+  const real _old_smallest_step = _noise_list.begin()->_step;
   
   if (_step > 0.5*_old_smallest_step*(1.0 + _EPSILON))
     _step = 0.5*_old_smallest_step;
@@ -370,7 +370,7 @@ if (_active_node == _noise_list.end())
 else {
   for (list<_dtdWstore>::iterator _temp_iter = _active_node; _temp_iter != _noise_list.end(); _temp_iter++) {
     _temp_iter->_step -= _step;
-    double _temp_step = _temp_iter->_step;
+    real _temp_step = _temp_iter->_step;
     
   @for field in integrator.integrationFields
     @for noise in $noisesForFieldInIntegrator(field, integrator)

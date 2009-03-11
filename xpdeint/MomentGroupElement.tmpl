@@ -135,7 +135,7 @@ $insertCodeForFeatures('insideMomentGroupProcessingLoop', $featureOrdering)@slur
   @set $componentCount = 0
   @for $variable in $dependentVariables
     @set $componentCount += len($variable.vector.components)
-    @# Technically, all these variables must be of type double...
+    @# Technically, all these variables must be of type real...
     @if $variable.vector.type == 'complex'
       @set $componentCount += len($variable.vector.components)
     @end if

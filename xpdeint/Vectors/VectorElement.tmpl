@@ -100,7 +100,7 @@ ${aliasName} = NULL;
 @end def
 
 @def findMaximum($variableName, $space = None)
-double ${variableName} = 0.0;
+real ${variableName} = 0.0;
 
   @if $type == 'real'
     @set $modFunction = 'abs'
@@ -108,7 +108,7 @@ double ${variableName} = 0.0;
     @set $modFunction = 'mod2'
   @end if
   @capture loopContents
-double _current_size = ${modFunction}(_active_\${vector.id}[\${index}]);
+real _current_size = ${modFunction}(_active_\${vector.id}[\${index}]);
 if (_current_size > $variableName) // UNVECTORISABLE
   ${variableName} = _current_size;
   @end capture

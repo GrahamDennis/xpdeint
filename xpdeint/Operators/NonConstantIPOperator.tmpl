@@ -34,15 +34,15 @@ memset(_${id}_exponent_offset_map, 0, sizeof(_${id}_exponent_offset_map));
 @def calculateOperatorFieldFunctionContents($function)
   @#
   @if len($integrator.ipPropagationStepFractions) > 1
-static const double _propagationStepFractions[] = {
+static const real _propagationStepFractions[] = {
   @for $propagationStepFraction in $integrator.ipPropagationStepFractions
   $propagationStepFraction,
   @end for
 };
-const double _propagationStepFraction = _propagationStepFractions[abs(_exponent) - 1];
+const real _propagationStepFraction = _propagationStepFractions[abs(_exponent) - 1];
 _${id}_exponent_offset_map[abs(_exponent) - 1] = _arrayIndex;
   @else
-const double _propagationStepFraction = ${integrator.ipPropagationStepFractions[0]};
+const real _propagationStepFraction = ${integrator.ipPropagationStepFractions[0]};
   @end if
 
   @super(function)

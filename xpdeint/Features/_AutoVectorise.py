@@ -49,13 +49,13 @@ class _AutoVectorise (_Feature):
     arrayNames = set(self.arrayNameRegex.findall(templateString))
     
     # Create a template prefix that creates the *_dbl variables
-    vectorisationPreambleContents = ''.join(['  _MAKE_DBL_VARIABLE(%s);\n' % arrayName for arrayName in arrayNames])
+    vectorisationPreambleContents = ''.join(['  _MAKE_AUTOVEC_VARIABLE(%s);\n' % arrayName for arrayName in arrayNames])
     
     vectorisationPreambleTemplateFunction = ''.join(["@def vectorisationPreamble\n",
                                                      vectorisationPreambleContents,
                                                      "@end def\n"])
     
-    newTemplateString = self.arrayNameRegex.sub(r'_DBL(\1)', templateString)
+    newTemplateString = self.arrayNameRegex.sub(r'_AUTOVEC(\1)', templateString)
     
     dict['templateString'] = newTemplateString
     dict['templateFunctions'].append(vectorisationPreambleTemplateFunction)

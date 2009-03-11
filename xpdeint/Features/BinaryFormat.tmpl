@@ -65,7 +65,7 @@ else if (sizeof(unsigned long) == 8)
 else
   unsignedLongType = "ulong";
 
-fprintf($fp, "    <Stream><Metalink Format=\"Binary\" UnsignedLong=\"%s\" precision=\"double\" Type=\"Remote\" Encoding=\"%s\"/>\n",
+fprintf($fp, "    <Stream><Metalink Format=\"Binary\" UnsignedLong=\"%s\" precision=\"${precision}\" Type=\"Remote\" Encoding=\"%s\"/>\n",
         unsignedLongType, encoding);
 fprintf($fp, "%s\n", _datFilename);
 

@@ -10,8 +10,8 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
   @#
   @set $forwardDimRep = dim.inSpace(0)
   @set $backwardDimRep = dim.inSpace(-1)
-double *_mmt_matrix_${forwardDimRep.name}_${backwardDimRep.name};
-double *_mmt_matrix_${backwardDimRep.name}_${forwardDimRep.name};
+real *_mmt_matrix_${forwardDimRep.name}_${backwardDimRep.name};
+real *_mmt_matrix_${backwardDimRep.name}_${forwardDimRep.name};
   @#
 @end def
 
@@ -33,8 +33,8 @@ ${dimRep.stepSizeArrayName}[$index] = ${stepWeightForDimRepAtIndex(dimRep, index
 @def transformMatricesForDim($dim)
   @set $forwardDimRep = dim.inSpace(0)
   @set $backwardDimRep = dim.inSpace(-1)
-_mmt_matrix_${forwardDimRep.name}_${backwardDimRep.name}  = (double *)xmds_malloc(sizeof(real) * ${forwardDimRep.globalLattice} * ${backwardDimRep.globalLattice});
-_mmt_matrix_${backwardDimRep.name}_${forwardDimRep.name} = (double *)xmds_malloc(sizeof(real) * ${backwardDimRep.globalLattice} * ${forwardDimRep.globalLattice});
+_mmt_matrix_${forwardDimRep.name}_${backwardDimRep.name}  = (real *)xmds_malloc(sizeof(real) * ${forwardDimRep.globalLattice} * ${backwardDimRep.globalLattice});
+_mmt_matrix_${backwardDimRep.name}_${forwardDimRep.name} = (real *)xmds_malloc(sizeof(real) * ${backwardDimRep.globalLattice} * ${forwardDimRep.globalLattice});
 for (long _i0 = 0; _i0 < ${forwardDimRep.globalLattice}; _i0++) {
   ${transformMatricesForwardDimConstantsAtIndex(dim, '_i0'), autoIndent=True}@slurp
   for (long _i1 = 0; _i1 < ${backwardDimRep.globalLattice}; _i1++) {

@@ -13,8 +13,8 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 @def globalsForDim($dim)
   @#
   @set $besselOrder = $order + $besselOrderOffset
-const double _normbesseljzeros_${dim.name}[] = {${wrapArray($normalisedBesselJZeros($besselOrder, dim.inSpace(0).lattice))}};
-const double _besseljnorm_${dim.name} = ${besselJZeros($besselOrder, dim.inSpace(0).lattice+1)[-1]};
+const real _normbesseljzeros_${dim.name}[] = {${wrapArray($normalisedBesselJZeros($besselOrder, dim.inSpace(0).lattice))}};
+const real _besseljnorm_${dim.name} = ${besselJZeros($besselOrder, dim.inSpace(0).lattice+1)[-1]};
   @#
   @super(dim)
   @#
@@ -30,12 +30,12 @@ jn($order, $argument)@slurp
 
 @def gridAndStepForDimRepAtIndex($dimRep, $index)
   @#
-const double besselFactor = ${besselJFunctionCall($order + 1, c'_normbesseljzeros_${dimRep.parent.name}[${index}] * _besseljnorm_${dimRep.parent.name}')};
-const double ${dimRep.name}_max = @slurp
+const real besselFactor = ${besselJFunctionCall($order + 1, c'_normbesseljzeros_${dimRep.parent.name}[${index}] * _besseljnorm_${dimRep.parent.name}')};
+const real ${dimRep.name}_max = @slurp
   @if not dimRep.isTransformed
 ${dimRep._maximum};
   @else
-(_besseljnorm_${dimRep.parent.name}/((double)${dimRep._maximum}));
+(_besseljnorm_${dimRep.parent.name}/((real)${dimRep._maximum}));
   @end if
   @#
   @super(dimRep, index)
@@ -57,7 +57,7 @@ _normbesseljzeros_${dimRep.parent.name}[$index] * ${dimRep.name}_max@slurp
 
 @def transformMatricesForDimAtIndices($dim, $forwardIndex, $backwardIndex)
   @#
-const double besselFactor = ${besselJFunctionCall($order, c'_normbesseljzeros_${dim.name}[${forwardIndex}] * _normbesseljzeros_${dim.name}[${backwardIndex}] * _besseljnorm_${dim.name}')};
+const real besselFactor = ${besselJFunctionCall($order, c'_normbesseljzeros_${dim.name}[${forwardIndex}] * _normbesseljzeros_${dim.name}[${backwardIndex}] * _besseljnorm_${dim.name}')};
   @#
   @super(dim, forwardIndex, backwardIndex)
   @#

@@ -31,7 +31,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 ${basis.globalsForDim($geometry.dimensionWithName(dimName))}@slurp
 
   @end for
-double *_mmt_scratch_space;
+real *_mmt_scratch_space;
   @#
 @end def
 
@@ -79,7 +79,7 @@ for (long _i0=0; _i0 < $fieldDimRep.globalLattice; _i0++) {
 
   @end for
 
-_mmt_scratch_space = (double *)xmds_malloc(sizeof(${maxVector.type}) * ${maxVector.allocSize});
+_mmt_scratch_space = (real *)xmds_malloc(sizeof(${maxVector.type}) * ${maxVector.allocSize});
 
 // Matrices are stored in row-major format
   @for dimName, basis in $basisMap.items()
@@ -110,9 +110,9 @@ This writes the function that does the fourier transforming of a specific vector
 to and from arbitrary combinations of fourier-space and normal-space.
 *@
   @#
-double *source_${vector.id} = reinterpret_cast<double*>(_active_${vector.id});
-double *dest_${vector.id} = _mmt_scratch_space;
-double *temp = NULL;
+real *source_${vector.id} = reinterpret_cast<real*>(_active_${vector.id});
+real *dest_${vector.id} = _mmt_scratch_space;
+real *temp = NULL;
 
   @for $dimName, $basis in $basisMap.items()
     @set $dim = vector.field.dimensionWithName(dimName)
@@ -152,7 +152,7 @@ if ((_newSpace ^ _${vector.id}_space) & ${dim.transformMask}) {
 }
   @end for
 
-if (source_${vector.id} != reinterpret_cast<double*>(_active_${vector.id})) {
+if (source_${vector.id} != reinterpret_cast<real*>(_active_${vector.id})) {
   ${copyVectors([vector], '_active', 'source')}@slurp
 }
 

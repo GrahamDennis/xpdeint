@@ -12,7 +12,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 @def makeNoises
   @#
 ${generatorName}->RandFill_gaussian_FP64(_noise_vector, _n);
-const double _sigma = sqrt(_var);
+const real _sigma = sqrt(_var);
 #pragma ivdep
 for (long _i0 = 0; _i0 < _n; _i0++)
   _noise_vector[_i0] *= _sigma;
