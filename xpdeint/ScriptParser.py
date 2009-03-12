@@ -21,13 +21,14 @@ from xpdeint import RegularExpressionStrings
 ###     the script.
 
 class ScriptParser(object):
-  def canParseXMLDocument(self, xmlDocument):
-    return False
-  
-  def parseXMLDocument(self, xmlDocument, globalNameSpace):
-    return None
-  
-  def applyAttributeDictionaryToObject(self, attrDict, obj):
-    for attrName, attrValue in attrDict.iteritems():
-      obj.__setattr__(attrName, attrValue)
+    def canParseXMLDocument(self, xmlDocument):
+        return False
     
+    def parseXMLDocument(self, xmlDocument, globalNameSpace):
+        return None
+    
+    def applyAttributeDictionaryToObject(self, attrDict, obj):
+        for attrName, attrValue in attrDict.iteritems():
+            setattr(obj, attrName, attrValue)
+    
+
