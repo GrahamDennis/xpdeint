@@ -1079,7 +1079,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
                                               "Options are 'SI', 'SIC', 'RK4', 'RK9', 'RK45', 'ARK45' , 'RK89', or 'ARK89'." % locals())
     
     integratorTemplate = integratorTemplateClass(stepperClass = stepperTemplateClass, **self.argumentsToTemplateConstructors)
-    self.applyAttributeDictionaryToObject(algorithmSpecificOptionsDict, integratorTemplate)      
+    self.applyAttributeDictionaryToObject(algorithmSpecificOptionsDict, stepperTemplateClass)
     
     if integrateElement.hasAttribute('home_space'):
       attributeValue = integrateElement.getAttribute('home_space').strip().lower()
