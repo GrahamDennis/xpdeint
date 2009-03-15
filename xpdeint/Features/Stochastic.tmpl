@@ -296,7 +296,7 @@ ${breakPoissonianNoiseInFieldInSpace(noise, field, space)}@slurp
     @end for
   @end for
   
-  if (_break_next && fabs(${propagationDimension} - _${propagationDimension}_ini + _step - _${propagationDimension}_break_next) > _step*_EPSILON)
+  if (_break_next && abs(${propagationDimension} - _${propagationDimension}_ini + _step - _${propagationDimension}_break_next) > _step*_EPSILON)
     _break_next = false;
 } 
 

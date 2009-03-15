@@ -10,8 +10,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 @from xpdeint.Geometry.SplitUniformDimensionRepresentation import SplitUniformDimensionRepresentation
 
 @def description: FFTW3 with MPI
-@attr $wisdomExtension = '.fftw3_mpi'
-@attr $uselib = ['fftw3', 'fftw3_mpi']
+@attr $fftwSuffix = 'mpi'
 
 @def includes
   @#
@@ -41,7 +40,7 @@ ptrdiff_t _swapped_block_size = 0;
 
 @def mainBegin($dict)
   @#
-fftw_mpi_init();
+${fftwPrefix}_mpi_init();
 ptrdiff_t _fft_sizes[${len($geometry.dimensions)}];
   @super($dict)
   @#
@@ -60,7 +59,7 @@ ptrdiff_t _sizes[] = {${', '.join([dim.inSpace(0).globalLattice for dim in fullT
 ptrdiff_t _howmany = ((ptrdiff_t)1) * ${geometry.pointsInDimensionsWithIndices(indices)};
 ptrdiff_t _local_alloc_size;
 
-_local_alloc_size = fftw_mpi_local_size_many_transposed(${len(fullTransformDimensions)}, _sizes, _howmany,
+_local_alloc_size = ${fftwPrefix}_mpi_local_size_many_transposed(${len(fullTransformDimensions)}, _sizes, _howmany,
                                                         FFTW_MPI_DEFAULT_BLOCK, FFTW_MPI_DEFAULT_BLOCK, MPI_COMM_WORLD,
                                                         &${firstMPIDim.inSpace(0).localLattice}, &${firstMPIDim.inSpace(0).localOffset},
                                                         &${secondMPIDim.inSpace($swappedSpace).localLattice}, &${secondMPIDim.inSpace($swappedSpace).localOffset});
@@ -102,7 +101,7 @@ ${repOut.localOffset} = ${repIn.localOffset};
           @silent indices.remove(field.indexOfDimension(dim))
         @end for
 _howmany = ((ptrdiff_t)1) * ${field.pointsInDimensionsWithIndices(indices)};
-${field.allocSize} = fftw_mpi_local_size_many_transposed(2, _sizes, _howmany, _unswapped_block_size, _swapped_block_size, MPI_COMM_WORLD,
+${field.allocSize} = ${fftwPrefix}_mpi_local_size_many_transposed(2, _sizes, _howmany, _unswapped_block_size, _swapped_block_size, MPI_COMM_WORLD,
         &${fieldMPIDim1.inSpace(0).localLattice}, &${fieldMPIDim1.inSpace(0).localOffset},
         &${fieldMPIDim2.inSpace($swappedSpace).localLattice}, &${fieldMPIDim2.inSpace($swappedSpace).localOffset});
 if (   (${fieldMPIDim1.inSpace(0).localLattice} != ${firstMPIDim.inSpace(0).localLattice})
@@ -240,13 +239,13 @@ ${field.allocSize} = _${field.name}_2d_size * ${field.pointsInDimensionsWithIndi
   @#
   @super
   @#
-fftw_mpi_broadcast_wisdom(MPI_COMM_WORLD);
+${fftwPrefix}_mpi_broadcast_wisdom(MPI_COMM_WORLD);
   @#
 @end def
 
 @def saveWisdom
   @#
-fftw_mpi_gather_wisdom(MPI_COMM_WORLD);
+${fftwPrefix}_mpi_gather_wisdom(MPI_COMM_WORLD);
   @#
   @super
   @#
@@ -291,12 +290,12 @@ _howmany *= ${dim.inSpace(space).globalLattice};
   @end if
   @#
   @if 'dft' in $distributedMPIKinds
-_plan = fftw_mpi_plan_many_dft(${rank}, _fft_sizes, _howmany, ${inBlockSize}, ${outBlockSize}, 
-                               reinterpret_cast<fftw_complex*>($arrayName),
-                               reinterpret_cast<fftw_complex*>($arrayName),
+_plan = ${fftwPrefix}_mpi_plan_many_dft(${rank}, _fft_sizes, _howmany, ${inBlockSize}, ${outBlockSize}, 
+                               reinterpret_cast<${fftwPrefix}_complex*>($arrayName),
+                               reinterpret_cast<${fftwPrefix}_complex*>($arrayName),
                                MPI_COMM_WORLD, FFTW_${direction.upper}, ${planType} | ${transposedState});
   @else
-_plan = fftw_mpi_plan_many_r2r(${rank}, _fft_sizes, _howmany, ${inBlockSize}, ${outBlockSize},
+_plan = ${fftwPrefix}_mpi_plan_many_r2r(${rank}, _fft_sizes, _howmany, ${inBlockSize}, ${outBlockSize},
                                reinterpret_cast<real*>($arrayName),
                                reinterpret_cast<real*>($arrayName),
                                MPI_COMM_WORLD, _r2r_kinds, ${planType} | ${transposedState});
@@ -362,7 +361,7 @@ _howmany = ${transposeMultiplier} * _${vector.id}_ncomponents;
 _howmany *= ${dim.inSpace(0).globalLattice};
     @end for
 
-_plan  = fftw_mpi_plan_many_transpose(${mpiDimensions[0].inSpace(0).globalLattice},
+_plan  = ${fftwPrefix}_mpi_plan_many_transpose(${mpiDimensions[0].inSpace(0).globalLattice},
                                       ${mpiDimensions[1].inSpace(0).globalLattice},
                                       _howmany, _unswapped_block_size, _swapped_block_size,
                                       reinterpret_cast<real*>($arrayName),
@@ -373,7 +372,7 @@ if (!_plan)
 
 _space_transform _${vector.id}_partial_transpose(_plan, _MPI_TRANSPOSE);
 
-_plan = fftw_mpi_plan_many_transpose(${mpiDimensions[1].inSpace(0).globalLattice},
+_plan = ${fftwPrefix}_mpi_plan_many_transpose(${mpiDimensions[1].inSpace(0).globalLattice},
                                      ${mpiDimensions[0].inSpace(0).globalLattice},
                                      _howmany, _swapped_block_size, _unswapped_block_size,
                                      reinterpret_cast<real*>($arrayName),
@@ -612,7 +611,7 @@ else if ((_from_space & ${partial2DMask}) != (_to_space & ${partial2DMask})) {
 case _MPI_DFT_TRANSFORM:
 case _MPI_R2R_TRANSFORM:
 case _MPI_TRANSPOSE:
-  fftw_execute_r2r(_it->first, reinterpret_cast<real*>(_active_${vector.id}),
+  ${fftwPrefix}_execute_r2r(_it->first, reinterpret_cast<real*>(_active_${vector.id}),
                                reinterpret_cast<real*>(_active_${vector.id}));
   break;
   @#

@@ -60,7 +60,7 @@
     <initialisation>
       <![CDATA[
       
-        if (fabs(y) < 1.0e-5) {
+        if (abs(y) < 1.0e-5) {
           phi = 1.0; //sqrt(Nparticles/2.0e-5);
           // This will be automatically normalised later
         } else {

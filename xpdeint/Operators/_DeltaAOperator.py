@@ -142,7 +142,7 @@ class _DeltaAOperator (Operator):
           # This vector is being accessed nonlocally on a dimension that is distributed. This isn't legal.
           dimRepName = simulationDriver.mpiDimRepForSpace(space).name
           raise ParserException(self.xmlElement, 
-                                  "The dimension '%(dimRepName)s' cannot be accessed nonlocally because it is being distributed with MPI.\n"
+                                  "The dimension '%(dimRepName)s' cannot be accessed nonlocally because it is being distributed with MPI. "
                                   "Try turning off MPI or re-ordering the dimensions in the <geometry> element." % locals())
       
       if dimRepNamesForThisVectorNeedingReordering:

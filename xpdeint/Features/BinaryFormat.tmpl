@@ -77,7 +77,7 @@ if ((fpBinary = fopen(_datFilename, "wb")) == NULL)
 
 unsigned long dataSize;
 off_t fieldOffset = 0;
-double coordinate;
+real coordinate;
 
   @for $dim in $field.dimensions
     @set $dimRep = $dim.inSpace(space)

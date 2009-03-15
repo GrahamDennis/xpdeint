@@ -60,6 +60,7 @@ Features = element features {
           }
         | Stochastic
         | FFTW
+        | element precision { text }
     )+
 }
 

@@ -9,8 +9,6 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 @def description: FFTW3
 
 @attr $planType = "FFTW_MEASURE"
-@attr $wisdomExtension = '.fftw3'
-@attr $uselib = ['fftw3']
 
 @def includes
   @#
@@ -19,6 +17,9 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 #if (CFG_COMPILER == CFG_COMPILER_MSVC)
   #define FFTW_DLL
 #endif
+
+#define xmds_malloc ${fftwPrefix}_malloc
+#define xmds_free ${fftwPrefix}_free
 
 #include <fftw3.h>
 #include <utility>
@@ -61,7 +62,7 @@ enum _transform_type {
   ${transformTypes, autoIndent=True}@slurp
 };
 
-typedef pair<fftw_plan, _transform_type> _plan_pair;
+typedef pair<${fftwPrefix}_plan, _transform_type> _plan_pair;
 // Structure to hold the fourier transform plans for an arbitrary change of space
 struct _space_transform
 {
@@ -72,7 +73,7 @@ struct _space_transform
   
   _space_transform(const _space_transform& _s) : _plans(_s._plans), _c(_s._c) {}
   
-  _space_transform(fftw_plan _p, _transform_type _t, real _c_in = 1.0) : _c(_c_in)
+  _space_transform(${fftwPrefix}_plan _p, _transform_type _t, real _c_in = 1.0) : _c(_c_in)
   {
     _plans.push_back(_plan_pair(_p, _t));
   }
@@ -152,12 +153,12 @@ real* _temporary_vector = (real*)_${maxVector.id};
     @end if
   @end if
 
-fftw_plan _plan;
-fftw_iodim _forward_sizes[${len($geometry.dimensions)}], _forward_loop_sizes[${len($geometry.dimensions) + 1}];
-fftw_iodim _backward_sizes[${len($geometry.dimensions)}], _backward_loop_sizes[${len($geometry.dimensions) + 1}];
-fftw_iodim _r2r_sizes[${len($geometry.dimensions)}], _r2r_loop_sizes[${len($geometry.dimensions) + 1}];
-fftw_iodim *_forward_iodim_ptr = NULL, *_backward_iodim_ptr = NULL, *_r2r_iodim_ptr;
-fftw_r2r_kind _r2r_kinds[${len($geometry.dimensions)}];
+${fftwPrefix}_plan _plan;
+${fftwPrefix}_iodim _forward_sizes[${len($geometry.dimensions)}], _forward_loop_sizes[${len($geometry.dimensions) + 1}];
+${fftwPrefix}_iodim _backward_sizes[${len($geometry.dimensions)}], _backward_loop_sizes[${len($geometry.dimensions) + 1}];
+${fftwPrefix}_iodim _r2r_sizes[${len($geometry.dimensions)}], _r2r_loop_sizes[${len($geometry.dimensions) + 1}];
+${fftwPrefix}_iodim *_forward_iodim_ptr = NULL, *_backward_iodim_ptr = NULL, *_r2r_iodim_ptr;
+${fftwPrefix}_r2r_kind _r2r_kinds[${len($geometry.dimensions)}];
 
 int _forward_sizes_index, _backward_sizes_index, _r2r_sizes_index;
 int _forward_loop_sizes_index, _backward_loop_sizes_index, _r2r_loop_sizes_index;
@@ -214,7 +215,7 @@ FILE *_wisdomFile = NULL;
 
 if ( (_wisdomFile = fopen(_wisdomPath.c_str(), "r")) != NULL) {
   _LOG(_SIMULATION_LOG_LEVEL, "Found enlightenment... (Importing wisdom)\n");
-  fftw_import_wisdom_from_file(_wisdomFile);
+  ${fftwPrefix}_import_wisdom_from_file(_wisdomFile);
   fclose(_wisdomFile);
 }
   @#
@@ -225,7 +226,7 @@ if ( (_wisdomFile = fopen(_wisdomPath.c_str(), "r")) != NULL) {
   @#
 if ( (_wisdomFile = fopen(_wisdomPath.c_str(), "w")) != NULL) {
   _LOG(_SIMULATION_LOG_LEVEL, "Keeping accumulated wisdom\n");
-  fftw_export_wisdom_to_file(_wisdomFile);
+  ${fftwPrefix}_export_wisdom_to_file(_wisdomFile);
   fclose(_wisdomFile);
 }
   @#
@@ -381,7 +382,7 @@ for (int _from_space_index = 0; _from_space_index < ${numberOfSpacesNeeded}; _fr
 _${vector.id}_plan_map.clear(); // This doesn't actually destroy the fftw_plan objects
   @end for
 
-fftw_cleanup();
+${fftwPrefix}_cleanup();
   @#
 @end def
 
@@ -425,11 +426,11 @@ ${loopOverVectorsWithInnerContentTemplate([$vector], '_active_${vector.id}[$inde
 @def executePlanForVector($vector)
   @#
 case _LOCAL_DFT_TRANSFORM:
-  fftw_execute_dft(_it->first, reinterpret_cast<fftw_complex*>(_active_${vector.id}),
-                               reinterpret_cast<fftw_complex*>(_active_${vector.id}));
+  ${fftwPrefix}_execute_dft(_it->first, reinterpret_cast<${fftwPrefix}_complex*>(_active_${vector.id}),
+                               reinterpret_cast<${fftwPrefix}_complex*>(_active_${vector.id}));
   break;
 case _LOCAL_R2R_TRANSFORM:
-  fftw_execute_r2r(_it->first, reinterpret_cast<real*>(_active_${vector.id}),
+  ${fftwPrefix}_execute_r2r(_it->first, reinterpret_cast<real*>(_active_${vector.id}),
                                reinterpret_cast<real*>(_active_${vector.id}));
   break;
   @#
@@ -446,10 +447,10 @@ Return the FFTW3 'guru' plan creation call needed for this arbitrary transform.
     @set $arrayName = '_temporary_vector'
   @end if
   @#
-_plan = fftw_plan_guru_dft(_${type}_sizes_index, _${type}_sizes,
+_plan = ${fftwPrefix}_plan_guru_dft(_${type}_sizes_index, _${type}_sizes,
                            _${type}_loop_sizes_index, _${type}_loop_sizes,
-                           reinterpret_cast<fftw_complex*>(${arrayName}),
-                           reinterpret_cast<fftw_complex*>(${arrayName}),
+                           reinterpret_cast<${fftwPrefix}_complex*>(${arrayName}),
+                           reinterpret_cast<${fftwPrefix}_complex*>(${arrayName}),
                            FFTW_${type.upper()}, ${planType});
 
 _transform->_plans.push_back(_plan_pair(_plan, _LOCAL_DFT_TRANSFORM));
@@ -463,7 +464,7 @@ _transform->_plans.push_back(_plan_pair(_plan, _LOCAL_DFT_TRANSFORM));
     @set $arrayName = '_temporary_vector'
   @end if
   @#
-_plan = fftw_plan_guru_r2r(_r2r_sizes_index, _r2r_sizes,
+_plan = ${fftwPrefix}_plan_guru_r2r(_r2r_sizes_index, _r2r_sizes,
                            _r2r_loop_sizes_index, _r2r_loop_sizes,
                            reinterpret_cast<real*>(${arrayName}),
                            reinterpret_cast<real*>(${arrayName}),

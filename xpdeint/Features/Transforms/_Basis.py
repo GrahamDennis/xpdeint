@@ -9,8 +9,6 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 
 from xpdeint.ScriptElement import ScriptElement
 
-from xpdeint.ParserException import ParserException
-
 # We don't directly import mpmath so that mpmath isn't a requirement for xpdeint
 # unless you use MMT's.
 mpmath = None

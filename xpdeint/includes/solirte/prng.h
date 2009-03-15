@@ -202,12 +202,14 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_uniform_FP32(void)
   #endif
 
   typename CRandPool<SFMTParams>::CRandomBlockPtr RandomBlock = FRandPool.GetRandomBlock();
+  // Don't need SIMDOps::EmptyForFP() here (handled per-path, since we've got an MMX path)
 
 #if (CFG_HAVE_U128FP32 == CFG_SIMD_INTRINSIC)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // FP32-intrinsic implementation
 // PATHNAME u128fp32intrinsic
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  SIMDOps::EmptyForFP();
   CDataBuffer_ConstView<uint128fp32_t, BufSize * 16> SrcPtr = RandomBlock.template GetConstView<uint128fp32_t>();
   CDataBuffer_VarView<uint128fp32_t, BufSize * 16> DstPtr = FBuffer_uniform_FP32.template GetVarView<uint128fp32_t>();
 
@@ -244,6 +246,7 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_uniform_FP32(void)
 // U128-intrinsic, fp32-scalar implementation
 // PATHNAME u128intrinsic-fp32scalar
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  SIMDOps::EmptyForFP();
   CDataBuffer_ConstView<uint128_t, BufSize * 16> SrcPtr = RandomBlock.template GetConstView<uint128_t>();
   CDataBuffer_VarView<float, BufSize * 16> DstPtr = FBuffer_uniform_FP32.template GetVarView<float>();
 
@@ -261,66 +264,66 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_uniform_FP32(void)
   for (CopyLoop = 0; CopyLoop < BufSize - (BufSize % 4); CopyLoop += 4)
   {
     TempBuf[0].AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 0), AndMask), OrMask);
-    DstPtr.Store(CopyLoop * 4 + 0, TempBuf[0].AsFP32[0] - 1.0);
-    DstPtr.Store(CopyLoop * 4 + 1, TempBuf[0].AsFP32[1] - 1.0);
-    DstPtr.Store(CopyLoop * 4 + 2, TempBuf[0].AsFP32[2] - 1.0);
-    DstPtr.Store(CopyLoop * 4 + 3, TempBuf[0].AsFP32[3] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 0, TempBuf[0].AsFP32[0] - 1);
+    DstPtr.Store(CopyLoop * 4 + 1, TempBuf[0].AsFP32[1] - 1);
+    DstPtr.Store(CopyLoop * 4 + 2, TempBuf[0].AsFP32[2] - 1);
+    DstPtr.Store(CopyLoop * 4 + 3, TempBuf[0].AsFP32[3] - 1);
     TempBuf[1].AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 1), AndMask), OrMask);
-    DstPtr.Store(CopyLoop * 4 + 4, TempBuf[1].AsFP32[0] - 1.0);
-    DstPtr.Store(CopyLoop * 4 + 5, TempBuf[1].AsFP32[1] - 1.0);
-    DstPtr.Store(CopyLoop * 4 + 6, TempBuf[1].AsFP32[2] - 1.0);
-    DstPtr.Store(CopyLoop * 4 + 7, TempBuf[1].AsFP32[3] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 4, TempBuf[1].AsFP32[0] - 1);
+    DstPtr.Store(CopyLoop * 4 + 5, TempBuf[1].AsFP32[1] - 1);
+    DstPtr.Store(CopyLoop * 4 + 6, TempBuf[1].AsFP32[2] - 1);
+    DstPtr.Store(CopyLoop * 4 + 7, TempBuf[1].AsFP32[3] - 1);
     TempBuf[2].AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 2), AndMask), OrMask);
-    DstPtr.Store(CopyLoop * 4 + 8, TempBuf[2].AsFP32[0] - 1.0);
-    DstPtr.Store(CopyLoop * 4 + 9, TempBuf[2].AsFP32[1] - 1.0);
-    DstPtr.Store(CopyLoop * 4 + 10, TempBuf[2].AsFP32[2] - 1.0);
-    DstPtr.Store(CopyLoop * 4 + 11, TempBuf[2].AsFP32[3] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 8, TempBuf[2].AsFP32[0] - 1);
+    DstPtr.Store(CopyLoop * 4 + 9, TempBuf[2].AsFP32[1] - 1);
+    DstPtr.Store(CopyLoop * 4 + 10, TempBuf[2].AsFP32[2] - 1);
+    DstPtr.Store(CopyLoop * 4 + 11, TempBuf[2].AsFP32[3] - 1);
     TempBuf[3].AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 3), AndMask), OrMask);
-    DstPtr.Store(CopyLoop * 4 + 12, TempBuf[3].AsFP32[0] - 1.0);
-    DstPtr.Store(CopyLoop * 4 + 13, TempBuf[3].AsFP32[1] - 1.0);
-    DstPtr.Store(CopyLoop * 4 + 14, TempBuf[3].AsFP32[2] - 1.0);
-    DstPtr.Store(CopyLoop * 4 + 15, TempBuf[3].AsFP32[3] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 12, TempBuf[3].AsFP32[0] - 1);
+    DstPtr.Store(CopyLoop * 4 + 13, TempBuf[3].AsFP32[1] - 1);
+    DstPtr.Store(CopyLoop * 4 + 14, TempBuf[3].AsFP32[2] - 1);
+    DstPtr.Store(CopyLoop * 4 + 15, TempBuf[3].AsFP32[3] - 1);
   }
 
   // Unrolling tail.
   if ((BufSize % 4) == 3)
   {
     TempBuf[0].AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 0), AndMask), OrMask);
-    DstPtr.Store(CopyLoop * 4 + 0, TempBuf[0].AsFP32[0] - 1.0);
-    DstPtr.Store(CopyLoop * 4 + 1, TempBuf[0].AsFP32[1] - 1.0);
-    DstPtr.Store(CopyLoop * 4 + 2, TempBuf[0].AsFP32[2] - 1.0);
-    DstPtr.Store(CopyLoop * 4 + 3, TempBuf[0].AsFP32[3] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 0, TempBuf[0].AsFP32[0] - 1);
+    DstPtr.Store(CopyLoop * 4 + 1, TempBuf[0].AsFP32[1] - 1);
+    DstPtr.Store(CopyLoop * 4 + 2, TempBuf[0].AsFP32[2] - 1);
+    DstPtr.Store(CopyLoop * 4 + 3, TempBuf[0].AsFP32[3] - 1);
     TempBuf[1].AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 1), AndMask), OrMask);
-    DstPtr.Store(CopyLoop * 4 + 4, TempBuf[1].AsFP32[0] - 1.0);
-    DstPtr.Store(CopyLoop * 4 + 5, TempBuf[1].AsFP32[1] - 1.0);
-    DstPtr.Store(CopyLoop * 4 + 6, TempBuf[1].AsFP32[2] - 1.0);
-    DstPtr.Store(CopyLoop * 4 + 7, TempBuf[1].AsFP32[3] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 4, TempBuf[1].AsFP32[0] - 1);
+    DstPtr.Store(CopyLoop * 4 + 5, TempBuf[1].AsFP32[1] - 1);
+    DstPtr.Store(CopyLoop * 4 + 6, TempBuf[1].AsFP32[2] - 1);
+    DstPtr.Store(CopyLoop * 4 + 7, TempBuf[1].AsFP32[3] - 1);
     TempBuf[2].AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 2), AndMask), OrMask);
-    DstPtr.Store(CopyLoop * 4 + 8, TempBuf[2].AsFP32[0] - 1.0);
-    DstPtr.Store(CopyLoop * 4 + 9, TempBuf[2].AsFP32[1] - 1.0);
-    DstPtr.Store(CopyLoop * 4 + 10, TempBuf[2].AsFP32[2] - 1.0);
-    DstPtr.Store(CopyLoop * 4 + 11, TempBuf[2].AsFP32[3] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 8, TempBuf[2].AsFP32[0] - 1);
+    DstPtr.Store(CopyLoop * 4 + 9, TempBuf[2].AsFP32[1] - 1);
+    DstPtr.Store(CopyLoop * 4 + 10, TempBuf[2].AsFP32[2] - 1);
+    DstPtr.Store(CopyLoop * 4 + 11, TempBuf[2].AsFP32[3] - 1);
   }
   if ((BufSize % 4) == 2)
   {
     TempBuf[0].AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 0), AndMask), OrMask);
-    DstPtr.Store(CopyLoop * 4 + 0, TempBuf[0].AsFP32[0] - 1.0);
-    DstPtr.Store(CopyLoop * 4 + 1, TempBuf[0].AsFP32[1] - 1.0);
-    DstPtr.Store(CopyLoop * 4 + 2, TempBuf[0].AsFP32[2] - 1.0);
-    DstPtr.Store(CopyLoop * 4 + 3, TempBuf[0].AsFP32[3] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 0, TempBuf[0].AsFP32[0] - 1);
+    DstPtr.Store(CopyLoop * 4 + 1, TempBuf[0].AsFP32[1] - 1);
+    DstPtr.Store(CopyLoop * 4 + 2, TempBuf[0].AsFP32[2] - 1);
+    DstPtr.Store(CopyLoop * 4 + 3, TempBuf[0].AsFP32[3] - 1);
     TempBuf[1].AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 1), AndMask), OrMask);
-    DstPtr.Store(CopyLoop * 4 + 4, TempBuf[1].AsFP32[0] - 1.0);
-    DstPtr.Store(CopyLoop * 4 + 5, TempBuf[1].AsFP32[1] - 1.0);
-    DstPtr.Store(CopyLoop * 4 + 6, TempBuf[2].AsFP32[2] - 1.0);
-    DstPtr.Store(CopyLoop * 4 + 7, TempBuf[2].AsFP32[3] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 4, TempBuf[1].AsFP32[0] - 1);
+    DstPtr.Store(CopyLoop * 4 + 5, TempBuf[1].AsFP32[1] - 1);
+    DstPtr.Store(CopyLoop * 4 + 6, TempBuf[2].AsFP32[2] - 1);
+    DstPtr.Store(CopyLoop * 4 + 7, TempBuf[2].AsFP32[3] - 1);
   }
   if ((BufSize % 4) == 1)
   {
     TempBuf[0].AsU128 = SIMDOP_or(SIMDOP_and(SrcPtr.Load(CopyLoop + 0), AndMask), OrMask);
-    DstPtr.Store(CopyLoop * 4 + 0, TempBuf[0].AsFP32[0] - 1.0);
-    DstPtr.Store(CopyLoop * 4 + 1, TempBuf[0].AsFP32[1] - 1.0);
-    DstPtr.Store(CopyLoop * 4 + 2, TempBuf[0].AsFP32[2] - 1.0);
-    DstPtr.Store(CopyLoop * 4 + 3, TempBuf[0].AsFP32[3] - 1.0);
+    DstPtr.Store(CopyLoop * 4 + 0, TempBuf[0].AsFP32[0] - 1);
+    DstPtr.Store(CopyLoop * 4 + 1, TempBuf[0].AsFP32[1] - 1);
+    DstPtr.Store(CopyLoop * 4 + 2, TempBuf[0].AsFP32[2] - 1);
+    DstPtr.Store(CopyLoop * 4 + 3, TempBuf[0].AsFP32[3] - 1);
   }
 #elif (CFG_HAVE_U128 == CFG_SIMD_MMX)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -380,6 +383,7 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_uniform_FP32(void)
 // U128-scalar, fp32-scalar 64-bit one-pass implementation
 // PATHNAME u128scalar-fp32scalar-64bit
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  SIMDOps::EmptyForFP();
   CDataBuffer_ConstView<uint64_t, BufSize * 16> SrcPtr = RandomBlock.template GetConstView<uint64_t>();
   CDataBuffer_VarView<float, BufSize * 16> DstPtr = FBuffer_uniform_FP32.template GetVarView<float>();
 
@@ -407,6 +411,7 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_uniform_FP32(void)
 // U128-scalar, fp32-scalar 32-bit one-pass implementation
 // PATHNAME u128scalar-fp32scalar-32bit
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  SIMDOps::EmptyForFP();
   CDataBuffer_ConstView<uint32_t, BufSize * 16> SrcPtr = RandomBlock.template GetConstView<uint32_t>();
   CDataBuffer_VarView<float, BufSize * 16> DstPtr = FBuffer_uniform_FP32.template GetVarView<float>();
 
@@ -485,12 +490,14 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_uniform_FP64(void)
   #endif
 
   typename CRandPool<SFMTParams>::CRandomBlockPtr RandomBlock = FRandPool.GetRandomBlock();
+  // Don't need SIMDOps::EmptyForFP() here (handled per-path, since we've got an MMX path)
 
 #if (CFG_HAVE_U128FP64 == CFG_SIMD_INTRINSIC)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // FP64-intrinsic implementation
 // PATHNAME u128fp64intrinsic
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  SIMDOps::EmptyForFP();
   CDataBuffer_ConstView<uint128fp64_t, BufSize * 16> SrcPtr = RandomBlock.template GetConstView<uint128fp64_t>();
   CDataBuffer_VarView<uint128fp64_t, BufSize * 16> DstPtr = FBuffer_uniform_FP64.template GetVarView<uint128fp64_t>();
 
@@ -527,6 +534,7 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_uniform_FP64(void)
 // U128-intrinsic, fp64-scalar implementation
 // PATHNAME u128intrinsic-fp64scalar
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  SIMDOps::EmptyForFP();
   CDataBuffer_ConstView<uint128_t, BufSize * 16> SrcPtr = RandomBlock.template GetConstView<uint128_t>();
   CDataBuffer_VarView<double, BufSize * 16> DstPtr = FBuffer_uniform_FP64.template GetVarView<double>();
 
@@ -637,6 +645,7 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_uniform_FP64(void)
 // U128-scalar, fp64-scalar 64-bit one-pass implementation
 // PATHNAME u128scalar-fp64scalar-64bit
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  SIMDOps::EmptyForFP();
   CDataBuffer_ConstView<uint64_t, BufSize * 16> SrcPtr = RandomBlock.template GetConstView<uint64_t>();
   CDataBuffer_VarView<double, BufSize * 16> DstPtr = FBuffer_uniform_FP64.template GetVarView<double>();
 
@@ -662,6 +671,7 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_uniform_FP64(void)
 // U128-scalar, fp64-scalar 32-bit one-pass implementation
 // PATHNAME u128scalar-fp64scalar-32bit
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  SIMDOps::EmptyForFP();
   CDataBuffer_ConstView<uint32_t, BufSize * 16> SrcPtr = RandomBlock.template GetConstView<uint32_t>();
   CDataBuffer_VarView<double, BufSize * 16> DstPtr = FBuffer_uniform_FP64.template GetVarView<double>();
 
@@ -812,7 +822,7 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_gaussiantail_FP64(void)
     double AsFP64[2];
   } u2;
 
-  for (int SrcIdx = 0; SrcIdx < FBufLen_gaussiantail_FP64 / 2; SrcIdx++)
+  for (size_t SrcIdx = 0; SrcIdx < FBufLen_gaussiantail_FP64 / 2; SrcIdx++)
   {
     // Extract (u1 + 1) and the sign bit.
     uint128_t TempSrc = SrcPtr.Load(SrcIdx * 2);
@@ -829,7 +839,7 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_gaussiantail_FP64(void)
     {
       double AsFP64[2];
       uint128_t AsU128;
-    } Test = {Test0, Test1};
+    } Test = {{Test0, Test1}};
 
     // Calculate the compare results (u2 < a / Test) ie: Test * u2 < a
     // Accept if Test * u2 < a
@@ -840,7 +850,7 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_gaussiantail_FP64(void)
     {
       uint64_t AsU64[2];
       uint128_t AsU128;
-    } CompareResult = {Compare0, Compare1};
+    } CompareResult = {{Compare0, Compare1}};
     #else
     uint32_t Compare0 = ((Test0 * (u2.AsFP64[0] - 1.0)) >= a) ? 0xFFFFFFFF : 0;
     uint32_t Compare1 = ((Test1 * (u2.AsFP64[1] - 1.0)) >= a) ? 0xFFFFFFFF : 0;
@@ -848,7 +858,7 @@ NOINLINE void CPRNG<SFMTParams>::RefillBuf_gaussiantail_FP64(void)
     {
       uint32_t AsU32[4];
       uint128_t AsU128;
-    } CompareResult = {Compare0, Compare0, Compare1, Compare1};
+    } CompareResult = {{Compare0, Compare0, Compare1, Compare1}};
     #endif
 
     // Store the transformed u1.

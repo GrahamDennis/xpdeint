@@ -14,12 +14,38 @@ from xpdeint.Geometry.SplitUniformDimensionRepresentation import SplitUniformDim
 
 from xpdeint.ParserException import ParserException
 
+from xpdeint.Utilities import lazy_property
+
 class _FourierTransformFFTW3 (_Transform):
   transformName = 'FourierTransform'
+  fftwSuffix = ''
   
   def __init__(self, *args, **KWs):
     _Transform.__init__(self, *args, **KWs)
     self.transformNameMap = {}
+  
+  @lazy_property
+  def fftwPrefix(self):
+    precision = self.getVar('precision')
+    return {'double': 'fftw', 'float': 'fftwf'}[precision]
+  
+  @lazy_property
+  def fftwLibVersionName(self):
+      return {'fftw': 'fftw3', 'fftwf': 'fftw3f'}[self.fftwPrefix]
+  
+  @lazy_property
+  def wisdomExtension(self):
+    result = '.' + self.fftwLibVersionName
+    if self.fftwSuffix:
+      result += '_' + self.fftwSuffix
+    return result
+  
+  @lazy_property
+  def uselib(self):
+    result = [self.fftwLibVersionName]
+    if self.fftwSuffix:
+      result.append(self.fftwLibVersionName + '_' + self.fftwSuffix)
+    return result
   
   def newDimension(self, name, lattice, minimum, maximum,
                    parent, transformName, aliases = set(),
@@ -95,8 +121,8 @@ class _FourierTransformFFTW3 (_Transform):
        or ((self.transformNameMap[dimensions[0].name] == 'dft') ^ (self.transformNameMap[dimensions[1].name] == 'dft')) \
        or ((self.transformNameMap[dimensions[0].name] in ['dct', 'dst']) ^ (self.transformNameMap[dimensions[1].name] in ['dct', 'dst'])):
       raise ParserException(self._driver.xmlElement,
-                            "To use the 'distributed-mpi' driver with the 'dft', 'dct' or 'dst' transforms, both the first and second dimensions\n"
-                            "must use one of these transforms with the additional restriction that if the 'dft' transform is used for one dimension\n"
+                            "To use the 'distributed-mpi' driver with the 'dft', 'dct' or 'dst' transforms, both the first and second dimensions "
+                            "must use one of these transforms with the additional restriction that if the 'dft' transform is used for one dimension "
                             "it must be used for the other.")
     super(_FourierTransformFFTW3, self).initialiseForMPIWithDimensions(dimensions)
   

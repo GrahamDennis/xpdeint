@@ -238,6 +238,17 @@ class XMDS2Parser(ScriptParser):
     parseSimpleFeature('diagnostics', Features.Diagnostics.Diagnostics)
     parseSimpleFeature('mmt', Transforms.MMT.MMT)
     
+    precisionElement = featuresParentElement.getChildElementByTagName('precision', optional=True)
+    if precisionElement:
+      content = precisionElement.innerText().strip().lower()
+      if content:
+        if not content in ['single', 'double']:
+          raise ParserException(
+            precisionElement,
+            "Unrecognised precision '%s'. Options are 'single' or 'double' (default)." % content
+          )
+        self.globalNameSpace['precision'] = content
+    
     validationFeatureElement = featuresParentElement.getChildElementByTagName('validation', optional=True)
     if validationFeatureElement and validationFeatureElement.hasAttribute('kind'):
       kindString = validationFeatureElement.getAttribute('kind').strip().lower()
@@ -249,7 +260,7 @@ class XMDS2Parser(ScriptParser):
       elif kindString == 'compile-time':
         pass
       else:
-        raise ParserException(validationFeatureElement, "The 'kind' attribute of the <validation> tag must be one of\n"
+        raise ParserException(validationFeatureElement, "The 'kind' attribute of the <validation> tag must be one of "
                                                         "'compile-time', 'run-time' or 'none'.")
       
     
@@ -285,7 +296,7 @@ class XMDS2Parser(ScriptParser):
           raise ParserException(argumentElement, "Unable to find a short (single character) name for command line option")        
         
         if not type in ('int', 'long', 'real', 'string'):
-          raise ParserException(argumentElement, "Invalid type name '%(type)s'.\n"
+          raise ParserException(argumentElement, "Invalid type name '%(type)s'. "
                                                  "Valid options are 'int', 'long', 'real' or 'string'." % locals())
         
         argumentAttributeDictionary = dict()
@@ -352,7 +363,11 @@ class XMDS2Parser(ScriptParser):
                 _LOG(_ERROR_LOG_LEVEL, "ERROR: The mean-rate for Poissonian noise %(prefix)s is not positive!\\n"
                                        "Mean-rate = %%e\\n", %(meanRateString)s);""" % locals())
             else:
-              raise ParserException(noiseElement, "Unable to understand '%(meanRateString)s' as a positive real value.\nUse the feature <validation/> to allow for arbitrary code." % locals())
+              raise ParserException(
+                noiseElement,
+                "Unable to understand '%(meanRateString)s' as a positive real value. "
+                "Use the feature <validation/> to allow for arbitrary code." % locals()
+              )
           noiseAttributeDictionary['noiseMeanRate'] = meanRateString
         elif kind in ('gaussian-mkl'):
           noiseClass = GaussianMKLNoise
@@ -397,7 +412,7 @@ class XMDS2Parser(ScriptParser):
                   _LOG(_ERROR_LOG_LEVEL, "ERROR: The seed for random noise %(prefix)s is not positive!\\n"
                   "Seed = %%d\\n", %(seedString)s);""" % locals())
               else:
-                raise ParserException(noiseElement, "Unable to understand seed '%(seedString)s' as a positive integer.\nUse the feature <validation/> to allow for arbitrary code." % locals())
+                raise ParserException(noiseElement, "Unable to understand seed '%(seedString)s' as a positive integer. Use the feature <validation/> to allow for arbitrary code." % locals())
           
           noise.seedArray = seedStringList
         
@@ -1099,6 +1114,14 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
           tolerance = float(toleranceString)
           if tolerance <= 0.0:
             raise ParserException(integrateElement, "Tolerance must be positive.")
+          minTolerance = {'single': 2**-21, 'double': 2**-50}[self.globalNameSpace['precision']]
+          if 'ErrorCheck' in self.globalNameSpace['features']:
+            minTolerance *= 16
+          if tolerance < minTolerance:
+            raise ParserException(
+              integrateElement,
+              "Requested integration tolerance '%s' is smaller than the machine precision for %s precision arithmetic %.1e." % (toleranceString, self.globalNameSpace['precision'], minTolerance)
+            )
         except ValueError, err:
           raise ParserException(integrateElement, "Could not understand tolerance '%(toleranceString)s' "
                                                   "as a number." % locals())

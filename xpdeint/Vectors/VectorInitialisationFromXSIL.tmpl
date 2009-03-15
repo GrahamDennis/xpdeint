@@ -233,7 +233,7 @@ for (int __i = 0; __i < _${vector.field.name}_ndims; __i++) {
     _difference = _inputData[__i]._floatPtr[1]  - _inputData[__i]._floatPtr[0];
   
   // Assert that the deltas are the same to within 1%
-  if (fabs(_dimDelta[__i] - _difference) > 0.01 * _dimDelta[__i])
+  if (abs(_dimDelta[__i] - _difference) > 0.01 * _dimDelta[__i])
     // _LOG will cause the simulation to exit
     _LOG(_ERROR_LOG_LEVEL, "The step size in the '%s' dimension of the input data and the simulation grid do not match.\n"
                            "The step size in the '%s' dimension was %e, while the input data had a step size of %e.\n",
@@ -249,7 +249,7 @@ for (int __i = 0; __i < _${vector.field.name}_ndims; __i++) {
   else
     _start = _inputData[__i]._floatPtr[0];
   
-  if (fabs(_dimMin[__i] - _start) > 0.1*_dimDelta[__i])
+  if (abs(_dimMin[__i] - _start) > 0.1*_dimDelta[__i])
     // _LOG will cause the simulation to exit
     _LOG(_ERROR_LOG_LEVEL, "Geometry matching mode is strict, so the starting coordinate of each dimension in the field\n"
                            "must be the same as in the input grid.\n"
@@ -366,14 +366,14 @@ if (_inputfield${dimRep.loopIndex} < 0 || _inputfield${dimRep.loopIndex} >= _inp
   else
     _inputfield_${dimName} = _inputData[${dimensionNumber}]._floatPtr[_inputfield${dimRep.loopIndex}];
   
-  if (fabs(_inputfield_${dimName} - ${dimName}) > 0.1*_dimDelta[${dimensionNumber}])
+  if (abs(_inputfield_${dimName} - ${dimName}) > 0.1*_dimDelta[${dimensionNumber}])
     // This only happens if your input field grid does not exactly match up with the simulation grid.
     // _LOG will cause the simulation to exit
     _LOG(_ERROR_LOG_LEVEL, "The input field coordinate in the '$dimName' dimension does not match up with the field coordinate.\n"
                            "${dimRep.loopIndex}: %li, ${dimName}: %e, _inputfield${dimRep.loopIndex}: %li, "
                            "_inputfield_${dimName}: %e, d${dimName}: %e, diff/Delta: %e\n",
                            ${dimRep.loopIndex}, ${dimName}, _inputfield${dimRep.loopIndex},
-                           _inputfield_${dimName}, d${dimName}, fabs(_inputfield_${dimName} - ${dimName})/_dimDelta[$dimensionNumber]);
+                           _inputfield_${dimName}, d${dimName}, abs(_inputfield_${dimName} - ${dimName})/_dimDelta[$dimensionNumber]);
 }
 
 _inputfield_index_pointer += _inputfield${dimRep.loopIndex}${''.join([c' * _inputLattice[$i]' for i in range(dimensionNumber + 1, len($vector.field.dimensions))])};
@@ -399,15 +399,15 @@ if (_isPrecisionDouble) {
 }
 
   @if $vector.type == 'real'
-_active_${vector.id}[_${vector.id}_index_pointer + _component] = _value;
+_active_${vector.id}[_${vector.id}_index_pointer + _component] = (real)_value;
   @else
 if (_component & 1)
-  _active_${vector.id}[_${vector.id}_index_pointer + _component/2].Im() = _value;
+  _active_${vector.id}[_${vector.id}_index_pointer + _component/2].Im() = (real)_value;
 else
-  _active_${vector.id}[_${vector.id}_index_pointer + _component/2].Re() = _value;
+  _active_${vector.id}[_${vector.id}_index_pointer + _component/2].Re() = (real)_value;
   @end if
   
-_ENDLOOP:
+_ENDLOOP:;
   @#
 @end def
 
