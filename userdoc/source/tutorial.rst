@@ -34,7 +34,7 @@ Below is a minimal script that solves this problem. Don't worry if it doesn't ma
       </geometry>
       
       <!-- A 'vector' describes the variables that we will be evolving. -->
-      <vector name="main" type="double">
+      <vector name="main" type="real">
         <components>
           x y z
         </components>

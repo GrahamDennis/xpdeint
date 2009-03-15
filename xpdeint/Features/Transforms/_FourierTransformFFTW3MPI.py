@@ -29,7 +29,7 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
       if all([field.dimensionWithName(name) == geometry.dimensionWithName(name) for name in driver.distributedDimensionNames]):
         continue
       for vector in [v for v in self.vectorsNeedingThisTransform if v.field == field]:
-        raise ParserException(vector.xmlElement, "Vector '%s' cannot be fourier transformed because it would be distributed with MPI\n"
+        raise ParserException(vector.xmlElement, "Vector '%s' cannot be fourier transformed because it would be distributed with MPI "
                                                  "and it doesn't have the same number of points as the geometry for the distributed dimensions." % vector)
     
     for field in fields:

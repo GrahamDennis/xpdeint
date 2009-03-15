@@ -52,7 +52,7 @@
     <group>
       <sampling initial_sample="yes">
         <moments>zR zI</moments>
-        <dependencies>main 0d_noise</dependencies>
+        <dependencies>main</dependencies>
         <![CDATA[
           _SAMPLE_COMPLEX(z);
         ]]>

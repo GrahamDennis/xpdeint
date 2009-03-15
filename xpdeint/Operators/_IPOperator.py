@@ -71,8 +71,8 @@ class _IPOperator(Operator):
         except Exception:
           # Target didn't match something of the form 'phi[j, k][m+3,n-9]'
           raise ParserException(self.xmlElement,
-                                "IP operators can only act on components of integration vectors.\n"
-                                "The '%(operatorName)s' operator acting on '%(target)s' doesn't seem to be of the right form\n"
+                                "IP operators can only act on components of integration vectors. "
+                                "The '%(operatorName)s' operator acting on '%(target)s' doesn't seem to be of the right form "
                                 "or '%(target)s' isn't in one of the integration vectors."
                                 % locals())
         
@@ -81,16 +81,16 @@ class _IPOperator(Operator):
         for dimName, (indexString, codeSlice) in resultDict.iteritems():
           if not dimName == indexString:
             raise ParserException(self.xmlElement,
-                                  "IP operators can only act on every value of a dimension.\n"
-                                  "The problem was caused by the '%(operatorName)s' operator acting on '%(target)s'.\n"
+                                  "IP operators can only act on every value of a dimension. "
+                                  "The problem was caused by the '%(operatorName)s' operator acting on '%(target)s'. "
                                   "EX operators do not have this restriction."
                                   % locals())
       
       if componentName in targetComponentNamesUsed:
         raise ParserException(self.xmlElement,
-                              "Check the documentation, only one IP operator can act on a given component,\n"
-                              "and this operator can only appear once.\n"
-                              "The problem was with the '%(componentName)s' term appearing more than once in an IP operator.\n"
+                              "Check the documentation, only one IP operator can act on a given component, "
+                              "and this operator can only appear once. "
+                              "The problem was with the '%(componentName)s' term appearing more than once in an IP operator. "
                               "You may be able to accomplish what you are trying with an EX operator."
                               % locals())
       

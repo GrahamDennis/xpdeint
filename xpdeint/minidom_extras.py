@@ -25,7 +25,7 @@ def getChildElementsByTagName(self, tagName, optional=False):
   
   elements = filter(lambda x: x.nodeType == minidom.Node.ELEMENT_NODE and x.tagName == tagName, self.childNodes)
   if not optional and len(elements) == 0:
-    raise ParserException(self, "There must be at least one '" + tagName + "' element.")
+    raise ParserException(self, "There must be at least one '%(tagName)s' element." % locals())
   return elements
 
 
@@ -41,10 +41,10 @@ def getChildElementByTagName(self, tagName, optional=False):
   elements = self.getChildElementsByTagName(tagName, optional=optional)
 
   if not optional and not len(elements) == 1:
-    raise ParserException(self, "There should one and only be one '" + tagName + "' element.")
+    raise ParserException(self, "There must be at least one '%(tagName)s' element." % locals())
 
   if optional and len(elements) > 1:
-    raise ParserException(self, "There should be no more than one '" + tagName + "' element.")
+    raise ParserException(self, "There must be at least one '%(tagName)s' element." % locals())
 
   if optional and len(elements) == 0:
     return None

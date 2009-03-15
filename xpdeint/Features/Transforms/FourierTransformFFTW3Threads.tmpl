@@ -7,8 +7,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 @extends xpdeint.Features.Transforms.FourierTransformFFTW3
 
 @def description: FFTW3 with threads
-@attr $wisdomExtension = '.fftw3_threads'
-@attr $uselib = ['fftw3', 'fftw3_threads']
+@attr $fftwSuffix = 'threads'
 
 @# defines
 @def defines
@@ -20,13 +19,13 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 
 @def mainBegin($dict)
   @#
-fftw_init_threads();
-fftw_plan_with_nthreads(_num_threads);
+${fftwPrefix}_init_threads();
+${fftwPrefix}_plan_with_nthreads(_num_threads);
   @super($dict)
   @#
 @end def
 
 @def mainEnd($dict)
   @super($dict)
-fftw_cleanup_threads();
+${fftwPrefix}_cleanup_threads();
 @end def

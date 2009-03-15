@@ -7,13 +7,13 @@
 #ifndef xpdeint_h
 #define xpdeint_h
 
-#ifdef FFTW3_H
-#define xmds_malloc fftw_malloc
-#define xmds_free   fftw_free
-#else
-#define xmds_malloc(n) _aligned_malloc(n, 16)
-#define xmds_free   _aligned_free
-#endif //FFTW3_H
+#ifndef xmds_malloc
+  #define xmds_malloc(n) _aligned_malloc(n, 16)
+#endif
+
+#ifndef xmds_free
+  #define xmds_free   _aligned_free
+#endif
 
 inline complex::value_type mod(const complex& _t) { return std::abs(_t); }
 inline complex::value_type mod2(const complex& _t) { return std::norm(_t); }

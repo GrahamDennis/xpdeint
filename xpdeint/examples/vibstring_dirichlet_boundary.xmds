@@ -49,7 +49,7 @@
     </components>
     <initialisation>
       <![CDATA[
-        real r = fabs(x);
+        real r = abs(x);
         real rright = xmax-width;
 
         if ( r > rright)

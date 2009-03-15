@@ -8,7 +8,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
 from xpdeint.Operators.Operator import Operator
-from xpdeint.ParserException import ParserException, parserWarning
+from xpdeint.ParserException import parserWarning
 from xpdeint.ParsedEntity import ParsedEntity
 
 from xpdeint.Vectors.ComputedVector import ComputedVector

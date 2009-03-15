@@ -135,9 +135,9 @@ class _Stochastic (_Feature):
     # either gaussian or poissonian
     for deltaAOperator in [o for o in objectsThatMightUseNoises if isinstance(o, DeltaAOperator) and isinstance(o.integrator, AdaptiveStepIntegrator)]:
       # Give the user a warning to note that the adaptive integrators with stochastics is not guaranteed to converge to the correct solution.
-      parserWarning(self.xmlElement, "The adaptive integrator with stochastics will not converge to the correct solution unless the \n"
-                                     "timestep is limited by the non-stochastic elements of the equations.  The RK algorithms are accurate only\n"
-                                     "if the solution to the SDE can be written as a Taylor series in the propagation dimension (time) and the noises.\n"
+      parserWarning(self.xmlElement, "The adaptive integrator with stochastics will not converge to the correct solution unless the "
+                                     "timestep is limited by the non-stochastic elements of the equations.  The RK algorithms are accurate only "
+                                     "if the solution to the SDE can be written as a Taylor series in the propagation dimension (time) and the noises. "
                                      "If this is the case, then there is probably an analytic solution to the SDE.\n"
                                      "You have been warned.")
       for noise in deltaAOperator.noises:

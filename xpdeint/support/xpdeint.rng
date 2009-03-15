@@ -138,6 +138,9 @@
           </element>
           <ref name="Stochastic"/>
           <ref name="FFTW"/>
+          <element name="precision">
+            <text/>
+          </element>
         </choice>
       </oneOrMore>
     </element>

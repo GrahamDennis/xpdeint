@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
-  <name>lorenz</name>
+  <name>lorenz_single</name>
   <author>Graham Dennis</author>
   <description>
     The Lorenz Attractor, an example of chaos.
@@ -11,7 +11,8 @@
     <benchmark />
     <error_check />
     <bing />
-    <!-- That's right, this script breaks the shackles with FFTW! -->
+    <precision>single</precision>
+    <diagnostics />
     <globals>
       <![CDATA[
       real sigma = 10.0;
@@ -37,7 +38,7 @@
   </vector>
   
   <sequence>
-    <integrate algorithm="ARK89" interval="100.0" steps="25000" tolerance="1e-7">
+    <integrate algorithm="ARK45" interval="100.0" steps="25000" tolerance="1e-6">
       <samples>5000</samples>
       <operators>
         <integration_vectors>main</integration_vectors>
@@ -49,7 +50,7 @@
       </operators>
     </integrate>
   </sequence>
-  <output format="binary" filename="lorenz.xsil">
+  <output format="binary">
     <group>
       <sampling initial_sample="yes">
         <moments>xR yR zR</moments>

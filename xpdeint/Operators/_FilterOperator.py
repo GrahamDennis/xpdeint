@@ -11,7 +11,6 @@ from xpdeint.Operators.Operator import Operator
 from xpdeint.Geometry.FieldElement import FieldElement
 
 from xpdeint import RegularExpressionStrings
-from xpdeint.ParserException import ParserException
 from xpdeint.Utilities import lazy_property
 
 class _FilterOperator (Operator):

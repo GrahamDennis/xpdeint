@@ -8,7 +8,6 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 """
 
 import re
-from xpdeint.ParserException import ParserException
 from xpdeint import RegularExpressionStrings
 
 ## Subclasses for parsing specific scripts types should

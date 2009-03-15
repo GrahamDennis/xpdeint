@@ -69,7 +69,7 @@ class _MMT (_Transform):
         try:
           order = int(orderString)
         except:
-          raise ParserException(xmlElement, "Cannot understand '%s' as a meaningful order.\n"
+          raise ParserException(xmlElement, "Cannot understand '%s' as a meaningful order. "
                                             "Order values must be non-negative integers." \
                                             % xmlElement.getAttribute('order'))
         else:
@@ -112,8 +112,8 @@ class _MMT (_Transform):
         self.basisMap[dim.name] = basis
       
       if not float(minimum) == 0.0:
-        raise ParserException(xmlElement, "For 'hermite-gauss' transformed dimensions, use the 'length_scale' attribute\n"
-                                          "instead of 'domain'.\n")
+        raise ParserException(xmlElement, "For 'hermite-gauss' transformed dimensions, use the 'length_scale' attribute "
+                                          "instead of 'domain'.")
       
       # Real space representation
       xspace = NonUniformDimensionRepresentation(name = name, type = type, lattice = lattice,

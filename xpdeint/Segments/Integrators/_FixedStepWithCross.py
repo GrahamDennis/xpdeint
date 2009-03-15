@@ -122,19 +122,19 @@ class _FixedStepWithCross (FixedStep):
         if not propagationDimension:
           propagationDimension = crossOp.propagationDimension
         if self.operatorContainerToOverride and not oc == self.operatorContainerToOverride:
-          raise ParserException(self.xmlElement, "This integrator can only have at most two cross-propagators.\n"
+          raise ParserException(self.xmlElement, "This integrator can only have at most two cross-propagators. "
                                                  "They must be in opposite directions, and be in the same <operators> block.")
         self.operatorContainerToOverride = oc
         if crossOp.propagationDirection == '+':
           # Propagating from left
           if self.leftOperatorContainer:
-            raise ParserException(self.xmlElement, "This integrator has two cross-propagators with left boundary conditions.\n"
+            raise ParserException(self.xmlElement, "This integrator has two cross-propagators with left boundary conditions. "
                                                    "The SIC integrator can only have two cross-propagators, one in each direction of a single dimension.")
           self.leftOperatorContainer = self.leftRightOperatorContainerFromCrossPropagationOperator(crossOp)
         else:
           # Propagating from right
           if self.rightOperatorContainer:
-            raise ParserException(self.xmlElement, "This integrator has two cross-propagators with right boundary conditions.\n"
+            raise ParserException(self.xmlElement, "This integrator has two cross-propagators with right boundary conditions. "
                                                    "The SIC integrator can only have two cross-propagators, one in each direction of a single dimension.")
           self.rightOperatorContainer = self.leftRightOperatorContainerFromCrossPropagationOperator(crossOp)
         

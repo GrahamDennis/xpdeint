@@ -270,13 +270,31 @@ def configure(conf):
         )
         
         check_cxx(
-            lib='fftw3_threads',
+            lib='fftw3f',
             header_name='fftw3.h',
-            function_name='fftw_init_threads',
-            uselib_store='fftw3_threads',
-            uselib=['fftw3', 'threads'],
-            msg = "Checking for threading support in FFTW3",
+            function_name='fftwf_execute',
+            uselib_store='fftw3f',
+            msg = "Checking for single-precision FFTW3"
         )
+        
+        if 'fftw3' in conf.env['uselib']:
+            check_cxx(
+                lib='fftw3_threads',
+                header_name='fftw3.h',
+                function_name='fftw_init_threads',
+                uselib_store='fftw3_threads',
+                uselib=['fftw3', 'threads'],
+                msg = "Checking for threading support in FFTW3",
+            )
+        if 'fftw3f' in conf.env['uselib']:
+            check_cxx(
+                lib='fftw3f_threads',
+                header_name='fftw3.h',
+                function_name='fftwf_init_threads',
+                uselib_store='fftw3f_threads',
+                uselib=['fftw3f', 'threads'],
+                msg = "Checking for threading support in single-precision FFTW3",
+            )
         
     
     print
@@ -294,14 +312,24 @@ def configure(conf):
         
         configure_compiler()
         
-        check_cxx(
-            lib='fftw3_mpi',
-            header_name='fftw3.h fftw3-mpi.h',
-            function_name='fftw_mpi_init',
-            uselib_store='fftw3_mpi',
-            uselib='fftw3',
-            msg = "Checking for FFTW3 with MPI"
-        )
+        if 'fftw3' in conf.env['uselib']:
+            check_cxx(
+                lib='fftw3_mpi',
+                header_name='fftw3.h fftw3-mpi.h',
+                function_name='fftw_mpi_init',
+                uselib_store='fftw3_mpi',
+                uselib='fftw3',
+                msg = "Checking for FFTW3 with MPI"
+            )
+        if 'fftw3f' in conf.env['uselib']:
+            check_cxx(
+                lib='fftw3f_mpi',
+                header_name='fftw3.h fftw3-mpi.h',
+                function_name='fftwf_mpi_init',
+                uselib_store='fftw3f_mpi',
+                uselib='fftw3f',
+                msg = "Checking for single-precision FFTW3 with MPI"
+            )
     else:
         print "MPI not found. No scripts using MPI can be compiled on this system."
         del conf.all_envs['mpi']

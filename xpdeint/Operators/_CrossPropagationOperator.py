@@ -176,7 +176,7 @@ class _CrossPropagationOperator (Operator):
     for vector in boundaryConditionDependencies:
       if not vector.field.isSubsetOfField(self.field):
         raise ParserException(self.codeBlocks['boundaryCondition'].xmlElement,
-                              "Cannot depend on vector '%s' because it is in the field '%s'\n"
+                              "Cannot depend on vector '%s' because it is in the field '%s' "
                               "which contains dimensions that are not in the field for this operator ('%s')."
                               % (vector.name, vector.field.name, self.field))
     
