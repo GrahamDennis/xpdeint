@@ -34,7 +34,7 @@ Below is a minimal script that solves this problem. Don't worry if it doesn't ma
       </geometry>
       
       <!-- A 'vector' describes the variables that we will be evolving. -->
-      <vector name="main" type="real">
+      <vector name="position" type="real">
         <components>
           x y z
         </components>
@@ -53,7 +53,7 @@ Below is a minimal script that solves this problem. Don't worry if it doesn't ma
         <integrate algorithm="ARK89" interval="100.0" tolerance="1e-7">
           <samples>100</samples>
           <operators>
-            <integration_vectors>main</integration_vectors>
+            <integration_vectors>position</integration_vectors>
             <![CDATA[
             dx_dt = 10.0*(y-x);
             dy_dt = 28.0*x - y - x*z;
@@ -68,7 +68,7 @@ Below is a minimal script that solves this problem. Don't worry if it doesn't ma
         <group>
           <sampling>
             <moments>xR yR zR</moments>
-            <dependencies>main</dependencies>
+            <dependencies>position</dependencies>
             <![CDATA[
               xR = x;
               yR = y;
