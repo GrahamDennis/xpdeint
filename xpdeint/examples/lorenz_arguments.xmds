@@ -27,7 +27,7 @@
     <propagation_dimension> t </propagation_dimension>
   </geometry>
   
-  <vector name="main" type="real">
+  <vector name="position" type="real">
     <components>
       x y z
     </components>
@@ -42,7 +42,7 @@
     <integrate algorithm="ARK89" interval="1.0*time_arg" steps="25000" tolerance="1e-7">
       <samples>10</samples>
       <operators>
-        <integration_vectors>main</integration_vectors>
+        <integration_vectors>position</integration_vectors>
         <![CDATA[
         dx_dt = sigma*(y-x);
         dy_dt = r*x - y - x*z;
@@ -55,7 +55,7 @@
     <group>
       <sampling initial_sample="yes">
         <moments>xR yR zR</moments>
-        <dependencies>main</dependencies>
+        <dependencies>position</dependencies>
         <![CDATA[
           xR = x;
           yR = y;
