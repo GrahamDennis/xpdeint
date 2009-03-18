@@ -18,6 +18,7 @@ from Constants import ASK_LATER, SKIP_ME, RUN_ME
 srcdir = '.'
 blddir = 'waf_build'
 
+from xpdeint import Configuration
 
 def set_options(opt):
     # options provided by modules
@@ -25,15 +26,15 @@ def set_options(opt):
 
 
 def configure(conf):
-    from xpdeint import Configuration
-    
     for key, value in Configuration.wafArguments.iteritems():
         conf.env[key] = value
     
     def check_cxx(**KWs):
         result = conf.check_cxx(**KWs)
         if result and 'uselib_store' in KWs:
-            conf.env['uselib'].add(KWs['uselib_store'])
+            conf.env.append_unique('uselib', KWs['uselib_store'])
+            if 'header_name' in KWs:
+                conf.env.append_unique('HEADER_%s' % KWs['uselib_store'], KWs['header_name'])
         return result
     
     mpi = conf.env.copy()
@@ -55,7 +56,6 @@ def configure(conf):
     
     
     def configure_compiler():
-        conf.env['uselib'] = set()
         conf.check_tool('compiler_cxx')
         conf.check_tool('osx')
         
@@ -338,7 +338,6 @@ def configure(conf):
     conf.setenv('default')
 
 def build(bld):
-    from xpdeint import Configuration
     Configuration.availableUselib = bld.env_of_name(Configuration.buildVariant)['uselib']
     Configuration.availableVariants = bld.all_envs.keys()
     
