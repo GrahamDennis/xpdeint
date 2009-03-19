@@ -12,6 +12,8 @@ Contents:
    
    tutorial
    
+   advanced_topics
+   
    optimisation_hints
    
    xsil2graphics2
