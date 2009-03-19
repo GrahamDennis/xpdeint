@@ -38,7 +38,7 @@
   
   <sequence>
     <integrate algorithm="ARK89" interval="100.0" steps="25000" tolerance="1e-7">
-      <samples>5000</samples>
+      <samples>5000 100</samples>
       <operators>
         <integration_vectors>position</integration_vectors>
         <![CDATA[
@@ -61,5 +61,16 @@
         ]]>
       </sampling>
     </group>
+	
+	<group>
+      <sampling initial_sample="yes">
+        <moments>distancesquared</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          distancesquared = x*x + y*y +z*z;
+        ]]>
+      </sampling>
+    </group>
+
   </output>
 </simulation>
