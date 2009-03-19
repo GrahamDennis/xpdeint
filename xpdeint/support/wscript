@@ -196,6 +196,12 @@ def configure(conf):
                 uselib = 'hdf5',
                 msg = "Checking for HDF5 High-level library"
             )
+            check_cxx(
+                header_name=['hdf5.h'],
+                function_name='H5Lexists',
+                uselib = 'hdf5',
+                uselib_store = 'hdf5'
+            )
         
         check_cxx(
             lib='xmds',
