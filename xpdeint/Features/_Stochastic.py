@@ -12,6 +12,7 @@ from xpdeint.Vectors.VectorElement import VectorElement
 from xpdeint.Vectors.ComputedVector import ComputedVector
 from xpdeint.Vectors.VectorInitialisationFromCDATA import VectorInitialisationFromCDATA
 from xpdeint.Vectors.VectorInitialisationFromXSIL import VectorInitialisationFromXSIL
+from xpdeint.Vectors.VectorInitialisationFromHDF5 import VectorInitialisationFromHDF5
 from xpdeint.Operators.FilterOperator import FilterOperator
 from xpdeint.Operators.DeltaAOperator import DeltaAOperator
 from xpdeint.Segments.Integrators.FixedStep import FixedStep as FixedStepIntegrator
@@ -77,7 +78,7 @@ class _Stochastic (_Feature):
     # Note that someone (maybe this class) needs to replace the named noises in
     # these classes (as read by the parser) with the actual noise objects
     
-    classesThatCanUseNoises = (VectorInitialisationFromCDATA, VectorInitialisationFromXSIL, ComputedVector, FilterOperator, DeltaAOperator)
+    classesThatCanUseNoises = (VectorInitialisationFromCDATA, VectorInitialisationFromXSIL, VectorInitialisationFromHDF5, ComputedVector, FilterOperator, DeltaAOperator)
     
     objectsThatMightUseNoises = [o for o in self.getVar('templates') if isinstance(o, classesThatCanUseNoises)]
     
