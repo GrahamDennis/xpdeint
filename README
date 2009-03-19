@@ -77,6 +77,18 @@ Build instructions:
    things. If you're not interested in the up-to-the-moment updates (most people won't be), sign up
    for the 'daily digest' instead.
 
+10. To build the user documentation, you first need to install sphinx, either via your package manager or:
+   sudo easy_install sphinx
+
+   Then, to build the documentation, in the xpdeint/userdoc/ directory run:
+   make html
+
+   If this results in an error, you may need run
+   sudo ./setup.py develop
+
+   The generated html documentation can now be found at xpdeint/userdoc/build/html/index.html
+
+
 Optional installs:
 * A Matrix library like ATLAS, or Intel's MKL
 * GNU Scientific library (GSL).
@@ -85,7 +97,7 @@ Optional installs:
 * numpy (sudo easy_install numpy)
 * fftw-3.3alpha. Needed for fourier transforms. The alpha version is required for MPI support.
 * OpenMPI. Needed to enable xpdeint to generate scripts that can be run across multiple machines.
-
+* mpmath. Library for arbitrary precision floating point math. Install from package manager or "sudo easy_install mpmath"
 
 This should mostly work.
 
