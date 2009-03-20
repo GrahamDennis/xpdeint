@@ -840,7 +840,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
             momentGroupName = 'moment_group_' + filenameElement.getAttribute('group').strip()
           initialisationTemplate.momentGroupName = momentGroupName
         elif kindString == 'hdf5':
-          groupName = '/1'
+          groupName = None
           if filenameElement.hasAttribute('group'):
             groupName = filenameElement.getAttribute('group').strip()
           initialisationTemplate.groupName = groupName
