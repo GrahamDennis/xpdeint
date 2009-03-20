@@ -32,13 +32,31 @@ $insertCodeForFeatures('vectorInitialisationBegin', $featureOrdering, featureDic
 
 htri_t result;
 hid_t hdf5_file = H5Fopen("${filename}", H5F_ACC_RDONLY, H5P_DEFAULT);
+hid_t hdf5_parent = 0;
+  @if $groupName
+if ((result = H5Lexists(hdf5_file, "${groupName}", H5P_DEFAULT)) > 0) {
+  hdf5_parent = H5Gopen(hdf5_file, "${groupName}");
+} else if (!result) {
+  _LOG(_ERROR_LOG_LEVEL, "Unable to find group '${groupName}' in HDF5 file '${filename}'.\n");
+} else {
+  _LOG(_ERROR_LOG_LEVEL, "Unable to determine if group '${groupName}' exists in HDF5 file '${filename}'. Is the file corrupt?\n");
+}
+  @else
+if ((result = H5Lexists(hdf5_file, "/1", H5P_DEFAULT)) > 0) {
+  hdf5_parent = H5Gopen(hdf5_file, "/1");
+} else if (!result) {
+  hdf5_parent = hdf5_file;
+} else {
+  _LOG(_ERROR_LOG_LEVEL, "Unable to determine if group '/1' exists in HDF5 file '${filename}'. Is the file corrupt?\n");
+}
+  @end if
 
   @set $dimCount = len(field.dimensions)
 hsize_t file_dims[${dimCount}];
 
   @for dimNum, dim in enumerate(field.dimensions)
     @set $dimRep = dim.inSpace($vector.initialSpace)
-hid_t dataset_${dimRep.name} = H5Dopen(hdf5_file, "${groupName}/${dimRep.name}");
+hid_t dataset_${dimRep.name} = H5Dopen(hdf5_parent, "${dimRep.name}");
 hid_t dataspace_${dimRep.name} = H5Dget_space(dataset_${dimRep.name});
 file_dims[$dimNum] = H5Sget_simple_extent_npoints(dataspace_${dimRep.name});
 ${dimRep.type}* ${dimRep.name}_inputdata = (${dimRep.type}*)xmds_malloc(H5Sget_simple_extent_npoints(dataspace_${dimRep.name}) * sizeof(${dimRep.type}));
@@ -87,9 +105,8 @@ file_dataspace = H5Screate_simple(${len(field.dimensions)}, file_dims, NULL);
     @end if
     @for offset, componentName in $variable.separatedComponents
 hid_t dataset_${componentName} = 0;
-      @set $identifier = c"${groupName}/${componentName}"
-if ((result = H5Lexists(hdf5_file, "${identifier}", H5P_DEFAULT))>0)
-  dataset_${componentName} = H5Dopen(hdf5_file, "${identifier}");
+if ((result = H5Lexists(hdf5_parent, "${componentName}", H5P_DEFAULT))>0)
+  dataset_${componentName} = H5Dopen(hdf5_parent, "${componentName}");
 else if (!result)
   _LOG(_WARNING_LOG_LEVEL, "Warning: Unable to find variable name '${componentName}' in HDF5 file.\n");
 else
@@ -116,6 +133,8 @@ xmds_free(${dimRep.name}_inputdata);
 H5Sclose(dataspace_${dimRep.name});
 H5Dclose(dataset_${dimRep.name});
   @end for
+if (hdf5_parent != hdf5_file)
+  H5Gclose(hdf5_parent);
 H5Fclose(hdf5_file);
 
 $insertCodeForFeaturesInReverseOrder('vectorInitialisationEnd', $featureOrdering, featureDict)@slurp
