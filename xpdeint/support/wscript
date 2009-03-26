@@ -198,6 +198,7 @@ def configure(conf):
             )
             check_cxx(
                 header_name=['hdf5.h'],
+                defines='HAVE_H5LEXISTS',
                 function_name='H5Lexists',
                 uselib = 'hdf5',
                 uselib_store = 'hdf5'
