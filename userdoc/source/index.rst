@@ -14,6 +14,8 @@ Contents:
    
    advanced_topics
    
+   faq
+   
    optimisation_hints
    
    xsil2graphics2
