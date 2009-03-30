@@ -6,7 +6,7 @@ Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 *@
 @extends xpdeint.Vectors._VectorInitialisationFromHDF5
 
-@from xpdeint.Geometry.NonUniformDimensionRepresentation import NonUniformDimensionRepresentation
+@from xpdeint.Geometry.SplitUniformDimensionRepresentation import SplitUniformDimensionRepresentation
 
 @def description: Vector initialisation from a HDF5 file
 
@@ -63,11 +63,11 @@ ${dimRep.type}* ${dimRep.name}_inputdata = (${dimRep.type}*)xmds_malloc(H5Sget_s
     @set $realType = {'single': 'H5T_NATIVE_FLOAT', 'double': 'H5T_NATIVE_DOUBLE'}[$precision]
     @set $dataType = {'real': realType, 'long': 'H5T_NATIVE_LONG'}[$dimRep.type]
 H5Dread(dataset_${dimRep.name}, $dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, ${dimRep.name}_inputdata);
-    @if not isinstance(dimRep, NonUniformDimensionRepresentation)
+    @if isinstance(dimRep, SplitUniformDimensionRepresentation)
       @set $dimArrayName = c'${dimRep.name}_data'
 ${dimRep.type}* ${dimArrayName} = (${dimRep.type}*)xmds_malloc(${dimRep.globalLattice} * sizeof(${dimRep.type}));
 for (long _i0 = 0; _i0 < ${dimRep.globalLattice}; _i0++) {
-  ${dimArrayName}[_i0] = ${dimRep.minimum} + ${dimRep.stepSize} * _i0;
+  ${dimArrayName}[_i0] = ${dimRep.arrayName}[(_i0 + (${dimRep.globalLattice}+1)/2) % ${dimRep.globalLattice}];
 }
     @else
       @set $dimArrayName = dimRep.arrayName
@@ -126,7 +126,7 @@ H5Sclose(file_dataspace);
 
   @for dim in $vector.field.dimensions
     @set $dimRep = dim.inSpace($vector.initialSpace)
-    @if not isinstance(dimRep, NonUniformDimensionRepresentation)
+    @if isinstance(dimRep, SplitUniformDimensionRepresentation)
 xmds_free(${dimRep.name}_data);
     @end if
 xmds_free(${dimRep.name}_inputdata);
