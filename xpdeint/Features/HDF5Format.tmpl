@@ -5,7 +5,7 @@ Created by Graham Dennis on 2009-01-24.
 Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 *@
 @extends xpdeint.Features._HDF5Format
-@from xpdeint.Geometry.NonUniformDimensionRepresentation import NonUniformDimensionRepresentation
+@from xpdeint.Geometry.SplitUniformDimensionRepresentation import SplitUniformDimensionRepresentation
 @from xpdeint.CallOnceGuards import callOnceGuard
 
 @def description: HDF5 output format
@@ -98,11 +98,11 @@ coordinate_length = ${dimRep.globalLattice};
 coordinate_dataspace = H5Screate_simple(1, &coordinate_length, NULL);
     @set $dataType = {'real': 'H5T_NATIVE_' + $precision.upper(), 'long': 'H5T_NATIVE_LONG'}[$dimRep.type]
 hid_t dataset_${dimRep.name} = H5Dcreate(hdf5_file, "/${groupID}/${dimRep.name}", ${dataType}, coordinate_dataspace, H5P_DEFAULT);
-    @if not isinstance(dimRep, NonUniformDimensionRepresentation)
+    @if isinstance(dimRep, SplitUniformDimensionRepresentation)
       @set $dimArrayName = c'${dimRep.name}_data'
 ${dimRep.type}* ${dimArrayName} = (${dimRep.type}*)xmds_malloc(${dimRep.globalLattice} * sizeof(${dimRep.type}));
 for (long _i0 = 0; _i0 < ${dimRep.globalLattice}; _i0++) {
-  ${dimArrayName}[_i0] = ${dimRep.minimum} + ${dimRep.stepSize} * _i0;
+  ${dimArrayName}[_i0] = ${dimRep.arrayName}[(_i0 + (${dimRep.globalLattice}+1)/2) % ${dimRep.globalLattice}];
 }
     @else
       @set $dimArrayName = dimRep.arrayName
@@ -112,7 +112,7 @@ H5Dwrite(dataset_${dimRep.name}, $dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, ${dim
   H5DSset_scale(dataset_${dimRep.name}, "${dimRep.name}");
 #endif
 
-    @if not isinstance(dimRep, NonUniformDimensionRepresentation)
+    @if isinstance(dimRep, SplitUniformDimensionRepresentation)
 xmds_free(${dimArrayName});
     @end if
 H5Sclose(coordinate_dataspace);
