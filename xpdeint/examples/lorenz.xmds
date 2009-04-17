@@ -65,7 +65,7 @@
 	<group>
       <sampling initial_sample="yes">
         <moments>distancesquared</moments>
-        <dependencies>main</dependencies>
+        <dependencies>position</dependencies>
         <![CDATA[
           distancesquared = x*x + y*y +z*z;
         ]]>
