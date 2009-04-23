@@ -516,15 +516,15 @@ class _ScriptElement (Template):
         # v is not on the stack, so we are safe
         # Put v on the stack
         stack.append(v)
-        # Add the dependencies for v at the end of my dependencies
-        orderedDependencies.extend(orderedDependenciesForVectors([u for u in v.dependencies if predicate(u)]))
+        # Add the dependencies for v at the end of my dependencies if they aren't there already
+        newDependencies = orderedDependenciesForVectors([u for u in v.dependencies if predicate(u)])
+        orderedDependencies.extend([v for v in newDependencies if not v in orderedDependencies])
         # Pop v off the stack and put it on our orderedDependencies
         orderedDependencies.append(stack.pop())
       
       return orderedDependencies
     
-    vectors = [v for v in vectors if predicate(v)]
-    return orderedDependenciesForVectors(vectors)
+    return orderedDependenciesForVectors([v for v in vectors if predicate(v)])
   
   def computedVectorsNeedingPrecalculationForOperatorContainers(self, operatorContainers):
     """
