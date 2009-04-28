@@ -42,15 +42,6 @@ class _UserLoopCodeBlock(ScriptElement):
     """
     return self.codeString
   
-  @lazy_property
-  def scriptLineOffset(self):
-    """
-    Default the script line number offset to be just the line number of the CDATA
-    section of our xml element. Though, as with all lazy_property's, this value can
-    be overridden.
-    """
-    return self.xmlElement.lineNumberForCDATASection()
-  
   @property
   def loopCodeString(self):
     return self.prefixCodeString + self.codeString + self.postfixCodeString
@@ -123,7 +114,7 @@ class _UserLoopCodeBlock(ScriptElement):
       evaluationCodeBlock.codeString = codeString
       # This code block could depend on anything we do
       evaluationCodeBlock.dependencies.update(self.dependencies)
-      evaluationCodeBlock.scriptLineOffset = self.scriptLineOffset + self.codeString.count('\n', 0, containingCodeSlice.start)
+      evaluationCodeBlock.scriptLineNumber = self.scriptLineNumber + self.codeString.count('\n', 0, containingCodeSlice.start)
       targetCodeBlocks.append(evaluationCodeBlock)
       targetVariableName = 'target%i' % targetCodeBlocks.index(evaluationCodeBlock)
       specialTargetsVector.components.append(targetVariableName)
@@ -275,7 +266,14 @@ class _TargetConstructorCodeBlock(_UserLoopCodeBlock):
   @property
   def loopCodeString(self):
     prefixString = ''.join([cb.prefixCodeString for cb in self.targetCodeBlocks])
-    loopString = ''.join(['target%i = %s;\n' % (targetNum, cb.codeString) for targetNum, cb in enumerate(self.targetCodeBlocks)])
+    writeLineDirectives = not self.getVar('debug')
+    loopStringTemplate = ''
+    if writeLineDirectives: loopStringTemplate += '#line %%(lineNumber)i "%s"\n' % self.getVar('scriptName')
+    loopStringTemplate += 'target%(targetNum)i = %(codeString)s;\n'
+    loopString = ''.join([loopStringTemplate % dict(lineNumber=cb.scriptLineNumber, targetNum=targetNum, codeString=cb.codeString)\
+                            for targetNum, cb in enumerate(self.targetCodeBlocks)])
+    if writeLineDirectives:
+      loopString += '#line _XPDEINT_CORRECT_MISSING_LINE_NUMBER_\n'
     postfixString = ''.join([cb.postfixCodeString for cb in self.targetCodeBlocks])
     return prefixString + loopString + postfixString
   

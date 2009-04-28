@@ -568,7 +568,7 @@ the line number from which the code came.
   @#
   @set $writeLineDirectives = not $debug and $entity.xmlElement
   @if writeLineDirectives
-#line $entity.xmlElement.lineNumberForCDATASection "$scriptName"
+#line $entity.scriptLineNumber "$scriptName"
   @end if
 ${entity.value, fixupWhitespace=True}
   @if writeLineDirectives
