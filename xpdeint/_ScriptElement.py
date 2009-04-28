@@ -155,6 +155,10 @@ class _ScriptElement (Template):
     else:
       return '+'
   
+  @lazy_property
+  def scriptLineNumber(self):
+    return self.xmlElement.lineNumberForCDATASection()
+  
   def hasattr(self, attrName):
     """
     Helper method to return whether or not the instance has the attribute `attrName`.

@@ -42,7 +42,7 @@ class LexerException(ParserException):
     for lineNumber, line in enumerate(lines):
       indexCounter += len(line)
       if indexCounter > codeIndex:
-        self.lineNumber = codeBlock.scriptLineOffset + lineNumber
+        self.lineNumber = codeBlock.scriptLineNumber + lineNumber
         self.columnNumber = codeIndex - (indexCounter - len(line)) + 1
         break
   
