@@ -244,6 +244,12 @@ def configure(conf):
         
         # Find CBLAS
         cblas_options = [
+            {# Intel MKL
+                'defines': 'CBLAS_MKL',
+                'lib': 'mkl_intel_lp64 mkl_intel_thread mkl_core',
+                'header_name': 'mkl.h',
+                'msg': "Checking for Intel's Math Kernel Library",
+            },
             {# Apple vecLib
                 'defines': 'CBLAS_VECLIB',
                 'framework_name': 'vecLib',
