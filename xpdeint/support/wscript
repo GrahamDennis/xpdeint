@@ -246,7 +246,8 @@ def configure(conf):
         cblas_options = [
             {# Intel MKL
                 'defines': 'CBLAS_MKL',
-                'lib': 'mkl_intel_lp64 mkl_intel_thread mkl_core',
+                'lib': ['mkl_intel_lp64', 'mkl_intel_thread', 'mkl_core'],
+                'linkflags': '-openmp', # FIXME: Dodgy hack. We should mark the uselib 'openmp' as a dependency
                 'header_name': 'mkl.h',
                 'msg': "Checking for Intel's Math Kernel Library",
             },
