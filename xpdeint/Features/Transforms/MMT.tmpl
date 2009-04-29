@@ -15,7 +15,9 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
   @#
   @super
   @#
-#if  defined(CBLAS_VECLIB)
+#if   defined(CBLAS_MKL)
+  #include <mkl.h>
+#elif defined(CBLAS_VECLIB)
   #include <vecLib/cblas.h>
 #elif defined(CBLAS_ATLAS)
   #include <cblas.h>
