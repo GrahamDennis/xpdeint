@@ -83,6 +83,7 @@ ${result}@slurp
 #undef imag
 
 @set $realType = {'single': 'float', 'double': 'double'}[$precision]
+typedef long integer;
 typedef ${realType} real;
 typedef std::Complex<real> complex;
 
