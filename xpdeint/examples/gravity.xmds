@@ -69,9 +69,9 @@
             // printf("j: %li k: %li    x[j]: %e x[k]: %e  y[j]: %e y[k]: %e\n", j, k, x[j], x[k], y[j], y[k]);
             // printf("separationSquared: %e inverseSeparationCubed: %e\n", (x[k] - x[j])*(x[k] - x[j]) + (y[k] - y[j])*(y[k] - y[j]), inverseSeparationCubed);
             dvx_dt(j: j) += m(j: k)*(x(j: k) - x(j: j))*inverseSeparationCubed;
-            dvx_dt(j: k) += m(j: k)*(x(j: j) - x(j: k))*inverseSeparationCubed;
+            dvx_dt(j: k) += m(j: j)*(x(j: j) - x(j: k))*inverseSeparationCubed;
             dvy_dt(j: j) += m(j: k)*(y(j: k) - y(j: j))*inverseSeparationCubed;
-            dvy_dt(j: k) += m(j: k)*(y(j: j) - y(j: k))*inverseSeparationCubed;
+            dvy_dt(j: k) += m(j: j)*(y(j: j) - y(j: k))*inverseSeparationCubed;
           }
         ]]>
       </operators>
