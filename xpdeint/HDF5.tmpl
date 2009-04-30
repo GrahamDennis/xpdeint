@@ -95,7 +95,7 @@ if (dataset_${componentName})
     @set $writeLoopContents = dict['writeLoopContents']
     @#
     @# The object passed as the first argument to this next call is a 
-// Select hyperslabs of memory and file data spaces and then write
+// Select hyperslabs of memory and file data spaces for data transfer operation
 ${splitUniformDataSelect(dimRepOrdering, writeLoopContents)}@slurp
 
 H5Sclose(mem_dataspace);
