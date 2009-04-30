@@ -7,6 +7,9 @@ Created by Graham Dennis on 2008-09-15.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
+from xpdeint.ParserException import ParserException
+import re
+
 class lazy_property(object):
   """
   A data descriptor that provides a default value for the attribute
@@ -110,4 +113,42 @@ def leopardWebKitHack():
     if sys.platform == 'darwin' and not 'WebKit' in sys.modules:
         module = type(sys)
         sys.modules['WebKit'] = module('WebKit')
+
+protectedNamesSet = set("""
+gamma nan ceil floor trunc round remainder abs sqrt hypot
+exp log pow cos sin tan cosh sinh tanh acos asin atan
+j0 j1 jn y0 y1 yn erf real complex Re Im mod2 integer mod
+""".split())
+
+def symbolsInString(string, xmlElement = None):
+    wordRegex = re.compile(r'\b\w+\b')
+    symbolRegex = re.compile(r'[a-zA-Z]\w*')
+    words = wordRegex.findall(string)
+    for word in words:
+        if not symbolRegex.match(word):
+            raise ParserException(
+                xmlElement,
+                "'%(word)s' is not a valid name. All names must start with a letter, "
+                "after that letters, numbers and underscores ('_') may be used." % locals()
+            )
+        if word in protectedNamesSet:
+            raise ParserException(
+                xmlElement,
+                "'%(word)s' cannot be used as a name because it conflicts with an internal function or variable of the same name. "
+                "Choose another name." % locals()
+            )
+    return words
+
+def symbolInString(string, xmlElement = None):
+    words = symbolsInString(string, xmlElement)
+    if len(words) > 1:
+        raise ParserException(
+            xmlElement,
+            "Only one name was expected at this point. The problem was with the string '%(string)s'" % locals()
+        )
+    if words:
+        return words[0]
+    else:
+        return None
+    
 

@@ -14,7 +14,7 @@ from xpdeint.ScriptElement import ScriptElement
 from xpdeint import RegularExpressionStrings
 from xpdeint.ParserException import ParserException
 
-from xpdeint.Utilities import lazy_property
+from xpdeint.Utilities import lazy_property, symbolsInString
 
 class _FieldElement (ScriptElement):
   def __init__(self, *args, **KWs):
@@ -241,7 +241,7 @@ class _FieldElement (ScriptElement):
       for rep in fieldDimension.representations:
         legalDimensionNames.add(rep.name)
     
-    spacesSymbols = RegularExpressionStrings.symbolsInString(spacesString)
+    spacesSymbols = symbolsInString(spacesString, xmlElement = xmlElement)
     
     for symbol in spacesSymbols:
       if not symbol in legalDimensionNames:
@@ -264,6 +264,14 @@ class _FieldElement (ScriptElement):
       if fieldDimension.isTransformable and spacesSymbols.count(fieldDimension.inSpace(-1).name):
         resultSpace |= fieldDimension.transformMask
     return resultSpace
+  
+  def newspaceFromString(self, spacesString, xmlElement = None):
+    """
+    Return the basis set given `spacesString`. This is the new version of this function.
+    """
+    xmlElement = xmlElement or self.xmlElement
+    
+    valid
   
   @classmethod
   def sortedFieldWithDimensionNames(cls, dimensionNames, xmlElement = None, createIfNeeded = True):

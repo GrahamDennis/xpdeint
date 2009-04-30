@@ -12,7 +12,7 @@ from xpdeint.ScriptParser import ScriptParser
 from xpdeint.ParserException import ParserException, parserWarning
 from xpdeint.ParsedEntity import ParsedEntity
 from xml.dom import minidom
-from xpdeint import RegularExpressionStrings
+from xpdeint import RegularExpressionStrings, Utilities
 
 from xpdeint._ScriptElement import _ScriptElement
 from xpdeint._UserLoopCodeBlock import _UserLoopCodeBlock
@@ -149,7 +149,7 @@ class XMDS2Parser(ScriptParser):
     dependenciesElement = element.getChildElementByTagName('dependencies', optional)
     dependencyVectorNames = []
     if dependenciesElement:
-      dependencyVectorNames = RegularExpressionStrings.symbolsInString(dependenciesElement.innerText())
+      dependencyVectorNames = Utilities.symbolsInString(dependenciesElement.innerText(), xmlElement = element)
       return ParsedEntity(dependenciesElement, dependencyVectorNames)
     else:
       return None
@@ -480,7 +480,7 @@ class XMDS2Parser(ScriptParser):
       raise ParserException(someElement, "You cannot specify both a 'noises' attribute and a 'no_noises' attribute.")
     
     if someElement.hasAttribute('noises'):
-      noises = RegularExpressionStrings.symbolsInString(someElement.getAttribute('noises'))
+      noises = Utilities.symbolsInString(someElement.getAttribute('noises'), xmlElement = someElement)
       someTemplate.noisesEntity = ParsedEntity(someElement, noises)
     
     if someElement.hasAttribute('no_noises'):
@@ -562,7 +562,7 @@ class XMDS2Parser(ScriptParser):
         dimensionName = parseAttribute('name')
         
         try:
-          dimensionName = RegularExpressionStrings.symbolInString(dimensionName)
+          dimensionName = Utilities.symbolInString(dimensionName, xmlElement = dimensionElement)
         except ValueError, err:
           raise ParserException(dimensionElement, "'%(dimensionName)s is not a valid name for a dimension.\n"
                                                   "It must not start with a number, and can only contain "
@@ -646,7 +646,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
         
         aliasNames = set()
         if dimensionElement.hasAttribute('aliases'):
-          aliasNames.update(RegularExpressionStrings.symbolsInString(dimensionElement.getAttribute('aliases').strip()))
+          aliasNames.update(Utilities.symbolsInString(dimensionElement.getAttribute('aliases'), xmlElement = dimensionElement))
           for aliasName in aliasNames:
             if aliasName in self.globalNameSpace['symbolNames']:
               raise ParserException(dimensionElement, "Cannot use '%(aliasName)s' as an alias name for dimension '%(dimensionName)s\n"
@@ -718,7 +718,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       dimensionNames = []
     else:
       dimensionsString = vectorElement.getAttribute('dimensions').strip()
-      dimensionNames = RegularExpressionStrings.symbolsInString(dimensionsString)
+      dimensionNames = Utilities.symbolsInString(dimensionsString, xmlElement = vectorElement)
       if not dimensionNames:
         raise ParserException(vectorElement, "Cannot understand '%(dimensionsString)s' as a "
                                             "list of dimensions" % locals())
@@ -730,7 +730,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       raise ParserException(vectorElement, "Each vector element must have a non-empty 'name' attribute")
     
     vectorName = vectorElement.getAttribute('name')
-    if not vectorName == RegularExpressionStrings.symbolInString(vectorName):
+    if not vectorName == Utilities.symbolInString(vectorName, xmlElement = vectorElement):
       raise ParserException(vectorElement, "'%(vectorName)s' is not a valid name for a vector.\n"
                                            "The name must not start with a number and can only contain letters, numbers and underscores." % locals())
     
@@ -778,7 +778,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     if not componentsString:
       raise ParserException(componentsElement, "The components element must not be empty")
     
-    results = RegularExpressionStrings.symbolsInString(componentsString)
+    results = Utilities.symbolsInString(componentsString, componentsElement)
     
     if not results:
       raise ParserException(componentsElement, "Could not extract component names from component string "
@@ -906,7 +906,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       dimensionNames = []
     else:
       dimensionsString = computedVectorElement.getAttribute('dimensions').strip()
-      dimensionNames = RegularExpressionStrings.symbolsInString(dimensionsString)
+      dimensionNames = Utilities.symbolsInString(dimensionsString, xmlElement = computedVectorElement)
       if not dimensionNames:
         raise ParserException(computedVectorElement, "Cannot understand '%(dimensionsString)s' as a "
                                                      "list of dimensions" % locals())
@@ -944,7 +944,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     if not componentsString:
       raise ParserException(componentsElement, "The components element must not be empty")
     
-    results = RegularExpressionStrings.symbolsInString(componentsString)
+    results = Utilities.symbolsInString(componentsString, componentsElement)
     
     if not results:
       raise ParserException(componentsElement, "Could not extract component names from component string "
@@ -1259,7 +1259,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       if not operatorsElement.hasAttribute('dimensions'):
         dimensionNames = self.globalNameSpace['geometry'].primaryTransverseDimensionNames
       else:
-        dimensionNames = RegularExpressionStrings.symbolsInString(operatorsElement.getAttribute('dimensions'))
+        dimensionNames = Utilities.symbolsInString(operatorsElement.getAttribute('dimensions'), xmlElement = operatorsElement)
       
       fieldTemplate = FieldElementTemplate.sortedFieldWithDimensionNames(dimensionNames, xmlElement = operatorsElement, createIfNeeded = False)
       
@@ -1315,7 +1315,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     self.parseFeatureAttributes(operatorsElement, deltaAOperatorTemplate)
     
     integrationVectorsElement = operatorsElement.getChildElementByTagName('integration_vectors')
-    integrationVectorsNames = RegularExpressionStrings.symbolsInString(integrationVectorsElement.innerText())
+    integrationVectorsNames = Utilities.symbolsInString(integrationVectorsElement.innerText(), xmlElement = integrationVectorsElement)
     
     if not integrationVectorsNames:
       raise ParserException(integrationVectorsElement, "Element must be non-empty.")
@@ -1401,7 +1401,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       operatorDefinitionCodeBlock.space = operatorTemplate.field.spaceMask
     
     operatorNamesElement = operatorElement.getChildElementByTagName('operator_names')
-    operatorNames = RegularExpressionStrings.symbolsInString(operatorNamesElement.innerText())
+    operatorNames = Utilities.symbolsInString(operatorNamesElement.innerText(), xmlElement = operatorNamesElement)
     
     if not operatorNames:
       raise ParserException(operatorNamesElement, "operator_names must not be empty.")
@@ -1455,7 +1455,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     
     operatorNamesElement = operatorElement.getChildElementByTagName('operator_names')
     
-    operatorNames = RegularExpressionStrings.symbolsInString(operatorNamesElement.innerText())
+    operatorNames = Utilities.symbolsInString(operatorNamesElement.innerText(), xmlElement = operatorNamesElement)
     
     if not operatorNames:
       raise ParserException(operatorNamesElement, "operator_names must not be empty.")
@@ -1586,7 +1586,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     crossIntegratorTemplate.step = ''.join([operatorTemplate.propagationDirection, '_', fullField.name, '_d', propagationDimensionName])
     
     integrationVectorsElement = operatorElement.getChildElementByTagName('integration_vectors')
-    integrationVectorNames = RegularExpressionStrings.symbolsInString(integrationVectorsElement.innerText())
+    integrationVectorNames = Utilities.symbolsInString(integrationVectorsElement.innerText(), xmlElement = integrationVectorsElement)
     operatorTemplate.integrationVectorsEntity = ParsedEntity(integrationVectorsElement, integrationVectorNames)
     
     # We need to construct the field element for the reduced dimensions
@@ -1790,7 +1790,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       momentGroupTemplate.rawVector = rawVectorTemplate
       
       momentsElement = samplingElement.getChildElementByTagName('moments')
-      momentNames = RegularExpressionStrings.symbolsInString(momentsElement.innerText())
+      momentNames = Utilities.symbolsInString(momentsElement.innerText(), xmlElement = momentsElement)
       
       if not momentNames:
         raise ParserException(momentsElement, "Moments element should be a list of moment names")
