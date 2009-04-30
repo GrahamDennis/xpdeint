@@ -61,7 +61,7 @@
       <sampling initial_sample="yes">
         <dimension name="j" lattice="0" />
         <moments>zR zI</moments>
-        <dependencies>main 0d_noise</dependencies>
+        <dependencies>main</dependencies>
         <![CDATA[
           zR = z.Re()/_lattice_j;
           zI = z.Im()/_lattice_j;
