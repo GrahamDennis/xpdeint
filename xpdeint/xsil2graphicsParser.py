@@ -13,19 +13,19 @@ import getopt
 
 from xpdeint.XSILFile import XSILFile
 
-from xpdeint.xsil2graphics2.MathematicaImport import MathematicaImport
-from xpdeint.xsil2graphics2.RImport import RImport
-from xpdeint.xsil2graphics2.MathematicaFiveImport import MathematicaFiveImport
-from xpdeint.xsil2graphics2.GnuplotImport import GnuplotImport
-from xpdeint.xsil2graphics2.MatlabImport import MatlabImport
-from xpdeint.xsil2graphics2.ScilabImport import ScilabImport
-
 # Hack for Leopard so it doesn't import the web rendering
 # framework WebKit when Cheetah tries to import the Python
 # web application framework WebKit
 if sys.platform == 'darwin':
   module = type(sys)
   sys.modules['WebKit'] = module('WebKit')
+
+from xpdeint.xsil2graphics2.MathematicaImport import MathematicaImport
+from xpdeint.xsil2graphics2.RImport import RImport
+from xpdeint.xsil2graphics2.MathematicaFiveImport import MathematicaFiveImport
+from xpdeint.xsil2graphics2.GnuplotImport import GnuplotImport
+from xpdeint.xsil2graphics2.MatlabImport import MatlabImport
+from xpdeint.xsil2graphics2.ScilabImport import ScilabImport
 
 
 # The help message printed when --help is used as an argument
