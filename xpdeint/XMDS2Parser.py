@@ -1066,12 +1066,22 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       integratorTemplateClass = Integrators.FixedStep.FixedStep
       stepperTemplateClass = Integrators.RK9Stepper.RK9Stepper
     elif algorithmString == 'RK45':
+      parserWarning(
+        integrateElement,
+        "RK45 is probably not the algorithm you want. RK45 is a 5th-order algorithm with embedded 4th-order "
+        "where the 4th-order results are just thrown away. Unless you know what you are doing, you probably meant RK4 or ARK45."
+      )
       integratorTemplateClass = Integrators.FixedStep.FixedStep
       stepperTemplateClass = Integrators.RK45Stepper.RK45Stepper
     elif algorithmString == 'ARK45':
       integratorTemplateClass = Integrators.AdaptiveStep.AdaptiveStep
       stepperTemplateClass = Integrators.RK45Stepper.RK45Stepper
     elif algorithmString == 'RK89':
+      parserWarning(
+        integrateElement,
+        "RK89 is probably not the algorithm you want. RK89 is a 9th-order algorithm with embedded 8th-order "
+        "where the 8th-order results are just thrown away. Unless you know what you are doing, you probably meant RK9 or ARK89."
+      )
       integratorTemplateClass = Integrators.FixedStep.FixedStep
       stepperTemplateClass = Integrators.RK89Stepper.RK89Stepper
     elif algorithmString == 'ARK89':
