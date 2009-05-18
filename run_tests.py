@@ -312,16 +312,16 @@ def main(argv=None):
       testsuites[head].addTest(suite)
   
   
-  suitesToRun = set()
+  suitesToRun = list()
   if len(argv) > 1:
     for suiteName in argv[1:]:
       fullSuiteName = os.path.join(baseSuiteName, suiteName)
       if fullSuiteName in testsuites:
-        suitesToRun.add(testsuites[fullSuiteName])
+        suitesToRun.append(testsuites[fullSuiteName])
       else:
         print >> sys.stderr, "Unable to find test '%(suiteName)s'" % locals()
   else:
-    suitesToRun.add(testsuites[baseSuiteName])
+    suitesToRun.append(testsuites[baseSuiteName])
   
   fullSuite = unittest.TestSuite(tests=suitesToRun)
   
