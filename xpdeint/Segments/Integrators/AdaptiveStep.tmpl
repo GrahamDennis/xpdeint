@@ -100,7 +100,8 @@ real _segment${segmentNumber}_${vector.id}_timestep_error(${vector.type}* _check
   real _error = 1e-24;
   real _temp_error = 0.0;
   real _temp_mod = 0.0;
-  
+  real _nan = 1.0/0.0;  
+
   @set $featureOrdering = ['Diagnostics']
   @set $dict = {'vector': vector}
   ${insertCodeForFeatures('timestepErrorBegin', featureOrdering, {'vector': vector}), autoIndent=True}@slurp
@@ -119,7 +120,7 @@ real _segment${segmentNumber}_${vector.id}_timestep_error(${vector.type}* _check
   ${insertCodeForFeatures('findMax', ['Driver'], {'variable': '_cutoff', 'count': c'_${vector.id}_ncomponents'}), autoIndent=True}@slurp
   
   for (long _i0 = 0; _i0 < _${vector.id}_ncomponents; _i0++) {
-    if (!isfinite(_cutoff[_i0]))
+    if (_cutoff[_i0] == _nan || !isfinite(_cutoff[_i0]))
       // Return an error two times the tolerance in this case because the timestep must be reduced.
       return 2.0*${tolerance};
     _cutoff[_i0] *= ${cutoff};
@@ -160,7 +161,7 @@ for (long _i1 = 0; _i1 < _${vector.id}_ncomponents; _i1++) {
     @set $modFunction = 'abs'
   @end if
   _temp_mod = ${modFunction}(_${vector.id}[_${vector.id}_index_pointer + _i1]);
-  if (!isfinite(_temp_mod))
+  if (_temp_mod == _nan || !isfinite(_temp_mod))
     _cutoff[_i1] = INFINITY;
   else if (_cutoff[_i1] < _temp_mod)
     _cutoff[_i1] = _temp_mod;
