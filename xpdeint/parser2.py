@@ -399,6 +399,8 @@ def main(argv=None):
   if not variant:
     variant.add('default')
   
+  assert len(variant) == 1
+  
   compilerLine = Configuration.run_build(
     sourceFileName,
     output,
