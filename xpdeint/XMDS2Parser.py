@@ -1056,8 +1056,6 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
     stepperTemplateClass = None
     algorithmSpecificOptionsDict = dict()
     
-    algorithms = {}
-    
     algorithmString = integrateElement.getAttribute('algorithm')
     if algorithmString == 'RK4':
       integratorTemplateClass = Integrators.FixedStep.FixedStep
@@ -1097,7 +1095,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       
       if integrateElement.hasAttribute('iterations'):
         algorithmSpecificOptionsDict['iterations'] = RegularExpressionStrings.integerInString(integrateElement.getAttribute('iterations'))
-        if algorithmSpecificOptionsDict['iterations']<1:
+        if algorithmSpecificOptionsDict['iterations'] < 1:
           raise ParserException(integrateElement, "Iterations element must be 1 or greater (default 3).")
     else:
       raise ParserException(integrateElement, "Unknown algorithm '%(algorithmString)s'. "
