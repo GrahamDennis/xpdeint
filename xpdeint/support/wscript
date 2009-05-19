@@ -352,11 +352,12 @@ def configure(conf):
     conf.setenv('default')
 
 def build(bld):
-    Configuration.availableUselib = bld.env_of_name(Configuration.buildVariant)['uselib']
     Configuration.availableVariants = bld.all_envs.keys()
     
     if not Configuration.buildVariant in Configuration.availableVariants:
         return
+    
+    Configuration.availableUselib = bld.env_of_name(Configuration.buildVariant)['uselib']
     
     obj = bld.new_task_gen(
         features = 'cxx cprogram',
