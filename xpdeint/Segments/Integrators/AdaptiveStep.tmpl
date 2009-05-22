@@ -302,7 +302,7 @@ do {
       _discard = false;
     } else {
       ${insertCodeForFeatures('adaptiveStepFailed', $featureOrderingForToleranceChecking), autoIndent=True}@slurp
-      t -= _step;
+      ${propagationDimension} -= _step;
   @for $vector in $integrationVectors
       
       _${name}_${vector.id}_reset(_${stepper.resetFieldName}_${vector.id});
