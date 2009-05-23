@@ -550,6 +550,21 @@
   }
 #endif
 
+inline double _private_nan()
+{
+  static const union
+  {
+    uint32_t nan_u32[2];
+    double nan_double;
+  } NANVal =
+  #if CFG_ENDIAN == CFG_ENDIAN_LITTLE
+    {{0xffffffff, 0x7fffffff}};
+  #else
+    {{0x7fffffff, 0xffffffff}};
+  #endif
+  return NANVal.nan_double;
+}
+
 // Define UINT64_C for 64-bit constants
 #ifndef UINT64_C
   #if (CFG_COMPILER == CFG_COMPILER_GCC) || (CFG_COMPILER == CFG_COMPILER_SUNCC) || (CFG_COMPILER == CFG_COMPILER_ICC)
