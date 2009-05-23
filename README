@@ -10,6 +10,11 @@ Build instructions:
 0. Obtain xpdeint. In a directory where you want to check out the repository, run:
    svn checkout https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
    (Only do this if you haven't done this already).
+   
+   It is important to NOT download the source from the tarball on the Sourceforge website as
+   this tarball does not have executable bits set on any files. Also, installing xpdeint this
+   way will make it much harder to update it in the future.
+   
 1. As xpdeint generates C++ code, you will need a C++ compiler. One common free compiler is gcc.
    xpdeint can also use Intel's C++ compiler if you have it. Intel's compiler typically generates
    faster code than gcc, but it isn't free.
@@ -73,9 +78,14 @@ Build instructions:
       to run all the tests
 
 8. Run the generated program, which will produce XSIL output exactly as XMDS-1
-
-   Note that xpdeint currently requires xmds-1 to be installed for libxmds when loading XSIL files.
-   It also currently uses the xsil2graphics program bundled with xmds-1.
+  
+   If you wish to load binary XSIL files _into_ xpdeint, then you will need the libxmds library that
+   comes with xmds-1. However, the same result can be achieved without using libxmds by using the 'HDF5'
+   output format and installing the HDF5 library (see optional installs section).
+   
+   xpdeint comes with a new version of xsil2graphics called xsil2graphics2. This version fully supports Mathematica
+   and only supports loading HDF5 files into Matlab. The original xsil2graphics can still be used if you need support
+   for Gnuplot, R, Scilab, or loading of binary or ascii data files into Matlab.
 
 9. Next time you want to update, just type 'make update' in the xpdeint/ directory.
 
@@ -83,10 +93,10 @@ Build instructions:
     This is a reasonably important step as xpdeint is still very much a moving target and things
     can still change or bugs can be found. Signing up to this list means you can keep track of these
     things. If you're not interested in the up-to-the-moment updates (most people won't be), sign up
-    for the 'daily digest' instead.
+    for the 'digest' instead.
 
 11. To build the user documentation, you first need to install sphinx, either via your package manager or:
-    sudo easy_install sphinx
+    sudo easy_install Sphinx
 
     Then, to build the documentation, in the xpdeint/userdoc/ directory run:
     make html
@@ -97,134 +107,51 @@ Build instructions:
     The generated html documentation can now be found at xpdeint/userdoc/build/html/index.html
 
 
+Highly suggested (but optional) installs:
+* FFTW3. This library is needed for Fourier transforms, which is the transform most people will be using in xpdeint. If you need
+  support for MPI distributed simulations, you must install the alpha version.
+* HDF5. This is a library for reading and writing the Heirachical Data Format (http://www.hdfgroup.org/HDF5/).
+  This is a standardised data format which it is suggested that people use in preference to the older 'binary' output (which is 
+  compatible with xmds-1). The advantage of HDF5 is that this data format is understood by a variety of other tools. xsil2graphics2
+  provides support for loading data created in this format into Mathematica and Matlab.
+
 Optional installs:
 * A Matrix library like ATLAS, or Intel's MKL. (Mac OS X comes with a matrix library)
 * GNU Scientific library (GSL).
-* HDF5, A library for the Heirachical Data Format (http://www.hdfgroup.org/HDF5/)
-  and h5py (sudo easy_install h5py). This is needed for writing and reading the hdf5 file format.
-  Don't worry so much about h5py, it is only needed to run the testcases that use HDF5.
+* h5py. This is needed for checking the results of xpdeint tests that generate HDF5 output.
 * numpy (sudo easy_install numpy). (Mac OS X Leopard comes with numpy)
-* fftw-3.3alpha. Needed for fourier transforms. The alpha version is required for MPI support.
 * OpenMPI. Needed to enable xpdeint to generate scripts that can be run across multiple machines. (Mac OS X Leopard comes with OpenMPI)
 * mpmath. Library for arbitrary precision floating point math. Install from package manager or "sudo easy_install mpmath"
-
-This should mostly work.
+  This package is needed for the matrix-based transforms like Bessel and Hermite-Gauss.
 
 So far the feature list includes:
-* RK4, RK9, ARK45, ARK89 integrators
+* All of the integrators from xmds-1 (SI, RK4, ARK45, RK9, ARK89).
+* Significantly better error reporting. When errors are found when compiling the script they will almost always be reported
+  with the corresponding line of your script, instead of the generated source.
 * IP/EX operators are separate from the integration algorithm, so you  
   can have both IP and EX operators in a single integrate block. Also,
-  EX operators can act on arbitrary code, not just vector components.
-* The ability to have more than one noise kind in a simulation.
-* Adaptive integrators that are stochastic-safe for Poissonian noises
-  as well as gaussian noises.  Not that the RK algorithms are technically not safe, however.
-  You may still obtain good results if the deterministic evolution limits the timestep.
+  EX operators can act on arbitrary code, not just vector components. (e.g. L[phi*phi]).
+* The ability to have more than one kind of noise (gaussian, poissonian, etc) in a simulation.
 * Cross propagation in the increasing direction of a given dimension
   or in the decreasing dimension. And you can have more than one
   cross-propagator in a given integrator (going in different directions
   or dimensions).
-* Fields of different dimensions.
+* Fields of different dimensions. So you can have a 1D potential and a 3D wavefunction.
 * Integrate more than one vector (in more than one field), so you can  
-  now simultaneously integrate a PDE and a coupled ODE
+  now simultaneously integrate a PDE and a coupled ODE (or coupled PDEs of different dimensions).
+* MPI support
+* Integer-valued dimensions with non-local access. You can have an array of variables and access different
+  elements of that array.
+* Faster Gaussian noises.
+* The ability to calculate spatial correlation functions
 * OpenMP support
 * From a developer point of view, many things have been abstracted, so  
   adding a new Fourier transform library shouldn't be difficult.
 * Non-Fourier transformations have been included.  These include the Bessel basis, 
-  Spherical Bessel basis and the Hermitee-Gauss basis.
+  Spherical Bessel basis and the Hermitee-Gauss (harmonic oscillator) basis.
 * Output moment groups use less memory when there isn't a  
   post_processing element
 * Generated source is indented correctly
 * An xmds-1 like script file format.
-* xmds-1 like generated source. In many places existing internal hacks  
-  could work in xpdeint.
+* xmds-1 like generated source.
 
-Currently the parser2.py doesn't read any preferences, it just loads an xmds script passed
-as an argument writes the generated source to file, and compiles the file.
-
-Here are a couple of potential projects that would be good introductions
-into the code base:
-
-1. Write the frontend (in python). This is a good project for someone
-   familiar with python.
-
-   My idea is that this relies entirely on a configuration file
-   (~/.xmds/xmds2_config or something) instead of hard-coded things generated
-   from compile time. For example, I think it is silly that you need to
-   recompile xmds to be able to generate scripts that can use MPI if you
-   didn't initially compile xmds for MPI despite xmds itself not using
-   MPI. So the frontend would do all the usual things that the xmds-1
-   frontend does like reading command line arguments, outputting the generated
-   file and compiling it. So the config file would say whether or not fftw2 or
-   fftw3 was available.
-   An initial config file could be generated by autoconf when libxmds
-   is compiled.
-
-2. Rewrite xsil2graphics using Python and Cheetah for templates.
-   This is a good intro project into using Cheetah.
-
-3. Anything in the TODO.
-
-
-Cheetah templates are basically a nice way of writing code whose primary purpose
-is to generate a string. These templates are compiled into python classes which
-can inherit from one another or from other python classes. These templates are
-denoted by the .tmpl suffix, and generate .py files of the same name when compiled
-by Cheetah.
-
-
-Finally, I'll describe the general purpose of the different files:
-
-_*.py files: These are the python superclasses for Cheetah Templates  
-  (Cheetah Templates generate python source files) where any pure-python  
-  code for a Cheetah template goes. This is also useful when an __init__  
-  method needs to be written as Cheetah doesn't provide a facility to  
-  modify its generated __init__ method.
-*.tmpl files: The actual Cheetah Templates. The Cheetah Templates  
-  generate all of the code for the generated source files, the code, I  
-  think is mostly a more natural way to write generated code as opposed  
-  to the fprintf nightmare.
-*Element.* files: The base-level script elements, fairly self- 
-  explanatory.
-*Integrator.* files: The various integration algorithms. These are  
-  loosely coupled to the IP/EX/etc operators
-*Operator.* files: These are the various 'operators' inside  
-  integration blocks. These include IP/EX operators, moment calculations  
-  and the actual derivative (delta-a) calculations
-
-*Feature.* files: These are the 'additional' things that add in to the  
-  simulation and modify it. They are inserted into the generated source  
-  file through the other templates calling  
-  $insertCodeForFeatures( insertionPointName, featureList) where  
-  featureList is an ordered list of the features that may want to insert  
-  code at this point. This way we can more clearly separate error  
-  checking and other things from the basic simulation script.  
-  BenchmarkFeature is a good example of a basic feature.
-
-*parser* files: The XML parser and its tools
-
-CallOnceGuards.py: Used for all Python CallOnceGuards
-
-*Filter.py: Cheetah Filters. These 'filter' the generated source as it  
-  goes. IndentFilter indents the code property (if you provide it the  
-  right arguments), PrintfFilter properly escapes strings that need to  
-  go in a printf statement.
-
-*.xmds: xmds-2 script files used for testing. The syntax is fairly  
-  obvious. Though the format is up for debate.
-
-
-I've tried to document my code as I went, and where I  
-didn't, make variable and method names sufficiently verbose to make  
-things clear. About the only real piece of black magic is  
-ScriptElement.tmpl which writes all of the looping code and handles  
-whether or not dimensions are being looped over, integrated, etc.
-Note that not all documentation is in the form of docstrings. This needs
-to be fixed.
-
-The only other thing I would mention is that the Cheetah documentation  
-is incomplete, and is from version 1.0. There have been a few features  
-added through to 2.0 that I have been using that are only described in  
-the CHANGES document available from the Cheetah website. Specifically,  
-I've been using 'Cheetah strings' (c'stuff' syntax, like Python's  
-r'stuff' raw-string syntax), CallOnceGuards in templates, and the 'capture'
-directive.
