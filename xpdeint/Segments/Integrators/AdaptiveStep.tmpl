@@ -100,7 +100,7 @@ real _segment${segmentNumber}_${vector.id}_timestep_error(${vector.type}* _check
   real _error = 1e-24;
   real _temp_error = 0.0;
   real _temp_mod = 0.0;
-  real _nan = 1.0/0.0;  
+  real _nan = 1.0/_temp_error; // Yes, this is meant to generate a NaN.
 
   @set $featureOrdering = ['Diagnostics']
   @set $dict = {'vector': vector}
