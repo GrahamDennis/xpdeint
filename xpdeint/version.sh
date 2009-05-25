@@ -2,9 +2,11 @@
 
 # Find out the latest revision
 if test -d ".svn"; then
-	REVISION=\""r`svn info . | sed -n 's/Revision: //p'`"\"
+  REVISION=\""r`svn info . | sed -n 's/Revision: //p'`"\"
+elif test -d "../.git"; then
+  REVISION=\""r`git svn info . | sed -n 's/Revision: //p'`"\"
 else
-	REVISION=\""HEAD"\"
+  REVISION=\""HEAD"\"
 fi
 echo "#!/usr/bin/env python" > Version.py
 echo "# encoding: utf-8" >> Version.py
