@@ -558,9 +558,9 @@ inline double _private_nan()
     double nan_double;
   } NANVal =
   #if CFG_ENDIAN == CFG_ENDIAN_LITTLE
-    {{0xffffffff, 0x7fffffff}};
+    {{0x00000000, 0x7ff00000}};
   #else
-    {{0x7fffffff, 0xffffffff}};
+    {{0x7ff00000, 0x00000000}};
   #endif
   return NANVal.nan_double;
 }
