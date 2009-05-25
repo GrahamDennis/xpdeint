@@ -68,7 +68,7 @@ class _IPOperator(Operator):
           # This will extract the componentName corresponding to the indexed variable in the target
           # or it will fail because it isn't of that form.
           componentName, resultDict = [(l[0], l[2]) for l in indexAccessedVariables if sharedCodeBlock.codeString[l[3]] == target][0]
-        except Exception:
+        except IndexError:
           # Target didn't match something of the form 'phi[j, k][m+3,n-9]'
           raise ParserException(self.xmlElement,
                                 "IP operators can only act on components of integration vectors. "

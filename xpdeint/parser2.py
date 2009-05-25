@@ -243,7 +243,7 @@ def main(argv=None):
       dataCache = cPickle.load(dataCacheFile)
       dataCacheFile.close()
       del dataCacheFile
-    except Exception, err:
+    except IOError, err:
       print >> sys.stderr, "Warning: Unable to load xpdeint data cache."
       if debug: raise
   globalNameSpace['dataCache'] = dataCache
@@ -345,7 +345,7 @@ def main(argv=None):
   if dataCache:
     try:
       dataCacheFile = file(xpdeintDataCachePath, 'w')
-    except Exception, err:
+    except IOError, err:
       print >> sys.stderr, "Warning: Unable to write xpdeint data cache. " \
                            "Ensure '%(xpdeintUserDataPath)s' exists and is writable." % locals()
     else:
