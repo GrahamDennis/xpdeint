@@ -30,7 +30,7 @@ class ParserException(Exception):
 def parserWarning(element, msg):
     try:
         lineNumber, columnNumber = element
-    except Exception, err:
+    except (TypeError, ValueError), err:
         lineNumber = element.getUserData('lineNumber')
         columnNumber = element.getUserData('columnNumber')
     print >> sys.stderr, indentMessageWithPrefix('WARNING: ', msg)

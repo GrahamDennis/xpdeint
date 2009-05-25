@@ -62,7 +62,7 @@ class _VectorElement (ScriptElement):
   def dependencies(self):
     try:
       return self.initialiser.codeBlocks['initialisation'].dependencies
-    except:
+    except AttributeError:
       return []
   
   @property

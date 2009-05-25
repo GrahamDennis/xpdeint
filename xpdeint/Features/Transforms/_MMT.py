@@ -68,7 +68,7 @@ class _MMT (_Transform):
         orderString = xmlElement.getAttribute('order')
         try:
           order = int(orderString)
-        except:
+        except ValueError:
           raise ParserException(xmlElement, "Cannot understand '%s' as a meaningful order. "
                                             "Order values must be non-negative integers." \
                                             % xmlElement.getAttribute('order'))

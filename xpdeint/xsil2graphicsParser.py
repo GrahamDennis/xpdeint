@@ -142,7 +142,7 @@ def main(argv=None):
     
     try:
       inputXSILFile = XSILFile(xsilInputName, loadData='ascii')
-    except Exception, err:
+    except IOError, err:
       print >> sys.stderr, "Exception raised while trying to read xsil file:", err
       if debug:
         raise
