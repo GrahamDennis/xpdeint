@@ -145,5 +145,5 @@ ${processedVector.findMaximum('_max_step_error', space = momentGroup.outputSpace
 // Restore active pointer for processed vector
 _active_${processedVector.id} = _${outputFieldName}_halfstep;
 
-_LOG(_SIMULATION_LOG_LEVEL, "Maximum step error in moment group $momentGroup.number was %e\n", _max_step_error);
+_LOG(_SIMULATION_LOG_LEVEL, "Maximum step error in moment group ${momentGroup.number+1} was %e\n", _max_step_error);
 @end def
