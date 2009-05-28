@@ -101,10 +101,12 @@ else {
   _sending_var = ${field.sizeInSpace(space)};
   MPI_Ssend(&_sending_var, sizeof(ptrdiff_t), MPI_BYTE, 0, 0, MPI_COMM_WORLD);
   
+  if (_sending_var != 0) {
   @# Note that a variable corresponds to an array with given component names
   @for $variable in $dependentVariables
-  MPI_Ssend(${variable.arrayName}, ${variable.vector.sizeInSpaceInReals(space)}, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+    MPI_Ssend(${variable.arrayName}, ${variable.vector.sizeInSpaceInReals(space)}, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
   @end for
+  }
 }
 
 MPI_Barrier(MPI_COMM_WORLD);
@@ -150,7 +152,9 @@ for (long _dataForRank = 0; _dataForRank < _size; _dataForRank++) {
   @end for
     MPI_Recv(&_local_field_size, sizeof(ptrdiff_t), MPI_BYTE, _dataForRank, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
     
-    
+    if (_local_field_size == 0)
+      continue;
+
     // Now allocate the space needed locally, and receive the entire buffer
   @for $variable in $dependentVariables
     @set $sizePrefix = ''
