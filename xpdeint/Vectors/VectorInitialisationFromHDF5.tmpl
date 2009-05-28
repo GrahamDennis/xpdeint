@@ -56,7 +56,13 @@ hsize_t file_dims[${dimCount}];
 
   @for dimNum, dim in enumerate(field.dimensions)
     @set $dimRep = dim.inSpace($vector.initialSpace)
-hid_t dataset_${dimRep.name} = H5Dopen(hdf5_parent, "${dimRep.name}");
+hid_t dataset_${dimRep.name};
+if ((result = H5Lexists(hdf5_parent, "${dimRep.name}", H5P_DEFAULT))>0)
+  dataset_${dimRep.name} = H5Dopen(hdf5_parent, "${dimRep.name}");
+else if (!result)
+  _LOG(_ERROR_LOG_LEVEL, "Error: Unable to find dimension '${dimRep.name}' in HDF5 file.\n");
+else
+  _LOG(_ERROR_LOG_LEVEL, "Error: Unable to determine if dimension '${dimRep.name}' exists in HDF5 file. Is the file corrupt?\n");
 hid_t dataspace_${dimRep.name} = H5Dget_space(dataset_${dimRep.name});
 file_dims[$dimNum] = H5Sget_simple_extent_npoints(dataspace_${dimRep.name});
 ${dimRep.type}* ${dimRep.name}_inputdata = (${dimRep.type}*)xmds_malloc(H5Sget_simple_extent_npoints(dataspace_${dimRep.name}) * sizeof(${dimRep.type}));
