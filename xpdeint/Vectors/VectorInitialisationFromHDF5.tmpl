@@ -109,16 +109,23 @@ file_dataspace = H5Screate_simple(${len(field.dimensions)}, file_dims, NULL);
         @silent components.extend([(2*offset, componentName + 'R'), (2*offset+1, componentName + 'I')])
       @end for
     @end if
+bool _variablesFound = false;
     @for offset, componentName in $variable.separatedComponents
 hid_t dataset_${componentName} = 0;
-if ((result = H5Lexists(hdf5_parent, "${componentName}", H5P_DEFAULT))>0)
+if ((result = H5Lexists(hdf5_parent, "${componentName}", H5P_DEFAULT))>0) {
   dataset_${componentName} = H5Dopen(hdf5_parent, "${componentName}");
-else if (!result)
+  _variablesFound = true;
+} else if (!result)
   _LOG(_WARNING_LOG_LEVEL, "Warning: Unable to find variable name '${componentName}' in HDF5 file.\n");
 else
   _LOG(_WARNING_LOG_LEVEL, "Warning: Unable to determine if variable '${componentName}' exists in HDF5 file. Is the file corrupt?\n");
     @end for
   @end for
+
+if (!_variablesFound) {
+  // We haven't found anything. There's a problem with the input file.
+  _LOG(_ERROR_LOG_LEVEL, "Error: None of the variables were found in the HDF5 file. Please check the file.\n");
+}
   @silent processingDict['variables'] = variables
 ${processData(processingDict)}@slurp
 
