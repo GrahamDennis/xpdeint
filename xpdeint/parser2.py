@@ -112,7 +112,7 @@ def main(argv=None):
     try:
       opts, args = getopt.gnu_getopt(
                     argv[1:],
-                    "dhno:",
+                    "ghno:",
                     [
                       "debug",
                       "help",
@@ -136,7 +136,7 @@ def main(argv=None):
     output = None
     # option processing
     for option, value in opts:
-      if option in ("-d", "--debug"):
+      if option in ("-g", "--debug"):
         debug = True
       elif option in ("-h", "--help"):
         raise Usage(help_message)
@@ -387,7 +387,11 @@ def main(argv=None):
   print >> myfile, simulationContents
   myfile.close()
   
-  if not set(['debug']).intersection(globalNameSpace['uselib']):
+  if debug:
+    globalNameSpace['uselib'].add('debug')
+    globalNameSpace['uselib'].discard('vectorise')
+  
+  if not globalNameSpace['uselib'].intersection(['debug']):
     globalNameSpace['uselib'].add('optimise')
   
   buildKWs = {
