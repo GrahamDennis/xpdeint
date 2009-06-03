@@ -41,12 +41,11 @@ real *_mmt_scratch_space;
 @def mainBegin($dict)
   @#
   @set $vectorsAndSizes = [(vector.maxSizeInReals, vector) for vector in $vectorsNeedingThisTransform]
-  @if not vectorsAndSizes
-    @return
-  @end if
-  @set $maxVector = max(vectorsAndSizes)[1]
+  @if vectorsAndSizes
+    @set $maxVector = max(vectorsAndSizes)[1]
 
-_LOG(_SIMULATION_LOG_LEVEL, "Constructing transform matrices\n");
+    _LOG(_SIMULATION_LOG_LEVEL, "Constructing transform matrices\n");
+  @end if
 
   @for dimName, basis in $basisMap.items()
     @for dimRep in [rep for rep in $geometry.dimensionWithName(dimName).representations if isinstance(rep, NonUniformDimensionRepresentation)]
@@ -80,16 +79,18 @@ for (long _i0=0; _i0 < $fieldDimRep.globalLattice; _i0++) {
     @end for
 
   @end for
-
+  
+  @if vectorsAndSizes
 _mmt_scratch_space = (real *)xmds_malloc(sizeof(${maxVector.type}) * ${maxVector.allocSize});
 
 // Matrices are stored in row-major format
-  @for dimName, basis in $basisMap.items()
-    @set $dim = $geometry.dimensionWithName(dimName)
+    @for dimName, basis in $basisMap.items()
+      @set $dim = $geometry.dimensionWithName(dimName)
 ${basis.transformMatricesForDim(dim)}@slurp
-  @end for
+    @end for
 
 _LOG(_SIMULATION_LOG_LEVEL, "Matrix construction complete\n");
+  @end if
 @end def
 
 
