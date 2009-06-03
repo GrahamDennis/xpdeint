@@ -12,7 +12,8 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 from xpdeint.ScriptElement import ScriptElement
 
 from xpdeint import RegularExpressionStrings
-from xpdeint.ParserException import ParserException
+from xpdeint.ParserException import ParserException, parserWarning
+from xpdeint.Geometry.NonUniformDimensionRepresentation import NonUniformDimensionRepresentation
 
 from xpdeint.Utilities import lazy_property, symbolsInString
 
@@ -185,7 +186,14 @@ class _FieldElement (ScriptElement):
     result = []
     separator = ''
     result.append('(')
-    for rep in filter(lambda x: x.type == 'real', reps):
+    for rep in [rep for rep in reps if rep.type == 'real']:
+      if isinstance(rep, NonUniformDimensionRepresentation):
+        parserWarning(
+          self.xmlElement,
+          "You're asking for a noise for a non-uniform dimension. "
+          "If you don't know how to handle this, treat this as an error."
+        )
+        continue
       result.extend([separator, rep.stepSize])
       separator = ' * '
     result.append(')')
