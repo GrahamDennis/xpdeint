@@ -198,7 +198,7 @@ def main(argv=None):
     scriptFile = file(scriptName)
   except Exception, err:
     print >> sys.stderr, "Exception raised while trying to read xmds script:", err
-    return
+    return -1
   
   # Read the contents of the file
   globalNameSpace['inputScript'] = scriptFile.read()
@@ -212,10 +212,10 @@ def main(argv=None):
     xmlDocument = minidom.parse(scriptName)
   except xml.parsers.expat.ExpatError, err:
     print >> sys.stderr, "XML Parser error:", err
-    return
+    return -1
   except Exception, err:
     print >> sys.stderr, "Exception raised during parsing xmds script:", err
-    return
+    return -1
   
   # FIXME: Dodgy hack until we have a autoconf-style system
   globalNameSpace['platform'] = sys.platform
@@ -265,7 +265,7 @@ def main(argv=None):
     # We don't have a parser that understands the XML, so we must bail
     if not parser:
       print >> sys.stderr, "Unable to recognise file as an xmds script."
-      return
+      return -1
     
     # Set our magic filter
     filterClass = IndentFilter
