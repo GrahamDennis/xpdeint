@@ -190,7 +190,7 @@ for (long _dataForRank = 0; _dataForRank < _size; _dataForRank++) {
   @end for
   }
 } // End looping over ranks
-  @for $vector in $dependentVariables
+  @for $variable in $dependentVariables
 ${variable.arrayName} = _backup${variable.arrayName};
   @end for
 
