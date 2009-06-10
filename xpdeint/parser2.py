@@ -217,8 +217,23 @@ def main(argv=None):
     print >> sys.stderr, "Exception raised during parsing xmds script:", err
     return -1
   
-  # FIXME: Dodgy hack until we have a autoconf-style system
-  globalNameSpace['platform'] = sys.platform
+  # Attempt to import lxml and run the script through
+  # the schema
+  try:
+    from lxml import etree
+  except ImportError, err:
+    pass
+  else:
+    # Parse the schema
+    relaxng_doc = etree.parse(resource_filename(__name__, 'support/xpdeint.rng'))
+    relaxng = etree.RelaxNG(relaxng_doc)
+    # Parse the script
+    script_doc = etree.fromstring(globalNameSpace['inputScript'])
+    if not relaxng.validate(script_doc):
+      # Validation failed
+      for error in relaxng.error_log:
+        parserWarning((error.line, error.column), error.message)
+  
   
   globalNameSpace['debug'] = debug
   globalNameSpace['xmlDocument'] = xmlDocument
@@ -233,7 +248,7 @@ def main(argv=None):
   globalNameSpace['precision'] = 'double'
   globalNameSpace['buildVariant'] = set()
   globalNameSpace['uselib'] = set()
-  globalNameSpace['bugReportAddress'] = 'xmds-devel@lists.sf.net'
+  globalNameSpace['bugReportAddress'] = 'xmds-devel@lists.sourceforge.net'
   
   xpdeintDataCachePath = os.path.join(xpdeintUserDataPath, 'xpdeint_cache')
   dataCache = {}
@@ -351,25 +366,6 @@ def main(argv=None):
     else:
       cPickle.dump(dataCache, dataCacheFile, protocol = 2)
       dataCacheFile.close()
-  
-  
-  # Attempt to import lxml and run the script through
-  # the schema
-  try:
-    from lxml import etree
-  except ImportError, err:
-    pass
-  else:
-    # Parse the schema
-    relaxng_doc = etree.parse(resource_filename(__name__, 'support/xpdeint.rng'))
-    relaxng = etree.RelaxNG(relaxng_doc)
-    # Parse the script
-    script_doc = etree.fromstring(globalNameSpace['inputScript'])
-    if not relaxng.validate(script_doc):
-      # Validation failed
-      for error in relaxng.error_log:
-        parserWarning((error.line, error.column), error.message)
-      # print error, error.domain_name, error.type_name, error.message, dir(error)
   
   
   # Now actually write the simulation to disk.
