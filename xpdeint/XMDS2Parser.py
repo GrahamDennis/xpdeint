@@ -1260,8 +1260,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
   def parseOperatorsElements(self, integrateElement, integratorTemplate):
     operatorsElements = integrateElement.getChildElementsByTagName('operators')
     
-    fieldsUsed = set()
-    validFieldNames = [field.name for field in self.globalNameSpace['fields']]
+    fieldsUsed = []
     
     for operatorsElement in operatorsElements:
       if not operatorsElement.hasAttribute('dimensions'):
@@ -1275,16 +1274,25 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
         raise ParserException(operatorsElement, "There are no vectors with this combination of dimensions.")
       
       if fieldTemplate in fieldsUsed:
-        raise ParserException(operatorsElement, "There can only be one operators element per combination of dimensions.")
+        parserWarning(
+          operatorsElement,
+          "There is more than one operators elements with this combination of dimensions. "
+          "The appropriate checks aren't yet in place to make sure that you aren't shooting yourself in the foot. "
+          "Are you sure you meant this?"
+        )
       
-      fieldsUsed.add(fieldTemplate)
+      fieldsUsed.append(fieldTemplate)
       
-      self.parseOperatorsElement(operatorsElement, integratorTemplate, fieldTemplate)
+      self.parseOperatorsElement(operatorsElement, integratorTemplate, fieldTemplate, count = fieldsUsed.count(fieldTemplate))
     
   
-  def parseOperatorsElement(self, operatorsElement, integratorTemplate, fieldTemplate):
+  def parseOperatorsElement(self, operatorsElement, integratorTemplate, fieldTemplate, count = 1):
+    if count == 1:
+      operatorSuffix = ''
+    else:
+      operatorSuffix = str(count)
     operatorContainer = OperatorContainerTemplate(field = fieldTemplate, xmlElement = operatorsElement,
-                                                  name = fieldTemplate.name + '_operators',
+                                                  name = fieldTemplate.name + operatorSuffix + '_operators',
                                                   parent = integratorTemplate,
                                                   **self.argumentsToTemplateConstructors)
     integratorTemplate.intraStepOperatorContainers.append(operatorContainer)
