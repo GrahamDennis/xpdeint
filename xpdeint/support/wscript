@@ -67,7 +67,7 @@ def configure(conf):
                 },
                 {
                     "msg": "Checking for Altivec",
-                    "cxxflags": '-maltivec',
+                    "cxxflags": ['-mpim-altivec', '-maltivec'],
                 },
                 {
                     "msg": "Checking for SSE3",
