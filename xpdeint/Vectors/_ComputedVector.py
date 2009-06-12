@@ -73,7 +73,8 @@ class _ComputedVector (VectorElement):
       evaluationSpace = evaluationCodeBlock.field.spaceFromString(dependenciesXMLElement.getAttribute('fourier_space'),
                                                                   xmlElement = dependenciesXMLElement)
       evaluationCodeBlock.space = evaluationSpace
-      self.initialSpace = evaluationSpace
+    # Set the space so that it is known that this vector is required in the evaluation space.
+    self.initialSpace = evaluationCodeBlock.space
     
     # Our components are constructed by an integral if the looping field doesn't have the same
     # dimensions as the field to which the computed vector belongs.
