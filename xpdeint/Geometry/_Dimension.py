@@ -30,6 +30,16 @@ class _Dimension(ScriptElement):
   non-uniformly spaced grids, but will also be useful for discrete cosine/sine transforms which have
   a transformed coordinate that is strictly positive.
   """
+  
+  class ReductionMethod(object):
+    fixedRange = 0
+    fixedStep = 1
+    
+    @staticmethod
+    def validate(method):
+      return method in range(2)
+  
+  
   def __init__(self, *args, **KWs):
     localKWs = self.extractLocalKWs(['name', 'transverse','transform', 'aliases'], KWs)
     ScriptElement.__init__(self, *args, **KWs)
@@ -44,13 +54,6 @@ class _Dimension(ScriptElement):
     self._transformMask = None
     self._mappingRules = None
   
-  @property
-  def children(self):
-    children = super(_Dimension, self).children
-    # Only add non-None representations
-    children.extend([rep for rep in self.representations if rep])
-    return children
-  
   def preflight(self):
     # FIXME: DODGY. When we go to the 'basis' concept from the 'spaces' concept, this should go away
     basisNameMap = dict([(rep.name, set()) for rep in self.representations if rep])
@@ -60,7 +63,6 @@ class _Dimension(ScriptElement):
       if len(repSet) > 1:
         for rep in [rep for rep in repSet if not rep.hasLocalOffset]:
           rep.silent = True
-    
   
   @lazy_property
   def prefix(self):
@@ -107,6 +109,7 @@ class _Dimension(ScriptElement):
   
   def addRepresentation(self, rep):
     self.representations.append(rep)
+    self._children.append(rep)
   
   def invalidateRepresentationsOtherThan(self, mainRep):
     for idx, rep in enumerate(self.representations[:]):
@@ -120,6 +123,17 @@ class _Dimension(ScriptElement):
         if rep: rep.remove()
         self.representations[idx] = None
   
+  def setReducedLatticeInSpace(self, newLattice, space, reductionMethod):
+    assert _Dimension.ReductionMethod.validate(reductionMethod)
+    dimRep = self.inSpace(space)
+    if dimRep.lattice == newLattice: return
+    newDimRep = dimRep.copy(parent = self)
+    newDimRep.lattice = newLattice
+    newDimRep.reductionMethod = reductionMethod
+    self._children.append(newDimRep)
+    self.representations[self.representations.index(dimRep)] = newDimRep
+    self.invalidateRepresentationsOtherThan(newDimRep)
+  
   @lazy_property
   def isDistributed(self):
     return any([rep.hasLocalOffset for rep in self.representations if rep])
@@ -129,12 +143,7 @@ class _Dimension(ScriptElement):
     newInstanceDict = dict([(key, getattr(self, key)) for key in newInstanceKeys])
     newInstanceDict.update(self.argumentsToTemplateConstructors)
     newDim = self.__class__(parent = parent, **newInstanceDict)
-    for rep in self.representations:
-      if rep:
-        newRep = rep.copy(parent = newDim)
-      else:
-        newRep = rep
-      newDim.representations.append(newRep)
+    newDim.representations = self.representations[:]
     return newDim
   
   def __eq__(self, other):

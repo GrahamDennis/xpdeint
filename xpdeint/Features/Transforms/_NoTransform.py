@@ -9,10 +9,13 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 
 from xpdeint.Features.Transforms._Transform import _Transform
 
+from xpdeint.Geometry.DimensionRepresentation import DimensionRepresentation
 from xpdeint.Geometry.UniformDimensionRepresentation import UniformDimensionRepresentation
 
 class _NoTransform (_Transform):
   transformName = 'NoTransform'
+  
+  dimRepTag = DimensionRepresentation.registerTag('No transform')
   
   def __init__(self, *args, **KWs):
     _Transform.__init__(self, *args, **KWs)
@@ -30,6 +33,7 @@ class _NoTransform (_Transform):
       stepSize = None
     rep = UniformDimensionRepresentation(name = name, type = type, lattice = lattice,
                                          minimum = minimum, maximum = maximum, stepSize = stepSize, parent = dim,
+                                         tag = self.dimRepTag,
                                          **self.argumentsToTemplateConstructors)
     dim.addRepresentation(rep)
     return dim

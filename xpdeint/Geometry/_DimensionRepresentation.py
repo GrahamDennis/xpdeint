@@ -18,8 +18,19 @@ class _DimensionRepresentation(ScriptElement):
   of variables for the lattice, minimum and maximum of the representation. Further things like
   how exactly to split the dimension are controlled by the transform that created the representation.
   """
+  
+  tags = {}
+  
+  @classmethod
+  def registerTag(cls, tagName):
+    return cls.tags.setdefault(tagName, id(tagName))
+  
+  @classmethod
+  def tagFromName(cls, tagName):
+    return cls.tags[tagName]
+  
   def __init__(self, **KWs):
-    localKWs = self.extractLocalKWs(['name', 'type', 'lattice', '_localVariablePrefix'], KWs)
+    localKWs = self.extractLocalKWs(['name', 'type', 'lattice', '_localVariablePrefix', 'reductionMethod', 'tag'], KWs)
     ScriptElement.__init__(self, **KWs)
     
     self.name = localKWs['name']
@@ -28,13 +39,17 @@ class _DimensionRepresentation(ScriptElement):
     self.lattice = localKWs.get('lattice', 0)
     self._localVariablePrefix = localKWs.get('_localVariablePrefix')
     self.silent = False
+    self.reductionMethod = localKWs.get('reductionMethod', -1)
+    self.tag = localKWs.get('tag', -1)
     
   
   def __eq__(self, other):
     try:
       return (self.name == other.name and
               self.type == other.type and
-              self.lattice == other.lattice)
+              self.lattice == other.lattice and
+              self.hasLocalOffset == other.hasLocalOffset and
+              self.tag == other.tag)
     except AttributeError:
       return NotImplemented
   
@@ -46,7 +61,14 @@ class _DimensionRepresentation(ScriptElement):
       return not eq
   
   def _newInstanceDict(self):
-    return {'name': self.name, 'type': self.type, 'lattice': self.lattice, '_localVariablePrefix': self._localVariablePrefix}
+    return {
+              'name': self.name,
+              'type': self.type,
+              'lattice': self.lattice,
+              '_localVariablePrefix': self._localVariablePrefix,
+              'reductionMethod': self.reductionMethod,
+              'tag': self.tag
+           }
   
   def copy(self, parent):
     newInstanceDict = self._newInstanceDict()
@@ -68,6 +90,8 @@ class _DimensionRepresentation(ScriptElement):
       self._localVariablePrefix = '_local'
       if localVariablePrefix:
         self._localVariablePrefix += '_' + localVariablePrefix
+    if 'hasLocalOffset' in self.__dict__:
+      del self.hasLocalOffset
   
   @lazy_property
   def hasLocalOffset(self):
@@ -106,13 +130,6 @@ class _DimensionRepresentation(ScriptElement):
   @lazy_property
   def loopIndex(self):
     return '_index_' + self.name
-  
-  @lazy_property
-  def isTransformed(self):
-    if self.parent.representations.index(self) > 0:
-      return True
-    else:
-      return False
   
   def aliasRepresentationsForFieldInSpace(self, field, space):
     return set([field.dimensionWithName(aliasName).inSpace(space) \

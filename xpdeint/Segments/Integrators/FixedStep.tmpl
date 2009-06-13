@@ -42,13 +42,13 @@ ${initialiseCrossPropagationFunctionImplementation}@slurp
 
 _${name}_initialise_cross_propagation();
 
-    @set $integrationDimension = $parent.field.dimensionWithName($propagationDimension)
+    @set $integrationDimRep = $parent.field.dimensionWithName($propagationDimension).inSpace(0)
     @if $propagationDirection == '+'
-      @set $dimensionSide = 'min'
+      @set $initialValue = integrationDimRep.minimum
     @else
-      @set $dimensionSide = 'max'
+      @set $initialValue = integrationDimRep.maximum
     @end if
-${integrationDimension.inSpace(0).type} ${integrationDimension.inSpace(0).name} = _${parent.field.name}_${dimensionSide}_${propagationDimension};
+${integrationDimRep.type} ${integrationDimRep.name} = ${initialValue};
   @end if
   @#
 @end def

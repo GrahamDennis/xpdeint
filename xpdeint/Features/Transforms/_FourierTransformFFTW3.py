@@ -9,6 +9,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 
 from xpdeint.Features.Transforms._Transform import _Transform
 
+from xpdeint.Geometry.DimensionRepresentation import DimensionRepresentation
 from xpdeint.Geometry.UniformDimensionRepresentation import UniformDimensionRepresentation
 from xpdeint.Geometry.SplitUniformDimensionRepresentation import SplitUniformDimensionRepresentation
 
@@ -19,6 +20,9 @@ from xpdeint.Utilities import lazy_property
 class _FourierTransformFFTW3 (_Transform):
   transformName = 'FourierTransform'
   fftwSuffix = ''
+  
+  coordinateSpaceTag = DimensionRepresentation.registerTag('FFTW coordinate space')
+  fourierSpaceTag = DimensionRepresentation.registerTag('FFTW Fourier space')
   
   def __init__(self, *args, **KWs):
     _Transform.__init__(self, *args, **KWs)
@@ -61,17 +65,19 @@ class _FourierTransformFFTW3 (_Transform):
       # x-space representation
       xspace = UniformDimensionRepresentation(name = name, type = type, lattice = lattice,
                                               minimum = minimum, maximum = maximum, parent = dim,
+                                              tag = self.coordinateSpaceTag,
                                               **self.argumentsToTemplateConstructors)
       # kspace representation
       kspace = SplitUniformDimensionRepresentation(name = 'k' + name, type = type, lattice = lattice,
                                                    range = '%s - %s' % (xspace.maximum, xspace.minimum),
-                                                   parent = dim,
+                                                   parent = dim, tag = self.fourierSpaceTag,
                                                    **self.argumentsToTemplateConstructors)
     else:
       # x-space representation
       stepSize = '((real)%(maximum)s - %(minimum)s)/(%(lattice)s)' % locals()
       xspace = UniformDimensionRepresentation(name = name, type = type, lattice = lattice,
                                               minimum = None, maximum = None, stepSize = stepSize,
+                                              tag = self.coordinateSpaceTag,
                                               parent = dim, **self.argumentsToTemplateConstructors)
       # Modify the minimum and maximum values to deal with the 0.5*stepSize offset
       xspace._minimum = '%s + 0.5*%s' % (minimum, xspace.stepSize)
@@ -81,12 +87,14 @@ class _FourierTransformFFTW3 (_Transform):
         kspace = UniformDimensionRepresentation(name = 'k' + name, type = type, lattice = lattice,
                                                 minimum = '0.0', maximum = None,
                                                 stepSize = '(M_PI/(%(maximum)s - %(minimum)s))' % locals(),
+                                                tag = self.fourierSpaceTag,
                                                 parent = dim, **self.argumentsToTemplateConstructors)
         kspace._maximum = '%s * %s' % (kspace.stepSize, kspace.globalLattice)
       else:
         kspace = UniformDimensionRepresentation(name = 'k' + name, type = type, lattice = lattice,
                                                 minimum = None, maximum = None,
                                                 stepSize = '(M_PI/(%(maximum)s - %(minimum)s))' % locals(),
+                                                tag = self.fourierSpaceTag,
                                                 parent = dim, **self.argumentsToTemplateConstructors)
         kspace._minimum = '%s' % kspace.stepSize
         kspace._maximum = '%s * (%s + 1)' % (kspace.stepSize, kspace.globalLattice)

@@ -32,15 +32,10 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
         raise ParserException(vector.xmlElement, "Vector '%s' cannot be fourier transformed because it would be distributed with MPI "
                                                  "and it doesn't have the same number of points as the geometry for the distributed dimensions." % vector)
     
-    for field in fields:
-      if not field.isDistributed:
-        for dim in [dim for dim in field.dimensions if dim.transform == self]:
-          if len(dim.representations) > 2:
-            dim.invalidateRepresentation(dim.representations[2])
-            del dim.representations[2]
-          for rep in dim.representations:
-            if rep:
-              rep.setHasLocalOffset(None)
+    for field in [field for field in fields if not field.isDistributed]:
+      for dim in [dim for dim in field.dimensions if dim.transform == self]:
+        for rep in [rep for rep in dim.representations if rep and rep.hasLocalOffset]:
+          dim.invalidateRepresentation(rep)
   
   def vectorNeedsPartialTransforms(self, vector):
     if not self._driver.isFieldDistributed(vector.field):
@@ -70,12 +65,15 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
     firstMPIDimension = dimensions[0]
     secondMPIDimension = dimensions[1]
     # Add additional transformed representations for the swapped case.
-    firstMPIDimension.addRepresentation(firstMPIDimension.inSpace(firstMPIDimension.transformMask).copy(parent=firstMPIDimension))
-    firstMPIDimension.inSpace(0).setHasLocalOffset('unswapped')
-    firstMPIDimension.inSpace(firstMPIDimension.transformMask).setHasLocalOffset('unswapped')
+    for rep in firstMPIDimension.representations[:]:
+      distributedRep = rep.copy(parent = firstMPIDimension)
+      distributedRep.setHasLocalOffset('unswapped')
+      firstMPIDimension.addRepresentation(distributedRep)
     
-    secondMPIDimension.addRepresentation(secondMPIDimension.inSpace(secondMPIDimension.transformMask).copy(parent=secondMPIDimension))
-    secondMPIDimension.inSpace(self.swappedSpace).setHasLocalOffset('swapped')
+    for rep in secondMPIDimension.representations[1:]:
+      distributedRep = rep.copy(parent = secondMPIDimension)
+      distributedRep.setHasLocalOffset('swapped')
+      secondMPIDimension.addRepresentation(distributedRep)
     
     self.distributedMPIKinds = set([self.transformNameMap[firstMPIDimension.name]])
     if self.distributedMPIKinds.intersection(['dct', 'dst']):
@@ -90,7 +88,10 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
     to the index in the rule is the result.
     """
     if self.isFieldDistributed(field) and dim.name in self._driver.distributedDimensionNames:
-      return [(self.swappedSpace, 2), (dim.transformMask, 1), (None, 0)]
+      if dim.name == self._driver.distributedDimensionNames[1]:
+        return [(self.swappedSpace, 2), (dim.transformMask, 1), (None, 0)]
+      else:
+        return [(self.swappedSpace, 1), (dim.transformMask, 3), (None, 2)]
     return super(_FourierTransformFFTW3MPI, self).mappingRulesForDimensionInField(dim, field)
   
   

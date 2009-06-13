@@ -57,7 +57,7 @@ _mmt_matrix_${backwardDimRep.name}_${forwardDimRep.name}[${forwardIndex} * ${bac
   @#
 @end def
 
-@def performTransformForVector($sourceDimRep, $destDimRep, vector)
+@def performTransformForVector($sourceDimRep, $destDimRep, $vector, $dir = None)
   @#
   @set $matMultFunction = {'single': 'cblas_sgemm', 'double': 'cblas_dgemm'}[$precision]
 ${matMultFunction}(CblasRowMajor, CblasNoTrans, CblasNoTrans,
