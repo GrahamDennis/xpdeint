@@ -55,16 +55,10 @@ ${basis.gridAndStepForDimRep(dimRep)}@slurp
       @if field == $geometry
         @continue
       @end if
-      @for fieldDimRep in [rep for rep in field.dimensionWithName(dimName).representations if isinstance(rep, NonUniformDimensionRepresentation)]
-        @if not fieldDimRep
+      @for (fieldDimRep, geometryDimRep) in zip(field.dimensionWithName(dimName).representations, $geometry.dimensionWithName(dimName).representations)
+        @if not fieldDimRep or not isinstance(fieldDimRep, NonUniformDimensionRepresentation)
           @continue
         @end if
-        @if fieldDimRep.isTransformed
-          @set $space = -1
-        @else
-          @set $space = 0
-        @end if
-        @set $geometryDimRep = $geometry.dimensionWithName(dimName).inSpace(space)
         @assert (geometryDimRep.lattice % fieldDimRep.lattice) == 0
         @if geometryDimRep.lattice == fieldDimRep.lattice
 memcpy(${fieldDimRep.arrayName}, ${geometryDimRep.arrayName}, sizeof(real)*${geometryDimRep.globalLattice});
@@ -142,12 +136,12 @@ if ((_newSpace ^ _${vector.id}_space) & ${dim.transformMask}) {
     // Forward transform for dimension $dimName
     @# We have to loop over all dimensions before this dimension
     for (long _i0 = 0; _i0 < outerLoopSize; _i0++) {
-      ${basis.performTransformForVector(forwardDimRep, backwardDimRep, vector), autoIndent=True}@slurp
+      ${basis.performTransformForVector(forwardDimRep, backwardDimRep, vector, dir='forward'), autoIndent=True}@slurp
     }
   } else {
     // Backward transform for dimension $dimName
     for (long _i0 = 0; _i0 < outerLoopSize; _i0++) {
-      ${basis.performTransformForVector(backwardDimRep, forwardDimRep, vector), autoIndent=True}@slurp
+      ${basis.performTransformForVector(backwardDimRep, forwardDimRep, vector, dir='backward'), autoIndent=True}@slurp
     }
   }
   // swap source and destination

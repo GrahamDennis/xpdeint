@@ -13,6 +13,7 @@ from xpdeint.Features.Transforms.BesselBasis import BesselBasis
 from xpdeint.Features.Transforms.SphericalBesselBasis import SphericalBesselBasis
 from xpdeint.Features.Transforms.HermiteGaussEPBasis import HermiteGaussEPBasis
 
+from xpdeint.Geometry.DimensionRepresentation import DimensionRepresentation
 from xpdeint.Geometry.UniformDimensionRepresentation import UniformDimensionRepresentation
 from xpdeint.Geometry.SplitUniformDimensionRepresentation import SplitUniformDimensionRepresentation
 from xpdeint.Geometry.NonUniformDimensionRepresentation import NonUniformDimensionRepresentation
@@ -21,6 +22,9 @@ from xpdeint.ParserException import ParserException
 
 class _MMT (_Transform):
   transformName = 'MMT'
+  
+  coordinateSpaceTag = DimensionRepresentation.registerTag('MMT coordinate space')
+  spectralSpaceTag = DimensionRepresentation.registerTag('MMT spectral space')
   
   def __init__(self, *args, **KWs):
     _Transform.__init__(self, *args, **KWs)
@@ -93,12 +97,14 @@ class _MMT (_Transform):
       # Real space representation
       xspace = NonUniformDimensionRepresentation(name = name, type = type, lattice = lattice,
                                                  stepSizeArray = True, parent = dim,
+                                                 tag = self.coordinateSpaceTag,
                                                  **self.argumentsToTemplateConstructors)
       xspace._maximum = maximum
       
       # Spectral space representation
       kspace = NonUniformDimensionRepresentation(name = 'k' + name, type = type, lattice = spectralLattice,
                                                  stepSizeArray = True, parent = dim,
+                                                 tag = self.spectralSpaceTag,
                                                  **self.argumentsToTemplateConstructors)
       kspace._maximum = maximum
     elif transformName == 'hermite-gauss':
@@ -118,12 +124,13 @@ class _MMT (_Transform):
       # Real space representation
       xspace = NonUniformDimensionRepresentation(name = name, type = type, lattice = lattice,
                                                  stepSizeArray = True, parent = dim,
+                                                 tag = self.coordinateSpaceTag,
                                                  **self.argumentsToTemplateConstructors)
       xspace._maximum = maximum
       # Spectral space representation
       kspace = UniformDimensionRepresentation(name = 'n' + name, type = 'long', lattice = spectralLattice,
                                               minimum = '0', maximum = spectralLattice, stepSize = '1',
-                                              parent = dim,
+                                              parent = dim, tag = self.spectralSpaceTag,
                                               **self.argumentsToTemplateConstructors)
     dim.addRepresentation(xspace)
     dim.addRepresentation(kspace)

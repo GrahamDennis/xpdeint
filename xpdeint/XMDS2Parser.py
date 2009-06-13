@@ -533,11 +533,15 @@ class XMDS2Parser(ScriptParser):
                                      parent = geometryTemplate,
                                      **self.argumentsToTemplateConstructors)
     
-    propagationDimension.addRepresentation(NonUniformDimensionRepresentation(name = propagationDimensionName,
-                                                                             type = 'real',
-                                                                             parent = propagationDimension,
-                                                                             xmlElement = propagationDimensionElement,
-                                                                             **self.argumentsToTemplateConstructors))
+    propagationDimension.addRepresentation(
+      NonUniformDimensionRepresentation(
+        name = propagationDimensionName,
+        type = 'real',
+        parent = propagationDimension,
+        xmlElement = propagationDimensionElement,
+        **self.argumentsToTemplateConstructors
+      )
+    )
     
     geometryTemplate.dimensions = [propagationDimension]
     
@@ -1599,7 +1603,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       raise ParserException(boundaryConditionElement, "Unknown boundary condition kind '%(kindString)s'. Options are 'left' or 'right'." % locals())
     
     # Set the step
-    crossIntegratorTemplate.step = ''.join([operatorTemplate.propagationDirection, '_', fullField.name, '_d', propagationDimensionName])
+    crossIntegratorTemplate.step = propDimRep.stepSize
     
     integrationVectorsElement = operatorElement.getChildElementByTagName('integration_vectors')
     integrationVectorNames = Utilities.symbolsInString(integrationVectorsElement.innerText(), xmlElement = integrationVectorsElement)
@@ -1709,6 +1713,8 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
       
       dimensionElements = samplingElement.getChildElementsByTagName('dimension', optional=True)
       
+      dimensionElementTuples = []
+      
       for dimensionElement in dimensionElements:
         if not dimensionElement.hasAttribute('name') or not dimensionElement.getAttribute('name').strip():
           raise ParserException(dimensionElement, 
@@ -1739,10 +1745,16 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
             raise ParserException(dimensionElement, "fourier_space attribute for dimension '%s' must be 'yes' / '%s' or 'no' / '%s'"
                                                     % (dimensionName, geometryDimension.inSpace(-1).name, geometryDimension.inSpace(0).name))
         
-        dimensionRepresentation = geometryDimension.inSpace(0)
+        dimensionElementTuples.append((dimensionElement, geometryDimension))
+        
         if fourierSpace:
           sampleSpace |= geometryDimension.transformMask
-          dimensionRepresentation = geometryDimension.inSpace(sampleSpace)
+      
+      dimensionsNeedingLatticeUpdates = {}
+      
+      for dimensionElement, geometryDimension in dimensionElementTuples:
+        
+        dimensionRepresentation = geometryDimension.inSpace(sampleSpace)
         
         lattice = dimensionRepresentation.lattice
         
@@ -1773,8 +1785,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
         if lattice > 1:
           outputFieldDimension = geometryDimension.copy(parent = outputFieldTemplate)
           if not dimensionRepresentation.lattice == lattice:
-            for rep in outputFieldDimension.representations:
-              rep.lattice = lattice
+            dimensionsNeedingLatticeUpdates[outputFieldDimension.name] = lattice
           samplingFieldTemplate.dimensions.append(outputFieldDimension.copy(parent = samplingFieldTemplate))
           outputFieldTemplate.dimensions.append(outputFieldDimension)
           
@@ -1788,15 +1799,17 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
           
           samplingFieldTemplate.dimensions.append(geometryDimension.copy(parent=samplingFieldTemplate))
       
+      for dimName, lattice in dimensionsNeedingLatticeUpdates.items():
+        dim = samplingFieldTemplate.dimensionWithName(dimName)
+        if dim.transformMask & sampleSpace:
+          reductionMethod = Dimension.ReductionMethod.fixedStep
+        else:
+          reductionMethod = Dimension.ReductionMethod.fixedRange
+        for field in [samplingFieldTemplate, outputFieldTemplate]:
+          field.dimensionWithName(dimName).setReducedLatticeInSpace(lattice, sampleSpace, reductionMethod)
+      
       samplingFieldTemplate.sortDimensions()
       outputFieldTemplate.sortDimensions()
-      
-      for field in [samplingFieldTemplate, outputFieldTemplate]:
-        field.sortDimensions()
-        space = sampleSpace
-        for dim in field.dimensions:
-          if not dim.inSpace(space).lattice == geometryTemplate.dimensionWithName(dim.name).inSpace(space).lattice:
-            dim.invalidateRepresentationsOtherThan(dim.inSpace(space))
       
       # end looping over dimension elements.  
       rawVectorTemplate = VectorElementTemplate(name = 'raw', field = momentGroupTemplate.outputField,

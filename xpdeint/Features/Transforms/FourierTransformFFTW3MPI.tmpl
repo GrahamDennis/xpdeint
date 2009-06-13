@@ -88,7 +88,7 @@ MPI_Bcast(&_swapped_block_size, sizeof(ptrdiff_t), MPI_BYTE, 0, MPI_COMM_WORLD);
       @# The field has the same structure for these dimensions as the geometry
       @for dimOut, dimIn in [(fieldMPIDim1, firstMPIDim), (fieldMPIDim2, secondMPIDim)]
         @for repOut, repIn in zip(dimOut.representations, dimIn.representations)
-          @if repOut and repOut.hasLocalOffset
+          @if repOut and repOut.hasLocalOffset and repOut.parent is fieldMPIDim1
 ${repOut.localLattice} = ${repIn.localLattice};
 ${repOut.localOffset} = ${repIn.localOffset};
           @end if
@@ -104,6 +104,7 @@ _howmany = ((ptrdiff_t)1) * ${field.pointsInDimensionsWithIndices(indices)};
 ${field.allocSize} = ${fftwPrefix}_mpi_local_size_many_transposed(2, _sizes, _howmany, _unswapped_block_size, _swapped_block_size, MPI_COMM_WORLD,
         &${fieldMPIDim1.inSpace(0).localLattice}, &${fieldMPIDim1.inSpace(0).localOffset},
         &${fieldMPIDim2.inSpace($swappedSpace).localLattice}, &${fieldMPIDim2.inSpace($swappedSpace).localOffset});
+        @if any([dimRep.parent is mpiDim for mpiDim in [fieldMPIDim1, fieldMPIDim2] for dimRep in mpiDim.representations])
 if (   (${fieldMPIDim1.inSpace(0).localLattice} != ${firstMPIDim.inSpace(0).localLattice})
     || (${fieldMPIDim1.inSpace(0).localOffset} != ${firstMPIDim.inSpace(0).localOffset})
     || (${fieldMPIDim2.inSpace($swappedSpace).localLattice} != ${secondMPIDim.inSpace($swappedSpace).localLattice})
@@ -124,6 +125,7 @@ if (   (${fieldMPIDim1.inSpace(0).localLattice} != ${firstMPIDim.inSpace(0).loca
                          ${secondMPIDim.inSpace($swappedSpace).localLattice}, ${secondMPIDim.inSpace($swappedSpace).localOffset},
                          ${fieldMPIDim2.inSpace($swappedSpace).localLattice}, ${fieldMPIDim2.inSpace($swappedSpace).localOffset});
 }
+        @end if
       @else
               @set $fieldIndices = range(0, len(field.dimensions))
               @silent fieldIndices.remove(field.indexOfDimension(firstMPIDim))
@@ -146,11 +148,11 @@ ${repOut.localOffset} = ${repIn.localOffset};
           @end for
         @else
           @# The dimensions aren't the same.
-          @for index, (fieldRep, geometryRep) in enumerate(zip(fieldDim.representations, mpiDim.representations))
+          @for fieldRep, geometryRep in zip(fieldDim.representations, mpiDim.representations)
             @if not fieldRep or not fieldRep.hasLocalOffset
               @continue
             @end if
-            @if index == 0
+            @if fieldRep.reductionMethod == fieldDim.ReductionMethod.fixedRange
               @# In this case we are in 'x' space and are subdividing a distributed dimension
 ptrdiff_t _${field.name}_unswapped_skip_size = ${geometryRep.globalLattice}/${fieldRep.globalLattice};
 if (_rank == 0) {

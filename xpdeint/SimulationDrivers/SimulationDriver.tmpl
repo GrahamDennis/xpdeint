@@ -79,11 +79,14 @@ ${field.free}@slurp
 
 @def mainBegin($dict)
   @#
+  @set $initialisedDimReps = set()
+  @#
   @for field in $fields
     @#
     @for dim in field.dimensions
-      @for dimRep in [dimRep for dimRep in dim.representations if dimRep and not dimRep.silent and hasattr(dimRep, 'initialiseArray')]
+      @for dimRep in [dimRep for dimRep in dim.representations if dimRep and not dimRep.silent and hasattr(dimRep, 'initialiseArray') and not dimRep in initialisedDimReps]
 ${dimRep.initialiseArray}@slurp
+        @silent initialisedDimReps.add(dimRep)
       @end for
     @end for
   @end for

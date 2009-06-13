@@ -54,7 +54,11 @@ for (long ${loopIndex} = ${localLattice}-1; ${loopIndex} >= 0; ${loopIndex}--) {
 @end def
 
 @def localIndexFromIndexForDimensionRep($dimRep)
-  @if not $isTransformed
+  @if $dimRep.lattice == $lattice or $dimRep.reductionMethod == $parent.ReductionMethod.fixedStep
+${dimRep.loopIndex} + ${dimRep.localOffset} - ${localOffset}@slurp
+  @elif $dimRep.reductionMethod == $parent.ReductionMethod.fixedRange
+    @# We are using a fixed-range reduction method.
+    @#
     @# Check that our lattice is a multiple of the lattice on which we want the
     @# index. In other words, that for every dimensionRep point, there is a corresponding
     @# point in our lattice. We might be more dense though.
@@ -62,7 +66,7 @@ for (long ${loopIndex} = ${localLattice}-1; ${loopIndex} >= 0; ${loopIndex}--) {
     @#
 (${dimRep.loopIndex} + ${dimRep.localOffset}) * (${globalLattice}/${dimRep.globalLattice}) - ${localOffset}@slurp
   @else
-${dimRep.loopIndex} + ${dimRep.localOffset} - ${localOffset}@slurp
+    @assert False
   @end if
   @#
 @end def

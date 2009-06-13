@@ -32,7 +32,7 @@ jn($order, $argument)@slurp
   @#
 const real besselFactor = ${besselJFunctionCall($order + 1, c'_normbesseljzeros_${dimRep.parent.name}[${index}] * _besseljnorm_${dimRep.parent.name}')};
 const real ${dimRep.name}_max = @slurp
-  @if not dimRep.isTransformed
+  @if dimRep.tag == $dimRep.tagFromName('MMT coordinate space')
 ${dimRep._maximum};
   @else
 (_besseljnorm_${dimRep.parent.name}/((real)${dimRep._maximum}));

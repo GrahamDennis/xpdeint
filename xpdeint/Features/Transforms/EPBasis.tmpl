@@ -84,9 +84,17 @@ _mmt_matrix_${backwardDimRep.name}_${forwardDimRep.name}_${kind}[${actualForward
   @#
 @end def
 
-@def performTransformForVector($sourceDimRep, $destDimRep, $vector)
+@def performTransformForVector($sourceDimRep, $destDimRep, $vector, $dir = None)
   @#
-  @if $destDimRep.isTransformed
+  @if dir == 'forward'
+${performForwardTransformForVector(sourceDimRep, destDimRep, vector)}@slurp
+  @else
+${performBackwardTransformForVector(sourceDimRep, destDimRep, vector)}@slurp
+  @end if
+@end def
+
+@def performForwardTransformForVector($sourceDimRep, $destDimRep, $vector)
+  @#
 // Loop to create symmetric and antisymmetric components.
 real _temp;
 long outerOffset = _i0 * innerLoopSize * ${sourceDimRep.globalLattice};
@@ -123,7 +131,11 @@ cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
             /* beta */ 0.0,
             /* C */ dest_${vector.id} + (_i0 * ${destDimRep.globalLattice} + 1) * innerLoopSize,
             2 * innerLoopSize);
-  @else
+  @#
+@end def
+
+@def performBackwardTransformForVector($sourceDimRep, $destDimRep, $vector)
+  @#
 // Symmetric component of the transform
 cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
             (${destDimRep.globalLattice}+1)/2,
@@ -164,7 +176,6 @@ for (long _i1 = 0; _i1 < ${destDimRep.globalLattice}/2; _i1++) {
     _high[_i2] += _temp;
   }
 }
-  @end if
   @#
 @end def
 
