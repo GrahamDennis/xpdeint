@@ -10,6 +10,7 @@
     <benchmark />
     <error_check />
     <bing />
+    <diagnostics /> <!-- This will make sure that all nonlocal accesses of dimensions are safe -->
   </features>
   
   <geometry>
