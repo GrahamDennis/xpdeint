@@ -188,13 +188,31 @@ class _UserLoopCodeBlock(ScriptElement):
           argumentsString = ', '.join([dimRep.loopIndex for dimRep in dimRepsNeeded])
           vectorID = vector.id
           componentNumber = vector.components.index(componentName)
-          defineString = "#define %(nonlocalAccessVariableName)s(%(argumentsString)s) _active_%(vectorID)s[%(componentNumber)s + (0" % locals()
+          defineString = "#define %(nonlocalAccessVariableName)s(%(argumentsString)s) " % locals()
+          
+          nonlocalAccessString = "_active_%(vectorID)s[%(componentNumber)s + (0" % locals()
           
           for dimension in vector.field.dimensions:
             termString = self.explicitIndexPointerTermForVectorAndDimensionWithFieldAndSpace(vector, dimension, self.field, self.space, indexOverrides)
-            defineString += termString.replace('\n', ' \\\n')
-          defineString += ') * _%(vectorID)s_ncomponents]\n' % locals()
-          self.prefixCodeString += defineString
+            nonlocalAccessString += termString.replace('\n', ' \\\n')
+          nonlocalAccessString += ') * _%(vectorID)s_ncomponents]' % locals()
+          
+          defineString += nonlocalAccessString + '\n'
+          
+          featureDict = {
+            'vector': vector,
+            'componentName': componentName,
+            'dimReps': dimRepsNeeded,
+            'nonlocalAccessVariableName': nonlocalAccessVariableName,
+            'nonlocalAccessString': nonlocalAccessString,
+            'defineString': defineString,
+          }
+          
+          featureOrdering = ['Diagnostics']
+          
+          self.insertCodeForFeatures('nonlocalAccess', featureOrdering, featureDict)
+          
+          self.prefixCodeString += featureDict['defineString']
           nonlocalVariablesCreated.add(nonlocalAccessVariableName)
         
         arguments = []

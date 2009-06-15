@@ -4,7 +4,9 @@ Diagnostics.tmpl
 Created by Graham Dennis on 2008-04-08.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 *@
-@extends xpdeint.Features._Feature
+@extends xpdeint.Features._Diagnostics
+
+@from xpdeint.Geometry.UniformDimensionRepresentation import UniformDimensionRepresentation
 
 @def description: Simulation diagnostics
 @attr featureName = 'Diagnostics'
@@ -63,5 +65,22 @@ if (_temp_error > _component_errors[_i1])
 if (_error == 2.0*${integrator.tolerance})
   _LOG(_SEGMENT_LOG_LEVEL, "NaN hit on this step. Retrying. (Error set to %e)\n", 2.0*${integrator.tolerance});
 _LOG(_SEGMENT_LOG_LEVEL, "Step size %e failed, ${integrator.propagationDimension} = %e, error = %e\n", _step, ${integrator.propagationDimension}, _error);
+  @#
+@end def
+
+@def nonlocalAccessValidationFunctionContents($dimReps, $nonlocalAccessString, $componentName, $func)
+  @#
+  @for dimRep in [dimRep for dimRep in dimReps if dimRep.type == 'long' and isinstance(dimRep, UniformDimensionRepresentation)]
+if (${dimRep.loopIndex} < ${dimRep.minimum} || ${dimRep.loopIndex} > ${dimRep.maximum}) {
+  _LOG(
+    _ERROR_LOG_LEVEL,
+    "Error: Invalid access of dimension ${dimRep.name} in %s on line %i.\n"
+    "       Value %i is out of range (%i, %i).\n"
+    "       Error was caused by accessing variable '${componentName}' nonlocally.\n",
+    filename, line_number, ${dimRep.loopIndex}, ${dimRep.minimum}, ${dimRep.maximum}
+  );
+}
+  @end for
+return ${nonlocalAccessString};
   @#
 @end def
