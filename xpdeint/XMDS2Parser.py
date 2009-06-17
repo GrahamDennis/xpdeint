@@ -295,9 +295,9 @@ class XMDS2Parser(ScriptParser):
         if shortName == "":
           raise ParserException(argumentElement, "Unable to find a short (single character) name for command line option")        
         
-        if not type in ('int', 'long', 'real', 'string'):
+        if not type in ('int', 'integer', 'long', 'real', 'string'):
           raise ParserException(argumentElement, "Invalid type name '%(type)s'. "
-                                                 "Valid options are 'int', 'long', 'real' or 'string'." % locals())
+                                                 "Valid options are 'integer', 'int', 'long', 'real' or 'string'." % locals())
         
         argumentAttributeDictionary = dict()
         
