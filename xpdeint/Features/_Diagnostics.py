@@ -14,6 +14,15 @@ from xpdeint.Function import Function
 
 class _Diagnostics (_Feature):
   def nonlocalAccess(self, dict):
+    """
+    The purpose of this function is to safety-check nonlocal dimension access. The only place where this is potentially
+    unsafe is with integer-valued dimensions as we permit users to use any code to access a dimension. For speed reasons
+    we don't run safety checks. But in the diagnostics feature, we can sacrifice speed for more safety.
+    
+    For any nonlocally-accessed dimReps, we replace the usual #define with a function call that includes the line number
+    from which it was called from the original .xmds file. The function then does a bounds check on all potentially-unsafe
+    accesses and stops the simulation if any are found.
+    """
     dimReps = dict['dimReps']
     
     if not any(dimRep.type == 'long' and isinstance(dimRep, UniformDimensionRepresentation) for dimRep in dimReps):
