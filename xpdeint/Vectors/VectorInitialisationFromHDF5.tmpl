@@ -32,6 +32,9 @@ $insertCodeForFeatures('vectorInitialisationBegin', $featureOrdering, featureDic
 
 htri_t result;
 hid_t hdf5_file = H5Fopen("${filename}", H5F_ACC_RDONLY, H5P_DEFAULT);
+if (hdf5_file < 0) {
+  _LOG(_ERROR_LOG_LEVEL, "Unable to open input HDF5 file '${filename}'. Does it exist?\n");
+}
 hid_t hdf5_parent = 0;
   @if $groupName
 if ((result = H5Lexists(hdf5_file, "${groupName}", H5P_DEFAULT)) > 0) {
