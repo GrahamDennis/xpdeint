@@ -27,12 +27,16 @@ class ParserException(Exception):
             self.lineNumber = self.element.getUserData('lineNumber')
             self.columnNumber = self.element.getUserData('columnNumber')
 
+warningsGiven = set()
+
 def parserWarning(element, msg):
     try:
         lineNumber, columnNumber = element
     except (TypeError, ValueError), err:
         lineNumber = element.getUserData('lineNumber')
         columnNumber = element.getUserData('columnNumber')
+    if (lineNumber, columnNumber, msg) in warningsGiven: return
+    warningsGiven.add((lineNumber, columnNumber, msg))
     print >> sys.stderr, indentMessageWithPrefix('WARNING: ', msg)
     print >> sys.stderr, "    At line %(lineNumber)i, column %(columnNumber)i" % locals()
     # print >> sys.stderr, "    In element: " + element.userUnderstandableXPath()
