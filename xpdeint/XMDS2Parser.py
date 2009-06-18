@@ -126,7 +126,7 @@ class XMDS2Parser(ScriptParser):
     else: description = ''
     self.globalNameSpace['simulationDescription'] = description
     
-    self.simulation = self.globalNameSpace['simulation']
+    self.simulation = _ScriptElement.simulation
     
     simulationElementTemplate = SimulationElementTemplate(parent = self.simulation, **self.argumentsToTemplateConstructors)
     
@@ -755,7 +755,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     vectorTemplate = VectorElementTemplate(name = vectorName, field = fieldTemplate,
                                            **self.argumentsToTemplateConstructors)
     
-    self.globalNameSpace['vectors'].append(vectorTemplate)
+    self.globalNameSpace['simulationVectors'].append(vectorTemplate)
     
     if not vectorElement.hasAttribute('initial_space'):
       vectorTemplate.initialSpace = 0
@@ -927,7 +927,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
                                             xmlElement = computedVectorElement,
                                             **self.argumentsToTemplateConstructors)
     
-    self.globalNameSpace['vectors'].append(vectorTemplate)
+    self.globalNameSpace['simulationVectors'].append(vectorTemplate)
     
     componentsElement = computedVectorElement.getChildElementByTagName('components')
     

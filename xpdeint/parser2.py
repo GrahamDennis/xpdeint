@@ -239,15 +239,15 @@ def main(argv=None):
   globalNameSpace['xmlDocument'] = xmlDocument
   globalNameSpace['features'] = {}
   globalNameSpace['fields'] = []
-  globalNameSpace['vectors'] = []
+  globalNameSpace['simulationVectors'] = []
   globalNameSpace['momentGroups'] = []
   globalNameSpace['symbolNames'] = set()
   globalNameSpace['xmds'] = {'versionString': versionString,
                              'subversionRevision': subversionRevisionString}
   globalNameSpace['templates'] = set()
   globalNameSpace['precision'] = 'double'
-  globalNameSpace['buildVariant'] = set()
-  globalNameSpace['uselib'] = set()
+  globalNameSpace['simulationBuildVariant'] = set()
+  globalNameSpace['simulationUselib'] = set()
   globalNameSpace['bugReportAddress'] = 'xmds-devel@lists.sourceforge.net'
   
   xpdeintDataCachePath = os.path.join(xpdeintUserDataPath, 'xpdeint_cache')
@@ -287,7 +287,6 @@ def main(argv=None):
     # Construct the top-level template class
     simulationTemplate = SimulationTemplate(parent = None, searchList=[globalNameSpace], filter=filterClass)
     _ScriptElement.simulation = simulationTemplate
-    globalNameSpace['simulation'] = simulationTemplate
     # Now get the parser to do the complex job of mapping the XML classes onto our
     # templates.
     parser.parseXMLDocument(xmlDocument, globalNameSpace, filterClass)
@@ -299,18 +298,18 @@ def main(argv=None):
     #
     
     # Loop over a copy because we may create templates during iteration
-    for template in globalNameSpace['simulation'].children[:]:
+    for template in _ScriptElement.simulation.children[:]:
       if not template._haveBeenRemoved:
         template.implementationsForFunctionName('bindNamedVectors')
     
-    for template in globalNameSpace['simulation'].children[:]:
+    for template in _ScriptElement.simulation.children[:]:
       if not template._haveBeenRemoved:
         template.implementationsForFunctionName('preflight')
     
     # Preflight is done
     
-    # We don't need the 'vectors' variable any more.
-    del globalNameSpace['vectors']
+    # We don't need the 'simulationVectors' variable any more.
+    del globalNameSpace['simulationVectors']
     
     # Now we need to do a dry-run conversion of the simulation template to a 
     # string. This is necessary so that various bits of information that will
@@ -384,18 +383,18 @@ def main(argv=None):
   myfile.close()
   
   if debug:
-    globalNameSpace['uselib'].add('debug')
-    globalNameSpace['uselib'].discard('vectorise')
+    globalNameSpace['simulationUselib'].add('debug')
+    globalNameSpace['simulationUselib'].discard('vectorise')
   
-  if not globalNameSpace['uselib'].intersection(['debug']):
-    globalNameSpace['uselib'].add('optimise')
+  if not globalNameSpace['simulationUselib'].intersection(['debug']):
+    globalNameSpace['simulationUselib'].add('optimise')
   
   buildKWs = {
     'includes': resource_filename(__name__, 'includes'),
-    'uselib': list(globalNameSpace['uselib']),
+    'uselib': list(globalNameSpace['simulationUselib']),
   }
   
-  variant = globalNameSpace['buildVariant']
+  variant = globalNameSpace['simulationBuildVariant']
   if not variant:
     variant.add('default')
   
