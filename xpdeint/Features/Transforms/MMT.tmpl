@@ -44,7 +44,7 @@ real *_mmt_scratch_space;
   @if vectorsAndSizes
     @set $maxVector = max(vectorsAndSizes)[1]
 
-    _LOG(_SIMULATION_LOG_LEVEL, "Constructing transform matrices\n");
+_LOG(_SIMULATION_LOG_LEVEL, "Constructing transform matrices\n");
   @end if
 
   @for dimName, basis in $basisMap.items()

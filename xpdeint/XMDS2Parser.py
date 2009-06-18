@@ -366,7 +366,7 @@ class XMDS2Parser(ScriptParser):
               raise ParserException(
                 noiseElement,
                 "Unable to understand '%(meanRateString)s' as a positive real value. "
-                "Use the feature <validation/> to allow for arbitrary code." % locals()
+                "Use the feature <validation kind=\"run-time\"/> to allow for arbitrary code." % locals()
               )
           noiseAttributeDictionary['noiseMeanRate'] = meanRateString
         elif kind in ('gaussian-mkl'):
@@ -412,7 +412,7 @@ class XMDS2Parser(ScriptParser):
                   _LOG(_ERROR_LOG_LEVEL, "ERROR: The seed for random noise %(prefix)s is not positive!\\n"
                   "Seed = %%d\\n", %(seedString)s);""" % locals())
               else:
-                raise ParserException(noiseElement, "Unable to understand seed '%(seedString)s' as a positive integer. Use the feature <validation/> to allow for arbitrary code." % locals())
+                raise ParserException(noiseElement, "Unable to understand seed '%(seedString)s' as a positive integer. Use the feature <validation kind=\"run-time\"/> to allow for arbitrary code." % locals())
           
           noise.seedArray = seedStringList
         
@@ -627,7 +627,7 @@ class XMDS2Parser(ScriptParser):
                                      "Start = %%e, End = %%e\\n", (real)%(minimumString)s, (real)%(maximumString)s);""" % locals())
           else:
             raise ParserException(dimensionElement, """Could not understand domain (%(minimumString)s, %(maximumString)s) as numbers.
-Use feature <validation/> to allow for arbitrary code.""" % locals() )
+Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % locals() )
         else: # In this case we were given numbers and should check that they in the correct order here
           if minimumValue >= maximumValue:
             raise ParserException(dimensionElement, "The end point of the dimension, '%(maximumString)s', must be "
@@ -1177,7 +1177,7 @@ Use feature <validation/> to allow for arbitrary code.""" % locals() )
                                  "Interval = %%e\\n", %(intervalString)s);""" % locals())
       else:
         raise ParserException(integrateElement, "Could not understand interval '%(intervalString)s' "
-                                                "as a number.\nUse the feature <validation/> to allow for arbitrary code." % locals())
+                                                "as a number. Use the feature <validation kind=\"run-time\"/> to allow for arbitrary code." % locals())
     
     integratorTemplate.interval = intervalString
     
