@@ -378,9 +378,9 @@ class _ScriptElement (Template):
     is converted to a C++ source file.
     """
     if hasattr(self, 'uselib'):
-      self.getVar('uselib').update(self.uselib)
+      self.getVar('simulationUselib').update(self.uselib)
     if hasattr(self, 'buildVariant'):
-      buildVariant = self.getVar('buildVariant')
+      buildVariant = self.getVar('simulationBuildVariant')
       if buildVariant and not self.buildVariant in buildVariant:
         raise ParserException(self, "Internal Error. More than one build variant is trying to be used.\n"
                                     "Please report this error to %s\n" % self.getVar('bugReportAddress'))
@@ -393,7 +393,7 @@ class _ScriptElement (Template):
     in the value of the XML element contained by the entity.
     """
     vectors = set()
-    vectorDictionary = dict([(vector.name, vector) for vector in self.getVar('vectors')])
+    vectorDictionary = dict([(vector.name, vector) for vector in self.getVar('simulationVectors')])
     
     ancestors = []
     currObject = self
@@ -453,7 +453,7 @@ class _ScriptElement (Template):
     self.getVar('templates').discard(self)
     
     for someIterable in (self.parent.children, self.getVar('fields'),
-                         self.getVar('vectors'), self.getVar('momentGroups')):
+                         self.getVar('simulationVectors'), self.getVar('momentGroups')):
       while self in someIterable:
         someIterable.remove(self)
     

@@ -30,7 +30,7 @@ class _TransformMultiplexer (_Feature):
     if transformWithClass:
       return transformWithClass[0]
     else:
-      return cls(parent = self.getVar('simulation'), **self.argumentsToTemplateConstructors)
+      return cls(parent = self.simulation, **self.argumentsToTemplateConstructors)
   
   def __getattribute__(self, name):
     """
