@@ -17,6 +17,7 @@
 
 inline complex::value_type mod(const complex& _t) { return std::abs(_t); }
 inline complex::value_type mod2(const complex& _t) { return std::norm(_t); }
+inline complex cis(const real& _t) { return std::polar(1.0, _t); }
 
 namespace std {
   inline complex operator*(const complex& a, const int b) { return a*complex::value_type(b); }

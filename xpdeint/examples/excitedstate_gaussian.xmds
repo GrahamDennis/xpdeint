@@ -111,7 +111,7 @@
         ]]>
       </operators>
     </integrate>
-    <breakpoint filename="excitedstate_gaussian_break.xsil">
+    <breakpoint filename="excitedstate_gaussian_break.xsil" format="hdf5">
       <dependencies>wavefunction</dependencies>
     </breakpoint>
   </sequence>

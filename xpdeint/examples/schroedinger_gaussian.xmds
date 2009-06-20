@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <name>schroedinger_gaussian</name>
+  <author>Graham Dennis</author>
+  <description>
+    Evolve a superposition of the groundstate and first excited state.
+  </description>
+  
+  <features>
+    <auto_vectorise />
+    <benchmark />
+    <bing />
+    <fftw plan="patient" />
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="y" lattice="1024"  domain="(-12.0, 12.0)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="potential" initial_space="y" type="complex">
+    <components>
+      V1
+    </components>
+    <initialisation kind="hdf5">
+      <!-- Use the same potential as the previous simulation -->
+      <filename>groundstate_gaussian_break.h5</filename>
+    </initialisation>
+  </vector>
+  
+  <vector name="excitedstate" initial_space="y" type="complex">
+    <components>
+      phi1
+    </components>
+    <initialisation kind="hdf5">
+      <filename>excitedstate_gaussian_break.h5</filename>
+    </initialisation>
+  </vector>
+  
+  <vector name="groundstate" initial_space="y" type="complex">
+    <components>phi</components>
+    <initialisation kind="hdf5">
+      <filename>groundstate_gaussian_break.h5</filename>
+    </initialisation>
+  </vector>
+  
+  <vector name="wavefunction" type="complex">
+    <components>psi</components>
+    <initialisation>
+      <dependencies>excitedstate groundstate</dependencies>
+      <![CDATA[
+        psi = 1.0/sqrt(2.0) * (phi1 + phi);
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="RK9" interval="10.0" steps="10000" tolerance="1e-8">
+      <samples>500</samples>
+      <operators>
+        <operator kind="ip" constant="no" type="imaginary">
+          <operator_names>T</operator_names>
+          <![CDATA[
+            T = -0.5*i*ky*ky;
+          ]]>
+        </operator>
+        <integration_vectors>wavefunction</integration_vectors>
+        <dependencies>potential</dependencies>
+        <![CDATA[
+          dpsi_dt = T[psi] + V1*psi;
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  <output format="hdf5">
+    <group>
+      <sampling initial_sample="yes">
+        <dimension name="y" />
+        <moments>dens</moments>
+        <dependencies>wavefunction</dependencies>
+        <![CDATA[
+          dens = mod2(psi);
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>

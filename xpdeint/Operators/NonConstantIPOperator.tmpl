@@ -60,7 +60,7 @@ ${codeString}@slurp
   @# Loop over each operator component
   @for $operatorComponentNumber, $operatorComponent in enumerate($operatorComponents.iterkeys())
 _${operatorVector.id}[_${operatorVector.id}_index_pointer + _arrayIndex * $len($operatorComponents) + ${operatorComponentNumber}]@slurp
- = exp(${operatorComponent} * _propagationStepFraction * _step);
+ = ${expFunction}(${operatorComponent}${valueSuffix} * _propagationStepFraction * _step);
   @end for
   @#
 @end def

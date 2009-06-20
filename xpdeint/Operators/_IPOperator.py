@@ -16,6 +16,8 @@ from xpdeint.Utilities import lazy_property
 class _IPOperator(Operator):
   evaluateOperatorFunctionArguments = [('int', '_exponent')]
   operatorKind = Operator.IPOperatorKind
+  expFunction = 'exp'
+  valueSuffix = ''
   
   @lazy_property
   def integrator(self):

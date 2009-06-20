@@ -1442,9 +1442,13 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     operatorVectorTemplate.type = 'complex'
     if operatorElement.hasAttribute('type'):
       typeString = operatorElement.getAttribute('type').strip().lower()
-      if not typeString in ['real', 'complex']:
+      if not typeString in ['real', 'imaginary', 'complex']:
         raise ParserException(operatorElement, "Unknown IP operator type '%(typeString)s'.\n"
-                                               "The 'type' attribute must be either 'real' or 'complex'." % locals())
+                                               "The 'type' attribute must be 'real', 'imaginary' or 'complex'." % locals())
+      if typeString == 'imaginary':
+        typeString = 'complex'
+        operatorTemplate.expFunction = 'cis'
+        operatorTemplate.valueSuffix = '.Im()'
       operatorVectorTemplate.type = typeString
     
     operatorVectorTemplate.initialSpace = operatorTemplate.operatorSpace
