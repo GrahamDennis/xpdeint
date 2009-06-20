@@ -140,4 +140,27 @@
       </sampling>
     </group>
   </output>
+
+<info>
+Script compiled with xpdeint version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+See http://www.xmds.org for more information.
+</info>
+
+<XSIL Name="breakpoint">
+  <Param Name="n_independent">2</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>4</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+z r phiR phiI 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>32</Dim>
+    <Dim>32</Dim>
+    <Dim>4</Dim>
+    <Stream><Metalink Format="HDF5" Type="Remote" Group="/1"/>
+bessel_cosine_groundstate_breakpoint_expected.h5
+    </Stream>
+  </Array>
+</XSIL>
 </simulation>

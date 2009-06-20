@@ -40,7 +40,9 @@ ${separator}${dimension.name}: ${($spaceMask >> $geometry.dimensions.index($dime
   @set $prefix = c'_${name}'
   @#
 const ptrdiff_t ${prefix}_size = (ptrdiff_t)${pointsInDimensionsWithIndices(range(len($dimensions)))};
+  @if $isDistributed
 ptrdiff_t ${allocSize} = ${prefix}_size;
+  @end if
   @# Child globals will go here
 @end def
 

@@ -32,7 +32,7 @@ ${codeString}@slurp
     @# Loop over each operator component
     @for $operatorComponentNumber, $operatorComponent in enumerate($operatorComponents.iterkeys())
       @set $offsetIndex = $operatorComponentNumber + $fractionIndex * len($operatorComponents)
-_${operatorVector.id}[_${operatorVector.id}_index_pointer + ${offsetIndex}] = exp(${operatorComponent} * $propagationStepFraction * _step);
+_${operatorVector.id}[_${operatorVector.id}_index_pointer + ${offsetIndex}] = ${expFunction}(${operatorComponent}${valueSuffix} * $propagationStepFraction * _step);
     @end for
   @end for
   @#

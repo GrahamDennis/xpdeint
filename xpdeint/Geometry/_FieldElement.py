@@ -209,7 +209,13 @@ class _FieldElement (ScriptElement):
     return self._driver.orderedDimensionsForFieldInSpace(self, space)
   
   @lazy_property
+  def size(self):
+    return '_' + self.name + '_size'
+  
+  @lazy_property
   def allocSize(self):
+    if not self.isDistributed:
+      return self.size
     return '_' + self.name + '_alloc_size'
   
   def sizeInSpace(self, space):

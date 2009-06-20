@@ -1,28 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
   <testing>
-    <xsil_file name="bessel_cosine_groundstate.xsil" expected="bessel_cosine_groundstate_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
-    <xsil_file name="bessel_cosine_groundstate_breakpoint.xsil" expected="bessel_cosine_groundstate_breakpoint_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <input_xsil_file name="bessel_cosine_groundstate_breakpoint_expected.xsil" />
+    <xsil_file name="bessel_cosine_evolution.xsil" expected="bessel_cosine_evolution_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
   </testing>
   
-  <name>bessel_cosine_groundstate</name>
+  <name>bessel_cosine_evolution</name>
   <author>Graham Dennis</author>
   <description>
-    Calculate the 3D ground state of a Rubidium BEC in a harmonic magnetic trap assuming
+    Evolve the 3D ground state of a Rubidium BEC in a harmonic magnetic trap assuming
     cylindrical symmetry about the z axis and reflection symmetry about z=0.
     This permits us to use the cylindrical bessel functions to expand the solution transverse
     to z and a cosine series to expand the solution along z.
     
     This testcase tests using both Fourier transforms and Matrix transforms in a single simulation.
+    
   </description>
   
   <features>
     <auto_vectorise />
     <benchmark />
     <bing />
-    <fftw />
-    <mmt />
-    <!-- <openmp /> -->
     <globals>
       <![CDATA[
         const real omegaz = 2*M_PI*20;
@@ -32,6 +30,7 @@
         const real g = 9.8;
         const real scatteringLength = 5.57e-9;
         const real Uint = 4.0*M_PI*hbar*hbar*scatteringLength/M;
+        const complex miUint_hbar = -i*Uint/hbar;
         const real Nparticles = 5.0e5;
 
         /* offset constants */
@@ -68,74 +67,38 @@
     <components>
       phi
     </components>
-    <initialisation>
-      <![CDATA[
-      
-        if ((abs(r) < 0.9e-5) && abs(z) < 0.9e-4) {
-          phi = 1.0; //sqrt(Nparticles/2.0e-5);
-          // This will be automatically normalised later
-        } else {
-          phi = 0.0;
-        }
-      
-      ]]>
+    <initialisation kind="hdf5">
+      <filename>bessel_cosine_groundstate_breakpoint_expected.h5</filename>
     </initialisation>
   </vector>
   
-  <computed_vector name="normalisation" dimensions="" type="real">
-    <components>
-      Ncalc
-    </components>
-    <evaluation>
-      <dependencies>wavefunction</dependencies>
-      <![CDATA[
-        // Calculate the current normalisation of the wave function.
-        Ncalc = 2.0*(2.0*M_PI)*mod2(phi);
-        // Factor of two is there due to z axis only covering half the condensate.
-        // Factor of two-pi is there for integration over the angular coordinate.
-      ]]>
-    </evaluation>
-  </computed_vector>
-  
   <sequence>
-    <integrate algorithm="RK4" interval="1e-4" steps="1000">
-      <samples>100</samples>
-      <filters>
-        <filter>
-          <dependencies>wavefunction normalisation</dependencies>
-          <![CDATA[
-            // Correct normalisation of the wavefunction
-            phi *= sqrt(Nparticles/Ncalc);
-          ]]>
-        </filter>
-      </filters>
+    <integrate algorithm="ARK45" tolerance="1e-6" interval="1e-3">
+      <samples>10</samples>
       <operators>
-        <operator kind="ip" constant="yes">
+        <operator kind="ip" constant="yes" type="imaginary">
           <operator_names>T</operator_names>
           <![CDATA[
-            T = -0.5*hbar/M*(kr*kr + kz*kz);
+            T = -i*0.5*hbar/M*(kr*kr + kz*kz);
           ]]>
         </operator>
         <integration_vectors>wavefunction</integration_vectors>
         <dependencies>potential</dependencies>
         <![CDATA[
-          dphi_dt = T[phi] - (i*V1 + Uint/hbar*mod2(phi))*phi;
+          dphi_dt = T[phi] + (V1 + miUint_hbar*mod2(phi))*phi;
         ]]>
       </operators>
     </integrate>
-    <breakpoint filename="bessel_cosine_groundstate_breakpoint.xsil" format="hdf5">
-      <dependencies>wavefunction</dependencies>
-    </breakpoint>
   </sequence>
-  <output format="binary">
+  <output format="hdf5">
     <group>
       <sampling initial_sample="no">
         <dimension name="r" />
         <dimension name="z" />
-        <moments>norm_dens</moments>
-        <dependencies>wavefunction normalisation</dependencies>
+        <moments>dens</moments>
+        <dependencies>wavefunction</dependencies>
         <![CDATA[
-          norm_dens = mod2(phi)/Ncalc;
+          dens = mod2(phi);
         ]]>
       </sampling>
     </group>
