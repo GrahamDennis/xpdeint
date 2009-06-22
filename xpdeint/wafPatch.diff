@@ -1,0 +1,40 @@
+diff --git a/xpdeint/wafadmin/Tools/config_c.py b/xpdeint/wafadmin/Tools/config_c.py
+index 8a7bfbb..d1380f1 100644
+--- a/xpdeint/wafadmin/Tools/config_c.py
++++ b/xpdeint/wafadmin/Tools/config_c.py
+@@ -476,7 +476,10 @@ def run_c_code(self, *k, **kw):
+ 	if kw['execute']:
+ 		args = Utils.to_list(kw.get('exec_args', []))
+ 		try:
+-			data = Utils.cmd_output([lastprog] + args).strip()
++			if not kw.get('returncode', False):
++				data = Utils.cmd_output([lastprog] + args).strip()
++			else:
++				data = Utils.cmd_output([lastprog] + args, returncode=True)
+ 		except ValueError, e:
+ 			self.fatal(Utils.ex_stack())
+ 		ret = data
+diff --git a/xpdeint/wafadmin/Utils.py b/xpdeint/wafadmin/Utils.py
+index b4f4f5c..701c1d5 100644
+--- a/xpdeint/wafadmin/Utils.py
++++ b/xpdeint/wafadmin/Utils.py
+@@ -438,6 +438,9 @@ def cmd_output(cmd, **kw):
+ 		tmp = kw['e']
+ 		del(kw['e'])
+ 		kw['env'] = tmp
++	returncode = kw.get('returncode', False)
++	if 'returncode' in kw:
++		del(kw['returncode'])
+ 
+ 	kw['shell'] = isinstance(cmd, str)
+ 	kw['stdout'] = pproc.PIPE
+@@ -455,6 +458,9 @@ def cmd_output(cmd, **kw):
+ 			msg = "command execution failed: %s -> %r" % (cmd, str(output))
+ 			raise ValueError(msg)
+ 		output = ''
++	if returncode:
++		output = not p.returncode
++	
+ 	return output
+ 
+ reg_subst = re.compile(r"(\\\\)|(\$\$)|\$\{([^}]+)\}")

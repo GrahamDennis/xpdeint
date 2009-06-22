@@ -30,7 +30,9 @@ def configure(conf):
         conf.env[key] = value
     
     def check_cxx(**KWs):
-        result = conf.check_cxx(**KWs)
+        KWs['execute'] = True
+        KWs['returncode'] = True
+        result = conf.check_cxx(**KWs) not in [None, False]
         if result and 'uselib_store' in KWs:
             conf.env.append_unique('uselib', KWs['uselib_store'])
             if 'header_name' in KWs:

@@ -59,6 +59,7 @@ def run_config(includePaths = None, libPaths = None):
     
     wafArguments['CPPPATH'] = includePaths
     wafArguments['LIBPATH'] = libPaths
+    wafArguments['RPATH'] = libPaths
     
     wafArguments.update([(key, value) for key, value in os.environ.iteritems() if key in ['CXX']])
     
