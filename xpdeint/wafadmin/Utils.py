@@ -438,6 +438,9 @@ def cmd_output(cmd, **kw):
 		tmp = kw['e']
 		del(kw['e'])
 		kw['env'] = tmp
+	returncode = kw.get('returncode', False)
+	if 'returncode' in kw:
+		del(kw['returncode'])
 
 	kw['shell'] = isinstance(cmd, str)
 	kw['stdout'] = pproc.PIPE
@@ -455,6 +458,9 @@ def cmd_output(cmd, **kw):
 			msg = "command execution failed: %s -> %r" % (cmd, str(output))
 			raise ValueError(msg)
 		output = ''
+	if returncode:
+		output = not p.returncode
+	
 	return output
 
 reg_subst = re.compile(r"(\\\\)|(\$\$)|\$\{([^}]+)\}")

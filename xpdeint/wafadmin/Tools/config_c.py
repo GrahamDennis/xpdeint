@@ -476,7 +476,10 @@ def run_c_code(self, *k, **kw):
 	if kw['execute']:
 		args = Utils.to_list(kw.get('exec_args', []))
 		try:
-			data = Utils.cmd_output([lastprog] + args).strip()
+			if not kw.get('returncode', False):
+				data = Utils.cmd_output([lastprog] + args).strip()
+			else:
+				data = Utils.cmd_output([lastprog] + args, returncode=True)
 		except ValueError, e:
 			self.fatal(Utils.ex_stack())
 		ret = data
