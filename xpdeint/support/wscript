@@ -32,6 +32,21 @@ def configure(conf):
     def check_cxx(**KWs):
         KWs['execute'] = True
         KWs['returncode'] = True
+        def listOption(var):
+          if isinstance(var, str):
+            return [var]
+          elif isinstance(var, list):
+            return var
+          assert False
+        
+        if 'cxxflags' in KWs:
+          cxxflags = listOption(KWs['cxxflags'])
+          
+          linkflags = []
+          if 'linkflags' in KWs:
+            linkflags.extend(listOption(KWs['linkflags']))
+          linkflags.extend(cxxflags)
+          KWs['linkflags'] = linkflags
         result = conf.check_cxx(**KWs) not in [None, False]
         if result and 'uselib_store' in KWs:
             conf.env.append_unique('uselib', KWs['uselib_store'])
@@ -128,16 +143,47 @@ def configure(conf):
             
             check_cxx(
                 cxxflags="-pthread",
-                linkflags="-pthread",
                 uselib_store="threads",
                 msg = "Checking for pthreads",
             )
         elif conf.env['CXX_NAME'] == 'icc':
-            check_cxx(
-                cxxflags="-fast",
-                uselib_store="optimise",
-                msg = "Checking for the 'go fast' compiler option"
-            )
+            compiler_optimisations = [
+                {
+                    "msg": "Checking for the 'go fast' compiler option",
+                    "cxxflags": ['-fast', '-ffast-math', '-complex-limited-range', '-fomit-frame-pointer'],
+                },
+                {
+                    "msg": "Checking for fallback optimisation flags",
+                    "cxxflags": ['-O3', '-ipo', '-ffast-math', '-complex-limited-range', '-fomit-frame-pointer'],
+                },
+                {
+                    "msg": "Checking safe optimisation flags",
+                    "cxxflags": "-O3",
+                }
+            ]
+            
+            try_options('optimise', compiler_optimisations)
+            
+            machine_optimisations = [
+                {
+                    "msg": "Trying to optimise for SSE4",
+                    "cxxflags": "-xS",
+                },
+                {
+                    "msg": "Trying to optimise for SSSE3",
+                    "cxxflags": "-xT",
+                },
+                {
+                    "msg": "Trying to optimise for SSE3",
+                    "cxxflags": "-xP",
+                },
+                {
+                    "msg": "Trying to optimise for SSE2",
+                    "cxxflags": "-xN",
+                },
+            ]
+            
+            try_options('optimise', machine_optimisations)
             
             check_cxx(
                 cxxflags="-fma",
@@ -161,14 +207,12 @@ def configure(conf):
             
             check_cxx(
                 cxxflags='-openmp',
-                linkflags="-openmp",
                 uselib_store="openmp",
                 msg = "Checking for OpenMP"
             )
             
             check_cxx(
                 cxxflags="-pthread",
-                linkflags="-pthread",
                 uselib_store="threads",
                 msg = "Checking for pthreads"
             )
