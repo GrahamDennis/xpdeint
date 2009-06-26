@@ -10,6 +10,7 @@ import os, sys, imp, shutil
 
 from pkg_resources import resource_filename
 from xpdeint.Preferences import xpdeintUserDataPath
+from xpdeint.Utilities import unique
 
 import cPickle
 
@@ -57,13 +58,14 @@ def run_config(includePaths = None, libPaths = None):
     includePaths = includePaths or []
     libPaths = libPaths or []
     
-    wafArguments['CPPPATH'] = includePaths
-    wafArguments['LIBPATH'] = libPaths
-    wafArguments['RPATH'] = libPaths
+    wafArguments['CPPPATH'] = unique(includePaths)
+    wafArguments['LIBPATH'] = unique(libPaths)
     
     wafArguments.update([(key, value) for key, value in os.environ.iteritems() if key in ['CXX']])
-    
     cPickle.dump(wafArguments, file(config_arg_cache_filename, 'w'))
+    
+    if not sys.platform == 'darwin':
+        wafArguments['RPATH'] = libPaths
     
     ret = run_waf('configure')
     
@@ -139,8 +141,15 @@ def run_build(source_name, target_name, variant = 'default', buildKWs = {}):
     source_name = '"' + source_name + '"'
     target_name = '"' + target_name + '"'
     
-    compile_command = g_compile_command.strip().replace(os.path.join('..', xpdeintSourcePlaceholder), source_name)
-    link_command = g_link_command.strip().replace(os.path.join(variant, xpdeintTargetPlaceholder), target_name)
+    lst = unique(g_compile_command + g_link_command)
     
-    return ' '.join([compile_command, link_command])
+    command = ' '.join(lst).strip().replace(
+        os.path.join('..', xpdeintSourcePlaceholder),
+        source_name,
+    ).replace(
+        os.path.join(variant, xpdeintTargetPlaceholder),
+        target_name,
+    )
+    
+    return command
 
