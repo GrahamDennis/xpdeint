@@ -31,7 +31,7 @@ class _FourierTransformFFTW3 (_Transform):
   @lazy_property
   def fftwPrefix(self):
     precision = self.getVar('precision')
-    return {'double': 'fftw', 'float': 'fftwf'}[precision]
+    return {'double': 'fftw', 'single': 'fftwf'}[precision]
   
   @lazy_property
   def fftwLibVersionName(self):
