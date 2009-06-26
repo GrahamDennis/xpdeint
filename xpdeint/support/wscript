@@ -410,6 +410,7 @@ def build(bld):
         source=Configuration.xpdeintSourcePlaceholder,
         target=Configuration.xpdeintTargetPlaceholder,
         link = 'xpdeint_link',
+        shell = False,
         env = bld.env_of_name(Configuration.buildVariant),
         **Configuration.wafArguments
     )
@@ -437,6 +438,6 @@ def build(bld):
     
 
 xpdeint_link_str = '${LINKFLAGS} ${CXXLNK_TGT_F}${TGT}'
-cls = Task.simple_task_type('xpdeint_link', xpdeint_link_str, color='YELLOW')
+cls = Task.simple_task_type('xpdeint_link', xpdeint_link_str, color='YELLOW', shell=False)
 
 
