@@ -116,9 +116,9 @@
         <moments>g1R g1I g2</moments>
         <dependencies>wavefunction</dependencies>
         <![CDATA[
-          complex g1 = conj(phi(y: y)) * phi(y: yp);
+          complex g1 = conj(phi(y => y)) * phi(y => yp);
           _SAMPLE_COMPLEX(g1);
-          g2 = mod2(phi(y: y)) * mod2(phi(y: yp));
+          g2 = mod2(phi(y => y)) * mod2(phi(y => yp));
         ]]>
       </sampling>
     </group>

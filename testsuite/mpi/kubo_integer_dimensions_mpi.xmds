@@ -47,7 +47,7 @@
       <operators noises="n">
         <integration_vectors>main</integration_vectors>
         <![CDATA[
-          dz_dt(j: j) = i*z*n_1;
+          dz_dt(j => j) = i*z*n_1;
         ]]>
       </operators>
     </integrate>

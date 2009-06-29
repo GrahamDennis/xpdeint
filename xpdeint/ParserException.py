@@ -12,7 +12,11 @@ import textwrap
 
 def indentMessageWithPrefix(prefix, msg):
     textWrapper = textwrap.TextWrapper(subsequent_indent=' '*len(prefix))
-    return textWrapper.fill(prefix + msg)
+    msgLines = msg.split('\n\n')
+    result = [textWrapper.fill(prefix + msgLines[0])]
+    textWrapper.initial_indent = ' '*len(prefix)
+    result.extend([textWrapper.fill(line) for line in msgLines[1:]])
+    return '\n'.join(result)
 
 
 class ParserException(Exception):

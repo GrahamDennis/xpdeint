@@ -11,8 +11,8 @@ from xpdeint.ScriptElement import ScriptElement
 
 from xpdeint.Function import Function
 from xpdeint.Utilities import lazy_property
-from xpdeint import CodeLexer
-from xpdeint.CodeLexer import LexerException
+from xpdeint import CodeParser
+from xpdeint.CodeParser import CodeParserException
 from xpdeint.CallOnceGuards import callOncePerInstanceGuard
 
 from xpdeint.Vectors.ComputedVector import ComputedVector
@@ -143,7 +143,7 @@ class _UserLoopCodeBlock(ScriptElement):
     vectorOverrides = self.loopArguments.get('vectorOverrides', [])
     
     simulationDriver = self.getVar('features')['Driver']
-    for componentName, vector, nonlocalAccessDict, codeSlice in reversed(CodeLexer.nonlocalDimensionAccessForVectors(vectorsToFix, self)):
+    for componentName, vector, nonlocalAccessDict, codeSlice in reversed(CodeParser.nonlocalDimensionAccessForVectors(vectorsToFix, self)):
       availableDimReps = [dim.inSpace(self.space) for dim in vector.field.dimensions]
       validDimensionNames = [dimRep.name for dimRep in availableDimReps]
       
@@ -153,14 +153,14 @@ class _UserLoopCodeBlock(ScriptElement):
       
       if vector in vectorOverrides:
         vectorID = vector.id
-        raise LexerException(self, codeSlice.start, "Cannot access vector '%(vectorID)s' non-locally." % locals())
+        raise CodeParserException(self, codeSlice.start, "Cannot access vector '%(vectorID)s' non-locally." % locals())
       
       # Check that there are no dimensions listed in the nonlocalAccessDict that don't refer to valid
       # dimensions for this vector
       
       for dimName in nonlocalAccessDict.iterkeys():
         if not dimName in validDimensionNames:
-          raise LexerException(self, nonlocalAccessDict[dimName][1].start, "Component '%s' doesn't have dimension '%s'." % (componentName, dimName))
+          raise CodeParserException(self, nonlocalAccessDict[dimName][1], "Component '%s' doesn't have dimension '%s'." % (componentName, dimName))
       
       dimRepsNeeded = [dimRep for dimRep in availableDimReps if dimRep.name in nonlocalAccessDict and nonlocalAccessDict[dimRep.name][0] != dimRep.name]
       
@@ -172,7 +172,7 @@ class _UserLoopCodeBlock(ScriptElement):
           for dimRep in dimRepsNeeded:
             if dimRep.name == simulationDriver.mpiDimRepForSpace(self.space).name:
               dimRepName = dimRep.name
-              raise LexerException(self, nonlocalAccessDict[dimRepName][1].start,
+              raise CodeParserException(self, nonlocalAccessDict[dimRepName][1],
                                    "It is illegal to access the dimension '%(dimRepName)s' nonlocally because it is being distributed with MPI.\n"
                                    "Try not using MPI or changing the order of your dimensions." % locals())
         
@@ -221,13 +221,13 @@ class _UserLoopCodeBlock(ScriptElement):
           argumentValue = dimRep.nonlocalAccessIndexFromStringForFieldInSpace(accessString, self.field, self.space)
           dimRepName = dimRep.name
           if not argumentValue:
-            raise LexerException(self, nonlocalAccessDict[dimRep.name][1].start,
+            raise CodeParserException(self, nonlocalAccessDict[dimRep.name][1],
                                  "Cannot access the '%(dimRepName)s' dimension nonlocally with the string '%(accessString)s'. Check the documentation." % locals())
-          arguments.append('/* %(dimRepName)s: %(accessString)s */ (%(argumentValue)s)' % locals())
+          arguments.append('/* %(dimRepName)s => %(accessString)s */ (%(argumentValue)s)' % locals())
         argumentsString = ', '.join(arguments)
         replacementString = '%(nonlocalAccessVariableName)s(%(argumentsString)s)' % locals()
       
-      # Replace the phi(j = j + 7) string with the appropriate string
+      # Replace the phi(j => j + 7) string with the appropriate string
       # i.e. _phi_j(j + 7)
       self.codeString = self.codeString[:codeSlice.start] + replacementString + self.codeString[codeSlice.stop:]
     
@@ -235,12 +235,12 @@ class _UserLoopCodeBlock(ScriptElement):
   def transformCodeString(self):
     """Modify the user code as necessary."""
     self.fixupNonlocallyAccessedComponents()
+    CodeParser.checkForIntegerDivision(self)
     
     if self.codeString.count('\n'):
       # Deindent code and add '#line' compiler directives
       self.codeString = self.insertUserCodeFromEntity(self)
     
-    CodeLexer.checkForIntegerDivision(self)
     
   
   @callOncePerInstanceGuard

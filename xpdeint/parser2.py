@@ -201,7 +201,7 @@ def main(argv=None):
     return -1
   
   # Read the contents of the file
-  globalNameSpace['inputScript'] = scriptFile.read()
+  globalNameSpace['inputScript'] = scriptFile.read().expandtabs()
   # Close the file
   scriptFile.close()
   del scriptFile
@@ -209,7 +209,7 @@ def main(argv=None):
   # Parse the XML input script into a set of XML
   # classes
   try:
-    xmlDocument = minidom.parse(scriptName)
+    xmlDocument = minidom.parseString(globalNameSpace['inputScript'])
   except xml.parsers.expat.ExpatError, err:
     print >> sys.stderr, "XML Parser error:", err
     return -1
@@ -336,11 +336,14 @@ def main(argv=None):
     columnNumber = err.columnNumber
     print >> sys.stderr, err.msg
     if not lineNumber == None:
-      positionReference =  "    At line %(lineNumber)i" % locals()
+      positionReference =  ["    Error caused at line %(lineNumber)i" % locals()]
       if not columnNumber == None:
-        positionReference += ", column %(columnNumber)i" % locals()
-      positionReference += "."
-      print >> sys.stderr, positionReference
+        positionReference.append(", column %(columnNumber)i" % locals())
+      positionReference.append(":\n")
+      positionReference.append(globalNameSpace['inputScript'].splitlines(True)[lineNumber-1])
+      if not columnNumber == None:
+          positionReference.append(" "*(columnNumber-1) + "^~~ here.")
+      print >> sys.stderr, ''.join(positionReference)
     if debug:
       if err.element:
         print >> sys.stderr, "    In element: " + err.element.userUnderstandableXPath()

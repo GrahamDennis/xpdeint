@@ -32,7 +32,7 @@
     <initialisation noises="">
       <![CDATA[
         if (_index_j == 1)
-          _LOG(_WARNING_LOG_LEVEL, "_j_local_lattice_j: %li, _j_local_offset_j: %li\n", _j_local_lattice_j, _j_local_offset_j);
+          _LOG(_WARNING_LOG_LEVEL, "_local_lattice_j: %li, _local_offset_j: %li\n", _local_lattice_j, _local_offset_j);
         z = 1.0;
       ]]>
     </initialisation>
@@ -44,7 +44,7 @@
       <operators noises="n">
         <integration_vectors>main</integration_vectors>
         <![CDATA[
-          dz_dt(j: j) = i*z*n_1;
+          dz_dt(j => j) = i*z*n_1;
         ]]>
       </operators>
     </integrate>

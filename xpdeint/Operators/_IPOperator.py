@@ -10,7 +10,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 from xpdeint.Operators.Operator import Operator
 from xpdeint.ParserException import ParserException, parserWarning
 
-from xpdeint import CodeLexer
+from xpdeint import CodeParser
 from xpdeint.Utilities import lazy_property
 
 class _IPOperator(Operator):
@@ -31,7 +31,7 @@ class _IPOperator(Operator):
       self.operatorComponents[operatorName] = {}
     
     sharedCodeBlock = self.parent.sharedCodeBlock
-    operatorTargetPairs = CodeLexer.targetComponentsForOperatorsInString(self.operatorNames, sharedCodeBlock)
+    operatorTargetPairs = CodeParser.targetComponentsForOperatorsInString(self.operatorNames, sharedCodeBlock)
     
     operatorNamesUsed = set()
     operatorNames = set(self.operatorNames)
@@ -64,7 +64,7 @@ class _IPOperator(Operator):
         componentName = target
       else:
         if indexAccessedVariables == None:
-          indexAccessedVariables = CodeLexer.nonlocalDimensionAccessForVectors(integrationVectors, sharedCodeBlock)
+          indexAccessedVariables = CodeParser.nonlocalDimensionAccessForVectors(integrationVectors, sharedCodeBlock)
         
         try:
           # This will extract the componentName corresponding to the indexed variable in the target
@@ -119,7 +119,7 @@ class _IPOperator(Operator):
       # Obviously the user could hide this from us, but if we can check the most
       # common case that frequently goes wrong, then we should.
       
-      CodeLexer.performIPOperatorSanityCheck(componentName, self.propagationDimension, codeSlice, sharedCodeBlock)
+      CodeParser.performIPOperatorSanityCheck(componentName, self.propagationDimension, codeSlice, sharedCodeBlock)
       
       # Replace the L[x] string with 0.0
       sharedCodeBlock.codeString = sharedCodeBlock.codeString[:codeSlice.start] + '0.0' + sharedCodeBlock.codeString[codeSlice.stop:]

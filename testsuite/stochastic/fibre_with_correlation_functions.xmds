@@ -80,8 +80,8 @@
         <moments>g1 g2</moments>
         <dependencies>main</dependencies>
         <![CDATA[
-          g1 = abs(conj(phi) * phi(x: xp));
-          g2 = mod2(phi) * mod2(phi(x: xp));
+          g1 = abs(conj(phi) * phi(x => xp));
+          g2 = mod2(phi) * mod2(phi(x => xp));
         ]]>
       </sampling>
     </group>
@@ -92,9 +92,9 @@
         <moments>g1 g2 g2minus</moments>
         <dependencies>main</dependencies>
         <![CDATA[
-          g1 = abs(conj(phi) * phi(kx: kxp));
-          g2 = mod2(phi) * mod2(phi(kx: kxp));
-          g2minus = mod2(phi) * mod2(phi(kx: -kxp));
+          g1 = abs(conj(phi) * phi(kx => kxp));
+          g2 = mod2(phi) * mod2(phi(kx => kxp));
+          g2minus = mod2(phi) * mod2(phi(kx => -kxp));
         ]]>
       </sampling>
     </group>

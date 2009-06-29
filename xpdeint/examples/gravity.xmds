@@ -65,13 +65,13 @@
           dx_dt = vx;
           dy_dt = vy;
           for (long k = 0; k < j; k++) {
-            real inverseSeparationCubed = pow((x(j: k) - x(j: j))*(x(j: k) - x(j: j)) + (y(j: k) - y(j: j))*(y(j: k) - y(j: j)), -3.0/2.0);
+            real inverseSeparationCubed = pow((x(j => k) - x(j => j))*(x(j => k) - x(j => j)) + (y(j => k) - y(j => j))*(y(j => k) - y(j => j)), -3.0/2.0);
             // printf("j: %li k: %li    x[j]: %e x[k]: %e  y[j]: %e y[k]: %e\n", j, k, x[j], x[k], y[j], y[k]);
             // printf("separationSquared: %e inverseSeparationCubed: %e\n", (x[k] - x[j])*(x[k] - x[j]) + (y[k] - y[j])*(y[k] - y[j]), inverseSeparationCubed);
-            dvx_dt(j: j) += m(j: k)*(x(j: k) - x(j: j))*inverseSeparationCubed;
-            dvx_dt(j: k) += m(j: j)*(x(j: j) - x(j: k))*inverseSeparationCubed;
-            dvy_dt(j: j) += m(j: k)*(y(j: k) - y(j: j))*inverseSeparationCubed;
-            dvy_dt(j: k) += m(j: j)*(y(j: j) - y(j: k))*inverseSeparationCubed;
+            dvx_dt(j => j) += m(j => k)*(x(j => k) - x(j => j))*inverseSeparationCubed;
+            dvx_dt(j => k) += m(j => j)*(x(j => j) - x(j => k))*inverseSeparationCubed;
+            dvy_dt(j => j) += m(j => k)*(y(j => k) - y(j => j))*inverseSeparationCubed;
+            dvy_dt(j => k) += m(j => j)*(y(j => j) - y(j => k))*inverseSeparationCubed;
           }
         ]]>
       </operators>
@@ -101,7 +101,7 @@
         // Check conserved quantities
           energy = 0.5*m*(vx*vx + vy*vy);
           for (long k = 0; k < j; k++) {
-            energy += -m(j: j)*m(j: k)*pow((x(j: j)-x(j: k))*(x(j: j)-x(j: k)) + (y(j: j)-y(j: k))*(y(j: j)-y(j: k)), -0.5);
+            energy += -m(j => j)*m(j => k)*pow((x(j => j)-x(j => k))*(x(j => j)-x(j => k)) + (y(j => j)-y(j => k))*(y(j => j)-y(j => k)), -0.5);
           }
           px = m*vx;
           py = m*vy;

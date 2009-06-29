@@ -13,7 +13,7 @@ from xpdeint.ParsedEntity import ParsedEntity
 
 from xpdeint.Vectors.ComputedVector import ComputedVector
 
-from xpdeint import CodeLexer
+from xpdeint import CodeParser
 
 class _EXOperator(Operator):
   evaluateOperatorFunctionArguments = []
@@ -30,7 +30,7 @@ class _EXOperator(Operator):
     operatorNames = set(self.operatorNames)
     sharedCodeBlock = self.parent.sharedCodeBlock
     
-    operatorTargetPairs = CodeLexer.targetComponentsForOperatorsInString(self.operatorNames, sharedCodeBlock)
+    operatorTargetPairs = CodeParser.targetComponentsForOperatorsInString(self.operatorNames, sharedCodeBlock)
     
     targetComponents = set()
     for vector in sharedCodeBlock.dependencies:

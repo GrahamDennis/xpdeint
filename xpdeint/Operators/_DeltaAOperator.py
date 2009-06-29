@@ -16,7 +16,7 @@ from xpdeint.Utilities import lazy_property
 
 from xpdeint.ParserException import ParserException
 
-from xpdeint import CodeLexer
+from xpdeint import CodeParser
 
 class _DeltaAOperator (Operator):
   evaluateOperatorFunctionArguments = [('real', '_step')]
@@ -68,8 +68,10 @@ class _DeltaAOperator (Operator):
         # If not, throw an exception.
         
         if not derivativeString in self.primaryCodeBlock.codeString:
-          raise CodeLexer.LexerException(self.primaryCodeBlock, 0,
-                  "Missing derivative for integration variable '%s' in vector '%s'." % (componentName, integrationVector.name))
+          raise ParserException(
+            self.primaryCodeBlock.xmlElement,
+            "Missing derivative for integration variable '%s' in vector '%s'." % (componentName, integrationVector.name)
+          )
     
     
     
@@ -116,7 +118,7 @@ class _DeltaAOperator (Operator):
         components.add(derivativeString)
         derivativeMap[derivativeString] = vector
     
-    indexAccessedVariables = CodeLexer.nonlocalDimensionAccessForComponents(components, self.primaryCodeBlock)
+    indexAccessedVariables = CodeParser.nonlocalDimensionAccessForComponents(components, self.primaryCodeBlock)
     
     repNameToDimNameMap = dict([(dim.inSpace(space).name, dim.name) for dim in self.primaryCodeBlock.field.dimensions])
     
@@ -135,7 +137,7 @@ class _DeltaAOperator (Operator):
       
       # Add the dimension names that aren't being accessed with the dimension variable
       # to the set of dimensions needing reordering.
-      dimRepNamesForThisVectorNeedingReordering = [dimRepName for dimRepName, (indexString, codeSlice) in resultDict.iteritems() if indexString != dimRepName]
+      dimRepNamesForThisVectorNeedingReordering = [dimRepName for dimRepName, (indexString, accessLoc) in resultDict.iteritems() if indexString != dimRepName]
       
       if vector.field.isDistributed:
         if simulationDriver.mpiDimRepForSpace(space) in dimRepNamesForThisVectorNeedingReordering:
@@ -220,15 +222,15 @@ class _DeltaAOperator (Operator):
     # We need to rewrite all the derivatives to only use dimensions in the delta a field (if we have one)
     # This needs to be done even if we don't have a delta-a field as otherwise writing dx_dt(j: j) wouldn't
     # get transformed as dx_dt won't be vector.
-    indexAccessedDerivatives = CodeLexer.nonlocalDimensionAccessForComponents(derivativeMap.keys(), self.primaryCodeBlock)
+    indexAccessedDerivatives = CodeParser.nonlocalDimensionAccessForComponents(derivativeMap.keys(), self.primaryCodeBlock)
     
     for componentName, resultDict, codeSlice in reversed(indexAccessedDerivatives):
       componentAccessString = componentName
       componentAccesses = []
-      for dimRepName, (accessString, accessCodeSlice) in resultDict.iteritems():
+      for dimRepName, (accessString, accessCodeLoc) in resultDict.iteritems():
         if not dimRepName in dimRepNamesNeedingReordering:
           continue
-        componentAccesses.append('%(dimRepName)s: %(accessString)s' % locals())
+        componentAccesses.append('%(dimRepName)s => %(accessString)s' % locals())
       if componentAccesses:
         componentAccessString += '(' + ','.join(componentAccesses) + ')'
       

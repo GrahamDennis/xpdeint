@@ -20,6 +20,7 @@ import subprocess
 
 from xml.dom import minidom
 import xpdeint.minidom_extras
+from xpdeint import CodeParser
 
 from xpdeint.XSILFile import XSILFile
 
@@ -313,8 +314,8 @@ def main(argv=None):
   
   
   suitesToRun = list()
-  if len(argv) > 1:
-    for suiteName in argv[1:]:
+  if len(args):
+    for suiteName in args:
       fullSuiteName = os.path.join(baseSuiteName, suiteName)
       if fullSuiteName in testsuites:
         suitesToRun.append(testsuites[fullSuiteName])
@@ -322,10 +323,11 @@ def main(argv=None):
         print >> sys.stderr, "Unable to find test '%(suiteName)s'" % locals()
   else:
     suitesToRun.append(testsuites[baseSuiteName])
+  suitesToRun.append(unittest.defaultTestLoader.loadTestsFromModule(CodeParser))
   
   fullSuite = unittest.TestSuite(tests=suitesToRun)
   
-  unittest.TextTestRunner(verbosity=2).run(fullSuite)
+  unittest.TextTestRunner().run(fullSuite)
   
 
 

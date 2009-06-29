@@ -23,7 +23,7 @@
       const real mu = mass/length;
       const real T_mu = T/mu;
       
-      const real xmax = _xy_max_x;
+      const real xmax = _max_x;
       const real width = 0.1;
       const real absorb = 80.0;
       ]]>

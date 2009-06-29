@@ -1,9 +1,9 @@
 <simulation xmds-version="2">
   <name>sech_soliton</name>
   
-  <author>Sebastian Wüster / Graham Dennis</author>
+  <author>Sebastian Wuster / Graham Dennis</author>
   <description>
-    Nonlinear Schrödinger equation with attractive interactions.
+    Nonlinear Schrodinger equation with attractive interactions.
     This equation has an analytic solution of the form of a breathing soliton.
   </description>
   
