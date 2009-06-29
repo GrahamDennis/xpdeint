@@ -23,9 +23,10 @@ class _Diagnostics (_Feature):
     from which it was called from the original .xmds file. The function then does a bounds check on all potentially-unsafe
     accesses and stops the simulation if any are found.
     """
-    dimReps = dict['dimReps']
+    availableDimReps = dict['availableDimReps']
+    dimRepsNeeded = dict['dimRepsNeeded']
     
-    if not any(dimRep.type == 'long' and isinstance(dimRep, UniformDimensionRepresentation) for dimRep in dimReps):
+    if not any(dimRep.type == 'long' and isinstance(dimRep, UniformDimensionRepresentation) for dimRep in dimRepsNeeded):
       return
     
     vector = dict['vector']
@@ -33,10 +34,10 @@ class _Diagnostics (_Feature):
     nonlocalAccessString = dict['nonlocalAccessString']
     componentName = dict['componentName']
     
-    args = [(dimRep.type, dimRep.loopIndex) for dimRep in dimReps]
+    args = [(dimRep.type, dimRep.loopIndex) for dimRep in availableDimReps]
     args.extend([('const char*', 'filename'), ('int', 'line_number')])
     
-    implementation = lambda func: self.nonlocalAccessValidationFunctionContents(dimReps, nonlocalAccessString, componentName, func)
+    implementation = lambda func: self.nonlocalAccessValidationFunctionContents(dimRepsNeeded, nonlocalAccessString, componentName, func)
     
     self.functions[nonlocalAccessVariableName] = Function(
       '_' + nonlocalAccessVariableName,
@@ -45,6 +46,7 @@ class _Diagnostics (_Feature):
       returnType = 'inline ' + vector.type + '&',
     )
     
-    argumentsString = ', '.join(dimRep.loopIndex for dimRep in dimReps)
-    defineString = '#define %(nonlocalAccessVariableName)s(%(argumentsString)s) _%(nonlocalAccessVariableName)s(%(argumentsString)s, __FILE__, __LINE__)\n' % locals()
+    defineArgumentsString = ', '.join(dimRep.loopIndex for dimRep in dimRepsNeeded)
+    functionArgumentsString = ', '.join(dimRep.loopIndex for dimRep in availableDimReps)
+    defineString = '#define %(nonlocalAccessVariableName)s(%(defineArgumentsString)s) _%(nonlocalAccessVariableName)s(%(functionArgumentsString)s, __FILE__, __LINE__)\n' % locals()
     dict['defineString'] = defineString

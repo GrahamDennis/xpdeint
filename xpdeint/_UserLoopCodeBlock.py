@@ -202,7 +202,8 @@ class _UserLoopCodeBlock(ScriptElement):
           featureDict = {
             'vector': vector,
             'componentName': componentName,
-            'dimReps': dimRepsNeeded,
+            'availableDimReps': availableDimReps,
+            'dimRepsNeeded': dimRepsNeeded,
             'nonlocalAccessVariableName': nonlocalAccessVariableName,
             'nonlocalAccessString': nonlocalAccessString,
             'defineString': defineString,
