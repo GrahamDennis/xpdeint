@@ -18,7 +18,7 @@
       const real length = 1.0;
       const real mu = mass/length;
       
-      const real xmax = _x_max_x;
+      const real xmax = _max_x;
       const real width = 0.1;
       ]]>
     </globals>

@@ -17,7 +17,6 @@ from xpdeint.ParserException import ParserException
 from xpdeint.ParsedEntity import ParsedEntity
 
 import re
-from xpdeint import CodeLexer
 from xpdeint.Utilities import lazy_property
 
 class _ScriptElement (Template):

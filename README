@@ -48,9 +48,9 @@ Build instructions:
    b) If necessary install setuptools, by executing ez_setup.py from the repository.
       "python ez_setup.py --prefix=~"
 
-4. Install Cheetah version 2.0.1 or later, Pygments, and (optionally) lxml. 
+4. Install Cheetah version 2.0.1 or later, pyparsing, and (optionally) lxml. 
    If you have root access, this is as easy as:
-   "sudo easy_install Cheetah" or "sudo easy_install Pygments" or "sudo easy_install lxml"
+   "sudo easy_install Cheetah" or "sudo easy_install pyparsing" or "sudo easy_install lxml"
    Make sure you have 'libxml2' and 'libxslt' installed (and the development packages if
    you're using a package manager) if you want to install lxml.
    

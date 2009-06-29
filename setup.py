@@ -30,7 +30,7 @@ setup(name="xpdeint",
       exclude_package_data = {'': ['README', 'TODO']},
       
       # Project requires Cheetah for all of the templates
-      install_requires = ['Cheetah>=2.0.1', 'Pygments'],
+      install_requires = ['Cheetah>=2.0.1', 'pyparsing'],
       
       package_data = {
         'xpdeint': ['examples/*.xmds',

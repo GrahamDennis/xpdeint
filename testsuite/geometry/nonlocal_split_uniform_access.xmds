@@ -75,7 +75,7 @@
         <dependencies>main</dependencies>
         <![CDATA[
           amp = mod2(u);
-          amp_reversed = mod2(u(kx: -kx));
+          amp_reversed = mod2(u(kx => -kx));
         ]]>
       </sampling>
     </group>
