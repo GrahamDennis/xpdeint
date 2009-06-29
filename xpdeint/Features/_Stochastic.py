@@ -40,7 +40,7 @@ class _Stochastic (_Feature):
   def noisesForFieldInIntegrator(self, field, integrator):
     assert field in integrator.integrationFields
     
-    deltaAOperatorList = [oc.deltaAOperator for oc in integrator.operatorContainers if oc.field == field]
+    deltaAOperatorList = [oc.deltaAOperator for oc in integrator.operatorContainers if oc.field == field and oc.deltaAOperator.noises]
     assert len(deltaAOperatorList) == 1
     deltaAOperator = deltaAOperatorList[0]
     
@@ -53,7 +53,7 @@ class _Stochastic (_Feature):
   def deltaAOperatorSpaceForFieldInIntegrator(self, field, integrator):
     assert field in integrator.integrationFields
     
-    deltaAOperatorList = [oc.deltaAOperator for oc in integrator.operatorContainers if oc.field == field]
+    deltaAOperatorList = [oc.deltaAOperator for oc in integrator.operatorContainers if oc.field == field and oc.deltaAOperator.noises]
     assert len(deltaAOperatorList) == 1
     deltaAOperator = deltaAOperatorList[0]
     
