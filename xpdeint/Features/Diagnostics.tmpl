@@ -68,9 +68,9 @@ _LOG(_SEGMENT_LOG_LEVEL, "Step size %e failed, ${integrator.propagationDimension
   @#
 @end def
 
-@def nonlocalAccessValidationFunctionContents($dimReps, $nonlocalAccessString, $componentName, $func)
+@def nonlocalAccessValidationFunctionContents($dimRepsNeeded, $nonlocalAccessString, $componentName, $func)
   @#
-  @for dimRep in [dimRep for dimRep in dimReps if dimRep.type == 'long' and isinstance(dimRep, UniformDimensionRepresentation)]
+  @for dimRep in [dimRep for dimRep in dimRepsNeeded if dimRep.type == 'long' and isinstance(dimRep, UniformDimensionRepresentation)]
 if (${dimRep.loopIndex} < ${dimRep.minimum} || ${dimRep.loopIndex} > ${dimRep.maximum}) {
   _LOG(
     _ERROR_LOG_LEVEL,
