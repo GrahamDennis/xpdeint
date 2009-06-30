@@ -85,7 +85,7 @@ class _Stochastic (_Feature):
     noiseNameMap = dict([(noise.prefix, noise) for noise in self.noises])
     fieldToNoisesMap = dict()
     
-    for o in objectsThatMightUseNoises:
+    for o in objectsThatMightUseNoises[:]:
       noises = self.noises
       if o.hasattr('noisesEntity'):
         noises = []
@@ -95,6 +95,10 @@ class _Stochastic (_Feature):
           noises.append(noiseNameMap[noiseName])
       
       o.noises = noises
+      
+      if not o.noises:
+        objectsThatMightUseNoises.remove(o)
+        continue
       
       # The field in which the noises need to be evaluated will be the object's 'noiseField'
       # attribute if it exists, otherwise, we'll use the 'field' attribute.
@@ -131,7 +135,6 @@ class _Stochastic (_Feature):
       # FIXME: Dodgy hack. Fortunately, this won't be needed once noise vectors are implemented.
       for codeBlock in o.codeBlocks.itervalues(): codeBlock.dependencies.update(noiseVectors)
     
-    
     # For each adaptive step integrator, we need to make sure that the noises being used are
     # either gaussian or poissonian
     for deltaAOperator in [o for o in objectsThatMightUseNoises if isinstance(o, DeltaAOperator) and isinstance(o.integrator, AdaptiveStepIntegrator)]:
@@ -147,9 +150,20 @@ class _Stochastic (_Feature):
                                                  "Only gaussian or poissonian noises can be used." % noise.noiseDistribution)
     
     # For each adaptive step integrator using noises, we need to reduce the order of the integrator
-    integratorsUsingNoises = set([o.integrator for o in objectsThatMightUseNoises if isinstance(o, DeltaAOperator) and isinstance(o.integrator, AdaptiveStepIntegrator)])
-    for integrator in integratorsUsingNoises:
+    adaptiveIntegratorsUsingNoises = set([o.integrator for o in objectsThatMightUseNoises
+                                              if isinstance(o, DeltaAOperator) and isinstance(o.integrator, AdaptiveStepIntegrator)])
+    for integrator in adaptiveIntegratorsUsingNoises:
       integrator.stepper.integrationOrder /= 2.0
+    
+    fixedStepIntegratorsUsingNoises = set([o.integrator for o in objectsThatMightUseNoises
+                                              if isinstance(o, DeltaAOperator) and isinstance(o.integrator, FixedStepIntegrator)])
+    if fixedStepIntegratorsUsingNoises:
+      for computedVector in [o for o in objectsThatMightUseNoises if isinstance(o, ComputedVector)]:
+        raise ParserException(
+          self.xmlElement,
+          "You have both computed vectors and a fixed step integrator that are both using noises. This is not safe. "
+          "You should probably add the attribute noises=\"\" to the evaluation element of any computed vectors that don't need noises."
+        )
     
     # When we have error checking, every noise vector used by a delta a operator in a fixed step integrator
     # needs a '2' noise vector alias for generating two half-step noises and adding them.

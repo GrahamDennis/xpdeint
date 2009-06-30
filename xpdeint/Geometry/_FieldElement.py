@@ -181,11 +181,7 @@ class _FieldElement (ScriptElement):
   
   def volumeElementInSpace(self, space):
     reps = [d.inSpace(space) for d in self.dimensions]
-    if all([rep.type == 'long' for rep in reps]):
-      return '1.0'
     result = []
-    separator = ''
-    result.append('(')
     for rep in [rep for rep in reps if rep.type == 'real']:
       if isinstance(rep, NonUniformDimensionRepresentation):
         parserWarning(
@@ -194,11 +190,10 @@ class _FieldElement (ScriptElement):
           "If you don't know how to handle this, treat this as an error."
         )
         continue
-      result.extend([separator, rep.stepSize])
-      separator = ' * '
-    result.append(')')
-    
-    return ''.join(result)
+      result.append(rep.stepSize)
+    if not result:
+        return '1.0'
+    return '(' + ' * '.join(result) + ')'
   
   @lazy_property
   def isDistributed(self):
