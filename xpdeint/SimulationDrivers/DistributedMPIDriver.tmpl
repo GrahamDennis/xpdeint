@@ -291,4 +291,11 @@ MPI_Bcast(_active_${noiseVector.id}, ${noiseVector.sizeInSpaceInReals(space)}, M
   @#
 @end def
 
+@def openXSILFile($dict)
+  @#
+// Only let rank 0 do the writing to disk
+if (_rank != 0)
+  return NULL;
+  @#
+@end def
 
