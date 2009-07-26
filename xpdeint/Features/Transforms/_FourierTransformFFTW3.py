@@ -24,8 +24,8 @@ class _FourierTransformFFTW3 (_Transform):
   transformName = 'FourierTransform'
   fftwSuffix = ''
   
-  coordinateSpaceTag = DimensionRepresentation.registerTag('FFTW coordinate space')
-  fourierSpaceTag = DimensionRepresentation.registerTag('FFTW Fourier space')
+  coordinateSpaceTag = DimensionRepresentation.registerTag('FFTW coordinate space', parent = 'coordinate')
+  fourierSpaceTag = DimensionRepresentation.registerTag('FFTW Fourier space', parent = 'spectral')
   
   def __init__(self, *args, **KWs):
     _Transform.__init__(self, *args, **KWs)

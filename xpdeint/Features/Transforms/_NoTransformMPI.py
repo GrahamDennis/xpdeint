@@ -22,10 +22,14 @@ class _NoTransformMPI (_NoTransform):
     return self.mpiDimension.inSpace(space)
   
   def canonicalBasisForBasis(self, basis):
-    if self.mpiDimension.name in basis:
+    mpiDimRep = self.mpiDimension.representations[0]
+    mpiDimNames = set([mpiDimRep.name, mpiDimRep.canonicalName])
+    if mpiDimNames.intersection(basis):
       basis = list(basis)
-      assert basis.index(self.mpiDimension.name) == 0
-      basis[0] = 'distributed ' + self.mpiDimension.name
+      for idx, b in enumerate(basis[:]):
+        if b in mpiDimNames:
+          basis[idx] = mpiDimRep.canonicalName
+          break
       basis = tuple(basis)
     return basis
   

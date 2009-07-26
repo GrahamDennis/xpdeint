@@ -286,12 +286,12 @@ class _FieldElement (ScriptElement):
     """
     if not basis in self._basisForBasisCache:
       geometry = self.getVar('geometry')
-      dimRepNames = [dr.canonicalName for dim in self.dimensions for dr in geometry.dimensionWithName(dim.name).representations]
+      dimRepNames = set([dr.canonicalName for dim in self.dimensions for dr in geometry.dimensionWithName(dim.name).representations])
       if not len(dimRepNames.intersection(basis)) == len(self.dimensions):
         raise ParserException(
           self.xmlElement,
-          "Internal error: The basis provided (%s) contained insufficient information to generate the appropriate basis for a vector in this field (%s)." %
-          (', '.join(basis), self.name)
+          "Internal error: The basis provided (%s) contained insufficient information to generate the appropriate basis for a vector in this field (%s). A specification is required for all dimensions (%s)." %
+          (', '.join(basis), self.name, ', '.join(dim.name for dim in self.dimensions))
         )
       
       newBasis = self._driver.canonicalBasisForBasis(tuple(b for b in basis if b in dimRepNames))
@@ -314,7 +314,7 @@ class _FieldElement (ScriptElement):
     """
     xmlElement = xmlElement or self.xmlElement
     
-    basis = set(symbolsInString(spacesString, xmlElement = xmlElement))
+    basis = set(symbolsInString(basisString, xmlElement = xmlElement))
     
     geometry = self.getVar('geometry')
     validNames = set([dimRep.name for dim in self.dimensions for dimRep in geometry.dimensionWithName(dim.name).representations])
@@ -354,6 +354,31 @@ class _FieldElement (ScriptElement):
     basis = self._driver.canonicalBasisForBasis(tuple(dimToDimRepMap[dim.name] for dim in self.dimensions))
     
     return basis
+  
+  @lazy_property
+  def defaultCoordinateBasis(self):
+    # Grab the first rep for each dim whose tag is a 'coordinate' tag
+    # i.e. the tag is a subclass of the 'coordinate' tag.
+    return self._driver.canonicalBasisForBasis(
+      tuple([rep for rep in dim.representations if issubclass(rep.tag, rep.tagForName('coordinate'))][0].canonicalName \
+              for dim in self.dimensions)
+    )
+  
+  @lazy_property
+  def defaultSpectralBasis(self):
+    # Grab the first dim rep for each dim whose tag is 'spectral' if one exists
+    # Failing that, take the first one with a 'coordinate' tag.
+    reps = []
+    for dim in self.dimensions:
+      rep = None
+      for tagName in ['spectral', 'coordinate']:
+        repList = [rep for rep in dim.representations if issubclass(rep.tag, rep.tagForName('spectral'))]
+        if repList:
+          rep = repList[0]
+          break
+      assert rep, "We should have found a representation that was either spectral or coordinate but somehow failed"
+      reps.append(rep.canonicalName)
+    return self._driver.canonicalBasisForBasis(tuple(reps))
   
   @classmethod
   def sortedFieldWithDimensionNames(cls, dimensionNames, xmlElement = None, createIfNeeded = True):

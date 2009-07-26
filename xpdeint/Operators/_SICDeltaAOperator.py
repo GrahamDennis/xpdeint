@@ -57,3 +57,11 @@ class _SICDeltaAOperator (DeltaAOperator):
     if self.crossPropagationDirection == '-':
       self.primaryCodeBlock.loopArguments['loopingOrder'] = _SICDeltaAOperator.LoopingOrder.StrictlyDescendingOrder
     
+    crossDimRep = self.loopingField.dimensionWithName(self.crossPropagationDimension).inSpace(self.operatorSpace)
+    crossPropDimOverrides = [(v.field, crossDimRep.loopIndex) for v in self.codeBlocks['crossPropagation'].dependencies 
+                                if v.field.hasDimensionName(self.crossPropagationDimension)]
+    
+    self.codeBlocks['crossPropagation'].loopArguments['indexOverrides'] = \
+      {self.crossPropagationDimension: crossPropDimOverrides}
+    
+    

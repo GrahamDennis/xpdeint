@@ -752,8 +752,18 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     ## Make sure no-one else takes the name
     self.globalNameSpace['symbolNames'].add(vectorName)
     
-    vectorTemplate = VectorElementTemplate(name = vectorName, field = fieldTemplate,
-                                           **self.argumentsToTemplateConstructors)
+    if vectorElement.hasAttribute('initial_space'):
+      initialBasis = fieldTemplate.basisFromString(
+        vectorElement.getAttribute('initial_space'),
+        xmlElement = vectorElement
+      )
+    else:
+      initialBasis = fieldTemplate.defaultCoordinateBasis
+    
+    vectorTemplate = VectorElementTemplate(
+      name = vectorName, field = fieldTemplate, initialBasis = initialBasis,
+      **self.argumentsToTemplateConstructors
+    )
     
     self.globalNameSpace['simulationVectors'].append(vectorTemplate)
     
@@ -805,8 +815,10 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
         kindString = initialisationElement.getAttribute('kind').lower()
       
       def createInitialisationCodeBlock():
-        initialisationCodeBlock = _UserLoopCodeBlock(field = vectorTemplate.field, space = vectorTemplate.initialSpace, xmlElement = initialisationElement,
-                                                     parent = initialisationTemplate, **self.argumentsToTemplateConstructors)
+        initialisationCodeBlock = _UserLoopCodeBlock(
+          field = vectorTemplate.field, space = vectorTemplate.initialSpace, xmlElement = initialisationElement,
+          basis = vectorTemplate.initialBasis, parent = initialisationTemplate,
+          **self.argumentsToTemplateConstructors)
         initialisationCodeBlock.dependenciesEntity = self.parseDependencies(initialisationElement, optional=True)
         initialisationCodeBlock.targetVector = vectorTemplate
         return initialisationCodeBlock
@@ -1326,15 +1338,21 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     deltaAOperatorTemplate = DeltaAOperatorTemplate(parent = operatorContainer, xmlElement = operatorsElement,
                                                     **self.argumentsToTemplateConstructors)
     
-    operatorDefinitionCodeBlock = _UserLoopCodeBlock(field = operatorContainer.field, space = 0, xmlElement = operatorsElement,
-                                                     parent = operatorContainer, **self.argumentsToTemplateConstructors)
+    integrationVectorsElement = operatorsElement.getChildElementByTagName('integration_vectors')
+    if integrationVectorsElement.hasAttribute('fourier_space'):
+      basis = operatorContainer.field.basisFromString(integrationVectorsElement.getAttribute('fourier_space'))
+    else:
+      basis = operatorContainer.field.defaultCoordinateBasis
+    
+    operatorDefinitionCodeBlock = _UserLoopCodeBlock(
+      field = operatorContainer.field, space = 0, parent = operatorContainer, basis = basis,
+      xmlElement = operatorsElement, **self.argumentsToTemplateConstructors)
     operatorDefinitionCodeBlock.dependenciesEntity = self.parseDependencies(operatorsElement, optional=True)
     
     deltaAOperatorTemplate.codeBlocks['operatorDefinition'] = operatorDefinitionCodeBlock
     
     self.parseFeatureAttributes(operatorsElement, deltaAOperatorTemplate)
     
-    integrationVectorsElement = operatorsElement.getChildElementByTagName('integration_vectors')
     integrationVectorsNames = Utilities.symbolsInString(integrationVectorsElement.innerText(), xmlElement = integrationVectorsElement)
     
     if not integrationVectorsNames:
@@ -1417,8 +1435,11 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       operatorDefinitionCodeBlock.space = \
         operatorTemplate.field.spaceFromString(operatorElement.getAttribute('fourier_space'),
                                                xmlElement = operatorElement)
+      operatorDefinitionCodeBlock.basis = \
+        operatorTemplate.field.basisFromString(operatorElement.getAttribute('fourier_space'), xmlElement = operatorElement)
     else:
       operatorDefinitionCodeBlock.space = operatorTemplate.field.spaceMask
+      operatorDefinitionCodeBlock.basis = operatorTemplate.field.defaultSpectralBasis
     
     operatorNamesElement = operatorElement.getChildElementByTagName('operator_names')
     operatorNames = Utilities.symbolsInString(operatorNamesElement.innerText(), xmlElement = operatorNamesElement)
@@ -1474,8 +1495,11 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       operatorDefinitionCodeBlock.space = \
         operatorTemplate.field.spaceFromString(operatorElement.getAttribute('fourier_space'),
                                                xmlElement = operatorElement)
+      operatorDefinitionCodeBlock.basis = \
+        operatorTemplate.field.basisFromString(operatorElement.getAttribute('fourier_space'), xmlElement = operatorElement)
     else:
       operatorDefinitionCodeBlock.space = operatorTemplate.field.spaceMask
+      operatorDefinitionCodeBlock.basis = operatorTemplate.field.defaultSpectralBasis
     
     operatorNamesElement = operatorElement.getChildElementByTagName('operator_names')
     
@@ -1534,6 +1558,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     operatorDefinitionCodeBlock = operatorTemplate.primaryCodeBlock
     
     operatorDefinitionCodeBlock.space = 0
+    operatorDefinitionCodeBlock.basis = operatorDefinitionCodeBlock.field.defaultCoordinateBasis
     
     if not operatorElement.hasAttribute('algorithm'):
       raise ParserException(operatorElement, "Missing 'algorithm' attribute.")
@@ -1622,8 +1647,10 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
                                                   **self.argumentsToTemplateConstructors)
     crossIntegratorTemplate.intraStepOperatorContainers.append(operatorContainer)
     
-    boundaryConditionCodeBlock = _UserLoopCodeBlock(field = reducedField, space = 0, xmlElement = boundaryConditionElement,
-                                                    parent = operatorTemplate, **self.argumentsToTemplateConstructors)
+    boundaryConditionCodeBlock = _UserLoopCodeBlock(
+      field = reducedField, space = 0, xmlElement = boundaryConditionElement,
+      parent = operatorTemplate, basis = reducedField.defaultCoordinateBasis,
+      **self.argumentsToTemplateConstructors)
     boundaryConditionCodeBlock.dependenciesEntity = self.parseDependencies(boundaryConditionElement, optional=True)
     
     operatorTemplate.codeBlocks['boundaryCondition'] = boundaryConditionCodeBlock
@@ -1699,6 +1726,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
           sampleCount = 1
       
       sampleSpace = 0
+      sampleBasis = []
       transformMultiplexer = self.globalNameSpace['features']['TransformMultiplexer']
       samplingDimension = Dimension(name = self.globalNameSpace['globalPropagationDimension'],
                                     transverse = False,
@@ -1753,7 +1781,15 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
         
         if fourierSpace:
           sampleSpace |= geometryDimension.transformMask
+          tagName = 'spectral'
+        else:
+          tagName = 'coordinate'
+        
+        sampleBasis.append(
+          [rep for rep in geometryDimension.representations if issubclass(rep.tag, rep.tagForName(tagName))][0].canonicalName
+        )
       
+      sampleBasis = tuple(sampleBasis)
       dimensionsNeedingLatticeUpdates = {}
       
       for dimensionElement, geometryDimension in dimensionElementTuples:
@@ -1816,8 +1852,16 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       outputFieldTemplate.sortDimensions()
       
       # end looping over dimension elements.  
-      rawVectorTemplate = VectorElementTemplate(name = 'raw', field = momentGroupTemplate.outputField,
-                                                **self.argumentsToTemplateConstructors)
+      momentGroupTemplate.outputSpace = sampleSpace & momentGroupTemplate.outputField.spaceMask
+      momentGroupTemplate.outputBasis = momentGroupTemplate.outputField.basisForBasis(
+        (propagationDimRep.canonicalName,) + sampleBasis
+      )
+      
+      rawVectorTemplate = VectorElementTemplate(
+        name = 'raw', field = momentGroupTemplate.outputField,
+        initialBasis = momentGroupTemplate.outputBasis,
+        **self.argumentsToTemplateConstructors
+      )
       rawVectorTemplate.type = 'real'
       rawVectorTemplate.initialSpace = sampleSpace
       momentGroupTemplate.rawVector = rawVectorTemplate
@@ -1837,8 +1881,10 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
         ## We don't add the momentName to the symbol list because they can be used by other moment groups safely
         rawVectorTemplate.components.append(momentName)
       
-      samplingCodeBlock = _UserLoopCodeBlock(field = samplingFieldTemplate, space = sampleSpace, xmlElement = samplingElement,
-                                             parent = momentGroupTemplate, **self.argumentsToTemplateConstructors)
+      samplingCodeBlock = _UserLoopCodeBlock(
+        field = samplingFieldTemplate, space = sampleSpace, xmlElement = samplingElement,
+        parent = momentGroupTemplate, basis = sampleBasis,
+        **self.argumentsToTemplateConstructors)
       samplingCodeBlock.dependenciesEntity = self.parseDependencies(samplingElement)
       # The raw vector will be needed during looping
       samplingCodeBlock.targetVector = rawVectorTemplate
@@ -1846,8 +1892,6 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       
       if not samplingCodeBlock.codeString:
         raise ParserException(samplingElement, "The CDATA section for the sampling code must not be empty.")
-      
-      momentGroupTemplate.outputSpace = sampleSpace & momentGroupTemplate.outputField.spaceMask
       
       operatorContainer = self.parseFilterElements(samplingElement, parent=momentGroupTemplate, optional=True)
       if operatorContainer:
@@ -1878,8 +1922,10 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       # TODO: Implement processing element.
       processingElement = momentGroupElement.getChildElementByTagName('post_processing', optional=True)
       
-      processedVectorTemplate = VectorElementTemplate(name = 'processed', field = outputFieldTemplate,
-                                                      **self.argumentsToTemplateConstructors)
+      processedVectorTemplate = VectorElementTemplate(
+        name = 'processed', field = outputFieldTemplate, initialBasis = momentGroupTemplate.outputBasis,
+        **self.argumentsToTemplateConstructors
+      )
       processedVectorTemplate.type = 'real'
       processedVectorTemplate.initialSpace = momentGroupTemplate.outputSpace
       momentGroupTemplate.processedVector = processedVectorTemplate

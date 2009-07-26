@@ -41,9 +41,9 @@ class _VectorElement (ScriptElement):
     self.aliases = set()
     self.spacesNeeded = set()
     self.basesNeeded = set()
-    self.initialBasis = ()
+    self.initialBasis = None
     
-    if 'initialBasis' in localKWs:
+    if localKWs.get('initialBasis') is not None:
       self.initialBasis = localKWs['initialBasis']
       self.basesNeeded.add(self.initialBasis)
     

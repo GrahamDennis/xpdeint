@@ -193,8 +193,9 @@ class _DeltaAOperator (Operator):
       # For each integration vector forcing the reordering, we need to construct
       # a corresponding vector in the new field.
       for integrationVector in self.vectorsForcingReordering:
-        deltaAVector = VectorElement(name = integrationVector.name, field = self.deltaAField, parent = self,
-                                     **self.argumentsToTemplateConstructors)
+        deltaAVector = VectorElement(
+          name = integrationVector.name, field = self.deltaAField, parent = self, initialBasis = self.operatorBasis,
+          **self.argumentsToTemplateConstructors)
         deltaAVector.type = integrationVector.type
         
         # The vector will only need initialisation if the derivatives are accessed out

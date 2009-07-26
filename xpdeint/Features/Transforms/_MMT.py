@@ -26,8 +26,8 @@ import operator
 class _MMT (_Transform):
   transformName = 'MMT'
   
-  coordinateSpaceTag = DimensionRepresentation.registerTag('MMT coordinate space')
-  spectralSpaceTag = DimensionRepresentation.registerTag('MMT spectral space')
+  coordinateSpaceTag = DimensionRepresentation.registerTag('MMT coordinate space', parent = 'coordinate')
+  spectralSpaceTag = DimensionRepresentation.registerTag('MMT spectral space', parent = 'spectral')
   
   def __init__(self, *args, **KWs):
     _Transform.__init__(self, *args, **KWs)

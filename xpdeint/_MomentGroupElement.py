@@ -93,6 +93,17 @@ class _MomentGroupElement (ScriptElement):
         self.outputField.dimensions.remove(singlePointDimension)
         singlePointDimension.remove()
     
+    # FIXME: This is only needed because the way that the output stuff is specified is totally broken
+    # Specifically, if we omit a <dimension /> tag, it means that we do a single-point sample. Totally broken.
+    geometry = self.getVar('geometry')
+    loopingDimensionNames = set([dim.name for dim in self.samplingField.dimensions])
+    for dependency in self.codeBlocks['sampling'].dependencies:
+      loopingDimensionNames.update([dim.name for dim in dependency.field.dimensions])
+    dimRepNameToDimNameMap = dict([(dimRep.canonicalName, dimName) for dimName in loopingDimensionNames for dimRep in geometry.dimensionWithName(dimName).representations])
+    for b in self.codeBlocks['sampling'].basis:
+      loopingDimensionNames.remove(dimRepNameToDimNameMap[b])
+    self.codeBlocks['sampling'].basis += tuple(loopingDimensionNames)
+    
     outputFieldID = self.outputField.id
     propagationDimension = self.propagationDimension
     self.codeBlocks['sampling'].loopArguments['indexOverrides'] = \
