@@ -10,8 +10,9 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 from xpdeint.Features.Transforms.FourierTransformFFTW3 import FourierTransformFFTW3
 
 from xpdeint.ParserException import ParserException
+from xpdeint.Utilities import permutations
 
-import operator
+import operator, math
 
 class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
   def preflight(self):
@@ -125,5 +126,49 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
       secondMPIDimIndex = field.indexOfDimension(self.mpiDimensions[1])
       (dimensions[secondMPIDimIndex], dimensions[firstMPIDimIndex]) = (dimensions[firstMPIDimIndex], dimensions[secondMPIDimIndex])
     return dimensions
+  
+  def potentialTransforms(self):
+    results = super(_FourierTransformFFTW3MPI, self).potentialTransforms()
+    
+    # Create transpose operations
+    forwardTransformations = []
+    backwardTransformations = []
+    communicationsCost = None
+    for firstDimRep, secondDimRep in permutations(*[dim.representations for dim in self.mpiDimensions]):
+      if not communicationsCost: communicationsCost = firstDimRep.lattice * secondDimRep.lattice
+      oldBasis = ('distributed ' + firstDimRep.name, secondDimRep.name)
+      newBasis = ('distributed ' + secondDimRep.name, firstDimRep.name)
+      forwardTransformations.append((oldBasis, newBasis))
+      backwardTransformations.append((newBasis, oldBasis))
+    # forward transpose operations
+    results.append(dict(transformations=forwardTransformations,
+                        communicationsCost=communicationsCost))
+    # backward transpose operations
+    results.append(dict(transformations=backwardTransformations,
+                        communicationsCost=communicationsCost))
+    
+    # Create partial forward / back operations
+    untransformedBasis = ('distributed ' + self.mpiDimensions[0].representations[0].name,
+                          self.mpiDimensions[1].representations[0].name)
+    transformedBasis = ('distributed ' + self.mpiDimensions[1].representations[1].name,
+                        self.mpiDimensions[0].representations[1].name)
+    
+    transformCost = self.fftCost([dim.name for dim in self.mpiDimensions])
+    
+    # Forward partial transform
+    results.append(dict(oldBasis=untransformedBasis,
+                        newBasis=transformedBasis,
+                        communicationsCost=communicationsCost,
+                        cost=transformCost))
+    # Backward partial transform
+    results.append(dict(oldBasis=transformedBasis,
+                        newBasis=untransformedBasis,
+                        communicationsCost=communicationsCost,
+                        cost=transformCost))
+    
+    # Fuller forward/reverse transforms would be good in the future for the case of more than two dimensions
+    # This isn't necessary for the moment though.
+    
+    return results
   
 
