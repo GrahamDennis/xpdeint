@@ -112,12 +112,6 @@ class _Operator (ScriptElement):
   def field(self):
     return self.parent.field
   
-  def bindNamedVectors(self):
-    super(_Operator, self).bindNamedVectors()
-    
-    if self.resultVector:
-      self.resultVector.spacesNeeded.add(self.primaryCodeBlock.space)
-  
   def preflight(self):
     super(_Operator, self).preflight()
     

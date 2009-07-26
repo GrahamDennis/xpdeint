@@ -311,19 +311,6 @@ def main(argv=None):
     # We don't need the 'simulationVectors' variable any more.
     del globalNameSpace['simulationVectors']
     
-    # Now we need to do a dry-run conversion of the simulation template to a 
-    # string. This is necessary so that various bits of information that will
-    # only be known once the template is written will be available for modifying
-    # the template. One example is creating a comprehensive set of fft plans
-    # requires knowledge of which vector will be required in which space. As this
-    # information is only found out as the template is converted to a string, we
-    # must do this at least once before we actually write the template to file.
-    
-    simulationContents = str(simulationTemplate)
-    del simulationContents
-    # Clear the guards that will have been set up
-    _ScriptElement.resetGuards()
-    
     # Final conversion to string
     simulationContents = str(simulationTemplate)
     

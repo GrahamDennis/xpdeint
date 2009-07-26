@@ -25,7 +25,7 @@ class _IPOperator(Operator):
     return self.parent.parent
   
   def preflight(self):
-    super(Operator, self).preflight()
+    super(_IPOperator, self).preflight()
     
     for operatorName in self.operatorNames:
       self.operatorComponents[operatorName] = {}
@@ -132,6 +132,8 @@ class _IPOperator(Operator):
       parserWarning(self.xmlElement,
                     "The following operator names weren't used: %(unusedOperatorNamesString)s" % locals())
     
+    vectors = set(self.targetVectors)
+    self.registerVectorsRequiredInSpace(vectors, self.operatorSpace)
     
   
 

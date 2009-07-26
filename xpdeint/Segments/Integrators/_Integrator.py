@@ -164,4 +164,5 @@ class _Integrator (_Segment):
         if not ('real', '_step') in evaluateFunction.args:
           evaluateFunction.args.append(('real', '_step'))
     
+    self.registerVectorsRequiredInSpace(self.integrationVectors, self.homeSpace)
   

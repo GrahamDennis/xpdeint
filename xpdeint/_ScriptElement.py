@@ -484,10 +484,11 @@ class _ScriptElement (Template):
                   "be transformed to the appropriate space (%i). The vector's initial space is %i." % (vector.name, space, vector.initialSpace))
       if vector.needsTransforms:
         result.extend([vector.functions['goSpace'].call(newSpace=space), '\n'])
-      # Add space $space to the set of spaces in which this vector is needed
-      vector.spacesNeeded.add(space & vector.field.spaceMask)
     return ''.join(result)
   
+  def registerVectorsRequiredInSpace(self, vectors, space):
+    for vector in vectors:
+      vector.spacesNeeded.add(space & vector.field.spaceMask)
   
   def remove(self):
     """
