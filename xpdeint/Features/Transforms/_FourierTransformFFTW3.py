@@ -148,7 +148,7 @@ class _FourierTransformFFTW3 (_Transform):
       ))
     
     if self.hasattr('mpiDimensions'):
-      for dim in self.mpiDimensions:
+      for dim in [dim for dim in self.mpiDimensions if dim.name in sortedDimNames]:
         sortedDimNames.remove(dim.name)
     
     c2cDimNames = [dimName for dimName in sortedDimNames if self.transformNameMap[dimName] == 'dft']

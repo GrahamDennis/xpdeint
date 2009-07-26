@@ -705,7 +705,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       transverseDimensions = geometryTemplate.dimensions[1:]
       mpiTransform = transverseDimensions[0].transform
       if not mpiTransform.isMPICapable:
-        raise ParserException(mpiTransform.xmlElement, "The '%s' transform for the '%s' dimension cannot be used with the 'distributed-mpi' driver." % (transverseDimensions[0].name, mpiTransform.transformName))
+        mpiTransform = transformMultiplexer.transformWithName('mpi')
       mpiTransform.initialiseForMPIWithDimensions(transverseDimensions)
     
     return geometryTemplate

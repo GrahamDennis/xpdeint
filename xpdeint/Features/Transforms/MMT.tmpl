@@ -40,8 +40,15 @@ ${basis.globalsForDim($geometry.dimensionWithName(dimName))}@slurp
 @def mainBegin($dict)
   @#
 
+  @if $simulationBuildVariant == 'mpi'
+#if defined(CBLAS_VECLIB)
+// We are using MPI. If we let vecLib spawn threads then overall performance will suffer
+  setenv("VECLIB_MAXIMUM_THREADS", "1", 1);
+#endif
+  @end if
+  @#
   @for dimName, basis in $basisMap.items()
-    @for dimRep in [rep for rep in $geometry.dimensionWithName(dimName).representations if isinstance(rep, NonUniformDimensionRepresentation)]
+    @for dimRep in [rep for rep in $geometry.dimensionWithName(dimName).representations if isinstance(rep, NonUniformDimensionRepresentation) and not rep.hasLocalOffset]
 ${basis.gridAndStepForDimRep(dimRep)}@slurp
     @end for
     @for field in [field for field in $fields if field.hasDimensionName(dimName)]

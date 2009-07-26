@@ -13,7 +13,7 @@ import FourierTransformFFTW3
 import FourierTransformFFTW3Threads
 import FourierTransformFFTW3MPI
 FourierTransformFFTW3.FourierTransformFFTW3.mpiCapableSubclass = FourierTransformFFTW3MPI.FourierTransformFFTW3MPI
-transformClasses.update([(name, FourierTransformFFTW3.FourierTransformFFTW3) for name in ['dft', 'dct', 'dst']])
+transformClasses.update([(name, FourierTransformFFTW3.FourierTransformFFTW3) for name in ['dft', 'dct', 'dst', 'mpi']])
 
 import MMT
 transformClasses.update([(name, MMT.MMT) for name in ['bessel', 'spherical-bessel', 'hermite-gauss']])

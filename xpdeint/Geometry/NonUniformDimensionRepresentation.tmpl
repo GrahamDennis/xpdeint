@@ -24,6 +24,10 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 
 @def globals
   @#
+  @if $silent
+    @stop
+  @end if
+  @#
   @super
   @#
   @if $lattice
@@ -38,11 +42,9 @@ unsigned long ${index} = 0;
 
 @def openLoopAscending
   @#
-  @# Non-uniform dimensions do not currently support being distributed
-  @assert not $hasLocalOffset
-#define ${name} ${arrayName}[${loopIndex}]
+#define ${name} ${arrayName}[${loopIndex} + ${localOffset}]
   @if $stepSizeArray
-#define d${name} ${stepSizeArrayName}[${loopIndex}]
+#define d${name} ${stepSizeArrayName}[${loopIndex} + ${localOffset}]
   @end if
 
 for (long ${loopIndex} = 0; ${loopIndex} < ${localLattice}; ${loopIndex}++) {
