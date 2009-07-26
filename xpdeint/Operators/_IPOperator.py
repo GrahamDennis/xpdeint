@@ -133,7 +133,6 @@ class _IPOperator(Operator):
                     "The following operator names weren't used: %(unusedOperatorNamesString)s" % locals())
     
     vectors = set(self.targetVectors)
-    self.registerVectorsRequiredInSpace(vectors, self.operatorSpace)
     self.registerVectorsRequiredInBasis(vectors, self.operatorBasis)
     
   

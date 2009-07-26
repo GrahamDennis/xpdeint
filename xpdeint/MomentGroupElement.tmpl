@@ -72,25 +72,10 @@ ${codeString}@slurp
       @#
       @# Although we don't have any processing code, one of our features has
       @# processing code that needs to run (but it is simple, right?)
-${loopOverVectorsWithInnerContentTemplate([$rawVector], $insideProcessingLoopsNoProcessingCode, space=$outputSpace)}@slurp
+${loopOverVectorsWithInnerContentTemplate([$rawVector], $insideProcessingLoopsNoProcessingCode, basis=$outputBasis)}@slurp
     @end if
   @else
-    @# In this case, we did allocate a raw vector, and we will have processing to do
-    @# Transform the moment group sampling vector into the processing space
-${transformVectorsToSpace($vectors, $processingSpace)}@slurp
-    @#
-    @if len($outputField.dimensions) != len($dimensions)
-      @# If the output field doesn't have the same number of dimensions as the sampled
-      @# data, then we're going to be integrating, and the vectors in the output field
-      @# are going to need to be overridden in the loop
-      @assert len($outputField.dimensions) < len($dimensions)
-      @set $vectorOverrides = $outputField.vectors.copy()
-    @else
-      @set $vectorOverrides = set()
-    @end if
-    @set $vectorsForLoop = $vectors.copy()
-    @silent $vectorsForLoop.update($outputField.vectors)
-${loopOverFieldInSpaceWithVectorsAndInnerContent($outputField, $processingSpace, $vectorsForLoop, $insideProcessingLoops, vectorOverrides=$vectorOverrides)}@slurp
+    @assert False, "Post processing of sampled data hasn't been implemented yet!"
   @end if
   @#
 @end def
@@ -144,13 +129,13 @@ $insertCodeForFeatures('insideMomentGroupProcessingLoop', $featureOrdering)@slur
   @# The features can return Cheetah template code suitable for passing to loopOverVectorsWithInnerContentTemplate
   @# in order to create their data. If any have, then we should actually create that loop and run that code.
   @if $result
-${loopOverVectorsWithInnerContentTemplate([$processedVector], $result, space = $outputSpace)}@slurp
+${loopOverVectorsWithInnerContentTemplate([$processedVector], $result, basis = $outputBasis)}@slurp
   @end if
 
 // The meat of the function goes here
   @set $featureOrdering = ['ErrorCheck', 'Output']
   @set $dict = {'field': $outputField,
-                'space': $outputSpace,
+                'basis': $outputBasis,
                 'fp': '_outfile',
                 'dependentVariables': $dependentVariables,
                 'xsilElementName': c'moment_group_${number + 1}',

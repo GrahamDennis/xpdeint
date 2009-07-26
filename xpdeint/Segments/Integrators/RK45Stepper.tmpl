@@ -116,7 +116,7 @@ _g[6]=( -_b[6][1]*_c[4]+_b[6][4]*_c[1] )/_den;
 @def singleIntegrationStep($function)
   @#
   @set $arguments = {'_step': '_step'}
-${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
+${transformVectorsToBasis($integrationVectors, $homeBasis)}@slurp
 
 // a_k = y1
 ${copyVectors($integrationVectors, '_akfield')}@slurp
@@ -125,7 +125,7 @@ ${callFunction('nonconstantIPFields', arguments, _exponent = 1, _arrayIndex = 0,
 
 // a_i = D(a_2*dt)[y1]
 ${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction=function)}
-${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
+${transformVectorsToBasis($integrationVectors, $homeBasis)}@slurp
 
 // y2 = y1
 ${copyVectors($integrationVectors, '_checkfield')}@slurp
@@ -142,7 +142,7 @@ ${callFunction('deltaA', arguments, parentFunction=function)}
 
 // a_i = D(a_2*dt)[a_k]
 ${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction=function)}
-${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
+${transformVectorsToBasis($integrationVectors, $homeBasis)}@slurp
 
 ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """// y1 = y1 + c_1*a_k
@@ -151,7 +151,7 @@ _${vector.id}[$index] += _c[1]*_akfield_${vector.id}[$index];
 _checkfield_${vector.id}[$index] += _cs[1]*_akfield_${vector.id}[$index];
 // a_k = a_i + b_21*a_k
 _akfield_${vector.id}[$index] = _aifield_${vector.id}[$index] + _b[2][1]*_akfield_${vector.id}[$index];
-""", space = $homeSpace)}@slurp
+""", basis = $homeBasis)}@slurp
 
 ${propagationDimension} += _a[2] * _step;
 
@@ -163,13 +163,13 @@ ${callFunction('ipEvolve', arguments, _exponent = -2, parentFunction=function)}
 ${callFunction('deltaA', arguments, parentFunction=function)}
 
 ${callFunction('ipEvolve', arguments, _exponent = +2, parentFunction=function)}
-${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
+${transformVectorsToBasis($integrationVectors, $homeBasis)}@slurp
 
 // c_2 == cs_2 == 0
 ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """// a_j = d_1*a_i + d_2*y1 + d_3*a_k
 _ajfield_${vector.id}[$index] = _d[1]*_aifield_${vector.id}[$index] + _d[2]*_${vector.id}[$index] + _d[3]*_akfield_${vector.id}[$index];
-""", space = $homeSpace)}@slurp
+""", basis = $homeBasis)}@slurp
 
 ${propagationDimension} += _a[3] * _step;
 
@@ -187,7 +187,7 @@ ${callFunction('deltaA', arguments, parentFunction=function)}
 
 // a_j = D(-(a_3 - a_2)*dt)[a_j]
 ${callFunction('ipEvolve', arguments, _exponent = +3, parentFunction=function)}
-${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
+${transformVectorsToBasis($integrationVectors, $homeBasis)}@slurp
 
 ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """// a_l = e_1*a_i + e_2*y1 + e_3*a_k + e_4*a_j
@@ -196,7 +196,7 @@ _alfield_${vector.id}[$index] = _e[1]*_aifield_${vector.id}[$index] + _e[2]*_${v
 _${vector.id}[$index] += _c[3]*_ajfield_${vector.id}[$index];
 // y2 = y2 + cs_3*a_j
 _checkfield_${vector.id}[$index] += _cs[3]*_ajfield_${vector.id}[$index];
-""", space = $homeSpace)}@slurp
+""", basis = $homeBasis)}@slurp
 
 ${propagationDimension} += _a[4] * _step;
 
@@ -214,7 +214,7 @@ ${callFunction('deltaA', arguments, parentFunction=function)}
 
 // a_l = D(-(a_4 - a_2)*dt)[a_l]
 ${callFunction('ipEvolve', arguments, _exponent = +4, parentFunction=function)}
-${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
+${transformVectorsToBasis($integrationVectors, $homeBasis)}@slurp
 
 ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """// y1 = y1 + c_4*a_l
@@ -223,13 +223,13 @@ _${vector.id}[$index] += _c[4]*_alfield_${vector.id}[$index];
 _checkfield_${vector.id}[$index] += _cs[4]*_alfield_${vector.id}[$index];
 // a_l = f_1*a_i + f_2*y1 + f_3*a_k + f_4*a_j + f_5*a_l
 _alfield_${vector.id}[$index] = _f[1]*_aifield_${vector.id}[$index] + _f[2]*_${vector.id}[$index] + _f[3]*_akfield_${vector.id}[$index] + _f[4]*_ajfield_${vector.id}[$index] + _f[5]*_alfield_${vector.id}[$index];
-""", space = $homeSpace)}@slurp
+""", basis = $homeBasis)}@slurp
 
 ${propagationDimension} += _a[5] * _step;
 
 // a_l = G[a_l, t + aa_5*dt]
 ${callFunction('deltaA', arguments, parentFunction=function)}
-${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
+${transformVectorsToBasis($integrationVectors, $homeBasis)}@slurp
 
 // c_5 == 0
 ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
@@ -237,7 +237,7 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 _checkfield_${vector.id}[$index] += _cs[5]*_alfield_${vector.id}[$index];
 // a_l = g_1*a_i + g_2*a_k + g_3*a_j + g_4*y_1 + g_5*a_l + g_6*y2
 _alfield_${vector.id}[$index] = _g[1]*_aifield_${vector.id}[$index] + _g[2]*_akfield_${vector.id}[$index] + _g[3]*_ajfield_${vector.id}[$index] + _g[4]*_${vector.id}[$index] + _g[5]*_alfield_${vector.id}[$index] + _g[6]*_checkfield_${vector.id}[$index];
-""", space = $homeSpace)}@slurp
+""", basis = $homeBasis)}@slurp
 
 ${propagationDimension} += _a[6] * _step;
 
@@ -251,7 +251,7 @@ ${callFunction('deltaA', arguments, parentFunction=function)}
 
 // a_l = D(-(a_6 - a_2)*dt)[a_l]
 ${callFunction('ipEvolve', arguments, _exponent = +5, parentFunction=function)}
-${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
+${transformVectorsToBasis($integrationVectors, $homeBasis)}@slurp
 
 // c_5 == 0
 ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
@@ -259,7 +259,7 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 _${vector.id}[$index] += _c[6]*_alfield_${vector.id}[$index];
 // y2 = y2 + cs_6*a_l
 _checkfield_${vector.id}[$index] += _cs[6]*_alfield_${vector.id}[$index];
-""", space = $homeSpace)}@slurp
+""", basis = $homeBasis)}@slurp
 
 // t -> t + dt
 ${propagationDimension} -= _a[6]*_step;

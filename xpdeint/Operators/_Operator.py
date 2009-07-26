@@ -105,10 +105,6 @@ class _Operator (ScriptElement):
     return self.primaryCodeBlock.dependencies
   
   @property
-  def operatorSpace(self):
-    return self.primaryCodeBlock.space
-  
-  @property
   def operatorBasis(self):
     return self.primaryCodeBlock.basis
   

@@ -58,6 +58,12 @@ _basis_map _${vector.id}_basis_map;
   @end for
 
 real *_auxiliary_array = NULL;
+
+/* List of basis identifiers:
+  @for idx, basis in enumerate(self.basesNeeded)
+  ${idx}: (${', '.join(basis)})
+  @end for
+*/
   @#
 @end def
 

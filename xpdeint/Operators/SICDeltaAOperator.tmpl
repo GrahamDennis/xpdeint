@@ -15,11 +15,11 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
   @# The Operator class will have defined for us all of the dVariableName_dPropagationDimension variables.
   @# Note that we assume that all of the integration vectors have an operotor component defined for them.
   
-  @set $crossDim = $loopingField.dimensionWithName($crossPropagationDimension)
+  @set $crossDimRep = $loopingField.dimensionWithName($crossPropagationDimension).inBasis($operatorBasis)
   @if $crossPropagationDirection == '+'
-if (${crossDim.inSpace($operatorSpace).loopIndex} == 0) {
+if (${crossDimRep.loopIndex} == 0) {
   @else
-if (${crossDim.inSpace($operatorSpace).loopIndex} == ${crossDim.inSpace($operatorSpace).globalLattice} - 1) {
+if (${crossDimRep.loopIndex} == ${crossDimRep.globalLattice} - 1) {
   @end if
   // ********** Boundary condition code ***********
   ${codeBlocks['boundaryCondition'].loopCodeString, autoIndent=True}@slurp

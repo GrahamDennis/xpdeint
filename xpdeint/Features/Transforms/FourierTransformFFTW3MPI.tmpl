@@ -9,6 +9,8 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 @from xpdeint.Geometry.UniformDimensionRepresentation import UniformDimensionRepresentation
 @from xpdeint.Geometry.SplitUniformDimensionRepresentation import SplitUniformDimensionRepresentation
 
+@from xpdeint.Utilities import permutations
+
 @def description: FFTW3 with MPI
 @attr $fftwSuffix = 'mpi'
 
@@ -25,41 +27,41 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
   @#
 ptrdiff_t _unswapped_block_size = 0;
 ptrdiff_t _swapped_block_size = 0;
+
+  @for dimRep in [dimRep for dim in self.mpiDimensions for dimRep in dim.representations if dimRep.hasLocalOffset]
+ptrdiff_t _block_size_${dimRep.name} = FFTW_MPI_DEFAULT_BLOCK;
+  @end for
   @#
 @end def
 
 @def setLocalLatticeAndOffsetVariables
   @#
 // First work out the local lattice and offset for the geometry
-  @set $firstMPIDim = $mpiDimensions[0]
-  @set $secondMPIDim = $mpiDimensions[1]
-  @set $fullTransformDimensions = $fullTransformDimensionsForField($geometry)
-ptrdiff_t _sizes[] = {${', '.join([dim.inSpace(0).globalLattice for dim in fullTransformDimensions])}};
-
-  @set $indices = range($geometry.indexOfDimension(fullTransformDimensions[-1])+1, len($geometry.dimensions))
-ptrdiff_t _howmany = ((ptrdiff_t)1) * ${geometry.pointsInDimensionsWithIndices(indices)};
-ptrdiff_t _local_alloc_size;
-
+ptrdiff_t _sizes[${len($geometry.dimensions)}];
 ${fftwPrefix}_mpi_init();
-_local_alloc_size = ${fftwPrefix}_mpi_local_size_many_transposed(${len(fullTransformDimensions)}, _sizes, _howmany,
-                                                        FFTW_MPI_DEFAULT_BLOCK, FFTW_MPI_DEFAULT_BLOCK, MPI_COMM_WORLD,
-                                                        &${firstMPIDim.inSpace(0).localLattice}, &${firstMPIDim.inSpace(0).localOffset},
-                                                        &${secondMPIDim.inSpace($swappedSpace).localLattice}, &${secondMPIDim.inSpace($swappedSpace).localOffset});
-  @# Set the transformed, but unswapped variables for the first dimension
-${firstMPIDim.inSpace($firstMPIDim.transformMask).localLattice} = ${firstMPIDim.inSpace(0).localLattice};
-${firstMPIDim.inSpace($firstMPIDim.transformMask).localOffset} = ${firstMPIDim.inSpace(0).localOffset};
-${secondMPIDim.representations[2].localLattice} = ${secondMPIDim.inSpace($swappedSpace).localLattice};
-${secondMPIDim.representations[2].localOffset} = ${secondMPIDim.inSpace($swappedSpace).localOffset};
+  @for firstMPIDimRep, secondMPIDimRep in permutations(*[dim.representations for dim in self.mpiDimensions]):
+    @if not (firstMPIDimRep.hasLocalOffset and secondMPIDimRep.hasLocalOffset)
+      @continue
+    @end if
+_sizes[0] = ${firstMPIDimRep.globalLattice}; _sizes[1] = ${secondMPIDimRep.globalLattice};
+${fftwPrefix}_mpi_local_size_many_transposed(
+  2, _sizes, 1, _block_size_${firstMPIDimRep.name}, _block_size_${secondMPIDimRep.name}, MPI_COMM_WORLD,
+  &${firstMPIDimRep.localLattice}, &${firstMPIDimRep.localOffset},
+  &${secondMPIDimRep.localLattice}, &${secondMPIDimRep.localOffset}
+);
 
 if (_rank == 0) {
-  _unswapped_block_size = ${firstMPIDim.inSpace(0).localLattice};
-  _swapped_block_size = ${secondMPIDim.inSpace($swappedSpace).localLattice};
+  _block_size_${firstMPIDimRep.name} = ${firstMPIDimRep.localLattice};
+  _block_size_${secondMPIDimRep.name} = ${secondMPIDimRep.localLattice};
 }
-MPI_Bcast(&_unswapped_block_size, sizeof(ptrdiff_t), MPI_BYTE, 0, MPI_COMM_WORLD);
-MPI_Bcast(&_swapped_block_size, sizeof(ptrdiff_t), MPI_BYTE, 0, MPI_COMM_WORLD);
+MPI_Bcast(&_block_size_${firstMPIDimRep.name}, sizeof(ptrdiff_t), MPI_BYTE, 0, MPI_COMM_WORLD);
+MPI_Bcast(&_block_size_${secondMPIDimRep.name}, sizeof(ptrdiff_t), MPI_BYTE, 0, MPI_COMM_WORLD);
 
+  @end for
+  @#
+  @set firstMPIDim, secondMPIDim = $mpiDimensions
   @for $field in $fields
-    @if field.name == 'geometry' or not $field.isDistributed
+    @if field.name == 'geometry' or not field.isDistributed
       @continue
     @end if
     @#
@@ -67,77 +69,18 @@ MPI_Bcast(&_swapped_block_size, sizeof(ptrdiff_t), MPI_BYTE, 0, MPI_COMM_WORLD);
     @# values for the geometry's version of these
     @set $fieldMPIDim1 = field.dimensionWithName(firstMPIDim.name)
     @set $fieldMPIDim2 = field.dimensionWithName(secondMPIDim.name)
-// Set the local lattice and offset variables for the '${field.name}' field
-    @if fieldMPIDim1 == firstMPIDim and fieldMPIDim2 == secondMPIDim
-      @# The field has the same structure for these dimensions as the geometry
-      @for dimOut, dimIn in [(fieldMPIDim1, firstMPIDim), (fieldMPIDim2, secondMPIDim)]
-        @for repOut, repIn in zip(dimOut.representations, dimIn.representations)
-          @if repOut and repOut.hasLocalOffset and repOut.parent is fieldMPIDim1
-${repOut.localLattice} = ${repIn.localLattice};
-${repOut.localOffset} = ${repIn.localOffset};
-          @end if
-        @end for
-      @end for
-      @if all([dim.isTransformable for dim in [fieldMPIDim1, fieldMPIDim2]])
-        @# Set the alloc size variable through an actual call to local_size_many_transposed
-        @set $indices = range(len(field.dimensions))
-        @for dim in [fieldMPIDim1, fieldMPIDim2]
-          @silent indices.remove(field.indexOfDimension(dim))
-        @end for
-_howmany = ((ptrdiff_t)1) * ${field.pointsInDimensionsWithIndices(indices)};
-${field.allocSize} = ${fftwPrefix}_mpi_local_size_many_transposed(2, _sizes, _howmany, _unswapped_block_size, _swapped_block_size, MPI_COMM_WORLD,
-        &${fieldMPIDim1.inSpace(0).localLattice}, &${fieldMPIDim1.inSpace(0).localOffset},
-        &${fieldMPIDim2.inSpace($swappedSpace).localLattice}, &${fieldMPIDim2.inSpace($swappedSpace).localOffset});
-        @if any([dimRep.parent is mpiDim for mpiDim in [fieldMPIDim1, fieldMPIDim2] for dimRep in mpiDim.representations])
-if (   (${fieldMPIDim1.inSpace(0).localLattice} != ${firstMPIDim.inSpace(0).localLattice})
-    || (${fieldMPIDim1.inSpace(0).localOffset} != ${firstMPIDim.inSpace(0).localOffset})
-    || (${fieldMPIDim2.inSpace($swappedSpace).localLattice} != ${secondMPIDim.inSpace($swappedSpace).localLattice})
-    || (${fieldMPIDim2.inSpace($swappedSpace).localOffset} != ${secondMPIDim.inSpace($swappedSpace).localOffset})) {
-  _LOG(_ERROR_LOG_LEVEL, "Local lattice/offset values returned for field '$field.name' aren't the same as the values for the full transform.\n"
-                         "Please report this error and the script that caused it to ${bugReportAddress}\n"
-                         "Number of nodes: %i\n"
-                         "${firstMPIDim.inSpace(0).localLattice}: %ti\n"
-                         "${firstMPIDim.inSpace(0).localOffset}: %ti\n"
-                         "${fieldMPIDim1.inSpace(0).localLattice}: %ti\n"
-                         "${fieldMPIDim1.inSpace(0).localOffset}: %ti\n"
-                         "${secondMPIDim.inSpace($swappedSpace).localLattice}: %ti\n"
-                         "${secondMPIDim.inSpace($swappedSpace).localOffset}: %ti\n"
-                         "${fieldMPIDim2.inSpace($swappedSpace).localLattice}: %ti\n"
-                         "${fieldMPIDim2.inSpace($swappedSpace).localOffset}: %ti\n",
-                         _size, ${firstMPIDim.inSpace(0).localLattice}, ${firstMPIDim.inSpace(0).localOffset},
-                         ${fieldMPIDim1.inSpace(0).localLattice}, ${fieldMPIDim1.inSpace(0).localOffset},
-                         ${secondMPIDim.inSpace($swappedSpace).localLattice}, ${secondMPIDim.inSpace($swappedSpace).localOffset},
-                         ${fieldMPIDim2.inSpace($swappedSpace).localLattice}, ${fieldMPIDim2.inSpace($swappedSpace).localOffset});
-}
+    @for fieldDim, geometryDim in [(fieldMPIDim1, firstMPIDim), (fieldMPIDim2, secondMPIDim)]
+      @for fieldRep, geometryRep in zip(fieldDim.representations, geometryDim.representations)
+        @if (not fieldRep) or (not fieldRep.hasLocalOffset) or (not fieldRep.parent is fieldDim)
+          @continue
         @end if
-      @else
-              @set $fieldIndices = range(0, len(field.dimensions))
-              @silent fieldIndices.remove(field.indexOfDimension(firstMPIDim))
-              @silent fieldIndices.remove(field.indexOfDimension(secondMPIDim))
-              @set $geometryIndices = range(1, len($geometry.dimensions))
-              @silent geometryIndices.remove($geometry.indexOfDimension(firstMPIDim))
-              @silent geometryIndices.remove($geometry.indexOfDimension(secondMPIDim))
-${field.allocSize} = _local_alloc_size * ${field.pointsInDimensionsWithIndices(fieldIndices)} / (${geometry.pointsInDimensionsWithIndices(geometryIndices)});
-      @end if
-    @else
-      @# The field has different structure to the geometry, so we need to work out our local offsets and lattice sizes.
-      @for fieldDim, mpiDim in [(fieldMPIDim1, firstMPIDim), (fieldMPIDim2, secondMPIDim)]
-        @if fieldDim == mpiDim
-          @# This dimension matches.
-          @for repOut, repIn in zip(fieldDim.representations, mpiDim.representations)
-            @if repOut and repOut.hasLocalOffset
-${repOut.localLattice} = ${repIn.localLattice};
-${repOut.localOffset} = ${repIn.localOffset};
-            @end if
-          @end for
-        @else
-          @# The dimensions aren't the same.
-          @for fieldRep, geometryRep in zip(fieldDim.representations, mpiDim.representations)
-            @if not fieldRep or not fieldRep.hasLocalOffset
-              @continue
-            @end if
-            @if fieldRep.reductionMethod == fieldDim.ReductionMethod.fixedRange
-              @# In this case we are in 'x' space and are subdividing a distributed dimension
+// Set the local lattice and offset variables for the '${field.name}' field
+        @if fieldRep == geometryRep
+${fieldRep.localLattice} = ${geometryRep.localLattice};
+${fieldRep.localOffset} = ${geometryRep.localOffset};
+        @elif fieldRep.reductionMethod == fieldDim.ReductionMethod.fixedRange
+          @# In this case we are in 'x' space and are subdividing a distributed dimension
+          @# fixedRange reduction method means we take every nth point.
 ptrdiff_t _${field.name}_unswapped_skip_size = ${geometryRep.globalLattice}/${fieldRep.globalLattice};
 if (_rank == 0) {
   ${fieldRep.localOffset}  = 0;
@@ -147,8 +90,9 @@ if (_rank == 0) {
   ${fieldRep.localLattice} = (${geometryRep.localOffset} + ${geometryRep.localLattice} - 1)/_${field.name}_unswapped_skip_size
                              + 1 - ${fieldRep.localOffset};
 }
-            @elif isinstance(fieldRep, UniformDimensionRepresentation)
-              @# In this case, we are in 'k' space and may be subdividing a UniformDimensionRepresentation (dct/dst)
+        @elif isinstance(fieldRep, UniformDimensionRepresentation)
+          @# In this case, we are in 'k' space and may be subdividing a UniformDimensionRepresentation (dct/dst)
+          @# Note that this is a fixedStep reduction method
 if (${geometryRep.localOffset} >= ${fieldRep.globalLattice}) {
   // No points here
   ${fieldRep.localOffset} = 0;
@@ -162,8 +106,9 @@ if (${geometryRep.localOffset} >= ${fieldRep.globalLattice}) {
   ${fieldRep.localOffset} = ${geometryRep.localOffset};
   ${fieldRep.localLattice} = ${geometryRep.localLattice};
 }
-            @elif isinstance(fieldRep, SplitUniformDimensionRepresentation)
-              @# In this case, we are in 'k' space and may be subdividing a SplitUniformDimensionRepresentation (dft)
+        @elif isinstance(fieldRep, SplitUniformDimensionRepresentation)
+          @# In this case, we are in 'k' space and may be subdividing a SplitUniformDimensionRepresentation (dft)
+          @# Note that this is a fixedStep reduction method
 ${fieldRep.localOffset} = -1;
 if (${geometryRep.localOffset} >= (${fieldRep.globalLattice}+1)/2) {
   // No points due to positive 'k' values.
@@ -189,31 +134,37 @@ if (${geometryRep.localOffset} + ${geometryRep.localLattice} <= ${geometryRep.gl
   ${fieldRep.localOffset} = ${geometryRep.localOffset} - (${geometryRep.globalLattice}-${fieldRep.globalLattice});
   ${fieldRep.localLattice} = ${geometryRep.localLattice};
 }
-            @end if
-          @end for
+        @else
+          @assert False
         @end if
       @end for
-ptrdiff_t _${field.name}_2d_size = 0;
-      @for spaceID in range(4)
-        @set $space = 0
-        @if spaceID & 1
-          @set $space |= $firstMPIDim.transformMask
-        @end if
-        @if spaceID & 2
-          @set $space |= $secondMPIDim.transformMask
-        @end if
-        @set $fieldRep1 = $fieldMPIDim1.inSpace(space)
-        @set $fieldRep2 = $fieldMPIDim2.inSpace(space)
-        @if not fieldRep1 or not fieldRep2
-          @continue
-        @end if
-_${field.name}_2d_size = MAX(_${field.name}_2d_size, ${fieldRep1.localLattice} * ${fieldRep2.localLattice});
-      @end for
-      @set $indices = range(len(field.dimensions))
-      @silent indices.remove(field.indexOfDimension(firstMPIDim))
-      @silent indices.remove(field.indexOfDimension(secondMPIDim))
-${field.allocSize} = _${field.name}_2d_size * ${field.pointsInDimensionsWithIndices(indices)};
+    @end for
+  @end for
+  @#
+@end def
+
+@def setVectorAllocSizes($vectors)
+  @#
+ptrdiff_t _local_alloc_size, _tmp;
+  @for tID, transformation in self.transformations
+    @if not transformation.get('distributedTransform', False)
+      @continue
     @end if
+    @set untransformedDimRepBasis, transformedDimRepBasis = transformation['transformPair']
+    @for dimNum, dimRep in enumerate(untransformedDimRepBasis)
+_sizes[${dimNum}] = ${dimRep.globalLattice};
+    @end for
+_local_alloc_size = ${fftwPrefix}_mpi_local_size_many_transposed(
+  ${len(untransformedDimRepBasis)}, _sizes,
+  (ptrdiff_t)${transformation['postfixLatticeString']},
+  _block_size_${untransformedDimRepBasis[0].name}, _block_size_${transformedDimRepBasis[0].name},
+  MPI_COMM_WORLD,
+  &_tmp, &_tmp, &_tmp, &_tmp /* Local lattices and offsets were obtained above */
+);
+    @for vector in transformation['vectors']
+${vector.allocSize} = MAX(${vector.allocSize}, (_local_alloc_size${'+1) / 2' if vector.type == 'complex' and transformation.get('transformType', 'real') == 'real' else ')'});
+    @end for
+
   @end for
   @#
 @end def

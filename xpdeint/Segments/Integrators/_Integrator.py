@@ -28,7 +28,6 @@ class _Integrator (_Segment):
     self.samplesEntity = None
     self.samples = []
     self._integrationVectors = set()
-    self.homeSpace = 0
     self.homeBasis = None
     self.cutoff = 1e-3
     self.stepStartOperatorContainers = []
@@ -156,7 +155,7 @@ class _Integrator (_Segment):
         if sampleCount and not (self.stepCount % sampleCount) == 0:
           raise ParserException(samplesElement, "Sample count does not evenly divide the number of steps")
         
-        momentGroup.outputField.dimensionWithName(self.propagationDimension).inSpace(0).lattice += sampleCount * self.totalCycles
+        momentGroup.addSamplePoints(sampleCount * self.totalCycles)
     
     # Permit any step start or step end operators to use the '_step' variable.
     for oc in chain(self.stepStartOperatorContainers, self.stepEndOperatorContainers):
@@ -165,6 +164,5 @@ class _Integrator (_Segment):
         if not ('real', '_step') in evaluateFunction.args:
           evaluateFunction.args.append(('real', '_step'))
     
-    self.registerVectorsRequiredInSpace(self.integrationVectors, self.homeSpace)
     self.registerVectorsRequiredInBasis(self.integrationVectors, self.homeBasis)
   

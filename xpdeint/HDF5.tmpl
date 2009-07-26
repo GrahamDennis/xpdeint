@@ -36,12 +36,14 @@ htri_t H5Lexists(hid_t loc_id, const char *name, hid_t lapl_id)
     return false;
 }
 #endif
+
+#define H5T_NATIVE_REAL H5T_NATIVE_${{'double': 'DOUBLE', 'single': 'FLOAT'}[$precision]}
   @#
 @end def
 
 @def processData(dict)
   @set $field = dict['field']
-  @set $space = dict['space']
+  @set $basis = dict['basis']
   @set $operation = dict['operation']
   @assert operation in ['read', 'write']
   @set $variables = dict['variables']
@@ -55,8 +57,9 @@ htri_t H5Lexists(hid_t loc_id, const char *name, hid_t lapl_id)
   @set dict['componentCount'] = componentCount
 /* Create the data space */
   @set $dimensionCount = len(field.dimensions)
-  @set $fileDimReps = [dim.inSpace(space) for dim in field.dimensions]
-  @set $memDimReps = [dim.inSpace(space) for dim in field.orderedDimensionsInSpace(space)]
+  @# File dim reps must be in dimension order as that is the order we desire for write-out
+  @set $fileDimReps = [dim.inBasis(basis) for dim in field.dimensions]
+  @set $memDimReps = field.inBasis(basis)
 hsize_t file_start[${dimensionCount}] = {${', '.join(dimRep.localOffset for dimRep in fileDimReps)}};
 hsize_t mem_dims[${dimensionCount+1}] = {${', '.join(dimRep.localLattice for dimRep in memDimReps)}, 1};
 hsize_t mem_start[${dimensionCount+1}] = {${', '.join(['0']*(dimensionCount+1))}};
@@ -83,7 +86,7 @@ H5Sselect_hyperslab(mem_dataspace, H5S_SELECT_SET, mem_start, mem_stride, mem_co
 H5Sselect_hyperslab(file_dataspace, H5S_SELECT_SET, file_start, mem_stride, mem_count, NULL);
 
 if (dataset_${componentName})
-  H5D${operation}(dataset_${componentName}, H5T_NATIVE_DOUBLE, mem_dataspace, file_dataspace, H5P_DEFAULT, ${variable.arrayName});
+  H5D${operation}(dataset_${componentName}, H5T_NATIVE_REAL, mem_dataspace, file_dataspace, H5P_DEFAULT, ${variable.arrayName});
       @end for
     @end capture
     @#

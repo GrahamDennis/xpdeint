@@ -768,12 +768,6 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     
     self.globalNameSpace['simulationVectors'].append(vectorTemplate)
     
-    if not vectorElement.hasAttribute('initial_space'):
-      vectorTemplate.initialSpace = 0
-    else:
-      vectorTemplate.initialSpace = fieldTemplate.spaceFromString(vectorElement.getAttribute('initial_space'),
-                                                                  xmlElement = vectorElement)
-    
     componentsElement = vectorElement.getChildElementByTagName('components')
     
     typeString = None
@@ -817,7 +811,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       
       def createInitialisationCodeBlock():
         initialisationCodeBlock = _UserLoopCodeBlock(
-          field = vectorTemplate.field, space = vectorTemplate.initialSpace, xmlElement = initialisationElement,
+          field = vectorTemplate.field, xmlElement = initialisationElement,
           basis = vectorTemplate.initialBasis, parent = initialisationTemplate,
           **self.argumentsToTemplateConstructors)
         initialisationCodeBlock.dependenciesEntity = self.parseDependencies(initialisationElement, optional=True)
@@ -976,7 +970,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       vectorTemplate.components.append(componentName)
     
     evaluationElement = computedVectorElement.getChildElementByTagName('evaluation')
-    evaluationCodeBlock = _UserLoopCodeBlock(field = None, space = 0, xmlElement = evaluationElement,
+    evaluationCodeBlock = _UserLoopCodeBlock(field = None, xmlElement = evaluationElement,
                                              parent = vectorTemplate, **self.argumentsToTemplateConstructors)
     evaluationCodeBlock.dependenciesEntity = self.parseDependencies(evaluationElement, optional=True)
     evaluationCodeBlock.targetVector = vectorTemplate
@@ -1124,10 +1118,8 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     if integrateElement.hasAttribute('home_space'):
       attributeValue = integrateElement.getAttribute('home_space').strip().lower()
       if attributeValue == 'k':
-        integratorTemplate.homeSpace = self.globalNameSpace['geometry'].spaceMask
         integratorTemplate.homeBasis = self.globalNameSpace['geometry'].defaultSpectralBasis
       elif attributeValue == 'x':
-        integratorTemplate.homeSpace = 0
         integratorTemplate.homeBasis = self.globalNameSpace['geometry'].defaultCoordinateBasis
       else:
         raise ParserException(integrateElement, "home_space must be either 'k' or 'x'.")
@@ -1271,7 +1263,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
                                             xmlElement = filterElement,
                                             **self.argumentsToTemplateConstructors)
     
-    codeBlock = _UserLoopCodeBlock(field = None, space = 0, xmlElement = filterElement,
+    codeBlock = _UserLoopCodeBlock(field = None, xmlElement = filterElement,
                                    parent = filterTemplate, **self.argumentsToTemplateConstructors)
     codeBlock.dependenciesEntity = self.parseDependencies(filterElement, optional=True)
     filterTemplate.codeBlocks['operatorDefinition'] = codeBlock
@@ -1350,7 +1342,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       basis = operatorContainer.field.defaultCoordinateBasis
     
     operatorDefinitionCodeBlock = _UserLoopCodeBlock(
-      field = operatorContainer.field, space = 0, parent = operatorContainer, basis = basis,
+      field = operatorContainer.field, parent = operatorContainer, basis = basis,
       xmlElement = operatorsElement, **self.argumentsToTemplateConstructors)
     operatorDefinitionCodeBlock.dependenciesEntity = self.parseDependencies(operatorsElement, optional=True)
     
@@ -1364,10 +1356,6 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       raise ParserException(integrationVectorsElement, "Element must be non-empty.")
     
     deltaAOperatorTemplate.integrationVectorsEntity = ParsedEntity(integrationVectorsElement, integrationVectorsNames)
-    
-    if integrationVectorsElement.hasAttribute('fourier_space'):
-      operatorDefinitionCodeBlock.space = \
-        deltaAOperatorTemplate.field.spaceFromString(integrationVectorsElement.getAttribute('fourier_space'))
   
   def parseOperatorElement(self, operatorElement, operatorContainer):
     if not operatorElement.hasAttribute('kind'):
@@ -1437,13 +1425,9 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     operatorDefinitionCodeBlock = operatorTemplate.primaryCodeBlock
     
     if operatorElement.hasAttribute('fourier_space'):
-      operatorDefinitionCodeBlock.space = \
-        operatorTemplate.field.spaceFromString(operatorElement.getAttribute('fourier_space'),
-                                               xmlElement = operatorElement)
       operatorDefinitionCodeBlock.basis = \
         operatorTemplate.field.basisFromString(operatorElement.getAttribute('fourier_space'), xmlElement = operatorElement)
     else:
-      operatorDefinitionCodeBlock.space = operatorTemplate.field.spaceMask
       operatorDefinitionCodeBlock.basis = operatorTemplate.field.defaultSpectralBasis
     
     operatorNamesElement = operatorElement.getChildElementByTagName('operator_names')
@@ -1477,7 +1461,6 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
         operatorTemplate.valueSuffix = '.Im()'
       operatorVectorTemplate.type = typeString
     
-    operatorVectorTemplate.initialSpace = operatorTemplate.operatorSpace
     operatorVectorTemplate.needsInitialisation = False
     
     operatorDefinitionCodeBlock.targetVector = operatorVectorTemplate
@@ -1497,13 +1480,9 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     operatorDefinitionCodeBlock = operatorTemplate.primaryCodeBlock
     
     if operatorElement.hasAttribute('fourier_space'):
-      operatorDefinitionCodeBlock.space = \
-        operatorTemplate.field.spaceFromString(operatorElement.getAttribute('fourier_space'),
-                                               xmlElement = operatorElement)
       operatorDefinitionCodeBlock.basis = \
         operatorTemplate.field.basisFromString(operatorElement.getAttribute('fourier_space'), xmlElement = operatorElement)
     else:
-      operatorDefinitionCodeBlock.space = operatorTemplate.field.spaceMask
       operatorDefinitionCodeBlock.basis = operatorTemplate.field.defaultSpectralBasis
     
     operatorNamesElement = operatorElement.getChildElementByTagName('operator_names')
@@ -1535,7 +1514,6 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
                                                      **self.argumentsToTemplateConstructors)
       operatorVectorTemplate.type = 'real'
       
-      operatorVectorTemplate.initialSpace = operatorTemplate.operatorSpace
       operatorVectorTemplate.needsInitialisation = False
       operatorVectorTemplate.components = operatorNames[:]
       operatorTemplate.operatorVector = operatorVectorTemplate
@@ -1548,11 +1526,9 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
                                          **self.argumentsToTemplateConstructors)
     resultVector.type = 'real'
     
-    resultVector.initialSpace = 0
     resultVector.needsInitialisation = False
     resultVector.components = resultVectorComponents
     operatorTemplate.resultVector = resultVector
-    resultVector.spacesNeeded.add(operatorTemplate.operatorSpace)
     resultVector.basesNeeded.add(resultVector.field.basisForBasis(operatorTemplate.operatorBasis))
     
     if isinstance(operatorTemplate, NonConstantEXOperatorTemplate):
@@ -1564,7 +1540,6 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
   def parseCrossPropagationOperatorElement(self, operatorTemplate, operatorElement):
     operatorDefinitionCodeBlock = operatorTemplate.primaryCodeBlock
     
-    operatorDefinitionCodeBlock.space = 0
     operatorDefinitionCodeBlock.basis = operatorDefinitionCodeBlock.field.defaultCoordinateBasis
     
     if not operatorElement.hasAttribute('algorithm'):
@@ -1615,9 +1590,9 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     
     propagationDimension = fullField.dimensionWithName(propagationDimensionName)
     
-    propDimRep = propagationDimension.inSpace(0)
+    propDimRep = propagationDimension.representations[0]
     
-    if not propDimRep.type == 'real' or not isinstance(propagationDimension.inSpace(0), UniformDimensionRepresentation):
+    if not propDimRep.type == 'real' or not isinstance(propDimRep, UniformDimensionRepresentation):
       raise ParserException(operatorElement, "Cannot integrate in the '%(propagationDimensionName)s' direction as it is an integer-valued dimension.\n"
                                              "Cross-propagators can only integrate along normal dimensions." % locals())
     
@@ -1656,8 +1631,8 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     crossIntegratorTemplate.intraStepOperatorContainers.append(operatorContainer)
     
     boundaryConditionCodeBlock = _UserLoopCodeBlock(
-      field = reducedField, space = 0, xmlElement = boundaryConditionElement,
-      parent = operatorTemplate, basis = reducedField.defaultCoordinateBasis,
+      field = reducedField, xmlElement = boundaryConditionElement,
+      parent = operatorTemplate, basis = operatorDefinitionCodeBlock.basis,
       **self.argumentsToTemplateConstructors)
     boundaryConditionCodeBlock.dependenciesEntity = self.parseDependencies(boundaryConditionElement, optional=True)
     
@@ -1777,13 +1752,16 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
           elif spaceString == 'no':
             fourierSpace = False
           else:
-            if geometryDimension.inSpace(0).name == spaceString:
-              fourierSpace = False
-            elif geometryDimension.inSpace(-1).name == spaceString:
-              fourierSpace = True
+            for dimRep in geometryDimension.representations:
+              if dimRep.name == spaceString:
+                fourierSpace = issubclass(dimRep.tag, dimRep.tagForName('spectral'))
+                break
           if fourierSpace == None:
-            raise ParserException(dimensionElement, "fourier_space attribute for dimension '%s' must be 'yes' / '%s' or 'no' / '%s'"
-                                                    % (dimensionName, geometryDimension.inSpace(-1).name, geometryDimension.inSpace(0).name))
+            raise ParserException(
+              dimensionElement,
+              "fourier_space attribute for dimension '%s' must be 'yes', 'no' or one of %s."
+              % (dimensionName, ', '.join(set([dimRep.name for dimRep in geometryDimension.representations])))
+            )
         
         dimensionElementTuples.append((dimensionElement, geometryDimension))
         
@@ -1793,18 +1771,16 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
         else:
           tagName = 'coordinate'
         
-        sampleBasis.append(
-          [rep for rep in geometryDimension.representations if issubclass(rep.tag, rep.tagForName(tagName))][0].canonicalName
-        )
+        sampleBasis.append(geometryDimension.firstDimRepWithTagName(tagName).canonicalName)
       
       sampleBasis = tuple(sampleBasis)
       dimensionsNeedingLatticeUpdates = {}
       
       for dimensionElement, geometryDimension in dimensionElementTuples:
         
-        dimensionRepresentation = geometryDimension.inSpace(sampleSpace)
+        dimRep = geometryDimension.inBasis(sampleBasis)
         
-        lattice = dimensionRepresentation.lattice
+        lattice = dimRep.lattice
         
         if dimensionElement.hasAttribute('lattice'):
           latticeString = dimensionElement.getAttribute('lattice').strip()
@@ -1816,7 +1792,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
                     "Unable to interpret '%(latticeString)s' as an integer" % locals())
           
           lattice = int(latticeString)
-          geometryLattice = int(geometryDimension.inSpace(sampleSpace).lattice)
+          geometryLattice = int(dimRep.lattice)
           
           if lattice > geometryLattice:
             raise ParserException(dimensionElement, 
@@ -1832,7 +1808,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
           
         if lattice > 1:
           outputFieldDimension = geometryDimension.copy(parent = outputFieldTemplate)
-          if not dimensionRepresentation.lattice == lattice:
+          if not dimRep.lattice == lattice:
             dimensionsNeedingLatticeUpdates[outputFieldDimension.name] = lattice
           samplingFieldTemplate.dimensions.append(outputFieldDimension.copy(parent = samplingFieldTemplate))
           outputFieldTemplate.dimensions.append(outputFieldDimension)
@@ -1847,23 +1823,24 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
           
           samplingFieldTemplate.dimensions.append(geometryDimension.copy(parent=samplingFieldTemplate))
       
+      samplingFieldTemplate.sortDimensions()
+      outputFieldTemplate.sortDimensions()
+      sampleBasis = samplingFieldTemplate.basisForBasis(sampleBasis)
+      outputBasis = momentGroupTemplate.outputField.basisForBasis(
+        (propagationDimRep.canonicalName,) + sampleBasis
+      )
+      
       for dimName, lattice in dimensionsNeedingLatticeUpdates.items():
         dim = samplingFieldTemplate.dimensionWithName(dimName)
         if dim.transformMask & sampleSpace:
           reductionMethod = Dimension.ReductionMethod.fixedStep
         else:
           reductionMethod = Dimension.ReductionMethod.fixedRange
-        for field in [samplingFieldTemplate, outputFieldTemplate]:
-          field.dimensionWithName(dimName).setReducedLatticeInSpace(lattice, sampleSpace, reductionMethod)
-      
-      samplingFieldTemplate.sortDimensions()
-      outputFieldTemplate.sortDimensions()
+        for field, basis in [(samplingFieldTemplate, sampleBasis), (outputFieldTemplate, outputBasis)]:
+          field.dimensionWithName(dimName).setReducedLatticeInBasis(lattice, basis, reductionMethod)
       
       # end looping over dimension elements.  
-      momentGroupTemplate.outputSpace = sampleSpace & momentGroupTemplate.outputField.spaceMask
-      momentGroupTemplate.outputBasis = momentGroupTemplate.outputField.basisForBasis(
-        (propagationDimRep.canonicalName,) + sampleBasis
-      )
+      momentGroupTemplate.outputBasis = outputBasis
       
       rawVectorTemplate = VectorElementTemplate(
         name = 'raw', field = momentGroupTemplate.outputField,
@@ -1871,7 +1848,6 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
         **self.argumentsToTemplateConstructors
       )
       rawVectorTemplate.type = 'real'
-      rawVectorTemplate.initialSpace = sampleSpace
       momentGroupTemplate.rawVector = rawVectorTemplate
       
       momentsElement = samplingElement.getChildElementByTagName('moments')
@@ -1890,7 +1866,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
         rawVectorTemplate.components.append(momentName)
       
       samplingCodeBlock = _UserLoopCodeBlock(
-        field = samplingFieldTemplate, space = sampleSpace, xmlElement = samplingElement,
+        field = samplingFieldTemplate, xmlElement = samplingElement,
         parent = momentGroupTemplate, basis = sampleBasis,
         **self.argumentsToTemplateConstructors)
       samplingCodeBlock.dependenciesEntity = self.parseDependencies(samplingElement)
@@ -1935,7 +1911,6 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
         **self.argumentsToTemplateConstructors
       )
       processedVectorTemplate.type = 'real'
-      processedVectorTemplate.initialSpace = momentGroupTemplate.outputSpace
       momentGroupTemplate.processedVector = processedVectorTemplate
       
       if not processingElement:

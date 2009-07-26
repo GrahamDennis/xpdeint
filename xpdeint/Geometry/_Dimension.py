@@ -52,7 +52,6 @@ class _Dimension(ScriptElement):
     
     self.representations = []
     self._transformMask = None
-    self._mappingRules = None
   
   def preflight(self):
     # FIXME: DODGY. When we go to the 'basis' concept from the 'spaces' concept, this should go away
@@ -79,24 +78,10 @@ class _Dimension(ScriptElement):
       self._transformMask = 1 << geometry.indexOfDimension(self)
     return self._transformMask
   
-  @lazy_property
-  def mappingRules(self):
-    if not self.parent:
-      return self.transform.mappingRulesForDimensionInField(self, None)
-    if not self._mappingRules:
-      self._mappingRules = self.transform.mappingRulesForDimensionInField(self, self.parent)
-      assert self.mappingRules[-1][0] == None
-    return self._mappingRules
-  
-  def inSpace(self, space):
-    for mask, index in self.mappingRules:
-      if mask == None:
-        return self.representations[index]
-      elif (mask & space) == mask:
-        return self.representations[index]
-  
-  def canTransformVector(self, vector):
-    return self.transform.canTransformVectorInDimension(vector, self)
+  def inBasis(self, basis):
+    for rep in self.representations:
+      if rep and rep.canonicalName in basis: return rep
+    assert False
   
   def addRepresentation(self, rep):
     self.representations.append(rep)
@@ -114,9 +99,9 @@ class _Dimension(ScriptElement):
         if rep: rep.remove()
         self.representations[idx] = None
   
-  def setReducedLatticeInSpace(self, newLattice, space, reductionMethod):
+  def setReducedLatticeInBasis(self, newLattice, basis, reductionMethod):
     assert _Dimension.ReductionMethod.validate(reductionMethod)
-    dimRep = self.inSpace(space)
+    dimRep = self.inBasis(basis)
     if dimRep.lattice == newLattice: return
     newDimRep = dimRep.copy(parent = self)
     newDimRep.lattice = newLattice
@@ -124,6 +109,10 @@ class _Dimension(ScriptElement):
     self._children.append(newDimRep)
     self.representations[self.representations.index(dimRep)] = newDimRep
     self.invalidateRepresentationsOtherThan(newDimRep)
+  
+  def firstDimRepWithTagName(self, tagName):
+    repList = [rep for rep in self.representations if rep and issubclass(rep.tag, rep.tagForName(tagName))]
+    return repList[0] if repList else None
   
   @lazy_property
   def isDistributed(self):

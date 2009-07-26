@@ -27,34 +27,46 @@ int main(int argc, char **argv)
   @#
 @end def
 
-@def loopOverFieldInSpaceWithVectorsAndInnerContentEnd($dict)
+@def setVectorAllocSizes($vectors)
+  @#
+  @super(vectors)
+  @#
+${distributedTransform.setVectorAllocSizes(vectors)}@slurp
+  @#
+@end def
+
+@def loopOverFieldInBasisWithVectorsAndInnerContentEnd($dict)
   @#
   @set $vectorOverrides = dict['vectorOverrides']
   @set $indexOverrides = dict['indexOverrides']
   @set $field = dict['field']
-  @set $space = dict['space']
+  @set $basis = dict['basis']
   @#
   @for $vector in $vectorOverrides
-    @set $dimensionsIntegratedOver = set([d.inSpace(space).name for d in field.dimensions if not vector.field.hasDimension(d)])
-    @if not dimensionsIntegratedOver.intersection(self.distributedDimensionNames)
+    @if not (field.isDistributed and not vector.field.isDistributed)
       @# If we aren't integrating over an MPI dimension, then everything is as usual.
       @continue
     @end if
     @# We did integrate over the MPI dimension, so we need to run MPI_Allreduce to combine the results.
     @set $arrayName = c'_active_${vector.id}'
-    @set $size = $vector.sizeInSpaceInReals(space)
+    @set $size = $vector.sizeInBasisInReals(basis)
     @#
     @# If we have any dimension overrides, then we don't want to add up the entire field
-    @for $dimName in indexOverrides.iterkeys()
-      @if vector.field.hasDimensionName(dimName) and vector.field in indexOverrides[dimName]
-        @set $indexOverride = indexOverrides[dimName][vector.field]
-        @set $vectorDim = vector.field.dimensionWithName(dimName)
-        @set $arrayName = arrayName + c' + ${indexOverride} * ${vector.field.localPointsInDimensionsAfterDimensionInSpace(vectorDim, space)} * _${vector.id}_ncomponents'
-        @set $size = size + c' / _${vector.field.name}_lattice_${dimName}'
+    @for $dimRepName in indexOverrides.iterkeys()
+      @if vector.field in indexOverrides[dimRepName]
+        @set dimReps = [dimRep for dimRep in vector.field.inBasis(basis) if dimRep.canonicalName == dimRepName]
+        @if not dimReps
+          @continue
+        @end if
+        @assert len(dimReps) == 1
+        @set vectorDimRep = dimReps[0]
+        @set $indexOverride = indexOverrides[dimRepName][vector.field]
+        @set $arrayName = arrayName + c' + ${indexOverride} * ${vector.field.localPointsInDimensionsAfterDimRepInBasis(vectorDimRep, basis)} * _${vector.id}_ncomponents'
+        @set $size = size + ' / ' + vectorDimRep.globalLattice
       @end if
     @end for
 MPI_Allreduce(MPI_IN_PLACE, $arrayName, $size,
-              MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+              MPI_REAL, MPI_SUM, MPI_COMM_WORLD);
   @end for
   @#
 @end def
@@ -63,7 +75,7 @@ MPI_Allreduce(MPI_IN_PLACE, $arrayName, $size,
   @#
   @set $variable = dict['variable']
   @set $count = dict['count']
-MPI_Allreduce(MPI_IN_PLACE, $variable, $count, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+MPI_Allreduce(MPI_IN_PLACE, $variable, $count, MPI_REAL, MPI_MAX, MPI_COMM_WORLD);
   @#
 @end def
 
@@ -80,7 +92,7 @@ if (_rank == 0) {
 @def binaryWriteOutEnd($dict)
   @#
   @set $field = dict['field']
-  @set $space = dict['space']
+  @set $basis = dict['basis']
   @set $dependentVariables = dict['dependentVariables']
   @#
   @set $dict['extraIndent'] -= 2
@@ -98,15 +110,17 @@ else {
   _sending_var = $shadowVariable;
   MPI_Ssend(&_sending_var, sizeof(ptrdiff_t), MPI_BYTE, 0, 0, MPI_COMM_WORLD);
   @end for
-  _sending_var = ${field.sizeInSpace(space)};
-  MPI_Ssend(&_sending_var, sizeof(ptrdiff_t), MPI_BYTE, 0, 0, MPI_COMM_WORLD);
   
-  if (_sending_var != 0) {
   @# Note that a variable corresponds to an array with given component names
   @for $variable in $dependentVariables
-    MPI_Ssend(${variable.arrayName}, ${variable.vector.sizeInSpaceInReals(space)}, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+  _sending_var = ${variable.vector.sizeInBasisInReals(basis)};
+  MPI_Ssend(&_sending_var, sizeof(ptrdiff_t), MPI_BYTE, 0, 0, MPI_COMM_WORLD);
+  if (_sending_var == 0)
+    goto _BINARY_WRITE_OUT_END;
+  MPI_Ssend(${variable.arrayName}, ${variable.vector.sizeInBasisInReals(basis)}, MPI_REAL, 0, 0, MPI_COMM_WORLD);
+  
   @end for
-  }
+_BINARY_WRITE_OUT_END:;
 }
 
 MPI_Barrier(MPI_COMM_WORLD);
@@ -116,7 +130,6 @@ MPI_Barrier(MPI_COMM_WORLD);
 @def binaryWriteOutWriteDataBegin($dict)
   @#
   @set $field = dict['field']
-  @set $space = dict['space']
   @set $dependentVariables = dict['dependentVariables']
   @#
   @if not all([field.hasDimensionName(dimName) for dimName in $distributedDimensionNames])
@@ -138,32 +151,28 @@ for (long _dataForRank = 0; _dataForRank < _size; _dataForRank++) {
   @for $shadowVariable in $shadowedVariablesForField(field)
   ptrdiff_t ${shadowVariable};
   @end for
-  ptrdiff_t _local_field_size;
+  ptrdiff_t _local_vector_size;
   
   if (_dataForRank == 0) {
   @for $shadowVariable in $shadowedVariablesForField(field)
     ${shadowVariable} = _my${shadowVariable};
   @end for
-  
+    
   } else {
     MPI_Status status;
   @for $shadowVariable in $shadowedVariablesForField(field)
     MPI_Recv(&${shadowVariable}, sizeof(ptrdiff_t), MPI_BYTE, _dataForRank, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
   @end for
-    MPI_Recv(&_local_field_size, sizeof(ptrdiff_t), MPI_BYTE, _dataForRank, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
     
-    if (_local_field_size == 0)
-      continue;
-
     // Now allocate the space needed locally, and receive the entire buffer
   @for $variable in $dependentVariables
-    @set $sizePrefix = ''
-    @if $variable.vector.type == 'complex'
-      @set $sizePrefix = '2 * '
-    @end if
-    _local${variable.arrayName} = (${variable.vector.type}*) xmds_malloc(sizeof(${variable.vector.type}) * _local_field_size * _${variable.vector.id}_ncomponents);
-    MPI_Recv(_local${variable.arrayName}, ${sizePrefix}_local_field_size * _${variable.vector.id}_ncomponents,
-             MPI_DOUBLE, _dataForRank, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+    MPI_Recv(&_local_vector_size, sizeof(ptrdiff_t), MPI_BYTE, _dataForRank, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+    if (_local_vector_size == 0)
+      continue;
+    
+    _local${variable.arrayName} = (${variable.vector.type}*) xmds_malloc(sizeof(real) * _local_vector_size);
+    MPI_Recv(_local${variable.arrayName}, _local_vector_size,
+             MPI_REAL, _dataForRank, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
     ${variable.arrayName} = _local${variable.arrayName};
     
   @end for
@@ -248,7 +257,7 @@ for (hsize_t _i${dimRep.name} = 0; _i${dimRep.name} < count_${dimRep.name}; _i${
 @def generateNoisesBegin($dict)
   @#
   @set $field = dict['field']
-  @set $space = dict['space']
+  @set $basis = dict['basis']
   @set $noises = dict['noises']
   @#
   @if $field.isDistributed
@@ -270,7 +279,7 @@ if (_rank == 0) {
 @def generateNoisesEnd($dict)
   @#
   @set $field = dict['field']
-  @set $space = dict['space']
+  @set $basis = dict['basis']
   @set $noises = dict['noises']
   @#
   @if $field.isDistributed
@@ -284,7 +293,7 @@ if (_rank == 0) {
 // Broadcast the noises to other nodes
   @for $noise in $noises
     @set $noiseVector = noise.noiseVectorForField(field)
-MPI_Bcast(_active_${noiseVector.id}, ${noiseVector.sizeInSpaceInReals(space)}, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+MPI_Bcast(_active_${noiseVector.id}, ${noiseVector.sizeInBasisInReals(basis)}, MPI_REAL, 0, MPI_COMM_WORLD);
   @end for
 
   @set $dict['extraIndent'] -= 2

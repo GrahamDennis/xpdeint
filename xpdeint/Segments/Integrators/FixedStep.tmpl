@@ -42,7 +42,7 @@ ${initialiseCrossPropagationFunctionImplementation}@slurp
 
 _${name}_initialise_cross_propagation();
 
-    @set $integrationDimRep = $parent.field.dimensionWithName($propagationDimension).inSpace(0)
+    @set $integrationDimRep = $parent.field.dimensionWithName($propagationDimension).inBasis($parent.operatorBasis)
     @if $propagationDirection == '+'
       @set $initialValue = integrationDimRep.minimum
     @else
@@ -126,7 +126,7 @@ ${insertCodeForFeaturesInReverseOrder('integrateFixedStepEnd', featureOrderingOu
     @if $negativeIndexOverride
       @set $indexOverrideValue = $negativeIndexOverride
     @else
-      @set $propDimRep = $parent.field.dimensionWithName($propagationDimension).inSpace(0)
+      @set $propDimRep = $parent.field.dimensionWithName($propagationDimension).inBasis($parent.operatorBasis)
       @set $indexOverrideValue = c'(${propDimRep.globalLattice} - _istep - 1)'
     @end if
   @end if
@@ -144,7 +144,7 @@ ${insertCodeForFeaturesInReverseOrder('integrateFixedStepEnd', featureOrderingOu
       @if vector.field.hasDimensionName($propagationDimension)
         @set $propagationDimensionObject = vector.field.dimensionWithName($propagationDimension)
         @silent innerLoopTemplate.skipSize = $propagationDirection + \
-                                             $vector.field.localPointsInDimensionsAfterDimensionInSpace(propagationDimensionObject, $homeSpace)
+                                             $vector.field.localPointsInDimensionsAfterDimRepInBasis(propagationDimensionObject.inBasis($homeBasis), $homeBasis)
       @end if
       @silent innerLoopTemplate.reducedVector = reducedVector
       @silent innerLoopTemplate.vector = vector
@@ -155,7 +155,7 @@ for (long _icomp = 0; _icomp < _${vector.id}_ncomponents; _icomp++) {
     @end for
   @end capture
   @#
-${loopOverFieldInSpaceWithVectorsAndInnerContent($parent.reducedField, $homeSpace, $setOfVectorsToLoopOver,
+${loopOverFieldInBasisWithVectorsAndInnerContent($parent.reducedField, $homeBasis, $setOfVectorsToLoopOver,
                                                  $loopContents, indexOverrides = $indexOverrides,
                                                  vectorsNotNeedingDefines = $setOfVectorsToLoopOver)}@slurp
   @#
@@ -173,7 +173,8 @@ ${loopOverFieldInSpaceWithVectorsAndInnerContent($parent.reducedField, $homeSpac
 void _${name}_initialise_cross_propagation()
 {
   @set $positiveIndexOverride = '0'
-  @set $propDimRep = $parent.field.dimensionWithName($propagationDimension).inSpace(0)
+  @set $basis = $parent.operatorBasis
+  @set $propDimRep = $parent.field.dimensionWithName($propagationDimension).inBasis(basis)
   @set $negativeIndexOverride = c'(${propDimRep.globalLattice} - 1)'
   @#
   @set $combinedLoopVectorMap = $integrationVectorMap.copy()
@@ -183,7 +184,7 @@ void _${name}_initialise_cross_propagation()
   @set $boundaryConditionDependencies = $parent.codeBlocks['boundaryCondition'].dependencies
   @silent vectorsNeedingTransforms.update(combinedLoopVectorMap.values())
   @silent vectorsNeedingTransforms.update(boundaryConditionDependencies)
-  ${transformVectorsToSpace(vectorsNeedingTransforms, 0), autoIndent=True}@slurp
+  ${transformVectorsToBasis(vectorsNeedingTransforms, basis), autoIndent=True}@slurp
   
   // Copy the initial value of the cross-propagation integration vectors and dependencies into our local arrays
   {

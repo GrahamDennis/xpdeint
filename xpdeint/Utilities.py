@@ -333,7 +333,6 @@ class GeneralisedBidirectionalSearch(object):
                     
                     # The total cost for the route
                     totalCost = costsOperation(operator.add, destCost, currentState.cost)
-                    print totalCost
                     targetRoutes[frozenset([currentState.source, destination])] = currentState.cost
                     maxCost = max(currentState.cost, maxCost)
                     

@@ -25,7 +25,7 @@ ${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction=function)}
 
 ${propagationDimension} += 0.5*_step;
 
-${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
+${transformVectorsToBasis($integrationVectors, $homeBasis)}@slurp
 
 ${copyVectors($integrationVectors, '_oldcopy')}@slurp
 
@@ -44,12 +44,12 @@ for (int _iteration = 0; _iteration < ${iterations}; _iteration++) {
   } else {
     ${callFunction('deltaA', arguments, parentFunction=function), autoIndent=True}
     
-    ${transformVectorsToSpace($integrationVectors, $homeSpace), autoIndent=True}@slurp
+    ${transformVectorsToBasis($integrationVectors, $homeBasis), autoIndent=True}@slurp
     
     ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """// a = oldcopy + a
 _${vector.id}[$index] += _oldcopy_${vector.id}[$index];
-""", space=$homeSpace), autoIndent=True}@slurp
+""", basis=$homeBasis), autoIndent=True}@slurp
   }
   
 }

@@ -15,8 +15,8 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   @set $dimensionsWithIndexOverrides = [dim for dim in loopingField.dimensions if not $deltaAField.hasDimension(dim)]
   @set $setOfVectorsToLoopOver = set($deltaAField.vectors)
   @silent setOfVectorsToLoopOver.update($vectorsForcingReordering)
-  @set $indexOverrides = dict([(dim.name, {loopingField: c'_${dim.inSpace($operatorSpace).name}_index'}) for dim in $dimensionsWithIndexOverrides])
-${loopOverFieldInSpaceWithVectorsAndInnerContent(loopingField, $operatorSpace, $setOfVectorsToLoopOver, $insideCopyDeltaALoops, $indexOverrides)}@slurp
+  @set $indexOverrides = dict([(dim.name, {loopingField: c'_${dim.inBasis($operatorBasis).name}_index'}) for dim in dimensionsWithIndexOverrides])
+${loopOverFieldInBasisWithVectorsAndInnerContent(loopingField, $operatorBasis, $setOfVectorsToLoopOver, $insideCopyDeltaALoops, $indexOverrides)}@slurp
   @#
 @end def
 

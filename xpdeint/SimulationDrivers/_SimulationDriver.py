@@ -19,14 +19,6 @@ class _SimulationDriver (ScriptElement):
     # Put ourselves at the start after the simulation element
     self.distributedDimensionNames = []
   
-  def sizeOfFieldInSpace(self, field, space):
-    """Return a name of a variable the value of which is the size of `field` in `space`."""
-    return field.allocSize
-  
-  def orderedDimensionsForFieldInSpace(self, field, space):
-    """Return a list of the dimensions for field in the order in which they should be looped over"""
-    return field.dimensions[:]
-  
   def isFieldDistributed(self, field):
     return False
   

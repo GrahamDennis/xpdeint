@@ -11,15 +11,12 @@ from xpdeint.Features.Transforms._NoTransform import _NoTransform
 
 class _NoTransformMPI (_NoTransform):
   def initialiseForMPIWithDimensions(self, dimensions):
-    dimensions[0].inSpace(0).setHasLocalOffset()
+    dimensions[0].representations[0].setHasLocalOffset()
     self.mpiDimension = dimensions[0]
     self._driver.distributedDimensionNames.append(self.mpiDimension.name)
   
   def isFieldDistributed(self, field):
     return field.hasDimension(self.mpiDimension)
-  
-  def mpiDimRepForSpace(self, space):
-    return self.mpiDimension.inSpace(space)
   
   def canonicalBasisForBasis(self, basis):
     mpiDimRep = self.mpiDimension.representations[0]

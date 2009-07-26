@@ -119,7 +119,7 @@ _outfile = NULL;
   @set $fp = dict['fp']
   @set $xsilElementName = dict['xsilElementName']
   @set $field = dict['field']
-  @set $space = dict['space']
+  @set $basis = dict['basis']
   @set $numIndependentVariables = len($field.dimensions)
   @#
   @set $dependentVariables = dict['dependentVariables']
@@ -141,7 +141,7 @@ if ($fp) {
   fprintf($fp, "@slurp
   @# First loop over the dimensions (the independent variables)
   @for $dimension in $field.dimensions
-${dimension.inSpace(space).name} @slurp
+${dimension.inBasis(basis).name} @slurp
   @end for
   @#
   @# Now loop over the dependent variables
@@ -161,7 +161,7 @@ ${componentName}R ${componentName}I @slurp
   @#
   @# Now loop over the dimensions
   @for $dimension in $field.dimensions
-  fprintf($fp, "    <Dim>%i</Dim>\n", $dimension.inSpace(space).globalLattice);
+  fprintf($fp, "    <Dim>%i</Dim>\n", $dimension.inBasis(basis).globalLattice);
   @end for
   @# Now the variables dimension
   fprintf($fp, "    <Dim>${numIndependentVariables + componentCount}</Dim>\n");

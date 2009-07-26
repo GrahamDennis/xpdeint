@@ -78,7 +78,7 @@ ${generateNoisesForVector($dict)}@slurp
   @#
   @set $caller = dict['caller']
   @set $field = dict['codeBlock'].field
-  @set $space = dict['codeBlock'].space
+  @set $basis = dict['codeBlock'].basis
   @#
   @set $noisesNeeded = $noises[:]
   @if caller.hasattr('noises')
@@ -89,16 +89,16 @@ ${generateNoisesForVector($dict)}@slurp
   @end if
   @#
   @set $featureOrdering = ['Driver']
-  @set $featureDict = {'field': field, 'space': space, 'noises': noisesNeeded, 'extraIndent': 0}
+  @set $featureDict = {'field': field, 'basis': basis, 'noises': noisesNeeded, 'extraIndent': 0}
 ${insertCodeForFeatures('generateNoisesBegin', featureOrdering, featureDict)}@slurp
   @set $extraIndent = featureDict['extraIndent']
   @#
   @capture result
-real _var = 1.0 / $field.volumeElementInSpace($space);
+real _var = 1.0 / $field.volumeElementInBasis(basis);
 
     @for noise in noisesNeeded
       @set $noiseVector = noise.noiseVectorForField(field)
-_make_${noise.prefix}_noises(_var, _${noiseVector.id}, ${noiseVector.sizeInSpace(space)});
+_make_${noise.prefix}_noises(_var, _${noiseVector.id}, ${noiseVector.sizeInBasis(basis)});
     @end for
 
   @end capture
@@ -116,9 +116,9 @@ ${insertCodeForFeaturesInReverseOrder('generateNoisesEnd', featureOrdering, feat
   @end if
   @#
   @for field in integrator.integrationFields
-    @set $space = $deltaAOperatorSpaceForFieldInIntegrator(field, integrator)
+    @set $basis = $deltaAOperatorBasisForFieldInIntegrator(field, integrator)
     @#
-const real _${field.name}_var = 1.0/($field.volumeElementInSpace($space) * _noiseStep);
+const real _${field.name}_var = 1.0/($field.volumeElementInBasis(basis) * _noiseStep);
   @end for
   @#
 @end def
@@ -132,9 +132,9 @@ const real _${field.name}_var = 1.0/($field.volumeElementInSpace($space) * _nois
   @end if
   @#
   @for field in integrator.integrationFields
-    @set $space = $deltaAOperatorSpaceForFieldInIntegrator(field, integrator)
+    @set $basis = $deltaAOperatorBasisForFieldInIntegrator(field, integrator)
     @#
-const real _${field.name}_var = 1.0 / $field.volumeElementInSpace($space);
+const real _${field.name}_var = 1.0 / $field.volumeElementInBasis(basis);
   @end for
 
 list<_dtdWstore> _noise_list;
@@ -169,8 +169,8 @@ _active_${noiseVector.id} = _${noiseVector.id};
   @set $featureOrdering = ['Driver']
   @for field in $integrator.integrationFields
     @set $noises = $noisesForFieldInIntegrator(field, integrator)
-    @set $space = $deltaAOperatorSpaceForFieldInIntegrator(field, integrator)
-    @set $featureDict = {'field': field, 'space': space, 'noises': noises, 'extraIndent': 0}
+    @set $basis = $deltaAOperatorBasisForFieldInIntegrator(field, integrator)
+    @set $featureDict = {'field': field, 'basis': basis, 'noises': noises, 'extraIndent': 0}
 ${insertCodeForFeatures('generateNoisesBegin', featureOrdering, featureDict)}@slurp
     @set $extraIndent = featureDict['extraIndent']
     @#
@@ -178,14 +178,14 @@ ${insertCodeForFeatures('generateNoisesBegin', featureOrdering, featureDict)}@sl
       @for noise in noises
         @set $noiseVector = noise.noiseVectorForField(field)
 
-_make_${noise.prefix}_noises(_${field.name}_var, _${noiseVector.id}, ${noiseVector.sizeInSpace(integrator.homeSpace)});
+_make_${noise.prefix}_noises(_${field.name}_var, _${noiseVector.id}, ${noiseVector.sizeInBasis(integrator.basis)});
         @#
         @if 'ErrorCheck' in $features
 if (!_half_step) {
-  _make_${noise.prefix}_noises(_${field.name}_var, _${noiseVector.id}2, ${noiseVector.sizeInSpace(integrator.homeSpace)});
+  _make_${noise.prefix}_noises(_${field.name}_var, _${noiseVector.id}2, ${noiseVector.sizeInBasis(integrator.basis)});
   ${loopOverVectorsWithInnerContentTemplate([$noiseVector],
 """_${vector.id}[$index] = 0.5*(_${vector.id}[$index] + _${vector.id}2[$index]);
-""", space = integrator.homeSpace), autoIndent=True}@slurp
+""", basis = basis), autoIndent=True}@slurp
 }
         @end if
       @end for
@@ -199,7 +199,6 @@ ${insertCodeForFeatures('generateNoisesEnd', featureOrdering, featureDict)}@slur
 @def integrateAdaptiveStepInnerLoopBegin(dict)
   @#
   @set $integrator = dict['caller']
-  @set $space = integrator.homeSpace
   @#
   @if not $integratorNeedsNoises(integrator)
     @return
@@ -219,16 +218,16 @@ if (_noise_list.empty()) {
   _active_node->_${noiseVector.id} = _active_${noiseVector.id};
     @end for
   
-    @set $space = $deltaAOperatorSpaceForFieldInIntegrator(field, integrator)
+    @set $basis = $deltaAOperatorBasisForFieldInIntegrator(field, integrator)
     @set $featureOrdering = ['Driver']
-    @set $featureDict = {'field': field, 'space': space, 'noises': noises, 'extraIndent': 0}
+    @set $featureDict = {'field': field, 'basis': basis, 'noises': noises, 'extraIndent': 0}
   ${insertCodeForFeatures('generateNoisesBegin', featureOrdering, featureDict), autoIndent=True}@slurp
     @set $extraIndent = featureDict['extraIndent']
     @#
     @capture result
       @for noise in noises
         @set $noiseVector = noise.noiseVectorForField(field)
-_make_${noise.prefix}_noises(_${field.name}_var/_step, _active_${noiseVector.id}, ${noiseVector.sizeInSpace(space)});
+_make_${noise.prefix}_noises(_${field.name}_var/_step, _active_${noiseVector.id}, ${noiseVector.sizeInBasis(basis)});
       @end for
     @end capture
   ${result, autoIndent=True, extraIndent=extraIndent}@slurp
@@ -253,18 +252,18 @@ _make_${noise.prefix}_noises(_${field.name}_var/_step, _active_${noiseVector.id}
   _active_${noiseVector.id} = (${noiseVector.type}*) xmds_malloc(sizeof(${noiseVector.type}) * ${noiseVector.allocSize});
     @end for
   
-    @set $space = $deltaAOperatorSpaceForFieldInIntegrator(field, integrator)
+    @set $basis = $deltaAOperatorBasisForFieldInIntegrator(field, integrator)
     @set $featureOrdering = ['Driver']
-    @set $featureDict = {'field': field, 'space': space, 'noises': noises, 'extraIndent': 0}
+    @set $featureDict = {'field': field, 'basis': basis, 'noises': noises, 'extraIndent': 0}
   ${insertCodeForFeatures('generateNoisesBegin', featureOrdering, featureDict), autoIndent=True}@slurp
     @set $extraIndent = featureDict['extraIndent']
     @#
     @capture result
       @for noise in noises
         @if noise.noiseDistribution == 'gaussian'
-${breakGaussianNoiseInFieldInSpace(noise, field, space)}@slurp
+${breakGaussianNoiseInFieldInBasis(noise, field, basis)}@slurp
         @elif noise.noiseDistribution == 'poissonian'
-${breakPoissonianNoiseInFieldInSpace(noise, field, space)}@slurp
+${breakPoissonianNoiseInFieldInBasis(noise, field, basis)}@slurp
         @end if
       @end for
     @end capture
@@ -303,7 +302,7 @@ ${breakPoissonianNoiseInFieldInSpace(noise, field, space)}@slurp
   @#
 @end def
 
-@def breakGaussianNoiseInFieldInSpace($noise, $field, $space)
+@def breakGaussianNoiseInFieldInBasis($noise, $field, $basis)
 @*doc:
 Return the code to generate a new smaller gaussian noise from a previous noise.
 
@@ -318,7 +317,7 @@ code, not in the template itself.
 
   @# Then generate a new noise of the appropriate variance
 _make_${noise.prefix}_noises(_${field.name}_var * (_old_smallest_step - _step)/(_step * _old_smallest_step), 
-    _active_${noiseVector.id}, ${noiseVector.sizeInSpace(space)});
+    _active_${noiseVector.id}, ${noiseVector.sizeInBasis(basis)});
 
   @# Then add the old noise.
   @# When adding the old noise, the first step is to get a pointer to the old noise itself.
@@ -330,12 +329,12 @@ ${noiseVector.type}* const _old_${noiseVector.id} = _noise_list.begin()->_${nois
   @# adding the old vector at each point.
 ${loopOverVectorsWithInnerContentTemplate([$noiseVector], 
 """_active_${vector.id}[$index] += _old_${vector.id}[$index];
-""", space = space), autoIndent=True}@slurp
+""", basis = basis), autoIndent=True}@slurp
 
   @#
 @end def
 
-@def breakPoissonianNoiseInFieldInSpace($noise, $field, $space)
+@def breakPoissonianNoiseInFieldInBasis($noise, $field, $basis)
 @*doc:
 Return the code to generate a new smaller poissonian noise from a previous noise.
 
@@ -349,7 +348,7 @@ code, not in the template itself.
 
 ${noiseVector.type}* const _old_${noiseVector.id} = _noise_list.begin()->_${noiseVector.id};
 
-_split_${noise.prefix}_noises(_${field.name}_var / _step, _${field.name}_var / _old_smallest_step, _active_${noiseVector.id}, _old_${noiseVector.id}, ${noiseVector.sizeInSpace(space)});
+_split_${noise.prefix}_noises(_${field.name}_var / _step, _${field.name}_var / _old_smallest_step, _active_${noiseVector.id}, _old_${noiseVector.id}, ${noiseVector.sizeInBasis(basis)});
 
   @#
 @end def

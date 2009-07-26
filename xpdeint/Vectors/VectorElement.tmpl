@@ -31,6 +31,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   @super
   @#
 // vector $name globals
+size_t ${allocSize} = 0;
 $type* _${id} = NULL;
 $type* _active_${id} = NULL;
   @if $needsTransforms
@@ -48,7 +49,7 @@ unsigned long _${id}_space;
 ${initialiser.initialiseVector}@slurp
   @if $needsTransforms
 
-_${id}_space = $initialSpace;
+_${id}_space = $spaceForBasis(self.initialBasis);
   @end if
   @#
 @end def
@@ -82,10 +83,10 @@ ${functions['initialise'].call()}
 *@
 @def allocate
 
-_${id} = ($type*) xmds_malloc(sizeof($type) * ${allocSize});
+_${id} = ($type*) xmds_malloc(sizeof(${type}) * ${allocSize});
 _active_${id} = _${id};
   @for aliasName in $aliases
-$aliasName = ($type*) xmds_malloc(sizeof($type) * ${allocSize}); // alias for _${id}
+$aliasName = ($type*) xmds_malloc(sizeof(${type}) * ${allocSize}); // alias for _${id}
   @end for
 @end def
 
@@ -99,7 +100,7 @@ ${aliasName} = NULL;
   @end for
 @end def
 
-@def findMaximum($variableName, $space = None)
+@def findMaximum($variableName, $basis = None)
 real ${variableName} = 0.0;
 
   @if $type == 'real'
@@ -112,7 +113,7 @@ real _current_size = ${modFunction}(_active_\${vector.id}[\${index}]);
 if (_current_size > $variableName) // UNVECTORISABLE
   ${variableName} = _current_size;
   @end capture
-${loopOverVectorsWithInnerContentTemplate([self], loopContents, space = space)}@slurp
+${loopOverVectorsWithInnerContentTemplate([self], loopContents, basis = basis)}@slurp
   @if $type == 'complex'
 ${variableName} = sqrt(${variableName}); // Take the square root to find the modulus.
   @end if

@@ -112,6 +112,5 @@ class _EXOperator(Operator):
     
     vectors = set(self.targetVectors)
     vectors.add(self.resultVector)
-    self.registerVectorsRequiredInSpace(vectors, self.operatorSpace)
     self.registerVectorsRequiredInBasis(vectors, self.operatorBasis)
     

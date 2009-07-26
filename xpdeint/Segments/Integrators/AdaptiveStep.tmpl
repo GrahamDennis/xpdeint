@@ -115,7 +115,7 @@ real _segment${segmentNumber}_${vector.id}_timestep_error(${vector.type}* _check
     _cutoff[_i0] = 0.0;
   
   {
-    ${loopOverVectorsInSpaceWithInnerContent([vector], $homeSpace, $insideFindPeakLoops(vector)), autoIndent=True}@slurp
+    ${loopOverVectorsInBasisWithInnerContent([vector], $homeBasis, $insideFindPeakLoops(vector)), autoIndent=True}@slurp
   }
   ${insertCodeForFeatures('findMax', ['Driver'], {'variable': '_cutoff', 'count': c'_${vector.id}_ncomponents'}), autoIndent=True}@slurp
   
@@ -141,7 +141,7 @@ real _segment${segmentNumber}_${vector.id}_timestep_error(${vector.type}* _check
   @# @end for
   @#
   {
-    ${loopOverVectorsInSpaceWithInnerContent([vector], $homeSpace, $insideFindMaxErrorLoops(vector)), autoIndent=True}@slurp
+    ${loopOverVectorsInBasisWithInnerContent([vector], $homeBasis, $insideFindMaxErrorLoops(vector)), autoIndent=True}@slurp
   }
   ${insertCodeForFeatures('findMax', ['Driver'], {'variable': '&_error', 'count': '1'}), autoIndent=True}@slurp
   ${insertCodeForFeaturesInReverseOrder('timestepErrorEnd', featureOrdering, dict), autoIndent=True}@slurp
@@ -206,7 +206,7 @@ ${insertCodeForFeatures('updateMaximumError', ['Diagnostics'], {'vector': vector
   @#
 void _segment${segmentNumber}_${vector.id}_reset(${vector.type}* _reset_to)
 {
-  ${loopOverVectorsWithInnerContentTemplate([$vector], "_${vector.id}[$index] = _reset_to[$index];", space = $homeSpace), autoIndent=True}@slurp
+  ${loopOverVectorsWithInnerContentTemplate([$vector], "_${vector.id}[$index] = _reset_to[$index];", basis = $homeBasis), autoIndent=True}@slurp
 }
   @#
 @end def

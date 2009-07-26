@@ -106,17 +106,6 @@ class _FourierTransformFFTW3 (_Transform):
     dim.addRepresentation(kspace)
     return dim
   
-  def canTransformVectorInDimension(self, vector, dim):
-    result = super(_FourierTransformFFTW3, self).canTransformVectorInDimension(vector, dim)
-    if result:
-      transformName = self.transformNameMap[dim.name]
-      # We can only transform complex vectors with dft.
-      # dct/dst can manage both complex and real
-      if transformName == 'dft' and not vector.type == 'complex':
-        result = False
-    
-    return result
-  
   def r2rKindForDimensionAndDirection(self, dim, direction):
     dimName = dim.name if not isinstance(dim, types.StringTypes) else dim
     transformName = self.transformNameMap[dimName]

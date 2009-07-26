@@ -70,7 +70,7 @@ ${codeBlocks['operatorDefinition'].loop(self.insideEvaluateOperatorLoops)}@slurp
   @#
   @if $resultVector and $resultVector.needsTransforms
 
-_${resultVector.id}_space = $operatorSpace;
+_${resultVector.id}_space = $spaceForBasis($operatorBasis);
   @end if
   @#
 @end def
@@ -79,7 +79,7 @@ _${resultVector.id}_space = $operatorSpace;
   @#
   @# We need to loop over all of the vectors to which we are applying our operators.
   @#
-${transformVectorsToSpace($targetVectors, $operatorSpace)}@slurp
+${transformVectorsToBasis($targetVectors, $operatorBasis)}@slurp
   @#
 
   @# We have an operator vector and we will need to loop over it
@@ -93,7 +93,7 @@ ${evaluateOperatorLoop(setOfVectorsToLoopOver)}@slurp
   @#
   @if $resultVector and $resultVector.needsTransforms
 
-_${resultVector.id}_space = $operatorSpace;
+_${resultVector.id}_space = $spaceForBasis($operatorBasis);
   @end if
   @#
 @end def

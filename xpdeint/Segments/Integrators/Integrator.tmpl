@@ -157,7 +157,7 @@ to be terminated early
     @end if
     @#
     @for dim in filter(lambda x: not x.transverse, mg.outputField.dimensions)
-      @set $dimRep = dim.inSpace(0)
+      @set $dimRep = dim.inBasis(mg.outputBasis)
 if (${dimRep.prefix}_index_${dimRep.name} < ${dimRep.globalLattice})
   _${mg.name}_sample();
     @end for
