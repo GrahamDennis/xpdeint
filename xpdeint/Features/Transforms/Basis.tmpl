@@ -113,7 +113,7 @@ if (_forward) {
   }
 } else {
   for (long _i0 = 0; _i0 < _prefix_lattice; _i0++) {
-    ${performTransform(forwardDimRep, backwardDimRep, dir='backward'), autoIndent=True}@slurp
+    ${performTransform(backwardDimRep, forwardDimRep, dir='backward'), autoIndent=True}@slurp
   }
 }
   @#

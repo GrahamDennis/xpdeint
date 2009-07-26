@@ -307,12 +307,12 @@ def main(argv=None):
         template.implementationsForFunctionName('preflight')
     
     # Preflight is done
+    # We don't need the 'simulationVectors' variable any more.
+    del globalNameSpace['simulationVectors']
     
     # Now build the map of transforms needed in the simulation
     globalNameSpace['features']['TransformMultiplexer'].buildTransformMap()
     
-    # We don't need the 'simulationVectors' variable any more.
-    del globalNameSpace['simulationVectors']
     
     # Final conversion to string
     simulationContents = str(simulationTemplate)

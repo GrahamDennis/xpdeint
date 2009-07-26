@@ -23,7 +23,6 @@
     <benchmark />
     <error_check />
     <bing />
-    <fftw />
     <!-- <openmp /> -->
     <stochastic>
       <noise kind="gaussian" prefix="n" num="2" seed="293485"/>
@@ -31,8 +30,8 @@
     </stochastic>
     <globals>
       <![CDATA[
-      const double ggamma = 1.0;
-      const double beta = sqrt(2.0*M_PI*ggamma/10.0);
+      const real ggamma = 1.0;
+      const real beta = sqrt(2.0*M_PI*ggamma/10.0);
       ]]>
     </globals>
   </features>
@@ -94,7 +93,7 @@ t kx mean_pow_dens error_pow_dens stderr_pow_dens
     <Dim>51</Dim>
     <Dim>64</Dim>
     <Dim>5</Dim>
-    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint64" precision="double" Type="Remote" Encoding="LittleEndian"/>
 fibre_expected_mg0.dat
     </Stream>
   </Array>

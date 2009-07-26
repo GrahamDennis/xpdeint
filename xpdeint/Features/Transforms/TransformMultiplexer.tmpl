@@ -12,62 +12,6 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 #include <map>
 @end def
 
-@def goSpaceFunctionContentsBegin($dict)
-@*doc:
-Returns the ``go_space`` function implementation for vector `vector`.
-
-This writes the function that does the fourier transforming of a specific vector
-to and from arbitrary combinations of fourier-space and normal-space.
-*@
-  @#
-  @set $function = dict['function']
-  @set $vector = dict['caller']
-newSpace &= _${vector.field.name}_full_kspace_mask;
-if (_${vector.id}_space == newSpace)
-  return;
-
-  @for t in $transformsForVector(vector)
-// ${t.transformName}
-    @set $transformMask = t.transformMaskForVector(vector)
-if ((_${vector.id}_space & ${transformMask}) != (newSpace & ${transformMask}))
-{
-  long _newSpace = newSpace & ${transformMask};
-  long _currentSpace = _${vector.id}_space & ${transformMask};
-  ${t.goSpaceFunctionContentsForVector(function, vector), autoIndent=True}@slurp
-  // Clear bits for ${t.transformName}
-  newSpace &= ~${transformMask};
-  // Set bits for ${t.transformName}
-  newSpace |= _newSpace;
-}
-  @end for
-_${vector.id}_space = newSpace;
-  @#
-@end def
-
-@def oopCopyTransformFunction(transformID, transformDict, function)
-  @#
-memcpy(_data_out, _data_in, _prefix_lattice * _postfix_lattice * sizeof(real));
-  @#
-@end def
-
-@def ipMultiplyTransformFunction(transformID, transformDict, function)
-  @#
-#pragma ivdep
-for (long _idx = 0; _idx < _prefix_lattice * _postfix_lattice; _idx++) {
-  _data_in[_idx] *= _multiplier;
-}
-  @#
-@end def
-
-@def oopMultiplyTransformFunction(transformID, transformDict, function)
-  @#
-#pragma ivdep
-for (long _idx = 0; _idx < _prefix_lattice * _postfix_lattice; _idx++) {
-  _data_out[_idx] = _data_in[_idx] * _multiplier;
-}
-  @#
-@end def
-
 @def globals
   @#
 typedef pair<ptrdiff_t, ptrdiff_t> _basis_pair;
@@ -112,25 +56,99 @@ typedef map<_basis_pair, _basis_transform, _basis_pair_less_than> _basis_map;
   @for vector in self.vectorTransformMap
 _basis_map _${vector.id}_basis_map;
   @end for
+
+real *_auxiliary_array = NULL;
   @#
 @end def
+
+@def goSpaceFunctionContentsBegin($dict)
+@*doc:
+Returns the ``go_space`` function implementation for vector `vector`.
+
+This writes the function that does the fourier transforming of a specific vector
+to and from arbitrary combinations of fourier-space and normal-space.
+*@
+  @#
+  @set $function = dict['function']
+  @set $vector = dict['caller']
+  @set $transformInfo = self.vectorTransformMap[vector]
+newSpace &= _${vector.field.name}_full_kspace_mask;
+if (_${vector.id}_space == newSpace)
+  return;
+
+if (_${vector.id}_basis_map.count(_basis_pair(_${vector.id}_space, newSpace)) == 0) {
+  _LOG(
+    _ERROR_LOG_LEVEL,
+    "Error: We should have information about how to do every needed transform, but it seems we don't for this transform.\n"
+    "       The transform is for the vector '${vector.id}' from space %li to space %li.\n",
+    _${vector.id}_space, newSpace
+  );
+}
+_basis_transform &_t = _${vector.id}_basis_map[_basis_pair(_${vector.id}_space, newSpace)];
+if (_t._transform_steps.size() == 0) {
+  _LOG(_ERROR_LOG_LEVEL, "Error: It looks like we tried to create plans for this transform, but failed.\n"
+                         "       The transform was for the vector '${vector.id}' from space %li to space %li.\n",
+                         _${vector.id}_space, newSpace);
+}
+real *_source_data = reinterpret_cast<real*>(_active_${vector.id});
+real *_dest_data = _auxiliary_array;
+for (vector<_transform_step>::iterator _it = _t._transform_steps.begin(); _it != _t._transform_steps.end(); ++_it) {
+  _it->_func(_it->_forward, _t._multiplier, _source_data, _dest_data, _it->_prefix_lattice, _it->_postfix_lattice);
+  if (_it->_out_of_place) {
+    real *_temp = _source_data;
+    _source_data = _dest_data;
+    _dest_data = _temp;
+  }
+}
+_${vector.id}_space = newSpace;
+  @#
+@end def
+
+@def oopCopyTransformFunction(transformID, transformDict, function)
+  @#
+memcpy(_data_out, _data_in, _prefix_lattice * _postfix_lattice * sizeof(real));
+  @#
+@end def
+
+@def ipMultiplyTransformFunction(transformID, transformDict, function)
+  @#
+#pragma ivdep
+for (long _idx = 0; _idx < _prefix_lattice * _postfix_lattice; _idx++) {
+  _data_in[_idx] *= _multiplier;
+}
+  @#
+@end def
+
+@def oopMultiplyTransformFunction(transformID, transformDict, function)
+  @#
+#pragma ivdep
+for (long _idx = 0; _idx < _prefix_lattice * _postfix_lattice; _idx++) {
+  _data_out[_idx] = _data_in[_idx] * _multiplier;
+}
+  @#
+@end def
+
 
 @def mainBegin($dict)
   @#
 
 _basis_transform *_basis_transform = NULL;
+ptrdiff_t _auxiliary_array_size = 0;
 
   @set $boolMap = {True: 'true', False: 'false'}
   @for vector, vectorTransformInfo in self.vectorTransformMap.items()
+    @set $needsAuxiliaryArray = False
     @set $bases = vectorTransformInfo['bases']
     @set $basisPairMap = vectorTransformInfo['basisPairMap']
     @for basisPairInfo in basisPairMap.values()
       @set $basisPair = basisPairInfo['basisPair']
-_basis_transform = &_${vector.id}_basis_map[_basis_pair(${', '.join([str(bases.index(basis)) for basis in basisPair])})];
+@#_basis_transform = &_${vector.id}_basis_map[_basis_pair(${', '.join([str(bases.index(basis)) for basis in basisPair])})];
+_basis_transform = &_${vector.id}_basis_map[_basis_pair(${', '.join([str(self.spaceForBasis(basis)) for basis in basisPair])})];
       @if basisPairInfo['forwardScale']
 _basis_transform->_multiplier = ${' * '.join(basisPairInfo['forwardScale'])};
       @end if
       @for transformStep in basisPairInfo['transformSteps']
+        @set needsAuxiliaryArray = True if transformStep[2] else needsAuxiliaryArray
 _basis_transform->append(
   /* transform function */ _transform_${transformStep[0]},
   /* forward? */ ${boolMap[transformStep[1]]},
@@ -140,11 +158,13 @@ _basis_transform->append(
 );
       @end for
 
-_basis_transform = &_${vector.id}_basis_map[_basis_pair(${', '.join([str(bases.index(basis)) for basis in reversed(basisPair)])})];
+@#_basis_transform = &_${vector.id}_basis_map[_basis_pair(${', '.join([str(bases.index(basis)) for basis in reversed(basisPair)])})];
+_basis_transform = &_${vector.id}_basis_map[_basis_pair(${', '.join([str(self.spaceForBasis(basis)) for basis in reversed(basisPair)])})];
       @if basisPairInfo['backwardScale']
 _basis_transform->_multiplier = ${' * '.join(basisPairInfo['backwardScale'])};
       @end if
       @for transformStep in reversed(basisPairInfo['transformSteps'])
+        @set needsAuxiliaryArray = True if transformStep[2] else needsAuxiliaryArray
 _basis_transform->append(
   /* transform function */ _transform_${transformStep[0]},
   /* forward? */ ${boolMap[not transformStep[1]]},
@@ -155,6 +175,22 @@ _basis_transform->append(
       @end for
 
     @end for
+    @if needsAuxiliaryArray
+      @set sizePrefix = '2 * ' if vector.type == 'complex' else ''
+_auxiliary_array_size = MAX(_auxiliary_array_size, ${sizePrefix}${vector.allocSize}); // vector '${vector.name}' needs an out-of-place transform
+
+    @end if
   @end for
+if (_auxiliary_array_size) {
+  _auxiliary_array = (real*) xmds_malloc(sizeof(real) * _auxiliary_array_size);
+}
+  @#
+@end def
+
+@def mainEnd($dict)
+  @#
+if (_auxiliary_array) {
+  xmds_free(_auxiliary_array);
+}
   @#
 @end def

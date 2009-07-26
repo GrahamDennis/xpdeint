@@ -76,7 +76,7 @@ t mean_zR mean_zI stderr_zR stderr_zI
   <Array Name="data" Type="double">
     <Dim>501</Dim>
     <Dim>5</Dim>
-    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint64" precision="double" Type="Remote" Encoding="LittleEndian"/>
 kubo_expected_mg0.dat
     </Stream>
   </Array>

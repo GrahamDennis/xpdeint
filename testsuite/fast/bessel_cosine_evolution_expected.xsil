@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
   <testing>
+    <input_xsil_file name="bessel_cosine_groundstate_breakpoint_expected.xsil" />
     <xsil_file name="bessel_cosine_evolution.xsil" expected="bessel_cosine_evolution_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
   </testing>
   
@@ -13,6 +14,7 @@
     to z and a cosine series to expand the solution along z.
     
     This testcase tests using both Fourier transforms and Matrix transforms in a single simulation.
+    
   </description>
   
   <features>
@@ -66,7 +68,7 @@
       phi
     </components>
     <initialisation kind="hdf5">
-      <filename>bessel_cosine_groundstate_breakpoint.h5</filename>
+      <filename>bessel_cosine_groundstate_breakpoint_expected.h5</filename>
     </initialisation>
   </vector>
   

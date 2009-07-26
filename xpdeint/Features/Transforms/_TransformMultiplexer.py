@@ -10,6 +10,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 from xpdeint.Features._Feature import _Feature
 from xpdeint.Utilities import lazy_property, combinations, GeneralisedBidirectionalSearch
 from xpdeint.Function import Function
+from xpdeint.Vectors.VectorElement import VectorElement
 
 import operator
 
@@ -269,14 +270,15 @@ class _TransformMultiplexer (_Feature):
         repNameBasis = tuple([repNameBasis])
       return tuple(representationMap[dimRepName] for dimRepName in repNameBasis)
     
-    vectors = [v for v in self.getVar('simulationVectors') if v.needsTransforms]
+    vectors = [v for v in self.getVar('templates') if isinstance(v, VectorElement) and v.needsTransforms]
+    
     driver = self._driver
     transformMap = dict()
     
     basesFieldMap = dict()
     for vector in vectors:
-      vectorBases = set(driver.canonicalBasisForBasis(convertSpaceInFieldToBasis(space, vector.field))
-                          for space in vector.spacesNeeded)
+      vectorBases = set([driver.canonicalBasisForBasis(convertSpaceInFieldToBasis(space, vector.field))
+                          for space in vector.spacesNeeded])
       if not vector.field.name in basesFieldMap:
         basesFieldMap[vector.field.name] = set()
       basesFieldMap[vector.field.name].update(vectorBases)
@@ -347,12 +349,21 @@ class _TransformMultiplexer (_Feature):
           # (think FFT's with different numbers of points not in the FFT dimension)
           geometrySpecification = None
           transformation = self.availableTransformations[transformID]
-          if 'requiresScaling' in transformation:
-            basisPairInfo['forwardScale'].append(transformation['forwardScale'])
-            basisPairInfo['backwardScale'].append(transformation['backwardScale'])
           
           resultBasis, (prefixBasis, matchedSourceBasis, postfixBasis) = transformedBasis(currentBasis, transformPair)
-          forward = True if transformPair and transformPair[0] == matchedSourceBasis else False
+          forward = True
+          if transformPair:
+            sourceBasis = transformPair[0]
+            if not isinstance(sourceBasis, tuple): sourceBasis = tuple([sourceBasis])
+            forward = True if sourceBasis == matchedSourceBasis else False
+          
+          if 'requiresScaling' in transformation:
+            forwardScale, backwardScale = transformation['forwardScale'], transformation['backwardScale']
+            if not forward:
+              forwardScale, backwardScale = backwardScale, forwardScale
+            basisPairInfo['forwardScale'].append(forwardScale)
+            basisPairInfo['backwardScale'].append(backwardScale)
+          
           prefixDimReps = basisToDimRepBasis(prefixBasis)
           postfixDimReps = basisToDimRepBasis(postfixBasis)
           
