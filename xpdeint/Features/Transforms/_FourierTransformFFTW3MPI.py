@@ -45,16 +45,12 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
     if len(dimensions) < 2:
       raise ParserException(self._driver.xmlElement,
                             "There must be at least two dimensions to use the 'distributed-mpi' with the '%s' transform." % self.transformName[dimensions[0].name])
-    if not (dimensions[0].transform == self and dimensions[1].transform == self) \
-       or ((self.transformNameMap[dimensions[0].name] == 'dft') ^ (self.transformNameMap[dimensions[1].name] == 'dft')) \
-       or ((self.transformNameMap[dimensions[0].name] in ['dct', 'dst']) ^ (self.transformNameMap[dimensions[1].name] in ['dct', 'dst'])):
-      raise ParserException(self._driver.xmlElement,
-                            "To use the 'distributed-mpi' driver with the 'dft', 'dct' or 'dst' transforms, both the first and second dimensions "
-                            "must use one of these transforms with the additional restriction that if the 'dft' transform is used for one dimension "
-                            "it must be used for the other.")
-    
-    for dim in dimensions[0:2]:
-      assert self.transformNameMap[dim.name] in ['dft', 'dct', 'dst']
+    if len(dimensions[0].representations) <= 1 or len(dimensions[1].representations) <= 1:
+      raise ParserException(
+        self._driver.xmlElement,
+        "To use the 'distributed-mpi' driver either the first dimension must have no transform or "
+        "the first two dimensions must both have transforms."
+      )
     
     self._driver.distributedDimensionNames = [dim.name for dim in dimensions[0:2]]
     self.mpiDimensions = dimensions[0:2]
@@ -72,10 +68,6 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
       distributedRep.setHasLocalOffset('swapped')
       secondMPIDimension.addRepresentation(distributedRep)
     
-    self.distributedMPIKinds = set([self.transformNameMap[firstMPIDimension.name]])
-    if self.distributedMPIKinds.intersection(['dct', 'dst']):
-      self.distributedMPIKinds.update(['dct', 'dst'])
-    
   
   def isFieldDistributed(self, field):
     if not field:
@@ -85,7 +77,7 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
   def fullTransformDimensionsForField(self, field):
     keyFunc = lambda x: {'dft': 'complex', 'dct': 'real', 'dst': 'real'}.get(self.transformNameMap.get(x.name))
     for transformType, dims in groupby(field.transverseDimensions, keyFunc):
-      return list(dims)
+      return list(dims) if transformType else []
   
   @property
   def vectorsNeedingDistributedTransforms(self):
@@ -124,10 +116,12 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
     untransformedDimReps = dict([(dimName, geometry.dimensionWithName(dimName).representations[0]) for dimName in sortedDimNames])
     transformedDimReps = dict([(dimName, geometry.dimensionWithName(dimName).representations[1]) for dimName in sortedDimNames])
     
-    mpiTransformDimNamesLists = [self._driver.distributedDimensionNames]
+    mpiTransformDimNamesLists = []
     fullTransformDims = self.fullTransformDimensionsForField(geometry)
     if len(fullTransformDims) > 2:
       mpiTransformDimNamesLists.append([dim.name for dim in fullTransformDims])
+    if len(fullTransformDims) >= 2:
+      mpiTransformDimNamesLists.append([dim.name for dim in fullTransformDims[0:2]])
     
     for dimNames in mpiTransformDimNamesLists:
       untransformedBasis = tuple(untransformedDimReps[dimName].name for dimName in dimNames)

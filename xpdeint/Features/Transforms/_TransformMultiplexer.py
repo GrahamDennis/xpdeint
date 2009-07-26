@@ -265,7 +265,7 @@ class _TransformMultiplexer (_Feature):
         repNameBasis = tuple([repNameBasis])
       return tuple(representationMap[dimRepName] for dimRepName in repNameBasis)
     
-    vectors = [v for v in self.getVar('templates') if isinstance(v, VectorElement) and v.needsTransforms]
+    vectors = set([v for v in self.getVar('templates') if isinstance(v, VectorElement) and v.needsTransforms])
     
     driver = self._driver
     transformMap = dict()

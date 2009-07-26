@@ -28,21 +28,23 @@ class _NonUniformDimensionRepresentation(DimensionRepresentation):
   dimensions, which is exactly where the weight should be used.
   """
   def __init__(self, **KWs):
-    localKWs = self.extractLocalKWs(['stepSizeArray'], KWs)
+    localKWs = self.extractLocalKWs(['stepSizeArray', 'maximum'], KWs)
     DimensionRepresentation.__init__(self, **KWs)
     
     self.stepSizeArray = localKWs.get('stepSizeArray', False)
+    self._maximum = localKWs.get('maximum')
   
   def __eq__(self, other):
     try:
       return (DimensionRepresentation.__eq__(self, other) and
-              self.stepSizeArray == other.stepSizeArray)
+              self.stepSizeArray == other.stepSizeArray and
+              self._maximum == other._maximum)
     except AttributeError:
       return NotImplemented
   
   def _newInstanceDict(self):
     result = DimensionRepresentation._newInstanceDict(self)
-    result.update({'stepSizeArray': self.stepSizeArray})
+    result.update({'stepSizeArray': self.stepSizeArray, 'maximum': self._maximum})
     return result
   
   @lazy_property
