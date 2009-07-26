@@ -143,3 +143,8 @@ Testcases needed:
 
 * Trigger support (Ask Michael Hush)
 
+* Things that can be done with the new basis system:
+  - Distributed MPI for all! (Think distributed matrix transforms and distributed bessel/cosine transforms!)
+  - Abel transforms and Fourier transforms for Hermite-Gauss bases
+  - Non-commutative transforms like plane polar and spherical polar
+  - Fix the slow writeout of HDF5 data when MPI & swapped.

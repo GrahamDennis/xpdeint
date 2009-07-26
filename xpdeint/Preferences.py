@@ -1,17 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
-"""This is the list of preferences that we don't want to bother listing at runtime.
-Chief amongst them are the compile options.
-
-We start here just listing these preferences, and then later we can generate this file via some clever method.  Or autoconf."""
-
 import os
 
-CC="g++"
-CFLAGS="-O3 -ffast-math -funroll-all-loops -fomit-frame-pointer"
-MPICC="mpic++"
-MPICFLAGS=""
-
-versionString = '0.7 "May the fish be with you"'
+versionString = '0.8 "The fish of good hope."'
 
 xpdeintUserDataPath = os.path.join(os.path.expanduser('~'), '.xmds')

@@ -89,15 +89,6 @@ class _Dimension(ScriptElement):
     return self._mappingRules
   
   def inSpace(self, space):
-    if isinstance(space, types.StringTypes):
-      # The space is a string, so use a proxy (if necessary)
-      # to allow the correct representation to be determined at run-time
-      if len(self.representations) == 1:
-        return self.representations[0]
-      else:
-        return RepresentationProxy(space, self.mappingRules, self.representations[:])
-    
-    # We know the space value now, so just return the correct representation
     for mask, index in self.mappingRules:
       if mask == None:
         return self.representations[index]
@@ -161,42 +152,3 @@ class _Dimension(ScriptElement):
     else:
       return not eq
   
-
-class RepresentationProxy(object):
-  def __init__(self, spaceVarName, mappingRules, representations):
-    object.__init__(self)
-    
-    self.spaceVarName = spaceVarName
-    self.mappingRules = mappingRules
-    self.representations = representations
-  
-  def __getattribute__(self, name):
-    """Produce ternary expressions that get the variables in the correct representation."""
-    # As we are customising attribute access in this method, attempts to access attributes directly
-    # would lead to infinite recursion (bad), so we must access variables specially
-    representations = object.__getattribute__(self, 'representations')
-    # If not all of the representations have this attribute, then raise an exception
-    if not all([hasattr(rep, name) for rep in representations]):
-      raise AttributeError
-    
-    result = []
-    resultIndex = 0
-    mappingRules = object.__getattribute__(self, 'mappingRules')
-    spaceVarName = object.__getattribute__(self, 'spaceVarName')
-    for mask, index in mappingRules:
-      if mask != None:
-        result.insert(resultIndex, '( (%(spaceVarName)s & %(mask)i) == %(mask)i ? ' % locals())
-        resultIndex += 1
-        result.insert(resultIndex+1, ')')
-      representationValue = getattr(representations[index], name)
-      if not isinstance(representationValue, types.StringTypes):
-        raise AttributeError
-      result.insert(resultIndex, representationValue)
-      resultIndex += 1
-      if mask != None:
-        result.insert(resultIndex, ' : ')
-        resultIndex += 1
-      
-    return ''.join(result)
-  
-

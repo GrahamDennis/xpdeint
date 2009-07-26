@@ -7,12 +7,6 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 @extends xpdeint.Features.Transforms._Basis
 
 @def globalsForDim($dim)
-  @#
-  @set $forwardDimRep = dim.inSpace(0)
-  @set $backwardDimRep = dim.inSpace(-1)
-real *_mmt_matrix_${forwardDimRep.name}_${backwardDimRep.name};
-real *_mmt_matrix_${backwardDimRep.name}_${forwardDimRep.name};
-  @#
 @end def
 
 @def gridAndStepForDimRep($dimRep)
@@ -31,8 +25,8 @@ ${dimRep.stepSizeArrayName}[$index] = ${stepWeightForDimRepAtIndex(dimRep, index
 @end def
 
 @def transformMatricesForDimReps($forwardDimRep, $backwardDimRep)
-_mmt_matrix_${forwardDimRep.name}_${backwardDimRep.name}  = (real *)xmds_malloc(sizeof(real) * ${forwardDimRep.globalLattice} * ${backwardDimRep.globalLattice});
-_mmt_matrix_${backwardDimRep.name}_${forwardDimRep.name} = (real *)xmds_malloc(sizeof(real) * ${backwardDimRep.globalLattice} * ${forwardDimRep.globalLattice});
+_mmt_matrix_forward  = (real *)xmds_malloc(sizeof(real) * ${forwardDimRep.globalLattice} * ${backwardDimRep.globalLattice});
+_mmt_matrix_backward = (real *)xmds_malloc(sizeof(real) * ${backwardDimRep.globalLattice} * ${forwardDimRep.globalLattice});
 for (long _i0 = 0; _i0 < ${forwardDimRep.globalLattice}; _i0++) {
   ${transformMatricesForwardDimConstantsAtIndex(forwardDimRep, backwardDimRep, '_i0'), autoIndent=True}@slurp
   for (long _i1 = 0; _i1 < ${backwardDimRep.globalLattice}; _i1++) {
@@ -46,9 +40,9 @@ for (long _i0 = 0; _i0 < ${forwardDimRep.globalLattice}; _i0++) {
 
 @def transformMatricesForDimRepsAtIndices($forwardDimRep, $backwardDimRep, $forwardIndex, $backwardIndex)
   @#
-_mmt_matrix_${forwardDimRep.name}_${backwardDimRep.name} [${backwardIndex} * ${forwardDimRep.globalLattice} + ${forwardIndex}] = \
+_mmt_matrix_forward [${backwardIndex} * ${forwardDimRep.globalLattice} + ${forwardIndex}] = \
   ${forwardMatrixForDimAtIndices(forwardDimRep, backwardDimRep, forwardIndex, backwardIndex)};
-_mmt_matrix_${backwardDimRep.name}_${forwardDimRep.name}[${forwardIndex} * ${backwardDimRep.globalLattice} + ${backwardIndex}] = \
+_mmt_matrix_backward[${forwardIndex} * ${backwardDimRep.globalLattice} + ${backwardIndex}] = \
   ${backwardMatrixForDimAtIndices(forwardDimRep, backwardDimRep, forwardIndex, backwardIndex)};
   @#
 @end def
@@ -62,7 +56,7 @@ ${matMultFunction}(
   /* nelem */ innerLoopSize,
   ${sourceDimRep.globalLattice},
   /* alpha */ 1.0,
-  /* A */ _mmt_matrix_${sourceDimRep.name}_${destDimRep.name}, ${sourceDimRep.globalLattice},
+  /* A */ _mmt_matrix_${dir}, ${sourceDimRep.globalLattice},
   /* B */ source_data + _i0 * innerLoopSize * ${sourceDimRep.globalLattice},
           innerLoopSize,
   /* beta */ 0.0,
@@ -72,18 +66,9 @@ ${matMultFunction}(
   @#
 @end def
 
-@def destroyTransformMatricesForDim($dim)
-  @#
-  @set $forwardDimRep = dim.inSpace(0)
-  @set $backwardDimRep = dim.inSpace(-1)
-xmds_free(_mmt_matrix_${forwardDimRep.name}_${backwardDimRep.name});
-xmds_free(_mmt_matrix_${backwardDimRep.name}_${forwardDimRep.name});
-  @#
-@end def
-
-@def transformFunctionStart($forwardDimRep, $backwardDimRep)
-static real *_mmt_matrix_${forwardDimRep.name}_${backwardDimRep.name} = NULL;
-static real *_mmt_matrix_${backwardDimRep.name}_${forwardDimRep.name} = NULL;
+@def transformFunctionStart
+static real *_mmt_matrix_forward = NULL;
+static real *_mmt_matrix_backward = NULL;
 @end def
 
 @def transformFunction(transformID, transformDict, function)
@@ -93,7 +78,7 @@ static real *_mmt_matrix_${backwardDimRep.name}_${forwardDimRep.name} = NULL;
   @set $backwardDimRep = transformPair[1][0]
   @# FIXME: Change these names once we shift over to the new transform system
 static bool _initialised = false;
-${transformFunctionStart(forwardDimRep, backwardDimRep)}@slurp
+${transformFunctionStart}@slurp
 ptrdiff_t innerLoopSize = _postfix_lattice;
 real* const __restrict__ source_data = _data_in;
 real* const __restrict__ dest_data = _data_out;

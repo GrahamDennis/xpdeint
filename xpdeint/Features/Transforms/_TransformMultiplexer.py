@@ -287,7 +287,6 @@ class _TransformMultiplexer (_Feature):
     for basesNeeded in basesFieldMap.values():
       targetStates = [BasisState( (0, 0, 0, 0), (basis, BasisState.IN_PLACE), sourceID) for sourceID, basis in enumerate(basesNeeded)]
       targetLocations = [state.location for state in targetStates]
-      print targetLocations
       pathInfo = GeneralisedBidirectionalSearch.perform(targetStates)
       for sourceLoc, targetLoc in combinations(2, targetLocations):
         path = pathFromBasisToBasis(sourceLoc, targetLocations.index(targetLoc), pathInfo)
@@ -314,7 +313,6 @@ class _TransformMultiplexer (_Feature):
         else:
           # Add an in-place multiply at the end
           path.extend([(ipMultiplyID, ()), path[-1]])
-      print basisPair, path
     
     self.vectorTransformMap = dict()
     transformsNeeded = list()
@@ -402,7 +400,6 @@ class _TransformMultiplexer (_Feature):
             )
           )
         basisPairInfo['transformSteps'] = transformSteps
-        print basisPair, transformSteps
     
     # Now we need to extract the transforms and include that information in choosing transforms
     # One advantage of this method is that we no longer have to make extra fft plans or matrices when we could just re-use others.

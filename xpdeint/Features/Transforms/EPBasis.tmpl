@@ -10,22 +10,11 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 *@
 @extends xpdeint.Features.Transforms.Basis
 
-@def globalsForDim($dim)
-  @#
-  @set $forwardDimRep = dim.inSpace(0)
-  @set $backwardDimRep = dim.inSpace(-1)
-real *_mmt_matrix_${forwardDimRep.name}_${backwardDimRep.name}_even;
-real *_mmt_matrix_${forwardDimRep.name}_${backwardDimRep.name}_odd;
-real *_mmt_matrix_${backwardDimRep.name}_${forwardDimRep.name}_even;
-real *_mmt_matrix_${backwardDimRep.name}_${forwardDimRep.name}_odd;
-  @#
-@end def
-
-@def transformFunctionStart($forwardDimRep, $backwardDimRep)
-static real *_mmt_matrix_${forwardDimRep.name}_${backwardDimRep.name}_even = NULL;
-static real *_mmt_matrix_${forwardDimRep.name}_${backwardDimRep.name}_odd  = NULL;
-static real *_mmt_matrix_${backwardDimRep.name}_${forwardDimRep.name}_even = NULL;
-static real *_mmt_matrix_${backwardDimRep.name}_${forwardDimRep.name}_odd  = NULL;
+@def transformFunctionStart
+static real *_mmt_matrix_forward_even = NULL;
+static real *_mmt_matrix_forward_odd  = NULL;
+static real *_mmt_matrix_backward_even = NULL;
+static real *_mmt_matrix_backward_odd  = NULL;
 @end def
 
 
@@ -34,10 +23,10 @@ long _even_${forwardDimRep.name} = (${forwardDimRep.globalLattice} + 1)/2;
 long _odd_${forwardDimRep.name} = ${forwardDimRep.globalLattice}/2;
 long _even_${backwardDimRep.name} = (${backwardDimRep.globalLattice} + 1)/2;
 long _odd_${backwardDimRep.name} = ${backwardDimRep.globalLattice}/2;
-_mmt_matrix_${forwardDimRep.name}_${backwardDimRep.name}_even = (real *)xmds_malloc(sizeof(real) * _even_${forwardDimRep.name} * _even_${backwardDimRep.name});
-_mmt_matrix_${forwardDimRep.name}_${backwardDimRep.name}_odd  = (real *)xmds_malloc(sizeof(real) * _odd_${forwardDimRep.name} * _odd_${backwardDimRep.name});
-_mmt_matrix_${backwardDimRep.name}_${forwardDimRep.name}_even = (real *)xmds_malloc(sizeof(real) * _even_${backwardDimRep.name} * _even_${forwardDimRep.name});
-_mmt_matrix_${backwardDimRep.name}_${forwardDimRep.name}_odd  = (real *)xmds_malloc(sizeof(real) * _odd_${backwardDimRep.name} * _odd_${forwardDimRep.name});
+_mmt_matrix_forward_even = (real *)xmds_malloc(sizeof(real) * _even_${forwardDimRep.name} * _even_${backwardDimRep.name});
+_mmt_matrix_forward_odd  = (real *)xmds_malloc(sizeof(real) * _odd_${forwardDimRep.name} * _odd_${backwardDimRep.name});
+_mmt_matrix_backward_even = (real *)xmds_malloc(sizeof(real) * _even_${backwardDimRep.name} * _even_${forwardDimRep.name});
+_mmt_matrix_backward_odd  = (real *)xmds_malloc(sizeof(real) * _odd_${backwardDimRep.name} * _odd_${forwardDimRep.name});
 
 for (long _i0 = 0; _i0 < _even_${forwardDimRep.name}; _i0++) {
   long __i0 = ${forwardDimRep.globalLattice} - 1 - _i0;
@@ -73,9 +62,9 @@ if (${backwardIndex} & 1) {
     @set $actualForwardIndex = c'(_odd_${forwardDimRep.name} -1 - $forwardIndex)'
   @end if
 long ${actualBackwardIndex} = ${backwardIndex}/2;
-_mmt_matrix_${forwardDimRep.name}_${backwardDimRep.name}_${kind}[${actualBackwardIndex} * _${kind}_${forwardDimRep.name} + ${actualForwardIndex}] = \
+_mmt_matrix_forward_${kind}[${actualBackwardIndex} * _${kind}_${forwardDimRep.name} + ${actualForwardIndex}] = \
   ${forwardMatrixForDimAtIndices(forwardDimRep, backwardDimRep, logicalForwardIndex, logicalBackwardIndex)};
-_mmt_matrix_${backwardDimRep.name}_${forwardDimRep.name}_${kind}[${actualForwardIndex} * _${kind}_${backwardDimRep.name} + ${actualBackwardIndex}] = \
+_mmt_matrix_backward_${kind}[${actualForwardIndex} * _${kind}_${backwardDimRep.name} + ${actualBackwardIndex}] = \
   ${backwardMatrixForDimAtIndices(forwardDimRep, backwardDimRep, logicalForwardIndex, logicalBackwardIndex)};
   @#
 @end def
@@ -109,7 +98,7 @@ cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
             /* nelem */ innerLoopSize,
             (${sourceDimRep.globalLattice}+1)/2,
             /* alpha */ 1.0,
-            /* A */ _mmt_matrix_${sourceDimRep.name}_${destDimRep.name}_even, (${sourceDimRep.globalLattice}+1)/2,
+            /* A */ _mmt_matrix_forward_even, (${sourceDimRep.globalLattice}+1)/2,
             /* B */ source_data + _i0 * ${sourceDimRep.globalLattice} * innerLoopSize,
                     innerLoopSize,
             /* beta */ 0.0,
@@ -121,7 +110,7 @@ cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
             /* nelem */ innerLoopSize,
             ${sourceDimRep.globalLattice}/2,
             /* alpha */ 1.0,
-            /* A */ _mmt_matrix_${sourceDimRep.name}_${destDimRep.name}_odd, ${sourceDimRep.globalLattice}/2,
+            /* A */ _mmt_matrix_forward_odd, ${sourceDimRep.globalLattice}/2,
             /* B */ source_data + (_i0 * ${sourceDimRep.globalLattice} + (${sourceDimRep.globalLattice}+1)/2) * innerLoopSize,
                     innerLoopSize,
             /* beta */ 0.0,
@@ -138,7 +127,7 @@ cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
             /* nelem */ innerLoopSize,
             (${sourceDimRep.globalLattice}+1)/2,
             /* alpha */ 1.0,
-            /* A */ _mmt_matrix_${sourceDimRep.name}_${destDimRep.name}_even, (${sourceDimRep.globalLattice}+1)/2,
+            /* A */ _mmt_matrix_backward_even, (${sourceDimRep.globalLattice}+1)/2,
             /* B */ source_data + _i0 * ${sourceDimRep.globalLattice} * innerLoopSize,
                     2 * innerLoopSize,
             /* beta */ 0.0,
@@ -150,7 +139,7 @@ cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
             /* nelem */ innerLoopSize,
             ${sourceDimRep.globalLattice}/2,
             /* alpha */ 1.0,
-            /* A */ _mmt_matrix_${sourceDimRep.name}_${destDimRep.name}_odd, ${sourceDimRep.globalLattice}/2,
+            /* A */ _mmt_matrix_backward_odd, ${sourceDimRep.globalLattice}/2,
             /* B */ source_data + (_i0 * ${sourceDimRep.globalLattice} + 1) * innerLoopSize,
                     2 * innerLoopSize,
             /* beta */ 0.0,
@@ -175,13 +164,3 @@ for (long _i1 = 0; _i1 < ${destDimRep.globalLattice}/2; _i1++) {
   @#
 @end def
 
-@def destroyTransformMatricesForDim($dim)
-  @#
-  @set $forwardDimRep = dim.inSpace(0)
-  @set $backwardDimRep = dim.inSpace(-1)
-xmds_free(_mmt_matrix_${forwardDimRep.name}_${backwardDimRep.name}_even);
-xmds_free(_mmt_matrix_${forwardDimRep.name}_${backwardDimRep.name}_odd);
-xmds_free(_mmt_matrix_${backwardDimRep.name}_${forwardDimRep.name}_even);
-xmds_free(_mmt_matrix_${backwardDimRep.name}_${forwardDimRep.name}_odd);
-  @#
-@end def
