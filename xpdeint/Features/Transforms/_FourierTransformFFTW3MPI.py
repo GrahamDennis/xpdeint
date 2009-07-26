@@ -51,10 +51,19 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
     return False
   
   def initialiseForMPIWithDimensions(self, dimensions):
-    # It has already been checked by _FourierTransformFFTW3 that we can handle these dimensions
-    # but let's just run a couple of assert's to make sure
-    assert not ((self.transformNameMap[dimensions[0].name] == 'dft') ^ (self.transformNameMap[dimensions[1].name] == 'dft'))
-    assert not ((self.transformNameMap[dimensions[0].name] in ['dct', 'dst']) ^ (self.transformNameMap[dimensions[1].name] in ['dct', 'dst']))
+    # We can only upgrade to MPI support if both the first and second dimensions
+    # are 'dft' or 'r2r' transforms. In the future, this restriction can be lifted
+    if len(dimensions) < 2:
+      raise ParserException(self._driver.xmlElement,
+                            "There must be at least two dimensions to use the 'distributed-mpi' with the '%s' transform." % self.transformName[dimensions[0].name])
+    if not (dimensions[0].transform == self and dimensions[1].transform == self) \
+       or ((self.transformNameMap[dimensions[0].name] == 'dft') ^ (self.transformNameMap[dimensions[1].name] == 'dft')) \
+       or ((self.transformNameMap[dimensions[0].name] in ['dct', 'dst']) ^ (self.transformNameMap[dimensions[1].name] in ['dct', 'dst'])):
+      raise ParserException(self._driver.xmlElement,
+                            "To use the 'distributed-mpi' driver with the 'dft', 'dct' or 'dst' transforms, both the first and second dimensions "
+                            "must use one of these transforms with the additional restriction that if the 'dft' transform is used for one dimension "
+                            "it must be used for the other.")
+    
     for dim in dimensions[0:2]:
       assert self.transformNameMap[dim.name] in ['dft', 'dct', 'dst']
       # Check that the dimension doesn't have any mapping rules yet
@@ -160,16 +169,12 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
       mpiTransformDimNamesLists.append([dim.name for dim in fullTransformDims])
     
     for dimNames in mpiTransformDimNamesLists:
-      untransformedBasis = self.canonicalBasisForBasis(
-        tuple(untransformedDimReps[dimName].name for dimName in dimNames)
-      )
-      transformedBasis = self.canonicalBasisForBasis(
-        tuple(transformedDimReps[dimName].name for dimName in dimNames)
-      )
+      untransformedBasis = tuple(untransformedDimReps[dimName].name for dimName in dimNames)
+      transformedBasis = tuple(transformedDimReps[dimName].name for dimName in dimNames)
       transformCost = self.fftCost([dimName for dimName in dimNames])
       
       results.append(dict(
-        transformations = [tuple([untransformedBasis, transformedBasis])],
+        transformations = [tuple([self.canonicalBasisForBasis(untransformedBasis), self.canonicalBasisForBasis(transformedBasis)])],
         communicationsCost = communicationsCost,
         cost = transformCost,
         forwardScale = self.scaleFactorForDimReps(untransformedBasis),

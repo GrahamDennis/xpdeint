@@ -7,6 +7,11 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 @extends xpdeint.Features.Transforms._TransformMultiplexer
 @def description: Transform Multiplexer
 
+@def includes
+#include <utility>
+#include <map>
+@end def
+
 @def goSpaceFunctionContentsBegin($dict)
 @*doc:
 Returns the ``go_space`` function implementation for vector `vector`.
@@ -60,5 +65,96 @@ for (long _idx = 0; _idx < _prefix_lattice * _postfix_lattice; _idx++) {
 for (long _idx = 0; _idx < _prefix_lattice * _postfix_lattice; _idx++) {
   _data_out[_idx] = _data_in[_idx] * _multiplier;
 }
+  @#
+@end def
+
+@def globals
+  @#
+typedef pair<ptrdiff_t, ptrdiff_t> _basis_pair;
+typedef void (*transform_function)(bool, real, real* const __restrict__, real* const __restrict__, ptrdiff_t, ptrdiff_t);
+
+// Less than operator needed by the C++ map class
+struct _basis_pair_less_than
+{
+  bool operator()(const _basis_pair& _x, const _basis_pair& _y) const {
+    return (_x.first < _y.first) || ((_x.first == _y.first) && (_x.second < _y.second));
+  }
+};
+
+struct _transform_step
+{
+  transform_function _func;
+  bool _forward;
+  bool _out_of_place;
+  ptrdiff_t _prefix_lattice;
+  ptrdiff_t _postfix_lattice;
+};
+
+// Structure to hold the basis change information
+struct _basis_transform
+{
+  vector<_transform_step> _transform_steps;
+  real _multiplier;
+  
+  _basis_transform(real _multiplier_in = 1.0) : _multiplier(_multiplier_in) {}
+  
+  _basis_transform(const _basis_transform& _b) : _transform_steps(_b._transform_steps), _multiplier(_b._multiplier) {}
+  
+  void append(transform_function _func, bool _forward, bool _out_of_place, ptrdiff_t _prefix_lattice, ptrdiff_t _postfix_lattice)
+  {
+    _transform_steps.push_back((_transform_step){_func, _forward, _out_of_place, _prefix_lattice, _postfix_lattice});
+  }
+};
+
+// Map type for holding (old_basis, new_basis) -> _basis_transform mappings
+typedef map<_basis_pair, _basis_transform, _basis_pair_less_than> _basis_map;
+
+  @for vector in self.vectorTransformMap
+_basis_map _${vector.id}_basis_map;
+  @end for
+  @#
+@end def
+
+@def mainBegin($dict)
+  @#
+
+_basis_transform *_basis_transform = NULL;
+
+  @set $boolMap = {True: 'true', False: 'false'}
+  @for vector, vectorTransformInfo in self.vectorTransformMap.items()
+    @set $bases = vectorTransformInfo['bases']
+    @set $basisPairMap = vectorTransformInfo['basisPairMap']
+    @for basisPairInfo in basisPairMap.values()
+      @set $basisPair = basisPairInfo['basisPair']
+_basis_transform = &_${vector.id}_basis_map[_basis_pair(${', '.join([str(bases.index(basis)) for basis in basisPair])})];
+      @if basisPairInfo['forwardScale']
+_basis_transform->_multiplier = ${' * '.join(basisPairInfo['forwardScale'])};
+      @end if
+      @for transformStep in basisPairInfo['transformSteps']
+_basis_transform->append(
+  /* transform function */ _transform_${transformStep[0]},
+  /* forward? */ ${boolMap[transformStep[1]]},
+  /* out-of-place? */ ${boolMap[transformStep[2]]},
+  /* prefix lattice */ ${transformStep[3]},
+  /* postfix lattice*/ ${transformStep[4]}
+);
+      @end for
+
+_basis_transform = &_${vector.id}_basis_map[_basis_pair(${', '.join([str(bases.index(basis)) for basis in reversed(basisPair)])})];
+      @if basisPairInfo['backwardScale']
+_basis_transform->_multiplier = ${' * '.join(basisPairInfo['backwardScale'])};
+      @end if
+      @for transformStep in reversed(basisPairInfo['transformSteps'])
+_basis_transform->append(
+  /* transform function */ _transform_${transformStep[0]},
+  /* forward? */ ${boolMap[not transformStep[1]]},
+  /* out-of-place? */ ${boolMap[transformStep[2]]},
+  /* prefix lattice */ ${transformStep[3]},
+  /* postfix lattice */ ${transformStep[4]}
+);
+      @end for
+
+    @end for
+  @end for
   @#
 @end def

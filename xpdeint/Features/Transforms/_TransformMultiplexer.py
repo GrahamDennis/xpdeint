@@ -46,34 +46,39 @@ class _TransformMultiplexer (_Feature):
     """
     # As we are customising attribute access in this method, attempts to access attributes directly
     # would lead to infinite recursion (bad), so we must access variables specially
-    try:
-      attr = _Feature.__getattribute__(self, name)
-    except AttributeError, err:
-      # If the attribute name is not in the list of functions we want to proxy
-      # then re-raise the exception
-      if not name in ['mainBegin', 'mainEnd']: raise
-      # We don't have the attribute, so maybe one of our child transforms does
-      transforms = _Feature.__getattribute__(self, 'transforms')
-      childAttributes = [getattr(t, name) for t in transforms if t.hasattr(name)]
-      # No child has the transform, re-raise the exception
-      if not childAttributes: raise
-      # A child has the attribute. Check they are all callable. If not, don't multiplex
-      # This line is here for debugging only
-      # assert all([callable(ca) for ca in childAttributes]), "Tried to multiplex call to non-callable attribute '%(name)s'" % locals()
-      if not all([callable(ca) for ca in childAttributes]): raise
-      
-      if len(childAttributes) == 1:
-        return childAttributes[0]
-      
-      # Create the function that does the actual multiplexing
-      def multiplexingFunction(*args, **KWs):
-        results = [ca(*args, **KWs) for ca in childAttributes]
-        return ''.join([result for result in results if result is not None])
-      
-      return multiplexingFunction
-    else:
-      return attr
     
+    # If the attribute isn't one that we are doing a special proxy for, then it perform as per usual.
+    if not name in ['mainBegin', 'mainEnd']:
+      return _Feature.__getattribute__(self, name)
+    
+    attributes = []
+    # If we have the attribute, then we go first
+    try:
+      attributes.append(_Feature.__getattribute__(self, name))
+    except AttributeError:
+      pass
+    
+    # Then we add any child attributes
+    transforms = _Feature.__getattribute__(self, 'transforms')
+    attributes.extend([getattr(t, name) for t in transforms if t.hasattr(name)])
+    
+    # If neither ourself nor any of our children have this attribute, then we need to raise an AttributeError
+    # the easiest way to do this is to just call the default implementation which will do this.
+    # We want to do the same thing 
+    if not attributes or not all([callable(attr) for attr in attributes]):
+      return _Feature.__getattribute__(self, name)
+    
+    # If there's only one, we don't need to multiplex.
+    if len(attributes) == 1:
+      return attributes[0]
+    
+    # Create a multiplexing function and return it.
+    def multiplexingFunction(*args, **KWs):
+      results = [attr(*args, **KWs) for attr in attributes]
+      return ''.join([result for result in results if result is not None])
+    
+    return multiplexingFunction
+  
   def preflight(self):
     super(_TransformMultiplexer, self).preflight()
     for transform in self.transforms:
@@ -380,8 +385,9 @@ class _TransformMultiplexer (_Feature):
             (
               transformsNeeded.index(transformDescriptor),
               forward,
-              prefixLatticeStrings or ['1'],
-              postfixLatticeStrings or ['1'],
+              transformation.get('outOfPlace', False),
+              ' * '.join(prefixLatticeStrings) or '1',
+              ' * '.join(postfixLatticeStrings) or '1',
             )
           )
         basisPairInfo['transformSteps'] = transformSteps
@@ -392,6 +398,7 @@ class _TransformMultiplexer (_Feature):
     # Not only do we need to extract the transforms, but we must also produce a simple list of transforms that must be applied
     # to change between any bases for this vector.
     
+    self.neededTransformations = []
     for transformID, transformSpecifier, transformPair in transformsNeeded:
       transformation = self.availableTransformations[transformID].copy()
       transformation['transformSpecifier'] = transformSpecifier
@@ -419,7 +426,7 @@ class _TransformMultiplexer (_Feature):
       functionName = '_transform_%i' % tID
       args = [
         ('bool', '_forward'),
-        ('double', '_multiplier'),
+        ('real', '_multiplier'),
         ('real* const __restrict__', '_data_in'),
         ('real* const __restrict__', '_data_out'),
         ('ptrdiff_t', '_prefix_lattice'),

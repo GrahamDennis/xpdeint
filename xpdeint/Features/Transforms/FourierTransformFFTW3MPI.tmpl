@@ -40,7 +40,6 @@ ptrdiff_t _swapped_block_size = 0;
 
 @def mainBegin($dict)
   @#
-${fftwPrefix}_mpi_init();
 ptrdiff_t _fft_sizes[${len($geometry.dimensions)}];
   @super($dict)
   @#
@@ -59,6 +58,7 @@ ptrdiff_t _sizes[] = {${', '.join([dim.inSpace(0).globalLattice for dim in fullT
 ptrdiff_t _howmany = ((ptrdiff_t)1) * ${geometry.pointsInDimensionsWithIndices(indices)};
 ptrdiff_t _local_alloc_size;
 
+${fftwPrefix}_mpi_init();
 _local_alloc_size = ${fftwPrefix}_mpi_local_size_many_transposed(${len(fullTransformDimensions)}, _sizes, _howmany,
                                                         FFTW_MPI_DEFAULT_BLOCK, FFTW_MPI_DEFAULT_BLOCK, MPI_COMM_WORLD,
                                                         &${firstMPIDim.inSpace(0).localLattice}, &${firstMPIDim.inSpace(0).localOffset},
