@@ -66,6 +66,8 @@ _local_alloc_size = ${fftwPrefix}_mpi_local_size_many_transposed(${len(fullTrans
   @# Set the transformed, but unswapped variables for the first dimension
 ${firstMPIDim.inSpace($firstMPIDim.transformMask).localLattice} = ${firstMPIDim.inSpace(0).localLattice};
 ${firstMPIDim.inSpace($firstMPIDim.transformMask).localOffset} = ${firstMPIDim.inSpace(0).localOffset};
+${secondMPIDim.representations[2].localLattice} = ${secondMPIDim.inSpace($swappedSpace).localLattice};
+${secondMPIDim.representations[2].localOffset} = ${secondMPIDim.inSpace($swappedSpace).localOffset};
 
 if (_rank == 0) {
   _unswapped_block_size = ${firstMPIDim.inSpace(0).localLattice};

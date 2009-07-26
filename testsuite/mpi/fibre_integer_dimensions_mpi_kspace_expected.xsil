@@ -33,8 +33,8 @@
     </stochastic>
     <globals>
       <![CDATA[
-      const double ggamma = 1.0;
-      const double beta = sqrt(2.0*M_PI*ggamma/10.0);
+      const real ggamma = 1.0;
+      const real beta = sqrt(2.0*M_PI*ggamma/10.0);
       ]]>
     </globals>
   </features>

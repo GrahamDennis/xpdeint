@@ -81,7 +81,7 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
       distributedRep.setHasLocalOffset('unswapped')
       firstMPIDimension.addRepresentation(distributedRep)
     
-    for rep in secondMPIDimension.representations[1:]:
+    for rep in secondMPIDimension.representations[:]:
       distributedRep = rep.copy(parent = secondMPIDimension)
       distributedRep.setHasLocalOffset('swapped')
       secondMPIDimension.addRepresentation(distributedRep)
@@ -100,7 +100,7 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
     """
     if self.isFieldDistributed(field) and dim.name in self._driver.distributedDimensionNames:
       if dim.name == self._driver.distributedDimensionNames[1]:
-        return [(self.swappedSpace, 2), (dim.transformMask, 1), (None, 0)]
+        return [(self.swappedSpace, 3), (dim.transformMask, 1), (None, 0)]
       else:
         return [(self.swappedSpace, 1), (dim.transformMask, 3), (None, 2)]
     return super(_FourierTransformFFTW3MPI, self).mappingRulesForDimensionInField(dim, field)

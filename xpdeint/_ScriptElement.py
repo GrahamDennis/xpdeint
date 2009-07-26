@@ -430,6 +430,7 @@ class _ScriptElement (Template):
   
   def validateBasis(self, basis, dimensions = None, _validNamesCache = set(), _validDimRepMap = {}):
     """Verify that `basis` is a self-consistent specification of a basis."""
+    basis = set([b.split(' ')[-1] for b in basis])
     if not _validNamesCache:
       geometry = self.getVar('geometry')
       for dim in geometry.dimensions:
@@ -464,19 +465,22 @@ class _ScriptElement (Template):
         )
     
   
+  def spaceForBasis(self, basis):
+    #FIXME: This function is only necessary in the transition
+    geometry = self.getVar('geometry')
+    space = 0
+    self.validateBasis(basis)
+    for dimIdx, dim in enumerate(geometry.dimensions):
+      if [dimRep for dimRep in dim.representations if (dim.representations.index(dimRep) & 1) and dimRep.canonicalName in basis]:
+        space |= 1 << dimIdx
+    return space
+  
   def transformVectorsToSpace(self, vectors, space):
     """Transform vectors `vectors` to space `space`."""
     result = []
     for vector in vectors:
-      if isinstance(space, set):
-        self.validateBasis(space)
-        # For the moment, we will simply generate a normal space variable
-        old_style_space = 0
-        geometry = self.getVar('geometry')
-        for dimIdx, dim in enumerate(geometry.dimensions):
-          if [dimRep for dimRep in dim.representations if dimRep.isTransformed and dimRep.name in space]:
-            old_style_space |= 1 << dimIdx
-        space = old_style_space
+      if isinstance(space, tuple):
+        space = self.spaceForBasis(basis)
       if not (vector.initialSpace) == (space & vector.field.spaceMask):
         if not vector.isTransformableTo(space):
           raise ParserException(self.xmlElement,
