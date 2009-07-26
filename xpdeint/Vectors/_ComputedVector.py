@@ -84,7 +84,7 @@ class _ComputedVector (VectorElement):
     # Set the space so that it is known that this vector is required in the evaluation space.
     self.initialSpace = evaluationCodeBlock.space
     
-    self.initialBasis = evaluationCodeBlock.basis
+    self.initialBasis = self.field.basisForBasis(evaluationCodeBlock.basis)
     self.basesNeeded.add(self.initialBasis)
     
     # Our components are constructed by an integral if the looping field doesn't have the same

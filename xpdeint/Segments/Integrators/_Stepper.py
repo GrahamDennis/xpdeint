@@ -19,6 +19,10 @@ class _Stepper (ScriptElement):
   def homeSpace(self):
     return self.parent.homeSpace
   
+  @property
+  def homeBasis(self):
+    return self.parent.homeBasis
+  
   @lazy_property
   def integrator(self):
     return self.parent

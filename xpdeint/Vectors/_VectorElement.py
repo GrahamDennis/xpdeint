@@ -44,7 +44,7 @@ class _VectorElement (ScriptElement):
     self.initialBasis = None
     
     if localKWs.get('initialBasis') is not None:
-      self.initialBasis = localKWs['initialBasis']
+      self.initialBasis = self.field.basisForBasis(localKWs['initialBasis'])
       self.basesNeeded.add(self.initialBasis)
     
     # Set default initialisation to be the zero initialisation template
@@ -77,6 +77,7 @@ class _VectorElement (ScriptElement):
   def needsTransforms(self):
     if self.transformFree:
       return False
+    assert len(self.spacesNeeded) == len(self.basesNeeded)
     return len(self.spacesNeeded) > 1 or len(self.basesNeeded) > 1
   
   def __hash__(self):
