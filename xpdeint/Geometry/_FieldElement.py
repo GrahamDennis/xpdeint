@@ -30,6 +30,7 @@ class _FieldElement (ScriptElement):
     self.managedVectors = set()
     self.temporaryVectors = set()
     self.dimensions = []
+    self._basisForBasisCache = {}
     
     self.getVar('fields').append(self)
   
@@ -274,14 +275,83 @@ class _FieldElement (ScriptElement):
         resultSpace |= fieldDimension.transformMask
     return resultSpace
   
-  def newspaceFromString(self, spacesString, xmlElement = None):
+  def basisForBasis(self, basis):
     """
-    Return the basis set given `spacesString`. This is the new version of this function.
+    Return a basis that only contains the dimensions in this field.
+    It also handles the case in which a distributed basis becomes a non-distributed basis
+    after a dimension has been omitted.
+    We do not validate that such a transformation is possible.
+    
+    The results of this method are cached on a per-instance basis for speed.
+    """
+    if not basis in self._basisForBasisCache:
+      geometry = self.getVar('geometry')
+      dimRepNames = [dr.canonicalName for dim in self.dimensions for dr in geometry.dimensionWithName(dim.name).representations]
+      if not len(dimRepNames.intersection(basis)) == len(self.dimensions):
+        raise ParserException(
+          self.xmlElement,
+          "Internal error: The basis provided (%s) contained insufficient information to generate the appropriate basis for a vector in this field (%s)." %
+          (', '.join(basis), self.name)
+        )
+      
+      newBasis = self._driver.canonicalBasisForBasis(tuple(b for b in basis if b in dimRepNames))
+      self._basisForBasisCache[basis] = newBasis
+    return self._basisForBasisCache[basis]
+  
+  def inBasis(self, basis):
+    """
+    Return a list of dimReps corresponding to the supplied basis. We cannot guarantee that the basis we are passed is directly appropriate
+    for this field. So we must pass it through basisForBasis.
+    """
+    
+    basis = self.basisForBasis(basis)
+    dimRepNameMap = dict([(dimRep.canonicalName, dimRep) for dim in self.dimensions for dimRep in dim.representations])
+    return [dimRepNameMap[b] for b in basis]
+  
+  def basisFromString(self, basisString, xmlElement = None):
+    """
+    Return the basis given `spacesString`.
     """
     xmlElement = xmlElement or self.xmlElement
     
     basis = set(symbolsInString(spacesString, xmlElement = xmlElement))
-    self.validateBasis(basis, dimensions = self.dimensions)
+    
+    geometry = self.getVar('geometry')
+    validNames = set([dimRep.name for dim in self.dimensions for dimRep in geometry.dimensionWithName(dim.name).representations])
+    if basis.difference(validNames):
+      raise ParserException(
+        xmlElement,
+        "The following names are not valid basis specifiers: %s." % ', '.join(basis.difference(validNames))
+      )
+    # Now we know we don't have any specifiers that we can't identify, 
+    # so we just need to check that we don't have two specifiers for the same dimension.
+    dimToDimRepMap = dict([(dim.name, [dimRep.name for dimRep in geometry.dimensionWithName(dim.name).representations]) for dim in self.dimensions])
+    
+    for dimName, dimRepNames in dimToDimRepMap.items():
+      basisNamesInDimRepNames = basis.intersection(dimRepNames)
+      if len(basisNamesInDimRepNames) > 1:
+        raise ParserException(
+          xmlElement,
+          "There is more than one basis specifier for dimension '%s'. The conflict is between %s." \
+            % (dimName, ' and '.join(basis.intersection(dimRepNames)))
+        )
+      elif len(basisNamesInDimRepNames) == 1:
+        # Use the map to now list the actual chosen dimRep name
+        dimToDimRepMap[dimName] = list(basisNamesInDimRepNames)[0]
+      else:
+        # This dimension doesn't have a rep specified. Default to the first rep.
+        dimToDimRepMap[dimName] = dimRepNames[0]
+      if dimToDimRepMap[dimName] is None:
+        raise ParserException(
+          xmlElement,
+          "Internal Error: When turning string '%s' into a basis, we were unable to determine the correct dimension representation for the %s dimension. "
+          "Please report this error to %s" \
+            % (basisString, dimName, self.getVar('bugReportAddress'))
+        )
+    
+    # Now we just need to construct the basis
+    
+    basis = self._driver.canonicalBasisForBasis(tuple(dimToDimRepMap[dim.name] for dim in self.dimensions))
     
     return basis
   

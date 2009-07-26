@@ -325,6 +325,7 @@ class _TransformMultiplexer (_Feature):
         bases = vectorBases,
         basisPairMap = dict(),
       )
+      vector.transformMap = self.vectorTransformMap[vector]
       
       for basisPair in combinations(2, vectorBases):
         basisPairSet = frozenset(basisPair)

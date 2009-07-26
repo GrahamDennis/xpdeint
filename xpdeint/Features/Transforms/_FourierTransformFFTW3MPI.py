@@ -191,17 +191,20 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
     return results
   
   def canonicalBasisForBasis(self, basis):
-    if all([set(rep.name for rep in mpiDim.representations).intersection(basis) for mpiDim in self.mpiDimensions]):
+    if all([set(rep.canonicalName for rep in mpiDim.representations).intersection(basis) for mpiDim in self.mpiDimensions]):
       # Decide what the order is.
       basis = list(basis)
-      mpiDimRepNames = [list(set(rep.name for rep in mpiDim.representations).intersection(basis))[0] for mpiDim in self.mpiDimensions]
-      if all(mpiDim.representations[1].name in mpiDimRepNames for mpiDim in self.mpiDimensions):
+      mpiDimRepNames = [list(set(rep.canonicalName for rep in mpiDim.representations).intersection(basis))[0] for mpiDim in self.mpiDimensions]
+      if all(any([rep.name in mpiDimRepNames for rep in mpiDim.representations if rep.tag == self.fourierSpaceTag]) for mpiDim in self.mpiDimensions):
         # Then we are swapped
         basis[0:2] = reversed(mpiDimRepNames)
       else:
         basis[0:2] = mpiDimRepNames
       basis[0] = 'distributed ' + basis[0]
       basis = tuple(basis)
+    else:
+      # At most one of the mpi dimensions is in this basis. Therefore we must ensure that no part of the basis contains 'distributed '
+      basis = tuple(b.replace('distributed ','') for b in basis)
     return basis
   
 

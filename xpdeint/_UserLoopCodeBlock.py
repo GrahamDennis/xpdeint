@@ -19,12 +19,13 @@ from xpdeint.Vectors.ComputedVector import ComputedVector
 
 class _UserLoopCodeBlock(ScriptElement):
   def __init__(self, **KWs):
-    localKWs = self.extractLocalKWs(['field', 'space', 'codeString', 'targetVector', 'loopArguments'], KWs)
+    localKWs = self.extractLocalKWs(['field', 'space', 'basis', 'codeString', 'targetVector', 'loopArguments'], KWs)
     
     ScriptElement.__init__(self, **KWs)
     
     self.field = localKWs.get('field')
     self.space = localKWs.get('space')
+    self.basis = localKWs.get('basis')
     if 'codeString' in localKWs: self.codeString = localKWs.get('codeString')
     self.targetVector = localKWs.get('targetVector', None)
     self.loopArguments = localKWs.get('loopArguments', {})
