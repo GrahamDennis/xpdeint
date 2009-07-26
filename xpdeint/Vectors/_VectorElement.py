@@ -18,11 +18,12 @@ from xpdeint.Utilities import lazy_property
 class _VectorElement (ScriptElement):
   isComputed = False
   
-  def __init__(self, name, field, transformFree = False, *args, **KWs):
-    if not 'parent' in KWs: KWs['parent'] = field
-    
-    self.name = name
+  def __init__(self, *args, **KWs):
+    localKWs = self.extractLocalKWs(['name', 'field', 'transformFree', 'initialBasis'], KWs)
+    field = localKWs['field']
+    self.name = localKWs['name']
     self.field = field
+    if not 'parent' in KWs: KWs['parent'] = field
     
     if KWs['parent'] is field:
       field.managedVectors.add(self)
@@ -30,6 +31,8 @@ class _VectorElement (ScriptElement):
       field.temporaryVectors.add(self)
     
     ScriptElement.__init__(self, *args, **KWs)
+    self.transformFree = localKWs.get('transformFree', False)
+    
     # Set default variables
     self.components = []
     self._needsInitialisation = True
@@ -37,7 +40,12 @@ class _VectorElement (ScriptElement):
     self.type = 'complex'
     self.aliases = set()
     self.spacesNeeded = set()
-    self.transformFree = transformFree
+    self.basesNeeded = set()
+    self.initialBasis = ()
+    
+    if 'initialBasis' in localKWs:
+      self.initialBasis = localKWs['initialBasis']
+      self.basesNeeded.add(self.initialBasis)
     
     # Set default initialisation to be the zero initialisation template
     self.initialiser = VectorInitialisation(*args, **KWs)
@@ -69,7 +77,7 @@ class _VectorElement (ScriptElement):
   def needsTransforms(self):
     if self.transformFree:
       return False
-    return len(self.spacesNeeded) > 1
+    return len(self.spacesNeeded) > 1 or len(self.basesNeeded) > 1
   
   def __hash__(self):
     """
@@ -147,6 +155,8 @@ class _VectorElement (ScriptElement):
   def isTransformableTo(self, newSpace):
     if self.transformFree:
       return True
+    if isinstance(newSpace, tuple):
+      return newSpace in self.transformMap['bases']
     newSpace &= self.field.spaceMask
     for dim in self.field.dimensions:
       if (newSpace ^ self.initialSpace) & dim.transformMask:

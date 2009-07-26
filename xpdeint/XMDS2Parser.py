@@ -33,7 +33,7 @@ from xpdeint.Vectors.VectorInitialisationFromHDF5 import VectorInitialisationFro
 
 
 from xpdeint.Segments.TopLevelSequenceElement import TopLevelSequenceElement as TopLevelSequenceElementTemplate
-from xpdeint.SimulationDrivers.DefaultDriver import DefaultDriver as DefaultDriverTemplate
+from xpdeint.SimulationDrivers.SimulationDriver import SimulationDriver as SimulationDriverTemplate
 from xpdeint.SimulationDrivers.MultiPathDriver import MultiPathDriver as MultiPathDriverTemplate
 from xpdeint.SimulationDrivers.MPIMultiPathDriver import MPIMultiPathDriver as MPIMultiPathDriverTemplate
 from xpdeint.SimulationDrivers.DistributedMPIDriver import DistributedMPIDriver as DistributedMPIDriverTemplate
@@ -156,7 +156,7 @@ class XMDS2Parser(ScriptParser):
     
   
   def parseDriverElement(self, simulationElement):
-    driverClass = DefaultDriverTemplate
+    driverClass = SimulationDriverTemplate
     
     driverAttributeDictionary = dict()
     

@@ -427,60 +427,35 @@ class _ScriptElement (Template):
     if self.parent:
       return self.parent.vectorForVectorName(vectorName, vectorDictionary)
   
-  
-  def validateBasis(self, basis, dimensions = None, _validNamesCache = set(), _validDimRepMap = {}):
-    """Verify that `basis` is a self-consistent specification of a basis."""
-    basis = set([b.split(' ')[-1] for b in basis])
-    if not _validNamesCache:
-      geometry = self.getVar('geometry')
-      for dim in geometry.dimensions:
-        dimRepNames = set([dimRep.name for dimRep in dim.representations])
-        _validNamesCache.update(dimRepNames)
-        _validDimRepMap[dim.name] = dimRepNames
-    
-    # If we have a dimensions list, then we should only check for specifiers belonging to those dimensions
-    validNames = None
-    if dimensions:
-      validNames = set()
-      for dim in dimensions:
-        validNames.update([dimRep.name for dimRep in dim.representations])
-    else:
-      validNames = _validNamesCache
-    
-    if basis.difference(validNames):
-      raise ParserException(
-        self.xmlElement,
-        "The following names are not valid basis specifiers: %s." % ', '.join(basis.difference(validNames))
-      )
-    
-    # Now we know we don't have any specifiers that we can't identify, so we just need to check
-    # that we don't have two specifiers for the same dimension.
-    
-    for dimName, dimRepNames in _validDimRepMap.items():
-      if len(basis.intersection(dimRepNames)) > 1:
-        raise ParserException(
-          self.xmlElement,
-          "There is more than one basis specifier for dimension '%s'. The conflict is between %s." \
-            % (dimName, ' and '.join(basis.intersection(dimRepNames)))
-        )
-    
-  
   def spaceForBasis(self, basis):
     #FIXME: This function is only necessary in the transition
     geometry = self.getVar('geometry')
     space = 0
-    self.validateBasis(basis)
     for dimIdx, dim in enumerate(geometry.dimensions):
       if [dimRep for dimRep in dim.representations if (dim.representations.index(dimRep) & 1) and dimRep.canonicalName in basis]:
         space |= 1 << dimIdx
     return space
   
+  def transformVectorsToBasis(self, vectors, basis):
+    result = []
+    for vector in vectors:
+      vectorBasis = vector.field.basisForBasis(basis)
+      if not vector.isTransformableTo(vectorBasis):
+        raise ParserException(
+          self.xmlElement,
+          "Cannot satisfy dependence on vector '%s' because it cannot be transformed to the required basis (%s). "
+          "The vector's initial basis is (%s)." % (vector.name, ', '.join(vectorBasis), ', '.join(vector.initialBasis))
+        )
+      # FIXME: This bit needs to be rewritten when we change over the generated code to use bases.
+      space = self.spaceForBasis(vectorBasis)
+      if vector.needsTransforms:
+        result.extend([vector.functions['goSpace'].call(newSpace=space), '\n'])
+    return ''.join(result)
+  
   def transformVectorsToSpace(self, vectors, space):
     """Transform vectors `vectors` to space `space`."""
     result = []
     for vector in vectors:
-      if isinstance(space, tuple):
-        space = self.spaceForBasis(basis)
       if not (vector.initialSpace) == (space & vector.field.spaceMask):
         if not vector.isTransformableTo(space):
           raise ParserException(self.xmlElement,
@@ -493,6 +468,10 @@ class _ScriptElement (Template):
   def registerVectorsRequiredInSpace(self, vectors, space):
     for vector in vectors:
       vector.spacesNeeded.add(space & vector.field.spaceMask)
+  
+  def registerVectorsRequiredInBasis(self, vectors, basis):
+    for vector in vectors:
+      vector.basesNeeded.add(vector.field.basisForBasis(basis))
   
   def remove(self):
     """
