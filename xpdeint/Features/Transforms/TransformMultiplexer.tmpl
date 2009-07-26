@@ -147,7 +147,6 @@ ptrdiff_t _auxiliary_array_size = 0;
     @set $basisPairMap = vectorTransformInfo['basisPairMap']
     @for basisPairInfo in basisPairMap.values()
       @set $basisPair = basisPairInfo['basisPair']
-@#_basis_transform = &_${vector.id}_basis_map[_basis_pair(${', '.join([str(bases.index(basis)) for basis in basisPair])})];
 _basis_transform = &_${vector.id}_basis_map[_basis_pair(${', '.join([str(self.basisIndexForBasis(basis)) for basis in basisPair])})];
       @if basisPairInfo['forwardScale']
 _basis_transform->_multiplier = ${' * '.join(basisPairInfo['forwardScale'])};
@@ -163,7 +162,6 @@ _basis_transform->append(
 );
       @end for
 
-@#_basis_transform = &_${vector.id}_basis_map[_basis_pair(${', '.join([str(bases.index(basis)) for basis in reversed(basisPair)])})];
 _basis_transform = &_${vector.id}_basis_map[_basis_pair(${', '.join([str(self.basisIndexForBasis(basis)) for basis in reversed(basisPair)])})];
       @if basisPairInfo['backwardScale']
 _basis_transform->_multiplier = ${' * '.join(basisPairInfo['backwardScale'])};

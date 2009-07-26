@@ -179,12 +179,14 @@ class _FieldElement (ScriptElement):
           "Internal error: The basis provided (%s) contained insufficient information to generate the appropriate basis for a vector in this field (%s). A specification is required for all dimensions (%s)." %
           (', '.join(basis), self.name, ', '.join(dim.name for dim in self.dimensions))
         )
+      newBasis = tuple(b for b in basis if b in dimRepNames)
+      maxDistributedIdx = max([idx for idx, dimRepName in enumerate(newBasis) if dimRepName.startswith('distributed ')] + [-1])
       orderedDimRepNames = [(idx, dimRep.canonicalName) 
                                 for idx, dim in enumerate(self.dimensions) 
                                   for dimRep in geometry.dimensionWithName(dim.name).representations
-                                    if dimRep.canonicalName in basis]
+                                    if dimRep.canonicalName in newBasis[maxDistributedIdx+1:]]
       orderedDimRepNames.sort()
-      newBasis = self._driver.canonicalBasisForBasis(tuple([x[1] for x in orderedDimRepNames]))
+      newBasis = self._driver.canonicalBasisForBasis(newBasis[:maxDistributedIdx+1] + tuple([x[1] for x in orderedDimRepNames]))
       self._basisForBasisCache[basis] = newBasis
     return self._basisForBasisCache[basis]
   

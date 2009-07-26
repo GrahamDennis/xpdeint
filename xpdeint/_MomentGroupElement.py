@@ -114,7 +114,7 @@ class _MomentGroupElement (ScriptElement):
     for b in self.codeBlocks['sampling'].basis:
       loopingDimensionNames.remove(dimRepNameToDimNameMap[b])
     self.codeBlocks['sampling'].basis += tuple(loopingDimensionNames)
-    self.codeBlocks['sampling'].basis += (self.propagationDimension,)
+    self.codeBlocks['sampling'].basis = (self.propagationDimension,) + self.codeBlocks['sampling'].basis
     
     outputFieldID = self.outputField.id
     propagationDimension = self.propagationDimension

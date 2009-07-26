@@ -1644,6 +1644,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     self.parseOperatorElements(operatorElement, operatorContainer, crossIntegratorTemplate)
     
     operatorTemplate.crossPropagationIntegrator = crossIntegratorTemplate
+    operatorContainer.deltaAOperator.codeBlocks['operatorDefinition'].basis = operatorDefinitionCodeBlock.basis
     operatorTemplate.crossPropagationIntegratorDeltaAOperator = operatorContainer.deltaAOperator
   
   
@@ -1829,7 +1830,9 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       outputBasis = momentGroupTemplate.outputField.basisForBasis(
         (propagationDimRep.canonicalName,) + sampleBasis
       )
-      # outputBasis = self.globalNameSpace['features']['Driver'].canonicalBasisForBasis(outputBasis, noTranspose=True)
+      driver = self.globalNameSpace['features']['Driver']
+      sampleBasis = driver.canonicalBasisForBasis(sampleBasis, noTranspose = True)
+      outputBasis = driver.canonicalBasisForBasis(outputBasis, noTranspose = True)
       
       
       for dimName, lattice in dimensionsNeedingLatticeUpdates.items():
