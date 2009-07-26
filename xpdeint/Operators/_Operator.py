@@ -108,6 +108,10 @@ class _Operator (ScriptElement):
   def operatorSpace(self):
     return self.primaryCodeBlock.space
   
+  @property
+  def operatorBasis(self):
+    return self.primaryCodeBlock.basis
+  
   @lazy_property
   def field(self):
     return self.parent.field

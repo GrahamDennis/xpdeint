@@ -48,6 +48,13 @@ class _BreakpointSegment (_Segment):
     if self.dependenciesEntity.xmlElement.hasAttribute('fourier_space'):
       spaceString = self.dependenciesEntity.xmlElement.getAttribute('fourier_space')
       self.breakpointSpace = self.field.spaceFromString(spaceString, xmlElement = self.dependenciesEntity.xmlElement)
+      self.breakpointBasis = \
+        self.field.basisFromString(
+          self.dependenciesEntity.xmlElement.getAttribute('fourier_space'),
+          xmlElement = self.dependenciesEntity.xmlElement
+        )
+    else:
+      self.breakpointBasis = self.field.defaultCoordinateBasis
     
     # Use the output format used for output if one isn't specified
     if not self.hasattr('outputFormat'):

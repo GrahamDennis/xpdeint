@@ -84,9 +84,11 @@ class _UserLoopCodeBlock(ScriptElement):
     specialTargetsVector.evaluationSpace = self.space
     specialTargetsVector.integratingComponents = False
     
-    evaluationCodeBlock = _TargetConstructorCodeBlock(field = self.field, space = self.space,
-                                                      parent = specialTargetsVector,
-                                                      **self.argumentsToTemplateConstructors)
+    evaluationCodeBlock = _TargetConstructorCodeBlock(
+      field = self.field, space = self.space, basis = self.basis,
+      parent = specialTargetsVector,
+      **self.argumentsToTemplateConstructors
+    )
     evaluationCodeBlock.targetVector = specialTargetsVector
     specialTargetsVector.codeBlocks['evaluation'] = evaluationCodeBlock
     
@@ -108,10 +110,11 @@ class _UserLoopCodeBlock(ScriptElement):
       evaluationCodeBlock = codeBlocksWithSameTarget[0]
       targetVariableName = 'target%i' % targetCodeBlocks.index(evaluationCodeBlock)
     else:
-      evaluationCodeBlock = _UserLoopCodeBlock(field = self.field, space = self.space,
-                                               parent = specialTargetCodeBlock,
-                                               xmlElement = self.xmlElement,
-                                               **self.argumentsToTemplateConstructors)
+      evaluationCodeBlock = _UserLoopCodeBlock(
+        field = self.field, space = self.space, basis = self.basis,
+        parent = specialTargetCodeBlock, xmlElement = self.xmlElement,
+        **self.argumentsToTemplateConstructors
+      )
       evaluationCodeBlock.codeString = codeString
       # This code block could depend on anything we do
       evaluationCodeBlock.dependencies.update(self.dependencies)
@@ -262,6 +265,9 @@ class _UserLoopCodeBlock(ScriptElement):
     if self.targetVector:
       vectors.add(self.targetVector)
     self.registerVectorsRequiredInSpace(vectors, self.space)
+    
+    basis = self.basis + tuple(self.loopArguments.get('indexOverrides', {}).keys())
+    self.registerVectorsRequiredInBasis(vectors, basis)
     
     self.preflightCalled = True
   

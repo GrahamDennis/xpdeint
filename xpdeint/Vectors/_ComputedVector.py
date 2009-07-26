@@ -58,6 +58,7 @@ class _ComputedVector (VectorElement):
     # Stochastic feature works at the moment is silly, and is causing design problems. The better
     # design is to use noise vectors but until that is implemented, the Stochastic feature will
     # be dealt with specially.
+    
     loopingDimensionNames = set([dim.name for dim in self.field.dimensions])
     for dependency in evaluationCodeBlock.dependencies:
       loopingDimensionNames.update([dim.name for dim in dependency.field.dimensions])
@@ -73,8 +74,18 @@ class _ComputedVector (VectorElement):
       evaluationSpace = evaluationCodeBlock.field.spaceFromString(dependenciesXMLElement.getAttribute('fourier_space'),
                                                                   xmlElement = dependenciesXMLElement)
       evaluationCodeBlock.space = evaluationSpace
+      evaluationCodeBlock.basis = \
+        evaluationCodeBlock.field.basisFromString(
+          dependenciesXMLElement.getAttribute('fourier_space'),
+          xmlElement = dependenciesXMLElement
+        )
+    if not evaluationCodeBlock.basis:
+      evaluationCodeBlock.basis = evaluationCodeBlock.field.defaultCoordinateBasis
     # Set the space so that it is known that this vector is required in the evaluation space.
     self.initialSpace = evaluationCodeBlock.space
+    
+    self.initialBasis = evaluationCodeBlock.basis
+    self.basesNeeded.add(self.initialBasis)
     
     # Our components are constructed by an integral if the looping field doesn't have the same
     # dimensions as the field to which the computed vector belongs.

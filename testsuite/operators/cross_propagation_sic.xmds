@@ -46,7 +46,7 @@
     </initialisation>
   </vector>
   
-  <vector name="zerodConstants" type="real">
+  <vector name="zerodConstants" type="real" dimensions="">
     <components>bar</components>
     <initialisation>
       <![CDATA[

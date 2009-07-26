@@ -40,6 +40,13 @@ class _FilterOperator (Operator):
     if codeBlock.dependenciesEntity and codeBlock.dependenciesEntity.xmlElement.hasAttribute('fourier_space'):
       codeBlock.space = codeBlock.field.spaceFromString(codeBlock.dependenciesEntity.xmlElement.getAttribute('fourier_space'),
                                                         xmlElement = codeBlock.dependenciesEntity.xmlElement)
+      codeBlock.basis = \
+        codeBlock.field.basisFromString(
+          codeBlock.dependenciesEntity.xmlElement.getAttribute('fourier_space'),
+          xmlElement = codeBlock.dependenciesEntity.xmlElement
+        )
+    if not codeBlock.basis:
+      codeBlock.basis = codeBlock.field.defaultCoordinateBasis
   
 
 

@@ -22,11 +22,13 @@ class _DimensionRepresentation(ScriptElement):
   tags = {}
   
   @classmethod
-  def registerTag(cls, tagName):
-    return cls.tags.setdefault(tagName, id(tagName))
+  def registerTag(cls, tagName, parent = None):
+    parent = cls.tagForName(parent) if parent else object
+    tag = type(tagName, (parent,), {})
+    return cls.tags.setdefault(tagName, tag)
   
   @classmethod
-  def tagFromName(cls, tagName):
+  def tagForName(cls, tagName):
     return cls.tags[tagName]
   
   def __init__(self, **KWs):
@@ -159,3 +161,5 @@ class _DimensionRepresentation(ScriptElement):
     
   
 
+_DimensionRepresentation.registerTag('coordinate')
+_DimensionRepresentation.registerTag('spectral')

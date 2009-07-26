@@ -15,7 +15,7 @@ from xpdeint.Geometry.UniformDimensionRepresentation import UniformDimensionRepr
 class _NoTransform (_Transform):
   transformName = 'NoTransform'
   
-  dimRepTag = DimensionRepresentation.registerTag('No transform')
+  dimRepTag = DimensionRepresentation.registerTag('No transform', parent = 'coordinate')
   
   def __init__(self, *args, **KWs):
     _Transform.__init__(self, *args, **KWs)
