@@ -13,6 +13,7 @@ from xpdeint.ParserException import ParserException
 from xpdeint.Utilities import permutations
 
 import operator, math
+from itertools import groupby
 
 class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
   def preflight(self):
@@ -108,12 +109,9 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
     return [dim.inSpace(space) for dim in self.mpiDimensions if dim.inSpace(space).hasLocalOffset][0]
   
   def fullTransformDimensionsForField(self, field):
-    result = []
-    for dim in field.transverseDimensions:
-      if not self.transformNameMap.get(dim.name) in self.distributedMPIKinds:
-        break
-      result.append(dim)
-    return result
+    keyFunc = lambda x: {'dft': 'complex', 'dct': 'real', 'dst': 'real'}.get(self.transformNameMap.get(x.name))
+    for transformType, dims in groupby(field.transverseDimensions, keyFunc):
+      return list(dims)
   
   def isSpaceSwapped(self, space):
     return (space & self.swappedSpace) == self.swappedSpace
@@ -147,26 +145,40 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
       transformFunction = self.transposeTransformFunction
     ))
     
-    # Create partial forward / back operations
-    untransformedBasis = ('distributed ' + self.mpiDimensions[0].representations[0].name,
-                          self.mpiDimensions[1].representations[0].name)
-    transformedBasis = ('distributed ' + self.mpiDimensions[1].representations[1].name,
-                        self.mpiDimensions[0].representations[1].name)
+    # Create mpi forward / back operations
+    geometry = self.getVar('geometry')
+    sortedDimNames = [(geometry.indexOfDimensionName(dimName), dimName) for dimName in self.transformNameMap]
+    sortedDimNames.sort()
+    sortedDimNames = [o[1] for o in sortedDimNames]
     
-    transformCost = self.fftCost([dim.name for dim in self.mpiDimensions])
+    untransformedDimReps = dict([(dimName, geometry.dimensionWithName(dimName).representations[0]) for dimName in sortedDimNames])
+    transformedDimReps = dict([(dimName, geometry.dimensionWithName(dimName).representations[1]) for dimName in sortedDimNames])
     
-    # Partial transform
-    results.append(dict(
-      transformations = [tuple([untransformedBasis, transformedBasis])],
-      communicationsCost = communicationsCost,
-      cost = transformCost,
-      forwardScale = self.scaleFactorForDimReps(untransformedBasis),
-      backwardScale = self.scaleFactorForDimReps(transformedBasis),
-      requiresScaling = True,
-      transformType = 'complex' if self.transformNameMap[self.mpiDimensions[0].name] == 'dft' else 'real',
-      geometryDependent = True,
-      transformFunction = self.distributedTransformFunction
-    ))
+    mpiTransformDimNamesLists = [self._driver.distributedDimensionNames]
+    fullTransformDims = self.fullTransformDimensionsForField(geometry)
+    if len(fullTransformDims) > 2:
+      mpiTransformDimNamesLists.append([dim.name for dim in fullTransformDims])
+    
+    for dimNames in mpiTransformDimNamesLists:
+      untransformedBasis = self.canonicalBasisForBasis(
+        tuple(untransformedDimReps[dimName].name for dimName in dimNames)
+      )
+      transformedBasis = self.canonicalBasisForBasis(
+        tuple(transformedDimReps[dimName].name for dimName in dimNames)
+      )
+      transformCost = self.fftCost([dimName for dimName in dimNames])
+      
+      results.append(dict(
+        transformations = [tuple([untransformedBasis, transformedBasis])],
+        communicationsCost = communicationsCost,
+        cost = transformCost,
+        forwardScale = self.scaleFactorForDimReps(untransformedBasis),
+        backwardScale = self.scaleFactorForDimReps(transformedBasis),
+        requiresScaling = True,
+        transformType = 'complex' if self.transformNameMap[self.mpiDimensions[0].name] == 'dft' else 'real',
+        geometryDependent = True,
+        transformFunction = self.distributedTransformFunction
+      ))
     
     # Fuller forward/reverse transforms would be good in the future for the case of more than two dimensions
     # This isn't necessary for the moment though.
