@@ -29,6 +29,7 @@ class _Integrator (_Segment):
     self.samples = []
     self._integrationVectors = set()
     self.homeSpace = 0
+    self.homeBasis = None
     self.cutoff = 1e-3
     self.stepStartOperatorContainers = []
     self.intraStepOperatorContainers = []
@@ -165,4 +166,5 @@ class _Integrator (_Segment):
           evaluateFunction.args.append(('real', '_step'))
     
     self.registerVectorsRequiredInSpace(self.integrationVectors, self.homeSpace)
+    self.registerVectorsRequiredInBasis(self.integrationVectors, self.homeBasis)
   

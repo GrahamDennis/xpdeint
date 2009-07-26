@@ -92,6 +92,10 @@ class _MomentGroupElement (ScriptElement):
         singlePointDimension = self.outputField.dimensionWithName(self.propagationDimension)
         self.outputField.dimensions.remove(singlePointDimension)
         singlePointDimension.remove()
+        for vector in self.outputField.vectors:
+          basesNeeded = set(tuple(b for b in basis if not b is self.propagationDimension) for basis in vector.basesNeeded)
+          vector.basesNeeded.clear()
+          vector.basesNeeded.update(basesNeeded)
     
     # FIXME: This is only needed because the way that the output stuff is specified is totally broken
     # Specifically, if we omit a <dimension /> tag, it means that we do a single-point sample. Totally broken.

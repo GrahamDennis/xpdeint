@@ -26,6 +26,8 @@ class _UserLoopCodeBlock(ScriptElement):
     self.field = localKWs.get('field')
     self.space = localKWs.get('space')
     self.basis = localKWs.get('basis')
+    if self.basis: self.basis = self.field.basisForBasis(self.basis)
+    
     if 'codeString' in localKWs: self.codeString = localKWs.get('codeString')
     self.targetVector = localKWs.get('targetVector', None)
     self.loopArguments = localKWs.get('loopArguments', {})
@@ -69,7 +71,7 @@ class _UserLoopCodeBlock(ScriptElement):
   @lazy_property
   def specialTargetsVector(self):
     specialTargetsVector = ComputedVector(name = self.parent.id + "_special_targets", field = self.field,
-                                          parent = self,
+                                          parent = self, initialBasis = self.basis,
                                           xmlElement = self.xmlElement,
                                           **self.argumentsToTemplateConstructors)
     
@@ -81,7 +83,6 @@ class _UserLoopCodeBlock(ScriptElement):
       if not self.targetVector or self.targetVector.type == 'real':
         specialTargetsVector.type = 'real'
     
-    specialTargetsVector.evaluationSpace = self.space
     specialTargetsVector.integratingComponents = False
     
     evaluationCodeBlock = _TargetConstructorCodeBlock(

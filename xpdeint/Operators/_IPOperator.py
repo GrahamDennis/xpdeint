@@ -134,6 +134,7 @@ class _IPOperator(Operator):
     
     vectors = set(self.targetVectors)
     self.registerVectorsRequiredInSpace(vectors, self.operatorSpace)
+    self.registerVectorsRequiredInBasis(vectors, self.operatorBasis)
     
   
 

@@ -63,6 +63,7 @@ class _BreakpointSegment (_Segment):
       self._children.append(self.outputFormat)
     
     self.registerVectorsRequiredInSpace(self.dependencies, self.breakpointSpace)
+    self.registerVectorsRequiredInBasis(self.dependencies, self.breakpointBasis)
     
   
 

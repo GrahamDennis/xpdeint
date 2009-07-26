@@ -539,6 +539,7 @@ class XMDS2Parser(ScriptParser):
         type = 'real',
         parent = propagationDimension,
         xmlElement = propagationDimensionElement,
+        tag = NonUniformDimensionRepresentation.tagForName('coordinate'),
         **self.argumentsToTemplateConstructors
       )
     )
@@ -1124,10 +1125,14 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       attributeValue = integrateElement.getAttribute('home_space').strip().lower()
       if attributeValue == 'k':
         integratorTemplate.homeSpace = self.globalNameSpace['geometry'].spaceMask
+        integratorTemplate.homeBasis = self.globalNameSpace['geometry'].defaultSpectralBasis
       elif attributeValue == 'x':
         integratorTemplate.homeSpace = 0
+        integratorTemplate.homeBasis = self.globalNameSpace['geometry'].defaultCoordinateBasis
       else:
         raise ParserException(integrateElement, "home_space must be either 'k' or 'x'.")
+    else:
+      integratorTemplate.homeBasis = self.globalNameSpace['geometry'].defaultCoordinateBasis
     
     if issubclass(integratorTemplateClass, Integrators.AdaptiveStep.AdaptiveStep):
       if not integrateElement.hasAttribute('tolerance'):
@@ -1458,7 +1463,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     vectorName = operatorTemplate.id + "_field"
     
     operatorVectorTemplate = VectorElementTemplate(name = vectorName, field = operatorTemplate.field,
-                                                   parent = operatorTemplate,
+                                                   parent = operatorTemplate, initialBasis = operatorTemplate.operatorBasis,
                                                    **self.argumentsToTemplateConstructors)
     operatorVectorTemplate.type = 'complex'
     if operatorElement.hasAttribute('type'):
@@ -1526,7 +1531,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       vectorName = operatorTemplate.id + "_field"
       
       operatorVectorTemplate = VectorElementTemplate(name = vectorName, field = operatorTemplate.field,
-                                                     parent = operatorTemplate,
+                                                     parent = operatorTemplate, initialBasis = operatorTemplate.operatorBasis,
                                                      **self.argumentsToTemplateConstructors)
       operatorVectorTemplate.type = 'real'
       
@@ -1539,7 +1544,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     
     vectorName = operatorTemplate.id + "_result"
     resultVector = VectorElementTemplate(name = vectorName, field = operatorTemplate.field,
-                                         parent = operatorTemplate,
+                                         parent = operatorTemplate, initialBasis = operatorTemplate.field.defaultCoordinateBasis,
                                          **self.argumentsToTemplateConstructors)
     resultVector.type = 'real'
     
@@ -1547,6 +1552,8 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     resultVector.needsInitialisation = False
     resultVector.components = resultVectorComponents
     operatorTemplate.resultVector = resultVector
+    resultVector.spacesNeeded.add(operatorTemplate.operatorSpace)
+    resultVector.basesNeeded.add(resultVector.field.basisForBasis(operatorTemplate.operatorBasis))
     
     if isinstance(operatorTemplate, NonConstantEXOperatorTemplate):
       operatorDefinitionCodeBlock.targetVector = resultVector
@@ -1589,6 +1596,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
                                                    parent = operatorTemplate,
                                                    **self.argumentsToTemplateConstructors)
     crossIntegratorTemplate.cross = True
+    crossIntegratorTemplate.homeBasis = operatorDefinitionCodeBlock.basis
     
     self.applyAttributeDictionaryToObject(algorithmSpecificOptionsDict, crossIntegratorTemplate)
     
