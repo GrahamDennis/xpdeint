@@ -123,21 +123,6 @@ class _FourierTransformFFTW3 (_Transform):
     return {'dct': {'forward': 'FFTW_REDFT10', 'backward': 'FFTW_REDFT01'},
             'dst': {'forward': 'FFTW_RODFT10', 'backward': 'FFTW_RODFT01'}}[transformName][direction]
   
-  def initialiseForMPIWithDimensions(self, dimensions):
-    # We can only upgrade to MPI support if both the first and second dimensions
-    # are 'dft' or 'r2r' transforms. In the future, this restriction can be lifted
-    if len(dimensions) < 2:
-      raise ParserException(self._driver.xmlElement,
-                            "There must be at least two dimensions to use the 'distributed-mpi' with the '%s' transform." % self.transformName[dimensions[0].name])
-    if not (dimensions[0].transform == self and dimensions[1].transform == self) \
-       or ((self.transformNameMap[dimensions[0].name] == 'dft') ^ (self.transformNameMap[dimensions[1].name] == 'dft')) \
-       or ((self.transformNameMap[dimensions[0].name] in ['dct', 'dst']) ^ (self.transformNameMap[dimensions[1].name] in ['dct', 'dst'])):
-      raise ParserException(self._driver.xmlElement,
-                            "To use the 'distributed-mpi' driver with the 'dft', 'dct' or 'dst' transforms, both the first and second dimensions "
-                            "must use one of these transforms with the additional restriction that if the 'dft' transform is used for one dimension "
-                            "it must be used for the other.")
-    super(_FourierTransformFFTW3, self).initialiseForMPIWithDimensions(dimensions)
-  
   def fftCost(self, dimNames):
     geometry = self.getVar('geometry')
     untransformedDimReps = dict([(dimName, geometry.dimensionWithName(dimName).representations[0]) for dimName in dimNames])
@@ -162,9 +147,7 @@ class _FourierTransformFFTW3 (_Transform):
     )
     
     for dimName in sortedDimNames:
-      # FIXME: The 0:2 slice in the following is to prevent double-up due to the current use of three representations
-      # for distributed MPI dimensions. This won't be needed when we convert to bases internally in xpdeint.
-      dimReps = geometry.dimensionWithName(dimName).representations[0:2]
+      dimReps = [rep for rep in geometry.dimensionWithName(dimName).representations if not rep.hasLocalOffset]
       results.append(dict(
         transformations = [tuple(rep.name for rep in dimReps)],
         cost = self.fftCost([dimName]),
