@@ -96,6 +96,9 @@ ${planGlobalsForVector(vector)}@slurp
 
 @def transformFunction(transformID, transformDict, function)
   @#
+  @set mpiPrefix, prefixLattice, postfixLattice = transformDict['transformSpecifier']
+// _prefix_lattice should be ${prefixLattice}
+// _postfix_lattice should be ${postfixLattice}
 static ${fftwPrefix}_plan _fftw_forward_plan = NULL;
 static ${fftwPrefix}_plan _fftw_backward_plan = NULL;
 
@@ -113,24 +116,21 @@ if (!_fftw_forward_plan) {
   
   int _transform_sizes_index = 0, _loop_sizes_index = 0;
   
-  @set mpiPrefix, prefixLattice, postfixLattice = transformDict['transformSpecifier']
-  @if mpiPrefix or prefixLattice > 1
-  _iodim_ptr = &_loop_sizes[_loop_sizes_index++];
-  _iodim_ptr->n = ${prefixLattice}${''.join(c' * ${mpiPrefixLattice}' for mpiPrefixLattice in mpiPrefix)};
-  _iodim_ptr->is = _iodim_ptr->os = ${postfixLattice} * ${' * '.join([dimRep.localLattice for dimRep in transformPair[0]])};
-  
-  @end if
-  @if postfixLattice > 1
-  _iodim_ptr = &_loop_sizes[_loop_sizes_index++];
-  _iodim_ptr->n = ${postfixLattice};
-  _iodim_ptr->is = _iodim_ptr->os = 1;
-  
-  @end if
+  if (_prefix_lattice) {
+    _iodim_ptr = &_loop_sizes[_loop_sizes_index++];
+    _iodim_ptr->n = _prefix_lattice;
+    _iodim_ptr->is = _iodim_ptr->os = _postfix_lattice * ${' * '.join([dimRep.globalLattice for dimRep in transformPair[0]])};
+  }
+  if (_postfix_lattice) {
+    _iodim_ptr = &_loop_sizes[_loop_sizes_index++];
+    _iodim_ptr->n = _postfix_lattice;
+    _iodim_ptr->is = _iodim_ptr->os = 1;
+  }
   @#
   @for dimID, dimRep in enumerate(transformPair[0])
   _iodim_ptr = &_transform_sizes[_transform_sizes_index++];
   _iodim_ptr->n = ${dimRep.globalLattice};
-  _iodim_ptr->is = _iodim_ptr->os = ${postfixLattice}${''.join(c' * ${dr.globalLattice}' for dr in transformPair[0][dimID+1:])};
+  _iodim_ptr->is = _iodim_ptr->os = _postfix_lattice${''.join(c' * ${dr.globalLattice}' for dr in transformPair[0][dimID+1:])};
   
   @end for
   @#
@@ -181,6 +181,9 @@ _fftw_${direction}_plan = ${fftwPrefix}_plan_guru_dft(
   reinterpret_cast<${fftwPrefix}_complex*>(_data_in), reinterpret_cast<${fftwPrefix}_complex*>($dataOut),
   FFTW_${direction.upper()}, ${planType}
 );
+if (!_fftw_${direction}_plan)
+  _LOG(_ERROR_LOG_LEVEL, "(%s: %i) Unable to create ${direction} dft plan.\n", __FILE__, __LINE__);
+
   @#
 @end def
 
@@ -196,6 +199,8 @@ _fftw_${direction}_plan = ${fftwPrefix}_plan_guru_r2r(
   reinterpret_cast<real*>(_data_in), reinterpret_cast<real*>($dataOut),
   _r2r_kinds, ${planType}
 );
+if (!_fftw_${direction}_plan)
+  _LOG(_ERROR_LOG_LEVEL, "(%s: %i) Unable to create ${direction} r2r plan.\n", __FILE__, __LINE__);
 
   @#
 @end def

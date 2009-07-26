@@ -236,30 +236,38 @@ ${field.allocSize} = _${field.name}_2d_size * ${field.pointsInDimensionsWithIndi
 
 @def transposeTransformFunction(transformID, transformDict, function)
   @#
+  @set mpiPrefix, prefixLattice, postfixLattice = transformDict['transformSpecifier']
+// _prefix_lattice should be ${prefixLattice}
+// _postfix_lattice should be ${postfixLattice}
 static ${fftwPrefix}_plan _fftw_forward_plan = NULL;
 static ${fftwPrefix}_plan _fftw_backward_plan = NULL;
 
 if (!_fftw_forward_plan) {
   _LOG(_SIMULATION_LOG_LEVEL, "Planning for ${function.description}...");
   @set $transformPair = transformDict['transformPair']
-  @set mpiPrefix, prefixLattice, postfixLattice = transformDict['transformSpecifier']
   @set $dataOut = '_data_out' if transformDict.get('outOfPlace', False) else '_data_in'
   
   _fftw_forward_plan = ${fftwPrefix}_mpi_plan_many_transpose(
     ${', '.join(dr.globalLattice for dr in transformPair[0])},
-    ${postfixLattice}, _unswapped_block_size, _swapped_block_size,
+    _postfix_lattice, _unswapped_block_size, _swapped_block_size,
     reinterpret_cast<real*>(_data_in),
     reinterpret_cast<real*>($dataOut),
     MPI_COMM_WORLD, ${planType}
   );
   
+  if (!_fftw_forward_plan)
+    _LOG(_ERROR_LOG_LEVEL, "(%s: %i) Unable to create forward mpi transform plan.\n", __FILE__, __LINE__);
+  
   _fftw_backward_plan = ${fftwPrefix}_mpi_plan_many_transpose(
     ${', '.join(dr.globalLattice for dr in transformPair[1])},
-    ${postfixLattice}, _swapped_block_size, _unswapped_block_size,
+    _postfix_lattice, _swapped_block_size, _unswapped_block_size,
     reinterpret_cast<real*>(_data_in),
     reinterpret_cast<real*>($dataOut),
     MPI_COMM_WORLD, ${planType}
   );
+  
+  if (!_fftw_backward_plan)
+    _LOG(_ERROR_LOG_LEVEL, "(%s: %i) Unable to create backward mpi transform plan.\n", __FILE__, __LINE__);
   
   // Save wisdom
   #if CFG_OSAPI == CFG_OSAPI_POSIX
@@ -287,6 +295,9 @@ if (_forward) {
 
 @def distributedTransformFunction(transformID, transformDict, function)
   @#
+  @set mpiPrefix, prefixLattice, postfixLattice = transformDict['transformSpecifier']
+// _prefix_lattice should be ${prefixLattice}
+// _postfix_lattice should be ${postfixLattice}
 static ${fftwPrefix}_plan _fftw_forward_plan = NULL;
 static ${fftwPrefix}_plan _fftw_backward_plan = NULL;
 
@@ -295,9 +306,8 @@ if (!_fftw_forward_plan) {
   @set $transformPair = transformDict['transformPair']
   @set $dimensionsBeingTransformed = len(transformPair[0])
   @set $transformType = transformDict['transformType']
-  @set mpiPrefix, prefixLattice, postfixLattice = transformDict['transformSpecifier']
   @set $dataOut = '_data_out' if transformDict.get('outOfPlace', False) else '_data_in'
-  ptrdiff_t _transform_sizes[${dimensionsBeingTransformed}], _howmany = ${postfixLattice};
+  ptrdiff_t _transform_sizes[${dimensionsBeingTransformed}];
   @if transformType == 'real'
   ${fftwPrefix}_r2r_kind _r2r_kinds[${dimensionsBeingTransformed}];
   @end if
@@ -351,12 +361,15 @@ if (_forward) {
 @def createGuruMPIDFTPlanInDirection($transformDict, $direction, $dataOut, $inBlockSize, $outBlockSize, $transposedState)
   @#
 _fftw_${direction}_plan = ${fftwPrefix}_mpi_plan_many_dft(
-  _transform_sizes_index, _transform_sizes, _howmany,
+  _transform_sizes_index, _transform_sizes, _postfix_lattice,
   ${inBlockSize}, ${outBlockSize},
   reinterpret_cast<${fftwPrefix}_complex*>(_data_in),
   reinterpret_cast<${fftwPrefix}_complex*>(${dataOut}),
   MPI_COMM_WORLD, FFTW_${direction.upper()}, ${planType} | ${transposedState}
 );
+if (!_fftw_${direction}_plan)
+  _LOG(_ERROR_LOG_LEVEL, "(%s: %i) Unable to create ${direction} mpi dft plan.\n", __FILE__, __LINE__);
+
   @#
 @end def
 
@@ -367,13 +380,15 @@ _r2r_kinds[${idx}] = ${r2rKindForDimensionAndDirection(dimRep.name, direction)};
   @end for
 
 _fftw_${direction}_plan = ${fftwPrefix}_mpi_plan_many_r2r(
-  _transform_sizes_index, _transform_sizes, _howmany,
+  _transform_sizes_index, _transform_sizes, _postfix_lattice,
   ${inBlockSize}, ${outBlockSize},
   reinterpret_cast<real*>(_data_in),
   reinterpret_cast<real*>(${dataOut}),
   MPI_COMM_WORLD, _r2r_kinds, ${planType} | ${transposedState}
 );
 
+if (!_fftw_${direction}_plan)
+  _LOG(_ERROR_LOG_LEVEL, "(%s: %i) Unable to create ${direction} mpi r2r plan.\n", __FILE__, __LINE__);
   @#
 @end def
 

@@ -92,17 +92,19 @@ static real *_mmt_matrix_${backwardDimRep.name}_${forwardDimRep.name} = NULL;
   @set $forwardDimRep = transformPair[0][0]
   @set $backwardDimRep = transformPair[1][0]
   @# FIXME: Change these names once we shift over to the new transform system
+static bool _initialised = false;
 ${transformFunctionStart(forwardDimRep, backwardDimRep)}@slurp
 ptrdiff_t innerLoopSize = _postfix_lattice;
 real* const __restrict__ source_data = _data_in;
 real* const __restrict__ dest_data = _data_out;
 
-if (!_mmt_matrix_${forwardDimRep.name}_${backwardDimRep.name}) {
+if (!_initialised) {
   _LOG(_SIMULATION_LOG_LEVEL, "Building matrices for ${function.description}...");
   
   ${transformMatricesForDimReps($forwardDimRep, $backwardDimRep), autoIndent=True}@slurp
   
   _LOG(_SIMULATION_LOG_LEVEL, " done.\n");
+  _initialised = true;
 }
 
 if (_forward) {

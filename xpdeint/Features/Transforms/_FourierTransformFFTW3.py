@@ -18,6 +18,7 @@ from xpdeint.ParserException import ParserException
 from xpdeint.Utilities import lazy_property, combinations
 
 import math, operator, types
+from itertools import groupby
 
 class _FourierTransformFFTW3 (_Transform):
   transformName = 'FourierTransform'
@@ -185,7 +186,9 @@ class _FourierTransformFFTW3 (_Transform):
     transformedDimReps = dict([(dimName, geometry.dimensionWithName(dimName).representations[1]) for dimName in sortedDimNames])
     
     # Create optimised forward/backward transforms
-    for dimNames, transformType in [(c2cDimNames, 'complex'), (r2rDimNames, 'real')]:
+    keyFunc = lambda x: {'dft': 'complex', 'dct': 'real', 'dst': 'real'}[self.transformNameMap[x]]
+    for transformType, dimNames in groupby(sortedDimNames, keyFunc):
+      dimNames = list(dimNames)
       if len(dimNames) <= 1: continue
       cost = self.fftCost(dimNames)
       untransformedBasis = tuple(untransformedDimReps[dimName].name for dimName in dimNames)
