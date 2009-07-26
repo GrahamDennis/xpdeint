@@ -70,7 +70,7 @@ ${writeOutFunctionImplementationEnd(dict)}@slurp
   @set $baseFilename = dict['baseFilename']
   @set $groupID = dict['groupID']
   @set $field = dict['field']
-  @set $space = dict['space']
+  @set $basis = dict['basis']
   @set $dependentVariables = dict['dependentVariables']
   @set $componentCount = 0
   @for $variable in $dependentVariables
@@ -93,7 +93,7 @@ fprintf($fp, "    </Stream>\n");
 hsize_t coordinate_length;
 hid_t coordinate_dataspace;
   @for dim in field.dimensions
-    @set $dimRep = dim.inSpace(space)
+    @set $dimRep = dim.inBasis(basis)
 coordinate_length = ${dimRep.globalLattice};
 coordinate_dataspace = H5Screate_simple(1, &coordinate_length, NULL);
     @set $dataType = {'real': 'H5T_NATIVE_' + $precision.upper(), 'long': 'H5T_NATIVE_LONG'}[$dimRep.type]
@@ -118,7 +118,7 @@ xmds_free(${dimArrayName});
 H5Sclose(coordinate_dataspace);
   @end for
 
-hsize_t file_dims[] = {${', '.join(dim.inSpace(space).globalLattice for dim in field.dimensions)}};
+hsize_t file_dims[] = {${', '.join(dim.inBasis(basis).globalLattice for dim in field.dimensions)}};
 hid_t file_dataspace;
 file_dataspace = H5Screate_simple(${len(field.dimensions)}, file_dims, NULL);
   @for variable in dependentVariables
@@ -132,16 +132,16 @@ file_dataspace = H5Screate_simple(${len(field.dimensions)}, file_dims, NULL);
       @end for
     @end if
     @for offset, componentName in $variable.separatedComponents
-hid_t dataset_${componentName} = H5Dcreate(hdf5_file, "/${groupID}/${componentName}", H5T_NATIVE_DOUBLE, file_dataspace, H5P_DEFAULT);
+hid_t dataset_${componentName} = H5Dcreate(hdf5_file, "/${groupID}/${componentName}", H5T_NATIVE_REAL, file_dataspace, H5P_DEFAULT);
 #if defined(HAVE_HDF5_HL)
       @for dimNum, dim in enumerate(field.dimensions)
-  H5DSattach_scale(dataset_${componentName}, dataset_${dim.inSpace(space).name}, ${dimNum});
+  H5DSattach_scale(dataset_${componentName}, dataset_${dim.inBasis(basis).name}, ${dimNum});
       @end for
 #endif
     @end for
   @end for
   @for dim in field.dimensions
-    @set $dimRep = dim.inSpace(space)
+    @set $dimRep = dim.inBasis(basis)
 H5Dclose(dataset_${dimRep.name});
   @end for
 

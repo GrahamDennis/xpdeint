@@ -140,7 +140,7 @@ for (int _error_check_loop_iter = (_half_step ? 2 : 1); _error_check_loop_iter >
   @set $outputFieldName = momentGroup.outputField.name
 _active_${processedVector.id} = _${outputFieldName}_fullstep;
 
-${processedVector.findMaximum('_max_step_error', space = momentGroup.outputSpace)}@slurp
+${processedVector.findMaximum('_max_step_error', basis = momentGroup.outputBasis)}@slurp
 
 // Restore active pointer for processed vector
 _active_${processedVector.id} = _${outputFieldName}_halfstep;

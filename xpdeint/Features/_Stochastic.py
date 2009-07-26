@@ -50,14 +50,14 @@ class _Stochastic (_Feature):
     
     return noisesNeeded
   
-  def deltaAOperatorSpaceForFieldInIntegrator(self, field, integrator):
+  def deltaAOperatorBasisForFieldInIntegrator(self, field, integrator):
     assert field in integrator.integrationFields
     
     deltaAOperatorList = [oc.deltaAOperator for oc in integrator.operatorContainers if oc.field == field and oc.deltaAOperator.noises]
     assert len(deltaAOperatorList) == 1
     deltaAOperator = deltaAOperatorList[0]
     
-    return deltaAOperator.operatorSpace
+    return deltaAOperator.operatorBasis
   
   def xsilOutputInfo(self, dict):
     return self.implementationsForChildren('xsilOutputInfo', dict)

@@ -6,6 +6,8 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 *@
 @extends xpdeint.SimulationDrivers._SimulationDriver
 
+@from xpdeint.Vectors.VectorElement import VectorElement
+
 @def description: Default Simulation Driver
 
 @def functionImplementations
@@ -48,6 +50,8 @@ int main(int argc, char **argv)
 
 @def mainRoutineInnerContent
   @#
+  @set vectors = set([v for v in $templates if isinstance(v, VectorElement)])
+${setVectorAllocSizes(vectors)}@slurp
   @#
   @for field in $fields
 ${field.allocate}@slurp
@@ -74,6 +78,16 @@ ${insertCodeForFeaturesInReverseOrder('mainEnd', $featureOrdering)}@slurp
 ${field.free}@slurp
   @end for
 
+  @#
+@end def
+
+@def setVectorAllocSizes($vectors)
+  @#
+  @for vector in vectors
+    @for basis in vector.basesNeeded
+${vector.allocSize} = MAX(${vector.allocSize}, ${vector.field.sizeInBasis(basis)} * _${vector.id}_ncomponents);
+    @end for
+  @end for
   @#
 @end def
 

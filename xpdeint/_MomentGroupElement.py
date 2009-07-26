@@ -80,6 +80,9 @@ class _MomentGroupElement (ScriptElement):
       self.processedVector = self.rawVector
     
   
+  def addSamplePoints(self, samplePoints):
+    self.outputField.dimensionWithName(self.propagationDimension).inBasis(self.outputBasis).lattice += samplePoints
+  
   def preflight(self):
     super(_MomentGroupElement, self).preflight()
     for dependency in self.codeBlocks['sampling'].dependencies:
@@ -88,12 +91,14 @@ class _MomentGroupElement (ScriptElement):
     
     # Throw out the propagation dimension if it only contains a single sample
     if self.outputField.hasDimensionName(self.propagationDimension):
-      if self.outputField.dimensionWithName(self.propagationDimension).inSpace(0).lattice == 1:
+      propDimRep = self.outputField.dimensionWithName(self.propagationDimension).inBasis(self.outputBasis)
+      if propDimRep.lattice == 1:
         singlePointDimension = self.outputField.dimensionWithName(self.propagationDimension)
         self.outputField.dimensions.remove(singlePointDimension)
         singlePointDimension.remove()
+        self.outputBasis = tuple(b for b in self.outputBasis if not b is propDimRep.canonicalName)
         for vector in self.outputField.vectors:
-          basesNeeded = set(tuple(b for b in basis if not b is self.propagationDimension) for basis in vector.basesNeeded)
+          basesNeeded = set(tuple(b for b in basis if not b is propDimRep.canonicalName) for basis in vector.basesNeeded)
           vector.basesNeeded.clear()
           vector.basesNeeded.update(basesNeeded)
     
@@ -107,6 +112,7 @@ class _MomentGroupElement (ScriptElement):
     for b in self.codeBlocks['sampling'].basis:
       loopingDimensionNames.remove(dimRepNameToDimNameMap[b])
     self.codeBlocks['sampling'].basis += tuple(loopingDimensionNames)
+    self.codeBlocks['sampling'].basis += (self.propagationDimension,)
     
     outputFieldID = self.outputField.id
     propagationDimension = self.propagationDimension

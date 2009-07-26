@@ -30,7 +30,7 @@ long _breakpointAutoNameCounter = 0;
 @def segmentFunctionBody($function)
 ${evaluateComputedVectors($dependencies)}@slurp
 
-${transformVectorsToSpace($dependencies, $breakpointSpace)}@slurp
+${transformVectorsToBasis($dependencies, $breakpointBasis)}@slurp
 
   @set $featureOrdering = ['Driver']
   @set $dict = {'extraIndent': 0}
@@ -64,7 +64,7 @@ ${outputFormat.writeOutSetup({}, '_baseFilename')}@slurp
 
   @set $dependentVariables = [{'vector': vector, 'arrayName': c'_active_${vector.id}', 'components': vector.components} for vector in $dependencies]
   @set $writeOutDict = {'field': $field,
-                        'space': $breakpointSpace,
+                        'basis': $breakpointBasis,
                         'fp': '_outfile',
                         'baseFilename': "_baseFilename",
                         'dependentVariables': dependentVariables,

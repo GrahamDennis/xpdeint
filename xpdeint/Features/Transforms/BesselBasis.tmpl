@@ -13,8 +13,9 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 @def globalsForDim($dim)
   @#
   @set $besselOrder = $order + $besselOrderOffset
-const real _normbesseljzeros_${dim.name}[] = {${wrapArray($normalisedBesselJZeros($besselOrder, dim.inSpace(0).lattice))}};
-const real _besseljnorm_${dim.name} = ${besselJZeros($besselOrder, dim.inSpace(0).lattice+1)[-1]};
+  @set $dimRep = dim.firstDimRepWithTagName('coordinate')
+const real _normbesseljzeros_${dim.name}[] = {${wrapArray($normalisedBesselJZeros($besselOrder, dimRep.lattice))}};
+const real _besseljnorm_${dim.name} = ${besselJZeros($besselOrder, dimRep.lattice+1)[-1]};
   @#
   @super(dim)
   @#
@@ -32,7 +33,7 @@ jn($order, $argument)@slurp
   @#
 const real besselFactor = ${besselJFunctionCall($order + 1, c'_normbesseljzeros_${dimRep.parent.name}[${index}] * _besseljnorm_${dimRep.parent.name}')};
 const real ${dimRep.name}_max = @slurp
-  @if dimRep.tag == $dimRep.tagForName('MMT coordinate space')
+  @if issubclass(dimRep.tag, dimRep.tagForName('coordinate'))
 ${dimRep._maximum};
   @else
 (_besseljnorm_${dimRep.parent.name}/((real)${dimRep._maximum}));

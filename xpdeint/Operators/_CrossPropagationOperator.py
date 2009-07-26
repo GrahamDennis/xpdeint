@@ -19,8 +19,6 @@ class _CrossPropagationOperator (Operator):
   operatorKind = Operator.OtherOperatorKind
   evaluateOperatorFunctionArguments = []
   
-  operatorSpace = 0
-  
   # This is a class attribute and not an instance attribute to prevent two
   # cross-propagation operators trying to create the same reduced field
   # and then creating the same reduced vectors, but in these different
@@ -183,7 +181,7 @@ class _CrossPropagationOperator (Operator):
     if self.propagationDirection == '+':
       indexOverrideValue = '0'
     else:
-      propDimRep = self.field.dimensionWithName(self.propagationDimension).inSpace(0)
+      propDimRep = self.field.dimensionWithName(self.propagationDimension).inBasis(self.operatorBasis)
       indexOverrideValue = '(%s - 1)' % propDimRep.globalLattice
     indexOverrides = {self.propagationDimension: dict([(v.field, indexOverrideValue) for v in boundaryConditionDependencies])}
     self.codeBlocks['boundaryCondition'].loopArguments['indexOverrides'] = indexOverrides

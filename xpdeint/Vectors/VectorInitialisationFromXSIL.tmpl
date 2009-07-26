@@ -7,6 +7,8 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 @extends xpdeint.Vectors.VectorInitialisation
 
 @from xpdeint.CallOnceGuards import callOnceGuard
+@from xpdeint.Geometry.UniformDimensionRepresentation import UniformDimensionRepresentation
+@from xpdeint.Geometry.SplitUniformDimensionRepresentation import SplitUniformDimensionRepresentation
 
 @attr $uselib = ['xmds']
 
@@ -128,7 +130,7 @@ double *_dimMin   = new double[_${vector.field.name}_ndims];
 unsigned long *_dimLattice = new unsigned long[_${vector.field.name}_ndims];
 
   @for dimensionNumber, dimension in enumerate($vector.field.dimensions)
-    @set $dimRep = dimension.inSpace($vector.initialSpace)
+    @set $dimRep = dimension.inBasis($vector.initialBasis)
 _dimNames[$dimensionNumber]   = "${dimRep.name}";
 _dimDelta[$dimensionNumber]   = ${dimRep.stepSize};
 _dimMin[$dimensionNumber]     = ${dimRep.minimum};
@@ -278,7 +280,7 @@ else
 
   @if len($vector.field.dimensions)
 // Create inputfield index variables
-long ${', '.join([c'_inputfield${dim.inSpace($vector.initialSpace).loopIndex}' for dim in $vector.field.dimensions])};
+long ${', '.join([c'_inputfield${dim.inBasis($vector.initialBasis).loopIndex}' for dim in $vector.field.dimensions])};
   @end if
 
 // Index pointer into the input array (new and old)
@@ -292,8 +294,8 @@ for (unsigned int _component = 0; _component < ${componentNameSizePrefix}_${vect
   @set $loopingVectors = $initialisationCodeBlock.dependencies.copy()
   @silent loopingVectors.add($vector)
   
-  ${loopOverFieldInSpaceWithVectorsAndInnerContent($initialisationCodeBlock.field,
-                                                   $initialisationCodeBlock.space,
+  ${loopOverFieldInBasisWithVectorsAndInnerContent($initialisationCodeBlock.field,
+                                                   $initialisationCodeBlock.basis,
                                                    $loopingVectors,
                                                    $insideDataLoops), autoIndent=True}@slurp
   
@@ -337,20 +339,22 @@ ${codeString}@slurp
 
 @def insideDataLoops
   @#
-  @set $space = $vector.initialSpace
+  @set $basis = $vector.initialBasis
 // Save the old initialisation pointer, and clear the new one
 _inputfield_old_index_pointer = _inputfield_index_pointer;
 _inputfield_index_pointer = 0;
 
   @for dimensionNumber, dimension in enumerate($vector.field.dimensions)
-    @set dimRep = dimension.inSpace(space)
+    @set dimRep = dimension.inBasis(basis)
     @set dimName = dimRep.name
 _inputfield${dimRep.loopIndex} = @slurp
     @# FIXME: Consider moving this to the dimension representations
-    @if $dimensionIsInFourierSpace(dimension, space)
+    @if isinstance(dimRep, UniformDimensionRepresentation)
+lround((${dimName} - _inputfield_min_${dimName})/_dimDelta[${dimensionNumber}]);
+    @elif isinstance(dimRep, SplitUniformDimensionRepresentation)
 lround(${dimName}/_dimDelta[${dimensionNumber}]) + (_inputLattice[${dimensionNumber}]/2);
     @else
-lround((${dimName} - _inputfield_min_${dimName})/_dimDelta[${dimensionNumber}]);
+      @assert False, "XSIL Loading does not support loading data for dimensions that aren't uniformly spaced. The problem is with %s" % dimName
     @end if
 
 // Check if the input grid has this coordinate value

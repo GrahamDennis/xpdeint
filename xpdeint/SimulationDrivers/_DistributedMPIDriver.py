@@ -29,18 +29,8 @@ class _DistributedMPIDriver (SimulationDriver, MPI):
   distributedTransform = property(_getDistributedTransform, _setDistributedTransform)
   del _getDistributedTransform, _setDistributedTransform
   
-  def mpiDimRepForSpace(self, space):
-    return self._distributedTransform.mpiDimRepForSpace(space)
-  
   def isFieldDistributed(self, field):
     return self._distributedTransform.isFieldDistributed(field)
-  
-  def sizeOfFieldInSpace(self, field, space):
-    """Return a name of a variable the value of which is the size of `field` in `space`."""
-    if self._distributedTransform.hasattr('sizeOfFieldInSpace'):
-      return self._distributedTransform.sizeOfFieldInSpace(field, space)
-    else:
-      return field.allocSize
   
   def shadowedVariablesForField(self, field):
     if not self.isFieldDistributed(field):
@@ -53,13 +43,6 @@ class _DistributedMPIDriver (SimulationDriver, MPI):
   
   def setDistributedMPILatticeVariableForSpace(self, varName, spaceVarName):
     return self._distributedTransform.setDistributedMPILatticeVariableForSpace(varName, spaceVarName)
-  
-  def orderedDimensionsForFieldInSpace(self, field, space):
-    """Return a list of the dimensions for field in the order in which they should be looped over"""
-    if self._distributedTransform.hasattr('orderedDimensionsForFieldInSpace'):
-      return self._distributedTransform.orderedDimensionsForFieldInSpace(field, space)
-    return super(_DistributedMPIDriver, self).orderedDimensionsForFieldInSpace(field, space)
-  
   
   def preflight(self):
     super(_DistributedMPIDriver, self).preflight()

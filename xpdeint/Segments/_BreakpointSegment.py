@@ -17,7 +17,6 @@ class _BreakpointSegment (_Segment):
     _Segment.__init__(self, *args, **KWs)
     
     self.filename = None
-    self.breakpointSpace = 0
     self.field = None
   
   @lazy_property
@@ -47,7 +46,6 @@ class _BreakpointSegment (_Segment):
     
     if self.dependenciesEntity.xmlElement.hasAttribute('fourier_space'):
       spaceString = self.dependenciesEntity.xmlElement.getAttribute('fourier_space')
-      self.breakpointSpace = self.field.spaceFromString(spaceString, xmlElement = self.dependenciesEntity.xmlElement)
       self.breakpointBasis = \
         self.field.basisFromString(
           self.dependenciesEntity.xmlElement.getAttribute('fourier_space'),
@@ -62,7 +60,6 @@ class _BreakpointSegment (_Segment):
     else:
       self._children.append(self.outputFormat)
     
-    self.registerVectorsRequiredInSpace(self.dependencies, self.breakpointSpace)
     self.registerVectorsRequiredInBasis(self.dependencies, self.breakpointBasis)
     
   

@@ -33,9 +33,6 @@ class _Transform (ScriptElement):
   def isMPICapable(self):
     return bool(self.mpiCapableSubclass)
   
-  def transformMaskForVector(self, vector):
-    return reduce(operator.__or__, [d.transformMask for d in vector.field.dimensions if d.transform == self], 0)
-  
   @property
   def vectorsNeedingThisTransform(self):
     vectors = set()
@@ -51,21 +48,6 @@ class _Transform (ScriptElement):
     # MPI subclass must define this method
     self.initialiseForMPIWithDimensions(dimensions)
   
-  def canTransformVectorInDimension(self, vector, dim):
-    if dim.isTransformable:
-      return True
-    else:
-      return False
-  
-  def mappingRulesForDimensionInField(self, dim, field):
-    """
-    Return default mapping rules. Each rule is a ``(mask, index)`` pair.
-    A mapping rule matches a space if ``mask & space`` is nonzero. The rules
-    are tried in order until one matches, and the representation correponding
-    to the index in the rule is the result.
-    """
-    return [(dim.transformMask, 1), (None, 0)]
-  
   def newDimension(self, name, lattice, minimum, maximum,
                    parent, transformName, aliases = set(),
                    type = 'real', xmlElement = None):
@@ -73,6 +55,8 @@ class _Transform (ScriptElement):
                      **self.argumentsToTemplateConstructors)
     return dim
   
+  def setVectorAllocSizes(self, vectors):
+    return ''
   
   def preflight(self):
     super(_Transform, self).preflight()

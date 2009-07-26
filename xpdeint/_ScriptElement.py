@@ -14,7 +14,6 @@ import textwrap
 
 from Cheetah.Template import Template
 from xpdeint.ParserException import ParserException
-from xpdeint.ParsedEntity import ParsedEntity
 
 import re
 from xpdeint.Utilities import lazy_property
@@ -301,16 +300,6 @@ class _ScriptElement (Template):
     
     return self.insertCodeForFeatures(functionName, reversedFeatureList, dict, reverse=True)
   
-  def dimensionIsInFourierSpace(self, dimension, space):
-    """Return `True` if `dimension` is in fourier space in `space`."""
-    # FIXME: This function needs to be removed
-    if space & dimension.transformMask:
-      # This dimension is in fourier space
-      return True
-    else:
-      # This dimension isn't in fourier space
-      return False
-  
   # Insert contents of function for self, classes and children
   def implementationsForFunctionName(self, functionName, *args, **KWs):
     """
@@ -439,6 +428,8 @@ class _ScriptElement (Template):
   def transformVectorsToBasis(self, vectors, basis):
     result = []
     for vector in vectors:
+      if not vector.needsTransforms:
+        continue
       vectorBasis = vector.field.basisForBasis(basis)
       if not vector.isTransformableTo(vectorBasis):
         raise ParserException(
@@ -448,26 +439,8 @@ class _ScriptElement (Template):
         )
       # FIXME: This bit needs to be rewritten when we change over the generated code to use bases.
       space = self.spaceForBasis(vectorBasis)
-      if vector.needsTransforms:
-        result.extend([vector.functions['goSpace'].call(newSpace=space), '\n'])
+      result.extend([vector.functions['goSpace'].call(newSpace=space), '\n'])
     return ''.join(result)
-  
-  def transformVectorsToSpace(self, vectors, space):
-    """Transform vectors `vectors` to space `space`."""
-    result = []
-    for vector in vectors:
-      if not (vector.initialSpace) == (space & vector.field.spaceMask):
-        if not vector.isTransformableTo(space):
-          raise ParserException(self.xmlElement,
-                  "Cannot satisfy dependence on vector '%s' because it cannot "
-                  "be transformed to the appropriate space (%i). The vector's initial space is %i." % (vector.name, space, vector.initialSpace))
-      if vector.needsTransforms:
-        result.extend([vector.functions['goSpace'].call(newSpace=space), '\n'])
-    return ''.join(result)
-  
-  def registerVectorsRequiredInSpace(self, vectors, space):
-    for vector in vectors:
-      vector.spacesNeeded.add(space & vector.field.spaceMask)
   
   def registerVectorsRequiredInBasis(self, vectors, basis):
     for vector in vectors:

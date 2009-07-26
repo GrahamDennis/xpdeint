@@ -36,10 +36,8 @@ class _VectorElement (ScriptElement):
     # Set default variables
     self.components = []
     self._needsInitialisation = True
-    self._initialSpace = 0
     self.type = 'complex'
     self.aliases = set()
-    self.spacesNeeded = set()
     self.basesNeeded = set()
     self.initialBasis = None
     
@@ -77,8 +75,7 @@ class _VectorElement (ScriptElement):
   def needsTransforms(self):
     if self.transformFree:
       return False
-    assert len(self.spacesNeeded) == len(self.basesNeeded)
-    return len(self.spacesNeeded) > 1 or len(self.basesNeeded) > 1
+    return len(self.basesNeeded) > 1
   
   def __hash__(self):
     """
@@ -115,57 +112,23 @@ class _VectorElement (ScriptElement):
   needsInitialisation = property(_getNeedsInitialisation, _setNeedsInitialisation)
   del _getNeedsInitialisation, _setNeedsInitialisation
   
-  def _getInitialSpace(self):
-    return self._initialSpace
-  
-  def _setInitialSpace(self, value):
-    """
-    Set the initial space for the vector.
-    
-    As a side-effect, this method also adds the initial space to the set of spaces
-    that this vector is needed in.
-    """
-    self._initialSpace = value & self.field.spaceMask
-    self.spacesNeeded.add(self._initialSpace)
-  
-  # Create a property for the class with the above getter and setter methods
-  initialSpace = property(_getInitialSpace, _setInitialSpace)
-  del _getInitialSpace, _setInitialSpace
-  
-  @lazy_property
-  def maxSizeInReals(self):
-    if self.type == 'complex':
-      multiplier = 2
-    else:
-      multiplier = 1
-    return self.field.maxPoints * self.nComponents * multiplier
-  
   @lazy_property
   def allocSize(self):
-    return self.field.allocSize + ' * _' + self.id + '_ncomponents'
+    return '_' + self.id + '_alloc_size'
   
-  def sizeInSpace(self, space):
-    return self.field.sizeInSpace(space) + ' * _' + self.id + '_ncomponents'
+  def sizeInBasis(self, basis):
+    return self.field.sizeInBasis(basis) + ' * _' + self.id + '_ncomponents'
   
-  def sizeInSpaceInReals(self, space):
+  def sizeInBasisInReals(self, basis):
     if self.type == 'real':
-      return self.sizeInSpace(space)
+      return self.sizeInBasis(basis)
     else:
-      return '2 * ' + self.sizeInSpace(space)
+      return '2 * ' + self.sizeInBasis(basis)
   
-  def isTransformableTo(self, newSpace):
+  def isTransformableTo(self, basis):
     if self.transformFree:
       return True
-    if isinstance(newSpace, tuple):
-      return newSpace in self.transformMap['bases']
-    newSpace &= self.field.spaceMask
-    for dim in self.field.dimensions:
-      if (newSpace ^ self.initialSpace) & dim.transformMask:
-        if not dim.canTransformVector(self):
-          # If the transform can't transform this vector, then
-          # this vector can't be transformed to the new space
-          return False
-    return True
+    return basis in self.transformMap['bases']
   
   def remove(self):
     self.field.managedVectors.discard(self)

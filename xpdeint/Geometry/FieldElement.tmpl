@@ -30,19 +30,3 @@ ${separator}${dimension.name}: ${($spaceMask >> $geometry.dimensions.index($dime
   @# Child defines will go here
 @end def
 
-@*
-  Globals needed at the start of the simulation
-*@
-@def globals
-  @#
-  @super
-  @#
-  @set $prefix = c'_${name}'
-  @#
-const ptrdiff_t ${prefix}_size = (ptrdiff_t)${pointsInDimensionsWithIndices(range(len($dimensions)))};
-  @if $isDistributed
-ptrdiff_t ${allocSize} = ${prefix}_size;
-  @end if
-  @# Child globals will go here
-@end def
-

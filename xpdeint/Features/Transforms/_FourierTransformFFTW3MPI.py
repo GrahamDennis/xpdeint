@@ -39,17 +39,6 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
         for rep in [rep for rep in dim.representations if rep and rep.hasLocalOffset]:
           dim.invalidateRepresentation(rep)
   
-  def vectorNeedsPartialTransforms(self, vector):
-    if not self._driver.isFieldDistributed(vector.field):
-      return False
-    if not vector.needsTransforms:
-      return False
-    # If any of the spaces in which this vector is needed are not full spaces, then we need partial transforms
-    tm = self.transformMask
-    if any([(space & tm) != 0 and (space & tm) != (vector.field.spaceMask & tm) for space in vector.spacesNeeded]):
-      return True
-    return False
-  
   def initialiseForMPIWithDimensions(self, dimensions):
     # We can only upgrade to MPI support if both the first and second dimensions
     # are 'dft' or 'r2r' transforms. In the future, this restriction can be lifted
@@ -66,12 +55,9 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
     
     for dim in dimensions[0:2]:
       assert self.transformNameMap[dim.name] in ['dft', 'dct', 'dst']
-      # Check that the dimension doesn't have any mapping rules yet
-      assert not dim._mappingRules
     
     self._driver.distributedDimensionNames = [dim.name for dim in dimensions[0:2]]
     self.mpiDimensions = dimensions[0:2]
-    self.swappedSpace = reduce(operator.__or__, [dim.transformMask for dim in self.mpiDimensions])
     
     firstMPIDimension = dimensions[0]
     secondMPIDimension = dimensions[1]
@@ -91,48 +77,22 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
       self.distributedMPIKinds.update(['dct', 'dst'])
     
   
-  def mappingRulesForDimensionInField(self, dim, field):
-    """
-    Return default mapping rules. Each rule is a ``(mask, index)`` pair.
-    A mapping rule matches a space if ``mask & space`` is nonzero. The rules
-    are tried in order until one matches, and the representation correponding
-    to the index in the rule is the result.
-    """
-    if self.isFieldDistributed(field) and dim.name in self._driver.distributedDimensionNames:
-      if dim.name == self._driver.distributedDimensionNames[1]:
-        return [(self.swappedSpace, 3), (dim.transformMask, 1), (None, 0)]
-      else:
-        return [(self.swappedSpace, 1), (dim.transformMask, 3), (None, 2)]
-    return super(_FourierTransformFFTW3MPI, self).mappingRulesForDimensionInField(dim, field)
-  
-  
   def isFieldDistributed(self, field):
     if not field:
       return False
     return field.hasDimension(self.mpiDimensions[0]) and field.hasDimension(self.mpiDimensions[1])
-  
-  def sizeOfFieldInSpace(self, field, space):
-    return '*'.join([dim.inSpace(space).localLattice for dim in field.dimensions])
-  
-  def mpiDimRepForSpace(self, space):
-    return [dim.inSpace(space) for dim in self.mpiDimensions if dim.inSpace(space).hasLocalOffset][0]
   
   def fullTransformDimensionsForField(self, field):
     keyFunc = lambda x: {'dft': 'complex', 'dct': 'real', 'dst': 'real'}.get(self.transformNameMap.get(x.name))
     for transformType, dims in groupby(field.transverseDimensions, keyFunc):
       return list(dims)
   
-  def isSpaceSwapped(self, space):
-    return (space & self.swappedSpace) == self.swappedSpace
-  
-  def orderedDimensionsForFieldInSpace(self, field, space):
-    """Return a list of the dimensions for field in the order in which they should be looped over"""
-    dimensions = field.dimensions[:]
-    if self.isSpaceSwapped(space) and self.isFieldDistributed(field):
-      firstMPIDimIndex = field.indexOfDimension(self.mpiDimensions[0])
-      secondMPIDimIndex = field.indexOfDimension(self.mpiDimensions[1])
-      (dimensions[secondMPIDimIndex], dimensions[firstMPIDimIndex]) = (dimensions[firstMPIDimIndex], dimensions[secondMPIDimIndex])
-    return dimensions
+  @property
+  def vectorsNeedingDistributedTransforms(self):
+    result = set()
+    [result.update(transformationDict['vectors']) 
+      for tID, transformationDict in self.transformations if transformationDict.get('distributedTransform', False)]
+    return result
   
   def availableTransformations(self):
     results = super(_FourierTransformFFTW3MPI, self).availableTransformations()
@@ -151,6 +111,7 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
       communicationsCost = communicationsCost,
       geometryDependent = True,
       transformType = 'real',
+      distributedTransform = True,
       transformFunction = self.transposeTransformFunction
     ))
     
@@ -177,6 +138,7 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
         transformations = [tuple([self.canonicalBasisForBasis(untransformedBasis), self.canonicalBasisForBasis(transformedBasis)])],
         communicationsCost = communicationsCost,
         cost = transformCost,
+        distributedTransform = True,
         forwardScale = self.scaleFactorForDimReps(untransformedBasis),
         backwardScale = self.scaleFactorForDimReps(transformedBasis),
         requiresScaling = True,
@@ -184,9 +146,6 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
         geometryDependent = True,
         transformFunction = self.distributedTransformFunction
       ))
-    
-    # Fuller forward/reverse transforms would be good in the future for the case of more than two dimensions
-    # This isn't necessary for the moment though.
     
     return results
   

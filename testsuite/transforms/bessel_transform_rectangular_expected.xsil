@@ -17,10 +17,10 @@
     <bing />
     <globals>
       <![CDATA[
-      const double T = 10.0;
-      const double mass = 1e-3;
-      const double length = 1.0;
-      const double mu = mass/length;
+      const real T = 10.0;
+      const real mass = 1e-3;
+      const real length = 1.0;
+      const real mu = mass/length;
       ]]>
     </globals>
   </features>
@@ -69,7 +69,7 @@
         <moments>amp</moments>
         <dependencies>main</dependencies>
         <![CDATA[
-          amp = u;
+          amp = u.Re();
         ]]>
       </sampling>
     </group>
@@ -79,7 +79,7 @@
         <moments>amp</moments>
         <dependencies>main</dependencies>
         <![CDATA[
-          amp = u.re;
+          amp = u.Re();
         
         ]]>
       </sampling>
@@ -103,7 +103,7 @@ t x amp
     <Dim>101</Dim>
     <Dim>100</Dim>
     <Dim>3</Dim>
-    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint64" precision="double" Type="Remote" Encoding="LittleEndian"/>
 bessel_transform_rectangular_expected_mg0.dat
     </Stream>
   </Array>
@@ -121,7 +121,7 @@ t kx amp
     <Dim>73</Dim>
     <Dim>50</Dim>
     <Dim>3</Dim>
-    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint64" precision="double" Type="Remote" Encoding="LittleEndian"/>
 bessel_transform_rectangular_expected_mg1.dat
     </Stream>
   </Array>

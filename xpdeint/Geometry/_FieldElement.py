@@ -68,10 +68,7 @@ class _FieldElement (ScriptElement):
   
   @lazy_property
   def prefix(self):
-    if not self.name == 'geometry':
-      return '_' + self.name
-    else:
-      return ''
+    return '_' + self.name if not self.name is 'geometry' else ''
   
   # Do we have the dimension?
   def hasDimension(self, dimension):
@@ -82,10 +79,7 @@ class _FieldElement (ScriptElement):
     dimensionList = filter(lambda x: x.name == dimensionName, self.dimensions)
     assert len(dimensionList) <= 1
     
-    if len(dimensionList):
-      return True
-    else:
-      return False
+    return len(dimensionList) == 1
   
   # Is the field a subset of another field (in terms of dimensions)
   def isSubsetOfField(self, field):
@@ -132,37 +126,13 @@ class _FieldElement (ScriptElement):
     
     return ''.join(result)
   
-  # Return a string which is the number of points in the dimensions corresponding to the passed indices
-  def localPointsInDimensionsWithIndicesInSpace(self, indices, space):
-    if len(indices) == 0:
-      return '1'
-    
-    result = []
-    separator = ''
-    for dimensionIndex in indices:
-      assert dimensionIndex < len(self.dimensions)
-      # Only put a multiply sign in for everything after the first dimension
-      result.append(separator)
-      separator = ' * '
-      result.append(self.dimensions[dimensionIndex].inSpace(space).localLattice)
-    
-    return ''.join(result)
-  
-  def localPointsInDimensionsAfterDimensionInSpace(self, dimension, space):
-    assert self.hasDimension(dimension)
-    orderedDimensions = self.orderedDimensionsInSpace(space)
+  def localPointsInDimensionsAfterDimRepInBasis(self, dimRep, basis):
+    dimReps = self.inBasis(basis)
     # Grab everything after dimension
-    orderedDimensions = orderedDimensions[(orderedDimensions.index(dimension)+1):]
-    indices = [self.dimensions.index(dim) for dim in orderedDimensions]
-    return self.localPointsInDimensionsWithIndicesInSpace(indices, space)
-  
-  @lazy_property
-  def maxPoints(self):
-    points = 1
-    for dimension in self.dimensions:
-      points *= max([rep.lattice for rep in dimension.representations])
-    
-    return points
+    dimReps = dimReps[(dimReps.index(dimRep)+1):]
+    if not len(dimReps):
+      return '1'
+    return ' * '.join([dimRep.localLattice for dimRep in dimReps])
   
   @property
   def transverseDimensions(self):
@@ -180,8 +150,8 @@ class _FieldElement (ScriptElement):
   def free(self):
     return self.implementationsForChildren('free')
   
-  def volumeElementInSpace(self, space):
-    reps = [d.inSpace(space) for d in self.dimensions]
+  def volumeElementInBasis(self, basis):
+    reps = self.inBasis(basis)
     result = []
     for rep in [rep for rep in reps if rep.type == 'real']:
       if isinstance(rep, NonUniformDimensionRepresentation):
@@ -200,80 +170,14 @@ class _FieldElement (ScriptElement):
   def isDistributed(self):
     return self._driver.isFieldDistributed(self)
   
-  def orderedDimensionsInSpace(self, space):
-    """Return a list of the dimensions in the order in which they should be looped over"""
-    return self._driver.orderedDimensionsForFieldInSpace(self, space)
-  
-  @lazy_property
-  def size(self):
-    return '_' + self.name + '_size'
-  
-  @lazy_property
-  def allocSize(self):
-    if not self.isDistributed:
-      return self.size
-    return '_' + self.name + '_alloc_size'
-  
-  def sizeInSpace(self, space):
-    """Return a name of a variable the value of which is the size of this field in `space`."""
-    if not self.isDistributed:
-      return self.allocSize
-    return self._driver.sizeOfFieldInSpace(self, space)
-  
+  def sizeInBasis(self, basis):
+    return '(' + (' * '.join([dimRep.localLattice for dimRep in self.inBasis(basis)]) or '1') + ')'
   
   def sortDimensions(self):
     """Sort the dimensions of the field into canonical (geometry element) order."""
     geometryTemplate = self.getVar('geometry')
     sortFunction = lambda x, y: cmp(geometryTemplate.indexOfDimension(x), geometryTemplate.indexOfDimension(y))
     self.dimensions.sort(sortFunction)
-  
-  def spaceFromString(self, spacesString, xmlElement = None):
-    """
-    Return the ``space`` bitmask corresponding to `spacesString` for this field.
-    
-    The contents of `spacesString` must be a sequence of dimension names or fourier
-    space versions of those dimension names (i.e. the dimension name prefixed with a 'k')
-    where legal.
-    
-    For example, if the geometry has dimensions 'x', 'y', 'z' and 'u', where 'u' is an
-    integer-valued dimension, then the following are valid entries in `spacesString`:
-    'x', 'kx', 'y', 'ky', 'z' and 'u'.
-    
-    Note that the entries in `spacesString` do not need to be in any order.
-    """
-    resultSpace = 0
-    
-    xmlElement = xmlElement or self.xmlElement
-    
-    # Complain if illegal fieldnames or k[integer-valued] are used
-    legalDimensionNames = set()
-    for fieldDimension in self.dimensions:
-      for rep in fieldDimension.representations:
-        legalDimensionNames.add(rep.name)
-    
-    spacesSymbols = symbolsInString(spacesString, xmlElement = xmlElement)
-    
-    for symbol in spacesSymbols:
-      if not symbol in legalDimensionNames:
-        raise ParserException(xmlElement, 
-                "'%(symbol)s' is not recognised as a dimension name for this field."  % locals())
-    
-    for fieldDimension in self.dimensions:
-      fieldDimensionName = fieldDimension.name
-      validDimensionNamesForField = set([rep.name for rep in fieldDimension.representations])
-      
-      dimensionOccurrences = sum([spacesSymbols.count(dimName) for dimName in validDimensionNamesForField])
-      
-      if dimensionOccurrences > 1:
-        raise ParserException(xmlElement,
-                  "The fourier_space attribute must only have one entry for dimension '%(fieldDimensionName)s'." % locals())
-      elif dimensionOccurrences == 0 and fieldDimension.isTransformable:
-        raise ParserException(xmlElement,
-                  "The fourier_space attribute must have an entry for dimension '%(fieldDimensionName)s'." % locals())
-      
-      if fieldDimension.isTransformable and spacesSymbols.count(fieldDimension.inSpace(-1).name):
-        resultSpace |= fieldDimension.transformMask
-    return resultSpace
   
   def basisForBasis(self, basis):
     """
@@ -307,9 +211,8 @@ class _FieldElement (ScriptElement):
     Return a list of dimReps corresponding to the supplied basis. We cannot guarantee that the basis we are passed is directly appropriate
     for this field. So we must pass it through basisForBasis.
     """
-    
     basis = self.basisForBasis(basis)
-    dimRepNameMap = dict([(dimRep.canonicalName, dimRep) for dim in self.dimensions for dimRep in dim.representations])
+    dimRepNameMap = dict([(dimRep.canonicalName, dimRep) for dim in self.dimensions for dimRep in dim.representations if dimRep])
     return [dimRepNameMap[b] for b in basis]
   
   def basisFromString(self, basisString, xmlElement = None):
@@ -364,8 +267,7 @@ class _FieldElement (ScriptElement):
     # Grab the first rep for each dim whose tag is a 'coordinate' tag
     # i.e. the tag is a subclass of the 'coordinate' tag.
     return self._driver.canonicalBasisForBasis(
-      tuple([rep for rep in dim.representations if issubclass(rep.tag, rep.tagForName('coordinate'))][0].canonicalName \
-              for dim in self.dimensions)
+      tuple([dim.firstDimRepWithTagName('coordinate').canonicalName for dim in self.dimensions])
     )
   
   @lazy_property
@@ -374,12 +276,9 @@ class _FieldElement (ScriptElement):
     # Failing that, take the first one with a 'coordinate' tag.
     reps = []
     for dim in self.dimensions:
-      rep = None
       for tagName in ['spectral', 'coordinate']:
-        repList = [rep for rep in dim.representations if issubclass(rep.tag, rep.tagForName('spectral'))]
-        if repList:
-          rep = repList[0]
-          break
+        rep = dim.firstDimRepWithTagName(tagName)
+        if rep: break
       assert rep, "We should have found a representation that was either spectral or coordinate but somehow failed"
       reps.append(rep.canonicalName)
     return self._driver.canonicalBasisForBasis(tuple(reps))

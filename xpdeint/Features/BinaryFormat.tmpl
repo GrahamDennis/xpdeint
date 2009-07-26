@@ -35,7 +35,7 @@ ${writeOutFunctionImplementationEnd(dict)}@slurp
   @set $fp = dict['fp']
   @set $baseFilename = dict['baseFilename']
   @set $field = dict['field']
-  @set $space = dict['space']
+  @set $basis = dict['basis']
   @set $dependentVariables = dict['dependentVariables']
   @set $componentCount = 0
   @for $variable in $dependentVariables
@@ -80,7 +80,7 @@ off_t fieldOffset = 0;
 real coordinate;
 
   @for $dim in $field.dimensions
-    @set $dimRep = $dim.inSpace(space)
+    @set $dimRep = $dim.inBasis(basis)
 dataSize = ${dimRep.globalLattice};
 if (fwrite(&dataSize, sizeof(unsigned long), 1, fpBinary) != 1) {
   _LOG(_ERROR_LOG_LEVEL, "Error writing size of dimension '${dimRep.name}' to binary data file '%s'.\n", _datFilename);
@@ -102,7 +102,7 @@ fieldOffset += sizeof(unsigned long) + sizeof(real) * dataSize;
   @end for
   @#
   @if field.dimensions
-dataSize = ${' * '.join([dim.inSpace(space).globalLattice for dim in field.dimensions])};
+dataSize = ${' * '.join([dim.inBasis(basis).globalLattice for dim in field.dimensions])};
   @else
 dataSize = 1;
   @end if
@@ -136,7 +136,7 @@ fprintf($fp, "    </Stream>\n");
 @def writeData($dict)
   @#
   @set $field = dict['field']
-  @set $space = dict['space']
+  @set $basis = dict['basis']
   @set $dependentVariables = dict['dependentVariables']
   @#
   @set variablesInEarlierVectors = 0
@@ -152,7 +152,7 @@ for (unsigned int _component = 0; _component < ${componentNameSizePrefix}_${vari
 
     @set $innerContent = $innerLoopsForVariable($variable, variablesInEarlierVectors, dict)
     @set $vectors = [$variable.vector]
-  ${loopOverFieldInSpaceWithVectorsAndInnerContent($field, $space, $vectors, $innerContent, vectorsNotNeedingDefines=vectors), autoIndent=True}@slurp
+  ${loopOverFieldInBasisWithVectorsAndInnerContent($field, $basis, $vectors, $innerContent, vectorsNotNeedingDefines=vectors), autoIndent=True}@slurp
 } // end loop over components of vector '${variable.vector.id}' (array '${variable.arrayName}')
     @set $variablesInEarlierVectors += $variable.vector.nComponents
     @if $variable.vector.type == 'complex'
@@ -166,15 +166,15 @@ for (unsigned int _component = 0; _component < ${componentNameSizePrefix}_${vari
 @def innerLoopsForVariable($variable, $variablesInEarlierVectors, $dict)
   @#
   @set $field = dict['field']
-  @set $space = dict['space']
+  @set $basis = dict['basis']
   @#
 _outputfield_old_index_pointer = _outputfield_index_pointer;
 _outputfield_index_pointer = 0;
 
 // Calculate the output field index pointer
-  @for $dim in $field.dimensions
-_outputfield_index_pointer += ($dim.inSpace(space).strictlyAscendingGlobalIndex)@slurp
- * ${field.pointsInDimensionsWithIndices(range(field.indexOfDimension(dim)+1, len(field.dimensions)))};
+  @for idx, dim in enumerate(field.dimensions)
+_outputfield_index_pointer += ($dim.inBasis(basis).strictlyAscendingGlobalIndex)@slurp
+${''.join([' * ' + dim.inBasis(basis).globalLattice for dim in field.dimensions[idx+1:]])};
   @end for
 
 if (_outputfield_index_pointer != _outputfield_old_index_pointer + 1)

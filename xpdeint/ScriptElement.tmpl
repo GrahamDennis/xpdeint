@@ -58,7 +58,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
       As this loop can contain arbitrary operations on complex vectors, this loop cannot be auto-vectorised.
       However, it can still be threaded with the OpenMP feature.
      
-  3. `loopOverFieldInSpaceWithVectorsAndInnerContent`: By far the most powerful loop construct available.
+  3. `loopOverFieldInBasisWithVectorsAndInnerContent`: By far the most powerful loop construct available.
      This is the loop construct you want with user-provided code. It allows you to loop over all of the 
      dimensions of a given field in a given space (arbitrary combination of fourier and non-fourier space),
      making various vectors available which may or may not come from the same field as the looping field.
@@ -205,8 +205,7 @@ for (long _i0 = 0; _i0 < ${field.sizeInSpace(space)}; _i0++) {
   @#
 @end def
 
-@# FIXME: Extend this def over multiple lines once my patch to Cheetah gets accepted (and we bump the required version number)
-@def loopOverFieldInSpaceWithVectorsAndInnerContent($field, $space, $vectors, $innerLoopCode, $indexOverrides = None, $vectorOverrides = None, $loopingOrder = _ScriptElement.LoopingOrder.MemoryOrder, $preDimensionLoopOpeningCode = None, $postDimensionLoopClosingCode = None, vectorsNotNeedingDefines = None)
+@def loopOverFieldInBasisWithVectorsAndInnerContent($field, $basis, $vectors, $innerLoopCode, $indexOverrides = None, $vectorOverrides = None, $loopingOrder = _ScriptElement.LoopingOrder.MemoryOrder, $preDimensionLoopOpeningCode = None, $postDimensionLoopClosingCode = None, vectorsNotNeedingDefines = None)
 @*doc:
 Insert code to loop over a fields points making available the given vectors
 Note that this code asserts that the field that will be iterated over is at
@@ -242,6 +241,9 @@ Optional arguments:
     ``x`` dimension, you would pass the following for `postDimensionLoopOpeningCode`::
     
       { 'x': lotsAndLotsOfPreLoopCode }
+    
+    Note that ``x`` must be the name of the dimension representation, not the dimension itself. i.e. ``kx`` instead
+    of ``x`` if the dimension is in Fourier space. This note applies to `postDimensionLoopClosingCode` as well.
   
   - `postDimensionLoopClosingCode`: a dictionary containing code to be put in the loop structure after
     the loop for a given dimension has been closed. For example, if you want to insert code after the
@@ -256,6 +258,7 @@ Optional arguments:
   @#
   @# Defaults
   @#
+  @set space = $spaceForBasis(basis)
   @set indexOverrides = indexOverrides or {}
   @set vectorOverrides = vectorOverrides or []
   @set preDimensionLoopOpeningCode = preDimensionLoopOpeningCode or {}
@@ -265,15 +268,16 @@ Optional arguments:
   @set $featureOrdering = ['Driver']
   @set $featuresDict = { 'field': field,
                          'space': space,
+                         'basis': basis,
                          'vectors': vectors,
                          'indexOverrides': indexOverrides,
                          'vectorOverrides': vectorOverrides,
                        }
-${insertCodeForFeatures('loopOverFieldInSpaceWithVectorsAndInnerContentBegin', featureOrdering, featuresDict)}@slurp
+${insertCodeForFeatures('loopOverFieldInBasisWithVectorsAndInnerContentBegin', featureOrdering, featuresDict)}@slurp
   @#
   @# Some vectors will need to have their index pointers set explicitly.
   @# These will be those which belong to fields with different dimensions.
-  @set $vectorsRequiringExplictIndexPointers = set(filter(lambda x: x.field != field and x.field.dimensions != field.dimensions, vectors))
+  @set $vectorsRequiringExplictIndexPointers = set([v for v in vectors if v.field.dimensions != field.dimensions])
   @# 
   @# If we have a loopingOrder other than MemoryOrder, then the vectors in
   @# field $field will also need their index pointers set explicitly
@@ -282,27 +286,25 @@ ${insertCodeForFeatures('loopOverFieldInSpaceWithVectorsAndInnerContentBegin', f
   @end if
   @#
   @# Now determine the vectors not requiring explicit index pointers
-  @set $vectorsNotRequiringExplicitIndexPointers = filter(lambda x: x not in vectorsRequiringExplictIndexPointers, vectors)
+  @set $vectorsNotRequiringExplicitIndexPointers = set(vectors).difference(vectorsRequiringExplictIndexPointers)
   @#
   @set $indentLevel = 0
   @#
-  @set $blankLineSeparator = ''
   @# Initialise index pointers
   @for $vector in $vectors
-    @# Don't output a blank line for the first vector
-${blankLineSeparator}@slurp
-    @set $blankLineSeparator = '\n'
     @#
 long _${vector.id}_index_pointer = 0;
-    @if not $vector in $vectorOverrides and not $vector in $vectorsNotNeedingDefines
-      @# If $vector isn't in $vectorOverrides, then we want to @define the vector's components
+    @if vector in vectorsNotNeedingDefines
+      @pass
+    @elif vector in vectorOverrides
+      @# This vector is in vectorOverrides, so instead of #defining, we want to create variables
+      @for componentName in vector.components
+$vector.type $componentName;
+      @end for
+    @else
+      @# If vector isn't in vectorOverrides or vectorsNotNeedingDefines, then we want to #define the vector's components
       @for $componentNumber, $componentName in enumerate($vector.components)
 #define $componentName _active_${vector.id}[_${vector.id}_index_pointer + $componentNumber]
-      @end for
-    @elif $vector in $vectorOverrides
-      @# This $vector is in $vectorOverrides, so instead of @defining, we want to create variables
-      @for $componentName in $vector.components
-$vector.type $componentName;
       @end for
     @end if
   @end for
@@ -313,69 +315,64 @@ $vector.type $componentName;
       @continue
     @end if
     @#
-    @set $vectorsWithThisDimension = filter(lambda x: x.field.hasDimension(dimension), $vectors)
-    @if len($vectorsWithThisDimension) == 0
+    @if len([v for v in vectors if v.field.hasDimension(dimension)]) == 0
       @continue
     @end if
     @#
-    @set $dimRep = dimension.inSpace(space)
+    @set $dimRep = dimension.inBasis(basis)
     @if indexOverrides.has_key(dimRep.name)
       @continue
     @end if
 
 ${dimRep.createCoordinateVariableForSinglePointSample}@slurp
-  @end for
 
+  @end for
   @#
   @# loop over the dimensions opening the loops
-  @set $lastLoopDimension = None
-  @for $dimension in $field.orderedDimensionsInSpace(space)
+  @set $lastLoopDimRep = None
+  @for dimRep in field.inBasis(basis)
     @#
-    @if $dimension.name in $preDimensionLoopOpeningCode
-${preDimensionLoopOpeningCode[$dimension.name], extraIndent=$indentLevel}@slurp
+    @if dimRep.name in preDimensionLoopOpeningCode
+${preDimensionLoopOpeningCode[$dimRep.name], extraIndent=$indentLevel}@slurp
     @end if
-    @set $dimRep = dimension.inSpace(space)
     @if not indexOverrides.has_key(dimRep.name)
       @# If there isn't an indexOverride for this dimension, then open a loop
-      @set $lastLoopDimension = dimension
+      @set $lastLoopDimRep = dimRep
 ${dimRep.openLoop(loopingOrder=loopingOrder), extraIndent=indentLevel}@slurp
       @set $indentLevel = $indentLevel + 2
     @else
       @# We have an indexOverride for this dimension. 
-${prologueForOverriddenDimensionInFieldInSpaceWithVectors($dimension, $field, $space, $vectors, $indexOverrides), extraIndent=$indentLevel}@slurp
+${prologueForOverriddenDimRepInFieldInBasisWithVectors($dimRep, $field, $basis, $vectors, $indexOverrides), extraIndent=$indentLevel}@slurp
     @end if
     @#
   @end for
   @#
-  @set $result = $setExplicitIndexPointersForVectorsWithFieldAndSpace(vectorsRequiringExplictIndexPointers, field, space, indexOverrides)
+  @set $result = $setExplicitIndexPointersForVectorsWithFieldAndBasis(vectorsRequiringExplictIndexPointers, field, basis, indexOverrides)
   @if result
 ${result, extraIndent=indentLevel}@slurp
   @end if
   @#
 ${innerLoopCode, extraIndent=$indentLevel}@slurp
-${epilogueToIntegrateOverriddenVectorsForSamplingFieldInSpace(vectorOverrides, field, space), extraIndent=indentLevel}@slurp
+${epilogueToIntegrateOverriddenVectorsForSamplingFieldInBasis(vectorOverrides, field, basis), extraIndent=indentLevel}@slurp
   @#
-  @if lastLoopDimension
+  @if lastLoopDimRep
     @# Increment the index pointers. This needs to be in a function in order to be able
     @# to use the variable indentation required
-${incrementIndexPointersForVectorsWithFieldAndSpaceAndLastLoopDimension(vectorsNotRequiringExplicitIndexPointers, field, space, lastLoopDimension), extraIndent=indentLevel}@slurp
+${incrementIndexPointersForVectorsWithFieldBasisAndLastLoopDimRep(vectorsNotRequiringExplicitIndexPointers, field, basis, lastLoopDimRep), extraIndent=indentLevel}@slurp
   @end if
   @#
   @# loop over the dimensions (in reverse order) closing the loops
-  @set $reversedLoopingDimensions = field.orderedDimensionsInSpace(space)
-  @silent reversedLoopingDimensions.reverse()
   @#
-  @for dimension in reversedLoopingDimensions
+  @for dimRep in reversed(field.inBasis(basis))
     @#
-    @set $dimRep = dimension.inSpace(space)
     @# If there isn't an indexOverride for this dimension, then reduce the indent and close the loop
     @if not indexOverrides.has_key(dimRep.name)
       @set $indentLevel = indentLevel - 2
 ${dimRep.closeLoop(loopingOrder=loopingOrder), extraIndent=indentLevel}@slurp
     @end if
     @#
-    @if $dimension.name in postDimensionLoopClosingCode
-${postDimensionLoopClosingCode[dimension.name], extraIndent=indentLevel}@slurp
+    @if $dimRep.name in postDimensionLoopClosingCode
+${postDimensionLoopClosingCode[dimRep.name], extraIndent=indentLevel}@slurp
     @end if
     @#
   @end for
@@ -390,15 +387,14 @@ ${postDimensionLoopClosingCode[dimension.name], extraIndent=indentLevel}@slurp
     @end for
   @end for
   @#
-${insertCodeForFeaturesInReverseOrder('loopOverFieldInSpaceWithVectorsAndInnerContentEnd', featureOrdering, featuresDict)}@slurp
+${insertCodeForFeaturesInReverseOrder('loopOverFieldInBasisWithVectorsAndInnerContentEnd', featureOrdering, featuresDict)}@slurp
   @#
 @end def
 
 
-@def prologueForOverriddenDimensionInFieldInSpaceWithVectors($dimension, $field, $space, $vectors, $indexOverrides)
+@def prologueForOverriddenDimRepInFieldInBasisWithVectors($dimRep, $field, $basis, $vectors, $indexOverrides)
 @#doc: Insert prologue for dimension $dimension when its index variable has been overridden
   @#
-  @set $dimRep = dimension.inSpace(space)
   @# As this field contains this dimension, we must make sure that the indexOverride dictionary contains
   @# a value for this field
   @assert $indexOverrides[$dimRep.name].has_key(field)
@@ -406,16 +402,17 @@ ${insertCodeForFeaturesInReverseOrder('loopOverFieldInSpaceWithVectorsAndInnerCo
 unsigned long ${dimRep.loopIndex} = ${indexOverrides[dimRep.name][field]};
   @# loop over the vectors in field $field, because we need to fix up their index pointers
   @# and those vectors with the same dimensions
-  @for $vector in filter(lambda x: x.field == field or x.field.dimensions == field.dimensions, vectors)
+  @for $vector in [v for v in vectors if not v.field.dimensions == field.dimensions]
 _${vector.id}_index_pointer += ${dimRep.loopIndex}@slurp
- * ${field.localPointsInDimensionsAfterDimensionInSpace(dimension, space)};
+  @# FIXME: This line needs changing
+ * ${field.localPointsInDimensionsAfterDimRepInBasis(dimRep, basis)};
   @end for
 
   @#
 @end def
 
 
-@def setExplicitIndexPointersForVectorsWithFieldAndSpace($vectors, $field, $space, $indexOverrides)
+@def setExplicitIndexPointersForVectorsWithFieldAndBasis($vectors, $field, $basis, $indexOverrides)
 @#doc: Set index pointers for those vectors requiring it to be set explicitly
   @#
   @# There's no need to (re-)set the index pointer for fields that have no dimensions
@@ -429,17 +426,16 @@ _${vector.id}_index_pointer += ${dimRep.loopIndex}@slurp
   @for vector in vectorsNeedingExplicitIndexPointers
     @#
 _${vector.id}_index_pointer = ( 0@slurp
-    @for $dimension in $vector.field.dimensions
-${explicitIndexPointerTermForVectorAndDimensionWithFieldAndSpace(vector, dimension, field, space, indexOverrides)}@slurp
+    @for dimRep in vector.field.inBasis(basis)
+${explicitIndexPointerTermForVectorAndDimRepWithFieldAndBasis(vector, dimRep, field, basis, indexOverrides)}@slurp
     @end for
  ) * _${vector.id}_ncomponents;
   @end for
   @#
 @end def
 
-@def explicitIndexPointerTermForVectorAndDimensionWithFieldAndSpace($vector, $dimension, $field, $space, $indexOverrides)
+@def explicitIndexPointerTermForVectorAndDimRepWithFieldAndBasis($vector, $dimRep, $field, $basis, $indexOverrides)
   @#
-  @set $dimRep = dimension.inSpace(space)
   @# Blank line for output formatting
 
   @# Not all of the dimensions in the vector's field's dimensions will necessarily
@@ -447,20 +443,23 @@ ${explicitIndexPointerTermForVectorAndDimensionWithFieldAndSpace(vector, dimensi
   @# aren't in $field's dimensions.
   @#
   @# First, check the case that they both have this dimension
-  @if field.hasDimension(dimension)
+  @set fieldDimRepList = [dr for dr in field.inBasis(basis) if dr.name == dimRep.name]
+  @#
+  @if fieldDimRepList
     @# First, consider when they both contain this dimension
     @#
-    @set $fieldDimRep = field.dimensionWithName(dimension.name).inSpace(space)
+    @assert len(fieldDimRepList) == 1
+    @set $fieldDimRep = fieldDimRepList[0]
     @#
     @# If the lattices are the same, then there is nothing special to be done for this dimension
     @# We also require that there are neither dimension could have a local offset
     @set $hasLocalOffset = dimRep.hasLocalOffset or fieldDimRep.hasLocalOffset
     @if dimRep.lattice == fieldDimRep.lattice and not hasLocalOffset
    + ${fieldDimRep.loopIndex}@slurp
- * $vector.field.localPointsInDimensionsAfterDimensionInSpace(dimension, space)@slurp
+ * $vector.field.localPointsInDimensionsAfterDimRepInBasis(dimRep, basis)@slurp
     @else
    + ( ${dimRep.localIndexFromIndexForDimensionRep(fieldDimRep)} )@slurp
- * $vector.field.localPointsInDimensionsAfterDimensionInSpace(dimension, space)@slurp
+ * $vector.field.localPointsInDimensionsAfterDimRepInBasis(dimRep, basis)@slurp
     @end if
   @else
     @# Now, consider when $field doesn't contain this dimension. If this dimension has an index override, then
@@ -471,7 +470,7 @@ ${explicitIndexPointerTermForVectorAndDimensionWithFieldAndSpace(vector, dimensi
       @# Check that we actually have an entry for this vector's field
       @assert indexOverrides[dimRep.name].has_key(vector.field)
    + ${indexOverrides[dimRep.name][vector.field]}@slurp
-  * $vector.field.localPointsInDimensionsAfterDimensionInSpace(dimension, space)@slurp
+  * $vector.field.localPointsInDimensionsAfterDimRepInBasis(dimRep, basis)@slurp
     @else
       @# We don't have an index override for this dimension.
       @# What happens in this case depends on whether or not the vector
@@ -480,16 +479,16 @@ ${explicitIndexPointerTermForVectorAndDimensionWithFieldAndSpace(vector, dimensi
       @# space, then we want to take its element in the middle.
       @#
       @# Either way, this is handled by the dimension. But we can't have this dimension distributed.
-      @assert not dimension.isDistributed, "Can't do single point samples with the distributed-mpi driver."
+      @assert not dimRep.hasLocalOffset, "Can't do single point samples with the distributed-mpi driver."
    + ( ${dimRep.indexForSinglePointSample} )@slurp
-  * $vector.field.localPointsInDimensionsAfterDimensionInSpace(dimension, space)@slurp
+  * $vector.field.localPointsInDimensionsAfterDimRepInBasis(dimRep, basis)@slurp
     @end if
   @end if
   @#
 @end def
 
 
-@def epilogueToIntegrateOverriddenVectorsForSamplingFieldInSpace($vectorOverrides, $field, $space)
+@def epilogueToIntegrateOverriddenVectorsForSamplingFieldInBasis($vectorOverrides, $field, $basis)
 @#doc: Integrate the overridden vectors
   @#
   @# Loop over the overridden vectors
@@ -497,14 +496,14 @@ ${explicitIndexPointerTermForVectorAndDimensionWithFieldAndSpace(vector, dimensi
 
     @# Determine which dimensions are being integrated over (if any)
     @# These are the ones that are in $field, but not in the vector's field
-    @set $dimensionsIntegratedOver = filter(lambda x: not vector.field.hasDimension(x), $field.dimensions)
+    @set $dimensionsIntegratedOver = [dim for dim in field.dimensions if not vector.field.hasDimension(dim)]
     @#
     @# Loop over the components in each vector
     @for $componentNumber, $componentName in enumerate($vector.components)
 _active_${vector.id}[_${vector.id}_index_pointer + ${componentNumber}] += ${componentName}@slurp
       @# Loop over the dimensions
       @for $dimension in $dimensionsIntegratedOver
- * ${dimension.inSpace(space).stepSize}@slurp
+ * ${dimension.inBasis(basis).stepSize}@slurp
       @end for
 ;
     @end for
@@ -513,27 +512,27 @@ _active_${vector.id}[_${vector.id}_index_pointer + ${componentNumber}] += ${comp
 @end def
 
 
-@def incrementIndexPointersForVectorsWithFieldAndSpaceAndLastLoopDimension($vectors, $field, $space, $lastLoopDimension)
+@def incrementIndexPointersForVectorsWithFieldBasisAndLastLoopDimRep($vectors, $field, $basis, $lastLoopDimRep)
 @#doc: Increment index pointers but only for those in field `field` or in a field with the same dimensions.
   @#
   @# For the vectors that are in the field $field, increment their index pointers.
   @#
   @# If none of $vectors have field $field, then there's nothing to do
-  @if len($vectors) == 0
+  @if len(vectors) == 0
     @return
   @end if
 // Increment index pointers for vectors in field $field.name (or having the same dimensions)
-  @for $vector in $vectors
+  @for vector in vectors
     @# We can only do this for vectors in $field
     @# or that have the same dimensions
-    @assert $vector.field == $field or $vector.field.dimensions == $field.dimensions
+    @assert vector.field.dimensions == field.dimensions
     @#
     @# Now we need to increment the vector
     @# We need to know the last loop dimension because we could be looping over the second last dimension and not the last
     @# because the last was overridden by an indexOverride. Hence the step may not be _stuff_ncomponents,
     @# but _stuff_latticeN * _stuff_ncomponents (etc.)
     @# This is needed for cross-propagation when cross-propagating along the last dimension.
-_${vector.id}_index_pointer += $field.localPointsInDimensionsAfterDimensionInSpace(lastLoopDimension, space) * _${vector.id}_ncomponents;
+_${vector.id}_index_pointer += $field.localPointsInDimensionsAfterDimRepInBasis(lastLoopDimRep, basis) * _${vector.id}_ncomponents;
   @end for
 
   @#

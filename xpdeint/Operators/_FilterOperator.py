@@ -38,8 +38,6 @@ class _FilterOperator (Operator):
     codeBlock.field = FieldElement.sortedFieldWithDimensionNames(dimensionNames)
     
     if codeBlock.dependenciesEntity and codeBlock.dependenciesEntity.xmlElement.hasAttribute('fourier_space'):
-      codeBlock.space = codeBlock.field.spaceFromString(codeBlock.dependenciesEntity.xmlElement.getAttribute('fourier_space'),
-                                                        xmlElement = codeBlock.dependenciesEntity.xmlElement)
       codeBlock.basis = \
         codeBlock.field.basisFromString(
           codeBlock.dependenciesEntity.xmlElement.getAttribute('fourier_space'),

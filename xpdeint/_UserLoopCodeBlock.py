@@ -19,14 +19,12 @@ from xpdeint.Vectors.ComputedVector import ComputedVector
 
 class _UserLoopCodeBlock(ScriptElement):
   def __init__(self, **KWs):
-    localKWs = self.extractLocalKWs(['field', 'space', 'basis', 'codeString', 'targetVector', 'loopArguments'], KWs)
+    localKWs = self.extractLocalKWs(['field', 'basis', 'codeString', 'targetVector', 'loopArguments'], KWs)
     
     ScriptElement.__init__(self, **KWs)
     
     self.field = localKWs.get('field')
-    self.space = localKWs.get('space')
     self.basis = localKWs.get('basis')
-    if self.basis: self.basis = self.field.basisForBasis(self.basis)
     
     if 'codeString' in localKWs: self.codeString = localKWs.get('codeString')
     self.targetVector = localKWs.get('targetVector', None)
@@ -56,11 +54,11 @@ class _UserLoopCodeBlock(ScriptElement):
     loopKWs = self.loopArguments.copy()
     loopKWs.update(KWs)
     
-    result = self.transformVectorsToSpace(self.dependencies, self.space)
+    result = self.transformVectorsToBasis(self.dependencies, self.basis)
     if result: result += '\n'
     loopingVectors = set(self.dependencies)
     if self.targetVector: loopingVectors.add(self.targetVector)
-    result += self.loopOverFieldInSpaceWithVectorsAndInnerContent(self.field, self.space, loopingVectors, loopCode, **loopKWs)
+    result += self.loopOverFieldInBasisWithVectorsAndInnerContent(self.field, self.basis, loopingVectors, loopCode, **loopKWs)
     
     return result
   
@@ -76,7 +74,6 @@ class _UserLoopCodeBlock(ScriptElement):
                                           **self.argumentsToTemplateConstructors)
     
     self.field.temporaryVectors.add(specialTargetsVector)
-    specialTargetsVector.initialSpace = self.space
     
     # If all dependencies are of type real, then the special targets vector must be real too
     if all([v.type == 'real' for v in self.dependencies]):
@@ -86,7 +83,7 @@ class _UserLoopCodeBlock(ScriptElement):
     specialTargetsVector.integratingComponents = False
     
     evaluationCodeBlock = _TargetConstructorCodeBlock(
-      field = self.field, space = self.space, basis = self.basis,
+      field = self.field, basis = self.basis,
       parent = specialTargetsVector,
       **self.argumentsToTemplateConstructors
     )
@@ -112,7 +109,7 @@ class _UserLoopCodeBlock(ScriptElement):
       targetVariableName = 'target%i' % targetCodeBlocks.index(evaluationCodeBlock)
     else:
       evaluationCodeBlock = _UserLoopCodeBlock(
-        field = self.field, space = self.space, basis = self.basis,
+        field = self.field, basis = self.basis,
         parent = specialTargetCodeBlock, xmlElement = self.xmlElement,
         **self.argumentsToTemplateConstructors
       )
@@ -149,7 +146,7 @@ class _UserLoopCodeBlock(ScriptElement):
     
     simulationDriver = self.getVar('features')['Driver']
     for componentName, vector, nonlocalAccessDict, codeSlice in reversed(CodeParser.nonlocalDimensionAccessForVectors(vectorsToFix, self)):
-      availableDimReps = [dim.inSpace(self.space) for dim in vector.field.dimensions]
+      availableDimReps = vector.field.inBasis(self.basis)
       validDimensionNames = [dimRep.name for dimRep in availableDimReps]
       
       # If the dict is empty, then it probably means something else
@@ -175,7 +172,7 @@ class _UserLoopCodeBlock(ScriptElement):
         # Check that the mpi distributed dimension isn't being accessed nonlocally.
         if vector.field.isDistributed:
           for dimRep in dimRepsNeeded:
-            if dimRep.name == simulationDriver.mpiDimRepForSpace(self.space).name:
+            if dimRep.hasLocalOffset:
               dimRepName = dimRep.name
               raise CodeParserException(self, nonlocalAccessDict[dimRepName][1],
                                    "It is illegal to access the dimension '%(dimRepName)s' nonlocally because it is being distributed with MPI.\n"
@@ -197,8 +194,8 @@ class _UserLoopCodeBlock(ScriptElement):
           
           nonlocalAccessString = "_active_%(vectorID)s[%(componentNumber)s + (0" % locals()
           
-          for dimension in vector.field.dimensions:
-            termString = self.explicitIndexPointerTermForVectorAndDimensionWithFieldAndSpace(vector, dimension, self.field, self.space, indexOverrides)
+          for dimRep in vector.field.inBasis(self.basis):
+            termString = self.explicitIndexPointerTermForVectorAndDimRepWithFieldAndBasis(vector, dimRep, self.field, self.basis, indexOverrides)
             nonlocalAccessString += termString.replace('\n', ' \\\n')
           nonlocalAccessString += ') * _%(vectorID)s_ncomponents]' % locals()
           
@@ -224,7 +221,7 @@ class _UserLoopCodeBlock(ScriptElement):
         arguments = []
         for dimRep in dimRepsNeeded:
           accessString = nonlocalAccessDict[dimRep.name][0]
-          argumentValue = dimRep.nonlocalAccessIndexFromStringForFieldInSpace(accessString, self.field, self.space)
+          argumentValue = dimRep.nonlocalAccessIndexFromStringForFieldInBasis(accessString, self.field, self.basis)
           dimRepName = dimRep.name
           if not argumentValue:
             raise CodeParserException(self, nonlocalAccessDict[dimRep.name][1],
@@ -265,7 +262,6 @@ class _UserLoopCodeBlock(ScriptElement):
     vectors = set(self.dependencies)
     if self.targetVector:
       vectors.add(self.targetVector)
-    self.registerVectorsRequiredInSpace(vectors, self.space)
     
     basis = self.basis + tuple(self.loopArguments.get('indexOverrides', {}).keys())
     self.registerVectorsRequiredInBasis(vectors, basis)

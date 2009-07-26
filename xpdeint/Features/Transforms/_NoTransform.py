@@ -38,7 +38,4 @@ class _NoTransform (_Transform):
     dim.addRepresentation(rep)
     return dim
   
-  def canTransformVectorInDimension(self, vector, dim):
-    return False
-  
 

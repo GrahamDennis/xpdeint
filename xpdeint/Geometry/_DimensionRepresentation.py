@@ -137,21 +137,21 @@ class _DimensionRepresentation(ScriptElement):
   def loopIndex(self):
     return '_index_' + self.name
   
-  def aliasRepresentationsForFieldInSpace(self, field, space):
-    return set([field.dimensionWithName(aliasName).inSpace(space) \
+  def aliasRepresentationsForFieldInBasis(self, field, basis):
+    return set([field.dimensionWithName(aliasName).inBasis(basis) \
                 for aliasName in self.parent.aliases if field.hasDimensionName(aliasName)])
   
-  def nonlocalAccessIndexFromStringForFieldInSpace(self, accessString, field, space):
+  def nonlocalAccessIndexFromStringForFieldInBasis(self, accessString, field, basis):
     """
     Return the string representing the index to be used for this dimension representation
     when accessing it nonlocally with the string `accessString` and when looping over
-    `field` in `space`.
+    `field` in `basis`.
     """
     # If we don't have any dimension aliases, then our subclasses will have to handle
     # any other cases for nonlocal dimension access
     if not len(self.parent.aliases) > 1: return
     
-    aliasRepresentations = self.aliasRepresentationsForFieldInSpace(field, space)
+    aliasRepresentations = self.aliasRepresentationsForFieldInBasis(field, basis)
     matchingAliasReps = [rep for rep in aliasRepresentations if rep.name == accessString]
     if not matchingAliasReps: return
     matchingAliasRep = matchingAliasReps[0]

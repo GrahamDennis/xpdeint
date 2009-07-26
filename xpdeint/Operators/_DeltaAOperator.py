@@ -22,8 +22,6 @@ class _DeltaAOperator (Operator):
   evaluateOperatorFunctionArguments = [('real', '_step')]
   operatorKind = Operator.DeltaAOperatorKind
   
-  defaultOperatorSpace = 0
-  
   def __init__(self, *args, **KWs):
     Operator.__init__(self, *args, **KWs)
     
@@ -109,7 +107,8 @@ class _DeltaAOperator (Operator):
     components = set()
     derivativeMap = {}
     propagationDimension = self.propagationDimension
-    space = self.primaryCodeBlock.space
+    basis = self.primaryCodeBlock.basis
+    dimRepNameMap = dict([(dimRep.name, dimRep) for dimRep in self.field.inBasis(basis)])
     
     for vector in self.integrationVectors:
       components.update(vector.components)
@@ -119,8 +118,6 @@ class _DeltaAOperator (Operator):
         derivativeMap[derivativeString] = vector
     
     indexAccessedVariables = CodeParser.nonlocalDimensionAccessForComponents(components, self.primaryCodeBlock)
-    
-    repNameToDimNameMap = dict([(dim.inSpace(space).name, dim.name) for dim in self.primaryCodeBlock.field.dimensions])
     
     simulationDriver = self.getVar('features')['Driver']
     
@@ -140,9 +137,13 @@ class _DeltaAOperator (Operator):
       dimRepNamesForThisVectorNeedingReordering = [dimRepName for dimRepName, (indexString, accessLoc) in resultDict.iteritems() if indexString != dimRepName]
       
       if vector.field.isDistributed:
-        if simulationDriver.mpiDimRepForSpace(space) in dimRepNamesForThisVectorNeedingReordering:
+        distributedDimRepsNeedingReordering = set(
+          [dimRep.name for dimRep in self.field.inBasis(basis)
+                  if dimRep.hasLocalOffset]
+        ).intersection(dimRepNamesForThisVectorNeedingReordering)
+        if distributedDimRepsNeedingReordering:
           # This vector is being accessed nonlocally on a dimension that is distributed. This isn't legal.
-          dimRepName = simulationDriver.mpiDimRepForSpace(space).name
+          dimRepName = list(distributedDimRepsNeedingReordering)[0]
           raise ParserException(self.xmlElement, 
                                   "The dimension '%(dimRepName)s' cannot be accessed nonlocally because it is being distributed with MPI. "
                                   "Try turning off MPI or re-ordering the dimensions in the <geometry> element." % locals())
@@ -167,7 +168,7 @@ class _DeltaAOperator (Operator):
       
       # Remove the dimensions needing reordering and replace them at the end
       for dim in newFieldDimensions[:]:
-        if dim.inSpace(space).name in dimRepNamesNeedingReordering:
+        if dim.inBasis(basis).name in dimRepNamesNeedingReordering:
           newFieldDimensions.remove(dim)
           newFieldDimensions.append(dim)
           dimensionsNeedingReordering.append(dim)
@@ -202,7 +203,6 @@ class _DeltaAOperator (Operator):
         # of order, i.e. dphi_dt[j+1] for example. We can detect this later and change this
         # if that is the case.
         deltaAVector.needsInitialisation = False
-        deltaAVector.initialSpace = self.operatorSpace
         # Construct dx_dt variables for the delta a vector.
         deltaAVector.components = [''.join(['d', componentName, '_d', propagationDimension]) for componentName in integrationVector.components]
         
@@ -253,21 +253,22 @@ class _DeltaAOperator (Operator):
       copyDeltaAFunctionName = ''.join(['_', self.id, '_copy_delta_a'])
       loopingField = self.primaryCodeBlock.field
       arguments = [('real', '_step')]
-      arguments.extend([('long', '_' + dim.inSpace(self.operatorSpace).name + '_index') \
-                            for dim in loopingField.dimensions if not self.deltaAField.hasDimension(dim)])
+      deltaAFieldReps = self.deltaAField.inBasis(self.operatorBasis)
+      arguments.extend([('long', '_' + dimRep.name + '_index') \
+                            for dimRep in loopingField.inBasis(self.operatorBasis) if not dimRep in deltaAFieldReps])
       copyDeltaAFunction = Function(name = copyDeltaAFunctionName,
                                     args = arguments,
                                     implementation = self.copyDeltaAFunctionContents,
                                     returnType = 'inline void')
       self.functions['copyDeltaA'] = copyDeltaAFunction
       
-      operatorSpace = self.operatorSpace
-      
       # Create arguments dictionary for a call to the copyDeltaA function
-      arguments = dict([('_' + dim.inSpace(operatorSpace).name + '_index', dim.inSpace(operatorSpace).loopIndex) \
-                          for dim in loopingField.dimensions if not self.deltaAField.hasDimension(dim)])
+      arguments = dict([('_' + dimRep.name + '_index', dimRep.loopIndex) \
+                          for dimRep in loopingField.inBasis(self.operatorBasis) if not dimRep in deltaAFieldReps])
       functionCall = self.functions['copyDeltaA'].call(parentFunction = self.functions['evaluate'], arguments = arguments) + '\n'
-      self.primaryCodeBlock.loopArguments['postDimensionLoopClosingCode'] = {self.deltaAField.dimensions[0].name: functionCall}
+      self.primaryCodeBlock.loopArguments['postDimensionLoopClosingCode'] = {
+        self.deltaAField.dimensions[0].inBasis(self.operatorBasis).name: functionCall
+      }
       
     
   

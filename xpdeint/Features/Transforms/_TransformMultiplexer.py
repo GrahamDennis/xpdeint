@@ -254,11 +254,6 @@ class _TransformMultiplexer (_Feature):
       
       return path
     
-    
-    def convertSpaceInFieldToBasis(space, field):
-      """Transforms an old-style `space` in field `field` to a new-style basis specification."""
-      return tuple(dim.inSpace(space).name for dim in field.dimensions)
-    
     geometry = self.getVar('geometry')
     representationMap = dict()
     representationMap.update((rep.canonicalName, rep) for dim in geometry.dimensions for rep in dim.representations)
@@ -277,8 +272,7 @@ class _TransformMultiplexer (_Feature):
     
     basesFieldMap = dict()
     for vector in vectors:
-      vectorBases = set([driver.canonicalBasisForBasis(convertSpaceInFieldToBasis(space, vector.field))
-                          for space in vector.spacesNeeded])
+      vectorBases = vector.basesNeeded.copy()
       if not vector.field.name in basesFieldMap:
         basesFieldMap[vector.field.name] = set()
       basesFieldMap[vector.field.name].update(vectorBases)
@@ -316,10 +310,11 @@ class _TransformMultiplexer (_Feature):
     
     self.vectorTransformMap = dict()
     transformsNeeded = list()
+    basesNeeded = set()
     
     for vector in vectors:
-      vectorBases = list(set(driver.canonicalBasisForBasis(convertSpaceInFieldToBasis(space, vector.field))
-                                for space in vector.spacesNeeded))
+      basesNeeded.update(vector.basesNeeded)
+      vectorBases = list(vector.basesNeeded)
       vectorBases.sort()
       self.vectorTransformMap[vector] = dict(
         bases = vectorBases,
@@ -348,6 +343,7 @@ class _TransformMultiplexer (_Feature):
           # (think FFT's with different numbers of points not in the FFT dimension)
           geometrySpecification = None
           transformation = self.availableTransformations[transformID]
+          transformation.setdefault('vectors', set()).add(vector)
           
           resultBasis, (prefixBasis, matchedSourceBasis, postfixBasis) = transformedBasis(currentBasis, transformPair)
           forward = True
@@ -391,13 +387,19 @@ class _TransformMultiplexer (_Feature):
           prefixLatticeStrings.extend([lattice[1] for lattice in prefixLattice])
           postfixLatticeStrings = [lattice[1] for lattice in postfixLattice]
           
+          prefixLatticeString = ' * '.join(prefixLatticeStrings) or '1'
+          postfixLatticeString = ' * '.join(postfixLatticeStrings) or '1'
+          if transformation.get('geometryDependent', False):
+            transformation.setdefault('prefixLatticeString', prefixLatticeString)
+            transformation.setdefault('postfixLatticeString', postfixLatticeString)
+          
           transformSteps.append(
             (
               transformsNeeded.index(transformDescriptor),
               forward,
               transformation.get('outOfPlace', False),
-              ' * '.join(prefixLatticeStrings) or '1',
-              ' * '.join(postfixLatticeStrings) or '1',
+              prefixLatticeString,
+              postfixLatticeString,
             )
           )
         basisPairInfo['transformSteps'] = transformSteps
@@ -406,6 +408,9 @@ class _TransformMultiplexer (_Feature):
     # One advantage of this method is that we no longer have to make extra fft plans or matrices when we could just re-use others.
     # Not only do we need to extract the transforms, but we must also produce a simple list of transforms that must be applied
     # to change between any bases for this vector.
+    
+    self.basesNeeded = list(basesNeeded)
+    self.basesNeeded.sort()
     
     self.neededTransformations = []
     for transformID, transformSpecifier, transformPair in transformsNeeded:

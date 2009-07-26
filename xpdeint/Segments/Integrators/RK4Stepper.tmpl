@@ -22,7 +22,7 @@ Copyright (c) 2007-2008 Graham Dennis. All rights reserved.
 @def singleIntegrationStep($function)
   @#
   @set $arguments = {'_step': '_step', $propagationDimension: $propagationDimension}
-${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
+${transformVectorsToBasis($integrationVectors, $homeBasis)}@slurp
 
 // a_k = a
 ${copyVectors($integrationVectors, '_akfield')}@slurp
@@ -31,7 +31,7 @@ ${callFunction('nonconstantIPFields', arguments, _exponent = 1, _arrayIndex = 0,
 
 // a = D[a]
 ${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction = function)}
-${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
+${transformVectorsToBasis($integrationVectors, $homeBasis)}@slurp
 
 // a_i = a
 ${copyVectors($integrationVectors, '_aifield')}@slurp
@@ -45,14 +45,14 @@ ${callFunction('deltaA', arguments, parentFunction = function)}
 
 // a_k = D[a_k]
 ${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction = function)}
-${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
+${transformVectorsToBasis($integrationVectors, $homeBasis)}@slurp
 
 ${loopOverVectorsWithInnerContentTemplate($integrationVectors, 
 """// a = a + a_k/6
 _${vector.id}[$index] += _akfield_${vector.id}[$index]/6.0;
 // a_k = a_i + a_k/2
 _akfield_${vector.id}[$index] = _aifield_${vector.id}[$index] + 0.5*_akfield_${vector.id}[$index];
-""", space = $homeSpace)}@slurp
+""", basis = $homeBasis)}@slurp
 
 ${propagationDimension} += 0.5*_step;
   @if $cross
@@ -62,25 +62,25 @@ ${interpolateDependencies}@slurp
 
 // a_k = G[a_k, t + h/2]
 ${callFunction('deltaA', arguments, parentFunction = function)}
-${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
+${transformVectorsToBasis($integrationVectors, $homeBasis)}@slurp
 
 ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """// a = a + a_k/3
 _${vector.id}[$index] += _akfield_${vector.id}[$index]/3.0;
 // a_k = a_i + a_k/2
 _akfield_${vector.id}[$index] = _aifield_${vector.id}[$index] + 0.5*_akfield_${vector.id}[$index];
-""", space = $homeSpace)}@slurp
+""", basis = $homeBasis)}@slurp
 
 // a_k = G[a_k, t + h/2]
 ${callFunction('deltaA', arguments, parentFunction = function)}
-${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
+${transformVectorsToBasis($integrationVectors, $homeBasis)}@slurp
 
 ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 """// a = a + a_k/3
 _${vector.id}[$index] += _akfield_${vector.id}[$index]/3.0;
 // a_k = a_i + a_k
 _akfield_${vector.id}[$index] = _aifield_${vector.id}[$index] + _akfield_${vector.id}[$index];
-""", space = $homeSpace)}@slurp
+""", basis = $homeBasis)}@slurp
 
 // a_k = D[a_k]
 ${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction = function)}
@@ -93,7 +93,7 @@ ${updateDependenciesForNextStep}@slurp
 
 // a_k = G[a_k, t + h]
 ${callFunction('deltaA', arguments, parentFunction = function)}
-${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
+${transformVectorsToBasis($integrationVectors, $homeBasis)}@slurp
 
   @for $vector in $integrationVectors
 _active_${vector.id} = _${vector.id};
@@ -101,12 +101,12 @@ _active_${vector.id} = _${vector.id};
 
 // a_k = D[a_k]
 ${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction = function)}
-${transformVectorsToSpace($integrationVectors, $homeSpace)}@slurp
+${transformVectorsToBasis($integrationVectors, $homeBasis)}@slurp
 
 ${loopOverVectorsWithInnerContentTemplate($integrationVectors, 
 """// a = a + a_k/6
 _${vector.id}[$index] += _akfield_${vector.id}[$index]/6.0;
-""", space = $homeSpace)}@slurp
+""", basis = $homeBasis)}@slurp
   @#
 @end def
 

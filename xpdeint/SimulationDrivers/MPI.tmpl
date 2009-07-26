@@ -16,6 +16,11 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
   @#
 @end def
 
+@def defines
+#undef MPI_REAL
+#define MPI_REAL MPI_${{'double': 'DOUBLE', 'single': 'FLOAT'}[$precision]}
+@end def
+
 @def globals
   @#
   @super

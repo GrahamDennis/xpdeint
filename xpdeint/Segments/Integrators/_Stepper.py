@@ -16,10 +16,6 @@ class _Stepper (ScriptElement):
     return self.parent.integrationVectors
   
   @property
-  def homeSpace(self):
-    return self.parent.homeSpace
-  
-  @property
   def homeBasis(self):
     return self.parent.homeBasis
   

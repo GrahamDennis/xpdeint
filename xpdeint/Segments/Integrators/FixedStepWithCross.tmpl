@@ -44,12 +44,12 @@ ${operatorContainer.evaluatePostDeltaAOperators(parentFunction = function)}@slur
 
   @set $integrationVectorsNeedingUpdating = $integrationVectors
   @silent integrationVectorsNeedingUpdating.difference_update(replacementOperatorContainer.deltaAOperator.integrationVectors)
-${transformVectorsToSpace($integrationVectorsNeedingUpdating, $homeSpace), autoIndent=True}@slurp
+${transformVectorsToBasis($integrationVectorsNeedingUpdating, $homeBasis), autoIndent=True}@slurp
 
 ${loopOverVectorsWithInnerContentTemplate($integrationVectorsNeedingUpdating,
 c"""// a = oldcopy + a
 _\${vector.id}[\$index] += _${name}_oldcopy_\${vector.id}[\$index];
-""", space = $homeSpace)}@slurp
+""", basis = $homeBasis)}@slurp
   @#
 @end def
 

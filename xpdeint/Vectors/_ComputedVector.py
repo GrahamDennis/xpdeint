@@ -71,9 +71,6 @@ class _ComputedVector (VectorElement):
     evaluationCodeBlock = self.codeBlocks['evaluation']
     if evaluationCodeBlock.dependenciesEntity and evaluationCodeBlock.dependenciesEntity.xmlElement.hasAttribute('fourier_space'):
       dependenciesXMLElement = evaluationCodeBlock.dependenciesEntity.xmlElement
-      evaluationSpace = evaluationCodeBlock.field.spaceFromString(dependenciesXMLElement.getAttribute('fourier_space'),
-                                                                  xmlElement = dependenciesXMLElement)
-      evaluationCodeBlock.space = evaluationSpace
       evaluationCodeBlock.basis = \
         evaluationCodeBlock.field.basisFromString(
           dependenciesXMLElement.getAttribute('fourier_space'),
@@ -81,8 +78,6 @@ class _ComputedVector (VectorElement):
         )
     if not evaluationCodeBlock.basis:
       evaluationCodeBlock.basis = evaluationCodeBlock.field.defaultCoordinateBasis
-    # Set the space so that it is known that this vector is required in the evaluation space.
-    self.initialSpace = evaluationCodeBlock.space
     
     self.initialBasis = self.field.basisForBasis(evaluationCodeBlock.basis)
     self.basesNeeded.add(self.initialBasis)
