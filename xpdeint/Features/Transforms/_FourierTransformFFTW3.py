@@ -15,7 +15,9 @@ from xpdeint.Geometry.SplitUniformDimensionRepresentation import SplitUniformDim
 
 from xpdeint.ParserException import ParserException
 
-from xpdeint.Utilities import lazy_property
+from xpdeint.Utilities import lazy_property, permutations
+
+import math, operator
 
 class _FourierTransformFFTW3 (_Transform):
   transformName = 'FourierTransform'
@@ -133,5 +135,46 @@ class _FourierTransformFFTW3 (_Transform):
                             "must use one of these transforms with the additional restriction that if the 'dft' transform is used for one dimension "
                             "it must be used for the other.")
     super(_FourierTransformFFTW3, self).initialiseForMPIWithDimensions(dimensions)
+  
+  def fftCost(self, dimNames):
+    geometry = self.getVar('geometry')
+    untransformedDimReps = dict([(dimName, geometry.dimensionWithName(dimName).representations[0]) for dimName in dimNames])
+    cost = reduce(operator.add, [math.log(untransformedDimReps[dimName].lattice) for dimName in dimNames], 0)
+    cost *= reduce(operator.mul, [untransformedDimReps[dimName].lattice for dimName in dimNames], 1)
+    return cost
+  
+  def potentialTransforms(self):
+    results = []
+    geometry = self.getVar('geometry')
+    sortedDimNames = [(geometry.indexOfDimensionName(dimName), dimName) for dimName in self.transformNameMap]
+    sortedDimNames.sort()
+    sortedDimNames = [o[1] for o in sortedDimNames]
+    for dimName in sortedDimNames:
+      dimReps = geometry.dimensionWithName(dimName).representations
+      for oldDimRep, newDimRep in permutations(dimReps, dimReps):
+        if oldDimRep == newDimRep: continue
+        results.append(dict(oldBasis=oldDimRep.name,
+                            newBasis=newDimRep.name,
+                            cost=oldDimRep.lattice * math.log(oldDimRep.lattice)))
+    if self.hasattr('mpiDimensions'):
+      for dim in self.mpiDimensions:
+        sortedDimNames.remove(dim.name)
+    
+    c2cDimNames = [dimName for dimName in sortedDimNames if self.transformNameMap[dimName] == 'dft']
+    r2rDimNames = [dimName for dimName in sortedDimNames if self.transformNameMap[dimName] in ['dct', 'dst']]
+    
+    untransformedDimReps = dict([(dimName, geometry.dimensionWithName(dimName).representations[0]) for dimName in sortedDimNames])
+    transformedDimReps = dict([(dimName, geometry.dimensionWithName(dimName).representations[1]) for dimName in sortedDimNames])
+    
+    # Create optimised forward/backward transforms
+    for dimNames in [c2cDimNames, r2rDimNames]:
+      if len(dimNames) <= 1: continue
+      cost = self.fftCost(dimNames)
+      untransformedBasis = tuple([untransformedDimReps[dimName].name for dimName in dimNames])
+      transformedBasis = tuple([transformedDimReps[dimName].name for dimName in dimNames])
+      results.append(dict(oldBasis=untransformedBasis, newBasis=transformedBasis, cost = cost))
+      results.append(dict(oldBasis=transformedBasis, newBasis=untransformedBasis, cost = cost))
+    
+    return results
   
 

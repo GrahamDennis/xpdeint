@@ -18,7 +18,10 @@ from xpdeint.Geometry.UniformDimensionRepresentation import UniformDimensionRepr
 from xpdeint.Geometry.SplitUniformDimensionRepresentation import SplitUniformDimensionRepresentation
 from xpdeint.Geometry.NonUniformDimensionRepresentation import NonUniformDimensionRepresentation
 
+from xpdeint.Utilities import permutations, combinations
 from xpdeint.ParserException import ParserException
+
+import operator
 
 class _MMT (_Transform):
   transformName = 'MMT'
@@ -136,5 +139,47 @@ class _MMT (_Transform):
     dim.addRepresentation(kspace)
     return dim
   
-  
+  def potentialTransforms(self):
+    results = []
+    geometry = self.getVar('geometry')
+    # Sort dimension names based on their ordering in the geometry.
+    sortedDimNames = [(geometry.indexOfDimensionName(dimName), dimName) for dimName in self.basisMap]
+    sortedDimNames.sort()
+    sortedDimNames = [o[1] for o in sortedDimNames]
+    # Step one: Create all transforms just for each dimension individually
+    # These transforms require an additional copy either at the start or end as there is no
+    # in-place matrix multiply.
+    for dimName in sortedDimNames:
+      dimReps = geometry.dimensionWithName(dimName).representations
+      for oldDimRep, newDimRep in permutations(dimReps, dimReps):
+        if oldDimRep == newDimRep: continue
+        results.append(dict(oldBasis=oldDimRep.name,
+                            newBasis=newDimRep.name,
+                            cost=oldDimRep.lattice * newDimRep.lattice))
+    
+    # Step two: Create 'optimised' transforms. These transform two dimensions at a time. This
+    # is more optimal as we don't have to have an additional copy as we can perform the first multiply
+    # into the temporary array, and the second back into the original storage.
+    
+    # Consider all combinations of two dimensions
+    for dimNames in combinations(2, sortedDimNames):
+      dimReps = [geometry.dimensionWithName(dimName).representations for dimName in dimNames]
+      # Loop over all possible transforms between these two dimensions
+      for oldReps in permutations(*dimReps):
+        for newReps in permutations(*dimReps):
+          # Only consider the transforms in which every dimension has something change.
+          if any([old == new for old, new in zip(oldReps, newReps)]): continue
+          transform = {}
+          transform['oldDimRep'] = tuple([dimRep.name for dimRep in oldReps])
+          transform['newDimRep'] = tuple([dimRep.name for dimRep in newReps])
+          # The inherent cost of the multiply
+          costs = [oldDimRep.lattice * newDimRep.lattice for oldDimRep, newDimRep in zip(oldReps, newReps)]
+          # There is a multiplier due to the number of these matrix multiplies we need
+          costMultipliers = [min(oldDimRep.lattice, newDimRep.lattice) for oldDimRep, newDimRep in zip(oldReps, newReps)]
+          # The cost for each transform should be multiplied by the smallest size of each other dimension (due to ordering)
+          for idx, cost in enumerate(costs):
+            costs[idx] *= reduce(operator.mul, costMultipliers[0:idx] + costMultipliers[idx+1:], 1)
+          transform['cost'] = reduce(operator.add, costs)
+          results.append(transform)
+    return results
 

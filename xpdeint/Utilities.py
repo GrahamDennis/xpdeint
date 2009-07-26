@@ -165,3 +165,36 @@ def unique(seq, idfun=None):
         result.append(item)
     return result
 
+def permutations(*iterables):
+    def permuteTwo(it1, it2):
+        for o1 in it1:
+            for o2 in it2:
+                if isinstance(o1, tuple):
+                    yield o1 + (o2,)
+                else:
+                    yield (o1, o2)
+    
+    if len(iterables) == 1:
+        return iterables[0]
+    
+    it = iterables[0]
+    for it2 in iterables[1:]:
+        it = permuteTwo(it, it2)
+    
+    return it
+
+def combinations(itemCount, lst):
+    """Generator for all unique combinations of `lst` containing `itemCount` elements."""
+    if itemCount == 0 or itemCount > len(lst):
+        return
+    if itemCount == 1:
+        for o in lst:
+            yield (o,)
+    elif itemCount == len(lst):
+        yield tuple(lst)
+    else:
+        for o in combinations(itemCount-1, lst[1:]):
+            yield (lst[0],) + o
+        for o in combinations(itemCount, lst[1:]):
+            yield o
+
