@@ -70,7 +70,7 @@ ${codeBlocks['operatorDefinition'].loop(self.insideEvaluateOperatorLoops)}@slurp
   @#
   @if $resultVector and $resultVector.needsTransforms
 
-_${resultVector.id}_space = $spaceForBasis($operatorBasis);
+_${resultVector.id}_space = $basisIndexForBasis($operatorBasis);
   @end if
   @#
 @end def
@@ -93,7 +93,7 @@ ${evaluateOperatorLoop(setOfVectorsToLoopOver)}@slurp
   @#
   @if $resultVector and $resultVector.needsTransforms
 
-_${resultVector.id}_space = $spaceForBasis($operatorBasis);
+_${resultVector.id}_space = $basisIndexForBasis($operatorBasis);
   @end if
   @#
 @end def

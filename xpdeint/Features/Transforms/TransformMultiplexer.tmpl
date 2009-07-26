@@ -78,7 +78,6 @@ to and from arbitrary combinations of fourier-space and normal-space.
   @set $function = dict['function']
   @set $vector = dict['caller']
   @set $transformInfo = self.vectorTransformMap[vector]
-newSpace &= _${vector.field.name}_full_kspace_mask;
 if (_${vector.id}_space == newSpace)
   return;
 
@@ -149,7 +148,7 @@ ptrdiff_t _auxiliary_array_size = 0;
     @for basisPairInfo in basisPairMap.values()
       @set $basisPair = basisPairInfo['basisPair']
 @#_basis_transform = &_${vector.id}_basis_map[_basis_pair(${', '.join([str(bases.index(basis)) for basis in basisPair])})];
-_basis_transform = &_${vector.id}_basis_map[_basis_pair(${', '.join([str(self.spaceForBasis(basis)) for basis in basisPair])})];
+_basis_transform = &_${vector.id}_basis_map[_basis_pair(${', '.join([str(self.basisIndexForBasis(basis)) for basis in basisPair])})];
       @if basisPairInfo['forwardScale']
 _basis_transform->_multiplier = ${' * '.join(basisPairInfo['forwardScale'])};
       @end if
@@ -165,7 +164,7 @@ _basis_transform->append(
       @end for
 
 @#_basis_transform = &_${vector.id}_basis_map[_basis_pair(${', '.join([str(bases.index(basis)) for basis in reversed(basisPair)])})];
-_basis_transform = &_${vector.id}_basis_map[_basis_pair(${', '.join([str(self.spaceForBasis(basis)) for basis in reversed(basisPair)])})];
+_basis_transform = &_${vector.id}_basis_map[_basis_pair(${', '.join([str(self.basisIndexForBasis(basis)) for basis in reversed(basisPair)])})];
       @if basisPairInfo['backwardScale']
 _basis_transform->_multiplier = ${' * '.join(basisPairInfo['backwardScale'])};
       @end if

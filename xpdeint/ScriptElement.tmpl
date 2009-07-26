@@ -83,7 +83,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *@
 
 
-@def loopOverVectorsWithInnerContentTemplate($vectors, $templateString, $space = None)
+@def loopOverVectorsWithInnerContentTemplate($vectors, $templateString, $basis = None)
 @*doc:
 Insert code to loop over a vector.
 
@@ -139,10 +139,10 @@ to be performed in the same way on a range of vectors in possibly different fiel
     @silent $templateVariables['vector'] = $vector
 ${insertCodeForFeatures('loopOverVectorsWithInnerContentTemplateBegin', $loopFeatureOrdering, $dict)}@slurp
     @capture loopString
-      @if space is None
+      @if basis is None
         @set $vectorSize = vector.allocSize
       @else
-        @set $vectorSize = vector.sizeInSpace(space)
+        @set $vectorSize = vector.sizeInBasis(basis)
       @end if
 for (long _i0 = 0; _i0 < ${loopCountPrefix}${vectorSize}; _i0++) {
   ${innerLoopTemplate, autoIndent=True}@slurp
@@ -153,7 +153,7 @@ ${insertCodeForFeaturesInReverseOrder('loopOverVectorsWithInnerContentTemplateEn
   @end for
 @end def
 
-@def loopOverVectorsInSpaceWithInnerContent($vectors, $space, $innerContent)
+@def loopOverVectorsInBasisWithInnerContent($vectors, $basis, $innerContent)
 @*doc:
 Insert code to loop over vectors in a single field.
 Unlike the previous function, this function loops over a single field
@@ -188,7 +188,7 @@ long _${vector.id}_index_pointer = 0;
   @end for
   @set $dict = {'vectors': $vectors}
 ${insertCodeForFeatures('loopOverVectorsWithInnerContentBegin', $featureOrdering, $dict)}@slurp
-for (long _i0 = 0; _i0 < ${field.sizeInSpace(space)}; _i0++) {
+for (long _i0 = 0; _i0 < ${field.sizeInBasis(basis)}; _i0++) {
   ${insertCodeForFeaturesInReverseOrder('loopOverVectorsWithInnerContentEnd', $featureOrdering, $dict), autoIndent=True}@slurp
   @#
   ${innerContent, autoIndent=True}@slurp
@@ -258,7 +258,6 @@ Optional arguments:
   @#
   @# Defaults
   @#
-  @set space = $spaceForBasis(basis)
   @set indexOverrides = indexOverrides or {}
   @set vectorOverrides = vectorOverrides or []
   @set preDimensionLoopOpeningCode = preDimensionLoopOpeningCode or {}
@@ -267,7 +266,6 @@ Optional arguments:
   @#
   @set $featureOrdering = ['Driver']
   @set $featuresDict = { 'field': field,
-                         'space': space,
                          'basis': basis,
                          'vectors': vectors,
                          'indexOverrides': indexOverrides,

@@ -1829,6 +1829,8 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       outputBasis = momentGroupTemplate.outputField.basisForBasis(
         (propagationDimRep.canonicalName,) + sampleBasis
       )
+      # outputBasis = self.globalNameSpace['features']['Driver'].canonicalBasisForBasis(outputBasis, noTranspose=True)
+      
       
       for dimName, lattice in dimensionsNeedingLatticeUpdates.items():
         dim = samplingFieldTemplate.dimensionWithName(dimName)

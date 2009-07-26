@@ -49,7 +49,7 @@ unsigned long _${id}_space;
 ${initialiser.initialiseVector}@slurp
   @if $needsTransforms
 
-_${id}_space = $spaceForBasis(self.initialBasis);
+_${id}_space = $basisIndexForBasis(self.initialBasis);
   @end if
   @#
 @end def
