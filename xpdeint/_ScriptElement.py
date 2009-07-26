@@ -428,10 +428,45 @@ class _ScriptElement (Template):
       return self.parent.vectorForVectorName(vectorName, vectorDictionary)
   
   
+  def validateBasis(self, basis, _validNamesCache = set(), _validDimRepMap = {}):
+    """Verify that `basis` is a self-consistent specification of a basis."""
+    if not _validNamesCache:
+      geometry = self.getVar('geometry')
+      for dim in geometry.dimensions:
+        dimRepNames = set([dimRep.name for dimRep in dim.representations])
+        _validNamesCache.update(dimRepNames)
+        _validDimRepMap[dim.name] = dimRepNames
+    
+    if basis.difference(_validNamesCache):
+      raise ParserException(
+        self.xmlElement,
+        "The following names are not valid basis specifiers: %s." % ', '.join(basis.difference(_validNamesCache))
+      )
+    
+    # Now we know we don't have any specifiers that we can't identify, so we just need to check
+    # that we don't have two specifiers for the same dimension.
+    
+    for dimName, dimRepNames in _validDimRepMap.items():
+      if len(basis.intersection(dimRepNames)) > 1:
+        raise ParserException(
+          self.xmlElement,
+          "There is more than one basis specifier for dimension '%s'. The conflict is between %s." \
+            % (dimName, ' and '.join(basis.intersection(dimRepNames)))
+        )
+  
   def transformVectorsToSpace(self, vectors, space):
     """Transform vectors `vectors` to space `space`."""
     result = []
     for vector in vectors:
+      if isinstance(space, set):
+        self.validateBasis(space)
+        # For the moment, we will simply generate a normal space variable
+        old_style_space = 0
+        geometry = self.getVar('geometry')
+        for dimIdx, dim in enumerate(geometry.dimensions):
+          if [dimRep for dimRep in dim.representations if dimRep.isTransformed and dimRep.name in space]:
+            old_style_space |= 1 << dimIdx
+        space = old_style_space
       if not (vector.initialSpace) == (space & vector.field.spaceMask):
         if not vector.isTransformableTo(space):
           raise ParserException(self.xmlElement,
