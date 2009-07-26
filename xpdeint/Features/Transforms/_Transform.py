@@ -20,6 +20,7 @@ class _Transform (ScriptElement):
     # Register ourselves with the transform multiplexer
     self.getVar('features')['TransformMultiplexer'].transforms.add(self)
     self.transformMask = 0
+    self.transformations = []
   
   def __hash__(self):
     """

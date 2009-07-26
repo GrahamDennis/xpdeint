@@ -30,7 +30,6 @@ class Function(object):
   for it, and it isn't clear how this behaviour would work in the face of nested
   looping segments.
   """
-  __slots__ = ['name', 'returnType', 'args', 'description', 'implementationContents', 'predicate']
   def __init__(self, name, args, implementation,
                description = None, returnType = 'void', predicate = lambda: True):
     """

@@ -15,9 +15,9 @@ from xpdeint.Geometry.SplitUniformDimensionRepresentation import SplitUniformDim
 
 from xpdeint.ParserException import ParserException
 
-from xpdeint.Utilities import lazy_property, permutations
+from xpdeint.Utilities import lazy_property, combinations
 
-import math, operator
+import math, operator, types
 
 class _FourierTransformFFTW3 (_Transform):
   transformName = 'FourierTransform'
@@ -117,7 +117,8 @@ class _FourierTransformFFTW3 (_Transform):
     return result
   
   def r2rKindForDimensionAndDirection(self, dim, direction):
-    transformName = self.transformNameMap[dim.name]
+    dimName = dim.name if not isinstance(dim, types.StringTypes) else dim
+    transformName = self.transformNameMap[dimName]
     return {'dct': {'forward': 'FFTW_REDFT10', 'backward': 'FFTW_REDFT01'},
             'dst': {'forward': 'FFTW_RODFT10', 'backward': 'FFTW_RODFT01'}}[transformName][direction]
   
@@ -139,23 +140,40 @@ class _FourierTransformFFTW3 (_Transform):
   def fftCost(self, dimNames):
     geometry = self.getVar('geometry')
     untransformedDimReps = dict([(dimName, geometry.dimensionWithName(dimName).representations[0]) for dimName in dimNames])
-    cost = reduce(operator.add, [math.log(untransformedDimReps[dimName].lattice) for dimName in dimNames], 0)
+    cost = sum([int(math.ceil(math.log(untransformedDimReps[dimName].lattice))) for dimName in dimNames], 0)
     cost *= reduce(operator.mul, [untransformedDimReps[dimName].lattice for dimName in dimNames], 1)
     return cost
   
-  def potentialTransforms(self):
+  @staticmethod
+  def scaleFactorForDimReps(dimReps):
+    return ' * '.join(['_inverse_sqrt_2pi * _d' + dimRepName for dimRepName in dimReps])
+  
+  def availableTransformations(self):
     results = []
     geometry = self.getVar('geometry')
     sortedDimNames = [(geometry.indexOfDimensionName(dimName), dimName) for dimName in self.transformNameMap]
     sortedDimNames.sort()
     sortedDimNames = [o[1] for o in sortedDimNames]
+    
+    transformFunctions = dict(
+      geometryDependent = True,
+      transformFunction = self.transformFunction,
+    )
+    
     for dimName in sortedDimNames:
-      dimReps = geometry.dimensionWithName(dimName).representations
-      for oldDimRep, newDimRep in permutations(dimReps, dimReps):
-        if oldDimRep == newDimRep: continue
-        results.append(dict(oldBasis=oldDimRep.name,
-                            newBasis=newDimRep.name,
-                            cost=oldDimRep.lattice * math.log(oldDimRep.lattice)))
+      # FIXME: The 0:2 slice in the following is to prevent double-up due to the current use of three representations
+      # for distributed MPI dimensions. This won't be needed when we convert to bases internally in xpdeint.
+      dimReps = geometry.dimensionWithName(dimName).representations[0:2]
+      results.append(dict(
+        transformations = [tuple(rep.name for rep in dimReps)],
+        cost = self.fftCost([dimName]),
+        forwardScale = self.scaleFactorForDimReps([dimReps[0].name]),
+        backwardScale = self.scaleFactorForDimReps([dimReps[1].name]),
+        requiresScaling = True,
+        transformType = 'complex' if self.transformNameMap[dimName] == 'dft' else 'real',
+        **transformFunctions
+      ))
+    
     if self.hasattr('mpiDimensions'):
       for dim in self.mpiDimensions:
         sortedDimNames.remove(dim.name)
@@ -167,14 +185,28 @@ class _FourierTransformFFTW3 (_Transform):
     transformedDimReps = dict([(dimName, geometry.dimensionWithName(dimName).representations[1]) for dimName in sortedDimNames])
     
     # Create optimised forward/backward transforms
-    for dimNames in [c2cDimNames, r2rDimNames]:
+    for dimNames, transformType in [(c2cDimNames, 'complex'), (r2rDimNames, 'real')]:
       if len(dimNames) <= 1: continue
       cost = self.fftCost(dimNames)
-      untransformedBasis = tuple([untransformedDimReps[dimName].name for dimName in dimNames])
-      transformedBasis = tuple([transformedDimReps[dimName].name for dimName in dimNames])
-      results.append(dict(oldBasis=untransformedBasis, newBasis=transformedBasis, cost = cost))
-      results.append(dict(oldBasis=transformedBasis, newBasis=untransformedBasis, cost = cost))
+      untransformedBasis = tuple(untransformedDimReps[dimName].name for dimName in dimNames)
+      transformedBasis = tuple(transformedDimReps[dimName].name for dimName in dimNames)
+      bases = tuple([untransformedBasis, transformedBasis])
+      results.append(dict(
+        transformations = [bases],
+        cost = cost,
+        forwardScale = self.scaleFactorForDimReps(untransformedBasis),
+        backwardScale = self.scaleFactorForDimReps(transformedBasis),
+        requiresScaling = True,
+        transformType = transformType,
+        **transformFunctions
+      ))
     
-    return results
+    final_transforms = []
+    for transform in results:
+      final_transforms.append(transform.copy())
+      transform['outOfPlace'] = True
+      final_transforms.append(transform)
+    
+    return final_transforms
   
 

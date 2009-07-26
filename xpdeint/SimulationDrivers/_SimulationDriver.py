@@ -30,3 +30,6 @@ class _SimulationDriver (ScriptElement):
   def isFieldDistributed(self, field):
     return False
   
+  def canonicalBasisForBasis(self, basis):
+    return basis
+  

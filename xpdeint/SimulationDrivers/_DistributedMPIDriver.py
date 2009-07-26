@@ -71,5 +71,8 @@ class _DistributedMPIDriver (SimulationDriver, MPI):
     if not outputFormat.mpiSafe:
       raise ParserException(outputFeature.xmlElement, "The '%s' output format cannot be used with the 'distributed-mpi' driver." % outputFormat.name)
   
-  
+  def canonicalBasisForBasis(self, basis):
+    if self._distributedTransform.hasattr('canonicalBasisForBasis'):
+      return self._distributedTransform.canonicalBasisForBasis(basis)
+    return super(_DistributedMPIDriver, self).canonicalBasisForBasis(basis)
   

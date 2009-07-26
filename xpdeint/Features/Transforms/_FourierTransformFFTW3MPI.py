@@ -127,25 +127,25 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
       (dimensions[secondMPIDimIndex], dimensions[firstMPIDimIndex]) = (dimensions[firstMPIDimIndex], dimensions[secondMPIDimIndex])
     return dimensions
   
-  def potentialTransforms(self):
-    results = super(_FourierTransformFFTW3MPI, self).potentialTransforms()
+  def availableTransformations(self):
+    results = super(_FourierTransformFFTW3MPI, self).availableTransformations()
     
     # Create transpose operations
-    forwardTransformations = []
-    backwardTransformations = []
+    transposeOperations = []
     communicationsCost = None
     for firstDimRep, secondDimRep in permutations(*[dim.representations for dim in self.mpiDimensions]):
       if not communicationsCost: communicationsCost = firstDimRep.lattice * secondDimRep.lattice
-      oldBasis = ('distributed ' + firstDimRep.name, secondDimRep.name)
-      newBasis = ('distributed ' + secondDimRep.name, firstDimRep.name)
-      forwardTransformations.append((oldBasis, newBasis))
-      backwardTransformations.append((newBasis, oldBasis))
-    # forward transpose operations
-    results.append(dict(transformations=forwardTransformations,
-                        communicationsCost=communicationsCost))
-    # backward transpose operations
-    results.append(dict(transformations=backwardTransformations,
-                        communicationsCost=communicationsCost))
+      basisA = ('distributed ' + firstDimRep.name, secondDimRep.name)
+      basisB = ('distributed ' + secondDimRep.name, firstDimRep.name)
+      transposeOperations.append(tuple([basisA, basisB]))
+    # transpose operations
+    results.append(dict(
+      transformations = transposeOperations,
+      communicationsCost = communicationsCost,
+      geometryDependent = True,
+      transformType = 'real',
+      transformFunction = self.transposeTransformFunction
+    ))
     
     # Create partial forward / back operations
     untransformedBasis = ('distributed ' + self.mpiDimensions[0].representations[0].name,
@@ -155,20 +155,36 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
     
     transformCost = self.fftCost([dim.name for dim in self.mpiDimensions])
     
-    # Forward partial transform
-    results.append(dict(oldBasis=untransformedBasis,
-                        newBasis=transformedBasis,
-                        communicationsCost=communicationsCost,
-                        cost=transformCost))
-    # Backward partial transform
-    results.append(dict(oldBasis=transformedBasis,
-                        newBasis=untransformedBasis,
-                        communicationsCost=communicationsCost,
-                        cost=transformCost))
+    # Partial transform
+    results.append(dict(
+      transformations = [tuple([untransformedBasis, transformedBasis])],
+      communicationsCost = communicationsCost,
+      cost = transformCost,
+      forwardScale = self.scaleFactorForDimReps(untransformedBasis),
+      backwardScale = self.scaleFactorForDimReps(transformedBasis),
+      requiresScaling = True,
+      transformType = 'complex' if self.transformNameMap[self.mpiDimensions[0].name] == 'dft' else 'real',
+      geometryDependent = True,
+      transformFunction = self.distributedTransformFunction
+    ))
     
     # Fuller forward/reverse transforms would be good in the future for the case of more than two dimensions
     # This isn't necessary for the moment though.
     
     return results
+  
+  def canonicalBasisForBasis(self, basis):
+    if all([set(rep.name for rep in mpiDim.representations).intersection(basis) for mpiDim in self.mpiDimensions]):
+      # Decide what the order is.
+      basis = list(basis)
+      mpiDimRepNames = [list(set(rep.name for rep in mpiDim.representations).intersection(basis))[0] for mpiDim in self.mpiDimensions]
+      if all(mpiDim.representations[1].name in mpiDimRepNames for mpiDim in self.mpiDimensions):
+        # Then we are swapped
+        basis[0:2] = reversed(mpiDimRepNames)
+      else:
+        basis[0:2] = mpiDimRepNames
+      basis[0] = 'distributed ' + basis[0]
+      basis = tuple(basis)
+    return basis
   
 

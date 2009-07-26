@@ -117,7 +117,7 @@ class _VectorElement (ScriptElement):
     that this vector is needed in.
     """
     self._initialSpace = value & self.field.spaceMask
-    self.spacesNeeded.add(value)
+    self.spacesNeeded.add(self._initialSpace)
   
   # Create a property for the class with the above getter and setter methods
   initialSpace = property(_getInitialSpace, _setInitialSpace)

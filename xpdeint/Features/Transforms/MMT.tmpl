@@ -80,7 +80,7 @@ _mmt_scratch_space = (real *)xmds_malloc(sizeof(${maxVector.type}) * ${maxVector
 // Matrices are stored in row-major format
     @for dimName, basis in $basisMap.items()
       @set $dim = $geometry.dimensionWithName(dimName)
-${basis.transformMatricesForDim(dim)}@slurp
+${basis.transformMatricesForDimReps(dim.inSpace(0), dim.inSpace(-1))}@slurp
     @end for
 
 _LOG(_SIMULATION_LOG_LEVEL, "Matrix construction complete\n");
@@ -107,8 +107,8 @@ This writes the function that does the fourier transforming of a specific vector
 to and from arbitrary combinations of fourier-space and normal-space.
 *@
   @#
-real *source_${vector.id} = reinterpret_cast<real*>(_active_${vector.id});
-real *dest_${vector.id} = _mmt_scratch_space;
+real *source_data = reinterpret_cast<real*>(_active_${vector.id});
+real *dest_data = _mmt_scratch_space;
 real *temp = NULL;
 
   @for $dimName, $basis in $basisMap.items()
@@ -118,12 +118,6 @@ real *temp = NULL;
     @# This is safe because the only place where distributed MPI dimensions can occur is at the start
     @# and either we are responsible for that, or there isn't one. The only case we have to worry
     @# about is distributed MPI dimensions *before* this dimension.
-    @set $nelemForward = $vector.field.localPointsInDimensionsAfterDimensionInSpace(dim, 0)
-    @set $nelemBackward = $vector.field.localPointsInDimensionsAfterDimensionInSpace(dim, -1)
-    @if $vector.type == 'complex'
-      @set $nelemForward = '2 * ' + nelemForward
-      @set $nelemBackward = '2 * ' + nelemBackward
-    @end if
 if ((_newSpace ^ _${vector.id}_space) & ${dim.transformMask}) {
   @set $indices = range(vector.field.indexOfDimension(dim))
   const long outerLoopSize = ${vector.field.localPointsInDimensionsWithIndicesInSpace(indices, c'_${vector.id}_space')};
@@ -136,20 +130,21 @@ if ((_newSpace ^ _${vector.id}_space) & ${dim.transformMask}) {
     // Forward transform for dimension $dimName
     @# We have to loop over all dimensions before this dimension
     for (long _i0 = 0; _i0 < outerLoopSize; _i0++) {
-      ${basis.performTransformForVector(forwardDimRep, backwardDimRep, vector, dir='forward'), autoIndent=True}@slurp
+      ${basis.performTransform(forwardDimRep, backwardDimRep, dir='forward'), autoIndent=True}@slurp
     }
   } else {
     // Backward transform for dimension $dimName
     for (long _i0 = 0; _i0 < outerLoopSize; _i0++) {
-      ${basis.performTransformForVector(backwardDimRep, forwardDimRep, vector, dir='backward'), autoIndent=True}@slurp
+      ${basis.performTransform(backwardDimRep, forwardDimRep, dir='backward'), autoIndent=True}@slurp
     }
   }
   // swap source and destination
-  temp = source_${vector.id}; source_${vector.id} = dest_${vector.id}; dest_${vector.id} = temp;
+  temp = source_data; source_data = dest_data; dest_data = temp;
 }
   @end for
 
-if (source_${vector.id} != reinterpret_cast<real*>(_active_${vector.id})) {
+if (source_data != reinterpret_cast<real*>(_active_${vector.id})) {
+  real * const __restrict__ source_${vector.id} = source_data;
   ${copyVectors([vector], '_active', 'source')}@slurp
 }
 

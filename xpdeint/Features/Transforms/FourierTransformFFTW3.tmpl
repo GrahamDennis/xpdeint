@@ -32,6 +32,7 @@ Return the string defining the globals needed by FFTW3.
 *@
   @#
 const real _inverse_sqrt_2pi = 1.0 / sqrt(2.0 * M_PI); 
+string _fftwWisdomPath;
   @#
   @# The basic idea here is that in addition to the full forward/backward plans
   @# we should store plans for every other arbitrary space transform that we do.
@@ -91,6 +92,112 @@ typedef map<_spaces_pair, _space_transform, _spaces_pair_less_than> _plan_map;
   @for $vector in $vectorsNeedingThisTransform
 ${planGlobalsForVector(vector)}@slurp
   @end for
+@end def
+
+@def transformFunction(transformID, transformDict, function)
+  @#
+static ${fftwPrefix}_plan _fftw_forward_plan = NULL;
+static ${fftwPrefix}_plan _fftw_backward_plan = NULL;
+
+if (!_fftw_forward_plan) {
+  _LOG(_SIMULATION_LOG_LEVEL, "Planning for ${function.description}...");
+  
+  @set $transformPair = transformDict['transformPair']
+  @set $dimensionsBeingTransformed = len(transformPair[0])
+  @set $transformType = transformDict['transformType']
+  ${fftwPrefix}_iodim _transform_sizes[${dimensionsBeingTransformed}], _loop_sizes[2];
+  @if transformType == 'real'
+  ${fftwPrefix}_r2r_kind _r2r_kinds[${dimensionsBeingTransformed}];
+  @end if
+  ${fftwPrefix}_iodim *_iodim_ptr = NULL;
+  
+  int _transform_sizes_index = 0, _loop_sizes_index = 0;
+  
+  @set mpiPrefix, prefixLattice, postfixLattice = transformDict['transformSpecifier']
+  @if mpiPrefix or prefixLattice > 1
+  _iodim_ptr = &_loop_sizes[_loop_sizes_index++];
+  _iodim_ptr->n = ${prefixLattice}${''.join(c' * ${mpiPrefixLattice}' for mpiPrefixLattice in mpiPrefix)};
+  _iodim_ptr->is = _iodim_ptr->os = ${postfixLattice} * ${' * '.join([dimRep.localLattice for dimRep in transformPair[0]])};
+  
+  @end if
+  @if postfixLattice > 1
+  _iodim_ptr = &_loop_sizes[_loop_sizes_index++];
+  _iodim_ptr->n = ${postfixLattice};
+  _iodim_ptr->is = _iodim_ptr->os = 1;
+  
+  @end if
+  @#
+  @for dimID, dimRep in enumerate(transformPair[0])
+  _iodim_ptr = &_transform_sizes[_transform_sizes_index++];
+  _iodim_ptr->n = ${dimRep.globalLattice};
+  _iodim_ptr->is = _iodim_ptr->os = ${postfixLattice}${''.join(c' * ${dr.globalLattice}' for dr in transformPair[0][dimID+1:])};
+  
+  @end for
+  @#
+  @if transformType == 'complex'
+    @set $guruPlanFunction = self.createGuruDFTPlanInDirection
+    @set $executeSuffix = 'dft'
+    @set $reinterpretType = $fftwPrefix + '_complex'
+  @else
+    @set $guruPlanFunction = self.createGuruR2RPlanInDirection
+    @set $executeSuffix = 'r2r'
+    @set $reinterpretType = 'real'
+  @end if
+  @#
+  @set $dataOut = '_data_out' if transformDict.get('outOfPlace', False) else '_data_in'
+  @#
+  ${guruPlanFunction(transformDict, 'forward', dataOut), autoIndent=True}@slurp
+  ${guruPlanFunction(transformDict, 'backward', dataOut), autoIndent=True}@slurp
+  
+  // Save wisdom
+  #if CFG_OSAPI == CFG_OSAPI_POSIX
+  ${saveWisdom, autoIndent=True}@slurp
+  #endif // POSIX
+  
+  _LOG(_SIMULATION_LOG_LEVEL, " done.\n");
+}
+
+if (_forward) {
+  ${fftwPrefix}_execute_${executeSuffix}(
+    _fftw_forward_plan,
+    reinterpret_cast<${reinterpretType}*>(_data_in),
+    reinterpret_cast<${reinterpretType}*>(${dataOut})
+  );
+} else {
+  ${fftwPrefix}_execute_${executeSuffix}(
+    _fftw_backward_plan,
+    reinterpret_cast<${reinterpretType}*>(_data_in),
+    reinterpret_cast<${reinterpretType}*>(${dataOut})
+  );
+}
+  @#
+@end def
+
+@def createGuruDFTPlanInDirection($transformDict, $direction, $dataOut)
+  @#
+_fftw_${direction}_plan = ${fftwPrefix}_plan_guru_dft(
+  _transform_sizes_index, _transform_sizes,
+  _loop_sizes_index, _loop_sizes,
+  reinterpret_cast<${fftwPrefix}_complex*>(_data_in), reinterpret_cast<${fftwPrefix}_complex*>($dataOut),
+  FFTW_${direction.upper()}, ${planType}
+);
+  @#
+@end def
+
+@def createGuruR2RPlanInDirection($transformDict, $direction, $dataOut)
+  @#
+  @for idx, dimRep in enumerate(transformDict['transformPair'][0])
+_r2r_kinds[${idx}] = ${r2rKindForDimensionAndDirection(dimRep.name, direction)};
+  @end for
+
+_fftw_${direction}_plan = ${fftwPrefix}_plan_guru_r2r(
+  _transform_sizes_index, _transform_sizes,
+  _loop_sizes_index, _loop_sizes,
+  reinterpret_cast<real*>(_data_in), reinterpret_cast<real*>($dataOut),
+  _r2r_kinds, ${planType}
+);
+
+  @#
 @end def
 
 @def transformTypes
@@ -209,14 +316,15 @@ if (_fp) {
   _pathToWisdom = ""; // present directory
 }
 
-string _wisdomPath = _pathToWisdom + _wisdomFileName;
+_fftwWisdomPath = _pathToWisdom + _wisdomFileName;
 
-FILE *_wisdomFile = NULL;
-
-if ( (_wisdomFile = fopen(_wisdomPath.c_str(), "r")) != NULL) {
-  _LOG(_SIMULATION_LOG_LEVEL, "Found enlightenment... (Importing wisdom)\n");
-  ${fftwPrefix}_import_wisdom_from_file(_wisdomFile);
-  fclose(_wisdomFile);
+{
+  FILE *_wisdomFile = NULL;
+  if ( (_wisdomFile = fopen(_fftwWisdomPath.c_str(), "r")) != NULL) {
+    _LOG(_SIMULATION_LOG_LEVEL, "Found enlightenment... (Importing wisdom)\n");
+    ${fftwPrefix}_import_wisdom_from_file(_wisdomFile);
+    fclose(_wisdomFile);
+  }
 }
   @#
 @end def
@@ -224,10 +332,12 @@ if ( (_wisdomFile = fopen(_wisdomPath.c_str(), "r")) != NULL) {
 
 @def saveWisdom
   @#
-if ( (_wisdomFile = fopen(_wisdomPath.c_str(), "w")) != NULL) {
-  _LOG(_SIMULATION_LOG_LEVEL, "Keeping accumulated wisdom\n");
-  ${fftwPrefix}_export_wisdom_to_file(_wisdomFile);
-  fclose(_wisdomFile);
+{
+  FILE *_wisdomFile = NULL;
+  if ( (_wisdomFile = fopen(_fftwWisdomPath.c_str(), "w")) != NULL) {
+    ${fftwPrefix}_export_wisdom_to_file(_wisdomFile);
+    fclose(_wisdomFile);
+  }
 }
   @#
 @end def

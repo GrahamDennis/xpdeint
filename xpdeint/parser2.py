@@ -308,6 +308,9 @@ def main(argv=None):
     
     # Preflight is done
     
+    # Now build the map of transforms needed in the simulation
+    globalNameSpace['features']['TransformMultiplexer'].buildTransformMap()
+    
     # We don't need the 'simulationVectors' variable any more.
     del globalNameSpace['simulationVectors']
     
