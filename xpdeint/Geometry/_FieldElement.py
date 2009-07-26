@@ -274,6 +274,17 @@ class _FieldElement (ScriptElement):
         resultSpace |= fieldDimension.transformMask
     return resultSpace
   
+  def newspaceFromString(self, spacesString, xmlElement = None):
+    """
+    Return the basis set given `spacesString`. This is the new version of this function.
+    """
+    xmlElement = xmlElement or self.xmlElement
+    
+    basis = set(symbolsInString(spacesString, xmlElement = xmlElement))
+    self.validateBasis(basis, dimensions = self.dimensions)
+    
+    return basis
+  
   @classmethod
   def sortedFieldWithDimensionNames(cls, dimensionNames, xmlElement = None, createIfNeeded = True):
     """
