@@ -257,6 +257,11 @@ class _UserLoopCodeBlock(ScriptElement):
     
     self.transformCodeString()
     
+    vectors = set(self.dependencies)
+    if self.targetVector:
+      vectors.add(self.targetVector)
+    self.registerVectorsRequiredInSpace(vectors, self.space)
+    
     self.preflightCalled = True
   
 

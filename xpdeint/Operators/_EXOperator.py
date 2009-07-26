@@ -21,7 +21,7 @@ class _EXOperator(Operator):
   operatorKind = Operator.OtherOperatorKind
   
   def preflight(self):
-    super(Operator, self).preflight()
+    super(_EXOperator, self).preflight()
     
     for operatorName in self.operatorNames:
       self.operatorComponents[operatorName] = {}
@@ -112,4 +112,8 @@ class _EXOperator(Operator):
     # If we are nonconstant then we need to add the target vectors to the dependencies of our primary code block
     if not 'calculateOperatorField' in self.functions:
       self.primaryCodeBlock.dependencies.update(self.targetVectors)
+    
+    vectors = set(self.targetVectors)
+    vectors.add(self.resultVector)
+    self.registerVectorsRequiredInSpace(vectors, self.operatorSpace)
     
