@@ -428,7 +428,7 @@ class _ScriptElement (Template):
       return self.parent.vectorForVectorName(vectorName, vectorDictionary)
   
   
-  def validateBasis(self, basis, _validNamesCache = set(), _validDimRepMap = {}):
+  def validateBasis(self, basis, dimensions = None, _validNamesCache = set(), _validDimRepMap = {}):
     """Verify that `basis` is a self-consistent specification of a basis."""
     if not _validNamesCache:
       geometry = self.getVar('geometry')
@@ -437,10 +437,19 @@ class _ScriptElement (Template):
         _validNamesCache.update(dimRepNames)
         _validDimRepMap[dim.name] = dimRepNames
     
-    if basis.difference(_validNamesCache):
+    # If we have a dimensions list, then we should only check for specifiers belonging to those dimensions
+    validNames = None
+    if dimensions:
+      validNames = set()
+      for dim in dimensions:
+        validNames.update([dimRep.name for dimRep in dim.representations])
+    else:
+      validNames = _validNamesCache
+    
+    if basis.difference(validNames):
       raise ParserException(
         self.xmlElement,
-        "The following names are not valid basis specifiers: %s." % ', '.join(basis.difference(_validNamesCache))
+        "The following names are not valid basis specifiers: %s." % ', '.join(basis.difference(validNames))
       )
     
     # Now we know we don't have any specifiers that we can't identify, so we just need to check
@@ -453,6 +462,7 @@ class _ScriptElement (Template):
           "There is more than one basis specifier for dimension '%s'. The conflict is between %s." \
             % (dimName, ' and '.join(basis.intersection(dimRepNames)))
         )
+    
   
   def transformVectorsToSpace(self, vectors, space):
     """Transform vectors `vectors` to space `space`."""
