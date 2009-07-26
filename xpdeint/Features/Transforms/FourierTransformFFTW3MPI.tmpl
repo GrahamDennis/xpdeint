@@ -234,7 +234,148 @@ ${field.allocSize} = _${field.name}_2d_size * ${field.pointsInDimensionsWithIndi
   @#
 @end def
 
+@def transposeTransformFunction(transformID, transformDict, function)
+  @#
+static ${fftwPrefix}_plan _fftw_forward_plan = NULL;
+static ${fftwPrefix}_plan _fftw_backward_plan = NULL;
 
+if (!_fftw_forward_plan) {
+  _LOG(_SIMULATION_LOG_LEVEL, "Planning for ${function.description}...");
+  @set $transformPair = transformDict['transformPair']
+  @set mpiPrefix, prefixLattice, postfixLattice = transformDict['transformSpecifier']
+  @set $dataOut = '_data_out' if transformDict.get('outOfPlace', False) else '_data_in'
+  
+  _fftw_forward_plan = ${fftwPrefix}_mpi_plan_many_transpose(
+    ${', '.join(dr.globalLattice for dr in transformPair[0])},
+    ${postfixLattice}, _unswapped_block_size, _swapped_block_size,
+    reinterpret_cast<real*>(_data_in),
+    reinterpret_cast<real*>($dataOut),
+    MPI_COMM_WORLD, ${planType}
+  );
+  
+  _fftw_backward_plan = ${fftwPrefix}_mpi_plan_many_transpose(
+    ${', '.join(dr.globalLattice for dr in transformPair[1])},
+    ${postfixLattice}, _swapped_block_size, _unswapped_block_size,
+    reinterpret_cast<real*>(_data_in),
+    reinterpret_cast<real*>($dataOut),
+    MPI_COMM_WORLD, ${planType}
+  );
+  
+  // Save wisdom
+  #if CFG_OSAPI == CFG_OSAPI_POSIX
+  ${saveWisdom, autoIndent=True}@slurp
+  #endif // POSIX
+  
+  _LOG(_SIMULATION_LOG_LEVEL, " done.\n");
+}
+
+if (_forward) {
+  ${fftwPrefix}_execute_r2r(
+    _fftw_forward_plan,
+    reinterpret_cast<real*>(_data_in),
+    reinterpret_cast<real*>(${dataOut})
+  );
+} else {
+  ${fftwPrefix}_execute_r2r(
+    _fftw_backward_plan,
+    reinterpret_cast<real*>(_data_in),
+    reinterpret_cast<real*>(${dataOut})
+  );
+}
+  @#
+@end def
+
+@def distributedTransformFunction(transformID, transformDict, function)
+  @#
+static ${fftwPrefix}_plan _fftw_forward_plan = NULL;
+static ${fftwPrefix}_plan _fftw_backward_plan = NULL;
+
+if (!_fftw_forward_plan) {
+  _LOG(_SIMULATION_LOG_LEVEL, "Planning for ${function.description}...");
+  @set $transformPair = transformDict['transformPair']
+  @set $dimensionsBeingTransformed = len(transformPair[0])
+  @set $transformType = transformDict['transformType']
+  @set mpiPrefix, prefixLattice, postfixLattice = transformDict['transformSpecifier']
+  @set $dataOut = '_data_out' if transformDict.get('outOfPlace', False) else '_data_in'
+  ptrdiff_t _transform_sizes[${dimensionsBeingTransformed}], _howmany = ${postfixLattice};
+  @if transformType == 'real'
+  ${fftwPrefix}_r2r_kind _r2r_kinds[${dimensionsBeingTransformed}];
+  @end if
+  
+  int _transform_sizes_index = 0;
+  
+  @#
+  @for dimID, dimRep in enumerate(transformPair[0])
+  _transform_sizes[_transform_sizes_index++] = ${dimRep.globalLattice};
+  @end for
+
+  @if transformType == 'complex'
+    @set $guruPlanFunction = self.createGuruMPIDFTPlanInDirection
+  @else
+    @set $guruPlanFunction = self.createGuruMPIR2RPlanInDirection
+  @end if
+  @#
+  ${guruPlanFunction(
+      transformDict, 'forward', dataOut,
+      '_unswapped_block_size', '_swapped_block_size', 'FFTW_MPI_TRANSPOSED_OUT'
+    ), autoIndent=True}@slurp
+  ${guruPlanFunction(
+      transformDict, 'backward', dataOut,
+      '_swapped_block_size', '_unswapped_block_size', 'FFTW_MPI_TRANSPOSED_IN'
+    ), autoIndent=True}@slurp
+  
+  // Save wisdom
+  #if CFG_OSAPI == CFG_OSAPI_POSIX
+  ${saveWisdom, autoIndent=True}@slurp
+  #endif // POSIX
+  
+  _LOG(_SIMULATION_LOG_LEVEL, " done.\n");
+}
+
+if (_forward) {
+  ${fftwPrefix}_execute_r2r(
+    _fftw_forward_plan,
+    reinterpret_cast<real*>(_data_in),
+    reinterpret_cast<real*>(${dataOut})
+  );
+} else {
+  ${fftwPrefix}_execute_r2r(
+    _fftw_backward_plan,
+    reinterpret_cast<real*>(_data_in),
+    reinterpret_cast<real*>(${dataOut})
+  );
+}
+  @#
+@end def
+
+@def createGuruMPIDFTPlanInDirection($transformDict, $direction, $dataOut, $inBlockSize, $outBlockSize, $transposedState)
+  @#
+_fftw_${direction}_plan = ${fftwPrefix}_mpi_plan_many_dft(
+  _transform_sizes_index, _transform_sizes, _howmany,
+  ${inBlockSize}, ${outBlockSize},
+  reinterpret_cast<${fftwPrefix}_complex*>(_data_in),
+  reinterpret_cast<${fftwPrefix}_complex*>(${dataOut}),
+  MPI_COMM_WORLD, FFTW_${direction.upper()}, ${planType} | ${transposedState}
+);
+  @#
+@end def
+
+@def createGuruMPIR2RPlanInDirection($transformDict, $direction, $dataOut, $inBlockSize, $outBlockSize, $transposedState)
+  @#
+  @for idx, dimRep in enumerate(transformDict['transformPair'][0])
+_r2r_kinds[${idx}] = ${r2rKindForDimensionAndDirection(dimRep.name, direction)};
+  @end for
+
+_fftw_${direction}_plan = ${fftwPrefix}_mpi_plan_many_r2r(
+  _transform_sizes_index, _transform_sizes, _howmany,
+  ${inBlockSize}, ${outBlockSize},
+  reinterpret_cast<real*>(_data_in),
+  reinterpret_cast<real*>(${dataOut}),
+  MPI_COMM_WORLD, _r2r_kinds, ${planType} | ${transposedState}
+);
+
+  @#
+@end def
 
 
 @def loadWisdom

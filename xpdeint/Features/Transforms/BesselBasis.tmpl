@@ -55,19 +55,19 @@ _normbesseljzeros_${dimRep.parent.name}[$index] * ${dimRep.name}_max@slurp
   @#
 @end def
 
-@def transformMatricesForDimAtIndices($dim, $forwardIndex, $backwardIndex)
+@def transformMatricesForDimRepsAtIndices($forwardDimRep, $backwardDimRep, $forwardIndex, $backwardIndex)
   @#
-const real besselFactor = ${besselJFunctionCall($order, c'_normbesseljzeros_${dim.name}[${forwardIndex}] * _normbesseljzeros_${dim.name}[${backwardIndex}] * _besseljnorm_${dim.name}')};
+const real besselFactor = ${besselJFunctionCall($order, c'_normbesseljzeros_${forwardDimRep.parent.name}[${forwardIndex}] * _normbesseljzeros_${forwardDimRep.parent.name}[${backwardIndex}] * _besseljnorm_${forwardDimRep.parent.name}')};
   @#
-  @super(dim, forwardIndex, backwardIndex)
+  @super(forwardDimRep, backwardDimRep, forwardIndex, backwardIndex)
   @#
 @end def
 
-@def forwardMatrixForDimAtIndices($dim, $forwardIndex, $backwardIndex)
-besselFactor * ${dim.inSpace(0).stepSizeArrayName}[$forwardIndex]@slurp
+@def forwardMatrixForDimAtIndices($forwardDimRep, $backwardDimRep, $forwardIndex, $backwardIndex)
+besselFactor * ${forwardDimRep.stepSizeArrayName}[$forwardIndex]@slurp
 @end def
 
-@def backwardMatrixForDimAtIndices($dim, $forwardIndex, $backwardIndex)
-besselFactor * ${dim.inSpace(-1).stepSizeArrayName}[$backwardIndex]@slurp
+@def backwardMatrixForDimAtIndices($forwardDimRep, $backwardDimRep, $forwardIndex, $backwardIndex)
+besselFactor * ${backwardDimRep.stepSizeArrayName}[$backwardIndex]@slurp
 @end def
 

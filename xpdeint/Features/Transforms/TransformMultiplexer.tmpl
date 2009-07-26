@@ -38,3 +38,27 @@ if ((_${vector.id}_space & ${transformMask}) != (newSpace & ${transformMask}))
 _${vector.id}_space = newSpace;
   @#
 @end def
+
+@def oopCopyTransformFunction(transformID, transformDict, function)
+  @#
+memcpy(_data_out, _data_in, _prefix_lattice * _postfix_lattice * sizeof(real));
+  @#
+@end def
+
+@def ipMultiplyTransformFunction(transformID, transformDict, function)
+  @#
+#pragma ivdep
+for (long _idx = 0; _idx < _prefix_lattice * _postfix_lattice; _idx++) {
+  _data_in[_idx] *= _multiplier;
+}
+  @#
+@end def
+
+@def oopMultiplyTransformFunction(transformID, transformDict, function)
+  @#
+#pragma ivdep
+for (long _idx = 0; _idx < _prefix_lattice * _postfix_lattice; _idx++) {
+  _data_out[_idx] = _data_in[_idx] * _multiplier;
+}
+  @#
+@end def

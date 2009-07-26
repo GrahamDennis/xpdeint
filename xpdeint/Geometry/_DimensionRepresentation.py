@@ -80,6 +80,10 @@ class _DimensionRepresentation(ScriptElement):
     return self.parent.prefix
   
   @lazy_property
+  def canonicalName(self):
+    return self.name if not self.hasLocalOffset else 'distributed ' + self.name
+  
+  @lazy_property
   def globalLattice(self):
     return self.prefix + '_lattice_' + self.name
   
@@ -138,7 +142,7 @@ class _DimensionRepresentation(ScriptElement):
   def nonlocalAccessIndexFromStringForFieldInSpace(self, accessString, field, space):
     """
     Return the string representing the index to be used for this dimension representation
-    when accessing it nonlocally with the strgin `accessString` and when looping over
+    when accessing it nonlocally with the string `accessString` and when looping over
     `field` in `space`.
     """
     # If we don't have any dimension aliases, then our subclasses will have to handle

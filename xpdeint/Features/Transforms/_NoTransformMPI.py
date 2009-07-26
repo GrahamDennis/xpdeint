@@ -21,4 +21,12 @@ class _NoTransformMPI (_NoTransform):
   def mpiDimRepForSpace(self, space):
     return self.mpiDimension.inSpace(space)
   
+  def canonicalBasisForBasis(self, basis):
+    if self.mpiDimension.name in basis:
+      basis = list(basis)
+      assert basis.index(self.mpiDimension.name) == 0
+      basis[0] = 'distributed ' + self.mpiDimension.name
+      basis = tuple(basis)
+    return basis
+  
 

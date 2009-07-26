@@ -10,6 +10,9 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 from xpdeint.ParserException import ParserException
 import re
 
+from heapq import heapify, heappush, heappop
+import operator
+
 class lazy_property(object):
   """
   A data descriptor that provides a default value for the attribute
@@ -183,18 +186,177 @@ def permutations(*iterables):
     
     return it
 
-def combinations(itemCount, lst):
-    """Generator for all unique combinations of `lst` containing `itemCount` elements."""
-    if itemCount == 0 or itemCount > len(lst):
-        return
-    if itemCount == 1:
-        for o in lst:
-            yield (o,)
-    elif itemCount == len(lst):
-        yield tuple(lst)
-    else:
-        for o in combinations(itemCount-1, lst[1:]):
-            yield (lst[0],) + o
-        for o in combinations(itemCount, lst[1:]):
-            yield o
+def combinations(itemCount, *lsts):
+    """Generator for all unique combinations of each list in `lsts` containing `itemCount` elements."""
+    def _combinations(itemCount, lst):
+        if itemCount == 0 or itemCount > len(lst):
+            return
+        if itemCount == 1:
+            for o in lst:
+                yield (o,)
+        elif itemCount == len(lst):
+            yield tuple(lst)
+        else:
+            if not isinstance(lst, list):
+              lst = list(lst)
+            for o in _combinations(itemCount-1, lst[1:]):
+                yield (lst[0],) + o
+            for o in _combinations(itemCount, lst[1:]):
+                yield o
+    if len(lsts) == 1:
+        return _combinations(itemCount, lsts[0])
+    iterables = [list(_combinations(itemCount, lst)) for lst in lsts]
+    return permutations(*iterables)
 
+
+class GeneralisedBidirectionalSearch(object):
+    """
+    A Generalised bidirectional search is an algorithm to search for the least-cost
+    route between a subset of nodes in a graph.
+    
+    Typically, only one of the least-cost solutions are desired, however
+    as we will have some additional criteria to apply later to the returned
+    paths, this implementation returns all of the least-cost paths between
+    two nodes.
+    """
+    class State(object):
+        """
+        A helper class to store information about a given node, the cost to get there
+        and the step that was used to get to this node.
+        
+        It is intended that this class be subclassed for use in searches.
+        """
+        __slots__ = ['cost', 'location', 'previous', 'source', 'transformation']
+        def __init__(self, cost, location, source, previous = None, transformation = None):
+            self.cost = cost
+            self.location = location
+            self.source = source
+            self.previous = previous
+            self.transformation = transformation
+        
+        def next(self):
+            """
+            This function is to return the nodes reachable from this node, the costs and
+            some related information.
+            
+            This function must be implemented by a subclass.
+            """
+            assert False
+        
+    
+    class NodeInfo(object):
+        """
+        This helper class stores the information known about the minimum-cost
+        routes to the target nodes from a given node. This information includes the minimum cost
+        to reach the target nodes and the next step towards each target node.
+        """
+        __slots__ = ['costs', 'next', 'transformations']
+        def __init__(self, sourceIdx, cost, next = None, transformation = None):
+            self.costs = [None] * GeneralisedBidirectionalSearch.NodeInfo.targetCount
+            self.next = self.costs[:]
+            self.transformations = self.costs[:]
+            self.costs[sourceIdx] = cost
+            self.next[sourceIdx] = next
+            self.transformations[sourceIdx] = transformation
+        
+    @staticmethod
+    def perform(targetNodes):
+        """
+        This function performs the 'bidirectional' search between the nodes `targetNodes`
+        This information is returned in a dictionary that
+        maps a given node to a `NodeInfo` object that contains information about
+        the minimum-cost routes to reach that node.
+        """
+        targetLocations = [node.location for node in targetNodes]
+        queue = [(node.cost, node) for node in targetNodes]
+        heapify(queue)
+        GeneralisedBidirectionalSearch.NodeInfo.targetCount = len(targetNodes)
+        pathInfo = dict()
+        targetRoutes = dict()
+        
+        maxCost = None
+        
+        # This algorithm works by iterating over a queue considering paths in
+        # order of increasing cost. As a path is considered, every possible
+        # single-step extension to this path is considered and added to the queue.
+        # Eventually the queue empties when the only paths contained are more expensive
+        # versions of paths that have already been considered.
+        #
+        # But we don't have to wait for the queue to empty, we can stop whenever we know how to get between
+        # each of our targetNodes
+        
+        def processState(state):
+            for nextState in state.next():
+                if nextState.location in pathInfo \
+                    and pathInfo[nextState.location].costs[nextState.source] is not None:
+                    continue
+                heappush(queue, (nextState.cost, nextState))
+        
+        def costsOperation(op, A, B):
+          return tuple(op(a, b) for a, b in zip(A, B))
+        
+        while queue:
+            currentState = heappop(queue)[1]
+            if maxCost is not None and currentState.cost > maxCost: break
+            if not currentState.location in pathInfo:
+                # This location hasn't been reached. Add a NodeInfo object to pathInfo
+                pathInfo[currentState.location] = GeneralisedBidirectionalSearch.NodeInfo(
+                    currentState.source,
+                    currentState.cost,
+                    currentState.previous,
+                    currentState.transformation,
+                )
+                if currentState.location in targetLocations \
+                    and not currentState.source == targetLocations.index(currentState.location) \
+                    and not frozenset([currentState.source, targetLocations.index(currentState.location)]) in targetRoutes:
+                    targetRoutes[frozenset([currentState.source, targetLocations.index(currentState.location)])] = currentState.cost
+                    maxCost = max(currentState.cost, maxCost)
+                processState(currentState)
+            elif pathInfo[currentState.location].costs[currentState.source] is None \
+                or pathInfo[currentState.location].costs[currentState.source] > currentState.cost:
+                # While this location has been reached before, it hasn't been reached from this source
+                # or it has been reached, but with a higher cost.
+                
+                nodeInfo = pathInfo[currentState.location]
+                nodeInfo.costs[currentState.source] = currentState.cost
+                nodeInfo.next[currentState.source] = currentState.previous
+                nodeInfo.transformations[currentState.source] = currentState.transformation
+                
+                # If we have reached a location which itself is reachable from a different targetNode,
+                # then we have found a shortest route from our source to the targetNode (and vice-versa)
+                for destination, destCost in enumerate(nodeInfo.costs):
+                    if destCost is None \
+                        or not frozenset([currentState.source, destination]) in targetRoutes \
+                        or targetRoutes[frozenset([currentState.source, destination])] < destCost + currentState.cost \
+                        or destination == currentState.source:
+                        continue
+                    
+                    # The total cost for the route
+                    totalCost = costsOperation(operator.add, destCost, currentState.cost)
+                    print totalCost
+                    targetRoutes[frozenset([currentState.source, destination])] = currentState.cost
+                    maxCost = max(currentState.cost, maxCost)
+                    
+                    # Now that we have found two intersecting routes, we must update each part with
+                    # the cost and path information to the corresponding targets
+                    
+                    forwardBackwardPathUpdateInfo = [
+                      (currentState.location, currentState.previous, currentState.source, destination),
+                      (currentState.previous, currentState.location, destination, currentState.source)
+                    ]
+                    
+                    for loc, prev, source, dest in forwardBackwardPathUpdateInfo:
+                        transformation = currentState.transformation
+                        while loc is not None:
+                            nodeInfo = pathInfo[loc]
+                            cost = costsOperation(operator.sub, totalCost, nodeInfo.costs[dest])
+                            nodeInfo.costs[source] = cost
+                            nodeInfo.next[source] = prev
+                            nodeInfo.transformations[source] = transformation
+                            processState(currentState.__class__(cost, loc, source, prev, transformation))
+                            prev, loc = loc, nodeInfo.next[dest]
+                            transformation = nodeInfo.transformations[dest]
+                    
+                processState(currentState)
+        return pathInfo
+    
