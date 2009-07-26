@@ -149,7 +149,7 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
     
     return results
   
-  def canonicalBasisForBasis(self, basis):
+  def canonicalBasisForBasis(self, basis, noTranspose=False):
     if all([set(rep.canonicalName for rep in mpiDim.representations).intersection(basis) for mpiDim in self.mpiDimensions]):
       # Decide what the order is.
       basis = list(basis)
@@ -160,7 +160,7 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
       assert len(mpiDimRepIndices) == 2
       assert mpiDimRepIndices[1]-mpiDimRepIndices[0] == 1
       basisSlice = slice(mpiDimRepIndices[0], mpiDimRepIndices[1]+1)
-      if all(any([rep.canonicalName in mpiDimRepNames for rep in mpiDim.representations if rep.tag == self.fourierSpaceTag]) for mpiDim in self.mpiDimensions):
+      if all(any([rep.canonicalName in mpiDimRepNames for rep in mpiDim.representations if rep.tag == self.fourierSpaceTag]) for mpiDim in self.mpiDimensions) and not noTranspose:
         # Then we are swapped
         basis[basisSlice] = reversed([b.replace('distributed ','') for b in mpiDimRepNames])
       else:

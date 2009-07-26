@@ -18,7 +18,7 @@ class _NoTransformMPI (_NoTransform):
   def isFieldDistributed(self, field):
     return field.hasDimension(self.mpiDimension)
   
-  def canonicalBasisForBasis(self, basis):
+  def canonicalBasisForBasis(self, basis, **KWs):
     mpiDimRep = self.mpiDimension.representations[0]
     mpiDimNames = set([mpiDimRep.name, mpiDimRep.canonicalName])
     if mpiDimNames.intersection(basis):

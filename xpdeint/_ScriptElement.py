@@ -416,14 +416,9 @@ class _ScriptElement (Template):
     if self.parent:
       return self.parent.vectorForVectorName(vectorName, vectorDictionary)
   
-  def spaceForBasis(self, basis):
-    #FIXME: This function is only necessary in the transition
-    geometry = self.getVar('geometry')
-    space = 0
-    for dimIdx, dim in enumerate(geometry.dimensions):
-      if [dimRep for dimRep in dim.representations if (dim.representations.index(dimRep) & 1) and dimRep.canonicalName in basis]:
-        space |= 1 << dimIdx
-    return space
+  def basisIndexForBasis(self, basis):
+    transformMultiplier = self.getVar('features')['TransformMultiplexer']
+    return transformMultiplier.basesNeeded.index(basis)
   
   def transformVectorsToBasis(self, vectors, basis):
     result = []
@@ -438,8 +433,9 @@ class _ScriptElement (Template):
           "The vector's initial basis is (%s)." % (vector.name, ', '.join(vectorBasis), ', '.join(vector.initialBasis))
         )
       # FIXME: This bit needs to be rewritten when we change over the generated code to use bases.
-      space = self.spaceForBasis(vectorBasis)
-      result.extend([vector.functions['goSpace'].call(newSpace=space), '\n'])
+      basisString = ', '.join(vectorBasis)
+      basisIndex = self.basisIndexForBasis(vectorBasis)
+      result.extend([vector.functions['goSpace'].call(newSpace=basisIndex), ' // (', basisString, ')\n'])
     return ''.join(result)
   
   def registerVectorsRequiredInBasis(self, vectors, basis):

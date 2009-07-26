@@ -48,24 +48,6 @@ class _FieldElement (ScriptElement):
     children.extend(self.managedVectors)
     return children
   
-  # The space mask for this field
-  # i.e. which parts of the space variable we care about
-  @lazy_property
-  def spaceMask(self):
-    """
-    Return the spaceMask for this field, i.e. which part of a spaces variable
-    that is relevant to this field.
-    """
-    bitMask = 0
-    
-    geometryElement = self.getVar('geometry')
-    
-    for dimensionNumber, dimension in enumerate(geometryElement.dimensions):
-      if self.hasDimension(dimension) and dimension.isTransformable:
-        bitMask |= dimension.transformMask
-    
-    return bitMask
-  
   @lazy_property
   def prefix(self):
     return '_' + self.name if not self.name is 'geometry' else ''

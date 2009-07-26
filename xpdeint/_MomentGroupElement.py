@@ -101,6 +101,8 @@ class _MomentGroupElement (ScriptElement):
           basesNeeded = set(tuple(b for b in basis if not b is propDimRep.canonicalName) for basis in vector.basesNeeded)
           vector.basesNeeded.clear()
           vector.basesNeeded.update(basesNeeded)
+          vector.field._basisForBasisCache.clear()
+          vector.initialBasis = tuple(b for b in vector.initialBasis if not b is propDimRep.canonicalName)
     
     # FIXME: This is only needed because the way that the output stuff is specified is totally broken
     # Specifically, if we omit a <dimension /> tag, it means that we do a single-point sample. Totally broken.

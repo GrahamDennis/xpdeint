@@ -25,9 +25,6 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
   @#
   @super
   @#
-ptrdiff_t _unswapped_block_size = 0;
-ptrdiff_t _swapped_block_size = 0;
-
   @for dimRep in [dimRep for dim in self.mpiDimensions for dimRep in dim.representations if dimRep.hasLocalOffset]
 ptrdiff_t _block_size_${dimRep.name} = FFTW_MPI_DEFAULT_BLOCK;
   @end for
@@ -81,13 +78,13 @@ ${fieldRep.localOffset} = ${geometryRep.localOffset};
         @elif fieldRep.reductionMethod == fieldDim.ReductionMethod.fixedRange
           @# In this case we are in 'x' space and are subdividing a distributed dimension
           @# fixedRange reduction method means we take every nth point.
-ptrdiff_t _${field.name}_unswapped_skip_size = ${geometryRep.globalLattice}/${fieldRep.globalLattice};
+ptrdiff_t _${field.name}_${fieldRep.name}_skip_size = ${geometryRep.globalLattice}/${fieldRep.globalLattice};
 if (_rank == 0) {
   ${fieldRep.localOffset}  = 0;
-  ${fieldRep.localLattice} = (${geometryRep.localLattice}-1)/_${field.name}_unswapped_skip_size + 1;
+  ${fieldRep.localLattice} = (${geometryRep.localLattice}-1)/_${field.name}_${fieldRep.name}_skip_size + 1;
 } else {
-  ${fieldRep.localOffset}  = (${geometryRep.localOffset}-1)/_${field.name}_unswapped_skip_size + 1;
-  ${fieldRep.localLattice} = (${geometryRep.localOffset} + ${geometryRep.localLattice} - 1)/_${field.name}_unswapped_skip_size
+  ${fieldRep.localOffset}  = (${geometryRep.localOffset}-1)/_${field.name}_${fieldRep.name}_skip_size + 1;
+  ${fieldRep.localLattice} = (${geometryRep.localOffset} + ${geometryRep.localLattice} - 1)/_${field.name}_${fieldRep.name}_skip_size
                              + 1 - ${fieldRep.localOffset};
 }
         @elif isinstance(fieldRep, UniformDimensionRepresentation)
@@ -184,7 +181,7 @@ if (!_fftw_forward_plan) {
   
   _fftw_forward_plan = ${fftwPrefix}_mpi_plan_many_transpose(
     ${', '.join(dr.globalLattice for dr in transformPair[0])},
-    _postfix_lattice, _unswapped_block_size, _swapped_block_size,
+    _postfix_lattice, _block_size_${transformPair[0][0].name}, _block_size_${transformPair[1][0].name},
     reinterpret_cast<real*>(_data_in),
     reinterpret_cast<real*>($dataOut),
     MPI_COMM_WORLD, ${planType}
@@ -195,7 +192,7 @@ if (!_fftw_forward_plan) {
   
   _fftw_backward_plan = ${fftwPrefix}_mpi_plan_many_transpose(
     ${', '.join(dr.globalLattice for dr in transformPair[1])},
-    _postfix_lattice, _swapped_block_size, _unswapped_block_size,
+    _postfix_lattice, _block_size_${transformPair[1][0].name}, _block_size_${transformPair[0][0].name},
     reinterpret_cast<real*>(_data_in),
     reinterpret_cast<real*>($dataOut),
     MPI_COMM_WORLD, ${planType}
@@ -262,11 +259,11 @@ if (!_fftw_forward_plan) {
   @#
   ${guruPlanFunction(
       transformDict, 'forward', dataOut,
-      '_unswapped_block_size', '_swapped_block_size', 'FFTW_MPI_TRANSPOSED_OUT'
+      '_block_size_' + transformPair[0][0].name, '_block_size_' + transformPair[1][0].name, 'FFTW_MPI_TRANSPOSED_OUT'
     ), autoIndent=True}@slurp
   ${guruPlanFunction(
       transformDict, 'backward', dataOut,
-      '_swapped_block_size', '_unswapped_block_size', 'FFTW_MPI_TRANSPOSED_IN'
+      '_block_size_' + transformPair[1][0].name, '_block_size_' + transformPair[0][0].name, 'FFTW_MPI_TRANSPOSED_IN'
     ), autoIndent=True}@slurp
   
   // Save wisdom
