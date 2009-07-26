@@ -17,10 +17,10 @@ for root, dirs, files in os.walk('xpdeint'):
         packages.append(root.replace(os.sep, '.'))
 
 setup(name="xpdeint",
-      version="0.7",
+      version="0.8",
       description="Stochastic ODE/PDE integrator",
       url="http://xmds.sourceforge.net",
-      license="GPL2",
+      license="BSD",
       keywords="scientific/engineering simulation",
       platforms="OS Independent",
       packages = packages,

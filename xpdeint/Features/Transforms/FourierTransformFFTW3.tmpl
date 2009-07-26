@@ -32,64 +32,6 @@ Return the string defining the globals needed by FFTW3.
 const real _inverse_sqrt_2pi = 1.0 / sqrt(2.0 * M_PI); 
 string _fftwWisdomPath;
   @#
-  @# The basic idea here is that in addition to the full forward/backward plans
-  @# we should store plans for every other arbitrary space transform that we do.
-  @# For the moment, these transforms will be generated during the simulation as
-  @# they are needed. Because they are generated after initialisation, we can't
-  @# use anything other than FFTW_ESTIMATE planning because FFTW_MEASURE and
-  @# FFTW_PATIENT both overwrite the arrays in the testing process. Eventually
-  @# this will be fixed by creating these plans as well at the start.
-  @#
-  @# So this code creates a map from (old_space, new_space) pairs to a
-  @# _space_transform structure which describes the fourier transform(s) required
-  @# for this operation. E.g. if you go from x ky z to kx y z, then you need two
-  @# transforms, one forward transform to send x to kx, and one reverse transform
-  @# to send ky to y. This is why there is both a _forward_plan and a 
-  @# _backward_plan in the _space_transform structure.
-  @#
-typedef pair<unsigned long, unsigned long> _spaces_pair;
-
-// Less than operator needed by the C++ map class
-struct _spaces_pair_less_than
-{
-  bool operator()(const _spaces_pair& _x, const _spaces_pair& _y) const {
-    return (_x.first < _y.first) || ((_x.first == _y.first) && (_x.second < _y.second));
-  }
-};
-
-enum _transform_type {
-  ${transformTypes, autoIndent=True}@slurp
-};
-
-typedef pair<${fftwPrefix}_plan, _transform_type> _plan_pair;
-// Structure to hold the fourier transform plans for an arbitrary change of space
-struct _space_transform
-{
-  vector<_plan_pair> _plans;
-  real _c;
-  
-  _space_transform(real _c_in = 1.0) : _c(_c_in) {}
-  
-  _space_transform(const _space_transform& _s) : _plans(_s._plans), _c(_s._c) {}
-  
-  _space_transform(${fftwPrefix}_plan _p, _transform_type _t, real _c_in = 1.0) : _c(_c_in)
-  {
-    _plans.push_back(_plan_pair(_p, _t));
-  }
-  
-  void append(const _space_transform& _s)
-  {
-    _c *= _s._c;
-    _plans.insert(_plans.end(), _s._plans.begin(), _s._plans.end());
-  }
-};
-
-// Map type for holding (old_space, new_space) -> _space_transform mappings
-typedef map<_spaces_pair, _space_transform, _spaces_pair_less_than> _plan_map;
-
-  @for $vector in $vectorsNeedingThisTransform
-${planGlobalsForVector(vector)}@slurp
-  @end for
 @end def
 
 @def transformFunction(transformID, transformDict, function)
@@ -202,21 +144,6 @@ if (!_fftw_${direction}_plan)
 
   @#
 @end def
-
-@def transformTypes
-  @#
-_LOCAL_DFT_TRANSFORM
-, _LOCAL_R2R_TRANSFORM
-  @#
-@end def
-
-@def planGlobalsForVector($vector)
-  @#
-_plan_map _${vector.id}_plan_map;
-  @#
-@end def
-
-
 
 @def mainBegin($dict)
 // load wisdom and create plans for fft
