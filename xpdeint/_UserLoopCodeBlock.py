@@ -263,7 +263,7 @@ class _UserLoopCodeBlock(ScriptElement):
     if self.targetVector:
       vectors.add(self.targetVector)
     
-    basis = self.basis + tuple(self.loopArguments.get('indexOverrides', {}).keys())
+    basis = self.basis
     self.registerVectorsRequiredInBasis(vectors, basis)
     
     self.preflightCalled = True

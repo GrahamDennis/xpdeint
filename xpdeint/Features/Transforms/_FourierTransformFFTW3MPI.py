@@ -149,22 +149,34 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
     
     return results
   
-  def canonicalBasisForBasis(self, basis, noTranspose=False):
+  def canonicalBasisForBasis(self, basis, noTranspose = False):
     if all([set(rep.canonicalName for rep in mpiDim.representations).intersection(basis) for mpiDim in self.mpiDimensions]):
       # Decide what the order is.
       basis = list(basis)
-      mpiDimRepNames = [list(set(rep.canonicalName for rep in mpiDim.representations).intersection(basis))[0] for mpiDim in self.mpiDimensions]
+      mpiDimRepNames = [rep.canonicalName for mpiDim in self.mpiDimensions for rep in mpiDim.representations if rep.canonicalName in basis]
       mpiDimRepIndices = [basis.index(rep.canonicalName) for mpiDim in self.mpiDimensions for rep in mpiDim.representations
                             if rep.canonicalName in basis]
       mpiDimRepIndices.sort()
       assert len(mpiDimRepIndices) == 2
       assert mpiDimRepIndices[1]-mpiDimRepIndices[0] == 1
       basisSlice = slice(mpiDimRepIndices[0], mpiDimRepIndices[1]+1)
-      if all(any([rep.canonicalName in mpiDimRepNames for rep in mpiDim.representations if rep.tag == self.fourierSpaceTag]) for mpiDim in self.mpiDimensions) and not noTranspose:
-        # Then we are swapped
-        basis[basisSlice] = reversed([b.replace('distributed ','') for b in mpiDimRepNames])
+      
+      nonDistributedMPIDimRepNames = [b.replace('distributed ', '') for b in mpiDimRepNames]
+      
+      if (not noTranspose) and sum(b.startswith('distributed ') for b in basis[basisSlice]) == 1:
+        # Transposes are legal, and the basis is already propery distributed.
+        # Leave it alone.
+        basis[basisSlice] = [b.replace('distributed ', '') for b in basis[basisSlice]]
+      elif (not noTranspose) \
+          and all([any([rep.canonicalName in mpiDimRepNames
+                          for rep in mpiDim.representations if issubclass(rep.tag, rep.tagForName('spectral'))])
+                    for mpiDim in self.mpiDimensions]):
+        # Transposes are legal and all MPI dimensions are in spectral representations.
+        # We decide that this means we are swapped.
+        basis[basisSlice] = reversed(nonDistributedMPIDimRepNames)
       else:
-        basis[basisSlice] = [b.replace('distributed ','') for b in mpiDimRepNames]
+        # Either transposes aren't legal or not all MPI dimensions were in spectral representation.
+        basis[basisSlice] = nonDistributedMPIDimRepNames
       
       basis[basisSlice.start] = 'distributed ' + basis[basisSlice.start]
       basis = tuple(basis)
