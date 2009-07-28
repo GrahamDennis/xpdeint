@@ -286,11 +286,20 @@ def performIPOperatorSanityCheck(componentName, propagationDimension, operatorCo
     expectedAssignmentVariable = 'd%(componentName)s_d%(propagationDimension)s' % locals()
     
     def validateStack():
+        """
+        It is the job of this function to validate the operations that the located operator is involved in.
+        The stack describes the part of the parse tree in which the operator was found. The first element in the stack
+        is the outermost operation, and the last the innermost. The last element is guaranteed to be the operator itself.
+        """
+        # Reverse the stack as we want to search the parse tree from inner-most expression to outer-most.
         stack.reverse()
         assignmentHit = False
         errorMessageCommon = "Due to the way IP operators work, they can only contribute to the derivative of the variable " \
             "they act on, i.e. dx_dt = L[x]; not dy_dt = L[x];\n\n"
         
+        # We don't need to check the first element of the stack
+        # as we are guaranteed that it is the operator itself. This will be useful for determining
+        # which part of the parse tree we should be looking at.
         for idx, node in enumerate(stack[1:]):
             if len(node) == 1: continue
             # idx is the index in the stack of the next element *deeper* in the parse tree.
@@ -305,7 +314,7 @@ def performIPOperatorSanityCheck(componentName, propagationDimension, operatorCo
             if node[binaryOpIdx] == '+': continue
             # Binary '-' is safe if the operator is the first argument.
             if node[binaryOpIdx] == '-' and node.asList().index(previousStackEntry) == 0: continue
-            # Assignment is safe if it is the first one, and if it's to the right variable
+            # Assignment is safe if it there is only one, and if it's to the right variable
             if node[binaryOpIdx] in ['=', '+=']:
                 if node[0] == expectedAssignmentVariable:
                     assignmentHit = True
@@ -365,6 +374,9 @@ def performIPOperatorSanityCheck(componentName, propagationDimension, operatorCo
             "Unable to check the safety of your IP operator because your code is too deeply nested."
         )
     
+
+# Below are a bunch of unit tests for the pyparsing-based code parser. These tests can be executed by
+# directly executing this file, or by running the xpdeint test suite from 'run_tests.py'
 
 class AbstractCodeParserTests(unittest.TestCase):
     @staticmethod

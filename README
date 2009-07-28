@@ -35,7 +35,8 @@ Build instructions:
    Linux: Use your favourite package manager (if you can).
    Windows: If you used the Enthought Python Distribution, this is already installed.
    
-   Mac OS X: Leopard (10.5) has setuptools pre-installed.
+   Mac OS X: Leopard (10.5) has setuptools pre-installed. Though if the next step fails, you may need to upgrade setuptools.
+             To do that, type "sudo easy_install -U setuptools"
    
    If you have root (sudo) access, the easy way to install this is by executing
    ez_setup.py from the repository. Simply type "sudo python ez_setup.py"
@@ -62,7 +63,7 @@ Build instructions:
    xpdeint wouldn't have otherwise noticed. Also note that installing lxml is a bit tricky on OS X
    because Apple continues to ship old versions of libxml2 with the system.
    
-   Pygments and Cheetah are required installs for xpdeint.
+   Pyparsing and Cheetah are required installs for xpdeint.
 
 5. Cheetah templates (*.tmpl) are compiled into python, to do this, run 'make' in the
    xpdeint/ directory.
