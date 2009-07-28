@@ -169,6 +169,7 @@ ${vector.allocSize} = MAX(${vector.allocSize}, (_local_alloc_size${'+1) / 2' if 
 @def transposeTransformFunction(transformID, transformDict, function)
   @#
   @set mpiPrefix, prefixLattice, postfixLattice = transformDict['transformSpecifier']
+  @set flags = ' | FFTW_MPI_TRANSPOSED_IN | FFTW_MPI_TRANSPOSED_OUT' if transformDict['transposedOrder'] else ''
 // _prefix_lattice should be ${prefixLattice}
 // _postfix_lattice should be ${postfixLattice}
 static ${fftwPrefix}_plan _fftw_forward_plan = NULL;
@@ -184,7 +185,7 @@ if (!_fftw_forward_plan) {
     _postfix_lattice, _block_size_${transformPair[0][0].name}, _block_size_${transformPair[1][0].name},
     reinterpret_cast<real*>(_data_in),
     reinterpret_cast<real*>($dataOut),
-    MPI_COMM_WORLD, ${planType}
+    MPI_COMM_WORLD, ${planType}${flags}
   );
   
   if (!_fftw_forward_plan)
@@ -195,7 +196,7 @@ if (!_fftw_forward_plan) {
     _postfix_lattice, _block_size_${transformPair[1][0].name}, _block_size_${transformPair[0][0].name},
     reinterpret_cast<real*>(_data_in),
     reinterpret_cast<real*>($dataOut),
-    MPI_COMM_WORLD, ${planType}
+    MPI_COMM_WORLD, ${planType}${flags}
   );
   
   if (!_fftw_backward_plan)

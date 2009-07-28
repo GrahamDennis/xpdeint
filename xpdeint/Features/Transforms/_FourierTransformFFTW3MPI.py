@@ -10,7 +10,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 from xpdeint.Features.Transforms.FourierTransformFFTW3 import FourierTransformFFTW3
 
 from xpdeint.ParserException import ParserException
-from xpdeint.Utilities import permutations
+from xpdeint.Utilities import permutations, lazy_property
 
 import operator, math
 from itertools import groupby
@@ -74,6 +74,11 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
       return False
     return field.hasDimension(self.mpiDimensions[0]) and field.hasDimension(self.mpiDimensions[1])
   
+  @lazy_property
+  def hasFFTWDistributedTransforms(self):
+    geometry = self.getVar('geometry')
+    return True if self.fullTransformDimensionsForField(geometry) else False
+  
   def fullTransformDimensionsForField(self, field):
     keyFunc = lambda x: {'dft': 'complex', 'dct': 'real', 'dst': 'real'}.get(self.transformNameMap.get(x.name))
     for transformType, dims in groupby(field.transverseDimensions, keyFunc):
@@ -89,32 +94,14 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
   def availableTransformations(self):
     results = super(_FourierTransformFFTW3MPI, self).availableTransformations()
     
-    # Create transpose operations
-    transposeOperations = []
-    communicationsCost = None
-    for firstDimRep, secondDimRep in permutations(*[dim.representations for dim in self.mpiDimensions]):
-      if not communicationsCost: communicationsCost = firstDimRep.lattice * secondDimRep.lattice
-      basisA = ('distributed ' + firstDimRep.name, secondDimRep.name)
-      basisB = ('distributed ' + secondDimRep.name, firstDimRep.name)
-      transposeOperations.append(tuple([basisA, basisB]))
-    # transpose operations
-    results.append(dict(
-      transformations = transposeOperations,
-      communicationsCost = communicationsCost,
-      geometryDependent = True,
-      transformType = 'real',
-      distributedTransform = True,
-      transformFunction = self.transposeTransformFunction
-    ))
-    
     # Create mpi forward / back operations
     geometry = self.getVar('geometry')
     sortedDimNames = [(geometry.indexOfDimensionName(dimName), dimName) for dimName in self.transformNameMap]
     sortedDimNames.sort()
     sortedDimNames = [o[1] for o in sortedDimNames]
     
-    untransformedDimReps = dict([(dimName, geometry.dimensionWithName(dimName).representations[0]) for dimName in sortedDimNames])
-    transformedDimReps = dict([(dimName, geometry.dimensionWithName(dimName).representations[1]) for dimName in sortedDimNames])
+    untransformedDimReps = dict([(dimName, geometry.dimensionWithName(dimName).firstDimRepWithTagName('coordinate')) for dimName in sortedDimNames])
+    transformedDimReps = dict([(dimName, geometry.dimensionWithName(dimName).firstDimRepWithTagName('spectral')) for dimName in sortedDimNames])
     
     mpiTransformDimNamesLists = []
     fullTransformDims = self.fullTransformDimensionsForField(geometry)
@@ -127,6 +114,7 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
       untransformedBasis = tuple(untransformedDimReps[dimName].name for dimName in dimNames)
       transformedBasis = tuple(transformedDimReps[dimName].name for dimName in dimNames)
       transformCost = self.fftCost([dimName for dimName in dimNames])
+      communicationsCost = reduce(operator.mul, [untransformedDimReps[dimName].lattice for dimName in dimNames])
       
       results.append(dict(
         transformations = [tuple([self.canonicalBasisForBasis(untransformedBasis), self.canonicalBasisForBasis(transformedBasis)])],
@@ -141,6 +129,25 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
         transformFunction = self.distributedTransformFunction
       ))
     
+    # Create transpose operations
+    transposeOperations = []
+    for firstDimRep, secondDimRep in permutations(*[[rep for rep in dim.representations if not rep.hasLocalOffset] for dim in self.mpiDimensions]):
+      communicationsCost = firstDimRep.lattice * secondDimRep.lattice
+      basisA = ('distributed ' + firstDimRep.name, secondDimRep.name)
+      basisB = ('distributed ' + secondDimRep.name, firstDimRep.name)
+      if not self.hasFFTWDistributedTransforms:
+        basisA = tuple(reversed(basisA))
+        basisB = tuple(reversed(basisB))
+      results.append(dict(
+        transformations = [tuple([basisA, basisB])],
+        communicationsCost = communicationsCost,
+        geometryDependent = True,
+        transformType = 'real',
+        distributedTransform = True,
+        transformFunction = self.transposeTransformFunction,
+        transposedOrder = not self.hasFFTWDistributedTransforms,
+      ))
+    
     return results
   
   def canonicalBasisForBasis(self, basis, noTranspose = False):
@@ -152,7 +159,7 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
                             if rep.canonicalName in basis]
       mpiDimRepIndices.sort()
       assert len(mpiDimRepIndices) == 2
-      assert mpiDimRepIndices[1]-mpiDimRepIndices[0] == 1
+      assert mpiDimRepIndices[1] - mpiDimRepIndices[0] == 1
       basisSlice = slice(mpiDimRepIndices[0], mpiDimRepIndices[1]+1)
       
       nonDistributedMPIDimRepNames = [b.replace('distributed ', '') for b in mpiDimRepNames]
@@ -160,19 +167,21 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
       if (not noTranspose) and sum(b.startswith('distributed ') for b in basis[basisSlice]) == 1:
         # Transposes are legal, and the basis is already propery distributed.
         # Leave it alone.
-        basis[basisSlice] = [b.replace('distributed ', '') for b in basis[basisSlice]]
-      elif (not noTranspose) \
-          and all([any([rep.canonicalName in mpiDimRepNames
-                          for rep in mpiDim.representations if issubclass(rep.tag, rep.tagForName('spectral'))])
-                    for mpiDim in self.mpiDimensions]):
-        # Transposes are legal and all MPI dimensions are in spectral representations.
-        # We decide that this means we are swapped.
-        basis[basisSlice] = reversed(nonDistributedMPIDimRepNames)
+        pass
       else:
-        # Either transposes aren't legal or not all MPI dimensions were in spectral representation.
-        basis[basisSlice] = nonDistributedMPIDimRepNames
-      
-      basis[basisSlice.start] = 'distributed ' + basis[basisSlice.start]
+        if (not noTranspose) \
+            and all([any([rep.canonicalName in mpiDimRepNames
+                            for rep in mpiDim.representations if issubclass(rep.tag, rep.tagForName('spectral'))])
+                      for mpiDim in self.mpiDimensions]):
+          # Transposes are legal and all MPI dimensions are in spectral representations.
+          # We decide that this means we are swapped.
+          basis[basisSlice] = reversed(nonDistributedMPIDimRepNames)
+        else:
+          # Either transposes aren't legal or not all MPI dimensions were in spectral representation.
+          basis[basisSlice] = nonDistributedMPIDimRepNames
+        
+        distributedIdx = basisSlice.start if self.hasFFTWDistributedTransforms else basisSlice.start + 1
+        basis[distributedIdx] = 'distributed ' + basis[distributedIdx]
       basis = tuple(basis)
     else:
       # At most one of the mpi dimensions is in this basis. Therefore we must ensure that no part of the basis contains 'distributed '
