@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <name>hermitegauss_transform_2d_mpi</name>
+  <author>Graham Dennis</author>
+  <description>
+    Solve the Schroedinger equation using the hermite-Gauss basis.
+  </description>
+  
+  <features>
+    <benchmark />
+    <!-- <error_check /> -->
+    <bing />
+    <validation kind="run-time" />
+    <globals>
+      <![CDATA[
+        const real M = 9.1e-31; // Mass of an electron
+        const real hbar = 1.05e-34;
+        const real omega = 2*M_PI*1e3;
+        const real offset = 1.0 * sqrt(hbar/(M*omega));
+        
+      ]]>
+    </globals>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="x" lattice="200" length_scale="sqrt(hbar/(M*omega))" transform="hermite-gauss" />
+      <dimension name="y" lattice="200" length_scale="sqrt(hbar/(M*omega))" transform="hermite-gauss" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <driver name="distributed-mpi" />
+  
+  <vector name="main" initial_space="x y" type="complex">
+    <components>
+      psi
+    </components>
+    <initialisation>
+      <![CDATA[
+      psi = pow(M*omega/(hbar*M_PI), 0.25) * exp(-0.5*(M*omega/hbar)*(x - offset)*(x - offset));
+      psi *= pow(M*omega/(hbar*M_PI), 0.25) * exp(-0.25*(M*omega/hbar)*y*y);
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <computed_vector name="normalisation" dimensions="" type="real">
+    <components>N integral_y2</components>
+    <evaluation>
+      <dependencies>main</dependencies>
+      <![CDATA[
+        N = mod2(psi);
+        integral_y2 = mod2(psi)*y*y;
+      ]]>
+    </evaluation>
+  </computed_vector>
+  
+  <sequence>
+    <integrate algorithm="RK4" tolerance="1e-6" interval="1e-3" steps="400">
+      <samples>10 1 10</samples>
+      <operators>
+        <operator kind="ip" constant="yes" fourier_space="nx ny">
+          <operator_names>L</operator_names>
+          <![CDATA[
+            L = -i*(nx + ny + 1.0)*omega;
+          ]]>
+        </operator>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+          dpsi_dt = L[psi];
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  <output format="binary">
+    <group>
+      <sampling initial_sample="yes">
+        <dimension name="x" fourier_space="no" />
+        <dimension name="y" fourier_space="no" />
+        <moments>dens</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          dens = mod2(psi);
+        
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling initial_sample="no">
+        <dimension name="x" fourier_space="yes" />
+        <dimension name="y" fourier_space="yes" />
+        <moments>dens</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          dens = mod2(psi);
+        
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling initial_sample="yes">
+        <dimension name="x" lattice="0" />
+        <dimension name="y" lattice="0" />
+        <moments>mean_x mean_sigmay</moments>
+        <dependencies>main normalisation</dependencies>
+        <![CDATA[
+          mean_x = mod2(psi)*x/N;
+          mean_sigmay = sqrt(integral_y2/N);
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>
