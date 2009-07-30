@@ -327,8 +327,7 @@ def main(argv=None):
   
   fullSuite = unittest.TestSuite(tests=suitesToRun)
   
-  unittest.TextTestRunner().run(fullSuite)
-  
+  return not unittest.TextTestRunner().run(fullSuite).wasSuccessful()
 
 
 if __name__ == "__main__":

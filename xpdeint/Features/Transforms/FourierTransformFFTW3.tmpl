@@ -85,9 +85,10 @@ if (!_fftw_forward_plan) {
   @end if
   @#
   @set $dataOut = '_data_out' if transformDict.get('outOfPlace', False) else '_data_in'
+  @set $flags = ' | FFTW_DESTROY_INPUT' if transformDict.get('outOfPlace', False) else ''
   @#
-  ${guruPlanFunction(transformDict, 'forward', dataOut), autoIndent=True}@slurp
-  ${guruPlanFunction(transformDict, 'backward', dataOut), autoIndent=True}@slurp
+  ${guruPlanFunction(transformDict, 'forward', dataOut, flags), autoIndent=True}@slurp
+  ${guruPlanFunction(transformDict, 'backward', dataOut, flags), autoIndent=True}@slurp
   
   // Save wisdom
   #if CFG_OSAPI == CFG_OSAPI_POSIX
@@ -113,13 +114,13 @@ if (_forward) {
   @#
 @end def
 
-@def createGuruDFTPlanInDirection($transformDict, $direction, $dataOut)
+@def createGuruDFTPlanInDirection($transformDict, $direction, $dataOut, $flags)
   @#
 _fftw_${direction}_plan = ${fftwPrefix}_plan_guru_dft(
   _transform_sizes_index, _transform_sizes,
   _loop_sizes_index, _loop_sizes,
   reinterpret_cast<${fftwPrefix}_complex*>(_data_in), reinterpret_cast<${fftwPrefix}_complex*>($dataOut),
-  FFTW_${direction.upper()}, ${planType}
+  FFTW_${direction.upper()}, ${planType}${flags}
 );
 if (!_fftw_${direction}_plan)
   _LOG(_ERROR_LOG_LEVEL, "(%s: %i) Unable to create ${direction} dft plan.\n", __FILE__, __LINE__);
@@ -127,7 +128,7 @@ if (!_fftw_${direction}_plan)
   @#
 @end def
 
-@def createGuruR2RPlanInDirection($transformDict, $direction, $dataOut)
+@def createGuruR2RPlanInDirection($transformDict, $direction, $dataOut, $flags)
   @#
   @for idx, dimRep in enumerate(transformDict['transformPair'][0])
 _r2r_kinds[${idx}] = ${r2rKindForDimensionAndDirection(dimRep.name, direction)};
@@ -137,7 +138,7 @@ _fftw_${direction}_plan = ${fftwPrefix}_plan_guru_r2r(
   _transform_sizes_index, _transform_sizes,
   _loop_sizes_index, _loop_sizes,
   reinterpret_cast<real*>(_data_in), reinterpret_cast<real*>($dataOut),
-  _r2r_kinds, ${planType}
+  _r2r_kinds, ${planType}${flags}
 );
 if (!_fftw_${direction}_plan)
   _LOG(_ERROR_LOG_LEVEL, "(%s: %i) Unable to create ${direction} r2r plan.\n", __FILE__, __LINE__);
