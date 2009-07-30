@@ -92,7 +92,9 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
     return result
   
   def availableTransformations(self):
-    results = super(_FourierTransformFFTW3MPI, self).availableTransformations()
+    parent_results = super(_FourierTransformFFTW3MPI, self).availableTransformations()
+    
+    results = []
     
     # Create mpi forward / back operations
     geometry = self.getVar('geometry')
@@ -148,7 +150,13 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
         transposedOrder = not self.hasFFTWDistributedTransforms,
       ))
     
-    return results
+    final_transforms = []
+    for transform in results:
+      final_transforms.append(transform.copy())
+      transform['outOfPlace'] = True
+      final_transforms.append(transform)
+    
+    return parent_results + final_transforms
   
   def canonicalBasisForBasis(self, basis, noTranspose = False):
     if all([set(rep.canonicalName for rep in mpiDim.representations).intersection(basis) for mpiDim in self.mpiDimensions]):

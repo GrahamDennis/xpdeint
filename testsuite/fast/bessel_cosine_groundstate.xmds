@@ -2,7 +2,7 @@
 <simulation xmds-version="2">
   <testing>
     <xsil_file name="bessel_cosine_groundstate.xsil" expected="bessel_cosine_groundstate_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
-    <xsil_file name="bessel_cosine_groundstate_breakpoint.xsil" expected="bessel_cosine_groundstate_breakpoint_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="bessel_cosine_groundstate_breakpoint.xsil" expected="bessel_cosine_groundstate_breakpoint_expected.xsil" absolute_tolerance="1e0" relative_tolerance="1e-5" />
   </testing>
   
   <name>bessel_cosine_groundstate</name>

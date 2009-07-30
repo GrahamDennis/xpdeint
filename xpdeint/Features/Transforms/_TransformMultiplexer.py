@@ -216,7 +216,17 @@ class _TransformMultiplexer (_Feature):
                 BasisState.IN_PLACE: BasisState.OUT_OF_PLACE,
                 BasisState.OUT_OF_PLACE: BasisState.IN_PLACE
               }[currentState]
-              newCost[3] += 1 # Number of out-of-place operations
+              
+              # Now you might think that we're violating the cost >= 0 requirement here
+              # where we use the negative of the number of out-of-place operations.
+              # While that would be true if this was the only part of the cost, it
+              # isn't the whole thing. Both 'communicationsCost' and 'cost' occur before
+              # this term, and 'cost' is guaranteed to be positive.
+              #
+              # It is the negative number of out-of-place operations we use here as
+              # FFTW is faster for out-of-place operations than in-place operations for
+              # typical transform sizes
+              newCost[3] -= 1 # Minus the number of out-of-place operations
             
             # Multiply the costMultiplier through the cost listed by the transform
             newCost[0:2] = [costMultiplier * transformation.get(key, 0) for key in ['communicationsCost', 'cost']]

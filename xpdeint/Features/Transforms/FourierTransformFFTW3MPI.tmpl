@@ -170,6 +170,7 @@ ${vector.allocSize} = MAX(${vector.allocSize}, (_local_alloc_size${'+1) / 2' if 
   @#
   @set mpiPrefix, prefixLattice, postfixLattice = transformDict['transformSpecifier']
   @set flags = ' | FFTW_MPI_TRANSPOSED_IN | FFTW_MPI_TRANSPOSED_OUT' if transformDict['transposedOrder'] else ''
+  @set flags += ' | FFTW_DESTROY_INPUT' if transformDict.get('outOfPlace', False) else ''
 // _prefix_lattice should be ${prefixLattice}
 // _postfix_lattice should be ${postfixLattice}
 static ${fftwPrefix}_plan _fftw_forward_plan = NULL;
@@ -240,6 +241,7 @@ if (!_fftw_forward_plan) {
   @set $dimensionsBeingTransformed = len(transformPair[0])
   @set $transformType = transformDict['transformType']
   @set $dataOut = '_data_out' if transformDict.get('outOfPlace', False) else '_data_in'
+  @set $flags = ' | FFTW_DESTROY_INPUT' if transformDict.get('outOfPlace', False) else ''
   ptrdiff_t _transform_sizes[${dimensionsBeingTransformed}];
   @if transformType == 'real'
   ${fftwPrefix}_r2r_kind _r2r_kinds[${dimensionsBeingTransformed}];
@@ -251,7 +253,7 @@ if (!_fftw_forward_plan) {
   @for dimID, dimRep in enumerate(transformPair[0])
   _transform_sizes[_transform_sizes_index++] = ${dimRep.globalLattice};
   @end for
-
+  
   @if transformType == 'complex'
     @set $guruPlanFunction = self.createGuruMPIDFTPlanInDirection
   @else
@@ -260,11 +262,11 @@ if (!_fftw_forward_plan) {
   @#
   ${guruPlanFunction(
       transformDict, 'forward', dataOut,
-      '_block_size_' + transformPair[0][0].name, '_block_size_' + transformPair[1][0].name, 'FFTW_MPI_TRANSPOSED_OUT'
+      '_block_size_' + transformPair[0][0].name, '_block_size_' + transformPair[1][0].name, 'FFTW_MPI_TRANSPOSED_OUT', flags
     ), autoIndent=True}@slurp
   ${guruPlanFunction(
       transformDict, 'backward', dataOut,
-      '_block_size_' + transformPair[1][0].name, '_block_size_' + transformPair[0][0].name, 'FFTW_MPI_TRANSPOSED_IN'
+      '_block_size_' + transformPair[1][0].name, '_block_size_' + transformPair[0][0].name, 'FFTW_MPI_TRANSPOSED_IN', flags
     ), autoIndent=True}@slurp
   
   // Save wisdom
@@ -291,14 +293,14 @@ if (_forward) {
   @#
 @end def
 
-@def createGuruMPIDFTPlanInDirection($transformDict, $direction, $dataOut, $inBlockSize, $outBlockSize, $transposedState)
+@def createGuruMPIDFTPlanInDirection($transformDict, $direction, $dataOut, $inBlockSize, $outBlockSize, $transposedState, $flags)
   @#
 _fftw_${direction}_plan = ${fftwPrefix}_mpi_plan_many_dft(
   _transform_sizes_index, _transform_sizes, _postfix_lattice,
   ${inBlockSize}, ${outBlockSize},
   reinterpret_cast<${fftwPrefix}_complex*>(_data_in),
   reinterpret_cast<${fftwPrefix}_complex*>(${dataOut}),
-  MPI_COMM_WORLD, FFTW_${direction.upper()}, ${planType} | ${transposedState}
+  MPI_COMM_WORLD, FFTW_${direction.upper()}, ${planType} | ${transposedState}${flags}
 );
 if (!_fftw_${direction}_plan)
   _LOG(_ERROR_LOG_LEVEL, "(%s: %i) Unable to create ${direction} mpi dft plan.\n", __FILE__, __LINE__);
@@ -306,7 +308,7 @@ if (!_fftw_${direction}_plan)
   @#
 @end def
 
-@def createGuruMPIR2RPlanInDirection($transformDict, $direction, $dataOut, $inBlockSize, $outBlockSize, $transposedState)
+@def createGuruMPIR2RPlanInDirection($transformDict, $direction, $dataOut, $inBlockSize, $outBlockSize, $transposedState, $flags)
   @#
   @for idx, dimRep in enumerate(transformDict['transformPair'][0])
 _r2r_kinds[${idx}] = ${r2rKindForDimensionAndDirection(dimRep.name, direction)};
@@ -317,7 +319,7 @@ _fftw_${direction}_plan = ${fftwPrefix}_mpi_plan_many_r2r(
   ${inBlockSize}, ${outBlockSize},
   reinterpret_cast<real*>(_data_in),
   reinterpret_cast<real*>(${dataOut}),
-  MPI_COMM_WORLD, _r2r_kinds, ${planType} | ${transposedState}
+  MPI_COMM_WORLD, _r2r_kinds, ${planType} | ${transposedState}${flags}
 );
 
 if (!_fftw_${direction}_plan)
