@@ -76,6 +76,8 @@ class _TransformMultiplexer (_Feature):
     # Create a multiplexing function and return it.
     def multiplexingFunction(*args, **KWs):
       results = [attr(*args, **KWs) for attr in attributes]
+      if name == 'mainBegin':
+        results.reverse()
       return ''.join([result for result in results if result is not None])
     
     return multiplexingFunction
@@ -322,6 +324,9 @@ class _TransformMultiplexer (_Feature):
     transformsNeeded = list()
     basesNeeded = set()
     
+    prefixLatticeStringMap = dict()
+    postfixLatticeStringMap = dict()
+    
     for vector in vectors:
       basesNeeded.update(vector.basesNeeded)
       vectorBases = list(vector.basesNeeded)
@@ -372,7 +377,7 @@ class _TransformMultiplexer (_Feature):
           prefixDimReps = basisToDimRepBasis(prefixBasis)
           postfixDimReps = basisToDimRepBasis(postfixBasis)
           
-          mpiPrefix = [dimRep.localLattice for dimRep in prefixDimReps if dimRep.hasLocalOffset]
+          mpiPrefix = tuple([dimRep.localLattice for dimRep in prefixDimReps if dimRep.hasLocalOffset])
           
           prefixLattice = [(dimRep.lattice, dimRep.localLattice) for dimRep in prefixDimReps if not dimRep.hasLocalOffset]
           
@@ -393,15 +398,16 @@ class _TransformMultiplexer (_Feature):
           if transformDescriptor not in transformsNeeded:
             transformsNeeded.append(transformDescriptor)
           
-          prefixLatticeStrings = mpiPrefix[:]
+          prefixLatticeStrings = list(mpiPrefix)
           prefixLatticeStrings.extend([lattice[1] for lattice in prefixLattice])
           postfixLatticeStrings = [lattice[1] for lattice in postfixLattice]
           
           prefixLatticeString = ' * '.join(prefixLatticeStrings) or '1'
           postfixLatticeString = ' * '.join(postfixLatticeStrings) or '1'
+          
           if transformation.get('geometryDependent', False):
-            transformation.setdefault('prefixLatticeString', prefixLatticeString)
-            transformation.setdefault('postfixLatticeString', postfixLatticeString)
+            prefixLatticeStringMap.setdefault(transformDescriptor, prefixLatticeString)
+            postfixLatticeStringMap.setdefault(transformDescriptor, postfixLatticeString)
           
           transformSteps.append(
             (
@@ -423,11 +429,16 @@ class _TransformMultiplexer (_Feature):
     self.basesNeeded.sort()
     
     self.neededTransformations = []
-    for transformID, transformSpecifier, transformPair in transformsNeeded:
+    for transformDescriptor in transformsNeeded:
+      transformID, transformSpecifier, transformPair = transformDescriptor
       transformation = self.availableTransformations[transformID].copy()
       transformation['transformSpecifier'] = transformSpecifier
       del transformation['transformations']
       transformation['transformPair'] = transformPair
+      # A bit dodgy, but I can't think of a better way
+      if transformation.get('geometryDependent', False):
+        transformation['prefixLatticeString'] = prefixLatticeStringMap[transformDescriptor]
+        transformation['postfixLatticeString'] = postfixLatticeStringMap[transformDescriptor]
       self.neededTransformations.append(transformation)
     
     def functionImplementation(func):

@@ -147,7 +147,7 @@ if (!_fftw_${direction}_plan)
 @end def
 
 @def mainBegin($dict)
-// load wisdom and create plans for fft
+// load wisdom
 #if CFG_OSAPI == CFG_OSAPI_POSIX // Don't load wisdom on windows
 ${loadWisdom}@slurp
 #endif // POSIX

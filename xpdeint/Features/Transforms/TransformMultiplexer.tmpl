@@ -139,9 +139,16 @@ for (long _idx = 0; _idx < _prefix_lattice * _postfix_lattice; _idx++) {
 
 _basis_transform *_basis_transform = NULL;
 ptrdiff_t _auxiliary_array_size = 0;
+ptrdiff_t _max_vector_size = 0;
+real* _max_vector_array = NULL;
 
   @set $boolMap = {True: 'true', False: 'false'}
   @for vector, vectorTransformInfo in self.vectorTransformMap.items()
+    @set sizePrefix = '2 * ' if vector.type == 'complex' else ''
+if (${sizePrefix}${vector.allocSize} > _max_vector_size) {
+  _max_vector_size = ${sizePrefix}${vector.allocSize};
+  _max_vector_array = reinterpret_cast<real*>(_${vector.id});
+}
     @set $needsAuxiliaryArray = False
     @set $bases = vectorTransformInfo['bases']
     @set $basisPairMap = vectorTransformInfo['basisPairMap']
@@ -186,6 +193,24 @@ _auxiliary_array_size = MAX(_auxiliary_array_size, ${sizePrefix}${vector.allocSi
   @end for
 if (_auxiliary_array_size) {
   _auxiliary_array = (real*) xmds_malloc(sizeof(real) * _auxiliary_array_size);
+}
+
+bool _allocated_temporary_array = false;
+if (!_max_vector_array) {
+  _max_vector_array = (real*) xmds_malloc(sizeof(real) * _max_vector_size);
+  _allocated_temporary_array = true;
+}
+
+// Make all geometry-dependent transformations prepare plans, etc.
+  @for tID, transformation in enumerate(self.neededTransformations)
+    @if not transformation.get('geometryDependent', False)
+      @continue
+    @end if
+_transform_${tID}(true, 1.0, _max_vector_array, _auxiliary_array, ${transformation['prefixLatticeString']}, ${transformation['postfixLatticeString']});
+  @end for
+
+if (_allocated_temporary_array) {
+  xmds_free(_max_vector_array);
 }
   @#
 @end def
