@@ -41,10 +41,10 @@ def getChildElementByTagName(self, tagName, optional=False):
   elements = self.getChildElementsByTagName(tagName, optional=optional)
 
   if not optional and not len(elements) == 1:
-    raise ParserException(self, "There must be at least one '%(tagName)s' element." % locals())
+    raise ParserException(self, "There must be exactly one '%(tagName)s' element." % locals())
 
   if optional and len(elements) > 1:
-    raise ParserException(self, "There must be at least one '%(tagName)s' element." % locals())
+    raise ParserException(self, "There may be at most one '%(tagName)s' element." % locals())
 
   if optional and len(elements) == 0:
     return None
