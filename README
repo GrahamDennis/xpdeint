@@ -112,6 +112,7 @@ Highly suggested (but optional) installs:
 * FFTW3. This library is needed for Fourier transforms, which is the transform most people will be using in xpdeint. If you need
   support for MPI distributed simulations, you must install the alpha version.
 * HDF5. This is a library for reading and writing the Heirachical Data Format (http://www.hdfgroup.org/HDF5/).
+  After downloading the latest package, install with the --prefix=/usr/local/ option if you want xpdeint to find the library automatically.
   This is a standardised data format which it is suggested that people use in preference to the older 'binary' output (which is 
   compatible with xmds-1). The advantage of HDF5 is that this data format is understood by a variety of other tools. xsil2graphics2
   provides support for loading data created in this format into Mathematica and Matlab.
@@ -119,8 +120,8 @@ Highly suggested (but optional) installs:
 Optional installs:
 * A Matrix library like ATLAS, or Intel's MKL. (Mac OS X comes with a matrix library)
 * GNU Scientific library (GSL).
-* h5py. This is needed for checking the results of xpdeint tests that generate HDF5 output.
-* numpy (sudo easy_install numpy). (Mac OS X Leopard comes with numpy)
+* numpy (sudo easy_install numpy). (Mac OS X Leopard comes with numpy, and has trouble updating cleanly.)
+* h5py. This is needed for checking the results of xpdeint tests that generate HDF5 output. (requires updated numpy)
 * OpenMPI. Needed to enable xpdeint to generate scripts that can be run across multiple machines. (Mac OS X Leopard comes with OpenMPI)
 * mpmath. Library for arbitrary precision floating point math. Install from package manager or "sudo easy_install mpmath"
   This package is needed for the matrix-based transforms like Bessel and Hermite-Gauss.
@@ -150,8 +151,7 @@ So far the feature list includes:
   adding a new Fourier transform library shouldn't be difficult.
 * Non-Fourier transformations have been included.  These include the Bessel basis, 
   Spherical Bessel basis and the Hermitee-Gauss (harmonic oscillator) basis.
-* Output moment groups use less memory when there isn't a  
-  post_processing element
+* Output moment groups use less memory when there isn't a post_processing element
 * Generated source is indented correctly
 * An xmds-1 like script file format.
 * xmds-1 like generated source.
