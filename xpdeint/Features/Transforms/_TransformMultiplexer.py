@@ -181,14 +181,6 @@ class _TransformMultiplexer (_Feature):
         
         currentBasis, currentState = self.location
         
-        # FIXME: Dodgy hack that can be removed when 'distributed y' has a dimRep
-        missingRepNames = [repName for repName in currentBasis if not repName in self.representationMap]
-        for missingRepName in missingRepNames:
-          if missingRepName.startswith('distributed '):
-            self.representationMap[missingRepName] = self.representationMap[missingRepName[len('distributed '):]]
-          else:
-            self.representationMap[missingRepName] = self.representationMap['distributed ' + missingRepName]
-        
         # Loop through all available transforms
         for transformID, transformation in enumerate(self.availableTransformations):
           # Loop through all basis-changes this 'transform' can handle

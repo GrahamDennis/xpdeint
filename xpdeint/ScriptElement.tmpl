@@ -402,7 +402,6 @@ unsigned long ${dimRep.loopIndex} = ${indexOverrides[dimRep.name][field]};
   @# and those vectors with the same dimensions
   @for $vector in [v for v in vectors if not v.field.dimensions == field.dimensions]
 _${vector.id}_index_pointer += ${dimRep.loopIndex}@slurp
-  @# FIXME: This line needs changing
  * ${field.localPointsInDimensionsAfterDimRepInBasis(dimRep, basis)};
   @end for
 
