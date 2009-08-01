@@ -369,18 +369,16 @@ class XMDS2Parser(ScriptParser):
                 "Use the feature <validation kind=\"run-time\"/> to allow for arbitrary code." % locals()
               )
           noiseAttributeDictionary['noiseMeanRate'] = meanRateString
-        elif kind in ('gaussian-mkl'):
-          noiseClass = GaussianMKLNoise
-        elif kind in ('uniform-mkl'):
-          noiseClass = UniformMKLNoise
-        elif kind in ('gaussian-dsfmt'):
-          noiseClass = GaussianDSFMTNoise
-        elif kind in ('uniform-dsfmt'):
-          noiseClass = UniformDSFMTNoise
-        elif kind in ('gaussian-solirte'):
-          noiseClass = GaussianSolirteNoise
         else:
-          raise ParserException(noiseElement, "Unknown noise kind '%(kind)s'." % locals())
+          noiseClass = {
+            'gaussian-mkl': GaussianMKLNoise,
+            'uniform-mkl': UniformMKLNoise,
+            'gaussian-dsfmt': GaussianDSFMTNoise,
+            'uniform-dsfmt': UniformDSFMTNoise,
+            'gaussian-solirte': GaussianSolirteNoise,
+          }.get(kind)
+          if not noiseClass:
+            raise ParserException(noiseElement, "Unknown noise kind '%(kind)s'." % locals())
         noise = noiseClass(parent = stochasticFeature,
                            **self.argumentsToTemplateConstructors)
         
@@ -439,16 +437,15 @@ class XMDS2Parser(ScriptParser):
       planType = None
       if not fftwElement.hasAttribute('plan'):
         pass
-      elif fftwElement.getAttribute('plan').strip().lower() == 'estimate':
-        planType = 'FFTW_ESTIMATE'
-      elif fftwElement.getAttribute('plan').strip().lower() == 'measure':
-        planType = 'FFTW_MEASURE'
-      elif fftwElement.getAttribute('plan').strip().lower() == 'patient':
-        planType = 'FFTW_PATIENT'
-      elif fftwElement.getAttribute('plan').strip().lower() == 'exhaustive':
-        planType = 'FFTW_EXHAUSTIVE'
       else:
-        raise ParserException(fftwElement, "The plan attribute must be one of 'estimate', 'measure', 'patient' or 'exhaustive'.")
+        planType = {
+          'estimate': 'FFTW_ESTIMATE',
+          'measure': 'FFTW_MEASURE',
+          'patient': 'FFTW_PATIENT',
+          'exhaustive': 'FFTW_EXHAUSTIVE'
+        }.get(fftwElement.getAttribute('plan').strip().lower())
+        if not planType:
+          raise ParserException(fftwElement, "The plan attribute must be one of 'estimate', 'measure', 'patient' or 'exhaustive'.")
       
       if planType:
         fftAttributeDictionary['planType'] = planType
@@ -1068,49 +1065,41 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     algorithmSpecificOptionsDict = dict()
     
     algorithmString = integrateElement.getAttribute('algorithm')
-    if algorithmString == 'RK4':
-      integratorTemplateClass = Integrators.FixedStep.FixedStep
-      stepperTemplateClass = Integrators.RK4Stepper.RK4Stepper
-    elif algorithmString == 'RK9':
-      integratorTemplateClass = Integrators.FixedStep.FixedStep
-      stepperTemplateClass = Integrators.RK9Stepper.RK9Stepper
-    elif algorithmString == 'RK45':
+    algorithmMap = {
+      'SI':    (Integrators.FixedStep.FixedStep,                   Integrators.SIStepper.SIStepper),
+      'RK4':   (Integrators.FixedStep.FixedStep,                   Integrators.RK4Stepper.RK4Stepper),
+      'RK9':   (Integrators.FixedStep.FixedStep,                   Integrators.RK9Stepper.RK9Stepper),
+      'RK45':  (Integrators.FixedStep.FixedStep,                   Integrators.RK45Stepper.RK45Stepper),
+      'RK89':  (Integrators.FixedStep.FixedStep,                   Integrators.RK89Stepper.RK89Stepper),
+      'ARK45': (Integrators.AdaptiveStep.AdaptiveStep,             Integrators.RK45Stepper.RK45Stepper),
+      'ARK89': (Integrators.AdaptiveStep.AdaptiveStep,             Integrators.RK89Stepper.RK89Stepper),
+      'SIC':   (Integrators.FixedStepWithCross.FixedStepWithCross, Integrators.SICStepper.SICStepper),
+    }
+    integratorTemplateClass, stepperTemplateClass = algorithmMap.get(algorithmString, (None, None))
+    
+    if not integratorTemplateClass:
+      raise ParserException(
+        integrateElement,
+        "Unknown algorithm '%s'. "
+        "Options are %s." % (algorithmString, ', '.join(algorithmMap.keys())))
+    
+    if algorithmString == 'RK45':
       parserWarning(
         integrateElement,
         "RK45 is probably not the algorithm you want. RK45 is a 5th-order algorithm with embedded 4th-order "
         "where the 4th-order results are just thrown away. Unless you know what you are doing, you probably meant RK4 or ARK45."
       )
-      integratorTemplateClass = Integrators.FixedStep.FixedStep
-      stepperTemplateClass = Integrators.RK45Stepper.RK45Stepper
-    elif algorithmString == 'ARK45':
-      integratorTemplateClass = Integrators.AdaptiveStep.AdaptiveStep
-      stepperTemplateClass = Integrators.RK45Stepper.RK45Stepper
     elif algorithmString == 'RK89':
       parserWarning(
         integrateElement,
         "RK89 is probably not the algorithm you want. RK89 is a 9th-order algorithm with embedded 8th-order "
         "where the 8th-order results are just thrown away. Unless you know what you are doing, you probably meant RK9 or ARK89."
       )
-      integratorTemplateClass = Integrators.FixedStep.FixedStep
-      stepperTemplateClass = Integrators.RK89Stepper.RK89Stepper
-    elif algorithmString == 'ARK89':
-      integratorTemplateClass = Integrators.AdaptiveStep.AdaptiveStep
-      stepperTemplateClass = Integrators.RK89Stepper.RK89Stepper
     elif algorithmString in ['SI','SIC']:
-      if algorithmString == 'SI':
-        integratorTemplateClass = Integrators.FixedStep.FixedStep
-        stepperTemplateClass = Integrators.SIStepper.SIStepper
-      else:
-        integratorTemplateClass = Integrators.FixedStepWithCross.FixedStepWithCross
-        stepperTemplateClass = Integrators.SICStepper.SICStepper
-      
       if integrateElement.hasAttribute('iterations'):
         algorithmSpecificOptionsDict['iterations'] = RegularExpressionStrings.integerInString(integrateElement.getAttribute('iterations'))
         if algorithmSpecificOptionsDict['iterations'] < 1:
           raise ParserException(integrateElement, "Iterations element must be 1 or greater (default 3).")
-    else:
-      raise ParserException(integrateElement, "Unknown algorithm '%(algorithmString)s'. "
-                                              "Options are 'SI', 'SIC', 'RK4', 'RK9', 'RK45', 'ARK45' , 'RK89', or 'ARK89'." % locals())
     
     integratorTemplate = integratorTemplateClass(stepperClass = stepperTemplateClass, **self.argumentsToTemplateConstructors)
     self.applyAttributeDictionaryToObject(algorithmSpecificOptionsDict, stepperTemplateClass)
@@ -1830,9 +1819,15 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       outputBasis = momentGroupTemplate.outputField.basisForBasis(
         (propagationDimRep.canonicalName,) + sampleBasis
       )
-      driver = self.globalNameSpace['features']['Driver']
-      sampleBasis = driver.canonicalBasisForBasis(sampleBasis, noTranspose = True)
-      outputBasis = driver.canonicalBasisForBasis(outputBasis, noTranspose = True)
+      
+      if formatName == 'hdf5':
+        # HDF5 doesn't like writing out data when the order of dimensions in the file and
+        # in memory aren't the same. It's slow. So we make sure that we sample in the same
+        # order that we would write out to file. But only for HDF5 as this requires extra
+        # MPI Transpose operations at each sample.
+        driver = self.globalNameSpace['features']['Driver']
+        sampleBasis = driver.canonicalBasisForBasis(sampleBasis, noTranspose = True)
+        outputBasis = driver.canonicalBasisForBasis(outputBasis, noTranspose = True)
       
       
       for dimName, lattice in dimensionsNeedingLatticeUpdates.items():

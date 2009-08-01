@@ -432,7 +432,6 @@ class _ScriptElement (Template):
           "Cannot satisfy dependence on vector '%s' because it cannot be transformed to the required basis (%s). "
           "The vector's initial basis is (%s)." % (vector.name, ', '.join(vectorBasis), ', '.join(vector.initialBasis))
         )
-      # FIXME: This bit needs to be rewritten when we change over the generated code to use bases.
       basisString = ', '.join(vectorBasis)
       basisIndex = self.basisIndexForBasis(vectorBasis)
       result.extend([vector.functions['goSpace'].call(newSpace=basisIndex), ' // (', basisString, ')\n'])

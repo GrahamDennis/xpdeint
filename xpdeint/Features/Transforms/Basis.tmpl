@@ -76,7 +76,6 @@ static real *_mmt_matrix_backward = NULL;
   @set $transformPair = transformDict['transformPair']
   @set $forwardDimRep = transformPair[0][0]
   @set $backwardDimRep = transformPair[1][0]
-  @# FIXME: Change these names once we shift over to the new transform system
 static bool _initialised = false;
 ${transformFunctionStart}@slurp
 ptrdiff_t innerLoopSize = _postfix_lattice;

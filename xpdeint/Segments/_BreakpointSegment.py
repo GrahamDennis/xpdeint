@@ -60,6 +60,14 @@ class _BreakpointSegment (_Segment):
     else:
       self._children.append(self.outputFormat)
     
+    if self.outputFormat.name == 'hdf5':
+      # HDF5 doesn't like writing out data when the order of dimensions in the file and
+      # in memory aren't the same. It's slow. So we make sure that we sample in the same
+      # order that we would write out to file. But only for HDF5 as this requires extra
+      # MPI Transpose operations at each sample.
+      driver = self._driver
+      self.breakpointBasis = driver.canonicalBasisForBasis(self.breakpointBasis, noTranspose = True)
+    
     self.registerVectorsRequiredInBasis(self.dependencies, self.breakpointBasis)
     
   
