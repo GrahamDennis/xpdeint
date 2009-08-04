@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <name>lorenz_lyap</name>
+  <author>Andre Carvalho and Graham Dennis</author>
+  <description>
+    The Lorenz Attractor, an example of chaos. Includes the calculation of the largest Lyapunov exponent.
+  </description>
+  
+  <features>
+    <auto_vectorise />
+    <benchmark />
+    <bing />
+    <globals>
+      <![CDATA[
+      real sigma = 10.0;
+      real b = 8.0/3.0;
+      real r = 28.0;
+      real d0 = 1.0e-8; // separation between the main path and the 'test' path
+      ]]>
+    </globals>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+  </geometry>
+  
+  <vector name="position" type="real">
+    <components>
+      x y z xe ye ze
+    </components>
+    <initialisation>
+      <![CDATA[
+      x = 1.;
+      y = 1.;
+      z = 1.;
+      xe= x + d0;
+      ye= y;
+      ze= z;
+      ]]>
+    </initialisation>
+  </vector>
+  
+   <!-- Calculate the Lyapunov Exponent -->
+   <vector type="real" name="lyapunov" dimensions="">
+    <components>lyap</components>
+  </vector>
+  <!-- **************************-->   
+  
+  <sequence>
+    <integrate algorithm="ARK45" interval="100000.0" steps="10000000" tolerance="1e-8">
+      <samples>5000 100</samples>
+      <!-- 
+        At the end of a step, we need to work out how far the two paths have separated,
+        reset the separation to d0 and calculate the contribution to the lyapunov exponent.
+      -->
+      <filters where="step end">
+        <filter>
+            <dependencies>position lyapunov</dependencies>
+            <![CDATA[
+                real dlx=(xe - x);
+                real dly=(ye - y);
+                real dlz=(ze - z);
+                real d1 = sqrt(dlx*dlx + dly*dly + dlz*dlz);
+                real df = d1/d0;
+                xe = x + (xe-x)/df;
+                ye = y + (ye-y)/df;
+                ze = z + (ze-z)/df;
+                lyap += log(df);
+            ]]>
+        </filter>
+      </filters>
+
+      <operators>
+        <integration_vectors>position</integration_vectors>
+        <![CDATA[
+        dx_dt = sigma*(y-x);
+        dy_dt = r*x - y - x*z;
+        dz_dt = x*y - b*z;
+        dxe_dt = sigma*(ye-xe);
+        dye_dt = r*xe - ye - xe*ze;
+        dze_dt = xe*ye - b*ze;
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  <output format="binary" filename="lorenz_lyap.xsil">
+    <group>
+      <sampling initial_sample="yes">
+        <moments>xR yR zR le</moments>
+        <dependencies>position lyapunov</dependencies>
+        <![CDATA[
+          xR = x;
+          yR = y;
+          zR = z;
+          le=lyap/t;
+        ]]>
+      </sampling>
+    </group>
+	
+	<group>
+      <sampling initial_sample="yes">
+        <moments>distance</moments>
+        <dependencies>position</dependencies>
+        <![CDATA[
+          distance = sqrt(x*x + y*y +z*z);
+        ]]>
+      </sampling>
+    </group>
+
+  </output>
+</simulation>
