@@ -760,6 +760,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     
     vectorTemplate = VectorElementTemplate(
       name = vectorName, field = fieldTemplate, initialBasis = initialBasis,
+      xmlElement = vectorElement,
       **self.argumentsToTemplateConstructors
     )
     

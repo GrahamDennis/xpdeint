@@ -92,7 +92,7 @@
           xR = x;
           yR = y;
           zR = z;
-          le=lyap/t;
+          le=lyap/t; // This value should asymptotically approach ~0.906
         ]]>
       </sampling>
     </group>
