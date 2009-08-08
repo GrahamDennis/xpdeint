@@ -11,6 +11,7 @@ from xpdeint.Features._Feature import _Feature
 from xpdeint.Utilities import lazy_property, combinations, GeneralisedBidirectionalSearch
 from xpdeint.Function import Function
 from xpdeint.Vectors.VectorElement import VectorElement
+from xpdeint.ParserException import ParserException
 
 import operator
 
@@ -258,6 +259,14 @@ class _TransformMultiplexer (_Feature):
       
       return path
     
+    def printBasis(basis):
+      if isinstance(basis, basestring): return basis
+      elif len(basis) == 1:
+        return basis[0] if isinstance(basis[0], basestring) else basis[0].canonicalName
+      else:
+        return '(' + ', '.join(dimRep if isinstance(dimRep, basestring) else dimRep.canonicalName for dimRep in basis) + ')'
+    
+    
     geometry = self.getVar('geometry')
     representationMap = dict()
     representationMap.update((rep.canonicalName, rep) for dim in geometry.dimensions for rep in dim.representations)
@@ -319,6 +328,8 @@ class _TransformMultiplexer (_Feature):
     prefixLatticeStringMap = dict()
     postfixLatticeStringMap = dict()
     
+    delayedException = None
+    
     for vector in vectors:
       basesNeeded.update(vector.basesNeeded)
       vectorBases = list(vector.basesNeeded)
@@ -379,6 +390,28 @@ class _TransformMultiplexer (_Feature):
           if transformation.get('transformType', 'real') is 'real' and vector.type == 'complex':
             postfixLattice.append((2, '2'))
           
+          if transformation.get('transformType', 'real') is 'complex' and vector.type == 'real':
+            delayedException = ParserException(
+              vector.xmlElement,
+              "Vector '%(vectorName)s' is of type 'real', but is needed in the following bases: %(basisList)s.\n"
+              "To transform between these bases, it is necessary to perform the %(firstBasis)s <--> %(secondBasis)s transform, "
+              "which is only possible for complex-valued vectors." % dict(
+                vectorName = vector.name,
+                basisList = ', '.join([printBasis(basis) for basis in vectorBases]),
+                firstBasis = printBasis(transformPair[0]),
+                secondBasis = printBasis(transformPair[1])
+              )
+            )
+            # Ideally, we'd rather raise this error on a user-created vector. Similar
+            # errors may also exist for related vectors which are of the same type as the original vector
+            # Identifying the error as originating from a user-generated vector makes the problem more obvious
+            # to the user. The difference between a user-created vector and an automatically generated one is that
+            # a user-created vector will have an XML element associated with it.
+            # But, should we not find a user-created vector with this problem, the exception will still be raised below.
+            # The problem will be harder to trace though.
+            if vector.xmlElement:
+              raise delayedException
+          
           if transformation.get('geometryDependent', False):
             geometrySpecification = (
               mpiPrefix,
@@ -412,6 +445,9 @@ class _TransformMultiplexer (_Feature):
           )
         basisPairInfo['transformSteps'] = transformSteps
     
+    # If we still have a delayed exception, we must raise it.
+    if delayedException: raise delayedException
+    
     # Now we need to extract the transforms and include that information in choosing transforms
     # One advantage of this method is that we no longer have to make extra fft plans or matrices when we could just re-use others.
     # Not only do we need to extract the transforms, but we must also produce a simple list of transforms that must be applied
@@ -437,12 +473,6 @@ class _TransformMultiplexer (_Feature):
       transform = func.transform
       transformFunction = transform.get('transformFunction')
       return transformFunction(*func.transformFunctionArgs) if transformFunction else ''
-    
-    def printBasis(basis):
-      if len(basis) == 1:
-        return basis[0].canonicalName
-      else:
-        return '(' + ', '.join(dimRep.canonicalName for dimRep in basis) + ')'
     
     for tID, transform in enumerate(self.neededTransformations):
       description = transform.get('description')

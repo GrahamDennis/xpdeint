@@ -28,6 +28,7 @@ class _MMT (_Transform):
   
   coordinateSpaceTag = DimensionRepresentation.registerTag('MMT coordinate space', parent = 'coordinate')
   spectralSpaceTag = DimensionRepresentation.registerTag('MMT spectral space', parent = 'spectral')
+  auxiliarySpaceTag = DimensionRepresentation.registerTag('MMT auxiliary space')
   
   def __init__(self, *args, **KWs):
     _Transform.__init__(self, *args, **KWs)
@@ -62,11 +63,13 @@ class _MMT (_Transform):
                                                  **self.argumentsToTemplateConstructors)
       xspace._minimum = minimum
       xspace._maximum = maximum
+      dim.addRepresentation(xspace)
       # transformed space representation
       kspace = UniformDimensionRepresentation(name = 'n' + name, type = 'long', lattice = lattice,
                                               minimum = '0', maximum = lattice, stepSize = '1',
                                               parent = dim,
                                               **self.argumentsToTemplateConstructors)
+      dim.addRepresentation(kspace)
     elif transformName in ('bessel', 'spherical-bessel'):
       # Bessel functions
       order = 0
@@ -103,6 +106,7 @@ class _MMT (_Transform):
                                                  tag = self.coordinateSpaceTag,
                                                  **self.argumentsToTemplateConstructors)
       xspace._maximum = maximum
+      dim.addRepresentation(xspace)
       
       # Spectral space representation
       kspace = NonUniformDimensionRepresentation(name = 'k' + name, type = type, lattice = spectralLattice,
@@ -110,6 +114,8 @@ class _MMT (_Transform):
                                                  tag = self.spectralSpaceTag,
                                                  **self.argumentsToTemplateConstructors)
       kspace._maximum = maximum
+      dim.addRepresentation(kspace)
+      
     elif transformName == 'hermite-gauss':
       # Hermite-gauss basis (harmonic oscillator)
       otherHGBases = [basis for basis in self.basisMap.values() if isinstance(basis, HermiteGaussEPBasis)]
@@ -130,13 +136,23 @@ class _MMT (_Transform):
                                                  tag = self.coordinateSpaceTag,
                                                  **self.argumentsToTemplateConstructors)
       xspace._maximum = maximum
+      dim.addRepresentation(xspace)
+      
       # Spectral space representation
-      kspace = UniformDimensionRepresentation(name = 'n' + name, type = 'long', lattice = spectralLattice,
+      nspace = UniformDimensionRepresentation(name = 'n' + name, type = 'long', lattice = spectralLattice,
                                               minimum = '0', maximum = spectralLattice, stepSize = '1',
                                               parent = dim, tag = self.spectralSpaceTag,
                                               **self.argumentsToTemplateConstructors)
-    dim.addRepresentation(xspace)
-    dim.addRepresentation(kspace)
+      dim.addRepresentation(nspace)
+      
+      # Fourier space representation
+      kspace = NonUniformDimensionRepresentation(
+        name = 'k' + name, type = type, lattice = lattice,
+        stepSizeArray = True, parent = dim, tag = self.auxiliarySpaceTag,
+        **self.argumentsToTemplateConstructors
+      )
+      kspace._maximum = "(1.0 / (%s))" % maximum
+      dim.addRepresentation(kspace)
     return dim
   
   def availableTransformations(self):

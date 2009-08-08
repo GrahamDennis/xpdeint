@@ -164,7 +164,7 @@ def operatorPrecedence( baseExpr, opList ):
        operators working in a precedence hierarchy.  Operators may be unary or
        binary, left- or right-associative.  Parse actions can also be attached
        to operator expressions.
-
+       
        Parameters:
         - baseExpr - expression representing the most basic element for the nested
         - opList - list of tuples, one for each operator precedence level in the
