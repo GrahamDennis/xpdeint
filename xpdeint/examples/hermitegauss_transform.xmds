@@ -37,7 +37,7 @@
   
   <sequence>
     <integrate algorithm="RK4" tolerance="1e-6" interval="10." steps="100">
-      <samples>100 100</samples>
+      <samples>100 100 100</samples>
       <operators>
         <operator kind="ip" constant="yes" fourier_space="nx">
           <operator_names>L</operator_names>
@@ -65,7 +65,18 @@
     </group>
     <group>
       <sampling initial_sample="no">
-        <dimension name="x" fourier_space="yes" />
+        <dimension name="x" fourier_space="nx" />
+        <moments>dens</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          dens = mod2(psi);
+        
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling initial_sample="no">
+        <dimension name="x" fourier_space="kx" />
         <moments>dens</moments>
         <dependencies>main</dependencies>
         <![CDATA[

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="hermitegauss_fourier_1.xsil" expected="hermitegauss_fourier_1_expected.xsil" absolute_tolerance="1e-8" relative_tolerance="1e-5" />
+    <xsil_file name="hermitegauss_fourier_2.xsil" expected="hermitegauss_fourier_2_expected.xsil" absolute_tolerance="1e-8" relative_tolerance="1e-5" />
+    <xsil_file name="hermitegauss_fourier_3.xsil" expected="hermitegauss_fourier_3_expected.xsil" absolute_tolerance="1e-11" relative_tolerance="1e-5" />
+    <xsil_file name="hermitegauss_fourier_4.xsil" expected="hermitegauss_fourier_1_expected.xsil" absolute_tolerance="1e-8" relative_tolerance="1e-5" />
+  </testing>
+
+  <name>hermitegauss_fourier</name>
+  <author>Graham Dennis</author>
+  <description>
+    Transform between the various Hermite-Gauss bases (position, spectral, momentum)
+  </description>
+  
+  <features>
+    <validation kind="run-time" />
+    <globals>
+      <![CDATA[
+        const real M = 9.1e-31; // Mass of an electron
+        const real hbar = 1.05e-34;
+        const real omega = 2*M_PI*1e3;
+        const real offset = 1.0 * sqrt(hbar/(M*omega));
+        
+      ]]>
+    </globals>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="x" lattice="80" spectral_lattice="50" length_scale="sqrt(hbar/(M*omega))" transform="hermite-gauss" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="main" initial_space="x" type="complex">
+    <components>
+      psi
+    </components>
+    <initialisation>
+      <![CDATA[
+        // initial state is the groundstate in the x axis, but shifted by offset and expanded
+      psi = pow(M*omega/(hbar*M_PI), 0.25) * exp(-0.25*(M*omega/hbar)*(x - offset)*(x - offset));
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <breakpoint filename="hermitegauss_fourier_1.xsil" format="hdf5">
+      <dependencies fourier_space="x">main</dependencies>
+    </breakpoint>
+    <breakpoint filename="hermitegauss_fourier_2.xsil" format="hdf5">
+      <dependencies fourier_space="nx">main</dependencies>
+    </breakpoint>
+    <breakpoint filename="hermitegauss_fourier_3.xsil" format="hdf5">
+      <dependencies fourier_space="kx">main</dependencies>
+    </breakpoint>
+    <breakpoint filename="hermitegauss_fourier_4.xsil" format="hdf5">
+      <dependencies fourier_space="x">main</dependencies>
+    </breakpoint>
+  </sequence>
+  <output />
+
+<info>
+Script compiled with xpdeint version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+See http://www.xmds.org for more information.
+</info>
+
+<XSIL Name="breakpoint">
+  <Param Name="n_independent">1</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>3</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+x psiR psiI 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>80</Dim>
+    <Dim>3</Dim>
+    <Stream><Metalink Format="HDF5" Type="Remote" Group="/1"/>
+hermitegauss_fourier_1_expected.h5
+    </Stream>
+  </Array>
+</XSIL>
+</simulation>

@@ -4,29 +4,13 @@ Basis.tmpl
 Created by Graham Dennis on 2008-12-14.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 *@
-@extends xpdeint.Features.Transforms._Basis
+@extends xpdeint.ScriptElement
 
-@def globalsForDim($dim)
-@end def
-
-@def gridAndStepForDimRep($dimRep)
-  @#
-for (long _i0=0; _i0 < ${dimRep.globalLattice}; _i0++) {
-  ${gridAndStepForDimRepAtIndex(dimRep, '_i0'), autoIndent=True}@slurp
-}
-  @#
-@end def
-
-@def gridAndStepForDimRepAtIndex($dimRep, $index)
-  @#
-${dimRep.arrayName}[$index] = ${gridForDimRepAtIndex(dimRep, index)};
-${dimRep.stepSizeArrayName}[$index] = ${stepWeightForDimRepAtIndex(dimRep, index)};
-  @#
-@end def
+@attr $matrixType = 'real'
 
 @def transformMatricesForDimReps($forwardDimRep, $backwardDimRep)
-_mmt_matrix_forward  = (real *)xmds_malloc(sizeof(real) * ${forwardDimRep.globalLattice} * ${backwardDimRep.globalLattice});
-_mmt_matrix_backward = (real *)xmds_malloc(sizeof(real) * ${backwardDimRep.globalLattice} * ${forwardDimRep.globalLattice});
+_mmt_matrix_forward  = ($matrixType *)xmds_malloc(sizeof($matrixType) * ${forwardDimRep.globalLattice} * ${backwardDimRep.globalLattice});
+_mmt_matrix_backward = ($matrixType *)xmds_malloc(sizeof($matrixType) * ${backwardDimRep.globalLattice} * ${forwardDimRep.globalLattice});
 for (long _i0 = 0; _i0 < ${forwardDimRep.globalLattice}; _i0++) {
   ${transformMatricesForwardDimConstantsAtIndex(forwardDimRep, backwardDimRep, '_i0'), autoIndent=True}@slurp
   for (long _i1 = 0; _i1 < ${backwardDimRep.globalLattice}; _i1++) {
@@ -49,17 +33,21 @@ _mmt_matrix_backward[${forwardIndex} * ${backwardDimRep.globalLattice} + ${backw
 
 @def performTransform($sourceDimRep, $destDimRep, $dir = None)
   @#
-  @set $matMultFunction = {'single': 'cblas_sgemm', 'double': 'cblas_dgemm'}[$precision]
+  @set $blasTypeChar = {'real': {'single': 's', 'double': 'd'}, 'complex': {'single': 'c', 'double': 'z'}}[self.matrixType][$precision]
+  @set $matMultFunction = 'cblas_%sgemm' % blasTypeChar
+  @set $alphaBetaPrefix = {'real': '', 'complex': '&'}[self.matrixType]
+const ${matrixType} alpha = 1.0;
+const ${matrixType} beta = 0.0;
 ${matMultFunction}(
   CblasRowMajor, CblasNoTrans, CblasNoTrans,
   ${destDimRep.globalLattice},
   /* nelem */ innerLoopSize,
   ${sourceDimRep.globalLattice},
-  /* alpha */ 1.0,
+  /* alpha */ ${alphaBetaPrefix}alpha,
   /* A */ _mmt_matrix_${dir}, ${sourceDimRep.globalLattice},
   /* B */ source_data + _i0 * innerLoopSize * ${sourceDimRep.globalLattice},
           innerLoopSize,
-  /* beta */ 0.0,
+  /* beta */ ${alphaBetaPrefix}beta,
   /* C */ dest_data + _i0 * innerLoopSize * ${destDimRep.globalLattice},
   innerLoopSize
 );
@@ -67,8 +55,8 @@ ${matMultFunction}(
 @end def
 
 @def transformFunctionStart
-static real *_mmt_matrix_forward = NULL;
-static real *_mmt_matrix_backward = NULL;
+static $matrixType *_mmt_matrix_forward = NULL;
+static $matrixType *_mmt_matrix_backward = NULL;
 @end def
 
 @def transformFunction(transformID, transformDict, function)
@@ -79,8 +67,8 @@ static real *_mmt_matrix_backward = NULL;
 static bool _initialised = false;
 ${transformFunctionStart}@slurp
 ptrdiff_t innerLoopSize = _postfix_lattice;
-real* const __restrict__ source_data = _data_in;
-real* const __restrict__ dest_data = _data_out;
+${matrixType}* const __restrict__ source_data = reinterpret_cast<${matrixType}* const>(_data_in);
+${matrixType}* const __restrict__ dest_data = reinterpret_cast<${matrixType}* const>(_data_out);
 
 if (!_initialised) {
   _LOG(_SIMULATION_LOG_LEVEL, "Building matrices for ${function.description}...");

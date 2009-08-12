@@ -6,59 +6,12 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 *@
 @extends xpdeint.Features.Transforms.Basis
 
-@attr $besselOrderOffset = 0
-
 @def description: Bessel function basis
-
-@def globalsForDim($dim)
-  @#
-  @set $besselOrder = $order + $besselOrderOffset
-  @set $dimRep = dim.firstDimRepWithTagName('coordinate')
-const real _normbesseljzeros_${dim.name}[] = {${wrapArray($normalisedBesselJZeros($besselOrder, dimRep.lattice))}};
-const real _besseljnorm_${dim.name} = ${besselJZeros($besselOrder, dimRep.lattice+1)[-1]};
-  @#
-  @super(dim)
-  @#
-@end def
-
-@def besselJFunctionCall($order, $argument)
-  @if $order in [0, 1]
-j${order}($argument)@slurp
-  @else
-jn($order, $argument)@slurp
-  @end if
-@end def
-
-@def gridAndStepForDimRepAtIndex($dimRep, $index)
-  @#
-const real besselFactor = ${besselJFunctionCall($order + 1, c'_normbesseljzeros_${dimRep.parent.name}[${index}] * _besseljnorm_${dimRep.parent.name}')};
-const real ${dimRep.name}_max = @slurp
-  @if issubclass(dimRep.tag, dimRep.tagForName('coordinate'))
-${dimRep._maximum};
-  @else
-(_besseljnorm_${dimRep.parent.name}/((real)${dimRep._maximum}));
-  @end if
-  @#
-  @super(dimRep, index)
-  @#
-@end def
-
-
-@def gridForDimRepAtIndex($dimRep, $index)
-  @#
-_normbesseljzeros_${dimRep.parent.name}[$index] * ${dimRep.name}_max@slurp
-  @#
-@end def
-
-@def stepWeightForDimRepAtIndex($dimRep, $index)
-  @#
-2.0 / (besselFactor * besselFactor * _besseljnorm_${dimRep.parent.name} * _besseljnorm_${dimRep.parent.name}) * ${dimRep.name}_max * ${dimRep.name}_max@slurp
-  @#
-@end def
 
 @def transformMatricesForDimRepsAtIndices($forwardDimRep, $backwardDimRep, $forwardIndex, $backwardIndex)
   @#
-const real besselFactor = ${besselJFunctionCall($order, c'_normbesseljzeros_${forwardDimRep.parent.name}[${forwardIndex}] * _normbesseljzeros_${forwardDimRep.parent.name}[${backwardIndex}] * _besseljnorm_${forwardDimRep.parent.name}')};
+  @set $order = forwardDimRep._order + forwardDimRep.orderOffset
+const real besselFactor = ${forwardDimRep.besselJFunctionCall($order, c'_normbesseljzeros_${forwardDimRep.parent.name}[${forwardIndex}] * _normbesseljzeros_${forwardDimRep.parent.name}[${backwardIndex}] * _besseljnorm_${forwardDimRep.parent.name}')};
   @#
   @super(forwardDimRep, backwardDimRep, forwardIndex, backwardIndex)
   @#

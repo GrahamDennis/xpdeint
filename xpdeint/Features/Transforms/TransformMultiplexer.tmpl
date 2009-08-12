@@ -59,11 +59,11 @@ _basis_map _${vector.id}_basis_map;
 
 real *_auxiliary_array = NULL;
 
-/* List of basis identifiers:
+const char *_basis_identifiers[] = {
   @for idx, basis in enumerate(self.basesNeeded)
-  ${idx}: (${', '.join(basis)})
+  /* ${idx} */ "(${', '.join(basis)})",
   @end for
-*/
+};
   @#
 @end def
 
@@ -85,15 +85,15 @@ if (_${vector.id}_basis_map.count(_basis_pair(_${vector.id}_space, newSpace)) ==
   _LOG(
     _ERROR_LOG_LEVEL,
     "Error: We should have information about how to do every needed transform, but it seems we don't for this transform.\n"
-    "       The transform is for the vector '${vector.id}' from space %li to space %li.\n",
-    _${vector.id}_space, newSpace
+    "       The transform is for the vector '${vector.id}' from basis %s to basis %s.\n",
+    _basis_identifiers[_${vector.id}_space], _basis_identifiers[newSpace]
   );
 }
 _basis_transform &_t = _${vector.id}_basis_map[_basis_pair(_${vector.id}_space, newSpace)];
 if (_t._transform_steps.size() == 0) {
   _LOG(_ERROR_LOG_LEVEL, "Error: It looks like we tried to create plans for this transform, but failed.\n"
-                         "       The transform was for the vector '${vector.id}' from space %li to space %li.\n",
-                         _${vector.id}_space, newSpace);
+                         "       The transform was for the vector '${vector.id}' from basis %s to basis %s.\n",
+                         _basis_identifiers[_${vector.id}_space], _basis_identifiers[newSpace]);
 }
 real *_source_data = reinterpret_cast<real*>(_active_${vector.id});
 real *_dest_data = _auxiliary_array;

@@ -32,7 +32,7 @@ class _NoTransform (_Transform):
     else:
       stepSize = None
     rep = UniformDimensionRepresentation(name = name, type = type, lattice = lattice,
-                                         minimum = minimum, maximum = maximum, stepSize = stepSize, parent = dim,
+                                         _minimum = minimum, _maximum = maximum, _stepSize = stepSize, parent = dim,
                                          tag = self.dimRepTag,
                                          **self.argumentsToTemplateConstructors)
     dim.addRepresentation(rep)

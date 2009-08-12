@@ -11,6 +11,8 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 @def description: MMT
 @attr $uselib = ['cblas']
 
+@from xpdeint.CallOnceGuards import callOnceGuard
+
 @def includes
   @#
   @super
@@ -27,15 +29,22 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
   @#
 @end def
 
-@def globals
+@def besselGlobalsForDim($dimName, $basisDict)
   @#
-  @for dimName, basis in $basisMap.items()
-${basis.globalsForDim($geometry.dimensionWithName(dimName))}@slurp
-
-  @end for
+  @set $besselOrder = basisDict['order'] + basisDict['orderOffset']
+  @set $lattice = basisDict['lattice']
+const real _normbesseljzeros_${dimName}[] = {${wrapArray($normalisedBesselJZeros(besselOrder, lattice))}};
+const real _besseljnorm_${dimName} = ${besselJZeros(besselOrder, lattice+1)[-1]};
   @#
 @end def
 
+@def hermiteGaussGlobalsForDim($dimName, $basisDict)
+  @#
+  @set $lattice = basisDict['lattice']
+const real _hermite_zeros_${dimName}[] = {${wrapArray($hermiteZeros(lattice))}};
+const real _hermite_gauss_weights_${dimName}[] = {${wrapArray($hermiteGaussWeights(lattice))}};
+  @#
+@end def
 
 @def mainBegin($dict)
   @#
@@ -47,9 +56,11 @@ ${basis.globalsForDim($geometry.dimensionWithName(dimName))}@slurp
 #endif
   @end if
   @#
-  @for dimName, basis in $basisMap.items()
+  @for dimName, basisDict in $basisMap.items()
     @for dimRep in [rep for rep in $geometry.dimensionWithName(dimName).representations if isinstance(rep, NonUniformDimensionRepresentation) and not rep.hasLocalOffset]
-${basis.gridAndStepForDimRep(dimRep)}@slurp
+for (long _i0 = 0; _i0 < ${dimRep.globalLattice}; _i0++) {
+  ${dimRep.gridAndStepAtIndex('_i0'), autoIndent=True}@slurp
+}
     @end for
     @for field in [field for field in $fields if field.hasDimensionName(dimName)]
       @if field == $geometry

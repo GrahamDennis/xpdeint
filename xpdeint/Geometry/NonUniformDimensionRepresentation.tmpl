@@ -71,3 +71,10 @@ for (long ${loopIndex} = 0; ${loopIndex} < ${localLattice}; ${loopIndex}++) {
 ${loopIndex} + ${localOffset}@slurp
   @#
 @end def
+
+@def gridAndStepAtIndex($index)
+  @#
+${arrayName}[$index] = ${gridAtIndex(index)};
+${stepSizeArrayName}[$index] = ${stepWeightAtIndex(index)};
+  @#
+@end def

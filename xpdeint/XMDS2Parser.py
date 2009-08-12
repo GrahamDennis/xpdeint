@@ -1734,6 +1734,8 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
         
         geometryDimension = geometryTemplate.dimensions[geometryTemplate.indexOfDimensionName(dimensionName)]
         
+        # FIXME: This code so needs rewriting
+        
         fourierSpace = False
         if dimensionElement.hasAttribute('fourier_space') and geometryDimension.isTransformable:
           spaceString = dimensionElement.getAttribute('fourier_space').strip().lower()
@@ -1745,7 +1747,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
           else:
             for dimRep in geometryDimension.representations:
               if dimRep.name == spaceString:
-                fourierSpace = issubclass(dimRep.tag, dimRep.tagForName('spectral'))
+                fourierSpace = dimRep.tag
                 break
           if fourierSpace == None:
             raise ParserException(
@@ -1756,11 +1758,16 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
         
         dimensionElementTuples.append((dimensionElement, geometryDimension))
         
-        if fourierSpace:
-          sampleSpace |= geometryDimension.transformMask
-          tagName = 'spectral'
+        if isinstance(fourierSpace, bool):
+          if fourierSpace:
+            sampleSpace |= geometryDimension.transformMask
+            tagName = 'spectral'
+          else:
+            tagName = 'coordinate'
         else:
-          tagName = 'coordinate'
+          tagName = fourierSpace.tagName
+          if not issubclass(fourierSpace, UniformDimensionRepresentation.tagForName('coordinate')):
+            sampleSpace |= geometryDimension.transformMask
         
         sampleBasis.append(geometryDimension.firstDimRepWithTagName(tagName).canonicalName)
       
