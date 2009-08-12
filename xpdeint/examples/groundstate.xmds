@@ -80,7 +80,9 @@
   </vector>
   
   <computed_vector name="normalisation" dimensions="" type="real">
-    <components> Ncalc  </components>
+    <components>
+      Ncalc
+    </components>
     <evaluation>
       <dependencies fourier_space="y">wavefunction</dependencies>
       <![CDATA[
@@ -94,7 +96,7 @@
     <filter>
       <dependencies>normalisation</dependencies>
       <![CDATA[
-        printf("Joe is great!\n");
+        printf("Hello world from a filter segment!\n");
       ]]>
     </filter>
     <integrate algorithm="ARK89" interval="1e-4" steps="10000" tolerance="1e-8">
