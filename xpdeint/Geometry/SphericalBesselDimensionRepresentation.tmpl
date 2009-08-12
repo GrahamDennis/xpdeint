@@ -1,0 +1,32 @@
+@*
+SphericalBesselDimensionRepresentation.tmpl
+
+Created by Graham Dennis on 2009-08-11.
+Copyright (c) 2009 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.Geometry.BesselDimensionRepresentation
+
+@from xpdeint.CallOnceGuards import callOnceGuard
+
+@attr $orderOffset = 0.5
+
+@@callOnceGuard
+@def includes
+  @#
+#include <gsl/gsl_sf_bessel.h>
+  @#
+@end def
+
+@def besselJFunctionCall($order, $argument)
+  @if $order in [0, 1, 2]
+gsl_sf_bessel_j${order}($argument)@slurp
+  @else
+gsl_sf_bessel_jl($order, $argument)@slurp
+  @end if
+@end def
+
+@def stepWeightAtIndex($index)
+  @#
+sqrt(M_PI/2.0) * 2.0 / (besselFactor * besselFactor * _besseljnorm_${parent.name} * _besseljnorm_${parent.name} * _besseljnorm_${parent.name}) * ${name}_max * ${name}_max * ${name}_max@slurp
+  @#
+@end def

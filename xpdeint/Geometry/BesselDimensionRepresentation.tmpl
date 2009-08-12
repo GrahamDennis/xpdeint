@@ -1,0 +1,40 @@
+@*
+BesselDimensionRepresentation.tmpl
+
+Created by Graham Dennis on 2009-08-11.
+Copyright (c) 2009 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.Geometry.NonUniformDimensionRepresentation
+
+@attr $instanceAttributes = ['_maximum', '_order']
+
+@attr $orderOffset = 0
+
+@def besselJFunctionCall($order, $argument)
+  @if $order in [0, 1]
+j${order}($argument)@slurp
+  @else
+jn(${order}, ${argument})@slurp
+  @end if
+@end def
+
+@def gridAndStepAtIndex($index)
+  @#
+const real besselFactor = ${besselJFunctionCall($_order + 1, c'_normbesseljzeros_${parent.name}[${index}] * _besseljnorm_${parent.name}')};
+const real ${name}_max = ${_maximum};
+  @#
+  @super(index)
+  @#
+@end def
+
+@def gridAtIndex($index)
+  @#
+_normbesseljzeros_${parent.name}[$index] * ${name}_max@slurp
+  @#
+@end def
+
+@def stepWeightAtIndex($index)
+  @#
+2.0 / (besselFactor * besselFactor * _besseljnorm_${parent.name} * _besseljnorm_${parent.name}) * ${name}_max * ${name}_max@slurp
+  @#
+@end def

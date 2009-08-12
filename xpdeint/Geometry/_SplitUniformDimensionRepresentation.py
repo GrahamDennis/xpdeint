@@ -11,23 +11,7 @@ from xpdeint.Geometry.DimensionRepresentation import DimensionRepresentation
 from xpdeint.Utilities import lazy_property
 
 class _SplitUniformDimensionRepresentation(DimensionRepresentation):
-  def __init__(self, **KWs):
-    localKWs = self.extractLocalKWs(['range'], KWs)
-    DimensionRepresentation.__init__(self, **KWs)
-    
-    self._range = localKWs['range']
-  
-  def __eq__(self, other):
-    try:
-      return (DimensionRepresentation.__eq__(self, other) and
-              self._range == other._range)
-    except AttributeError:
-      return NotImplemented
-  
-  def _newInstanceDict(self):
-    result = DimensionRepresentation._newInstanceDict(self)
-    result.update({'range': self._range})
-    return result
+  instanceAttributes = ['_range']
   
   @lazy_property
   def alternateLoopIndex(self):

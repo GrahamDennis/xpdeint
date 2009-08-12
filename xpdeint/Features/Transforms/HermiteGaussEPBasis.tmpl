@@ -11,29 +11,6 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 
 @def description: Hermite-Gauss basis (Harmonic oscillator)
 
-@def globalsForDim($dim)
-  @#
-  @set $dimRep = dim.firstDimRepWithTagName('coordinate')
-const real _hermite_zeros_${dim.name}[] = {${wrapArray($hermiteZeros(dimRep.lattice))}};
-const real _hermite_gauss_weights_${dim.name}[] = {${wrapArray($hermiteGaussWeights(dimRep.lattice))}};
-  @#
-  @super(dim)
-  @#
-@end def
-
-@def gridForDimRepAtIndex($dimRep, $index)
-  @#
-_hermite_zeros_${dimRep.parent.name}[$index] * ${dimRep._maximum}@slurp
-  @#
-@end def
-
-@def stepWeightForDimRepAtIndex($dimRep, $index)
-  @#
-_hermite_gauss_weights_${dimRep.parent.name}[$index] * ${dimRep._maximum}@slurp
-  @#
-@end def
-
-
 @def transformMatricesForwardDimConstantsAtIndex($forwardDimRep, $backwardDimRep, $forwardIndex)
 real hermiteGaussMinusOne = 0.0;
 real hermiteGaussMinusTwo = 0.0;

@@ -11,10 +11,10 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 @extends xpdeint.Features.Transforms.Basis
 
 @def transformFunctionStart
-static real *_mmt_matrix_forward_even = NULL;
-static real *_mmt_matrix_forward_odd  = NULL;
-static real *_mmt_matrix_backward_even = NULL;
-static real *_mmt_matrix_backward_odd  = NULL;
+static ${matrixType} *_mmt_matrix_forward_even = NULL;
+static ${matrixType} *_mmt_matrix_forward_odd  = NULL;
+static ${matrixType} *_mmt_matrix_backward_even = NULL;
+static ${matrixType} *_mmt_matrix_backward_odd  = NULL;
 @end def
 
 
@@ -23,10 +23,10 @@ long _even_${forwardDimRep.name} = (${forwardDimRep.globalLattice} + 1)/2;
 long _odd_${forwardDimRep.name} = ${forwardDimRep.globalLattice}/2;
 long _even_${backwardDimRep.name} = (${backwardDimRep.globalLattice} + 1)/2;
 long _odd_${backwardDimRep.name} = ${backwardDimRep.globalLattice}/2;
-_mmt_matrix_forward_even = (real *)xmds_malloc(sizeof(real) * _even_${forwardDimRep.name} * _even_${backwardDimRep.name});
-_mmt_matrix_forward_odd  = (real *)xmds_malloc(sizeof(real) * _odd_${forwardDimRep.name} * _odd_${backwardDimRep.name});
-_mmt_matrix_backward_even = (real *)xmds_malloc(sizeof(real) * _even_${backwardDimRep.name} * _even_${forwardDimRep.name});
-_mmt_matrix_backward_odd  = (real *)xmds_malloc(sizeof(real) * _odd_${backwardDimRep.name} * _odd_${forwardDimRep.name});
+_mmt_matrix_forward_even = ($matrixType *)xmds_malloc(sizeof($matrixType) * _even_${forwardDimRep.name} * _even_${backwardDimRep.name});
+_mmt_matrix_forward_odd  = ($matrixType *)xmds_malloc(sizeof($matrixType) * _odd_${forwardDimRep.name} * _odd_${backwardDimRep.name});
+_mmt_matrix_backward_even = ($matrixType *)xmds_malloc(sizeof($matrixType) * _even_${backwardDimRep.name} * _even_${forwardDimRep.name});
+_mmt_matrix_backward_odd  = ($matrixType *)xmds_malloc(sizeof($matrixType) * _odd_${backwardDimRep.name} * _odd_${forwardDimRep.name});
 
 for (long _i0 = 0; _i0 < _even_${forwardDimRep.name}; _i0++) {
   long __i0 = ${forwardDimRep.globalLattice} - 1 - _i0;
@@ -80,40 +80,46 @@ ${performBackwardTransform(sourceDimRep, destDimRep)}@slurp
 
 @def performForwardTransform($sourceDimRep, $destDimRep)
   @#
+  @set $blasTypeChar = {'real': {'single': 's', 'double': 'd'}, 'complex': {'single': 'c', 'double': 'z'}}[self.matrixType][$precision]
+  @set $alphaBetaPrefix = {'real': '', 'complex': '&'}[self.matrixType]
+  @set $matMultFunction = 'cblas_%sgemm' % blasTypeChar
 // Loop to create symmetric and antisymmetric components.
-real _temp;
+${matrixType} _temp;
 long outerOffset = _i0 * innerLoopSize * ${sourceDimRep.globalLattice};
 for (long _i1 = 0; _i1 < ${sourceDimRep.globalLattice}/2; _i1++) {
-  real* __restrict__ _low = &source_data[outerOffset + _i1 * innerLoopSize];
-  real* __restrict__ _high = &source_data[outerOffset + (${sourceDimRep.globalLattice} - 1 - _i1) * innerLoopSize];
+  ${matrixType}* __restrict__ _low = &source_data[outerOffset + _i1 * innerLoopSize];
+  ${matrixType}* __restrict__ _high = &source_data[outerOffset + (${sourceDimRep.globalLattice} - 1 - _i1) * innerLoopSize];
   for (long _i2 = 0; _i2 < innerLoopSize; _i2++) {
     _temp = _low[_i2];
     _low[_i2] += _high[_i2];  // _low stores the symmetric component
     _high[_i2] -= _temp; // _high stores the antisymmetric component
   }
 }
+const ${matrixType} alpha = 1.0;
+const ${matrixType} beta = 0.0;
+
 // Symmetric component of the transform
-cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
+${matMultFunction}(CblasRowMajor, CblasNoTrans, CblasNoTrans,
             (${destDimRep.globalLattice}+1)/2,
             /* nelem */ innerLoopSize,
             (${sourceDimRep.globalLattice}+1)/2,
-            /* alpha */ 1.0,
+            /* alpha */ ${alphaBetaPrefix}alpha,
             /* A */ _mmt_matrix_forward_even, (${sourceDimRep.globalLattice}+1)/2,
             /* B */ source_data + _i0 * ${sourceDimRep.globalLattice} * innerLoopSize,
                     innerLoopSize,
-            /* beta */ 0.0,
+            /* beta */ ${alphaBetaPrefix}beta,
             /* C */ dest_data + _i0 * ${destDimRep.globalLattice} * innerLoopSize,
             2 * innerLoopSize);
 // Antisymmetric component of the transform
-cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
+${matMultFunction}(CblasRowMajor, CblasNoTrans, CblasNoTrans,
             ${destDimRep.globalLattice}/2,
             /* nelem */ innerLoopSize,
             ${sourceDimRep.globalLattice}/2,
-            /* alpha */ 1.0,
+            /* alpha */ ${alphaBetaPrefix}alpha,
             /* A */ _mmt_matrix_forward_odd, ${sourceDimRep.globalLattice}/2,
             /* B */ source_data + (_i0 * ${sourceDimRep.globalLattice} + (${sourceDimRep.globalLattice}+1)/2) * innerLoopSize,
                     innerLoopSize,
-            /* beta */ 0.0,
+            /* beta */ ${alphaBetaPrefix}beta,
             /* C */ dest_data + (_i0 * ${destDimRep.globalLattice} + 1) * innerLoopSize,
             2 * innerLoopSize);
   @#
@@ -121,38 +127,44 @@ cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
 
 @def performBackwardTransform($sourceDimRep, $destDimRep)
   @#
+  @set $blasTypeChar = {'real': {'single': 's', 'double': 'd'}, 'complex': {'single': 'c', 'double': 'z'}}[self.matrixType][$precision]
+  @set $alphaBetaPrefix = {'real': '', 'complex': '&'}[self.matrixType]
+  @set $matMultFunction = 'cblas_%sgemm' % blasTypeChar
+const ${matrixType} alpha = 1.0;
+const ${matrixType} beta = 0.0;
+
 // Symmetric component of the transform
-cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
+${matMultFunction}(CblasRowMajor, CblasNoTrans, CblasNoTrans,
             (${destDimRep.globalLattice}+1)/2,
             /* nelem */ innerLoopSize,
             (${sourceDimRep.globalLattice}+1)/2,
-            /* alpha */ 1.0,
+            /* alpha */ ${alphaBetaPrefix}alpha,
             /* A */ _mmt_matrix_backward_even, (${sourceDimRep.globalLattice}+1)/2,
             /* B */ source_data + _i0 * ${sourceDimRep.globalLattice} * innerLoopSize,
                     2 * innerLoopSize,
-            /* beta */ 0.0,
+            /* beta */ ${alphaBetaPrefix}beta,
             /* C */ dest_data + _i0 * ${destDimRep.globalLattice} * innerLoopSize,
             innerLoopSize);
 // Antisymmetric component of the transform
-cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
+${matMultFunction}(CblasRowMajor, CblasNoTrans, CblasNoTrans,
             ${destDimRep.globalLattice}/2,
             /* nelem */ innerLoopSize,
             ${sourceDimRep.globalLattice}/2,
-            /* alpha */ 1.0,
+            /* alpha */ ${alphaBetaPrefix}alpha,
             /* A */ _mmt_matrix_backward_odd, ${sourceDimRep.globalLattice}/2,
             /* B */ source_data + (_i0 * ${sourceDimRep.globalLattice} + 1) * innerLoopSize,
                     2 * innerLoopSize,
-            /* beta */ 0.0,
+            /* beta */ ${alphaBetaPrefix}beta,
             /* C */ dest_data + (_i0 * ${destDimRep.globalLattice} + (${destDimRep.globalLattice}+1)/2) * innerLoopSize,
             innerLoopSize);
 // Loop to unravel symmetric and antisymmetric components.
-real _temp;
+${matrixType} _temp;
 long outerOffset = _i0 * innerLoopSize * ${destDimRep.globalLattice};
 for (long _i1 = 0; _i1 < ${destDimRep.globalLattice}/2; _i1++) {
   // _low stored the symmetric component
-  real* __restrict__ _low = &dest_data[outerOffset + _i1 * innerLoopSize];
+  ${matrixType}* __restrict__ _low = &dest_data[outerOffset + _i1 * innerLoopSize];
   // _high stored the antisymmetric component
-  real* __restrict__ _high = &dest_data[outerOffset + (${destDimRep.globalLattice} - 1 - _i1) * innerLoopSize];
+  ${matrixType}* __restrict__ _high = &dest_data[outerOffset + (${destDimRep.globalLattice} - 1 - _i1) * innerLoopSize];
   for (long _i2 = 0; _i2 < innerLoopSize; _i2++) {
     _temp = _low[_i2];
     // _low is the negative domain
