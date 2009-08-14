@@ -1,0 +1,35 @@
+@*
+HermiteGaussFourierEPBasis.tmpl
+
+Hermite-Gauss Fourier basis using the definite parity of the basis functions to remove
+half the work.
+
+Created by Graham Dennis on 2009-08-12.
+Copyright (c) 2009 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.Features.Transforms.HermiteGaussEPBasis
+
+@def description: Hermite-Gauss Fourier basis (Harmonic oscillator)
+
+@attr $matrixType = 'complex'
+
+@def transformMatricesForwardDimConstantsAtIndex($forwardDimRep, $backwardDimRep, $forwardIndex)
+  @super(forwardDimRep, backwardDimRep, forwardIndex)
+complex eigenvalue_factor = 1.0;
+@end def
+
+@def transformMatricesForDimRepsAtIndices($forwardDimRep, $backwardDimRep, $forwardIndex, $backwardIndex)
+  @#
+  @super(forwardDimRep, backwardDimRep, forwardIndex, backwardIndex)
+eigenvalue_factor *= -i;
+  @#
+@end def
+
+@def forwardMatrixForDimAtIndices($forwardDimRep, $backwardDimRep, $forwardIndex, $backwardIndex)
+eigenvalue_factor * @super(forwardDimRep, backwardDimRep, forwardIndex, backwardIndex)@slurp
+@end def
+
+@def backwardMatrixForDimAtIndices($forwardDimRep, $backwardDimRep, $forwardIndex, $backwardIndex)
+conj(eigenvalue_factor) * @super(forwardDimRep, backwardDimRep, forwardIndex, backwardIndex)@slurp
+@end def
+
