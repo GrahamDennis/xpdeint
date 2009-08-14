@@ -1,0 +1,22 @@
+@*
+HermiteGaussDimensionRepresentation.tmpl
+
+Created by Graham Dennis on 2009-08-12.
+Copyright (c) 2009 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.Geometry.NonUniformDimensionRepresentation
+
+@attr $instanceAttributes = ['_maximum']
+
+@def gridAtIndex($index)
+  @#
+_hermite_zeros_${parent.name}[$index] * ${_maximum}@slurp
+  @#
+@end def
+
+@def stepWeightAtIndex($index)
+  @#
+_hermite_gauss_weights_${parent.name}[$index] * ${_maximum}@slurp
+  @#
+@end def
+
