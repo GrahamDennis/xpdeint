@@ -57,12 +57,12 @@ class _VectorElement (ScriptElement):
                                   predicate = lambda: self.needsInitialisation)
     self.functions['initialise'] = initialiseFunction
     
-    goSpaceFunctionName = ''.join(['_', self.id, '_go_space'])
-    goSpaceFunction = Function(name = goSpaceFunctionName,
-                               args = [('unsigned long', 'newSpace')],
-                               implementation = self.goSpaceFunctionContents,
+    basisTransformFunctionName = ''.join(['_', self.id, '_basis_transform'])
+    basisTransformFunction = Function(name = basisTransformFunctionName,
+                               args = [('ptrdiff_t', 'new_basis')],
+                               implementation = self.basisTransformFunctionContents,
                                predicate = lambda: self.needsTransforms)
-    self.functions['goSpace'] = goSpaceFunction
+    self.functions['basisTransform'] = basisTransformFunction
   
   @property
   def dependencies(self):

@@ -218,6 +218,7 @@ class _MMT (_Transform):
                            stepSizeArray = True, parent = dim,
                            _maximum = '(_besseljnorm_%(name)s/((real)%(maximum)s))' % locals(),
                            _order = order,
+                           reductionMethod = dimRepClass.ReductionMethod.fixedStep,
                            tag = self.spectralSpaceTag,
                            **self.argumentsToTemplateConstructors)
       dim.addRepresentation(kspace)
@@ -250,11 +251,14 @@ class _MMT (_Transform):
         name = 'n' + name, type = 'long', lattice = spectralLattice,
         _minimum = '0', _maximum = spectralLattice, _stepSize = '1',
         parent = dim, tag = self.spectralSpaceTag,
+        reductionMethod = UniformDimensionRepresentation.ReductionMethod.fixedStep,
         **self.argumentsToTemplateConstructors
       )
       dim.addRepresentation(nspace)
       
       # Fourier space representation
+      # FIXME: We may want to make this have a fixedStep ReductionMethod, but that requires support from
+      # the DimRep and from FourierTransformFFTW3MPI in the case that this dimension is distributed.
       kspace = HermiteGaussDimensionRepresentation(
         name = 'k' + name, type = type, lattice = lattice, _maximum = "(1.0 / (%s))" % maximum,
         stepSizeArray = True, parent = dim, tag = self.auxiliarySpaceTag,

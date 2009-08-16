@@ -75,7 +75,7 @@ MPI_Bcast(&_block_size_${secondMPIDimRep.name}, sizeof(ptrdiff_t), MPI_BYTE, 0, 
         @if fieldRep == geometryRep
 ${fieldRep.localLattice} = ${geometryRep.localLattice};
 ${fieldRep.localOffset} = ${geometryRep.localOffset};
-        @elif fieldRep.reductionMethod == fieldDim.ReductionMethod.fixedRange
+        @elif fieldRep.reductionMethod == fieldRep.ReductionMethod.fixedRange
           @# In this case we are in 'x' space and are subdividing a distributed dimension
           @# fixedRange reduction method means we take every nth point.
 ptrdiff_t _${field.name}_${fieldRep.name}_skip_size = ${geometryRep.globalLattice}/${fieldRep.globalLattice};

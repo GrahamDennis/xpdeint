@@ -36,7 +36,7 @@ $type* _${id} = NULL;
 $type* _active_${id} = NULL;
   @if $needsTransforms
 
-unsigned long _${id}_space;
+ptrdiff_t _${id}_basis;
   @end if
   @#
 @end def
@@ -49,16 +49,16 @@ unsigned long _${id}_space;
 ${initialiser.initialiseVector}@slurp
   @if $needsTransforms
 
-_${id}_space = $basisIndexForBasis(self.initialBasis);
+_${id}_basis = $basisIndexForBasis(self.initialBasis);
   @end if
   @#
 @end def
 
-@def goSpaceFunctionContents($function)
+@def basisTransformFunctionContents($function)
   @#
   @set $featureOrdering = ['TransformMultiplexer']
   @set $dict = {'function': function}
-${insertCodeForFeatures('goSpaceFunctionContentsBegin', featureOrdering, dict)}@slurp
+${insertCodeForFeatures('basisTransformFunctionContentsBegin', featureOrdering, dict)}@slurp
   @#
 @end def
 

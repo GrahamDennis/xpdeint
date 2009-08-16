@@ -1699,7 +1699,6 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
           momentGroupTemplate.requiresInitialSample = True
           sampleCount = 1
       
-      sampleSpace = 0
       sampleBasis = []
       transformMultiplexer = self.globalNameSpace['features']['TransformMultiplexer']
       samplingDimension = Dimension(name = self.globalNameSpace['globalPropagationDimension'],
@@ -1734,8 +1733,6 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
         
         geometryDimension = geometryTemplate.dimensions[geometryTemplate.indexOfDimensionName(dimensionName)]
         
-        # FIXME: This code so needs rewriting
-        
         fourierSpace = False
         if dimensionElement.hasAttribute('fourier_space') and geometryDimension.isTransformable:
           spaceString = dimensionElement.getAttribute('fourier_space').strip().lower()
@@ -1760,14 +1757,11 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
         
         if isinstance(fourierSpace, bool):
           if fourierSpace:
-            sampleSpace |= geometryDimension.transformMask
             tagName = 'spectral'
           else:
             tagName = 'coordinate'
         else:
           tagName = fourierSpace.tagName
-          if not issubclass(fourierSpace, UniformDimensionRepresentation.tagForName('coordinate')):
-            sampleSpace |= geometryDimension.transformMask
         
         sampleBasis.append(geometryDimension.firstDimRepWithTagName(tagName).canonicalName)
       
@@ -1839,13 +1833,8 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       
       
       for dimName, lattice in dimensionsNeedingLatticeUpdates.items():
-        dim = samplingFieldTemplate.dimensionWithName(dimName)
-        if dim.transformMask & sampleSpace:
-          reductionMethod = Dimension.ReductionMethod.fixedStep
-        else:
-          reductionMethod = Dimension.ReductionMethod.fixedRange
         for field, basis in [(samplingFieldTemplate, sampleBasis), (outputFieldTemplate, outputBasis)]:
-          field.dimensionWithName(dimName).setReducedLatticeInBasis(lattice, basis, reductionMethod)
+          field.dimensionWithName(dimName).setReducedLatticeInBasis(lattice, basis)
       
       # end looping over dimension elements.  
       momentGroupTemplate.outputBasis = outputBasis

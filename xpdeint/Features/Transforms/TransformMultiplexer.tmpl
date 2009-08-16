@@ -67,9 +67,9 @@ const char *_basis_identifiers[] = {
   @#
 @end def
 
-@def goSpaceFunctionContentsBegin($dict)
+@def basisTransformFunctionContentsBegin($dict)
 @*doc:
-Returns the ``go_space`` function implementation for vector `vector`.
+Returns the ``basis_transform`` function implementation for vector `vector`.
 
 This writes the function that does the fourier transforming of a specific vector
 to and from arbitrary combinations of fourier-space and normal-space.
@@ -78,22 +78,22 @@ to and from arbitrary combinations of fourier-space and normal-space.
   @set $function = dict['function']
   @set $vector = dict['caller']
   @set $transformInfo = self.vectorTransformMap[vector]
-if (_${vector.id}_space == newSpace)
+if (_${vector.id}_basis == new_basis)
   return;
 
-if (_${vector.id}_basis_map.count(_basis_pair(_${vector.id}_space, newSpace)) == 0) {
+if (_${vector.id}_basis_map.count(_basis_pair(_${vector.id}_basis, new_basis)) == 0) {
   _LOG(
     _ERROR_LOG_LEVEL,
     "Error: We should have information about how to do every needed transform, but it seems we don't for this transform.\n"
     "       The transform is for the vector '${vector.id}' from basis %s to basis %s.\n",
-    _basis_identifiers[_${vector.id}_space], _basis_identifiers[newSpace]
+    _basis_identifiers[_${vector.id}_basis], _basis_identifiers[new_basis]
   );
 }
-_basis_transform &_t = _${vector.id}_basis_map[_basis_pair(_${vector.id}_space, newSpace)];
+_basis_transform &_t = _${vector.id}_basis_map[_basis_pair(_${vector.id}_basis, new_basis)];
 if (_t._transform_steps.size() == 0) {
   _LOG(_ERROR_LOG_LEVEL, "Error: It looks like we tried to create plans for this transform, but failed.\n"
                          "       The transform was for the vector '${vector.id}' from basis %s to basis %s.\n",
-                         _basis_identifiers[_${vector.id}_space], _basis_identifiers[newSpace]);
+                         _basis_identifiers[_${vector.id}_basis], _basis_identifiers[new_basis]);
 }
 real *_source_data = reinterpret_cast<real*>(_active_${vector.id});
 real *_dest_data = _auxiliary_array;
@@ -105,7 +105,7 @@ for (vector<_transform_step>::iterator _it = _t._transform_steps.begin(); _it !=
     _dest_data = _temp;
   }
 }
-_${vector.id}_space = newSpace;
+_${vector.id}_basis = new_basis;
   @#
 @end def
 
