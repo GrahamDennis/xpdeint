@@ -31,15 +31,6 @@ class _Dimension(ScriptElement):
   a transformed coordinate that is strictly positive.
   """
   
-  class ReductionMethod(object):
-    fixedRange = 0
-    fixedStep = 1
-    
-    @staticmethod
-    def validate(method):
-      return method in range(2)
-  
-  
   def __init__(self, *args, **KWs):
     localKWs = self.extractLocalKWs(['name', 'transverse','transform', 'aliases'], KWs)
     ScriptElement.__init__(self, *args, **KWs)
@@ -51,7 +42,6 @@ class _Dimension(ScriptElement):
     self.aliases.add(self.name)
     
     self.representations = []
-    self._transformMask = None
   
   def preflight(self):
     # FIXME: DODGY. When we go to the 'basis' concept from the 'spaces' concept, this should go away
@@ -70,13 +60,6 @@ class _Dimension(ScriptElement):
   @lazy_property
   def isTransformable(self):
     return len(self.representations) >= 2
-  
-  @lazy_property
-  def transformMask(self):
-    if self._transformMask == None:
-      geometry = self.getVar('geometry')
-      self._transformMask = 1 << geometry.indexOfDimension(self)
-    return self._transformMask
   
   def inBasis(self, basis):
     for rep in self.representations:
@@ -99,13 +82,13 @@ class _Dimension(ScriptElement):
         if rep: rep.remove()
         self.representations[idx] = None
   
-  def setReducedLatticeInBasis(self, newLattice, basis, reductionMethod):
-    assert _Dimension.ReductionMethod.validate(reductionMethod)
+  def setReducedLatticeInBasis(self, newLattice, basis):
     dimRep = self.inBasis(basis)
+    reductionMethod = dimRep.reductionMethod
+    assert dimRep.ReductionMethod.validate(reductionMethod)
     if dimRep.lattice == newLattice: return
     newDimRep = dimRep.copy(parent = self)
     newDimRep.lattice = newLattice
-    newDimRep.reductionMethod = reductionMethod
     self._children.append(newDimRep)
     self.representations[self.representations.index(dimRep)] = newDimRep
     self.invalidateRepresentationsOtherThan(newDimRep)

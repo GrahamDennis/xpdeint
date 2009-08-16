@@ -1,14 +1,6 @@
-* Complete Stochastics support
-  * Test
-  * Implement noise vectors
-  * Fix given recent discovery of limitations
-
 * Add ASCII/binary vector initialisation options
 
 * Add the ability to distribute stochastic simulations using MPI with the scheduling method
-
-* Deterministic/distributed MPI
-  * Needs testing.
 
 * Make sure that all the things that Andy has been doing to enable various simulation
   parameters can be controlled at simulation run time can be done in xpdeint.
@@ -58,22 +50,6 @@
 
 * Rewrite bindNamedVectors/preflight system. It's a mess. bindNamedVectors/preflight should probably be renamed to something like 'localPreflight'/'nonlocalPreflight'.
 
-* Add support for multiple transforms. Here we will want a transform multiplexer to combine the results of the (separable) transforms. The kinds of transforms
-  that should be considered should include:
-  - Discrete Cosine / Sine Transforms (for even/odd symmetric boundary conditions): Done
-  - General matrix transforms. For example, Hankel transforms (require non-uniform dimensions) 
-    and hermite-gaussian basis decomposition (may require non-square transforms): Done
-  - We need a differentiation operator D[phi, x, x, y, y] = d^4phi/(dx^2 dy^2) (better syntax needed) to represent derivatives of variables.
-    Another option for the syntax could be D_x[phi], D_x2[phi], D_theta[phi], D_x_y[phi]. This way only symbols starting with 'D_' would be banned
-    instead of all beginning with 'D' which would be a little restrictive. Also, we won't introduce a new kind of operator notation that could be confused
-    with IP or EX operators. And this way we can then use the same parsing code as is used for EX/IP operators and all this code can be combined into a single
-    location.
-    This is needed because for many transforms, a derivative cannot be represented in terms of IP or EX operators.
-    A good example is calculating odd derivatives with the DCT/DST transforms. i*kx is *NOT* the first derivative. This is only
-    true for DFTs. However, the first derivative can be calculated when using DCTs/DSTs, so the 'D' operator would make this available.
-    This would also lessen the learning curve for first-time users, as they can use a more obvious syntax instead of EX or IP operators.
-    Even better, this syntax would be independent of the transform you are using. If a specific transform doesn't support the particular
-    derivative requested, it can simply say so at compile time.
 
 * Make xmds/xpdeint code compile on Windows. Currently it works in Cygwin but suffers from 
   SERIOUS performance degradation. I've been trying to compile a simple script (modified 
@@ -108,10 +84,7 @@
 
 Things to be done by AIP:
 * Windows compatibility
-* Remove dependence on libxmds for XSIL import (port xsil2graphics too?)
 * 'D_' operators (for ease of use by new users)
-Lower priority, but still nice:
-* General matrix transforms lending credibility to calling xpdeint a general spectral method code generator.
 
 Testcases needed:
 * MPI with Fourier transforms testing looping over both MPI dimensions with a vector that only has one of the two MPI dimensions.
@@ -120,9 +93,6 @@ Testcases needed:
 * Tests dumping fields where the testcase data was dumped on a big-endian machine (PPC)
 * More testcases doing stupid things with loading and dumping of various formats of data, including loading in MPI
   simulations, writing of ascii/binary/HDF5 data and loading of binary/HDF5 data.
-
-* pointsInDimensionsWithIndices should probably be renamed and most things that use it should probably be shifted to use
-  localPointsInDimensionsAfterDimensionInSpace
 
 * Replace 'space' with the more general notion of 'basis'. Change the transform system to not require transforms to define
   how to perform every possible transform, but instead just the fundamental operations that can then be chained together as

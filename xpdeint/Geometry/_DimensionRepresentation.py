@@ -19,13 +19,21 @@ class _DimensionRepresentation(ScriptElement):
   how exactly to split the dimension are controlled by the transform that created the representation.
   """
   
+  class ReductionMethod(object):
+    fixedRange = 0
+    fixedStep = 1
+    
+    @staticmethod
+    def validate(method):
+      return method in range(2)
+  
   tags = {}
   
   instanceAttributes = ['name',  'type', 'lattice', '_localVariablePrefix', 'reductionMethod', 'tag']
   
   instanceDefaults = dict(
     lattice = 0,
-    reductionMethod = -1,
+    reductionMethod = ReductionMethod.fixedRange,
     tag = -1
   )
   

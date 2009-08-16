@@ -41,9 +41,6 @@ class _DistributedMPIDriver (SimulationDriver, MPI):
         result.extend([rep.localLattice, rep.localOffset])
     return result
   
-  def setDistributedMPILatticeVariableForSpace(self, varName, spaceVarName):
-    return self._distributedTransform.setDistributedMPILatticeVariableForSpace(varName, spaceVarName)
-  
   def preflight(self):
     super(_DistributedMPIDriver, self).preflight()
     

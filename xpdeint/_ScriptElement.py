@@ -434,7 +434,7 @@ class _ScriptElement (Template):
         )
       basisString = ', '.join(vectorBasis)
       basisIndex = self.basisIndexForBasis(vectorBasis)
-      result.extend([vector.functions['goSpace'].call(newSpace=basisIndex), ' // (', basisString, ')\n'])
+      result.extend([vector.functions['basisTransform'].call(new_basis=basisIndex), ' // (', basisString, ')\n'])
     return ''.join(result)
   
   def registerVectorsRequiredInBasis(self, vectors, basis):

@@ -26,9 +26,6 @@ class _TransformMultiplexer (_Feature):
     self.neededTransformations = []
     self.transformations = []
   
-  def transformsForVector(self, vector):
-    return set([dim.transform for dim in vector.field.dimensions if dim.transform.hasattr('goSpaceFunctionContentsForVector')])
-  
   def transformWithName(self, name):
     if not name in self.transformClasses:
       return None

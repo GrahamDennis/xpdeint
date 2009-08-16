@@ -54,9 +54,9 @@ for (long ${loopIndex} = ${localLattice}-1; ${loopIndex} >= 0; ${loopIndex}--) {
 @end def
 
 @def localIndexFromIndexForDimensionRep($dimRep)
-  @if $dimRep.lattice == $lattice or $dimRep.reductionMethod == $parent.ReductionMethod.fixedStep
+  @if $dimRep.lattice == $lattice or $dimRep.reductionMethod == $ReductionMethod.fixedStep
 ${dimRep.loopIndex} + ${dimRep.localOffset} - ${localOffset}@slurp
-  @elif $dimRep.reductionMethod == $parent.ReductionMethod.fixedRange
+  @elif $dimRep.reductionMethod == $ReductionMethod.fixedRange
     @# We are using a fixed-range reduction method.
     @#
     @# Check that our lattice is a multiple of the lattice on which we want the

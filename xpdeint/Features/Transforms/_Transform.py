@@ -19,7 +19,6 @@ class _Transform (ScriptElement):
     ScriptElement.__init__(self, *args, **KWs)
     # Register ourselves with the transform multiplexer
     self.getVar('features')['TransformMultiplexer'].transforms.add(self)
-    self.transformMask = 0
     self.transformations = []
   
   def __hash__(self):
@@ -57,9 +56,5 @@ class _Transform (ScriptElement):
   
   def setVectorAllocSizes(self, vectors):
     return ''
-  
-  def preflight(self):
-    super(_Transform, self).preflight()
-    self.transformMask = reduce(operator.__or__, [d.transformMask for d in self.getVar('geometry').dimensions if d.transform == self], 0)
   
 

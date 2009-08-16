@@ -71,33 +71,42 @@ class _FourierTransformFFTW3 (_Transform):
                                               tag = self.coordinateSpaceTag,
                                               **self.argumentsToTemplateConstructors)
       # kspace representation
-      kspace = SplitUniformDimensionRepresentation(name = 'k' + name, type = type, lattice = lattice,
-                                                   _range = '%s - %s' % (xspace.maximum, xspace.minimum),
-                                                   parent = dim, tag = self.fourierSpaceTag,
-                                                   **self.argumentsToTemplateConstructors)
+      kspace = SplitUniformDimensionRepresentation(
+        name = 'k' + name, type = type, lattice = lattice,
+        _range = '%s - %s' % (xspace.maximum, xspace.minimum),
+        parent = dim, tag = self.fourierSpaceTag,
+        reductionMethod = SplitUniformDimensionRepresentation.ReductionMethod.fixedStep,
+        **self.argumentsToTemplateConstructors
+      )
     else:
       # x-space representation
       stepSize = '((real)%(maximum)s - %(minimum)s)/(%(lattice)s)' % locals()
-      xspace = UniformDimensionRepresentation(name = name, type = type, lattice = lattice,
-                                              _stepSize = stepSize,
-                                              tag = self.coordinateSpaceTag,
-                                              parent = dim, **self.argumentsToTemplateConstructors)
+      xspace = UniformDimensionRepresentation(
+        name = name, type = type, lattice = lattice,
+        _stepSize = stepSize, tag = self.coordinateSpaceTag,
+        parent = dim, **self.argumentsToTemplateConstructors
+      )
       # Modify the minimum and maximum values to deal with the 0.5*stepSize offset
       xspace._minimum = '%s + 0.5*%s' % (minimum, xspace.stepSize)
       xspace._maximum = '%s + 0.5*%s' % (maximum, xspace.stepSize)
       if transformName == 'dct':
         # kspace representation
-        kspace = UniformDimensionRepresentation(name = 'k' + name, type = type, lattice = lattice,
-                                                _minimum = '0.0',
-                                                _stepSize = '(M_PI/(%(maximum)s - %(minimum)s))' % locals(),
-                                                tag = self.fourierSpaceTag,
-                                                parent = dim, **self.argumentsToTemplateConstructors)
+        kspace = UniformDimensionRepresentation(
+          name = 'k' + name, type = type, lattice = lattice,
+          _minimum = '0.0', _stepSize = '(M_PI/(%(maximum)s - %(minimum)s))' % locals(),
+          tag = self.fourierSpaceTag,
+          reductionMethod = UniformDimensionRepresentation.ReductionMethod.fixedStep,
+          parent = dim, **self.argumentsToTemplateConstructors
+        )
         kspace._maximum = '%s * %s' % (kspace.stepSize, kspace.globalLattice)
       else:
-        kspace = UniformDimensionRepresentation(name = 'k' + name, type = type, lattice = lattice,
-                                                _stepSize = '(M_PI/(%(maximum)s - %(minimum)s))' % locals(),
-                                                tag = self.fourierSpaceTag,
-                                                parent = dim, **self.argumentsToTemplateConstructors)
+        kspace = UniformDimensionRepresentation(
+          name = 'k' + name, type = type, lattice = lattice,
+          _stepSize = '(M_PI/(%(maximum)s - %(minimum)s))' % locals(),
+          tag = self.fourierSpaceTag,
+          reductionMethod = UniformDimensionRepresentation.ReductionMethod.fixedStep,
+          parent = dim, **self.argumentsToTemplateConstructors
+        )
         kspace._minimum = '%s' % kspace.stepSize
         kspace._maximum = '%s * (%s + 1)' % (kspace.stepSize, kspace.globalLattice)
     

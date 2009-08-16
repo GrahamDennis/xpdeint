@@ -91,23 +91,6 @@ class _FieldElement (ScriptElement):
     """Return the dimension that has the name `dimensionName`."""
     return self.dimensions[self.indexOfDimensionName(dimensionName)]
   
-  # Return a string which is the number of points in the dimensions corresponding to the passed indices
-  def pointsInDimensionsWithIndices(self, indices):
-    if len(indices) == 0:
-      return '1'
-    
-    result = []
-    separator = ''
-    for dimensionIndex in indices:
-      assert dimensionIndex < len(self.dimensions)
-      # Only put a multiply sign in for everything after the first dimension
-      result.append(separator)
-      separator = ' * '
-      maxRep = max([(rep.lattice, rep) for rep in self.dimensions[dimensionIndex].representations if rep])[1]
-      result.append(maxRep.globalLattice)
-    
-    return ''.join(result)
-  
   def localPointsInDimensionsAfterDimRepInBasis(self, dimRep, basis):
     dimReps = self.inBasis(basis)
     # Grab everything after dimension
@@ -201,7 +184,7 @@ class _FieldElement (ScriptElement):
   
   def basisFromString(self, basisString, xmlElement = None):
     """
-    Return the basis given `spacesString`.
+    Return the basis given `basisString`.
     """
     xmlElement = xmlElement or self.xmlElement
     
