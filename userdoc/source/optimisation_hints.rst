@@ -21,6 +21,7 @@ Avoid transcendental functions like :math:`\sin(x)` or :math:`\exp(x)` in inner 
 Use the Interaction Picture (IP) operator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Just do it. Only use the EX operator when you have to. If you must use the EX operator, consider making it ``constant="no"``. It uses less memory.
+When you use the IP operator, make sure you know what it's doing.  Do not pre- or post-multiply that term in your equations.
 
 Consider writing the evolution in spectral basis
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
