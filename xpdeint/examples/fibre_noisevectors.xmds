@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <name>fibre</name>
+  <author>Unknown author</author>
+  <description>
+    Example fibre noise simulation
+  </description>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="x" lattice="64"  domain="(-5, 5)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <driver name="mpi-multi-path" paths="50" />
+  
+  <features>
+    <auto_vectorise />
+    <benchmark />
+    <error_check />
+    <bing />
+    <fftw />
+    <!-- <openmp /> -->
+    <stochastic>
+      <noise kind="gaussian" prefix="n" num="2"/>
+      <!-- If there is no seed attribute then seeds will be chosen randomly at run-time -->
+    </stochastic>
+    <globals>
+      <![CDATA[
+      const real ggamma = 1.0;
+      const real beta = sqrt(2.0*M_PI*ggamma/10.0);
+      ]]>
+    </globals>
+  </features>
+  
+  <vector name="main" initial_space="x" type="complex">
+    <components>phi</components>
+    <initialisation no_noises="true">
+      <![CDATA[
+        phi = 0.0;
+      ]]>
+    </initialisation>
+  </vector>
+
+  <noise_vector name="deedoubleyou" dimensions="x" kind="gaussian" type="real">
+    <components>p_1 p_2</components>
+    <evaluation>
+      <![CDATA[
+        p_1 = 0.0;
+        p_2 = 0.0;
+      ]]>
+    </evaluation>
+  </noise_vector>
+
+  <computed_vector name="filter1" dimensions="" type="real">
+    <components>moment</components>
+    <evaluation noises="">
+      <![CDATA[
+      // Joe is great
+        moment = 1.0;
+      ]]>
+    </evaluation>
+  </computed_vector>
+  
+  <sequence>
+    <integrate algorithm="RK4" iterations="3" interval="2.5" steps="200000" tolerance="1e-6">
+      <samples>50</samples>
+      <operators>
+        <operator kind="ip" constant="yes">
+          <operator_names>L</operator_names>
+          <![CDATA[
+            L = -i*kx*kx;
+          ]]>
+        </operator>
+        <dependencies>filter1</dependencies>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+          dphi_dt = L[phi] - ggamma*phi + moment*beta*complex(n_1, n_2);
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  
+  <output format="binary" filename="fibre.xsil">
+    <group>
+      <sampling initial_sample="yes">
+        <dimension name="x" lattice="64" fourier_space="yes" />
+        <moments>pow_dens</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          pow_dens = mod2(phi);
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>
