@@ -1,0 +1,28 @@
+@*
+NoiseVector.tmpl
+
+Created by Joe Hope on 2009-08-17.
+Copyright (c) 2009 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.Vectors._NoiseVector
+
+@*
+  Description of template
+*@
+@def description: noise vector $name
+
+@def evaluateFunctionContents($function)
+@*doc:
+  This function returns the code for the calculated vector's ``evaluate()`` function.
+  
+  The ``evaluate()`` function executes the code that defines the calculated vector.
+*@
+  @#
+  @# adding autoIndent=True in the next phrase caused a barf
+  ${randomVariable.makeNoises}@slurp
+  @#
+  @if $needsTransforms
+_${id}_basis = $basisIndexForBasis(self.initialBasis);
+  @end if
+  @#
+@end def

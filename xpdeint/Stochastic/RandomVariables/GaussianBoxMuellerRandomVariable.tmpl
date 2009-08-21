@@ -1,0 +1,65 @@
+@*
+GaussianBoxMuellerRandomVariable.tmpl
+
+Created by Joe Hope on 2009-08-20.
+Copyright (c) 2009 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.ScriptElement
+
+@def boxMuellerAlgorithm
+@*doc:
+  Return the code to generate two gaussian noises
+  using the Box-Mueller algorithm
+*@
+  @#
+real _v1, _v2, _rsq;
+do {
+  _v1 = ${generator.minusOneToOneRandomNumber};
+  _v2 = ${generator.minusOneToOneRandomNumber};
+  _rsq = _v1*_v1 + _v2*_v2;
+} while(_rsq >= 1.0 || _rsq == 0.0);
+const real _fac = sqrt(-2.0*_var*log(_rsq)/_rsq);
+  @#
+@end def
+
+@def makeNoises
+@*doc:
+  Return the code for the contents of the makeNoises function for
+  a gaussian noise generated with the Box Mueller algorithm
+*@
+  @set noiseVector = $parent
+  @#
+const real _var = 1.0/sqrt(${noiseVector.field.volumeElementInBasis(noiseVector.initialBasis)}@slurp
+@if not noiseVector.static:
+*_step@slurp
+@end if
+);
+
+const ptrdiff_t _vector_size = ${noiseVector.sizeInBasisInReals(noiseVector.initialBasis)};
+const ptrdiff_t _evenNoises = _vector_size & ~1;
+for (ptrdiff_t _i0 = 0; _i0 < _evenNoises; _i0 += 2) {
+  ${boxMuellerAlgorithm, autoIndent=True}@slurp
+  reinterpret_cast<real*>(_${noiseVector.id})[_i0 + 0] = _v1*_fac;
+  reinterpret_cast<real*>(_${noiseVector.id})[_i0 + 1] = _v2*_fac;
+}
+
+// If _n is odd, we need to generate the last random number
+if (_vector_size & 1) {
+  static real _spareNoise = 0.0;
+  static bool _spareNoiseAvailable = false;
+  static real _old_var = 0.0;
+  
+  if (_spareNoiseAvailable && _old_var == _var) {
+    reinterpret_cast<real*>(_${noiseVector.id})[_vector_size - 1] = _spareNoise;
+    _spareNoiseAvailable = false;
+  } else {
+    ${boxMuellerAlgorithm, autoIndent=True}@slurp
+    reinterpret_cast<real*>(_${noiseVector.id})[_vector_size - 1] = _v1*_fac;
+    _spareNoise = _v2*_fac;
+    
+    _spareNoiseAvailable = true;
+    _old_var = _var;
+  }
+}
+  @#
+@end def

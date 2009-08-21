@@ -26,6 +26,9 @@ from xpdeint.Geometry.NonUniformDimensionRepresentation import NonUniformDimensi
 
 from xpdeint.Vectors.VectorElement import VectorElement as VectorElementTemplate
 from xpdeint.Vectors.ComputedVector import ComputedVector as ComputedVectorTemplate
+from xpdeint.Vectors.NoiseVector import NoiseVector as NoiseVectorTemplate
+from xpdeint.Stochastic.RandomVariables.GaussianBoxMuellerRandomVariable import GaussianBoxMuellerRandomVariable
+from xpdeint.Stochastic.Generators.POSIXGenerator import POSIXGenerator
 from xpdeint.Vectors.VectorInitialisation import VectorInitialisation as VectorInitialisationZeroTemplate
 from xpdeint.Vectors.VectorInitialisationFromCDATA import VectorInitialisationFromCDATA as VectorInitialisationFromCDATATemplate
 from xpdeint.Vectors.VectorInitialisationFromXSIL import VectorInitialisationFromXSIL as VectorInitialisationFromXSILTemplate
@@ -139,6 +142,8 @@ class XMDS2Parser(ScriptParser):
     self.parseVectorElements(simulationElement)
     
     self.parseComputedVectorElements(simulationElement, None)
+    
+    self.parseNoiseVectorElements(simulationElement, None)
     
     self.parseTopLevelSequenceElement(simulationElement)
     
@@ -979,6 +984,214 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     return vectorTemplate
   
   
+  def parseNoiseVectorElements(self, parentElement, parentTemplate):
+    results = []
+    noiseVectorElements = parentElement.getChildElementsByTagName('noise_vector', optional=True)
+    for noiseVectorElement in noiseVectorElements:
+      # Add the noise vector template to the results
+      results.append(self.parseNoiseVectorElement(noiseVectorElement, parentTemplate))
+ 
+    return results
+
+  def parseNoiseVectorElement(self, noiseVectorElement, parentTemplate):
+    if not noiseVectorElement.hasAttribute('name') or len(noiseVectorElement.getAttribute('name')) == 0:
+      raise ParserException(noiseVectorElement, "Each noise vector element must have a non-empty 'name' attribute")
+    
+    vectorName = noiseVectorElement.getAttribute('name')
+    
+    # Check that this vector name is unique
+    for field in self.globalNameSpace['fields']:
+      if len(filter(lambda x: x.name == vectorName, field.vectors)) > 0:
+        raise ParserException(noiseVectorElement, "Noise vector name '%(vectorName)s' conflicts with a "
+                                                     "previously defined vector of the same name" % locals())
+    
+    ## Check that the name isn't already taken
+    if vectorName in self.globalNameSpace['symbolNames']:
+      raise ParserException(noiseVectorElement, "Noise vector name '%(vectorName)s' conflicts with previously "
+                                                   "defined symbol of the same name." % locals())
+    
+    ## Make sure no-one else takes the name
+    self.globalNameSpace['symbolNames'].add(vectorName)
+    
+    if not noiseVectorElement.hasAttribute('dimensions'):
+      dimensionNames = self.globalNameSpace['geometry'].primaryTransverseDimensionNames
+    elif len(noiseVectorElement.getAttribute('dimensions').strip()) == 0:
+      # No dimensions
+      dimensionNames = []
+    else:
+      dimensionsString = noiseVectorElement.getAttribute('dimensions').strip()
+      dimensionNames = Utilities.symbolsInString(dimensionsString, xmlElement = noiseVectorElement)
+      if not dimensionNames:
+        raise ParserException(noiseVectorElement, "Cannot understand '%(dimensionsString)s' as a "
+                                                     "list of dimensions" % locals())
+    
+    
+    fieldTemplate = FieldElementTemplate.sortedFieldWithDimensionNames(dimensionNames, xmlElement = noiseVectorElement)
+
+    if noiseVectorElement.hasAttribute('initial_space'):
+      initialBasis = fieldTemplate.basisFromString(
+          noiseVectorElement.getAttribute('initial_space'),
+          xmlElement = noiseVectorElement
+      )
+    else:
+      initialBasis = fieldTemplate.defaultCoordinateBasis
+    
+    if parentTemplate is None:
+      parentTemplate = fieldTemplate
+    # One way or another, we now have our fieldTemplate
+    # So we can now construct the noise vector template
+    vectorTemplate = NoiseVectorTemplate(name = vectorName, field = fieldTemplate,
+                                            parent = parentTemplate, initialBasis = initialBasis,
+                                            xmlElement = noiseVectorElement,
+                                            **self.argumentsToTemplateConstructors)
+    
+    self.globalNameSpace['simulationVectors'].append(vectorTemplate)
+    
+    componentsElement = noiseVectorElement.getChildElementByTagName('components')
+    
+    typeString = None
+    if noiseVectorElement.hasAttribute('type'):
+      typeString = noiseVectorElement.getAttribute('type').lower()
+    
+    if typeString in (None, 'complex'):
+      vectorTemplate.type = 'complex'
+    elif typeString == 'real':
+      vectorTemplate.type = 'real'
+    else:
+      raise ParserException(componentsElement, "Unknown type '%(typeString)s'. "
+                                               "Options are 'complex' (default), "
+                                               "or 'real'" % locals())
+    
+    componentsString = componentsElement.innerText()
+    if not componentsString:
+      raise ParserException(componentsElement, "The components element must not be empty")
+    
+    results = Utilities.symbolsInString(componentsString, componentsElement)
+    
+    if not results:
+      raise ParserException(componentsElement, "Could not extract component names from component string "
+                                               "'%(componentsString)s'." % locals())
+    
+    for componentName in results:
+      if componentName in self.globalNameSpace['symbolNames']:
+        raise ParserException(componentsElement, "Component name '%(componentName)s' conflicts with "
+                                                 "a previously-defined symbol of the same name." % locals())
+      self.globalNameSpace['symbolNames'].add(componentName)
+    
+    vectorTemplate.components.append(componentName)
+      
+    staticString = None
+    if noiseVectorElement.hasAttribute('static'):
+      staticString = noiseVectorElement.getAttribute('static').lower()
+
+    if staticString in (None, 'no'):
+      vectorTemplate.static = False
+    elif staticString == 'yes':
+      vectorTemplate.static = True
+    else:
+      raise ParserException(noiseVectorElement, "Static element must be either 'yes' or 'no'")
+
+    if not noiseVectorElement.hasAttribute('kind') or len(noiseVectorElement.getAttribute('kind')) == 0:
+      raise ParserException(noiseVectorElement, "Each noise vector element must have a non-empty 'kind' attribute")
+    
+    vectorKind = noiseVectorElement.getAttribute('kind').strip().lower()
+    vectorMethod = None
+    if noiseVectorElement.hasAttribute('method'):
+      vectorMethod = noiseVectorElement.getAttribute('method').lower()
+          
+    randomVariableClass = None
+    generatorClass = None
+    randomVariableAttributeDictionary = dict()
+    if vectorKind in ('gauss', 'gaussian'):
+      if vectorMethod in (None, 'posix'):
+        randomVariableClass = GaussianBoxMuellerRandomVariable
+        generatorClass = POSIXGenerator
+      else:
+        randomVariableClass = {
+          'gaussian-mkl': GaussianMKLNoiseVector,
+          'uniform-mkl': UniformMKLNoiseVector,
+          'gaussian-dsfmt': GaussianDSFMTNoiseVector,
+          'uniform-dsfmt': UniformDSFMTNoiseVector,
+          'gaussian-solirte': GaussianSolirteNoiseVector,
+        }.get(vectorKind)
+    elif vectorKind == 'uniform':
+      randomVariableClass = UniformPOSIXNoiseVector
+    elif vectorKind == 'poissonian':
+      if vectorKind.endswith('dsfmt'):
+        randomVariableClass = PoissonianDSFMTNoiseVector
+      else:
+        randomVariableClass = PoissonianPOSIXNoiseVector
+      
+      if not noiseVectorElement.hasAttribute('mean-rate'):
+        raise ParserException(noiseVectorElement, "Poissonian noise must specify a 'mean-rate' attribute.")
+      
+      meanRateString = noiseVectorElement.getAttribute('mean-rate')
+      try:
+        meanRate = float(meanRateString) # Is it a simple number?
+        if meanRate < 0.0:               # Was the number positive?
+          raise ParserException(noiseVectorElement, "Mean-rate for Poissonian noises must be positive.")
+      except ValueError, err:
+        # We could just barf now, but it could be valid code, and there's no way we can know.
+        # But we only accept code for this value when we have a validation element with a 
+        # run-time kind of validation check
+        if 'Validation' in self.globalNameSpace['features']:
+          validationFeature = self.globalNameSpace['features']['Validation']
+          validationFeature.validationChecks.append("""
+          if (%(meanRateString)s < 0.0)
+            _LOG(_ERROR_LOG_LEVEL, "ERROR: The mean-rate for Poissonian noise %(prefix)s is not positive!\\n"
+                                   "Mean-rate = %%e\\n", %(meanRateString)s);""" % locals())
+        else:
+          raise ParserException(
+            noiseVectorElement,
+            "Unable to understand '%(meanRateString)s' as a positive real value. "
+            "Use the feature <validation kind=\"run-time\"/> to allow for arbitrary code." % locals()
+          )
+      randomVariableAttributeDictionary['noiseMeanRate'] = meanRateString
+    else:
+      randomVariableClass = {
+        'gaussian-mkl': GaussianMKLNoiseVector,
+        'uniform-mkl': UniformMKLNoiseVector,
+        'gaussian-dsfmt': GaussianDSFMTNoiseVector,
+        'uniform-dsfmt': UniformDSFMTNoiseVector,
+        'gaussian-solirte': GaussianSolirteNoiseVector,
+      }.get(vectorKind)
+      if not randomVariableClass:
+        raise ParserException(noiseVectorElement, "Unknown noise kind '%(kind)s'." % locals())
+
+    randomVariable = randomVariableClass(parent = vectorTemplate, **self.argumentsToTemplateConstructors)
+    vectorTemplate._children.append(randomVariable)
+    generator = generatorClass(parent = randomVariable, **self.argumentsToTemplateConstructors)
+    randomVariable._children.append(generator)
+    
+    self.applyAttributeDictionaryToObject(randomVariableAttributeDictionary, randomVariable)
+    
+    generator.seedArray = []
+    if noiseVectorElement.hasAttribute('seed'):
+      seedStringList = noiseVectorElement.getAttribute('seed').split()
+      for seedString in seedStringList:
+        try:
+          seedInt = int(seedString)
+          if seedInt < 0:
+            raise ParserException(noiseVectorElement, "Seeds must be positive integers." % locals())
+        except ValueError, err:
+          if 'Validation' in self.globalNameSpace['features']:
+            validationFeature = self.globalNameSpace['features']['Validation']
+            validationFeature.validationChecks.append("""
+            if (%(seedString)s < 0)
+              _LOG(_ERROR_LOG_LEVEL, "ERROR: The seed for random noise %(prefix)s is not positive!\\n"
+              "Seed = %%d\\n", %(seedString)s);""" % locals())
+          else:
+            raise ParserException(noiseVectorElement, "Unable to understand seed '%(seedString)s' as a positive integer. Use the feature <validation kind=\"run-time\"/> to allow for arbitrary code." % locals())
+      generator.seedArray = seedStringList
+      
+    generator.generatorName = '_gen_'+vectorName
+    randomVariable.generator = generator
+      
+    vectorTemplate.randomVariable = randomVariable
+
+    return vectorTemplate
+
+
   def parseTopLevelSequenceElement(self, simulationElement):
     topLevelSequenceElement = simulationElement.getChildElementByTagName('sequence')
     
