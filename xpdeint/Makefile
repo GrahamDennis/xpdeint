@@ -13,6 +13,9 @@ update:
 waf_build/config.log: wscript waf_extensions/cheetah.py
 	@./waf-light configure
 
+clean:
+	@./waf-light clean
+
 # check examples compile
 check:
 	@for i in examples/*.xmds; do \
