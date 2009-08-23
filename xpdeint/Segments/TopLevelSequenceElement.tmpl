@@ -27,21 +27,29 @@ $propagationDimension = 0.0;
   @#
 
   @set $fieldsNotToInitialise = set()
-  @for $mg in $momentGroups
+  @for $momentGroup in $momentGroups
     @# Initialise the raw vector
-${mg.rawVector.functions['initialise'].call()}
+${momentGroup.rawVector.functions['initialise'].call()}
     @# Don't call the initialise method as that will cause
     @# its aliases to be initialised, which is bad.
-    @silent fieldsNotToInitialise.add(mg.outputField)
+    @silent fieldsNotToInitialise.add(momentGroup.outputField)
   @end for
   @#
   @set $vectorsToInitialise = set()
   @for field in [f for f in $fields if f not in fieldsNotToInitialise]
-    @silent vectorsToInitialise.update(field.managedVectors)
+    @silent vectorsToInitialise.update([v for v in field.managedVectors if not v.isComputed])
   @end for
   @#
   @for vector in self.evaluationOrderForVectors(vectorsToInitialise)
+    @if vector.isComputed
+      @# Computed vectors were explicitly removed from the set of vectors that need
+      @# initialisation. The only way we can get one now is if one of the other vectors depends on this
+      @# vector. In this case, we must provide the information the other vector is requiring. To do this,
+      @# we must evaluate the vector, not initialise it.
+${vector.functions['evaluate'].call()}
+    @else
 ${vector.initialise}@slurp
+    @end if
   @end for
   @#
   @for $momentGroup in $momentGroups
@@ -54,7 +62,7 @@ ${vector.initialise}@slurp
 _${momentGroup.outputField.id}_index_${propagationDimension} = 0;
   @end for
   @#
-  @for $momentGroup in $filter(lambda x: x.requiresInitialSample, $momentGroups)
+  @for $momentGroup in filter(lambda x: x.requiresInitialSample, $momentGroups)
 _mg${momentGroup.number}_sample();
   @end for
   @#
