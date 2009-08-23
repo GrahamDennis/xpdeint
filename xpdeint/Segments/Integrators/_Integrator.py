@@ -133,8 +133,8 @@ class _Integrator (_Segment):
     
     return '\n'.join(result)
   
-  def preflight(self):
-    super(_Integrator, self).preflight()
+  def bindNamedVectors(self):
+    super(_Integrator, self).bindNamedVectors()
     
     momentGroups = self.getVar('momentGroups')
     
@@ -163,6 +163,9 @@ class _Integrator (_Segment):
         evaluateFunction = op.functions['evaluate']
         if not ('real', '_step') in evaluateFunction.args:
           evaluateFunction.args.append(('real', '_step'))
+    
+  def preflight(self):
+    super(_Integrator, self).preflight()
     
     self.registerVectorsRequiredInBasis(self.integrationVectors, self.homeBasis)
   
