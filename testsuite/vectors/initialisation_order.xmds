@@ -91,12 +91,23 @@
     </evaluation>
   </computed_vector>
   
+  <vector name="normalisation_copy" dimensions="" type="real">
+    <components>N1_copy N0_copy</components>
+    <initialisation>
+      <dependencies>normalisation</dependencies>
+      <![CDATA[
+        N1_copy = N1;
+        N0_copy = N0;
+      ]]>
+    </initialisation>
+  </vector>
+  
   <sequence>
     <filter>
-      <dependencies>wavefunction normalisation</dependencies>
+      <dependencies>wavefunction normalisation_copy</dependencies>
       <![CDATA[
-        phi1 *= sqrt(eta*Nparticles/N1);
-        phi0 *= sqrt((1.0-eta)*Nparticles/N0);
+        phi1 *= sqrt(eta*Nparticles/N1_copy);
+        phi0 *= sqrt((1.0-eta)*Nparticles/N0_copy);
       ]]>
     </filter>
     <integrate algorithm="RK4" interval="5.0e-4" steps="500">

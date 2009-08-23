@@ -45,12 +45,6 @@
 
   <noise_vector name="deedoubleyou" dimensions="x" kind="gaussian" type="real">
     <components>p_1 p_2</components>
-    <evaluation>
-      <![CDATA[
-        p_1 = 0.0;
-        p_2 = 0.0;
-      ]]>
-    </evaluation>
   </noise_vector>
 
   <computed_vector name="filter1" dimensions="" type="real">
