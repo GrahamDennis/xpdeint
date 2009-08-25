@@ -474,13 +474,24 @@ class _ScriptElement (Template):
                     compilerSettings = settings)
   
   
-  def evaluationOrderForVectors(self, vectors, predicate = lambda x: True):
+  def evaluationOrderForVectors(self, vectors, static, predicate = lambda x: True):
     """
-    Return the ordering for the computed vectors in `vectors` taking into account
+    Return the ordering for the noise vectors and computed vectors in `vectors` taking into account
     any dependencies between the computed vectors.
     """
-    
+    def checkSelfConsistentVectors(vectors, static):
+      #We check that all noise vectors are static or dynamic, as requested.
+      for nv in [nv for nv in vectors if nv.isNoise and nv.static != static]:
+        if static:
+            raise ParserException(self.xmlElement, "Dynamic noises (Wiener and Jump processes) cannot be used outside of integration elements.\n"
+                                                   "Perhaps %s should be a static noise (like 'Gaussian' or 'Poissonian')?" % nv.name)
+        if not static:
+            raise ParserException(self.xmlElement, "Static noises cannot be used inside integration elements.\n"
+                                                   "Perhaps %s should be a dynamic noise (like 'Wiener' or 'Jump')?" % nv.name)
+          
     stack = []
+    
+    checkSelfConsistentVectors(vectors, static)
     
     # The algorithm here is basically to start with any given vector and traverse
     # the dependencies recursively until a vector with no dependencies is found,
@@ -500,6 +511,8 @@ class _ScriptElement (Template):
       circular dependencies will result in a ParserException.
       """
       orderedDependencies = []
+      checkSelfConsistentVectors(vectors, static)
+      
       for v in vectors:
         # If v is in the ordering, then it has already been taken care of
         if v in orderedDependencies:

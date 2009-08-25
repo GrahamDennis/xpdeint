@@ -1,0 +1,79 @@
+@*
+DSFMTGenerator.tmpl
+
+Created by Joe Hope on 2009-08-22.
+Copyright (c) 2009 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.ScriptElement
+
+@from xpdeint.CallOnceGuards import callOnceGuard
+@import random
+
+@attr uselib = ['dsfmt']
+
+@def description: Generic dSFMT noise
+@def generatorType: dsfmt_t*
+@def globals
+  @#
+  @super
+  @#
+$generatorType ${generatorName};
+  @#
+@end def
+
+@*
+  Static includes
+*@
+@#  The callOnceGuard won't work until the same includes are gone from the stochastic feature.
+@@callOnceGuard
+@def static_includes
+  @#
+  @super
+  @#
+#define DSFMT_DO_NOT_USE_OLD_NAMES
+#if CFG_HAVE_SSE2
+  #define HAVE_SSE2
+#elif CFG_HAVE_ALTIVEC
+  #define HAVE_ALTIVEC
+#endif
+
+#define DSFMT_MEXP 19937
+
+#include <dSFMT/dSFMT.h>
+#include <dSFMT/dSFMT.c>
+  @#
+@end def
+
+@def constructArrayUniformRandomNumbers
+  @set noiseVector = $parent.parent
+  const ptrdiff_t _vector_size = ${noiseVector.sizeInBasisInReals(noiseVector.initialBasis)};
+  if (!(_vector_size & 0x1) && _vector_size > dsfmt_get_min_array_size())
+    dsfmt_fill_array_open_open(${generatorName}, reinterpret_cast<real*>(_active_${noiseVector.id}), _vector_size);
+  else {
+    for (long _i0 = 0; _i0 < _vector_size; _i0++) {
+      reinterpret_cast<real*>(_active_${noiseVector.id})[_i0] = dsfmt_genrand_open_open(${generatorName});
+    }
+  }
+@end def
+
+@def minusOneToOneRandomNumber: 2.0*dsfmt_genrand_close1_open2($generatorName) - 3.0
+
+@def zeroToOneRandomNumber($gen): dsfmt_genrand_open_open(${gen})
+
+@def initialiseSeeds
+  @#
+  @set $featureOrdering = ['Driver']
+  @silent seedOffset = $insertCodeForFeatures('seedOffset', $featureOrdering)
+  @#
+  @if not len($seedArray)
+    @set self.generatedSeeds = [random.randrange(0, pow(2, 31)) for i in xrange(3)]
+    @set seedArray = self.generatedSeeds
+  @end if
+  @#
+  @set $seedString = ', '.join([str(seed)+seedOffset for seed in $seedArray])
+  @#
+uint32_t ${generatorName}_seeds[${len($seedArray)}] = { $seedString };
+${generatorName} = (dsfmt_t *)xmds_malloc(sizeof(dsfmt_t));
+dsfmt_init_by_array(${generatorName}, ${generatorName}_seeds, ${len($seedArray)});
+  @#
+@end def

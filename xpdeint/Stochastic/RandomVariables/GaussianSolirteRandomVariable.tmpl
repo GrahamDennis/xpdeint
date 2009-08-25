@@ -1,0 +1,37 @@
+@*
+GaussianSolirteRandomVariable.tmpl
+
+Created by Joe Hope on 2009-08-22.
+Copyright (c) 2009 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.ScriptElement
+
+@def makeNoises
+@*doc:
+  Return the code for the contents of the makeNoises function for
+  a Solirte Gaussian (Ziggurat method) noise
+*@
+  @set noiseVector = $parent
+  @#
+const real _var =@slurp
+@if noiseVector.type == 'complex':
+0.5@slurp
+@else:
+1.0@slurp
+@end if
+/(${noiseVector.field.volumeElementInBasis(noiseVector.initialBasis)}@slurp
+@if not noiseVector.static:
+*_step@slurp
+@end if
+);
+
+const ptrdiff_t _vector_size = ${noiseVector.sizeInBasisInReals(noiseVector.initialBasis)};
+
+${generator.generatorName}->RandFill_gaussian_FP64(reinterpret_cast<real*>(_active_${noiseVector.id}), _vector_size);
+const real _sigma = sqrt(_var);
+#pragma ivdep
+for (long _i0 = 0; _i0 < _vector_size; _i0++)
+  _active_${noiseVector.id}[_i0] *= _sigma;
+  @#
+@end def
+

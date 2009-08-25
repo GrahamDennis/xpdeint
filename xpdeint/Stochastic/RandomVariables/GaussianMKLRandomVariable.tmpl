@@ -1,0 +1,33 @@
+@*
+GaussianMKLRandomVariable.tmpl
+
+Created by Joe Hope on 2009-08-22.
+Copyright (c) 2009 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.ScriptElement
+
+@def makeNoises
+@*doc:
+  Return the code for the contents of the makeNoises function for
+  a gaussian noise generated with the MKL generator
+*@
+  @set noiseVector = $parent
+  @#
+const real _var =@slurp
+@if noiseVector.type == 'complex':
+0.5@slurp
+@else:
+1.0@slurp
+@end if
+/(${noiseVector.field.volumeElementInBasis(noiseVector.initialBasis)}@slurp
+@if not noiseVector.static:
+*_step@slurp
+@end if
+);
+
+const ptrdiff_t _vector_size = ${noiseVector.sizeInBasisInReals(noiseVector.initialBasis)};
+
+vdRngGaussian(VSL_METHOD_DGAUSSIAN_BOXMULLER2, ${generator.generatorName}, _vector_size, reinterpret_cast<real*>(_active_${noiseVector.id}), 0.0, sqrt(_var));
+
+  @#
+@end def

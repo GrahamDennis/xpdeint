@@ -11,8 +11,6 @@ Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 @def description: Generic POSIX noise
 @def generatorType: unsigned short*
 
-@def minusOneToOneRandomNumber: 2.0*erand48($generatorName) - 1.0
-
 @*
   Globals
 *@
@@ -20,6 +18,17 @@ Copyright (c) 2009 __MyCompanyName__. All rights reserved.
   @#
 unsigned short ${generatorName}[3];
   @#
+@end def
+
+@def minusOneToOneRandomNumber: 2.0*erand48($generatorName) - 1.0
+
+@def zeroToOneRandomNumber($gen): erand48(${gen})
+
+@def constructArrayUniformRandomNumbers
+  @set noiseVector = $parent.parent
+for (long _i0 = 0; _i0 < ${noiseVector.sizeInBasisInReals(noiseVector.initialBasis)}; _i0++) {
+  _active_${noiseVector.id}[_i0] = erand48(${generatorName});
+}
 @end def
 
 @*

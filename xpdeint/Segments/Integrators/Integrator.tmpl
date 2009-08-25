@@ -25,7 +25,7 @@ ${vector.type}* _${name}_${arrayName}_${vector.id};
 @def deltaAFunctionBody($function)
   @#
   @# First evaluate any computed vector that any of our operators may depend on
-${evaluateComputedVectors($computedVectorsNeedingPrecalculationForOperatorContainers($intraStepOperatorContainers))}@slurp
+${evaluateComputedVectors($computedVectorsNeedingPrecalculationForOperatorContainers($intraStepOperatorContainers), static = False)}@slurp
   @#
   @# Then loop over operators that come before the delta A operators in the order in which
   @# they appear in the xmds script.
