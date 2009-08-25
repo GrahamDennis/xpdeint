@@ -535,10 +535,13 @@ _${vector.id}_index_pointer += $field.localPointsInDimensionsAfterDimRepInBasis(
   @#
 @end def
 
-@def evaluateComputedVectors($vectors)
-@#doc: Evaluate the computed vectors in an appropriate order taking into account dependencies
+@def evaluateComputedVectors($vectors, $static = True)
+@*doc: 
+Evaluate the computed vectors in an appropriate order taking into account dependencies.  
+All noises vectors must have the same static/dynamic type as that passed in.
+*@
   @#
-  @for vector in self.evaluationOrderForVectors(vectors, predicate = lambda x: x.isComputed)
+  @for vector in self.evaluationOrderForVectors(vectors, static, predicate = lambda x: x.isComputed)
 ${vector.functions['evaluate'].call()}
   @end for
   @#

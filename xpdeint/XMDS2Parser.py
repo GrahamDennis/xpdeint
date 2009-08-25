@@ -28,7 +28,14 @@ from xpdeint.Vectors.VectorElement import VectorElement as VectorElementTemplate
 from xpdeint.Vectors.ComputedVector import ComputedVector as ComputedVectorTemplate
 from xpdeint.Vectors.NoiseVector import NoiseVector as NoiseVectorTemplate
 from xpdeint.Stochastic.RandomVariables.GaussianBoxMuellerRandomVariable import GaussianBoxMuellerRandomVariable
+from xpdeint.Stochastic.RandomVariables.GaussianMKLRandomVariable import GaussianMKLRandomVariable
+from xpdeint.Stochastic.RandomVariables.GaussianSolirteRandomVariable import GaussianSolirteRandomVariable
+from xpdeint.Stochastic.RandomVariables.UniformRandomVariable import UniformRandomVariable
+from xpdeint.Stochastic.RandomVariables.PoissonianRandomVariable import PoissonianRandomVariable
 from xpdeint.Stochastic.Generators.POSIXGenerator import POSIXGenerator
+from xpdeint.Stochastic.Generators.MKLGenerator import MKLGenerator
+from xpdeint.Stochastic.Generators.DSFMTGenerator import DSFMTGenerator
+from xpdeint.Stochastic.Generators.SolirteGenerator import SolirteGenerator
 from xpdeint.Vectors.VectorInitialisation import VectorInitialisation as VectorInitialisationZeroTemplate
 from xpdeint.Vectors.VectorInitialisationFromCDATA import VectorInitialisationFromCDATA as VectorInitialisationFromCDATATemplate
 from xpdeint.Vectors.VectorInitialisationFromXSIL import VectorInitialisationFromXSIL as VectorInitialisationFromXSILTemplate
@@ -1036,22 +1043,119 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     else:
       initialBasis = fieldTemplate.defaultCoordinateBasis
     
+    typeString = None
+    if noiseVectorElement.hasAttribute('type'):
+      typeString = noiseVectorElement.getAttribute('type').lower()
+
+    if not noiseVectorElement.hasAttribute('kind') or len(noiseVectorElement.getAttribute('kind')) == 0:
+      raise ParserException(noiseVectorElement, "Each noise vector element must have a non-empty 'kind' attribute")
+
+    vectorKind = noiseVectorElement.getAttribute('kind').strip().lower()
+    vectorMethod = None
+    if noiseVectorElement.hasAttribute('method'):
+      vectorMethod = noiseVectorElement.getAttribute('method').lower()
+    else:
+      vectorMethod = 'posix'
+
+    randomVariableClass = None
+    generatorClass = None
+    static = None
+    randomVariableAttributeDictionary = dict()
+
+    if vectorKind in ('gauss', 'gaussian', 'wiener'):
+      static = True
+      if vectorKind == 'wiener':
+        static = False
+      randomVariableClass, generatorClass = {
+        'mkl': (GaussianMKLRandomVariable, MKLGenerator),
+        'dsfmt': (GaussianBoxMuellerRandomVariable, DSFMTGenerator),
+        'posix': (GaussianBoxMuellerRandomVariable, POSIXGenerator),
+        'solirte': (GaussianSolirteRandomVariable, SolirteGenerator),
+      }.get(vectorMethod)
+      if not generatorClass:
+        raise ParserException(noiseVectorElement, "Method '%(vectorMethod)s' for Gaussian noises is unknown." % locals())
+
+    elif vectorKind == 'uniform':
+      static = True
+      randomVariableClass = UniformRandomVariable
+      generatorClass = {
+        'mkl': MKLGenerator,
+        'dsfmt': DSFMTGenerator,
+        'posix': POSIXGenerator,
+        'solirte': SolirteGenerator,
+      }.get(vectorMethod)
+      if not generatorClass:
+        raise ParserException(noiseVectorElement, "Method '%(vectorMethod)s' for uniform noises is unknown." % locals())
+
+    elif vectorKind in ('poissonian','jump'):
+      if typeString == 'complex':
+        raise ParserException(noiseVectorElement, "Poissonian noises cannot be complex-valued.")        
+      randomVariableClass = PoissonianRandomVariable
+      if vectorKind == 'jump':
+        static = False
+        if noiseVectorElement.hasAttribute('mean-rate'):
+          meanRateString = noiseVectorElement.getAttribute('mean-rate')
+          meanRateAttributeName = 'mean-rate'
+        else:  
+          raise ParserException(noiseVectorElement, "Jump noises must specify a 'mean-rate' attribute.")
+      elif vectorKind == 'poissonian':
+        static = True
+        if noiseVectorElement.hasAttribute('mean-density'):
+          meanRateString = noiseVectorElement.getAttribute('mean-density')
+          meanRateAttributeName = 'mean-density'
+        elif noiseVectorElement.hasAttribute('mean'):
+          meanRateString = noiseVectorElement.getAttribute('mean')
+          meanRateAttributeName = 'mean'
+        else:  
+          raise ParserException(noiseVectorElement, "Poissonian noise must specify a 'mean-density' or 'mean' attribute.")
+          
+      if vectorMethod == 'posix': 
+        generatorClass = POSIXGenerator
+      elif vectorMethod == 'dsfmt':
+          generatorClass = DSFMTGenerator
+      else:
+        raise ParserException(noiseVectorElement, "Method '%(vectorMethod)s' for Poissonian and Jump noises is unknown." % locals())
+
+      try:
+        meanRate = float(meanRateString) # Is it a simple number?
+        if meanRate < 0.0:               # Was the number positive?
+          raise ParserException(noiseVectorElement, "The %(meanRateAttributeName)s for Poissonian noises must be positive." % locals())
+      except ValueError, err:
+        # We could just barf now, but it could be valid code, and there's no way we can know.
+        # But we only accept code for this value when we have a validation element with a 
+        # run-time kind of validation check
+        if 'Validation' in self.globalNameSpace['features']:
+          validationFeature = self.globalNameSpace['features']['Validation']
+          validationFeature.validationChecks.append("""
+          if (%(meanRateString)s < 0.0)
+            _LOG(_ERROR_LOG_LEVEL, "ERROR: The %(meanRateAttributeName)s for Poissonian noise %(vectorName)s is not positive!\\n"
+                                   "Mean-rate = %%e\\n", %(meanRateString)s);""" % locals())
+        else:
+          raise ParserException(
+            noiseVectorElement,
+            "Unable to understand '%(meanRateString)s' as a positive real value. "
+            "Use the feature <validation kind=\"run-time\"/> to allow for arbitrary code." % locals()
+          )
+      randomVariableAttributeDictionary['noiseMeanRate'] = meanRateString
+    else:
+      raise ParserException(noiseVectorElement, "Unknown noise kind '%(kind)s'." % locals())
+
+    if static is None:
+      raise ParserException(
+          noiseVectorElement, 
+          "Internal error: Noise type is not defined as static or dynamic. "
+          "Please report this error to %s." % self.globalNameSpace['bugReportAddress'])
+      
     if parentTemplate is None:
       parentTemplate = fieldTemplate
     # One way or another, we now have our fieldTemplate
     # So we can now construct the noise vector template
-    vectorTemplate = NoiseVectorTemplate(name = vectorName, field = fieldTemplate,
+    vectorTemplate = NoiseVectorTemplate(name = vectorName, field = fieldTemplate, staticNoise = static,
                                             parent = parentTemplate, initialBasis = initialBasis,
                                             xmlElement = noiseVectorElement,
                                             **self.argumentsToTemplateConstructors)
     
     self.globalNameSpace['simulationVectors'].append(vectorTemplate)
-    
-    componentsElement = noiseVectorElement.getChildElementByTagName('components')
-    
-    typeString = None
-    if noiseVectorElement.hasAttribute('type'):
-      typeString = noiseVectorElement.getAttribute('type').lower()
     
     if typeString in (None, 'complex'):
       vectorTemplate.type = 'complex'
@@ -1061,6 +1165,8 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       raise ParserException(componentsElement, "Unknown type '%(typeString)s'. "
                                                "Options are 'complex' (default), "
                                                "or 'real'" % locals())
+
+    componentsElement = noiseVectorElement.getChildElementByTagName('components')
     
     componentsString = componentsElement.innerText()
     if not componentsString:
@@ -1078,86 +1184,8 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
                                                  "a previously-defined symbol of the same name." % locals())
       self.globalNameSpace['symbolNames'].add(componentName)
     
-    vectorTemplate.components.append(componentName)
+      vectorTemplate.components.append(componentName)
       
-    staticString = None
-    if noiseVectorElement.hasAttribute('static'):
-      staticString = noiseVectorElement.getAttribute('static').lower()
-
-    if staticString in (None, 'no'):
-      vectorTemplate.static = False
-    elif staticString == 'yes':
-      vectorTemplate.static = True
-    else:
-      raise ParserException(noiseVectorElement, "Static element must be either 'yes' or 'no'")
-
-    if not noiseVectorElement.hasAttribute('kind') or len(noiseVectorElement.getAttribute('kind')) == 0:
-      raise ParserException(noiseVectorElement, "Each noise vector element must have a non-empty 'kind' attribute")
-    
-    vectorKind = noiseVectorElement.getAttribute('kind').strip().lower()
-    vectorMethod = None
-    if noiseVectorElement.hasAttribute('method'):
-      vectorMethod = noiseVectorElement.getAttribute('method').lower()
-          
-    randomVariableClass = None
-    generatorClass = None
-    randomVariableAttributeDictionary = dict()
-    if vectorKind in ('gauss', 'gaussian'):
-      if vectorMethod in (None, 'posix'):
-        randomVariableClass = GaussianBoxMuellerRandomVariable
-        generatorClass = POSIXGenerator
-      else:
-        randomVariableClass = {
-          'gaussian-mkl': GaussianMKLNoiseVector,
-          'uniform-mkl': UniformMKLNoiseVector,
-          'gaussian-dsfmt': GaussianDSFMTNoiseVector,
-          'uniform-dsfmt': UniformDSFMTNoiseVector,
-          'gaussian-solirte': GaussianSolirteNoiseVector,
-        }.get(vectorKind)
-    elif vectorKind == 'uniform':
-      randomVariableClass = UniformPOSIXNoiseVector
-    elif vectorKind == 'poissonian':
-      if vectorKind.endswith('dsfmt'):
-        randomVariableClass = PoissonianDSFMTNoiseVector
-      else:
-        randomVariableClass = PoissonianPOSIXNoiseVector
-      
-      if not noiseVectorElement.hasAttribute('mean-rate'):
-        raise ParserException(noiseVectorElement, "Poissonian noise must specify a 'mean-rate' attribute.")
-      
-      meanRateString = noiseVectorElement.getAttribute('mean-rate')
-      try:
-        meanRate = float(meanRateString) # Is it a simple number?
-        if meanRate < 0.0:               # Was the number positive?
-          raise ParserException(noiseVectorElement, "Mean-rate for Poissonian noises must be positive.")
-      except ValueError, err:
-        # We could just barf now, but it could be valid code, and there's no way we can know.
-        # But we only accept code for this value when we have a validation element with a 
-        # run-time kind of validation check
-        if 'Validation' in self.globalNameSpace['features']:
-          validationFeature = self.globalNameSpace['features']['Validation']
-          validationFeature.validationChecks.append("""
-          if (%(meanRateString)s < 0.0)
-            _LOG(_ERROR_LOG_LEVEL, "ERROR: The mean-rate for Poissonian noise %(prefix)s is not positive!\\n"
-                                   "Mean-rate = %%e\\n", %(meanRateString)s);""" % locals())
-        else:
-          raise ParserException(
-            noiseVectorElement,
-            "Unable to understand '%(meanRateString)s' as a positive real value. "
-            "Use the feature <validation kind=\"run-time\"/> to allow for arbitrary code." % locals()
-          )
-      randomVariableAttributeDictionary['noiseMeanRate'] = meanRateString
-    else:
-      randomVariableClass = {
-        'gaussian-mkl': GaussianMKLNoiseVector,
-        'uniform-mkl': UniformMKLNoiseVector,
-        'gaussian-dsfmt': GaussianDSFMTNoiseVector,
-        'uniform-dsfmt': UniformDSFMTNoiseVector,
-        'gaussian-solirte': GaussianSolirteNoiseVector,
-      }.get(vectorKind)
-      if not randomVariableClass:
-        raise ParserException(noiseVectorElement, "Unknown noise kind '%(kind)s'." % locals())
-
     randomVariable = randomVariableClass(parent = vectorTemplate, **self.argumentsToTemplateConstructors)
     vectorTemplate._children.append(randomVariable)
     generator = generatorClass(parent = randomVariable, **self.argumentsToTemplateConstructors)
@@ -1419,7 +1447,9 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     
     integratorTemplate.samplesEntity = ParsedEntity(samplesElement, results)
     
-    integratorTemplate.computedVectors.update(self.parseComputedVectorElements(integrateElement, integratorTemplate))
+    integratorTemplate.localVectors.update(self.parseComputedVectorElements(integrateElement, integratorTemplate))
+    
+    integratorTemplate.localVectors.update(self.parseNoiseVectorElements(integrateElement, integratorTemplate))
     
     self.parseOperatorsElements(integrateElement, integratorTemplate)
     

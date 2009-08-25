@@ -40,7 +40,7 @@ ${momentGroup.rawVector.functions['initialise'].call()}
     @silent vectorsToInitialise.update([v for v in field.managedVectors if not v.isComputed])
   @end for
   @#
-  @for vector in self.evaluationOrderForVectors(vectorsToInitialise)
+  @for vector in self.evaluationOrderForVectors(vectorsToInitialise, static = True)
     @if vector.isComputed
       @# Computed vectors were explicitly removed from the set of vectors that need
       @# initialisation. The only way we can get one now is if one of the other vectors depends on this

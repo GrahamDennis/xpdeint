@@ -59,6 +59,10 @@ ${noiseAlias.type}* _${noiseAlias.id}2;
 ${noise.initialiseSeeds}@slurp
 
   @end for
+  @for noiseVector in $noiseVectors
+${noiseVector.initialiseSeeds}@slurp
+
+  @end for
   @#
 @end def
 

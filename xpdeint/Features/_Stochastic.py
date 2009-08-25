@@ -10,6 +10,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 from xpdeint.Features._Feature import _Feature
 from xpdeint.Vectors.VectorElement import VectorElement
 from xpdeint.Vectors.ComputedVector import ComputedVector
+from xpdeint.Vectors.NoiseVector import NoiseVector
 from xpdeint.Vectors.VectorInitialisationFromCDATA import VectorInitialisationFromCDATA
 from xpdeint.Vectors.VectorInitialisationFromXSIL import VectorInitialisationFromXSIL
 from xpdeint.Vectors.VectorInitialisationFromHDF5 import VectorInitialisationFromHDF5
@@ -64,6 +65,8 @@ class _Stochastic (_Feature):
   
   def preflight(self):
     super(_Stochastic, self).preflight()
+    
+    self.noiseVectors = [o for o in self.getVar('templates') if isinstance(o, NoiseVector)]
     
     # We need to iterate over everything that could possibly need noises
     # The best way to do that is to have the ability to iterate over everything

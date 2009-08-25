@@ -1,0 +1,168 @@
+@*
+PoissonianRandomVariable.tmpl
+
+Created by Joe Hope on 2009-08-22.
+Copyright (c) 2009 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.ScriptElement
+
+@from xpdeint.CallOnceGuards import callOnceGuard
+
+@def makeNoises
+@*doc:
+  Return the code for the contents of the makeNoises function for
+  a poissonian random variable, by which we mean a jump process.  
+  Much of this is likely to change when we implement triggered filters
+  to model jump processes efficiently.
+*@
+  @#
+  @set noiseVector = $parent
+  @#
+  const real _var = 1.0/(${noiseVector.field.volumeElementInBasis(noiseVector.initialBasis)}@slurp
+  @if not noiseVector.static:
+  *_step@slurp
+  @end if
+  );
+  const real _dVdt = 1.0/_var;
+  for (long _i0 = 0; _i0 < ${noiseVector.sizeInBasisInReals(noiseVector.initialBasis)}; _i0++) {
+    _active_${noiseVector.id}[_i0] = _var * _poidev(${noiseMeanRate} * _dVdt, ${generator.generatorName});
+  }
+  @#
+@end def
+
+@@callOnceGuard
+@def static_functionPrototypes
+  @#
+  @super
+  @#
+real _poidev(real xm, ${generator.generatorType} _generator);
+real _poisplit(real pp, int n, ${generator.generatorType} _generator);
+  @#
+@end def
+
+@def functionPrototypes
+  @#
+  @set noiseVector = $parent
+  @super
+  @#
+inline void _split_${noiseVector.id}_noise(real _new_var, real _old_var, real* _new_noise_vector, real* _old_noise_vector, unsigned long _n);
+  @#
+@end def
+
+@def functionImplementations
+  @#
+  @set noiseVector = $parent
+  @super
+  @#
+inline void _split_${noiseVector.id}_noises(real _new_var, real _old_var, real* _new_noise_vector, real* _old_noise_vector, unsigned long _n)
+{
+  for (long _i0 = 0; _i0 < _n; _i0++) { 
+    _new_noise_vector[_i0] = _new_var*_poisplit(_old_var/_new_var, lrint(_old_noise_vector[_i0]/_old_var), ${generator.generatorName});
+  }
+
+}
+  @#
+@end def
+
+@@callOnceGuard
+@def static_functionImplementations
+  @#
+  @super
+  @#
+real _poidev(real xm, ${generator.generatorType} _generator)
+{
+  real sq, alxm, g, em, t, y;
+
+  if (xm < 12.0) {        // Use direct method
+    g = exp(-xm);
+    em = -1.0;
+    t = 1.0;
+    // Instead of adding exponential deviates it is equivalent
+    // to multiply uniform deviates.  We never actually have to
+    // take the log, merely compare to the pre-computed exponential
+    do {
+      ++em;
+      t *= ${generator.zeroToOneRandomNumber("_generator")};
+    } while (t > g);
+  } else {
+    // Use rejection method
+    sq = sqrt(2.0*xm);
+    alxm = log(xm);
+    g = xm*alxm - lgamma(xm + 1.0);
+    do {
+      do {
+        // y is a deviate from a Lorenzian comparison function
+        y = tan(M_PI*${generator.zeroToOneRandomNumber("_generator")});
+        // em is y, shifted and scaled
+        em = sq*y + xm;
+      } while (em < 0.0);  // Reject if in regime of zero probability
+      em = floor(em);      // The trick for integer-valued distributions
+      t = 0.9*(1.0 + y*y)*exp(em*alxm - lgamma(em + 1.0) - g);
+      // The ratio of the desired distribution to the comparison
+      // function; we reject by comparing it to another uniform
+      // deviate. The factor 0.9 so that t never exceeds 1.
+    } while (${generator.zeroToOneRandomNumber("_generator")} > t);
+  }
+  return em;
+}
+
+real _poisplit(real pp, long n, ${generator.generatorType} _generator)
+{
+  /*
+  Returns as a floating-point number an integer value that is a random deviate drawn from
+  a binomial distribution of n trials each of probability pp, using erand48(_generator) as a source of
+  uniform random deviates. This is exactly the distribution that must be sampled when a poissonian process is split over two smaller time steps
+  */
+
+  long j;
+  real am, em, g, p, bnl, sq, t, y;
+  static real pc, plog, pclog, en, oldg;
+
+  // The binomial distribution is invariant under changing pp to 1-pp,
+  // if we also change the answer to n minus itself; we do this at the end.
+  p = (pp <= 0.5 ? pp : 1.0-pp);
+
+  // This is the mean of the deviate to be produced.
+  am = n * p;
+
+  if (n < 25) {
+    // Use the direct method while n is not too large. This can require up to 25 calls to erand48(_generator).
+    bnl = 0.0;
+    for (j = 1; j <= n; j++)
+      if (${generator.zeroToOneRandomNumber("_generator")} < p)
+        ++bnl;
+  } else if (am < 1.0) {
+    // If fewer than one event is expected out of 25 or more trials, then the distribution is quite accurately Poisson. Use direct Poisson method.
+    g = exp(-am);
+    t = 1.0;
+    for (j = 0; j <= n; j++) {
+      t *= ${generator.zeroToOneRandomNumber("_generator")};
+      if (t < g)
+        break;
+    }
+    bnl = (j <= n ? j : n);
+  } else {
+    en = n;
+    oldg = lgamma(en + 1.0);
+    pc = 1.0 - p;
+    plog = log(p);
+    pclog = log(pc);
+    sq = sqrt(2.0*am*pc);
+    // The following code should by now seem familiar: rejection method with a Lorentzian comparison function.
+    do {
+      do {
+        y = tan(M_PI*${generator.zeroToOneRandomNumber("_generator")});
+        em = sq*y + am;
+      } while (em < 0.0 || em >= (en+1.0)); // Reject.
+      em = floor(em); // Trick for integer-valued distribution. 
+      t = 1.2 * sq * (1.0 + y*y) * exp(oldg - lgamma(em + 1.0) - lgamma(en - em + 1.0) + em*plog + (en - em)*pclog); 
+    } while (${generator.zeroToOneRandomNumber("_generator")} > t); // Reject. This happens about 1.5 times per deviate, on average.
+    bnl = em;
+  }
+  if (p != pp) bnl = n - bnl; // Remember to undo the symmetry transformation.
+  return bnl;
+}
+
+  @#
+@end def
+

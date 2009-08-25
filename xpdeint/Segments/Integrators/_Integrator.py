@@ -33,7 +33,7 @@ class _Integrator (_Segment):
     self.stepStartOperatorContainers = []
     self.intraStepOperatorContainers = []
     self.stepEndOperatorContainers = []
-    self.computedVectors = set()
+    self.localVectors = set()
     assert stepperClass
     self.stepper = stepperClass(parent = self, **self.argumentsToTemplateConstructors)
     self._children.append(self.stepper)
@@ -60,7 +60,7 @@ class _Integrator (_Segment):
   def children(self):
     children = super(_Integrator, self).children
     children.extend(chain(self.stepStartOperatorContainers, self.intraStepOperatorContainers, self.stepEndOperatorContainers, \
-                          self.computedVectors))
+                          self.localVectors))
     return children
   
   @property

@@ -17,6 +17,7 @@ from xpdeint.Utilities import lazy_property
 
 class _VectorElement (ScriptElement):
   isComputed = False
+  isNoise = False
   
   def __init__(self, *args, **KWs):
     localKWs = self.extractLocalKWs(['name', 'field', 'transformFree', 'initialBasis'], KWs)

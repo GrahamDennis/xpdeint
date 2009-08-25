@@ -1,0 +1,60 @@
+@*
+SolirteGenerator.tmpl
+
+Created by Joe Hope on 2009-08-22.
+Copyright (c) 2009 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.ScriptElement
+
+@from xpdeint.CallOnceGuards import callOnceGuard
+@import random
+
+@def description: Generic Solirte noise
+@def generatorType: CPRNG<CSFMTParams_19937>*
+
+@def globals
+  @#
+  @super
+  @#
+$generatorType ${generatorName};
+  @#
+@end def
+
+@*
+  Static includes
+*@
+@#  The callOnceGuard won't work until the same includes are gone from the stochastic feature.
+@@callOnceGuard
+@def static_includes
+  @#
+  @super
+  @#
+#define CFG_TIMETRACK_DISABLE
+// We have disabled Solirte's MMX version.
+// Use SSE2 or get a newer computer.
+#undef CFG_HAVE_MMX
+#define CFG_HAVE_MMX 0
+#include <solirte/SFMTparams.h>
+#include <solirte/prng.h>
+#include <solirte/ziggurat.cpp>
+  @#
+@end def
+
+@*
+  Initialise seeds
+*@
+@def initialiseSeeds
+  @#
+  @set $featureOrdering = ['Driver']
+  @silent seedOffset = $insertCodeForFeatures('seedOffset', featureOrdering)
+  @#
+  @if not len($seedArray)
+    @set self.generatedSeeds = [random.randrange(0, pow(2, 31)) for i in xrange(1)]
+    @set seedArray = self.generatedSeeds
+  @end if
+  @#
+  @set $seedString = str($seedArray[0])+seedOffset
+  @#
+${generatorName} = new CPRNG<CSFMTParams_19937>($seedString);
+  @#
+@end def

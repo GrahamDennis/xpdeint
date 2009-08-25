@@ -1,0 +1,18 @@
+@*
+UniformRandomVariable.tmpl
+
+Created by Joe Hope on 2009-08-22.
+Copyright (c) 2009 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.ScriptElement
+
+@def makeNoises
+@*doc:
+  Return the code for the contents of the makeNoises function for
+  a uniform random variable.  
+  Essentially, this is generator specific code, hence the lack of anything here.
+*@
+  @#
+${generator.constructArrayUniformRandomNumbers}@slurp
+  @#
+@end def

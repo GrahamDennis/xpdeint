@@ -29,7 +29,13 @@ const real _fac = sqrt(-2.0*_var*log(_rsq)/_rsq);
 *@
   @set noiseVector = $parent
   @#
-const real _var = 1.0/sqrt(${noiseVector.field.volumeElementInBasis(noiseVector.initialBasis)}@slurp
+const real _var =@slurp
+@if noiseVector.type == 'complex':
+0.5@slurp
+@else:
+1.0@slurp
+@end if
+/(${noiseVector.field.volumeElementInBasis(noiseVector.initialBasis)}@slurp
 @if not noiseVector.static:
 *_step@slurp
 @end if
@@ -39,8 +45,8 @@ const ptrdiff_t _vector_size = ${noiseVector.sizeInBasisInReals(noiseVector.init
 const ptrdiff_t _evenNoises = _vector_size & ~1;
 for (ptrdiff_t _i0 = 0; _i0 < _evenNoises; _i0 += 2) {
   ${boxMuellerAlgorithm, autoIndent=True}@slurp
-  reinterpret_cast<real*>(_${noiseVector.id})[_i0 + 0] = _v1*_fac;
-  reinterpret_cast<real*>(_${noiseVector.id})[_i0 + 1] = _v2*_fac;
+  reinterpret_cast<real*>(_active_${noiseVector.id})[_i0 + 0] = _v1*_fac;
+  reinterpret_cast<real*>(_active_${noiseVector.id})[_i0 + 1] = _v2*_fac;
 }
 
 // If _n is odd, we need to generate the last random number
@@ -50,11 +56,11 @@ if (_vector_size & 1) {
   static real _old_var = 0.0;
   
   if (_spareNoiseAvailable && _old_var == _var) {
-    reinterpret_cast<real*>(_${noiseVector.id})[_vector_size - 1] = _spareNoise;
+    reinterpret_cast<real*>(_active_${noiseVector.id})[_vector_size - 1] = _spareNoise;
     _spareNoiseAvailable = false;
   } else {
     ${boxMuellerAlgorithm, autoIndent=True}@slurp
-    reinterpret_cast<real*>(_${noiseVector.id})[_vector_size - 1] = _v1*_fac;
+    reinterpret_cast<real*>(_active_${noiseVector.id})[_vector_size - 1] = _v1*_fac;
     _spareNoise = _v2*_fac;
     
     _spareNoiseAvailable = true;
