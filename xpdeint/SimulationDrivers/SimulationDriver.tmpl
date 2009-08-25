@@ -93,14 +93,14 @@ ${vector.allocSize} = MAX(${vector.allocSize}, ${vector.field.sizeInBasis(basis)
 
 @def mainBegin($dict)
   @#
-  @set $initialisedDimReps = set()
+  @set $initialisedDimRepArrays = set()
   @#
   @for field in $fields
     @#
     @for dim in field.dimensions
-      @for dimRep in [dimRep for dimRep in dim.representations if dimRep and not dimRep.silent and hasattr(dimRep, 'initialiseArray') and not dimRep in initialisedDimReps]
+      @for dimRep in [dimRep for dimRep in dim.representations if dimRep and not dimRep.arrayName in initialisedDimRepArrays]
 ${dimRep.initialiseArray}@slurp
-        @silent initialisedDimReps.add(dimRep)
+        @silent initialisedDimRepArrays.add(dimRep.arrayName)
       @end for
     @end for
   @end for

@@ -72,6 +72,16 @@ ${loopIndex} + ${localOffset}@slurp
   @#
 @end def
 
+@def initialiseArray
+  @#
+  @if $stepSizeArray
+for (long ${loopIndex} = 0; ${loopIndex} < ${globalLattice}; ${loopIndex}++) {
+  ${gridAndStepAtIndex(self.loopIndex)}@slurp
+}
+  @end if
+  @#
+@end def
+
 @def gridAndStepAtIndex($index)
   @#
 ${arrayName}[$index] = ${gridAtIndex(index)};
