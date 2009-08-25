@@ -44,7 +44,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
     @set seedArray = self.generatedSeeds
   @end if
   @#
-  @set $seedString = str($seedArray[0])
+  @set $seedString = str($seedArray[0])+seedOffset
   @#
 ${generatorName} = new CPRNG<CSFMTParams_19937>($seedString);
   @#
