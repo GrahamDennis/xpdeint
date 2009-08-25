@@ -15,7 +15,8 @@ from xml.dom import minidom
 from xpdeint import RegularExpressionStrings, Utilities
 
 from xpdeint._ScriptElement import _ScriptElement
-from xpdeint._UserLoopCodeBlock import _UserLoopCodeBlock
+from xpdeint._UserCodeBlock import _UserCodeBlock
+from xpdeint._UserCodeBlock import _UserLoopCodeBlock
 
 from xpdeint.SimulationElement import SimulationElement as SimulationElementTemplate
 from xpdeint.Geometry.GeometryElement import GeometryElement as GeometryElementTemplate
@@ -279,13 +280,17 @@ class XMDS2Parser(ScriptParser):
     argumentsFeatureElement = featuresParentElement.getChildElementByTagName('arguments', optional=True)
     
     if argumentsFeatureElement:
-      argumentsFeature = Features.Arguments.Arguments(parent = self.simulation,
-                                                      **self.argumentsToTemplateConstructors)
-      argumentsFeature.xmlElement = argumentsFeatureElement
+      argumentsFeature = Features.Arguments.Arguments(
+        parent = self.simulation, xmlElement = argumentsFeatureElement,
+        **self.argumentsToTemplateConstructors
+      )
       
       argumentElements = argumentsFeatureElement.getChildElementsByTagName('argument')
       
-      argumentsFeature.postArgumentsCodeEntity = ParsedEntity(argumentsFeatureElement, argumentsFeatureElement.cdataContents())
+      argumentsFeature.codeBlocks['postArgumentProcessing'] = _UserCodeBlock(
+        xmlElement = argumentsFeatureElement, parent = argumentsFeature,
+        **self.argumentsToTemplateConstructors
+      )
       
       argumentList = []
       # Note that "h" is already taken as the "help" option 
@@ -327,7 +332,10 @@ class XMDS2Parser(ScriptParser):
     if globalsElement:
       globalsTemplate = Features.Globals.Globals(parent = self.simulation,
                                                  **self.argumentsToTemplateConstructors)
-      globalsTemplate.globalsCodeEntity = ParsedEntity(globalsElement, globalsElement.cdataContents())
+      globalsTemplate.codeBlocks['globalsCode'] = _UserCodeBlock(
+        parent = globalsTemplate, xmlElement = globalsElement,
+        **self.argumentsToTemplateConstructors
+      )
     
     cflagsElement = featuresParentElement.getChildElementByTagName('cflags', optional=True)
     if cflagsElement:

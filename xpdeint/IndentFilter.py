@@ -10,7 +10,6 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 from Cheetah.Filters import Filter
 
 import sys
-import textwrap
 
 class IndentFilter(Filter):
   def filter(self, val, **kw):
@@ -41,13 +40,9 @@ class IndentFilter(Filter):
     
     Additionally, the option ``extraIndent=n`` can be passed which increases
     the indent by ``n`` spaces.
-    
-    Also, whitespace can be 'fixed-up' for the variable replacement by passing
-    ``fixupWhitespace=True``. This option causes the overall indent level of the
-    replacement string to be reduced to zero.
     """
     # Quickly check for the case where we have nothing to do
-    if not (kw.get('autoIndent') or kw.get('extraIndent') or kw.get('fixupWhitespace')):
+    if not (kw.get('autoIndent') or kw.get('extraIndent')):
       return super(IndentFilter, self).filter(val, **kw)
     trans = None
     indentString = ''
@@ -62,9 +57,6 @@ class IndentFilter(Filter):
     # If the replacement string is just space, just use an empty string instead.
     if replacementString == None or replacementString.isspace():
       replacementString = ''
-    
-    if kw.get('fixupWhitespace', False):
-      replacementString = textwrap.dedent(replacementString)
     
     if kw.get('autoIndent'):
       # Grab the transaction object from our caller's frame. Yay introspection.

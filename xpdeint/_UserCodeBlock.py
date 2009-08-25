@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 """
-_UserLoopCodeBlock.py
+_UserCodeBlock.py
 
 Created by Graham Dennis on 2008-09-11.
 Copyright (c) 2008 __MyCompanyName__. All rights reserved.
@@ -17,16 +17,59 @@ from xpdeint.CallOnceGuards import callOncePerInstanceGuard
 
 from xpdeint.Vectors.ComputedVector import ComputedVector
 
-class _UserLoopCodeBlock(ScriptElement):
+import textwrap
+
+class _UserCodeBlock(ScriptElement):
   def __init__(self, **KWs):
-    localKWs = self.extractLocalKWs(['field', 'basis', 'codeString', 'targetVector', 'loopArguments'], KWs)
+    localKWs = self.extractLocalKWs(['codeString'], KWs)
     
     ScriptElement.__init__(self, **KWs)
+    
+    if 'codeString' in localKWs: self.codeString = localKWs.get('codeString')
+  
+  @lazy_property
+  def codeString(self):
+    return self.xmlElement.cdataContents()
+  
+  def transformCodeString(self):
+    CodeParser.checkForIntegerDivision(self)
+    
+    if self.codeString.count('\n'):
+      # Deindent code and add '#line' compiler directives
+      self.addCompilerLineDirectives()
+    
+  
+  def addCompilerLineDirectives(self):
+    """
+    Add the #line compiler directives at the start and end so that
+    any compiler errors are reported in terms of lines in the actual xmds
+    script itself.
+    """
+    result = [textwrap.dedent(self.codeString)]
+    
+    writeLineDirectives = not self.getVar('debug') and self.xmlElement
+    if writeLineDirectives:
+      result.insert(
+        0,
+        '#line %i "%s"\n' % (self.scriptLineNumber, self.getVar('scriptName'))
+      )
+      result.append('#line _XPDEINT_CORRECT_MISSING_LINE_NUMBER_\n')
+    self.codeString = ''.join(result)
+  
+  def preflight(self):
+    super(_UserCodeBlock, self).preflight()
+    self.transformCodeString()
+  
+
+class _UserLoopCodeBlock(_UserCodeBlock):
+  def __init__(self, **KWs):
+    localKWs = self.extractLocalKWs(['field', 'basis', 'targetVector', 'loopArguments'], KWs)
+    
+    _UserCodeBlock.__init__(self, **KWs)
     
     self.field = localKWs.get('field')
     self.basis = localKWs.get('basis')
     
-    if 'codeString' in localKWs: self.codeString = localKWs.get('codeString')
     self.targetVector = localKWs.get('targetVector', None)
     self.loopArguments = localKWs.get('loopArguments', {})
     
@@ -35,13 +78,6 @@ class _UserLoopCodeBlock(ScriptElement):
     
     self.prefixCodeString = ''
     self.postfixCodeString = ''
-  
-  @property
-  def value(self):
-    """
-    Defined to make this object look like a ParsedEntity.
-    """
-    return self.codeString
   
   @property
   def loopCodeString(self):
@@ -61,10 +97,6 @@ class _UserLoopCodeBlock(ScriptElement):
     result += self.loopOverFieldInBasisWithVectorsAndInnerContent(self.field, self.basis, loopingVectors, loopCode, **loopKWs)
     
     return result
-  
-  @lazy_property
-  def codeString(self):
-      return self.xmlElement.cdataContents()
   
   @lazy_property
   def specialTargetsVector(self):
@@ -237,13 +269,8 @@ class _UserLoopCodeBlock(ScriptElement):
   
   def transformCodeString(self):
     """Modify the user code as necessary."""
+    super(_UserLoopCodeBlock, self).transformCodeString()
     self.fixupNonlocallyAccessedComponents()
-    CodeParser.checkForIntegerDivision(self)
-    
-    if self.codeString.count('\n'):
-      # Deindent code and add '#line' compiler directives
-      self.codeString = self.insertUserCodeFromEntity(self)
-    
     
   
   @callOncePerInstanceGuard
@@ -256,8 +283,6 @@ class _UserLoopCodeBlock(ScriptElement):
   @callOncePerInstanceGuard
   def preflight(self):
     super(_UserLoopCodeBlock, self).preflight()
-    
-    self.transformCodeString()
     
     vectors = set(self.dependencies)
     if self.targetVector:

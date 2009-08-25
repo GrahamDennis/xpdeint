@@ -111,9 +111,9 @@ $argument.shortName:@slurp
 if (optind < argc)
   _print_usage(); // This causes the simulation to exit.
 
-  @if $postArgumentsCodeEntity.value
+  @if 'postArgumentProcessing' in self.codeBlocks
 // ******** Argument post-processing code *******
-${insertUserCodeFromEntity($postArgumentsCodeEntity)}@slurp
+${codeBlocks['postArgumentProcessing'].codeString}@slurp
 // **********************************************
 
   @end if
