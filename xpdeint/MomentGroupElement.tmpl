@@ -89,20 +89,6 @@ ${insertCodeForFeatures('insideMomentGroupProcessingNoProcessingCodeLoop', $feat
 @end def
 
 @*
-  This function provides the contents of the moment group processing loop
-*@
-@def insideProcessingLoops
-  @#
-// ************** Processing code ***************
-${processingCode, fixupWhitespace=True}
-// **********************************************
-
-  @set $featureOrdering = ['Driver']
-$insertCodeForFeatures('insideMomentGroupProcessingLoop', $featureOrdering)@slurp
-  @#
-@end def
-
-@*
   Write output function implementation
 *@
 @def writeOutFunctionContents($function)
