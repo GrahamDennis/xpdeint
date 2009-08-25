@@ -13,9 +13,6 @@
     <auto_vectorise />
     <benchmark />
     <bing />
-    <fftw plan="exhaustive" />
-    <mmt />
-    <!-- <openmp /> -->
     <globals>
       <![CDATA[
         const real omegaz = 2*M_PI*20;
@@ -38,8 +35,8 @@
   <geometry>
     <propagation_dimension> t </propagation_dimension>
     <transverse_dimensions>
-      <dimension name="z" lattice="32"  domain="(0.0, 1.0e-4)" transform="dct" />
       <dimension name="r" lattice="32"  domain="(0.0, 1.0e-5)" transform="bessel" />
+      <dimension name="z" lattice="32"  domain="(0.0, 1.0e-4)" transform="dct" />
     </transverse_dimensions>
   </geometry>
   
