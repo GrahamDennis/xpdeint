@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="fibre_fixedstep.xsil" expected="fibre_fixedstep_expected.xsil" absolute_tolerance="5e-2" relative_tolerance="1e-1" />
+  </testing>
+  <name>fibre_fixedstep</name>
+  <author>Unknown author</author>
+  <description>
+    Example fibre noise simulation
+  </description>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="x" lattice="64"  domain="(-5, 5)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <driver name="multi-path" paths="2" />
+  
+  <features>
+    <auto_vectorise />
+    <benchmark />
+    <error_check />
+    <bing />
+    <!-- <openmp /> -->
+    <stochastic>
+      <noise kind="gaussian" prefix="n" num="2" seed="293485"/>
+      <!-- If there is no seed attribute then seeds will be chosen randomly at run-time -->
+    </stochastic>
+    <globals>
+      <![CDATA[
+      const real ggamma = 1.0;
+      const real beta = sqrt(2.0*M_PI*ggamma/10.0);
+      ]]>
+    </globals>
+  </features>
+  
+  <vector name="main" initial_space="x" type="complex">
+    <components>phi</components>
+    <initialisation no_noises="true">
+      <![CDATA[
+        phi = 0.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="RK9" iterations="3" interval="2.5" steps="200000">
+      <samples>50</samples>
+      <operators>
+        <operator kind="ex" constant="yes">
+          <operator_names>L</operator_names>
+          <![CDATA[
+            L = -i*kx*kx;
+          ]]>
+        </operator>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+          dphi_dt = L[phi] - ggamma*phi + beta*complex(n_1, n_2);
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  
+  <output format="binary">
+    <group>
+      <sampling initial_sample="yes">
+        <dimension name="x" lattice="64" fourier_space="yes" />
+        <moments>pow_dens</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          pow_dens = mod2(phi);
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>
