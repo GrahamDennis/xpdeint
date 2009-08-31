@@ -25,7 +25,7 @@ Build instructions:
 
 2. Install python 2.4 or greater. (2.5 recommended)
    Mac OS X: The easiest way to do this is by downloading a .dmg from http://pythonmac.org/packages/.
-   If you have Leopard (10.5) or later, then python 2.5 comes pre-installed.
+   If you have Leopard (10.5) or later, then python 2.5+ comes pre-installed.
    
    Linux: Install this using your favourite package manager.
    Windows: One way to install Python and related packages is via the Enthought Python Distribution.
@@ -35,7 +35,8 @@ Build instructions:
    Linux: Use your favourite package manager (if you can).
    Windows: If you used the Enthought Python Distribution, this is already installed.
    
-   Mac OS X: Leopard (10.5) has setuptools pre-installed. Though if the next step fails, you may need to upgrade setuptools.
+   Mac OS X: Leopard (10.5) and later have setuptools pre-installed.
+             Though if the next step fails, you may need to upgrade setuptools.
              To do that, type "sudo easy_install -U setuptools"
    
    If you have root (sudo) access, the easy way to install this is by executing
@@ -60,8 +61,9 @@ Build instructions:
    
    Note that lxml is not required for xpdeint to run. If it is installed, it is used to validate
    the xmds script passed to xpdeint to check that there isn't any invalid syntax or typos that
-   xpdeint wouldn't have otherwise noticed. Also note that installing lxml is a bit tricky on OS X
-   because Apple continues to ship old versions of libxml2 with the system.
+   xpdeint wouldn't have otherwise noticed. Also note that installing lxml is a bit tricky on Mac
+   OS X Leopard because Apple shipped an old version of libxml2 with the system.
+   (This problem does not exist on Snow Leopard.)
    
    Pyparsing and Cheetah are required installs for xpdeint.
 
@@ -78,7 +80,7 @@ Build instructions:
 7. b) If you have 'numpy' installed, type './run_tests.py' in the xpdeint/ directory
       to run all the tests
 
-8. Run the generated program, which will produce XSIL output exactly as XMDS-1
+8. Run the generated program, which will produce XSIL output similar to that produced by xmds-1
   
    If you wish to load binary XSIL files _into_ xpdeint, then you will need the libxmds library that
    comes with xmds-1. However, the same result can be achieved without using libxmds by using the 'HDF5'
@@ -120,8 +122,10 @@ Highly suggested (but optional) installs:
 Optional installs:
 * A Matrix library like ATLAS, or Intel's MKL. (Mac OS X comes with a matrix library)
 * GNU Scientific library (GSL).
-* numpy (sudo easy_install numpy). (Mac OS X Leopard comes with numpy, and has trouble updating cleanly.)
-* h5py. This is needed for checking the results of xpdeint tests that generate HDF5 output. (requires updated numpy)
+* numpy (sudo easy_install numpy). (Mac OS X Leopard and above come with numpy)
+* h5py. This is needed for checking the results of xpdeint tests that generate HDF5 output.
+  h5py requires numpy >= 1.0.3 Mac OS X Leopard comes with 1.0.1, so this must be upgraded on such systems.
+  Mac OS X Snow Leopard comes with 1.2.1
 * OpenMPI. Needed to enable xpdeint to generate scripts that can be run across multiple machines. (Mac OS X Leopard comes with OpenMPI)
 * mpmath. Library for arbitrary precision floating point math. Install from package manager or "sudo easy_install mpmath"
   This package is needed for the matrix-based transforms like Bessel and Hermite-Gauss.
