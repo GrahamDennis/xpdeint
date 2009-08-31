@@ -17,7 +17,7 @@ class _FilterOperator (Operator):
   # Filter operators must cause their computed vectors to be re-evaluated
   # as one filter operator could easily change the value of a computed vector
   # (think renormalisation)
-  computedVectorsNeedingPrecalculation = []
+  dynamicVectorsNeedingPrecalculation = []
   
   evaluateOperatorFunctionArguments = []
   operatorKind = Operator.OtherOperatorKind

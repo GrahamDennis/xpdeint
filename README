@@ -125,6 +125,7 @@ Optional installs:
 * numpy (sudo easy_install numpy). (Mac OS X Leopard and above come with numpy)
 * h5py. This is needed for checking the results of xpdeint tests that generate HDF5 output.
   h5py requires numpy >= 1.0.3 Mac OS X Leopard comes with 1.0.1, so this must be upgraded on such systems.
+  Upgrading h5py on Mac OS X is best done with the source of the package, as the easy_install option can get confused with multiple numpy versions.
   Mac OS X Snow Leopard comes with 1.2.1
 * OpenMPI. Needed to enable xpdeint to generate scripts that can be run across multiple machines. (Mac OS X Leopard comes with OpenMPI)
 * mpmath. Library for arbitrary precision floating point math. Install from package manager or "sudo easy_install mpmath"

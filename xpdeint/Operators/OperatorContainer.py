@@ -46,7 +46,7 @@ class OperatorContainer(ScriptElement):
   that all necessary computed vectors have been evaluated (and in the correct order).
   To help with this, OperatorContainer returns a set of all of the computed vectors
   on which operators in this `OperatorContainer` depend through the 
-  `computedVectorsNeedingPrecalculation` method.
+  `dynamicVectorsNeedingPrecalculation` method.
   
   Do write the code that will actually evaluate the operators, just call one of the ``evaluate*``
   functions. If you need to call another function on the operators other than ``evaluate``,
@@ -109,10 +109,10 @@ class OperatorContainer(ScriptElement):
     return children
   
   @property
-  def computedVectorsNeedingPrecalculation(self):
+  def dynamicVectorsNeedingPrecalculation(self):
     result = set()
     for operator in self.operators:
-      result.update(operator.computedVectorsNeedingPrecalculation)
+      result.update(operator.dynamicVectorsNeedingPrecalculation)
     return result
   
   def addOperator(self, op):

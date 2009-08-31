@@ -91,10 +91,10 @@ class _Operator (ScriptElement):
     return ', '.join([pair[0] + ' ' + pair[1] for pair in self.evaluateOperatorFunctionArguments])
   
   @lazy_property
-  def computedVectorsNeedingPrecalculation(self):
+  def dynamicVectorsNeedingPrecalculation(self):
     vectorSet = self.dependencies.copy()
     vectorSet.update(self.targetVectors)
-    return filter(lambda x: x.isComputed, vectorSet)
+    return filter(lambda x: x.isComputed or x.isNoise, vectorSet)
   
   @lazy_property
   def primaryCodeBlock(self):

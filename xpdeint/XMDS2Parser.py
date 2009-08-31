@@ -1079,7 +1079,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
         'dsfmt': (GaussianBoxMuellerRandomVariable, DSFMTGenerator),
         'posix': (GaussianBoxMuellerRandomVariable, POSIXGenerator),
         'solirte': (GaussianSolirteRandomVariable, SolirteGenerator),
-      }.get(vectorMethod)
+      }.get(vectorMethod,(None,None))
       if not generatorClass:
         raise ParserException(noiseVectorElement, "Method '%(vectorMethod)s' for Gaussian noises is unknown." % locals())
 

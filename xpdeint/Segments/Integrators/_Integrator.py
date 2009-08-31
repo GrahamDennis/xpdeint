@@ -75,6 +75,14 @@ class _Integrator (_Segment):
     return self._integrationVectors.copy()
   
   @lazy_property
+  def dynamicNoiseVectors(self):
+    """Returns the dynamic noise vectors required by the integrator."""
+    
+    return [vector for vector in self.evaluationOrderForVectors(
+            self.dynamicVectorsNeedingPrecalculationForOperatorContainers(self.intraStepOperatorContainers), 
+            static = False, predicate = lambda x: x.isComputed or x.isNoise) if vector.isNoise]
+
+  @lazy_property
   def extraIntegrationArrayNames(self):
     return self.stepper.extraIntegrationArrayNames
   

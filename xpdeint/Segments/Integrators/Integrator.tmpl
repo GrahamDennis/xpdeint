@@ -25,7 +25,7 @@ ${vector.type}* _${name}_${arrayName}_${vector.id};
 @def deltaAFunctionBody($function)
   @#
   @# First evaluate any computed vector that any of our operators may depend on
-${evaluateComputedVectors($computedVectorsNeedingPrecalculationForOperatorContainers($intraStepOperatorContainers), static = False)}@slurp
+${evaluateComputedVectors($dynamicVectorsNeedingPrecalculationForOperatorContainers($intraStepOperatorContainers), static = False)}@slurp
   @#
   @# Then loop over operators that come before the delta A operators in the order in which
   @# they appear in the xmds script.
@@ -57,7 +57,7 @@ ${operatorContainer.evaluatePostDeltaAOperators(parentFunction = function)}@slur
 
 @def preSingleStep
   @#
-${evaluateComputedVectors($computedVectorsNeedingPrecalculationForOperatorContainers($stepStartOperatorContainers))}@slurp
+${evaluateComputedVectors($dynamicVectorsNeedingPrecalculationForOperatorContainers($stepStartOperatorContainers))}@slurp
   @#
   @for $operatorContainer in $stepStartOperatorContainers
 
@@ -72,7 +72,7 @@ ${operatorContainer.evaluateOperators(_step = '_step')}@slurp
   @#
 ${insertCodeForFeatures('postSingleStep', featureOrdering)}@slurp
   @#
-${evaluateComputedVectors($computedVectorsNeedingPrecalculationForOperatorContainers($stepEndOperatorContainers))}@slurp
+${evaluateComputedVectors($dynamicVectorsNeedingPrecalculationForOperatorContainers($stepEndOperatorContainers))}@slurp
   @#
   @for $operatorContainer in $stepEndOperatorContainers
 
