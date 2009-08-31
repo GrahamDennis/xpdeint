@@ -16,13 +16,13 @@
     </transverse_dimensions>
   </geometry>
   
-  <driver name="multi-path" paths="2" />
+  <driver name="multi-path" paths="100" />
   
   <features>
     <auto_vectorise />
     <benchmark />
-    <error_check />
-    <bing />
+    <!--<error_check />-->
+    <!--<bing />-->
     <!-- <openmp /> -->
     <stochastic>
       <noise kind="gaussian" prefix="n" num="2" seed="293485"/>
@@ -46,7 +46,7 @@
   </vector>
   
   <sequence>
-    <integrate algorithm="RK9" iterations="3" interval="2.5" steps="200000">
+    <integrate algorithm="RK9" iterations="3" interval="0.0025" steps="200">
       <samples>50</samples>
       <operators>
         <operator kind="ex" constant="yes">

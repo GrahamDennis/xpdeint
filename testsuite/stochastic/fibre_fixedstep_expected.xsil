@@ -16,13 +16,13 @@
     </transverse_dimensions>
   </geometry>
   
-  <driver name="multi-path" paths="2" />
+  <driver name="multi-path" paths="100" />
   
   <features>
     <auto_vectorise />
     <benchmark />
-    <error_check />
-    <bing />
+    <!--<error_check />-->
+    <!--<bing />-->
     <!-- <openmp /> -->
     <stochastic>
       <noise kind="gaussian" prefix="n" num="2" seed="293485"/>
@@ -46,7 +46,7 @@
   </vector>
   
   <sequence>
-    <integrate algorithm="RK9" iterations="3" interval="2.5" steps="200000">
+    <integrate algorithm="RK9" iterations="3" interval="0.0025" steps="200">
       <samples>50</samples>
       <operators>
         <operator kind="ex" constant="yes">
@@ -84,15 +84,15 @@ See http://www.xmds.org for more information.
 <XSIL Name="moment_group_1">
   <Param Name="n_independent">2</Param>
   <Array Name="variables" Type="Text">
-    <Dim>5</Dim>
+    <Dim>4</Dim>
     <Stream><Metalink Format="Text" Delimiter=" \n"/>
-t kx mean_pow_dens error_pow_dens stderr_pow_dens 
+t kx mean_pow_dens stderr_pow_dens 
     </Stream>
   </Array>
   <Array Name="data" Type="double">
     <Dim>51</Dim>
     <Dim>64</Dim>
-    <Dim>5</Dim>
+    <Dim>4</Dim>
     <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
 fibre_fixedstep_expected_mg0.dat
     </Stream>
