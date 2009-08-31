@@ -21,9 +21,6 @@
   <features>
     <auto_vectorise />
     <benchmark />
-    <!--<error_check />-->
-    <!--<bing />-->
-    <!-- <openmp /> -->
     <stochastic>
       <noise kind="gaussian" prefix="n" num="2" seed="293485"/>
       <!-- If there is no seed attribute then seeds will be chosen randomly at run-time -->
@@ -46,7 +43,7 @@
   </vector>
   
   <sequence>
-    <integrate algorithm="RK9" iterations="3" interval="0.0025" steps="200">
+    <integrate algorithm="RK9" interval="0.0025" steps="200">
       <samples>50</samples>
       <operators>
         <operator kind="ex" constant="yes">
