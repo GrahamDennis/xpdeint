@@ -58,7 +58,7 @@ $generatorType ${generatorName};
 
 @def minusOneToOneRandomNumber: 2.0*dsfmt_genrand_close1_open2($generatorName) - 3.0
 
-@def zeroToOneRandomNumber($gen): dsfmt_genrand_open_open(${gen})
+@def zeroToOneRandomNumber(): dsfmt_genrand_open_open(${generatorName})
 
 @def initialiseSeeds
   @#

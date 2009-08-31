@@ -22,7 +22,7 @@ unsigned short ${generatorName}[3];
 
 @def minusOneToOneRandomNumber: 2.0*erand48($generatorName) - 1.0
 
-@def zeroToOneRandomNumber($gen): erand48(${gen})
+@def zeroToOneRandomNumber(): erand48(${generatorName})
 
 @def constructArrayUniformRandomNumbers
   @set noiseVector = $parent.parent

@@ -19,7 +19,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
   @# Evaluate any computed vectors we have that either we or one
   @# of our operators depends on
   @set $computedVectorDependencies = $codeBlocks['sampling'].dependencies.copy()
-  @silent computedVectorDependencies.update($computedVectorsNeedingPrecalculationForOperatorContainers($operatorContainers))
+  @silent computedVectorDependencies.update($dynamicVectorsNeedingPrecalculationForOperatorContainers($operatorContainers))
 ${evaluateComputedVectors(computedVectorDependencies)}@slurp
   @#
   @# Execute any operatorContainers

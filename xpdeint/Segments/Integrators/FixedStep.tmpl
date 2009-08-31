@@ -82,6 +82,11 @@ ${initialise}@slurp
 ${localInitialise}@slurp
 
 for (long _istep = 0; _istep < ${stepCount}; _istep++) {
+  @for nv in self.dynamicNoiseVectors
+  _active_${nv.id} = _${nv.id};
+  ${nv.functions['evaluate'].call(_step = '_noiseStep')}
+  @end for
+  
   @# Insert code for features
   @set $featureOrderingInner = ['Output', 'ErrorCheck', 'Stochastic']
   @#

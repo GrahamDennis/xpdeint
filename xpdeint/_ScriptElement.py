@@ -479,6 +479,7 @@ class _ScriptElement (Template):
     Return the ordering for the noise vectors and computed vectors in `vectors` taking into account
     any dependencies between the computed vectors.
     """
+    
     def checkSelfConsistentVectors(vectors, static):
       #We check that all noise vectors are static or dynamic, as requested.
       for nv in [nv for nv in vectors if nv.isNoise and nv.static != static]:
@@ -539,14 +540,14 @@ class _ScriptElement (Template):
     
     return orderedDependenciesForVectors([v for v in vectors if predicate(v)])
   
-  def computedVectorsNeedingPrecalculationForOperatorContainers(self, operatorContainers):
+  def dynamicVectorsNeedingPrecalculationForOperatorContainers(self, operatorContainers):
     """
     Return a set of computed vectors that `operatorContainers` need to be precomputed
     before executing the operator containers.
     """
     result = set()
     for operatorContainer in operatorContainers:
-      result.update(operatorContainer.computedVectorsNeedingPrecalculation)
+      result.update(operatorContainer.dynamicVectorsNeedingPrecalculation)
     return result
   
   @staticmethod

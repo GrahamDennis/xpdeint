@@ -34,6 +34,10 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 size_t ${allocSize} = 0;
 $type* _${id} = NULL;
 $type* _active_${id} = NULL;
+  @for aliasName in $aliases
+$type* ${aliasName} = NULL;
+  @end for
+  @#
   @if $needsTransforms
 
 ptrdiff_t _${id}_basis;

@@ -17,13 +17,22 @@ class _NoiseVector (VectorElement):
   isNoise = True
   
   def __init__(self, *args, **KWs):
+    localKWs = self.extractLocalKWs(['staticNoise'], KWs)
     VectorElement.__init__(self, *args, **KWs)
-    
+    args = []
+    self.static = localKWs['staticNoise']
+    if not self.static:
+      args.append(('double','_step'))
+    else:
+      self.isComputed = True
     evaluateFunctionName = ''.join(['_', self.id, '_evaluate'])
     evaluateFunction = Function(name = evaluateFunctionName,
-                               args = [('double','_step')],
+                               args = args,
                                implementation = self.evaluateFunctionContents)
     self.functions['evaluate'] = evaluateFunction
     self.basesNeeded.add(self.initialBasis)
     
     self.needsInitialisation = False
+  
+  def initialiseSeeds(self):
+    return self.randomVariable.generator.initialiseSeeds()

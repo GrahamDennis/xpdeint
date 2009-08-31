@@ -23,7 +23,7 @@
     <fftw />
     <!-- <openmp /> -->
     <stochastic>
-      <noise kind="gaussian-posix" mean-rate="4.282" prefix="p" num="2"/>
+      <noise kind="gaussian-posix" mean-rate="4.282" prefix="p" num="2" seed="314 159 276"/>
       <!-- If there is no seed attribute then seeds will be chosen randomly at run-time -->
     </stochastic>
     <globals>
@@ -38,31 +38,35 @@
     <components>phi</components>
     <initialisation>
       <![CDATA[
-        phi = W_2/moment;
+        phi = W_2;
       ]]>
-      <dependencies>filter1 deedoubleyou</dependencies>
+      <dependencies>deedoubleyou</dependencies>
     </initialisation>
   </vector>
 
-  <noise_vector name="deedoubleyou" dimensions="x" kind="gaussian" mean="4.282" type="complex" method="posix">
+  <noise_vector name="deedoubleyou" dimensions="x" kind="poissonian" mean="4.282" type="real" method="posix" seed="314 159 276">
     <components>W_1 W_2</components>
+  </noise_vector>
+
+  <noise_vector name="deen" dimensions="x" kind="jump" mean-rate="4.282" type="real" method="dsfmt" seed="314 159 276">
+    <components>n</components>
   </noise_vector>
 
   <computed_vector name="filter1" dimensions="" type="real" no_noises="true">
     <components>moment moment2</components>
     <evaluation no_noises="true">
       <![CDATA[
-      // Joe is great
-        moment = 1.0;
+        moment = 1.0+n;
         moment2= 0.0;
       ]]>
+      <dependencies>deen</dependencies>
     </evaluation>
   </computed_vector>
   
   <sequence>
     <integrate algorithm="RK4" iterations="3" interval="2.5" steps="200000" tolerance="1e-6">
       <samples>50</samples>
-      <noise_vector name="deedoublevee" dimensions="x" kind="wiener" mean="4.282" type="complex" method="dsfmt">
+      <noise_vector name="deedoublevee" dimensions="x" kind="wiener" mean="4.282" type="complex" method="dsfmt" seed="314 159 276">
         <components>V_1 V_2</components>
       </noise_vector>
       <operators>
@@ -76,7 +80,7 @@
         <integration_vectors>main</integration_vectors>
         <![CDATA[
          //  dphi_dt = L[phi] - ggamma*phi + moment*beta*complex(n_1, n_2);
-         dphi_dt = L[phi] - ggamma*phi + moment*beta*(V_2);
+         dphi_dt = L[phi] - ggamma*phi + moment*0*(V_2);
         ]]>
       </operators>
     </integrate>
