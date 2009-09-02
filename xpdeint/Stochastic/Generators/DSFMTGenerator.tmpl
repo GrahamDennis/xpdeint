@@ -46,14 +46,13 @@ $generatorType ${generatorName};
 
 @def constructArrayUniformRandomNumbers
   @set noiseVector = $parent.parent
-  const ptrdiff_t _vector_size = ${noiseVector.sizeInBasisInReals(noiseVector.initialBasis)};
-  if (!(_vector_size & 0x1) && _vector_size > dsfmt_get_min_array_size())
-    dsfmt_fill_array_open_open(${generatorName}, reinterpret_cast<real*>(_active_${noiseVector.id}), _vector_size);
-  else {
-    for (long _i0 = 0; _i0 < _vector_size; _i0++) {
-      reinterpret_cast<real*>(_active_${noiseVector.id})[_i0] = dsfmt_genrand_open_open(${generatorName});
-    }
+if (!(_vector_size & 0x1) && _vector_size > dsfmt_get_min_array_size())
+  dsfmt_fill_array_open_open(${generatorName}, reinterpret_cast<real*>(_active_${noiseVector.id}), _vector_size);
+else {
+  for (long _i0 = 0; _i0 < _vector_size; _i0++) {
+    reinterpret_cast<real*>(_active_${noiseVector.id})[_i0] = dsfmt_genrand_open_open(${generatorName});
   }
+}
 @end def
 
 @def minusOneToOneRandomNumber: 2.0*dsfmt_genrand_close1_open2($generatorName) - 3.0

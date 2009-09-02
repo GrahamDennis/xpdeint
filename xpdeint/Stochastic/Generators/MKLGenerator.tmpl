@@ -23,7 +23,7 @@ $generatorType ${generatorName};
 
 @def constructArrayUniformRandomNumbers
   @set noiseVector = $parent.parent
-vdRngUniform(VSL_METHOD_DUNIFORM_STD, ${generatorName}, ${noiseVector.sizeInBasisInReals(noiseVector.initialBasis)}, reinterpret_cast<real*>(_active_${noiseVector.id}), 0.0, 1.0);
+vdRngUniform(VSL_METHOD_DUNIFORM_STD, ${generatorName}, _vector_size, reinterpret_cast<real*>(_active_${noiseVector.id}), 0.0, 1.0);
 @end def
 
 @*
