@@ -26,7 +26,7 @@ unsigned short ${generatorName}[3];
 
 @def constructArrayUniformRandomNumbers
   @set noiseVector = $parent.parent
-for (long _i0 = 0; _i0 < ${noiseVector.sizeInBasisInReals(noiseVector.initialBasis)}; _i0++) {
+for (long _i0 = 0; _i0 < _vector_size; _i0++) {
   _active_${noiseVector.id}[_i0] = erand48(${generatorName});
 }
 @end def

@@ -18,15 +18,15 @@ Copyright (c) 2009 __MyCompanyName__. All rights reserved.
   @#
   @set noiseVector = $parent
   @#
-  const real _var = 1.0/(${noiseVector.field.volumeElementInBasis(noiseVector.initialBasis)}@slurp
+const real _dVdt = ${noiseVector.field.volumeElementInBasis(noiseVector.initialBasis)}@slurp
   @if not noiseVector.static:
-  *_step@slurp
+*_step@slurp
   @end if
-  );
-  const real _dVdt = 1.0/_var;
-  for (long _i0 = 0; _i0 < ${noiseVector.sizeInBasisInReals(noiseVector.initialBasis)}; _i0++) {
-    _active_${noiseVector.id}[_i0] = _var * _poidev_${noiseVector.id}(${noiseMeanRate} * _dVdt);
-  }
+;
+const real _var = 1.0/_dVdt;
+for (long _i0 = 0; _i0 < _vector_size; _i0++) {
+  _active_${noiseVector.id}[_i0] = _var * _poidev_${noiseVector.id}(${noiseMeanRate} * _dVdt);
+}
   @#
 @end def
 

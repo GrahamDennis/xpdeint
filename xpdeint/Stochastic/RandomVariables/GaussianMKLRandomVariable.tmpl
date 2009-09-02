@@ -25,8 +25,6 @@ const real _var =@slurp
 @end if
 );
 
-const ptrdiff_t _vector_size = ${noiseVector.sizeInBasisInReals(noiseVector.initialBasis)};
-
 vdRngGaussian(VSL_METHOD_DGAUSSIAN_BOXMULLER2, ${generator.generatorName}, _vector_size, reinterpret_cast<real*>(_active_${noiseVector.id}), 0.0, sqrt(_var));
 
   @#

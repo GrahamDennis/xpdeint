@@ -41,7 +41,6 @@ const real _var =@slurp
 @end if
 );
 
-const ptrdiff_t _vector_size = ${noiseVector.sizeInBasisInReals(noiseVector.initialBasis)};
 const ptrdiff_t _evenNoises = _vector_size & ~1;
 for (ptrdiff_t _i0 = 0; _i0 < _evenNoises; _i0 += 2) {
   ${boxMuellerAlgorithm, autoIndent=True}@slurp

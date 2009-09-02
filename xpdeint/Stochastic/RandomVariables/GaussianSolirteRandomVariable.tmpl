@@ -25,8 +25,6 @@ const real _var =@slurp
 @end if
 );
 
-const ptrdiff_t _vector_size = ${noiseVector.sizeInBasisInReals(noiseVector.initialBasis)};
-
 ${generator.generatorName}->RandFill_gaussian_FP64(reinterpret_cast<real*>(_active_${noiseVector.id}), _vector_size);
 const real _sigma = sqrt(_var);
 #pragma ivdep
