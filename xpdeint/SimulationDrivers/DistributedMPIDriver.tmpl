@@ -258,7 +258,6 @@ for (hsize_t _i${dimRep.name} = 0; _i${dimRep.name} < count_${dimRep.name}; _i${
   @#
   @set $field = dict['field']
   @set $basis = dict['basis']
-  @set $noises = dict['noises']
   @#
   @if $field.isDistributed
     @# If the field is distributed, then the noise
@@ -277,6 +276,27 @@ if (_rank == 0) {
 @end def
 
 @def generateNoisesEnd($dict)
+  @#
+  @set $field = dict['field']
+  @set $basis = dict['basis']
+  @set $noiseVector = dict['caller']
+  @#
+  @if $field.isDistributed
+    @# If the field is distributed, then the noise
+    @# will need to vary along the MPI dimension, so all is
+    @# OK.
+    @return
+  @end if
+  @#
+}
+// Broadcast the noises to other nodes
+MPI_Bcast(_active_${noiseVector.id}, ${noiseVector.sizeInBasisInReals(basis)}, MPI_REAL, 0, MPI_COMM_WORLD);
+
+  @set $dict['extraIndent'] -= 2
+  @#
+@end def
+
+@def generateNoisesEndDeprecated($dict)
   @#
   @set $field = dict['field']
   @set $basis = dict['basis']
