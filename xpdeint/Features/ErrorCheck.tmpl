@@ -130,27 +130,6 @@ ${nv.functions['evaluate'].call(_step = '_noiseStep')}
 for (int _error_check_loop_iter = (_half_step ? 2 : 1); _error_check_loop_iter > 0; _error_check_loop_iter--) {
   @silent $dict['extraIndent'] += 2
   @#
-  if (_half_step) {
-    if (_error_check_loop_iter == 2) { // This is the first loop iteration, so we use the first set of noises.
-      @for nv in integrator.dynamicNoiseVectors
-        _active_${nv.id} = _${nv.id};
-      @end for
-    }
-    else {// This is the second iteration, so we use the second set of noises
-      @for nv in integrator.dynamicNoiseVectors
-        _active_${nv.id} = _${nv.id}2;
-      @end for
-    }
-  }
-  else { // For the full step we average the two noises.
-      @for nv in integrator.dynamicNoiseVectors
-        @#
-      ${loopOverVectorsWithInnerContentTemplate([$nv],
-      """_${vector.id}[$index] = 0.5*(_${vector.id}[$index] + _${vector.id}2[$index]);
-      """, basis = nv.initialBasis), autoIndent=True}@slurp
-      _active_${nv.id} = _${nv.id};
-      @end for
-  }
 @end def
 
 @def integrateFixedStepInnerLoopEnd($dict)

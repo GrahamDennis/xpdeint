@@ -104,7 +104,7 @@ _make_${noise.prefix}_noises(_var, _${noiseVector.id}, ${noiseVector.sizeInBasis
 
   @end capture
 ${result, extraIndent=extraIndent}@slurp
-${insertCodeForFeaturesInReverseOrder('generateNoisesEnd', featureOrdering, featureDict)}@slurp
+${insertCodeForFeaturesInReverseOrder('generateNoisesEndDeprecated', featureOrdering, featureDict)}@slurp
   @#
 @end def
 
@@ -167,6 +167,30 @@ _active_${noiseVector.id} = _${noiseVector.id};
     @return
   @end if
   @#
+
+  @if ('ErrorCheck' in $features) and integrator.dynamicNoiseVectors 
+if (_half_step) {
+  if (_error_check_loop_iter == 2) { // This is the first loop iteration, so we use the first set of noises.
+    @for nv in integrator.dynamicNoiseVectors
+      _active_${nv.id} = _${nv.id};
+    @end for
+  }
+  else {// This is the second iteration, so we use the second set of noises
+    @for nv in integrator.dynamicNoiseVectors
+      _active_${nv.id} = _${nv.id}2;
+    @end for
+  }
+}
+else { // For the full step we average the two noises.
+    @for nv in integrator.dynamicNoiseVectors
+      @#
+    ${loopOverVectorsWithInnerContentTemplate([$nv],
+    """_${vector.id}[$index] = 0.5*(_${vector.id}[$index] + _${vector.id}2[$index]);
+    """, basis = nv.initialBasis), autoIndent=True}@slurp
+    _active_${nv.id} = _${nv.id};
+    @end for
+}
+  @end if
   @set $featureOrdering = ['Driver']
   @for field in $integrator.integrationFields
     @set $noises = $noisesForFieldInIntegrator(field, integrator)
@@ -192,7 +216,7 @@ if (!_half_step) {
       @end for
     @end capture
 ${result, extraIndent=extraIndent}@slurp
-${insertCodeForFeatures('generateNoisesEnd', featureOrdering, featureDict)}@slurp
+${insertCodeForFeatures('generateNoisesEndDeprecated', featureOrdering, featureDict)}@slurp
   @end for
   @#
 @end def
@@ -232,7 +256,7 @@ _make_${noise.prefix}_noises(_${field.name}_var/_step, _active_${noiseVector.id}
       @end for
     @end capture
   ${result, autoIndent=True, extraIndent=extraIndent}@slurp
-  ${insertCodeForFeatures('generateNoisesEnd', featureOrdering, featureDict), autoIndent=True}@slurp
+  ${insertCodeForFeatures('generateNoisesEndDeprecated', featureOrdering, featureDict), autoIndent=True}@slurp
   @end for
 } else if (_step*(1.0 + _EPSILON) < _noise_list.begin()->_step) {
   // Create new smallest time step
@@ -269,7 +293,7 @@ ${breakPoissonianNoiseInFieldInBasis(noise, field, basis)}@slurp
       @end for
     @end capture
   ${result, autoIndent=True, extraIndent=extraIndent}@slurp
-  ${insertCodeForFeaturesInReverseOrder('generateNoisesEnd', featureOrdering, featureDict), autoIndent=True}@slurp
+  ${insertCodeForFeaturesInReverseOrder('generateNoisesEndDeprecated', featureOrdering, featureDict), autoIndent=True}@slurp
   @end for
   @#
   
