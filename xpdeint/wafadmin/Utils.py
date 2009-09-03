@@ -150,7 +150,7 @@ def exec_command(s, **kw):
 	try:
 		proc = pproc.Popen(s, **kw)
 		return proc.wait()
-	except WindowsError:
+	except OSError:
 		return -1
 
 if is_win32:
@@ -450,7 +450,7 @@ def cmd_output(cmd, **kw):
 	try:
 		p = pproc.Popen(cmd, **kw)
 		output = p.communicate()[0]
-	except WindowsError, e:
+	except OSError, e:
 		raise ValueError(str(e))
 
 	if p.returncode:
