@@ -9,6 +9,19 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 @def description: segment $segmentNumber ($stepper.name adaptive-step integrator)
 
 @*
+  Globals
+*@
+@def globals
+  @#
+  @super
+  @#
+  @set $featureOrderingGlobals = ['Stochastic']
+  ${insertCodeForFeatures('integrateAdaptiveGlobals', featureOrderingGlobals)}@slurp
+  @#
+@end def
+
+
+@*
   Function prototypes
 *@
 @def functionPrototypes
