@@ -257,7 +257,6 @@ for (hsize_t _i${dimRep.name} = 0; _i${dimRep.name} < count_${dimRep.name}; _i${
 @def generateNoisesBegin($dict)
   @#
   @set $field = dict['field']
-  @set $basis = dict['basis']
   @#
   @if $field.isDistributed
     @# If the field is distributed, then the noise

@@ -13,7 +13,7 @@
     </transverse_dimensions>
   </geometry>
   
-  <driver name="mpi-multi-path" paths="10" />
+  <driver name="mpi-multi-path" paths="2" />
   
   <features>
     <auto_vectorise />
@@ -35,39 +35,20 @@
   </features>
   
   <vector name="main" initial_space="x" type="complex">
-    <components>phi</components>
-    <initialisation>
+    <components>phi psi</components>
+    <initialisation no_noises="true">
       <![CDATA[
-        phi = W_2;
+        phi = exp(-x*x);
+        psi = exp(-x*x);
       ]]>
-      <dependencies>deedoubleyou</dependencies>
     </initialisation>
   </vector>
 
-  <noise_vector name="deedoubleyou" dimensions="x" kind="poissonian" mean="4.282" type="real" method="posix" seed="314 159 276">
-    <components>W_1 W_2</components>
-  </noise_vector>
-
-  <noise_vector name="deen" dimensions="x" kind="jump" mean-rate="4.282" type="real" method="dsfmt" seed="314 159 276">
-    <components>n</components>
-  </noise_vector>
-
-  <computed_vector name="filter1" dimensions="" type="real" no_noises="true">
-    <components>moment moment2</components>
-    <evaluation no_noises="true">
-      <![CDATA[
-        moment = 1.0+n;
-        moment2= 0.0;
-      ]]>
-      <dependencies>deen</dependencies>
-    </evaluation>
-  </computed_vector>
-  
   <sequence>
-    <integrate algorithm="RK4" iterations="3" interval="2.5" steps="200000" tolerance="1e-6">
+    <integrate algorithm="ARK45" iterations="3" interval="0.25" steps="200000" tolerance="1e-12">
       <samples>50</samples>
-      <noise_vector name="deedoublevee" dimensions="x" kind="wiener" mean="4.282" type="complex" method="dsfmt" seed="314 159 276">
-        <components>V_1 V_2</components>
+      <noise_vector name="dupvee" dimensions="x" kind="wiener" mean="4.282" type="real" method="posix" seed="314 159 276">
+        <components>Vd_1 Vd_2</components>
       </noise_vector>
       <operators>
         <operator kind="ip" constant="yes">
@@ -76,24 +57,27 @@
             L = -i*kx*kx;
           ]]>
         </operator>
-        <dependencies>filter1 deedoublevee</dependencies>
+        <dependencies>dupvee</dependencies>
         <integration_vectors>main</integration_vectors>
         <![CDATA[
-         //  dphi_dt = L[phi] - ggamma*phi + moment*beta*complex(n_1, n_2);
-         dphi_dt = L[phi] - ggamma*phi + moment*0*(V_2);
+         // if (_index_x == 1) {
+         //   printf("flag difference %e          p_1 is %e   Vd_1 is  %e   t is %e\n",p_1-Vd_1,p_1,Vd_1,t);};
+         dphi_dt = L[phi] - ggamma*phi + phi*complex(Vd_1,Vd_2);
+         dpsi_dt = L[psi] - ggamma*psi + psi*complex(p_1,p_2);
         ]]>
       </operators>
     </integrate>
   </sequence>
   
-  <output format="binary" filename="fibre.xsil">
+  <output format="ascii" filename="fibre.xsil">
     <group>
       <sampling initial_sample="yes">
         <dimension name="x" lattice="64" fourier_space="yes" />
-        <moments>pow_dens</moments>
+        <moments>kdensphi kdenspsi</moments>
         <dependencies>main</dependencies>
         <![CDATA[
-          pow_dens = mod2(phi);
+          kdensphi = mod2(phi);
+          kdenspsi = mod2(psi);
         ]]>
       </sampling>
     </group>
