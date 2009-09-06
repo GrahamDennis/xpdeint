@@ -165,12 +165,6 @@ class _Integrator (_Segment):
         
         momentGroup.addSamplePoints(sampleCount * self.totalCycles)
     
-    # Permit any step start or step end operators to use the '_step' variable.
-    for oc in chain(self.stepStartOperatorContainers, self.stepEndOperatorContainers):
-      for op in oc.operators:
-        evaluateFunction = op.functions['evaluate']
-        if not ('real', '_step') in evaluateFunction.args:
-          evaluateFunction.args.append(('real', '_step'))
     
   def preflight(self):
     super(_Integrator, self).preflight()

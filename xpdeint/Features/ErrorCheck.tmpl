@@ -121,11 +121,6 @@ if (_half_step)
   @#
   @set $integrator = dict['caller']
 
-@for nv in integrator.dynamicNoiseVectors
-_active_${nv.id} = _${nv.id}2;
-${nv.functions['evaluate'].call(_step = '_noiseStep')}
-@end for
-
 // If we are doing half-step integration, then we need to do each integrate step twice (but with half the step size)
 for (int _error_check_loop_iter = (_half_step ? 2 : 1); _error_check_loop_iter > 0; _error_check_loop_iter--) {
   @silent $dict['extraIndent'] += 2
