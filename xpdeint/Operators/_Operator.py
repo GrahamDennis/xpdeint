@@ -13,7 +13,6 @@ from xpdeint.ScriptElement import ScriptElement
 from xpdeint.ParserException import ParserException
 
 from xpdeint import RegularExpressionStrings
-import re
 
 from xpdeint.Function import Function
 from xpdeint.Utilities import lazy_property
