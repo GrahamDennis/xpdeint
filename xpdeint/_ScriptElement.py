@@ -9,13 +9,11 @@ Created by Graham Dennis on 2007-10-17.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 """
 
-import sys
 import textwrap
 
 from Cheetah.Template import Template
 from xpdeint.ParserException import ParserException
 
-import re
 from xpdeint.Utilities import lazy_property
 
 class _ScriptElement (Template):
