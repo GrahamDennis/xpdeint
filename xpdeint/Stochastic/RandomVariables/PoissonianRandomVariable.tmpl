@@ -8,7 +8,24 @@ Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 
 @from xpdeint.CallOnceGuards import callOnceGuard
 
-@attr noiseDistribution = 'poissonian'
+@def breakNoiseVector()
+@*doc:
+Return the code to generate a new smaller poissonian noise from a previous noise.
+
+The previous noise had a time step of ``_old_smallest_step`` a variable available in the C
+code, not in the template itself.
+*@
+  @set $noiseVector=$parent
+  @#
+  @#
+// Split a poissonian noise
+${transformVectorsToBasis([$noiseVector], $noiseVector.initialBasis)}@slurp
+${noiseVector.type}* const _old_${noiseVector.id} = _noise_list.begin()->_${noiseVector.id};
+
+_split_${noiseVector.id}_noises(_${noiseVector.field.name}_var / _step, _${noiseVector.field.name}_var / _old_smallest_step, _active_${noiseVector.id}, _old_${noiseVector.id}, ${noiseVector.sizeInBasis(noiseVector.initialBasis)});
+
+  @#
+@end def
 
 @def makeNoises
 @*doc:

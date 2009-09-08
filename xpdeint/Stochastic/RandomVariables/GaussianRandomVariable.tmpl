@@ -1,0 +1,36 @@
+@*
+GaussianRandomVariable.tmpl
+
+Created by Joe Hope on 2009-08-20.
+Copyright (c) 2009 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.ScriptElement
+
+@def breakNoiseVector()
+@*doc:
+Return the code to generate a new smaller gaussian noise from a previous noise.
+
+The previous noise had a time step of ``old_smallest_step`` a variable available in the C
+code, not in the template itself.
+*@
+  @set $noiseVector=$parent
+  @#
+// Split a gaussian noise
+  @# Generate a new noise of the appropriate variance
+${noiseVector.functions['evaluate'].call(_step = '(_step * _old_smallest_step)/(_old_smallest_step - _step)')}
+
+${transformVectorsToBasis([$noiseVector], $noiseVector.initialBasis)}@slurp
+  @# Then add the old noise.
+  @# When adding the old noise, the first step is to get a pointer to the old noise itself.
+  @# This pointer is called _old_${noiseVector.id}
+// Now complete creation of the new noise.
+${noiseVector.type}* const _old_${noiseVector.id} = _noise_list.begin()->_${noiseVector.id};
+
+  @# Now do the actual adding. This code creates a loop over the noiseVector
+  @# adding the old vector at each point.
+${loopOverVectorsWithInnerContentTemplate([$noiseVector], 
+"""_active_${vector.id}[$index] += _old_${vector.id}[$index];
+""", basis = noiseVector.initialBasis), autoIndent=True}@slurp
+
+  @#
+@end def

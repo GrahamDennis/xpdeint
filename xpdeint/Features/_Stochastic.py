@@ -51,6 +51,12 @@ class _Stochastic (_Feature):
     
     return noisesNeeded
   
+  def adaptiveIntegratorsWithNoises(self):
+
+    adaptiveIntegratorList = [ai for ai in self.getVar('templates') if isinstance(ai, AdaptiveStepIntegrator) and (ai.dynamicNoiseVectors or self.integratorNeedsNoises(ai))]
+
+    return adaptiveIntegratorList
+
   def deltaAOperatorBasisForFieldInIntegrator(self, field, integrator):
     assert field in integrator.integrationFields
     

@@ -20,14 +20,14 @@ Copyright (c) 2009 __MyCompanyName__. All rights reserved.
   @# For distributed MPI drivers, we may need to share the noise if it is defined on a field
   @#  that is not distributed.
     @set $featureOrdering = ['Driver']
-    @set $featureDict = {'field': self.field, 'basis': self.initialBasis, 'extraIndent': 0}
-${insertCodeForFeatures('generateNoisesBegin', featureOrdering, featureDict)}@slurp
+    @set $featureDict = {'extraIndent': 0, 'noiseVector': self}
+${insertCodeForFeatures('evaluateNoiseVectorBegin', featureOrdering, featureDict)}@slurp
     @set $extraIndent = featureDict['extraIndent']
   @#
 const ptrdiff_t _vector_size = ${self.sizeInBasisInReals(self.initialBasis)};
 ${randomVariable.makeNoises}@slurp
   @#
-${insertCodeForFeatures('generateNoisesEnd', featureOrdering, featureDict)}@slurp
+${insertCodeForFeatures('evaluateNoiseVectorEnd', featureOrdering, featureDict)}@slurp
   @#
   @if $needsTransforms
 _${id}_basis = $basisIndexForBasis(self.initialBasis);
