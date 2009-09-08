@@ -22,6 +22,11 @@ from xpdeint.Segments.Integrators.AdaptiveStep import AdaptiveStep as AdaptiveSt
 from xpdeint.ParserException import ParserException, parserWarning
 
 class _Stochastic (_Feature):
+  def __init__(self, *args, **KWs):
+    _Feature.__init__(self, *args, **KWs)
+    
+    self.noises = []
+  
   @property
   def children(self):
     children = super(_Stochastic, self).children
@@ -42,7 +47,9 @@ class _Stochastic (_Feature):
     assert field in integrator.integrationFields
     
     deltaAOperatorList = [oc.deltaAOperator for oc in integrator.operatorContainers if oc.field == field and oc.deltaAOperator.noises]
-    assert len(deltaAOperatorList) == 1
+    assert len(deltaAOperatorList) <= 1
+    
+    if not deltaAOperatorList: return []
     deltaAOperator = deltaAOperatorList[0]
     
     noisesNeeded = self.noises[:]
@@ -61,7 +68,9 @@ class _Stochastic (_Feature):
     assert field in integrator.integrationFields
     
     deltaAOperatorList = [oc.deltaAOperator for oc in integrator.operatorContainers if oc.field == field and oc.deltaAOperator.noises]
-    assert len(deltaAOperatorList) == 1
+    assert len(deltaAOperatorList) <= 1
+    
+    if not deltaAOperatorList: return None
     deltaAOperator = deltaAOperatorList[0]
     
     return deltaAOperator.operatorBasis
@@ -128,8 +137,8 @@ class _Stochastic (_Feature):
         
         noiseVector = VectorElement(name = '%s_noises' % noise.prefix, field = field,
                                     transformFree = True, # This attribute says that this vector is always in the right field.
+                                    type = 'real',
                                     **self.argumentsToTemplateConstructors)
-        noiseVector.type = 'real'
         noiseVector.needsInitialisation = False
         noiseVector.components = ['%s_%i' % (noise.prefix, i) for i in range(1, noise.noiseCount + 1)]
         field.managedVectors.add(noiseVector)

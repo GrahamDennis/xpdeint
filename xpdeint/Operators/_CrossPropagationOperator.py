@@ -105,8 +105,11 @@ class _CrossPropagationOperator (Operator):
     if vectorsWithSameName:
       reducedVector = vectorsWithSameName[0]
     else:
-      reducedVector = VectorElement(name = fullVector.name, field = reducedField,
-                                    **self.argumentsToTemplateConstructors)
+      reducedVector = VectorElement(
+        name = fullVector.name, field = reducedField,
+        type = fullVector.type,
+        **self.argumentsToTemplateConstructors
+      )
       
       reducedVector.type = fullVector.type
       reducedVector.components = fullVector.components

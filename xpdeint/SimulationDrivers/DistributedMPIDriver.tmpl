@@ -277,9 +277,9 @@ if (_rank == 0) {
 
 @def evaluateNoiseVectorBegin($dict)
   @#
-  @set $noiseVector = dict['noiseVector']
+  @set noiseVector = dict['caller']
   @#
-  @if $noiseVector.field.isDistributed
+  @if noiseVector.field.isDistributed
     @# If the field is distributed, then the noise
     @# will need to vary along the MPI dimension, so all is
     @# OK.
@@ -297,9 +297,9 @@ if (_rank == 0) {
 
 @def evaluateNoiseVectorEnd($dict)
   @#
-  @set $noiseVector = dict['noiseVector']
+  @set noiseVector = dict['caller']
   @#
-  @if $noiseVector.field.isDistributed
+  @if noiseVector.field.isDistributed
     @# If the field is distributed, then the noise
     @# will need to vary along the MPI dimension, so all is
     @# OK.
