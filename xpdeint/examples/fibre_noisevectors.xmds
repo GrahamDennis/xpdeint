@@ -10,10 +10,11 @@
     <propagation_dimension> t </propagation_dimension>
     <transverse_dimensions>
       <dimension name="x" lattice="64"  domain="(-5, 5)" />
+      <dimension name="y" lattice="64"  domain="(-5, 5)" />
     </transverse_dimensions>
   </geometry>
   
-  <driver name="mpi-multi-path" paths="2" />
+  <driver name="distributed-mpi" paths="2" />
   
   <features>
     <auto_vectorise />
@@ -67,9 +68,25 @@
         ]]>
       </operators>
     </integrate>
+    <integrate algorithm="ARK45" iterations="3" interval="0.25" steps="200000" tolerance="1e-12">
+      <samples>50</samples>
+      <operators noises="">
+        <operator kind="ip" constant="yes">
+          <operator_names>L</operator_names>
+          <![CDATA[
+            L = -i*kx*kx;
+          ]]>
+        </operator>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+         dphi_dt = L[phi] - ggamma*phi;
+         dpsi_dt = L[psi] - ggamma*psi;
+        ]]>
+      </operators>
+    </integrate>
   </sequence>
   
-  <output format="ascii" filename="fibre.xsil">
+  <output format="binary" filename="fibre.xsil">
     <group>
       <sampling initial_sample="yes">
         <dimension name="x" lattice="64" fourier_space="yes" />

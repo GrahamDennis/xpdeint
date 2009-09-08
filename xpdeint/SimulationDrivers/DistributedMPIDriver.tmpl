@@ -256,6 +256,7 @@ for (hsize_t _i${dimRep.name} = 0; _i${dimRep.name} < count_${dimRep.name}; _i${
 
 @def generateNoisesBegin($dict)
   @#
+  @# Don't fret about the 'duplicated code'.  This will vanish when we remove noises in the stochastic element.
   @set $field = dict['field']
   @#
   @if $field.isDistributed
@@ -274,13 +275,31 @@ if (_rank == 0) {
   @#
 @end def
 
-@def generateNoisesEnd($dict)
+@def evaluateNoiseVectorBegin($dict)
   @#
-  @set $field = dict['field']
-  @set $basis = dict['basis']
-  @set $noiseVector = dict['caller']
+  @set $noiseVector = dict['noiseVector']
   @#
-  @if $field.isDistributed
+  @if $noiseVector.field.isDistributed
+    @# If the field is distributed, then the noise
+    @# will need to vary along the MPI dimension, so all is
+    @# OK.
+    @return
+  @end if
+  @#
+  @# This means that the noise field doesn't contain the MPI dimension.
+  @# As a result, the noise vector should be identical
+if (_rank == 0) {
+  // This noise is for a field that isn't distributed, so we should
+  // make sure the noise is the same on all ranks
+  @set $dict['extraIndent'] += 2
+  @#
+@end def
+
+@def evaluateNoiseVectorEnd($dict)
+  @#
+  @set $noiseVector = dict['noiseVector']
+  @#
+  @if $noiseVector.field.isDistributed
     @# If the field is distributed, then the noise
     @# will need to vary along the MPI dimension, so all is
     @# OK.
@@ -289,13 +308,13 @@ if (_rank == 0) {
   @#
 }
 // Broadcast the noises to other nodes
-MPI_Bcast(_active_${noiseVector.id}, ${noiseVector.sizeInBasisInReals(basis)}, MPI_REAL, 0, MPI_COMM_WORLD);
+MPI_Bcast(_active_${noiseVector.id}, ${noiseVector.sizeInBasisInReals(noiseVector.initialBasis)}, MPI_REAL, 0, MPI_COMM_WORLD);
 
   @set $dict['extraIndent'] -= 2
   @#
 @end def
 
-@def generateNoisesEndDeprecated($dict)
+@def generateNoisesEnd($dict)
   @#
   @set $field = dict['field']
   @set $basis = dict['basis']
