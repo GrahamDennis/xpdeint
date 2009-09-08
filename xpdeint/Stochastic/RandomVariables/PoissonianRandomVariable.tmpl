@@ -8,21 +8,22 @@ Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 
 @from xpdeint.CallOnceGuards import callOnceGuard
 
-@def breakNoiseVector()
+@def splitNoise($function)
 @*doc:
 Return the code to generate a new smaller poissonian noise from a previous noise.
 
 The previous noise had a time step of ``_old_smallest_step`` a variable available in the C
 code, not in the template itself.
 *@
-  @set $noiseVector=$parent
   @#
-  @#
+  @set noiseVector = $parent
 // Split a poissonian noise
-${transformVectorsToBasis([$noiseVector], $noiseVector.initialBasis)}@slurp
-${noiseVector.type}* const _old_${noiseVector.id} = _noise_list.begin()->_${noiseVector.id};
+const real _new_var = 1.0 / (${noiseVector.field.volumeElementInBasis(noiseVector.initialBasis)} * _new_step);
+const real _old_var = 1.0 / (${noiseVector.field.volumeElementInBasis(noiseVector.initialBasis)} * _old_step);
 
-_split_${noiseVector.id}_noises(_${noiseVector.field.name}_var / _step, _${noiseVector.field.name}_var / _old_smallest_step, _active_${noiseVector.id}, _old_${noiseVector.id}, ${noiseVector.sizeInBasis(noiseVector.initialBasis)});
+for (long _i0 = 0; _i0 < _vector_size; _i0++) { 
+  _new_noise_vector[_i0] = _new_var*_poisplit_${noiseVector.id}(_new_step/_old_step, lrint(_old_array[_i0]/_old_var));
+}
 
   @#
 @end def
@@ -49,7 +50,7 @@ for (long _i0 = 0; _i0 < _vector_size; _i0++) {
   @#
 @end def
 
-@def static_functionPrototypes
+@def functionPrototypes
   @#
   @super
   @#
@@ -60,31 +61,7 @@ real _poisplit_${noiseVector.id}(real pp, int n);
   @#
 @end def
 
-@def functionPrototypes
-  @#
-  @set noiseVector = $parent
-  @super
-  @#
-inline void _split_${noiseVector.id}_noise(real _new_var, real _old_var, real* _new_noise_vector, real* _old_noise_vector, unsigned long _n);
-  @#
-@end def
-
 @def functionImplementations
-  @#
-  @set noiseVector = $parent
-  @super
-  @#
-inline void _split_${noiseVector.id}_noises(real _new_var, real _old_var, real* _new_noise_vector, real* _old_noise_vector, unsigned long _n)
-{
-  for (long _i0 = 0; _i0 < _n; _i0++) { 
-    _new_noise_vector[_i0] = _new_var*_poisplit_${noiseVector.id}(_old_var/_new_var, lrint(_old_noise_vector[_i0]/_old_var));
-  }
-
-}
-  @#
-@end def
-
-@def static_functionImplementations
   @#
   @super
   @#

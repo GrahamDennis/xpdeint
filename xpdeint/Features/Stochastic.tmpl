@@ -31,10 +31,11 @@ struct _dtdWstore_segment${integrator.segmentNumber} {
   real* _${noiseVector.id};
       @end for
     @end for
-    @for nv in integrator.dynamicNoiseVectors
-  $nv.type* _${nv.id};
+    @#
+    @for noiseVector in integrator.dynamicNoiseVectors
+  $noiseVector.type* _${noiseVector.id};
     @end for
-
+  
   _dtdWstore_segment${integrator.segmentNumber}() {
   _step = 0;
     @for noise in noisesNeeded
@@ -42,8 +43,9 @@ struct _dtdWstore_segment${integrator.segmentNumber} {
   _${noiseVector.id} = NULL;
       @end for
     @end for
-    @for nv in integrator.dynamicNoiseVectors
-  _${nv.id} = NULL;
+    @#
+    @for noiseVector in integrator.dynamicNoiseVectors
+  _${noiseVector.id} = NULL;
     @end for
   }
   ~_dtdWstore_segment${integrator.segmentNumber}() {
@@ -53,9 +55,10 @@ struct _dtdWstore_segment${integrator.segmentNumber} {
       xmds_free(_${noiseVector.id});
       @end for
     @end for
-    @for nv in integrator.dynamicNoiseVectors
-    if (_${nv.id})
-      xmds_free(_${nv.id});
+    @#
+    @for noiseVector in integrator.dynamicNoiseVectors
+    if (_${noiseVector.id})
+      xmds_free(_${noiseVector.id});
     @end for
   }
 };
@@ -70,6 +73,7 @@ struct _dtdWstore_segment${integrator.segmentNumber} {
 ${noise.initialiseSeeds}@slurp
 
   @end for
+  @#
   @for noiseVector in $noiseVectors
 ${noiseVector.initialiseSeeds}@slurp
 
@@ -142,18 +146,21 @@ const real _${field.name}_var = 1.0/($field.volumeElementInBasis(basis) * _noise
   @#
   @set $integrator = dict['caller']
   @#
+  @if not $integratorNeedsNoises(integrator) and not integrator.dynamicNoiseVectors
+    @return
+  @end if
+  @#
   @if $integratorNeedsNoises(integrator)
     @for field in integrator.integrationFields
       @set $basis = $deltaAOperatorBasisForFieldInIntegrator(field, integrator)
       @#
-  const real _${field.name}_var = 1.0 / $field.volumeElementInBasis(basis);
+const real _${field.name}_var = 1.0 / $field.volumeElementInBasis(basis);
     @end for
   @end if
   @#
-  @if $integratorNeedsNoises(integrator) or integrator.dynamicNoiseVectors
-list<_dtdWstore_segment${integrator.segmentNumber}> _noise_list;
-list<_dtdWstore_segment${integrator.segmentNumber}>::iterator _active_node;
-  @end if
+typedef _dtdWstore_segment${integrator.segmentNumber} _dtdWstore;
+list<_dtdWstore> _noise_list;
+list<_dtdWstore>::iterator _active_node;
   @#
 @end def
 
@@ -161,13 +168,13 @@ list<_dtdWstore_segment${integrator.segmentNumber}>::iterator _active_node;
   @#
   @set $integrator = dict['caller']
   @#
-  @for nv in integrator.dynamicNoiseVectors 
-_active_${nv.id} = _${nv.id};
-  @end for
-  @#
-  @if not $integratorNeedsNoises(integrator)
+  @if not $integratorNeedsNoises(integrator) and not integrator.dynamicNoiseVectors
     @return
   @end if
+  @#
+  @for noiseVector in integrator.dynamicNoiseVectors
+_active_${noiseVector.id} = _${noiseVector.id};
+  @end for
   @#
   @for field in $integrator.integrationFields
     @for noise in $noisesForFieldInIntegrator(field, integrator)
@@ -244,11 +251,11 @@ ${insertCodeForFeatures('generateNoisesEnd', featureOrdering, featureDict)}@slur
     @return
   @end if
   @#
-if (_noise_list.empty()) { 
+if (_noise_list.empty()) {
   // Noise list empty so start afresh
-  _noise_list.push_front(_dtdWstore_segment${integrator.segmentNumber}()); 
-  _active_node = _noise_list.begin(); 
-  _active_node->_step = _step; 
+  _noise_list.push_front(_dtdWstore());
+  _active_node = _noise_list.begin();
+  _active_node->_step = _step;
   @for field in $integrator.integrationFields
     @set $noises = $noisesForFieldInIntegrator(field, integrator)
   
@@ -273,11 +280,12 @@ _make_${noise.prefix}_noises(_${field.name}_var/_step, _active_${noiseVector.id}
   ${result, autoIndent=True, extraIndent=extraIndent}@slurp
   ${insertCodeForFeatures('generateNoisesEnd', featureOrdering, featureDict), autoIndent=True}@slurp
   @end for
-  @for nv in integrator.dynamicNoiseVectors
-
-  _active_${nv.id} =  (${nv.type}*) xmds_malloc(sizeof(${nv.type}) * ${nv.allocSize});
-  _active_node->_${nv.id} = _active_${nv.id};
-  ${nv.functions['evaluate'].call(_step = '_step')}
+  @#
+  @for noiseVector in integrator.dynamicNoiseVectors
+  
+  _active_${noiseVector.id} =  (${noiseVector.type}*) xmds_malloc(sizeof(${noiseVector.type}) * ${noiseVector.allocSize});
+  _active_node->_${noiseVector.id} = _active_${noiseVector.id};
+  ${noiseVector.functions['evaluate'].call(_step = '_step')}
   @end for
 } else if (_step*(1.0 + _EPSILON) < _noise_list.begin()->_step) {
   // Create new smallest time step
@@ -317,24 +325,16 @@ ${breakPoissonianNoiseInFieldInBasis(noise, field, basis)}@slurp
   ${insertCodeForFeaturesInReverseOrder('generateNoisesEnd', featureOrdering, featureDict), autoIndent=True}@slurp
   @end for
   @#
-
-  @for nv in integrator.dynamicNoiseVectors
-  _active_${nv.id} = (${nv.type}*) xmds_malloc(sizeof(${nv.type}) * ${nv.allocSize});
-
-    @set $featureOrdering = ['Driver']
-    @set $featureDict = {'extraIndent': 0, 'noiseVector': nv}
-  ${insertCodeForFeatures('evaluateNoiseVectorBegin', featureOrdering, featureDict), autoIndent=True}@slurp
-    @set $extraIndent = featureDict['extraIndent']
-    @#
-    @capture result
-${nv.randomVariable.breakNoiseVector}@slurp
-    @end capture
-  ${result, autoIndent=True, extraIndent=extraIndent}@slurp
-  ${insertCodeForFeaturesInReverseOrder('evaluateNoiseVectorEnd', featureOrdering, featureDict), autoIndent=True}@slurp
+  
+  @for noiseVector in integrator.dynamicNoiseVectors
+    @# It is necessary to transform the noise vector back to its original basis, as it may have been transformed in the mean time.
+  ${transformVectorsToBasis([noiseVector], noiseVector.initialBasis), autoIndent=True}@slurp
+  _active_${noiseVector.id} = (${noiseVector.type}*) xmds_malloc(sizeof(${noiseVector.type}) * ${noiseVector.allocSize});
+  ${noiseVector.functions['split'].call(_new_step = '_step', _old_step = '_old_smallest_step', _old_array = '_noise_list.begin()->_' + noiseVector.id)}
+  
   @end for
   @#
-  
-  _noise_list.push_front(_dtdWstore_segment${integrator.segmentNumber}());
+  _noise_list.push_front(_dtdWstore());
   _active_node = _noise_list.begin();
   _active_node->_step = _step;
   @for field in integrator.integrationFields
@@ -343,8 +343,9 @@ ${nv.randomVariable.breakNoiseVector}@slurp
   _active_node->_${noiseVector.id} = _active_${noiseVector.id};
     @end for
   @end for
-  @for nv in integrator.dynamicNoiseVectors
-  _active_node->_${nv.id} = _active_${nv.id};
+  @#
+  @for noiseVector in integrator.dynamicNoiseVectors
+  _active_node->_${noiseVector.id} = _active_${noiseVector.id};
   @end for
 } else {
   // Use step already attempted
@@ -359,8 +360,12 @@ ${nv.randomVariable.breakNoiseVector}@slurp
   _active_${noiseVector.id} = _active_node->_${noiseVector.id};
     @end for
   @end for
-  @for nv in integrator.dynamicNoiseVectors
-  _active_${nv.id} = _active_node->_${nv.id};
+  @#
+  @for noiseVector in integrator.dynamicNoiseVectors
+  _active_${noiseVector.id} = _active_node->_${noiseVector.id};
+    @if noiseVector.needsTransforms
+  _${noiseVector.id}_basis = ${basisIndexForBasis(noiseVector.initialBasis)};
+    @end if
   @end for
   
   if (_break_next && abs(${propagationDimension} - _${propagationDimension}_ini + _step - _${propagationDimension}_break_next) > _step*_EPSILON)
@@ -435,7 +440,7 @@ _active_node++;
 if (_active_node == _noise_list.end())
   _noise_list.clear();
 else {
-  for (list<_dtdWstore_segment${integrator.segmentNumber}>::iterator _temp_iter = _active_node; _temp_iter != _noise_list.end(); _temp_iter++) {
+  for (list<_dtdWstore>::iterator _temp_iter = _active_node; _temp_iter != _noise_list.end(); _temp_iter++) {
     _temp_iter->_step -= _step;
     real _temp_step = _temp_iter->_step;
     
@@ -449,9 +454,11 @@ else {
     @end for
   @end for
 
-  @for nv in integrator.dynamicNoiseVectors
-    ${nv.type}* _temp_${nv.id} = _temp_iter->_${nv.id};
-    ${loopOverVectorsWithInnerContentTemplate([$nv],
+  @for noiseVector in integrator.dynamicNoiseVectors
+    @# The noise vector must be transformed back to its initial basis in case it has been transformed during the integration step.
+    ${transformVectorsToBasis([noiseVector], noiseVector.initialBasis), autoIndent = True}@slurp
+    ${noiseVector.type}* _temp_${noiseVector.id} = _temp_iter->_${noiseVector.id};
+    ${loopOverVectorsWithInnerContentTemplate([$noiseVector],
 """_temp_${vector.id}[$index] = (_temp_${vector.id}[$index]*(_temp_step + _step) - _active_${vector.id}[$index]*_step)/_temp_step;
 """), autoIndent=True}@slurp
   @end for

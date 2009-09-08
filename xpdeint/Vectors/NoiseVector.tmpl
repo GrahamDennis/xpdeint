@@ -19,18 +19,55 @@ Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 *@
   @# For distributed MPI drivers, we may need to share the noise if it is defined on a field
   @#  that is not distributed.
-    @set $featureOrdering = ['Driver']
-    @set $featureDict = {'extraIndent': 0, 'noiseVector': self}
+  @set $featureOrdering = ['Driver']
+  @set $featureDict = {'extraIndent': 0}
 ${insertCodeForFeatures('evaluateNoiseVectorBegin', featureOrdering, featureDict)}@slurp
-    @set $extraIndent = featureDict['extraIndent']
+  @set $extraIndent = featureDict['extraIndent']
   @#
-const ptrdiff_t _vector_size = ${self.sizeInBasisInReals(self.initialBasis)};
-${randomVariable.makeNoises}@slurp
+${evaluateFunctionContentsInner(function), extraIndent=extraIndent}@slurp
   @#
-${insertCodeForFeatures('evaluateNoiseVectorEnd', featureOrdering, featureDict)}@slurp
+${insertCodeForFeaturesInReverseOrder('evaluateNoiseVectorEnd', featureOrdering, featureDict)}@slurp
   @#
   @if $needsTransforms
 _${id}_basis = $basisIndexForBasis(self.initialBasis);
   @end if
+  @#
+@end def
+
+@def evaluateFunctionContentsInner($function)
+  @#
+const ptrdiff_t _vector_size = ${sizeInBasisInReals(self.initialBasis)};
+${randomVariable.makeNoises}@slurp
+  @#
+@end def
+
+@def splitFunctionContents($function)
+@*doc:
+  This function is responsible for splitting the noise due to a failed step.
+  
+  As the implementation of this function is dependent on the random variable,
+  it is the responsibility of the random variable to implement this.
+*@
+  @# For distributed MPI drivers, we may need to share the split noise. So we perform the split
+  @# on only one of the nodes.
+  @set featureOrdering = ['Driver']
+  @set featureDict = {'extraIndent': 0}
+${insertCodeForFeatures('evaluateNoiseVectorBegin', featureOrdering, featureDict)}@slurp
+  @set $extraIndent = featureDict['extraIndent']
+  @#
+${splitFunctionContentsInner(function), extraIndent = extraIndent}@slurp
+  @#
+${insertCodeForFeaturesInReverseOrder('evaluateNoiseVectorEnd', featureOrdering, featureDict)}@slurp
+  @#
+  @if $needsTransforms
+_${id}_basis = ${basisIndexForBasis(self.initialBasis)};
+  @end if
+  @#
+@end def
+
+@def splitFunctionContentsInner($function)
+  @#
+const ptrdiff_t _vector_size = ${sizeInBasisInReals(self.initialBasis)};
+${randomVariable.splitNoise(function)}@slurp
   @#
 @end def

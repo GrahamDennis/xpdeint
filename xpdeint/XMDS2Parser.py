@@ -236,9 +236,8 @@ class XMDS2Parser(ScriptParser):
       feature = None
       if featureElement:
         if len(featureElement.innerText()) == 0 or featureElement.innerText().lower() == 'yes':
-          feature = featureClass(parent = self.simulation,
+          feature = featureClass(parent = self.simulation, xmlElement = featureElement,
                                  **self.argumentsToTemplateConstructors)
-          feature.xmlElement = featureElement
       return featureElement, feature
     
     
@@ -348,7 +347,6 @@ class XMDS2Parser(ScriptParser):
     if stochasticFeature:
       stochasticFeature.xmlElement = stochasticFeatureElement
       noiseElements = stochasticFeatureElement.getChildElementsByTagName('noise')
-      stochasticFeature.noises = []
       for noiseElement in noiseElements:
         prefix = noiseElement.getAttribute('prefix').strip()
         kind = noiseElement.getAttribute('kind').strip().lower()
@@ -778,28 +776,30 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     else:
       initialBasis = fieldTemplate.defaultCoordinateBasis
     
+    typeString = None
+    if vectorElement.hasAttribute('type'):
+      typeString = vectorElement.getAttribute('type').lower()
+    
+    if typeString in (None, 'complex'):
+      typeString = 'complex'
+    elif typeString == 'real':
+      typeString = 'real'
+    else:
+      raise ParserException(
+        vectorElement,
+        "Unknown type '%(typeString)s'. "
+        "Options are 'complex' (default), or 'real'" % locals()
+      )
+    
     vectorTemplate = VectorElementTemplate(
       name = vectorName, field = fieldTemplate, initialBasis = initialBasis,
-      xmlElement = vectorElement,
+      type = typeString, xmlElement = vectorElement,
       **self.argumentsToTemplateConstructors
     )
     
     self.globalNameSpace['simulationVectors'].append(vectorTemplate)
     
     componentsElement = vectorElement.getChildElementByTagName('components')
-    
-    typeString = None
-    if vectorElement.hasAttribute('type'):
-      typeString = vectorElement.getAttribute('type').lower()
-    
-    if typeString in (None, 'complex'):
-      vectorTemplate.type = 'complex'
-    elif typeString == 'real':
-      vectorTemplate.type = 'real'
-    else:
-      raise ParserException(componentsElement, "Unknown type '%(typeString)s'. "
-                                               "Options are 'complex' (default), "
-                                               "or 'real'" % locals())
     
     componentsString = componentsElement.innerText()
     if not componentsString:
@@ -943,12 +943,27 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     
     fieldTemplate = FieldElementTemplate.sortedFieldWithDimensionNames(dimensionNames, xmlElement = computedVectorElement)
     
+    typeString = None
+    if computedVectorElement.hasAttribute('type'):
+      typeString = computedVectorElement.getAttribute('type').lower()
+    
+    if typeString in (None, 'complex'):
+      typeString = 'complex'
+    elif typeString == 'real':
+      typeString = 'real'
+    else:
+      raise ParserException(
+        computedVectorElement,
+        "Unknown type '%(typeString)s'. "
+        "Options are 'complex' (default), or 'real'" % locals()
+      )
+    
     if parentTemplate is None:
       parentTemplate = fieldTemplate
     # One way or another, we now have our fieldTemplate
     # So we can now construct the computed vector template
     vectorTemplate = ComputedVectorTemplate(name = vectorName, field = fieldTemplate,
-                                            parent = parentTemplate,
+                                            parent = parentTemplate, type = typeString,
                                             xmlElement = computedVectorElement,
                                             **self.argumentsToTemplateConstructors)
     
@@ -956,18 +971,6 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     
     componentsElement = computedVectorElement.getChildElementByTagName('components')
     
-    typeString = None
-    if computedVectorElement.hasAttribute('type'):
-      typeString = computedVectorElement.getAttribute('type').lower()
-    
-    if typeString in (None, 'complex'):
-      vectorTemplate.type = 'complex'
-    elif typeString == 'real':
-      vectorTemplate.type = 'real'
-    else:
-      raise ParserException(componentsElement, "Unknown type '%(typeString)s'. "
-                                               "Options are 'complex' (default), "
-                                               "or 'real'" % locals())
     
     componentsString = componentsElement.innerText()
     if not componentsString:
@@ -1005,9 +1008,13 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     for noiseVectorElement in noiseVectorElements:
       # Add the noise vector template to the results
       results.append(self.parseNoiseVectorElement(noiseVectorElement, parentTemplate))
- 
+    
+    if not 'Stochastic' in self.globalNameSpace['features']:
+      Features.Stochastic.Stochastic(parent = self.simulation, **self.argumentsToTemplateConstructors)
+    
+    
     return results
-
+  
   def parseNoiseVectorElement(self, noiseVectorElement, parentTemplate):
     if not noiseVectorElement.hasAttribute('name') or len(noiseVectorElement.getAttribute('name')) == 0:
       raise ParserException(noiseVectorElement, "Each noise vector element must have a non-empty 'name' attribute")
@@ -1054,22 +1061,22 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     typeString = None
     if noiseVectorElement.hasAttribute('type'):
       typeString = noiseVectorElement.getAttribute('type').lower()
-
+    
     if not noiseVectorElement.hasAttribute('kind') or len(noiseVectorElement.getAttribute('kind')) == 0:
       raise ParserException(noiseVectorElement, "Each noise vector element must have a non-empty 'kind' attribute")
-
+    
     vectorKind = noiseVectorElement.getAttribute('kind').strip().lower()
     vectorMethod = None
     if noiseVectorElement.hasAttribute('method'):
       vectorMethod = noiseVectorElement.getAttribute('method').lower()
     else:
       vectorMethod = 'posix'
-
+    
     randomVariableClass = None
     generatorClass = None
     static = None
     randomVariableAttributeDictionary = dict()
-
+    
     if vectorKind in ('gauss', 'gaussian', 'wiener'):
       static = True
       if vectorKind == 'wiener':
@@ -1082,7 +1089,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       }.get(vectorMethod,(None,None))
       if not generatorClass:
         raise ParserException(noiseVectorElement, "Method '%(vectorMethod)s' for Gaussian noises is unknown." % locals())
-
+    
     elif vectorKind == 'uniform':
       static = True
       randomVariableClass = UniformRandomVariable
@@ -1094,7 +1101,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       }.get(vectorMethod)
       if not generatorClass:
         raise ParserException(noiseVectorElement, "Method '%(vectorMethod)s' for uniform noises is unknown." % locals())
-
+    
     elif vectorKind in ('poissonian','jump'):
       if typeString == 'complex':
         raise ParserException(noiseVectorElement, "Poissonian noises cannot be complex-valued.")        
@@ -1123,7 +1130,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
           generatorClass = DSFMTGenerator
       else:
         raise ParserException(noiseVectorElement, "Method '%(vectorMethod)s' for Poissonian and Jump noises is unknown." % locals())
-
+      
       try:
         meanRate = float(meanRateString) # Is it a simple number?
         if meanRate < 0.0:               # Was the number positive?
@@ -1147,33 +1154,37 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       randomVariableAttributeDictionary['noiseMeanRate'] = meanRateString
     else:
       raise ParserException(noiseVectorElement, "Unknown noise kind '%(kind)s'." % locals())
-
+    
     if static is None:
       raise ParserException(
           noiseVectorElement, 
           "Internal error: Noise type is not defined as static or dynamic. "
           "Please report this error to %s." % self.globalNameSpace['bugReportAddress'])
-      
+    
+    if typeString in (None, 'complex'):
+      typeString = 'complex'
+    elif typeString == 'real':
+      typeString = 'real'
+    else:
+      raise ParserException(noiseVectorElement,
+        "Unknown type '%(typeString)s'. "
+        "Options are 'complex' (default), or 'real'" % locals()
+      )
+    
     if parentTemplate is None:
       parentTemplate = fieldTemplate
     # One way or another, we now have our fieldTemplate
     # So we can now construct the noise vector template
-    vectorTemplate = NoiseVectorTemplate(name = vectorName, field = fieldTemplate, staticNoise = static,
-                                            parent = parentTemplate, initialBasis = initialBasis,
-                                            xmlElement = noiseVectorElement,
-                                            **self.argumentsToTemplateConstructors)
+    vectorTemplate = NoiseVectorTemplate(
+      name = vectorName, field = fieldTemplate, staticNoise = static,
+      parent = parentTemplate, initialBasis = initialBasis,
+      type = typeString, xmlElement = noiseVectorElement,
+      **self.argumentsToTemplateConstructors
+    )
     
     self.globalNameSpace['simulationVectors'].append(vectorTemplate)
     
-    if typeString in (None, 'complex'):
-      vectorTemplate.type = 'complex'
-    elif typeString == 'real':
-      vectorTemplate.type = 'real'
-    else:
-      raise ParserException(componentsElement, "Unknown type '%(typeString)s'. "
-                                               "Options are 'complex' (default), "
-                                               "or 'real'" % locals())
-
+    
     componentsElement = noiseVectorElement.getChildElementByTagName('components')
     
     componentsString = componentsElement.innerText()
@@ -1687,10 +1698,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     
     vectorName = operatorTemplate.id + "_field"
     
-    operatorVectorTemplate = VectorElementTemplate(name = vectorName, field = operatorTemplate.field,
-                                                   parent = operatorTemplate, initialBasis = operatorTemplate.operatorBasis,
-                                                   **self.argumentsToTemplateConstructors)
-    operatorVectorTemplate.type = 'complex'
+    typeString = 'complex'
     if operatorElement.hasAttribute('type'):
       typeString = operatorElement.getAttribute('type').strip().lower()
       if not typeString in ['real', 'imaginary', 'complex']:
@@ -1700,7 +1708,13 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
         typeString = 'complex'
         operatorTemplate.expFunction = 'cis'
         operatorTemplate.valueSuffix = '.Im()'
-      operatorVectorTemplate.type = typeString
+    
+    operatorVectorTemplate = VectorElementTemplate(
+      name = vectorName, field = operatorTemplate.field,
+      parent = operatorTemplate, initialBasis = operatorTemplate.operatorBasis,
+      type = typeString,
+      **self.argumentsToTemplateConstructors
+    )
     
     operatorVectorTemplate.needsInitialisation = False
     
@@ -1750,10 +1764,12 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     if isinstance(operatorTemplate, ConstantEXOperatorTemplate):
       vectorName = operatorTemplate.id + "_field"
       
-      operatorVectorTemplate = VectorElementTemplate(name = vectorName, field = operatorTemplate.field,
-                                                     parent = operatorTemplate, initialBasis = operatorTemplate.operatorBasis,
-                                                     **self.argumentsToTemplateConstructors)
-      operatorVectorTemplate.type = 'real'
+      operatorVectorTemplate = VectorElementTemplate(
+        name = vectorName, field = operatorTemplate.field,
+        parent = operatorTemplate, initialBasis = operatorTemplate.operatorBasis,
+        type = 'real',
+        **self.argumentsToTemplateConstructors
+      )
       
       operatorVectorTemplate.needsInitialisation = False
       operatorVectorTemplate.components = operatorNames[:]
@@ -1762,10 +1778,12 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       operatorDefinitionCodeBlock.targetVector = operatorVectorTemplate
     
     vectorName = operatorTemplate.id + "_result"
-    resultVector = VectorElementTemplate(name = vectorName, field = operatorTemplate.field,
-                                         parent = operatorTemplate, initialBasis = operatorTemplate.field.defaultCoordinateBasis,
-                                         **self.argumentsToTemplateConstructors)
-    resultVector.type = 'real'
+    resultVector = VectorElementTemplate(
+      name = vectorName, field = operatorTemplate.field,
+      parent = operatorTemplate, initialBasis = operatorTemplate.field.defaultCoordinateBasis,
+      type = 'real',
+      **self.argumentsToTemplateConstructors
+    )
     
     resultVector.needsInitialisation = False
     resultVector.components = resultVectorComponents
@@ -2092,10 +2110,9 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       
       rawVectorTemplate = VectorElementTemplate(
         name = 'raw', field = momentGroupTemplate.outputField,
-        initialBasis = momentGroupTemplate.outputBasis,
+        initialBasis = momentGroupTemplate.outputBasis, type = 'real',
         **self.argumentsToTemplateConstructors
       )
-      rawVectorTemplate.type = 'real'
       momentGroupTemplate.rawVector = rawVectorTemplate
       
       momentsElement = samplingElement.getChildElementByTagName('moments')
@@ -2156,9 +2173,9 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       
       processedVectorTemplate = VectorElementTemplate(
         name = 'processed', field = outputFieldTemplate, initialBasis = momentGroupTemplate.outputBasis,
+        type = 'real',
         **self.argumentsToTemplateConstructors
       )
-      processedVectorTemplate.type = 'real'
       momentGroupTemplate.processedVector = processedVectorTemplate
       
       if not processingElement:

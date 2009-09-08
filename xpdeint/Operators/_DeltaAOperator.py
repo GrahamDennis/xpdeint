@@ -195,9 +195,11 @@ class _DeltaAOperator (Operator):
       # a corresponding vector in the new field.
       for integrationVector in self.vectorsForcingReordering:
         deltaAVector = VectorElement(
-          name = integrationVector.name, field = self.deltaAField, parent = self, initialBasis = self.operatorBasis,
-          **self.argumentsToTemplateConstructors)
-        deltaAVector.type = integrationVector.type
+          name = integrationVector.name, field = self.deltaAField,
+          parent = self, initialBasis = self.operatorBasis,
+          type = integrationVector.type,
+          **self.argumentsToTemplateConstructors
+        )
         
         # The vector will only need initialisation if the derivatives are accessed out
         # of order, i.e. dphi_dt[j+1] for example. We can detect this later and change this

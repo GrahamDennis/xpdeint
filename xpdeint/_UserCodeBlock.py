@@ -100,17 +100,18 @@ class _UserLoopCodeBlock(_UserCodeBlock):
   
   @lazy_property
   def specialTargetsVector(self):
+    # If all dependencies are of type real, then the special targets vector must be real too
+    specialTargetsVectorType = 'complex'
+    if all([v.type == 'real' for v in self.dependencies]):
+      if not self.targetVector or self.targetVector.type == 'real':
+        specialTargetsVectorType = 'real'
+    
     specialTargetsVector = ComputedVector(name = self.parent.id + "_special_targets", field = self.field,
                                           parent = self, initialBasis = self.basis,
-                                          xmlElement = self.xmlElement,
+                                          type = specialTargetsVectorType, xmlElement = self.xmlElement,
                                           **self.argumentsToTemplateConstructors)
     
     self.field.temporaryVectors.add(specialTargetsVector)
-    
-    # If all dependencies are of type real, then the special targets vector must be real too
-    if all([v.type == 'real' for v in self.dependencies]):
-      if not self.targetVector or self.targetVector.type == 'real':
-        specialTargetsVector.type = 'real'
     
     specialTargetsVector.integratingComponents = False
     

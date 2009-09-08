@@ -20,7 +20,7 @@ class _VectorElement (ScriptElement):
   isNoise = False
   
   def __init__(self, *args, **KWs):
-    localKWs = self.extractLocalKWs(['name', 'field', 'transformFree', 'initialBasis'], KWs)
+    localKWs = self.extractLocalKWs(['name', 'field', 'transformFree', 'initialBasis', 'type'], KWs)
     field = localKWs['field']
     self.name = localKWs['name']
     self.field = field
@@ -37,7 +37,7 @@ class _VectorElement (ScriptElement):
     # Set default variables
     self.components = []
     self._needsInitialisation = True
-    self.type = 'complex'
+    self.type = localKWs['type']
     self.aliases = set()
     self.basesNeeded = set()
     self.initialBasis = None
