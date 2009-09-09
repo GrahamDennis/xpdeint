@@ -62,7 +62,7 @@ const real _hermite_gauss_weights_${dimName}[] = {${wrapArray($hermiteGaussWeigh
         @continue
       @end if
       @for (fieldDimRep, geometryDimRep) in zip(field.dimensionWithName(dimName).representations, $geometry.dimensionWithName(dimName).representations)
-        @if not fieldDimRep or not isinstance(fieldDimRep, NonUniformDimensionRepresentation)
+        @if not fieldDimRep or not isinstance(fieldDimRep, NonUniformDimensionRepresentation) or geometryDimRep.arrayName == fieldDimRep.arrayName
           @continue
         @end if
         @assert (geometryDimRep.lattice % fieldDimRep.lattice) == 0

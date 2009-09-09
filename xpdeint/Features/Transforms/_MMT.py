@@ -225,12 +225,16 @@ class _MMT (_Transform):
       
     elif transformName == 'hermite-gauss':
       # Hermite-gauss basis (harmonic oscillator)
+      coordinate2SpectralBasisChange = HermiteGaussEPBasis(parent = self, **self.argumentsToTemplateConstructors)
+      fourier2SpectralBasisChange = HermiteGaussFourierEPBasis(parent = self, **self.argumentsToTemplateConstructors)
+      
       self.basisMap[dim.name] = dict(
         globalsFunction = self.hermiteGaussGlobalsForDim,
         lattice = lattice,
         transformations = dict([
-          ((name, 'n' + name), HermiteGaussEPBasis(parent = self, **self.argumentsToTemplateConstructors)),
-          (('k' + name, 'n' + name), HermiteGaussFourierEPBasis(parent = self, **self.argumentsToTemplateConstructors))
+          ((name, 'n' + name), coordinate2SpectralBasisChange),
+          ((name + '_4f', 'n' + name), coordinate2SpectralBasisChange),
+          (('k' + name, 'n' + name), fourier2SpectralBasisChange)
         ])
       )
       
@@ -265,6 +269,13 @@ class _MMT (_Transform):
         **self.argumentsToTemplateConstructors
       )
       dim.addRepresentation(kspace)
+      
+      fourFieldCoordinateSpace = HermiteGaussDimensionRepresentation(
+        name = name + '_4f', type = type, lattice = lattice, _maximum = maximum,
+        stepSizeArray = True, parent = dim, tag = self.auxiliarySpaceTag, fieldCount = 4.0,
+        **self.argumentsToTemplateConstructors
+      )
+      dim.addRepresentation(fourFieldCoordinateSpace)
     return dim
   
   def availableTransformations(self):

@@ -14,7 +14,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 @def transformMatricesForwardDimConstantsAtIndex($forwardDimRep, $backwardDimRep, $forwardIndex)
 real hermiteGaussMinusOne = 0.0;
 real hermiteGaussMinusTwo = 0.0;
-const real _root = _hermite_zeros_${forwardDimRep.parent.name}[${forwardIndex}];
+const real _root = _hermite_zeros_${forwardDimRep.parent.name}[${forwardIndex}] / sqrt(${forwardDimRep.fieldCount / 2.0});
 const real expFactor = exp(-0.5 * _root * _root / ${backwardDimRep.globalLattice});
 const real expFactor2 = exp(-_root * _root / ${backwardDimRep.globalLattice});
 const real normalisation = 1.0/sqrt(${forwardDimRep._maximum});

@@ -6,17 +6,18 @@ Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 *@
 @extends xpdeint.Geometry.NonUniformDimensionRepresentation
 
-@attr $instanceAttributes = ['_maximum']
+@attr $instanceAttributes = ['_maximum', 'fieldCount']
+@attr $instanceDefaults = {'fieldCount': 2.0}
 
 @def gridAtIndex($index)
   @#
-_hermite_zeros_${parent.name}[$index] * ${_maximum}@slurp
+_hermite_zeros_${parent.name}[$index] * ${_maximum} / sqrt(${fieldCount / 2.0})@slurp
   @#
 @end def
 
 @def stepWeightAtIndex($index)
   @#
-_hermite_gauss_weights_${parent.name}[$index] * ${_maximum}@slurp
+_hermite_gauss_weights_${parent.name}[$index] * ${_maximum} / sqrt(${fieldCount / 2.0})@slurp
   @#
 @end def
 
