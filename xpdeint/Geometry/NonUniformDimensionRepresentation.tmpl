@@ -76,7 +76,7 @@ ${loopIndex} + ${localOffset}@slurp
   @#
   @if $stepSizeArray
 for (long ${loopIndex} = 0; ${loopIndex} < ${globalLattice}; ${loopIndex}++) {
-  ${gridAndStepAtIndex(self.loopIndex)}@slurp
+  ${gridAndStepAtIndex(self.loopIndex), autoIndent=True}@slurp
 }
   @end if
   @#

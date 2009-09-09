@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <name>nlprojection</name>
+  <author>Graham Dennis</author>
+  <description>
+    Project |psi|^2 psi where psi is the harmonic oscillator groundstate
+    onto the harmonic oscillator basis for a three-dimensional trap.
+  </description>
+  
+  <!-- 'features' describes various optional extras that can be plugged into the simulation -->
+  <features>
+    <auto_vectorise />
+    <benchmark />
+  </features>
+  
+  <!-- This is where the geometry of the simulation is defined -->
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="x" lattice="7" spectral_lattice="3" length_scale="1.0" transform="hermite-gauss" />
+      <dimension name="y" lattice="7" spectral_lattice="3" length_scale="1.0" transform="hermite-gauss" />
+      <dimension name="z" lattice="7" spectral_lattice="3" length_scale="1.0" transform="hermite-gauss" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <!-- A vector is a set of variables that can be evolved. -->
+  <vector name="wavefunction" initial_space="nx ny nz" type="real">
+    <components>
+      phi
+    </components>
+    <initialisation>
+      <![CDATA[
+      if (nx == 0 && ny == 0 && nz == 0)
+        phi = 1.0;
+      else
+        phi = 0.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <!-- This is a dodgy method of evaluating the nonlinear term. 
+       It uses the two-field quadrature, and so the result isn't quite right.
+  -->
+  <computed_vector name="nlterm" dimensions="x y z" type="real">
+    <components>
+      nl
+    </components>
+    <evaluation>
+      <dependencies fourier_space="x y z">wavefunction</dependencies>
+      <![CDATA[
+        // Calculate the nonlinear term.
+        nl = mod2(phi)*phi;
+      ]]>
+    </evaluation>
+  </computed_vector>
+  
+  <!-- 
+    This is the correct method to evaluate the nonlinear term.
+    This uses the four-field quadrature, and so is evaluated to high precision
+    even with comparatively few points. The correct result for
+    nl(nx => 0,ny => 0, nz => 0) is 6.34936359e-2
+   -->
+  <computed_vector name="nlterm_4f" dimensions="x y z" type="real">
+    <components>
+      nl_4f
+    </components>
+    <evaluation>
+      <dependencies fourier_space="x_4f y_4f z_4f">wavefunction</dependencies>
+      <![CDATA[
+        // Compute nonlinear term
+        nl_4f = mod2(phi) * phi;
+      ]]>
+    </evaluation>
+  </computed_vector>
+  
+  <sequence>
+    <!-- This is where the evolution of the simulation would go.
+         An 'integrate' block here would describe how to evolve some of the vectors
+         defined previously. -->
+    <!-- In this case, we have no evolution, all we need to do is save the nonlinear term
+         in the harmonic oscillator basis to a file. -->
+    <breakpoint filename="nlbreak.xsil" format="hdf5">
+      <dependencies fourier_space="nx ny nz">nlterm nlterm_4f</dependencies>
+    </breakpoint>
+  </sequence>
+  <output format="hdf5" />
+</simulation>
