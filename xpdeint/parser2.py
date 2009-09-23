@@ -258,7 +258,7 @@ def main(argv=None):
       dataCache = cPickle.load(dataCacheFile)
       dataCacheFile.close()
       del dataCacheFile
-    except IOError, err:
+    except Exception, err:
       print >> sys.stderr, "Warning: Unable to load xpdeint data cache."
       if debug: raise
   globalNameSpace['dataCache'] = dataCache
