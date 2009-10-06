@@ -11,14 +11,19 @@ import os
 from xml.dom import minidom
 import xpdeint.minidom_extras
 
-import numpy
-
 h5py = None
+
+numpy = None
 
 def require_h5py():
   global h5py
   if not h5py:
     import h5py
+
+def require_numpy():
+  global numpy
+  if not numpy:
+    import numpy
 
 
 class XSILData(object):
@@ -35,6 +40,8 @@ class XSILDataASCII(XSILData):
     if dataString: self.parseDataString(dataString)
   
   def parseDataString(self, dataString):
+    require_numpy()
+    
     lines = dataString.splitlines()
     del dataString
     varCount = len(self.independentVariables) + len(self.dependentVariables)
@@ -79,6 +86,8 @@ class XSILDataBinary(XSILData):
     assert uLong in ['uint32', 'uint64']
     assert precision in ['single', 'double']
     assert encoding in ['BigEndian', 'LittleEndian']
+    
+    require_numpy()
     
     fd = file(dataFile, 'rb')
     
