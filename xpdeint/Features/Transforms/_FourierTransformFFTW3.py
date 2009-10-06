@@ -13,9 +13,7 @@ from xpdeint.Geometry.DimensionRepresentation import DimensionRepresentation
 from xpdeint.Geometry.UniformDimensionRepresentation import UniformDimensionRepresentation
 from xpdeint.Geometry.SplitUniformDimensionRepresentation import SplitUniformDimensionRepresentation
 
-from xpdeint.ParserException import ParserException
-
-from xpdeint.Utilities import lazy_property, combinations
+from xpdeint.Utilities import lazy_property
 
 import math, operator, types
 from itertools import groupby

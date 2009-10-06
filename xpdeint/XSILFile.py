@@ -8,7 +8,6 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
 import os
-import sys
 from xml.dom import minidom
 import xpdeint.minidom_extras
 

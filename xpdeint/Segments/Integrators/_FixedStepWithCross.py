@@ -15,6 +15,7 @@ from xpdeint.Operators.SICDeltaAOperator import SICDeltaAOperator
 
 from xpdeint.ParserException import ParserException
 from xpdeint.Function import Function
+from xpdeint.Geometry import FieldElement
 
 class _FixedStepWithCross (FixedStep):
   def __init__(self, *args, **KWs):

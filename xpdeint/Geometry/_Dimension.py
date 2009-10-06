@@ -9,7 +9,6 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 
 from xpdeint.ScriptElement import ScriptElement
 from xpdeint.Utilities import lazy_property
-import types
 
 class _Dimension(ScriptElement):
   """

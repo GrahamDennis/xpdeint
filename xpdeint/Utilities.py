@@ -9,6 +9,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 
 from xpdeint.ParserException import ParserException
 import re
+import sys
 
 from heapq import heapify, heappush, heappop
 import operator
@@ -112,7 +113,6 @@ def leopardWebKitHack():
     the web rendering framework WebKit when Cheetah tries to import
     the Python web application framework WebKit.
     """
-    import sys
     if sys.platform == 'darwin' and not 'WebKit' in sys.modules:
         module = type(sys)
         sys.modules['WebKit'] = module('WebKit')

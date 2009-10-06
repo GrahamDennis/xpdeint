@@ -606,9 +606,9 @@ class XMDS2Parser(ScriptParser):
           elif dimensionType in ('long', 'int', 'integer'):
             dimensionType = 'long'
           else:
-            raise ParserException(dimensionElemment, "'%(dimensionType)s' is not a valid type for a dimension.\n"
-                                                     "It must be one of 'real' (default) or "
-                                                     "'integer'/'int'/'long' (synonyms)." % locals())
+            raise ParserException(dimensionElement, "'%(dimensionType)s' is not a valid type for a dimension.\n"
+                                                    "It must be one of 'real' (default) or "
+                                                    "'integer'/'int'/'long' (synonyms)." % locals())
         
         
         if dimensionElement.hasAttribute('domain'):
@@ -1300,8 +1300,8 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
           outputFormatClass = Features.OutputFormat.OutputFormat.outputFormatClasses.get(formatString)
           if not outputFormatClass:
             validFormats = ', '.join(["'%s'" % formatName for formatName in Features.OutputFormat.OutputFormat.outputFormatClasses.keys()])
-            raise ParserException(outputElement, "Breakpoint format attribute '%(formatString)s' unknown.\n"
-                                                 "The valid formats are %(validFormats)s." % locals())
+            raise ParserException(childNode, "Breakpoint format attribute '%(formatString)s' unknown.\n"
+                                             "The valid formats are %(validFormats)s." % locals())
           outputFormat = outputFormatClass(parent = breakpointSegmentTemplate, **self.argumentsToTemplateConstructors)
           
           breakpointSegmentTemplate.outputFormat = outputFormat

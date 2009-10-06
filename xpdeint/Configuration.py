@@ -6,7 +6,7 @@ Configuration.py
 Created by Graham Dennis on 2009-03-01.
 Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 """
-import os, sys, imp, shutil
+import os, sys, shutil
 
 from pkg_resources import resource_filename
 from xpdeint.Preferences import xpdeintUserDataPath
