@@ -15,7 +15,6 @@ import getopt
 import shutil
 import hashlib
 import unittest
-import tempfile
 import subprocess
 
 from xml.dom import minidom

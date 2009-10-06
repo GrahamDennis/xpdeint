@@ -10,7 +10,6 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 from xpdeint.Operators.Operator import Operator
 from xpdeint.Geometry.FieldElement import FieldElement
 
-from xpdeint import RegularExpressionStrings
 from xpdeint.Utilities import lazy_property
 
 class _FilterOperator (Operator):

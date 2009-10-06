@@ -8,7 +8,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 """
 
 from xpdeint.Features._Feature import _Feature
-from xpdeint.Utilities import lazy_property, combinations, GeneralisedBidirectionalSearch
+from xpdeint.Utilities import combinations, GeneralisedBidirectionalSearch
 from xpdeint.Function import Function
 from xpdeint.Vectors.VectorElement import VectorElement
 from xpdeint.ParserException import ParserException

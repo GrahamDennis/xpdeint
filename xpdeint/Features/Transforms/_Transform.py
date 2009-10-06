@@ -10,7 +10,6 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 from xpdeint.ScriptElement import ScriptElement
 from xpdeint.Geometry._Dimension import _Dimension
 from xpdeint.Utilities import lazy_property
-import operator
 
 class _Transform (ScriptElement):
   mpiCapableSubclass = None

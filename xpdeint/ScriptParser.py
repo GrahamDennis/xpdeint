@@ -7,8 +7,6 @@ Created by Graham Dennis on 2007-12-29.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 """
 
-from xpdeint import RegularExpressionStrings
-
 ## Subclasses for parsing specific scripts types should
 ## override the following functions:
 ##

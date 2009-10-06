@@ -18,7 +18,6 @@ from pkg_resources import resource_filename
 import hashlib
 import shutil
 
-import imp
 import cPickle
 
 from xpdeint.Utilities import leopardWebKitHack

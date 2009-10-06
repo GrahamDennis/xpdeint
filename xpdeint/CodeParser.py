@@ -20,7 +20,7 @@ from pyparsing import \
         Word, alphas, alphanums, Regex, cppStyleComment, quotedString, Forward, \
         nestedExpr, OneOrMore, Suppress, oneOf, Keyword, Dict, Group, ZeroOrMore, \
         delimitedList, originalTextFor, Empty, opAssoc, \
-        ParserElement, nums, Optional, lineno, col, MatchFirst, Literal
+        ParserElement, Optional, lineno, col, MatchFirst, Literal
 
 ParserElement.enablePackrat()
 

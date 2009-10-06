@@ -12,7 +12,7 @@ from xpdeint.Features.Transforms.FourierTransformFFTW3 import FourierTransformFF
 from xpdeint.ParserException import ParserException
 from xpdeint.Utilities import permutations, lazy_property
 
-import operator, math
+import operator
 from itertools import groupby
 
 class _FourierTransformFFTW3MPI (FourierTransformFFTW3):

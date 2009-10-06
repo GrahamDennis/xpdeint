@@ -11,7 +11,6 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 
 from xpdeint.ScriptElement import ScriptElement
 
-from xpdeint import RegularExpressionStrings
 from xpdeint.ParserException import ParserException, parserWarning
 from xpdeint.Geometry.NonUniformDimensionRepresentation import NonUniformDimensionRepresentation
 

@@ -9,9 +9,6 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 
 from xpdeint.SimulationDrivers.SimulationDriver import SimulationDriver
 
-from xpdeint.Vectors.VectorElement import VectorElement
-from xpdeint.Vectors.VectorInitialisation import VectorInitialisation
-
 class _MultiPathDriver (SimulationDriver):
   logLevelsBeingLogged = "_PATH_LOG_LEVEL|_SIMULATION_LOG_LEVEL|_WARNING_LOG_LEVEL|_ERROR_LOG_LEVEL"
   

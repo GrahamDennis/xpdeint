@@ -19,7 +19,6 @@ from xpdeint.Geometry.BesselDimensionRepresentation import BesselDimensionRepres
 from xpdeint.Geometry.SphericalBesselDimensionRepresentation import SphericalBesselDimensionRepresentation
 from xpdeint.Geometry.HermiteGaussDimensionRepresentation import HermiteGaussDimensionRepresentation
 
-from xpdeint.Utilities import permutations, combinations
 from xpdeint.ParserException import ParserException
 
 import operator
