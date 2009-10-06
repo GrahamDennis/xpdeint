@@ -24,7 +24,7 @@ Build instructions:
    Linux: Install 'gcc' or 'g++' using your favourite package manager.
 
 2. Install python 2.4 or greater. (2.5 recommended)
-   Mac OS X: The easiest way to do this is by downloading a .dmg from http://pythonmac.org/packages/.
+   Mac OS X: The easiest way to do this is by downloading the installer from http://www.python.org.
    If you have Leopard (10.5) or later, then python 2.5+ comes pre-installed.
    
    Linux: Install this using your favourite package manager.
