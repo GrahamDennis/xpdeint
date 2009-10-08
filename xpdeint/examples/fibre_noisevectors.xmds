@@ -10,11 +10,10 @@
     <propagation_dimension> t </propagation_dimension>
     <transverse_dimensions>
       <dimension name="x" lattice="64"  domain="(-5, 5)" />
-      <dimension name="y" lattice="64"  domain="(-5, 5)" />
     </transverse_dimensions>
   </geometry>
   
-  <driver name="distributed-mpi" paths="2" />
+  <driver name="mpi-multi-path" paths="2" />
   
   <features>
     <auto_vectorise />
