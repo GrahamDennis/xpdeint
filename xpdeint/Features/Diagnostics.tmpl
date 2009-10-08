@@ -71,13 +71,13 @@ _LOG(_SEGMENT_LOG_LEVEL, "Step size %e failed, ${integrator.propagationDimension
 @def nonlocalAccessValidationFunctionContents($dimRepsNeeded, $nonlocalAccessString, $componentName, $func)
   @#
   @for dimRep in [dimRep for dimRep in dimRepsNeeded if dimRep.type == 'long' and isinstance(dimRep, UniformDimensionRepresentation)]
-if (${dimRep.loopIndex} < ${dimRep.minimum} || ${dimRep.loopIndex} > ${dimRep.maximum}) {
+if (${dimRep.loopIndex} < 0 || ${dimRep.loopIndex} > ${dimRep.globalLattice}) {
   _LOG(
     _ERROR_LOG_LEVEL,
     "Error: Invalid access of dimension ${dimRep.name} in %s on line %i.\n"
     "       Value %i is out of range (%i, %i).\n"
     "       Error was caused by accessing variable '${componentName}' nonlocally.\n",
-    filename, line_number, ${dimRep.loopIndex}, ${dimRep.minimum}, ${dimRep.maximum}
+    filename, line_number, ${dimRep.loopIndex} + ${dimRep.minimum}, ${dimRep.minimum}, ${dimRep.maximum}
   );
 }
   @end for
