@@ -75,7 +75,7 @@ if (${dimRep.loopIndex} < 0 || ${dimRep.loopIndex} >= ${dimRep.globalLattice}) {
   _LOG(
     _ERROR_LOG_LEVEL,
     "Error: Invalid access of dimension ${dimRep.name} in %s on line %i.\n"
-    "       Value %i is out of range (%i, %i).\n"
+    "       Value %li is out of range (%li, %li).\n"
     "       Error was caused by accessing variable '${componentName}' nonlocally.\n",
     filename, line_number, ${dimRep.loopIndex} + ${dimRep.minimum}, ${dimRep.minimum}, ${dimRep.maximum}
   );
