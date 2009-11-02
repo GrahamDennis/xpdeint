@@ -117,3 +117,7 @@ Testcases needed:
   - Abel transforms and Fourier transforms for Hermite-Gauss bases
   - Non-commutative transforms like plane polar and spherical polar
   - Local transpose operations.
+
+* Make <operators> elements work out their dimensions based on the vectors in the <integration_vectors> element
+
+* Determine the name of the simulation from the file name, make it so that <name> is not necessary.
