@@ -81,6 +81,19 @@ def setValueForKeyPath(base, value, keyPath):
     print >> sys.stderr, "Hit exception trying to set keyPath '%(keyPath)s' on object %(baseRep)s." % locals()
     raise
 
+class Proxy(object):
+  def __init__(self, proxee):
+    object.__setattr__(self, 'proxee', proxee)
+  
+  def __getattribute__(self, name):
+    try:
+      return object.__getattribute__(self, name)
+    except AttributeError:
+      pass
+    
+    proxee = object.__getattribute__(self, 'proxee')
+    return object.__getattribute__(proxee, name)
+    
 
 def greatestCommonFactor(num):
     t_val = num[0]
