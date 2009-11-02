@@ -66,13 +66,17 @@ ${typeName} ${operatorComponentName};
 
   @end if
   @#
-${codeBlocks['operatorDefinition'].loop(self.insideEvaluateOperatorLoops)}@slurp
+${callEvaluateLoop}@slurp
   @#
   @if $resultVector and $resultVector.needsTransforms
 
 _${resultVector.id}_basis = $basisIndexForBasis($operatorBasis);
   @end if
   @#
+@end def
+
+@def callEvaluateLoop
+${codeBlocks['operatorDefinition'].loop(self.insideEvaluateOperatorLoops)}@slurp
 @end def
 
 @def evaluateOperatorFunctionContentsWithoutCodeBlock($function)
