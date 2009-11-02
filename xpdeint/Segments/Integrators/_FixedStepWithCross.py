@@ -16,7 +16,6 @@ from xpdeint.Operators.SICDeltaAOperator import SICDeltaAOperator
 from xpdeint.ParserException import ParserException
 from xpdeint.Function import Function
 from xpdeint.Geometry import FieldElement
-from xpdeint.Utilities import Proxy
 
 class _FixedStepWithCross (FixedStep):
   def __init__(self, *args, **KWs):
@@ -72,8 +71,7 @@ class _FixedStepWithCross (FixedStep):
     leftRightDeltaAOperator.crossPropagationDimension           = crossOp.propagationDimension
     leftRightDeltaAOperator.crossPropagationDirection           = direction
     leftRightDeltaAOperator.integrationVectorsEntity            = normalDeltaAOperator.integrationVectorsEntity
-    leftRightDeltaAOperator.codeBlocks['operatorDefinition']    = Proxy(normalDeltaAOperator.codeBlocks['operatorDefinition'])
-    leftRightDeltaAOperator.codeBlocks['operatorDefinition'].loopArguments = leftRightDeltaAOperator.codeBlocks['operatorDefinition'].loopArguments.copy()
+    leftRightDeltaAOperator.codeBlocks['operatorDefinition']    = normalDeltaAOperator.codeBlocks['operatorDefinition']
     
     leftRightDeltaAOperator.codeBlocks['boundaryCondition']     = crossOp.codeBlocks['boundaryCondition']
     
