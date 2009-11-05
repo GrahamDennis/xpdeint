@@ -1,0 +1,30 @@
+--- libbench2/report.c.old	2009-09-24 10:23:36.000000000 +1000
++++ libbench2/report.c	2009-09-24 10:20:37.000000000 +1000
+@@ -92,21 +92,17 @@
+ 
+ static void sprintf_time(double x, char *buf, int buflen)
+ {
+-#ifdef HAVE_SNPRINTF
+-#  define BENCH_BUFARG buf, buflen
+-#else
+-#  define snprintf sprintf
+-#  define BENCH_BUFARG buf
++#ifndef HAVE_SNPRINTF
++#  define snprintf(str, len, ...) sprintf(str, __VA_ARGS__)
+ #endif
+      if (x < 1.0E-6)
+-	  snprintf(BENCH_BUFARG, "%.2f ns", x * 1.0E9);
++	  snprintf(buf, buflen, "%.2f ns", x * 1.0E9);
+      else if (x < 1.0E-3)
+-	  snprintf(BENCH_BUFARG, "%.2f us", x * 1.0E6);
++	  snprintf(buf, buflen, "%.2f us", x * 1.0E6);
+      else if (x < 1.0)
+-	  snprintf(BENCH_BUFARG, "%.2f ms", x * 1.0E3);
++	  snprintf(buf, buflen, "%.2f ms", x * 1.0E3);
+      else
+-	  snprintf(BENCH_BUFARG, "%.2f s", x);
+-#undef BENCH_BUFARG
++	  snprintf(buf, buflen, "%.2f s", x);
+ }
+ 
+ void report_verbose(const bench_problem *p, double *t, int st)
