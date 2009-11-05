@@ -113,6 +113,15 @@ Build instructions:
 Highly suggested (but optional) installs:
 * FFTW3. This library is needed for Fourier transforms, which is the transform most people will be using in xpdeint. If you need
   support for MPI distributed simulations, you must install the alpha version.
+  
+  NOTE: As of current writing, the latest versions of fftw3 (3.2.2 and 3.3alpha1) do not compile on Snow Leopard.
+  A patch for this bug exists in admin/fftw3-SnowLeopard.patch
+  This patch has been submitted upstream, however no response has been received as yet.
+  I hope that the patch makes it into the next release of fftw3.
+  To apply the patch run (in the fftw-3 directory):
+  patch -p0 < ~/path/to/xpdeint/admin/fftw3-SnowLeopard.patch
+  Then configure/compile as normal.
+  
 * HDF5. This is a library for reading and writing the Heirachical Data Format (http://www.hdfgroup.org/HDF5/).
   After downloading the latest package, install with the --prefix=/usr/local/ option if you want xpdeint to find the library automatically.
   This is a standardised data format which it is suggested that people use in preference to the older 'binary' output (which is 
