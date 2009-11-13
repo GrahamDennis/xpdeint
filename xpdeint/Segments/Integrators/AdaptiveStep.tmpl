@@ -194,6 +194,12 @@ for (long  _i1 = 0; _i1 < _${vector.id}_ncomponents; _i1++) {
   @#
 _temp_error = abs(_${vector.id}[_${vector.id}_index_pointer + _i1] - _checkfield[_${vector.id}_index_pointer + _i1]) / (0.5*abs(_${vector.id}[_${vector.id}_index_pointer + _i1]) + 0.5*abs(_checkfield[_${vector.id}_index_pointer + _i1]));
 
+if (_temp_error == _nan) {
+  /* For _temp_error to be NaN, both the absolute value of the higher and lower order solutions
+     must BOTH be zero. This therefore implies that their difference is zero, and that there is no error. */
+  _temp_error = 0.0;
+}
+
 if (_error < _temp_error)
   _error = _temp_error;
   @#
