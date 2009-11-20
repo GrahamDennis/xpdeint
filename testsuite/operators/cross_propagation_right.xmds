@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="cross_propagation_right.xsil" expected="cross_propagation_right_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+  </testing>
+  <name>cross_propagation_right</name>
+  <author>Graham Dennis</author>
+  <description>
+    Sine cross-propagation validity tests.
+    
+    The 'u' variable checks for errors caused by poorly interpolating
+    dependencies. The 'v' variable checks for errors just in the
+    cross-propagation algorithm. The 'w' variable checks for errors due
+    to IP cross-propagation (should be the smallest). The 'x' variable checks
+    for errors due to EX cross-propagation, they should be the same as 'v'.
+    You can choose the cross-propagation algorithm to be either 'SI' or 'RK4'.
+  </description>
+  
+  <features>
+    <benchmark />
+    <bing />
+  </features>
+  
+  <geometry>
+    <propagation_dimension> z </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="t" lattice="128"  domain="(-10, 0)" transform="none" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="main" type="complex">
+    <components>
+      foo
+    </components>
+    <initialisation>
+      <![CDATA[
+      foo = 0.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <vector name="constants" type="real">
+    <components>cosine</components>
+    <initialisation>
+      <![CDATA[
+        cosine = cos(t);
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <vector name="zerodConstants" type="real">
+    <components>bar</components>
+    <initialisation>
+      <![CDATA[
+        bar = M_PI;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <vector name="cross" type="complex">
+    <components>u v w x</components>
+    <initialisation>
+      <![CDATA[
+        u = 0.0;
+        v = 0.0;
+        w = 0.0;
+        x = 0.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="RK9" interval="1" steps="2">
+      <samples>1</samples>
+      <operators>
+        <operator kind="cross_propagation" algorithm="SI" propagation_dimension="t">
+          <integration_vectors>cross</integration_vectors>
+          <dependencies>constants zerodConstants</dependencies>
+          <boundary_condition kind="right">
+            <![CDATA[
+              u = sin(-t);
+              v = polar(1.0, -t);
+              w = polar(1.0, -t);
+              x = polar(1.0, -t);
+            ]]>
+          </boundary_condition>
+          
+          <operator kind="ip" constant="yes">
+            <operator_names>L</operator_names>
+            <![CDATA[
+              L = -i;
+            ]]>
+          </operator>
+          
+          <operator kind="ex" constant="yes">
+            <operator_names>M</operator_names>
+            <![CDATA[
+              M = -i;
+            ]]>
+          </operator>
+          <![CDATA[
+            du_dt = -cosine;
+            dv_dt = -i*v;
+            dw_dt = L[w]; // this one is pretty much exact
+            dx_dt = M[x];
+          ]]>
+        </operator>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+        dfoo_dz = 0.0;
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  
+  <output format="binary">
+    <group>
+      <sampling initial_sample="no">
+        <dimension name="t" />
+        <moments>error_u error_v error_w error_x</moments>
+        <dependencies>cross</dependencies>
+        <![CDATA[
+          error_u = abs(u - sin(-t));
+          error_v = abs(v - polar(1.0, -t));
+          error_w = abs(w - polar(1.0, -t));
+          error_x = abs(x - polar(1.0, -t));
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>
