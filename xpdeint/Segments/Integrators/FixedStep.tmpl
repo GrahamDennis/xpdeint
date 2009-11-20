@@ -186,6 +186,13 @@ void _${name}_initialise_cross_propagation()
   @silent vectorsNeedingTransforms.update(boundaryConditionDependencies)
   ${transformVectorsToBasis(vectorsNeedingTransforms, basis), autoIndent=True}@slurp
   
+  @if $propagationDirection == '+'
+    @set $index = $positiveIndexOverride
+  @else
+    @set $index = $negativeIndexOverride
+  @end if
+  real $propagationDimension = ${propDimRep.arrayName}[$index];
+  
   // Copy the initial value of the cross-propagation integration vectors and dependencies into our local arrays
   {
     ${reducedFieldCopy(combinedLoopVectorMap,

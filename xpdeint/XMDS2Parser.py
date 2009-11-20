@@ -1874,7 +1874,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       raise ParserException(boundaryConditionElement, "Unknown boundary condition kind '%(kindString)s'. Options are 'left' or 'right'." % locals())
     
     # Set the step
-    crossIntegratorTemplate.step = propDimRep.stepSize
+    crossIntegratorTemplate.step = operatorTemplate.propagationDirection + propDimRep.stepSize
     
     integrationVectorsElement = operatorElement.getChildElementByTagName('integration_vectors')
     integrationVectorNames = Utilities.symbolsInString(integrationVectorsElement.innerText(), xmlElement = integrationVectorsElement)
