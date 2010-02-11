@@ -386,6 +386,9 @@ def main(argv=None):
     'uselib': list(globalNameSpace['simulationUselib']),
   }
   
+  if 'CFlags' in globalNameSpace['features']:
+    buildKWs['CXXFLAGS'] = globalNameSpace['features']['CFlags'].cflags()
+  
   variant = globalNameSpace['simulationBuildVariant']
   if not variant:
     variant.add('default')
