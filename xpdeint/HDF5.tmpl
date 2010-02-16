@@ -8,6 +8,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 
 @from xpdeint.Geometry.SplitUniformDimensionRepresentation import SplitUniformDimensionRepresentation
 @from xpdeint.CallOnceGuards import callOnceGuard
+@from itertools import chain
 
 @attr $uselib = ['hdf5']
 
@@ -61,10 +62,10 @@ htri_t H5Lexists(hid_t loc_id, const char *name, hid_t lapl_id)
   @set $fileDimReps = [dim.inBasis(basis) for dim in field.dimensions]
   @set $memDimReps = field.inBasis(basis)
 hsize_t file_start[${dimensionCount}] = {${', '.join(dimRep.localOffset for dimRep in fileDimReps)}};
-hsize_t mem_dims[${dimensionCount+1}] = {${', '.join(dimRep.localLattice for dimRep in memDimReps)}, 1};
+hsize_t mem_dims[${dimensionCount+1}] = {${', '.join(chain((dimRep.localLattice for dimRep in memDimReps), ['1']))}};
 hsize_t mem_start[${dimensionCount+1}] = {${', '.join(['0']*(dimensionCount+1))}};
 hsize_t mem_stride[${dimensionCount+1}] = {${', '.join(['1']*(dimensionCount+1))}};
-hsize_t mem_count[${dimensionCount+1}] = {${', '.join(dimRep.localLattice for dimRep in memDimReps)}, 1};
+hsize_t mem_count[${dimensionCount+1}] = {${', '.join(chain((dimRep.localLattice for dimRep in memDimReps), ['1']))}};
 
 hid_t mem_dataspace;
   @for variable in variables
@@ -83,7 +84,10 @@ H5Sselect_hyperslab(mem_dataspace, H5S_SELECT_SET, mem_start, mem_stride, mem_co
         @#  number of elements in each dimension and the same stride as in memory (but ignoring the last dimension).
         @#  The only difference is the starting position for the selection.
         @#
+        @if fileDimReps
+          @# We can only do a selection in the file if the output data is more than zero-dimensional
 H5Sselect_hyperslab(file_dataspace, H5S_SELECT_SET, file_start, mem_stride, mem_count, NULL);
+        @end if
 
 if (dataset_${componentName})
   H5D${operation}(dataset_${componentName}, H5T_NATIVE_REAL, mem_dataspace, file_dataspace, H5P_DEFAULT, ${variable.arrayName});
