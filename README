@@ -114,7 +114,8 @@ Highly suggested (but optional) installs:
 * FFTW3. This library is needed for Fourier transforms, which is the transform most people will be using in xpdeint. If you need
   support for MPI distributed simulations, you must install the alpha version.
   
-  NOTE: As of current writing, the latest versions of fftw3 (3.2.2 and 3.3alpha1) do not compile on Snow Leopard.
+  NOTE: As of current writing, the latest version of fftw3 (3.3alpha1) do not compile on Snow Leopard.
+  FFTW-3.2.2 compiles fine on Snow Leopard, but if you need MPI support, you must use the alpha version.
   A patch for this bug exists in admin/fftw3-SnowLeopard.patch
   This patch has been submitted upstream, however no response has been received as yet.
   I hope that the patch makes it into the next release of fftw3.

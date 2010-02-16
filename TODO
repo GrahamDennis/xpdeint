@@ -110,6 +110,9 @@ Testcases needed:
 * xsil2graphics2 needs finishing.
 
 * Noise vectors
+  - Support for non-uniform dimensions
+  - Comprehensive testing
+  - Consider the syntax
 
 * Trigger support (Ask Michael Hush)
 
@@ -117,6 +120,9 @@ Testcases needed:
   - Abel transforms and Fourier transforms for Hermite-Gauss bases
   - Non-commutative transforms like plane polar and spherical polar
   - Local transpose operations.
+  - Local transpose operations -- useful for matrix multiplication operations
+    as they are faster when the dimension being transformed is first.
+  - Clean up the way dimension representations and their lattices are specified. (Useful for Hermite-Gauss transforms.)
 
 * Make <operators> elements work out their dimensions based on the vectors in the <integration_vectors> element
 
