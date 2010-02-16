@@ -12,7 +12,7 @@ Consider symmetry, can you use ``dct`` transforms or ``bessel`` transforms? Do y
 
 Tricks for Bessel and Hermite-Gauss transforms
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Mention that dimensions using matrix transforms should be first for performance reasons.
+Dimensions using matrix transforms should be first for performance reasons.  Unless you're using MPI, in which case ``xpdeint`` can work it out for the first two dimensions.  Ideally, ``xpdeint`` would sort it out in all cases, but it's not that smart yet.
 
 Reduce code complexity
 ----------------------
@@ -22,6 +22,8 @@ Use the Interaction Picture (IP) operator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Just do it. Only use the EX operator when you have to. If you must use the EX operator, consider making it ``constant="no"``. It uses less memory.
 When you use the IP operator, make sure you know what it's doing.  Do not pre- or post-multiply that term in your equations.
+
+When using the IP operator, check if your operator is purely real or purely imaginary.  If real, (e.g. ``L = -0.5*kx * kx;``), then add the attribute ``type="real"`` to the ``<operator kind="ip">`` tag.  If purely imaginary, use ``type="real"``.  This optimisation saves performing the part of the complex exponential that is unnecessary.
 
 Consider writing the evolution in spectral basis
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
