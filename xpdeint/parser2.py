@@ -132,7 +132,7 @@ def main(argv=None):
     run_config = False
     run_reconfig = False
     
-    output = None
+    sourceFilename = None
     # option processing
     for option, value in opts:
       if option in ("-g", "--debug"):
@@ -140,7 +140,7 @@ def main(argv=None):
       elif option in ("-h", "--help"):
         raise Usage(help_message)
       elif option in ("-o", "--output"):
-        output = value
+        sourceFilename = value
       elif option in ("-n", "--no-compile"):
         compileScript = False
       elif option == "--no-version":
@@ -361,18 +361,20 @@ def main(argv=None):
   
   # Now actually write the simulation to disk.
   
-  if not output:
-    output = globalNameSpace['simulationName']
-  sourceFileName = output + '.cc'
-  myfile = file(sourceFileName, "w")
+  if not sourceFilename:
+    sourceFilename = globalNameSpace['simulationName']
+  
+  if not sourceFilename.endswith('.cc'):
+    sourceFilename += '.cc'
+  
   if not debug:
     lines = simulationContents.splitlines(True)
     for lineNumber, line in enumerate(lines[:]):
       if '_XPDEINT_CORRECT_MISSING_LINE_NUMBER_' in line:
-        lines[lineNumber] = line.replace('_XPDEINT_CORRECT_MISSING_LINE_NUMBER_', '%i "%s"' % (lineNumber+2, sourceFileName))
+        lines[lineNumber] = line.replace('_XPDEINT_CORRECT_MISSING_LINE_NUMBER_', '%i "%s"' % (lineNumber+2, sourceFilename))
     simulationContents = ''.join(lines)
-  print >> myfile, simulationContents
-  myfile.close()
+  
+  file(sourceFilename, 'w').write(simulationContents)
   
   if debug:
     globalNameSpace['simulationUselib'].add('debug')
@@ -396,8 +398,8 @@ def main(argv=None):
   assert len(variant) == 1
   
   compilerLine = Configuration.run_build(
-    sourceFileName,
-    output,
+    sourceFilename,
+    sourceFilename[:-3], # strip of trailing '.cc'
     variant = anyObject(variant),
     buildKWs = buildKWs
   )
