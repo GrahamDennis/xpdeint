@@ -83,8 +83,8 @@ SetDirectory[NotebookDirectory[]];
 ${varName} = Import["${filename}", {"Datasets", "${groupName}/${var.name}"}];
      @end for
 ResetDirectory[];
-   @else:
-    @raise "The data format is neither 'Text' nor 'Binary'.  xsil2graphics2 is confused, and I think there might be someone standing RIGHT BEHIND YOU!"
+   @else
+     @raise Exception("No support for Mathematica output for XSIL format '%s'." % xsilObject.data.format)
    @end if
  @end for
 

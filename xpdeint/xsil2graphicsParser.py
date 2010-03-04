@@ -149,10 +149,11 @@ def main(argv=None):
       return
     
     # Now actually write the simulation to disk.
+    try:
+      file(outputFilename, 'w').write(outputTemplate.loadXSILFile(inputXSILFile))
+    except Exception, err:
+      print >> sys.stderr, 'ERROR:', err
     
-    outputFile = file(outputFilename, "w")
-    print >> outputFile, outputTemplate.loadXSILFile(inputXSILFile)  
-    outputFile.close()
   
 
 if __name__ == "__main__":

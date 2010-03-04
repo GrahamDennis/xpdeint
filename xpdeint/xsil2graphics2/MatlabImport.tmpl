@@ -26,7 +26,7 @@ ${outName} = hdf5read('${filename}', '${groupName}/${var.name}');
 ${outName} = permute(${outName}, ndims(${outName}):-1:1);
       @end for
     @else
-      @raise "No support for Matlab output for XSIL format '%s'." % xsilObject.data.format
+      @raise Exception("No support for Matlab output for XSIL format '%s'." % xsilObject.data.format)
     @end if
   @end for
 @end def
