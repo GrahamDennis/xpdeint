@@ -127,3 +127,5 @@ Testcases needed:
 * Make <operators> elements work out their dimensions based on the vectors in the <integration_vectors> element
 
 * Determine the name of the simulation from the file name, make it so that <name> is not necessary.
+
+* Optimisation: IP evolution and renormalisation of FFT's (or other transforms) can be combined in many cases.
