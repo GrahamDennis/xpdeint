@@ -99,7 +99,7 @@ ${transformVectorsToBasis($integrationVectors, $homeBasis)}@slurp
 _active_${vector.id} = _${vector.id};
   @end for
 
-// a_k = D[a_k]
+// a = D[a]
 ${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction = function)}
 ${transformVectorsToBasis($integrationVectors, $homeBasis)}@slurp
 
