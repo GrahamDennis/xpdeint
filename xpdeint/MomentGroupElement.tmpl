@@ -118,7 +118,6 @@ ${insertCodeForFeatures('insideMomentGroupProcessingNoProcessingCodeLoop', $feat
 ${loopOverVectorsWithInnerContentTemplate([$processedVector], $result, basis = $outputBasis)}@slurp
   @end if
 
-// The meat of the function goes here
   @set $featureOrdering = ['ErrorCheck', 'Output']
   @set $dict = {'field': $outputField,
                 'basis': $outputBasis,
