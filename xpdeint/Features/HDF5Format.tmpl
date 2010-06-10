@@ -96,7 +96,7 @@ hid_t coordinate_dataspace;
     @set $dimRep = dim.inBasis(basis)
 coordinate_length = ${dimRep.globalLattice};
 coordinate_dataspace = H5Screate_simple(1, &coordinate_length, NULL);
-    @set $dataType = {'real': 'H5T_NATIVE_' + $precision.upper(), 'long': 'H5T_NATIVE_LONG'}[$dimRep.type]
+    @set $dataType = {'real': 'H5T_NATIVE_REAL', 'long': 'H5T_NATIVE_LONG'}[$dimRep.type]
 hid_t dataset_${dimRep.name} = H5Dcreate(hdf5_file, "/${groupID}/${dimRep.name}", ${dataType}, coordinate_dataspace, H5P_DEFAULT);
     @if isinstance(dimRep, SplitUniformDimensionRepresentation)
       @set $dimArrayName = c'${dimRep.name}_data'
