@@ -1,3 +1,5 @@
+.. _QuickStartTutorial:
+
 Quickstart Tutorial
 ===================
 
