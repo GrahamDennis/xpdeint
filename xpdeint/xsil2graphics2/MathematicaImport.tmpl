@@ -29,7 +29,7 @@ $listOrElement@slurp
        @set varName = var["name"].replace('_','') + str(objectNum + 1)
        @silent declaredVars.append(varName)
 Clear[$varName]
-$varName = {${', '.join([repr(float(e)) for e in var["array"]])}};
+$varName = {${', '.join([format(float(e),'f') for e in var["array"]])}};
      @end for
      @for varD in xsilObject.dependentVariables:
        @set varName = varD["name"].replace('_','') + str(objectNum + 1)
@@ -37,7 +37,7 @@ $varName = {${', '.join([repr(float(e)) for e in var["array"]])}};
 Clear[$varName]
 $varName = $printMathematicaListOrElement($varD["array"]);      
      @end for 
-@# Binary output, so we merely link to the requisite data file and write a script ot import it
+@# Binary output, so we merely link to the requisite data file and write a script to import it
    @elif xsilObject.data.format == 'binary':
      @set nIndepVar = len(xsilObject.independentVariables)
      @set machineFormat = {'BigEndian': '1', 'LittleEndian': '-1'}.get(xsilObject.data.encoding, '$ByteOrdering')
@@ -49,14 +49,14 @@ fpDat = OpenRead["$xsilObject.data.filename",BinaryFormat -> True];
         @set varName = var["name"].replace('_','') + str(objectNum + 1)
         @silent declaredVars.append(varName)
 $(varName)Len = BinaryRead[fpDat, "$uLongFormat", ByteOrdering->$machineFormat];
-$(varName) = BinaryReadList[fpDat, {"$outputPrecision"}, $(varName)Len, ByteOrdering->$machineFormat];
+$(varName) = Flatten[BinaryReadList[fpDat, {"$outputPrecision"}, $(varName)Len, ByteOrdering->$machineFormat]];
      @end for
      @for varD in xsilObject.dependentVariables:
         @set varName = varD["name"].replace('_','') + str(objectNum + 1)
         @silent declaredVars.append(varName)
 $(varName)Len = BinaryRead[fpDat, "$uLongFormat", ByteOrdering->$machineFormat];
         @if nIndepVar<=1:
-$varName = BinaryReadList[fpDat, {"$outputPrecision"}, $(varName)Len, ByteOrdering->$machineFormat];
+$varName = Flatten[BinaryReadList[fpDat, {"$outputPrecision"}, $(varName)Len, ByteOrdering->$machineFormat]];
         @else:
 $varName = Flatten[Table[BinaryReadList[fpDat, {"$outputPrecision"}, $(xsilObject.independentVariables[-1]["name"])$(objectNum+1)Len, ByteOrdering->$machineFormat]@slurp
           @for varIndex, varI in enumerate(xsilObject.independentVariables[0:-1])
