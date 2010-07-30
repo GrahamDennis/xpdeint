@@ -11,6 +11,7 @@ Simulation = element simulation {
         | Driver
         | Vector
         | ComputedVector
+        | NoiseVector
         | Sequence
         | Output
     )+
@@ -164,6 +165,14 @@ ComputedVector = element computed_vector {
         , Dependencies?
         , text
     }
+}
+
+NoiseVector = element noise_vector {
+    VectorCommon
+    , attribute kind { text },
+    attribute mean { text }?,
+    attribute method { text }?,
+    attribute seed { text }?
 }
 
 # Sequence
