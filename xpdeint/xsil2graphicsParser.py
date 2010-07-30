@@ -74,7 +74,7 @@ def main(argv=None):
   from Preferences import versionString
   from Version import subversionRevisionString
   
-  print "xsil2graphics2 from xpdeint version %(versionString)s (%(subversionRevisionString)s)" % locals()
+  print "xsil2graphics2 from xmds2 version %(versionString)s (%(subversionRevisionString)s)" % locals()
   
   # Attempt to parse command line arguments
   if argv is None:

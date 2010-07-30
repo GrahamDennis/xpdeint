@@ -10,24 +10,19 @@
     <propagation_dimension> t </propagation_dimension>
   </geometry>
   
-  <driver name="multi-path" paths="10240" />
+  <driver name="multi-path" paths="1" />
   
   <features>
-    
-    <!-- <error_check /> -->
-    <bing />
-    <!-- <fftw /> -->
-    <openmp />
-    <stochastic>
-      <noise kind="gaussian-dsfmt" prefix="n" num="1"/>
-      <!-- If there is no seed attribute then seeds will be chosen randomly at run-time -->
-    </stochastic>
+    <error_check />
+    <benchmark />
   </features>
+
+  <noise_vector name="drivingNoise" dimensions="" kind="wiener" type="real" method="dsfmt" seed="314 159 276">
+    <components>dW</components>
+  </noise_vector>
   
   <vector name="main" type="complex">
-    <components>
-      z
-    </components>
+    <components> z </components>
     <initialisation noises="">
       <![CDATA[
         z = 1.0;
@@ -36,16 +31,18 @@
   </vector>
   
   <sequence>
-    <integrate algorithm="ARK89" interval="10" steps="1000" tolerance="1e-8">
+    <integrate algorithm="SI" interval="10" steps="1000">
       <samples>100</samples>
-      <operators noises="n">
+      <operators>
         <integration_vectors>main</integration_vectors>
+        <dependencies>drivingNoise</dependencies>
         <![CDATA[
-          dz_dt = i*z*n_1;
+          dz_dt = i*z*dW;
         ]]>
       </operators>
     </integrate>
   </sequence>
+
   <output format="ascii" filename="kubo.xsil">
     <group>
       <sampling initial_sample="yes">

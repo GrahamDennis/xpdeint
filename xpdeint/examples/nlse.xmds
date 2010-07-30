@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <name>nlse</name>
+
+  <author>Joe Hope</author>
+  <description>
+    The nonlinear Schrodinger equation in one dimension, 
+    which is a simple partial differential equation.  
+    We introduce several new features in this script.
+  </description>
+
+  <features>
+      <benchmark />
+      <bing />
+      <fftw plan="patient" />
+      <openmp />
+      <auto_vectorise />
+      <globals>
+          <![CDATA[
+          const double energy = 4;
+          const double vel = 0.3;
+          const double hwhm = 1.0;
+          ]]>
+       </globals>
+     </features>
+
+  <geometry>
+      <propagation_dimension> xi </propagation_dimension>
+      <transverse_dimensions>
+        <dimension name="tau" lattice="128"  domain="(-6, 6)" />
+      </transverse_dimensions>
+   </geometry>
+
+  <vector name="wavefunction" type="complex">
+    <components> phi </components>
+    <initialisation>
+      <![CDATA[
+      const double w0 = hwhm*sqrt(2/log(2));
+      const double amp = sqrt(energy/w0/sqrt(M_PI/2));
+      phi = amp*exp(-tau*tau/w0/w0)*exp(i*vel*tau);
+      ]]>
+    </initialisation>
+  </vector>
+
+  <vector name="dampingVector" type="real">
+    <components> Gamma </components>
+    <initialisation>
+      <![CDATA[
+      Gamma=1.0*(1-exp(-pow(tau*tau/4.0/4.0,10)));
+      ]]>
+    </initialisation>
+  </vector>
+
+  <sequence>
+    <integrate algorithm="ARK45" interval="20.0" tolerance="1e-7">
+      <samples>10 100 10</samples>
+      <operators>
+        <integration_vectors>wavefunction</integration_vectors>
+        <operator kind="ex" constant="yes">
+          <operator_names>Ltt</operator_names>
+          <![CDATA[
+            Ltt = -i*ktau*ktau*0.5;
+          ]]>
+        </operator>
+        <![CDATA[
+        dphi_dxi = Ltt[phi] - phi*Gamma + i*mod2(phi)*phi;
+        ]]>
+        <dependencies>dampingVector</dependencies>
+      </operators>
+    </integrate>
+  </sequence>
+
+  <output format="binary" filename="nlse.xsil">
+    <group>
+      <sampling initial_sample="yes">
+        <dimension name="tau" lattice="128" />
+        <moments>density</moments>
+        <dependencies>wavefunction</dependencies>
+        <![CDATA[
+          density = mod2(phi);
+        ]]>
+      </sampling>
+    </group>
+
+    <group>
+      <sampling initial_sample="yes">
+        <dimension name="tau" lattice="0" />
+        <moments>normalisation</moments>
+        <dependencies>wavefunction</dependencies>
+        <![CDATA[
+          normalisation = mod2(phi);
+        ]]>
+      </sampling>
+    </group>
+
+    <group>
+      <sampling initial_sample="yes">
+        <moments>densityK</moments>
+        <dimension name="tau" fourier_space="yes" lattice="32" />
+        <dependencies>wavefunction</dependencies>
+        <![CDATA[
+          densityK = mod2(phi);
+        ]]>
+      </sampling>
+    </group>
+
+  </output>
+</simulation>
+

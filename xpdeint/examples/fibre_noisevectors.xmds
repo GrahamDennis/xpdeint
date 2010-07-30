@@ -17,11 +17,11 @@
   
   <features>
     <auto_vectorise />
+    <validation kind="none"/>
     <benchmark />
     <error_check />
     <bing />
     <fftw />
-    <!-- <openmp /> -->
     <stochastic>
       <noise kind="gaussian-posix" mean-rate="4.282" prefix="p" num="2" seed="314 159 276"/>
       <!-- If there is no seed attribute then seeds will be chosen randomly at run-time -->
@@ -34,12 +34,17 @@
     </globals>
   </features>
   
+  <noise_vector name="killme" dimensions="x" kind="poissonian" mean="_i0+0.001" type="real" method="posix" seed="314 159 276">
+    <components>nn_1 nn_2</components>
+  </noise_vector>
+
   <vector name="main" initial_space="x" type="complex">
     <components>phi psi</components>
-    <initialisation no_noises="true">
+    <initialisation>
+        <dependencies>killme</dependencies>
       <![CDATA[
-        phi = exp(-x*x);
-        psi = exp(-x*x);
+        phi = exp(-x*x)+nn_1;
+        psi = exp(-x*x)+nn_2;
       ]]>
     </initialisation>
   </vector>
@@ -47,9 +52,6 @@
   <sequence>
     <integrate algorithm="ARK45" iterations="3" interval="0.25" steps="200000" tolerance="1e-12">
       <samples>50</samples>
-      <noise_vector name="dupvee" dimensions="x" kind="wiener" mean="4.282" type="real" method="posix" seed="314 159 276">
-        <components>Vd_1 Vd_2</components>
-      </noise_vector>
       <operators>
         <operator kind="ip" constant="yes">
           <operator_names>L</operator_names>
@@ -69,7 +71,7 @@
     </integrate>
     <integrate algorithm="ARK45" iterations="3" interval="0.25" steps="200000" tolerance="1e-12">
       <samples>50</samples>
-      <operators noises="">
+      <operators >
         <operator kind="ip" constant="yes">
           <operator_names>L</operator_names>
           <![CDATA[

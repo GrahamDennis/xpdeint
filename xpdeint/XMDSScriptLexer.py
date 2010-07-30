@@ -48,7 +48,7 @@ class XMDSScriptLexer(XmlLexer):
   
   
   name = 'XMDS'
-  aliases = ['xmds', 'xpdeint']
+  aliases = ['xmds2','xmds','xpdeint']
   filenames = ['*.xmds']
   
   cdataRule = (r'(\<\!\[CDATA\[)(.*?)(\]\]\>)',
