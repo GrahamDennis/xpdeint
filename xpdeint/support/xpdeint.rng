@@ -25,6 +25,7 @@
           <ref name="Driver"/>
           <ref name="Vector"/>
           <ref name="ComputedVector"/>
+          <ref name="NoiseVector"/>
           <ref name="Sequence"/>
           <ref name="Output"/>
         </choice>
@@ -329,6 +330,21 @@
         </optional>
         <text/>
       </element>
+    </element>
+  </define>
+  <define name="NoiseVector">
+    <element name="noise_vector">
+      <ref name="VectorCommon"/>
+      <attribute name="kind"/>
+      <optional>
+        <attribute name="mean"/>
+      </optional>
+      <optional>
+        <attribute name="method"/>
+      </optional>
+      <optional>
+        <attribute name="seed"/>
+      </optional>
     </element>
   </define>
   <!-- Sequence -->
