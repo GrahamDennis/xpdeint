@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# xpdeint documentation build configuration file, created by
+# XMDS2 documentation build configuration file, created by
 # sphinx-quickstart on Tue Nov 18 15:10:03 2008.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -37,7 +37,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General substitutions.
-project = u'xpdeint'
+project = u'XMDS2'
 copyright = u'2008-2009, Graham Dennis'
 
 # The default replacements for |version| and |release|, also used in various
@@ -160,7 +160,7 @@ htmlhelp_basename = 'xpdeintdoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, document class [howto/manual]).
 latex_documents = [
-  ('index', 'xpdeint.tex', u'xpdeint Documentation',
+  ('index', 'xmds2.tex', u'XMDS2 Documentation',
    u'Graham Dennis', 'manual'),
 ]
 

@@ -99,7 +99,7 @@ def main(argv=None):
   from Preferences import versionString
   from Version import subversionRevisionString
   
-  print "xpdeint version %(versionString)s (%(subversionRevisionString)s)" % locals()
+  print "xmds2 version %(versionString)s (%(subversionRevisionString)s)" % locals()
   
   if not os.path.isdir(xpdeintUserDataPath):
       os.mkdir(xpdeintUserDataPath)

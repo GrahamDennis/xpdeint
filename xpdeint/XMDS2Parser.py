@@ -1088,7 +1088,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
         'solirte': (GaussianSolirteRandomVariable, SolirteGenerator),
       }.get(vectorMethod,(None,None))
       if not generatorClass:
-        raise ParserException(noiseVectorElement, "Method '%(vectorMethod)s' for Gaussian noises is unknown." % locals())
+        raise ParserException(noiseVectorElement, "Method '%(vectorMethod)s' for Gaussian noises is unknown.  Legal possibilities include 'mkl', 'dsfmt', 'posix' and 'solirte'." % locals())
     
     elif vectorKind == 'uniform':
       static = True

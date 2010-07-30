@@ -16,7 +16,7 @@ for root, dirs, files in os.walk('xpdeint'):
     else:
         packages.append(root.replace(os.sep, '.'))
 
-setup(name="xpdeint",
+setup(name="xmds2",
       version="0.8",
       description="Stochastic ODE/PDE integrator",
       url="http://xmds.sourceforge.net",
@@ -25,7 +25,7 @@ setup(name="xpdeint",
       platforms="OS Independent",
       packages = packages,
       
-      scripts = ['bin/xpdeint', 'bin/xsil2graphics2'],
+      scripts = ['bin/xmds2', 'bin/xsil2graphics2'],
       
       exclude_package_data = {'': ['README', 'TODO']},
       
@@ -33,7 +33,7 @@ setup(name="xpdeint",
       install_requires = ['Cheetah>=2.0.1', 'pyparsing>=1.5.1', 'mpmath'],
       
       package_data = {
-        'xpdeint': ['examples/*.xmds',
+        'xmds2': ['examples/*.xmds',
                     'includes/*.c',
                     'includes/*.h',
                     'includes/dSFMT/*',

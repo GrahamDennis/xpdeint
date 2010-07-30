@@ -1,4 +1,4 @@
-Welcome to xpdeint, the development testing project for xmds.
+Welcome to XMDS2 (codename: xpdeint).
 If you have any questions, please email xmds-devel@lists.sourceforge.net
 
 This code is written in python and generates C++ code that is very similar to the
@@ -8,16 +8,16 @@ need at least version 2.0.1) to remove the fprintf nightmare in xmds.
 First, let's dive into the build instructions before we talk about features.
 
 Build instructions:
-0. Obtain xpdeint. In a directory where you want to check out the repository, run:
+0. Obtain XMDS 2. In a directory where you want to check out the repository, run:
    svn checkout https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
    (Only do this if you haven't done this already).
    
    It is important to NOT download the source from the tarball on the Sourceforge website as
-   this tarball does not have executable bits set on any files. Also, installing xpdeint this
+   this tarball does not have executable bits set on any files. Also, installing XMDS2 this
    way will make it much harder to update it in the future.
    
-1. As xpdeint generates C++ code, you will need a C++ compiler. One common free compiler is gcc.
-   xpdeint can also use Intel's C++ compiler if you have it. Intel's compiler typically generates
+1. As XMDS2 generates C++ code, you will need a C++ compiler. One common free compiler is gcc.
+   XMDS2 can also use Intel's C++ compiler if you have it. Intel's compiler typically generates
    faster code than gcc, but it isn't free.
    Mac OS X: Xcode and other development comes free on the Mac OS X install discs. Install the 
    Development package or Xcode (or whatever it is called) in the Optional Installs folder on the
@@ -60,41 +60,41 @@ Build instructions:
    If you don't have root access or want to install into your home directory, use:
    "easy_install --prefix=~ Cheetah" (etc.)
    
-   Note that lxml is not required for xpdeint to run. If it is installed, it is used to validate
-   the xmds script passed to xpdeint to check that there isn't any invalid syntax or typos that
-   xpdeint wouldn't have otherwise noticed. Also note that installing lxml is a bit tricky on Mac
+   Note that lxml is not required for XMDS2 to run. If it is installed, it is used to validate
+   the xmds script passed to XMDS2 to check that there isn't any invalid syntax or typos that
+   XMDS2 wouldn't have otherwise noticed. Also note that installing lxml is a bit tricky on Mac
    OS X Leopard because Apple shipped an old version of libxml2 with the system.
    (This problem does not exist on Snow Leopard.)
    
-   Pyparsing and Cheetah are required installs for xpdeint.
+   Pyparsing and Cheetah are required installs for XMDS2.
 
 5. Cheetah templates (*.tmpl) are compiled into python, to do this, run 'make' in the
    xpdeint/ directory.
 
-6. Install xpdeint into your python path by running (in the xpdeint/ directory):
+6. Install XMDS2 into your python path by running (in the xpdeint/ directory):
    sudo ./setup.py develop
    
    If you want to install it into your home directory, type "./setup.py develop --prefix=~"
 
-7. a) Test xpdeint by running (in the xpdeint/xpdeint/examples/ directory):
+7. a) Test XMDS2 by running (in the xpdeint/xpdeint/examples/ directory):
       xpdeint kubo.xmds
 7. b) If you have 'numpy' installed, type './run_tests.py' in the xpdeint/ directory
       to run all the tests
 
 8. Run the generated program, which will produce XSIL output similar to that produced by xmds-1
   
-   If you wish to load binary XSIL files _into_ xpdeint, then you will need the libxmds library that
+   If you wish to load binary XSIL files _into_ XMDS2, then you will need the libxmds library that
    comes with xmds-1. However, the same result can be achieved without using libxmds by using the 'HDF5'
    output format and installing the HDF5 library (see optional installs section).
    
-   xpdeint comes with a new version of xsil2graphics called xsil2graphics2. This version fully supports Mathematica
+   XMDS2 comes with a new version of xsil2graphics called xsil2graphics2. This version fully supports Mathematica
    and only supports loading HDF5 files into Matlab. The original xsil2graphics can still be used if you need support
    for Gnuplot, R, Scilab, or loading of binary or ascii data files into Matlab.
 
 9. Next time you want to update, just type 'make update' in the xpdeint/ directory.
 
 10. Sign up to the xmds-commit list at https://lists.sourceforge.net/lists/listinfo/xmds-commit.
-    This is a reasonably important step as xpdeint is still very much a moving target and things
+    This is a reasonably important step as XMDS2 is still very much a moving target and things
     can still change or bugs can be found. Signing up to this list means you can keep track of these
     things. If you're not interested in the up-to-the-moment updates (most people won't be), sign up
     for the 'digest' instead.
@@ -112,10 +112,10 @@ Build instructions:
 
 
 Highly suggested (but optional) installs:
-* FFTW3. This library is needed for Fourier transforms, which is the transform most people will be using in xpdeint. If you need
+* FFTW3. This library is needed for Fourier transforms, which is the transform most people will be using in XMDS2. If you need
   support for MPI distributed simulations, you must install the alpha version.
   
-  NOTE: As of current writing, the latest version of fftw3 (3.3alpha1) do not compile on Snow Leopard.
+  NOTE: As of current writing, the latest version of fftw3 (3.3alpha1) does not compile on Snow Leopard.
   FFTW-3.2.2 compiles fine on Snow Leopard, but if you need MPI support, you must use the alpha version.
   A patch for this bug exists in admin/fftw3-SnowLeopard.patch
   This patch has been submitted upstream, however no response has been received as yet.
@@ -125,7 +125,7 @@ Highly suggested (but optional) installs:
   Then configure/compile as normal.
   
 * HDF5. This is a library for reading and writing the Heirachical Data Format (http://www.hdfgroup.org/HDF5/).
-  After downloading the latest package, install with the --prefix=/usr/local/ option if you want xpdeint to find the library automatically.
+  After downloading the latest package, install with the --prefix=/usr/local/ option if you want XMDS2 to find the library automatically.
   This is a standardised data format which it is suggested that people use in preference to the older 'binary' output (which is 
   compatible with xmds-1). The advantage of HDF5 is that this data format is understood by a variety of other tools. xsil2graphics2
   provides support for loading data created in this format into Mathematica and Matlab.
@@ -134,11 +134,11 @@ Optional installs:
 * A Matrix library like ATLAS, or Intel's MKL. (Mac OS X comes with a matrix library)
 * GNU Scientific library (GSL).
 * numpy (sudo easy_install numpy). (Mac OS X Leopard and above come with numpy)
-* h5py. This is needed for checking the results of xpdeint tests that generate HDF5 output.
+* h5py. This is needed for checking the results of XMDS2 tests that generate HDF5 output.
   h5py requires numpy >= 1.0.3 Mac OS X Leopard comes with 1.0.1, so this must be upgraded on such systems.
   Upgrading h5py on Mac OS X is best done with the source of the package, as the easy_install option can get confused with multiple numpy versions.
   Mac OS X Snow Leopard comes with 1.2.1
-* OpenMPI. Needed to enable xpdeint to generate scripts that can be run across multiple machines. (Mac OS X Leopard comes with OpenMPI)
+* OpenMPI. Needed to enable XMDS2 to generate scripts that can be run across multiple machines. (Mac OS X Leopard comes with OpenMPI)
 * mpmath. Library for arbitrary precision floating point math. Install from package manager or "sudo easy_install mpmath"
   This package is needed for the matrix-based transforms like Bessel and Hermite-Gauss.
 
