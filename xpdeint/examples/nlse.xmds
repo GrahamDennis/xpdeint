@@ -31,7 +31,7 @@
       </transverse_dimensions>
    </geometry>
 
-  <vector name="wavefunction" type="complex">
+  <vector name="wavefunction" type="complex" dimensions="tau">
     <components> phi </components>
     <initialisation>
       <![CDATA[

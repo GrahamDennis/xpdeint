@@ -3,6 +3,8 @@
 Worked Examples
 ===============
 
+One of the best ways to learn XMDS2 is to see several illustrative examples.  Here are a set of example scripts and explanations of the code, which will be a good way to get started.  As an instructional aid, they are meant to be read sequentially, but the adventurous could try starting with one that looked like a simulation they wanted to run, and adapt for their own purposes.
+
    :ref:`NonLinearSchrodingerEquation` (partial differential equation)
    
    :ref:`Kubo` (stochastic differential equations)
@@ -12,7 +14,7 @@ Worked Examples
 The nonlinear Schrodinger equation
 ----------------------------------
 
-This worked example will show a range of new features that can be used in an **XMDS2** script, and we will also examine our first partial differential equation.  We will take the one dimensional nonlinear Schrodinger equation, which is a common nonlinear wave equation.  The equation describing this problem is
+This worked example will show a range of new features that can be used in an **XMDS2** script, and we will also examine our first partial differential equation.  We will take the one dimensional nonlinear Schrodinger equation, which is a common nonlinear wave equation.  The equation describing this problem is:
 
 .. math::
     \frac{\partial \phi}{\partial \xi} = i \left[\frac{1}{2}\frac{\partial^2 \phi}{\partial \tau^2} + i\Gamma(\tau)\phi+|\phi|^2\right]
@@ -53,7 +55,7 @@ where :math:`\phi` is a complex-valued field, and :math:`\Gamma(\tau)` is a :mat
           </transverse_dimensions>
        </geometry>
   
-      <vector name="wavefunction" type="complex">
+      <vector name="wavefunction" type="complex" dimensions="tau">
         <components> phi </components>
         <initialisation>
           <![CDATA[
@@ -146,7 +148,9 @@ Let us examine the ``<geometry>`` element.
 
 This is the first example that includes a transverse dimension.  We have only one dimension, and we have labelled it "tau".  It is a continuous dimension, but only defined on a grid containing 128 points (defined with the lattice variable), and on a domain from -6 to 6.  The default is that transforms in continuous dimensions are fast Fourier transforms, which means that this dimension is effectively defined on a loop, and the "tau=-6" and "tau=6" positions are in fact the same.  Other transforms are possible, as are discrete dimensions such as an integer-valued index, but we will leave these advanced possibilities to later examples.
 
-Two vector elements have been defined in this simulation.  One defines the complex-valued wavefunction "phi" that we wish to evolve, and the other contains the component "Gamma" which is a function of the transverse variable tau, as specified in the equation of motion for the field.  This second vector could have been avoided in two ways.  First, the function could have been written explicitly in the integrate block where it is required, but calculating it once and then recalling it from memory is far more efficient.  Second, it could have been included in the "wavefunction" vector as another component, but then it would have been unnecessarily complex-valued, it would have needed an explicit derivative in the equations of motion (presumably "dGamma_dxi = 0;"), and it would have been Fourier transformed whenever the phi component was transformed.  So separating it as its own vector is far more efficient.
+Two vector elements have been defined in this simulation.  One defines the complex-valued wavefunction "phi" that we wish to evolve.  We define the transverse dimensions over which this vector is defined by the ``dimensions`` tag in the description.  By default, it is defined over all of the transverse dimensions in the ``<geometry>`` element, so even though we have omitted this tag for the second vector, it also assumes that the vector is defined over all of tau.  
+
+The second vector element contains the component "Gamma" which is a function of the transverse variable tau, as specified in the equation of motion for the field.  This second vector could have been avoided in two ways.  First, the function could have been written explicitly in the integrate block where it is required, but calculating it once and then recalling it from memory is far more efficient.  Second, it could have been included in the "wavefunction" vector as another component, but then it would have been unnecessarily complex-valued, it would have needed an explicit derivative in the equations of motion (presumably "dGamma_dxi = 0;"), and it would have been Fourier transformed whenever the phi component was transformed.  So separating it as its own vector is far more efficient.
 
 The ``<integrate>`` element for a partial differential equation has some new features:
 
@@ -234,16 +238,12 @@ The final output group above samples the mod square of the Fourier-space wavefun
 Kubo Oscillator
 ---------------
 
-This example demonstrates the integration of a stochastic differential equation.  We examine the Kubo oscillator.
+This example demonstrates the integration of a stochastic differential equation.  We examine the Kubo oscillator, which is a complex variable whose phase is evolving according to a Wiener noise.  In a suitable rotating frame, the equation of motion for the variable is
 
 .. math::
-    \frac{dx}{dt} &= \sigma (y - x)\\
-    \frac{dy}{dt} &= x (\rho - z) - y\\
-    \frac{dz}{dt} &= xy - \beta z
+    dz = i z dW
 
-where we will solve with the parameters :math:`\sigma=10`, :math:`\rho=28`, :math:`\beta = \frac{8}{3}` and the initial condition :math:`x(0) = y(0) = z(0) = 1`.
-
-Below is a minimal script that solves this problem. Don't worry if it doesn't make sense yet, soon we'll break it down into easily digestible parts.
+where we can interpret this as a Stratonovich or Ito differential equation, depending on the choice of rotating frame.  This equation is solved by the following XMDS2 script:
 
 .. code-block:: xpdeint
 
@@ -258,7 +258,7 @@ Below is a minimal script that solves this problem. Don't worry if it doesn't ma
         <propagation_dimension> t </propagation_dimension>
       </geometry>
   
-      <driver name="multi-path" paths="1" />
+      <driver name="multi-path" paths="10000" />
   
       <features>
         <error_check />
@@ -305,43 +305,62 @@ Below is a minimal script that solves this problem. Don't worry if it doesn't ma
       </output>
     </simulation>
 
+The first new item in this script is the ``<driver>`` element.  This element enables us to change top level management of the simulation.  Without this element, XMDS2 will integrate the stochastic equation as described.  With this element and the option ``name="multi-path"``, it will integrate it multiple times, using different random numbers each time.  The output will then contain the mean values and standard errors of your output variables.  The number of integrations included in the averages is set with the ``paths`` variable.
 
+In the ``<features>`` element we have included the ``<error_check>`` element.  This performs the integration first with the specified number of steps (or with the specified tolerance), and then with twice the number of steps (or equivalently reduced tolerance).  The output then includes the difference between the output variables on the coarse and the fine grids as the 'error' in the output variables.  This error is particularly useful for stochastic integrations, where algorithms with adaptive step-sizes are less safe, so the number of integration steps must be user-specified.
 
+We define the stochastic elements in a simulation with the ``<noise_vector>`` element.  
 
+.. code-block:: xpdeint
 
+    <noise_vector name="drivingNoise" dimensions="" kind="wiener" type="real" method="dsfmt" seed="314 159 276">
+     <components>dW</components>
+    </noise_vector>
+  
+This defines a vector that is used like any other, but it will be randomly generated with particular statistics and characteristics rather than initialised.  The name, dimensions and type tags are defined just as for normal vectors.  The names of the components are also defined in the same way.  The noise is defined as a Wiener noise here (``kind = "wiener"``), which is a zero-mean Gaussian random noise with an average variance equal to the discretisation volume (here it is just the step size in the propagation dimension, as it is not defined over transverse dimensions).  Other noise types are possible, including uniform and Poissonian noises, but we will not describe them in detail here.  
 
-You can compile and run this script with **xpdeint**. To compile the script, just pass the name of the script as an argument to **xpdeint**.
+We may also define a noise method to choose a non-default pseudo random number generator, and a seed for the random number generator.  Using a seed can be very useful when debugging the behaviour of a simulation, and many compilers have pseudo-random number generators that are superior to the default option (posix).
+
+The integrate block is using the semi-implicit algorithm (``algorithm="SI"``), which is a good default choice for stochastic problems, even though it is only second order convergent for deterministic equations.  More will be said about algorithm choice later, but for now we should note that adaptive algorithms based on Runge-Kutta methods are not guaranteed to converge safely for stochastic equations.  This can be particularly deceptive as they often succeed, particularly for almost any problem for which there is a known analytic solution.  
+
+We include elements from the noise vector in the equation of motion just as we do for any other vector.  The default SI and Runge-Kutta algorithms converge to the *Stratonovich* integral.  Ito stochastic equations can be converted to Stratonovich form and vice versa.
+
+Executing the generated program 'kubo' gives slightly different output due to the "multi-path" driver.
 
 .. code-block:: none
 
-    $ xpdeint lorenz.xmds
-    g++ -o 'lorenz' 'lorenz.cc' -O3 -ffast-math -funroll-all-loops 
-    -fomit-frame-pointer -lxmds -I"/Users/graham/Developer/xmds/xpdeint/xpdeint/includes" 
+            $ ./kubo
+            Beginning full step integration ...
+            Starting path 1
+            Starting path 2
 
-Now we can execute the generated program 'lorenz'.
-
-.. code-block:: none
-
-    $ ./lorenz
-    Current timestep: 4.476617e-02
-    Sampled field (for moment group #1) at t = 1.000000e-01
-    Current timestep: 3.272028e-02
-    Sampled field (for moment group #1) at t = 2.000000e-01
-    Current timestep: 2.076453e-02
-    Sampled field (for moment group #1) at t = 3.000000e-01
-    Current timestep: 2.046119e-02
-    Sampled field (for moment group #1) at t = 4.000000e-01
             ... many lines omitted ...
-    Current timestep: 3.534532e-02
-    Sampled field (for moment group #1) at t = 9.800000e+00
-    Current timestep: 3.402670e-02
-    Sampled field (for moment group #1) at t = 9.900000e+00
-    Current timestep: 4.084675e-02
-    Sampled field (for moment group #1) at t = 1.000000e+01
-    Current timestep: 1.724322e-02
-    Segment 1: minimum timestep: 1.324010e-02 maximum timestep: 1.000000e-01
-      Attempted 314 steps, 0.96% steps failed.
-    Generating output for lorenz
 
+            Starting path 9999
+            Starting path 10000
+            Beginning half step integration ...
+            Starting path 1
+            Starting path 2
 
-From this point on the plan is to break the above simulation to bits and describe each part separately. In each part the plan was to briefly mention the other kinds of things that can be done in a given part of the code, but not to go into the details. For example, when discussing the geometry element state that this is where you add additional dimensions to the problem but instead of stating how, simply say that this will be discussed in a later example. In the future we can link to the appropriate part of the documentation.
+            ... many lines omitted ...
+
+            Starting path 9999
+            Starting path 10000
+            Generating output for kubo
+            Maximum step error in moment group 1 was 4.942549e-04
+            Time elapsed for simulation is: 2.71 seconds
+
+The maximum step error in each moment group is given in absolute terms.  This is the largest difference between the full step integration and the half step integration.  While a single path might be very stochastic:
+
+.. figure:: images/kuboSingle.*
+    :align: center
+    
+    The mean value of the real and imaginary components of the z variable for a single path of the simulation.
+    
+The average over multiple paths can be increasingly smooth.  
+
+.. figure:: images/kubo10000.*
+    :align: center
+
+    The mean and standard error of the z variable averaged over 10000 paths, as given by this simulation.  It agrees within the standard error with the expected result of :math:`\exp(-t/2)`.
+

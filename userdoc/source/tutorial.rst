@@ -140,6 +140,7 @@ This has now generated the file 'lorenz.nb', which is a Mathematica notebook tha
         ListPointPlot3D[ll]
 
 .. image:: images/lorenz.*
+    :align: center
 
 ...and we see the lobes of the strange attractor.  Now let us examine the code that produced this simulation.
 
