@@ -10,7 +10,7 @@
     <propagation_dimension> t </propagation_dimension>
   </geometry>
   
-  <driver name="multi-path" paths="1" />
+  <driver name="multi-path" paths="10000" />
   
   <features>
     <error_check />

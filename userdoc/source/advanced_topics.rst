@@ -179,6 +179,7 @@ Example 1
 ^^^^^^^^^
 
 .. image:: images/FourierTransformEx1.*
+    :align: center
 
 When data is input in Fourier space and output in real space there is one backwards Fourier transform is required. Therefore the Fourier space data must be multiplied by a phase factor before the backwards Fourier transform is applied.
 
@@ -189,7 +190,8 @@ When data is input in Fourier space and output in real space there is one backwa
 Example 2
 ^^^^^^^^^
 .. image:: images/FourierTransformEx2.*
-
+    :align: center
+    
 Functions of the form :math:`h(x) = \int f(x') g(x-x') dx'` can be evaluated using the convolution theorem:
 
 .. math::
@@ -202,5 +204,6 @@ This requires two forward Fourier transforms to get the two functions f and g in
 Example 3
 ^^^^^^^^^
 .. image:: images/FourierTransformEx3.*
-
+    :align: center
+    
 Sometimes when the convolution theorem is used one of the forward Fourier transforms is calculated analytically and input in Fourier space. In this case only one forward numerical Fourier transform and one backward numerical Fourier transform is used. The number of forward and backward transforms are equal, so no phase factor is required.
