@@ -123,8 +123,9 @@ class XMDS2Parser(ScriptParser):
     
     simulationElement = xmlDocument.getChildElementByTagName("simulation")
     
-    nameElement = simulationElement.getChildElementByTagName('name')
-    self.globalNameSpace['simulationName'] = nameElement.innerText()
+    nameElement = simulationElement.getChildElementByTagName('name', optional=True)
+    if nameElement:
+        self.globalNameSpace['simulationName'] = nameElement.innerText()
     
     authorElement = simulationElement.getChildElementByTagName('author', optional=True)
     if authorElement: author = authorElement.innerText()
