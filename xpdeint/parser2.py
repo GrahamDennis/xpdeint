@@ -46,7 +46,7 @@ from xpdeint import Configuration
 
 # The help message printed when --help is used as an argument
 help_message = '''
-usage: xpdeint [options] fileToBeParsed
+usage: xmds2 [options] fileToBeParsed
 
 Options and arguments:
 -h                              : Print this message (also --help)
@@ -186,7 +186,7 @@ def main(argv=None):
   
   # globalNameSpace is a dictionary of variables that are available in all
   # templates
-  globalNameSpace = {'scriptName': scriptName}
+  globalNameSpace = {'scriptName': scriptName, 'simulationName': os.path.splitext(scriptName)[0]}
   
   if noVersionInformation:
     versionString = "VERSION_PLACEHOLDER"
