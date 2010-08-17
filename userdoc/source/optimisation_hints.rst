@@ -23,7 +23,7 @@ Use the Interaction Picture (IP) operator
 Just do it. Only use the EX operator when you have to. If you must use the EX operator, consider making it ``constant="no"``. It uses less memory.
 When you use the IP operator, make sure you know what it's doing.  Do not pre- or post-multiply that term in your equations.
 
-When using the IP operator, check if your operator is purely real or purely imaginary.  If real, (e.g. ``L = -0.5*kx * kx;``), then add the attribute ``type="real"`` to the ``<operator kind="ip">`` tag.  If purely imaginary, use ``type="real"``.  This optimisation saves performing the part of the complex exponential that is unnecessary.
+When using the IP operator, check if your operator is purely real or purely imaginary.  If real, (e.g. ``L = -0.5*kx * kx;``), then add the attribute ``type="real"`` to the ``<operator kind="ip">`` tag.  If purely imaginary, use ``type="imaginary"``.  This optimisation saves performing the part of the complex exponential that is unnecessary.
 
 Consider writing the evolution in spectral basis
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
