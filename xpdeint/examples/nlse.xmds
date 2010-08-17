@@ -24,6 +24,8 @@
        </globals>
      </features>
 
+  <driver name="distributed-mpi" />
+
   <geometry>
       <propagation_dimension> xi </propagation_dimension>
       <transverse_dimensions>

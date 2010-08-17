@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <name>wigner</name>
+  <author>Graham Dennis and Joe Hope</author>
+  <description>
+    Simulation of the Wigner function for an anharmonic oscillator with the initial state
+    being a coherent state.
+    
+    WARNING: This simulation will take a couple of hours.
+  </description>
+  
+  <features>
+    <benchmark />
+    <arguments>
+      <argument name="omega" type="real" default_value="0.0" />
+      <argument name="alpha_0"     type="real" default_value="3.0" />
+      <argument name="absorb"     type="real" default_value="8.0" />
+      <argument name="width" type="real" default_value="0.3" />
+      <argument name="Uint_hbar" type="real" default_value="1.0" />
+    </arguments>
+    <bing />
+    <fftw plan="patient" />
+    <openmp />
+    <globals>
+      <![CDATA[
+      /* derived constants */
+        const real Uint_hbar_on16 = Uint_hbar/16.0;
+      ]]>
+    </globals>
+  </features>
+
+  <driver name="distributed-mpi" />
+    
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="x" lattice="128"  domain="(-6, 6)" />
+      <dimension name="y" lattice="128"  domain="(-6, 6)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="main" initial_space="x y" type="complex">
+    <components> W </components>
+    <initialisation>
+      <![CDATA[
+        W = 2.0/M_PI * exp(-2.0*(y*y + (x-alpha_0)*(x-alpha_0)));
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <vector name="dampConstants" initial_space="x y" type="real">
+    <components>damping</components>
+    <initialisation>
+      <![CDATA[
+      if (sqrt(x*x + y*y) > _max_x-width)
+        damping = 0.0;
+      else
+        damping = 1.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="ARK89" tolerance="1e-7" interval="7.0e-2" steps="100000">
+      <samples>50</samples>
+      <operators>
+        <operator kind="ex" constant="yes">
+          <operator_names>Lx Ly Lxxx Lxxy Lxyy Lyyy</operator_names>
+          <![CDATA[
+            Lx = i*kx;
+            Ly = i*ky;
+            Lxxx = -i*kx*kx*kx;
+            Lxxy = -i*kx*kx*ky;
+            Lxyy = -i*kx*ky*ky;
+            Lyyy = -i*ky*ky*ky;
+          ]]>
+        </operator>
+        <integration_vectors>main</integration_vectors>
+        <dependencies>dampConstants</dependencies>
+        <![CDATA[
+        real rotation = omega + Uint_hbar*(-1.0 + x*x + y*y);
+
+        dW_dt = damping * ( rotation * (x*Ly[W] - y*Lx[W]) 
+                    - Uint_hbar_on16*( x*(Lxxy[W] + Lyyy[W]) - y*(Lxyy[W] + Lxxx[W]) )
+                );
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  
+  <output format="hdf5" filename="wigner.xsil">
+    <group>
+      <sampling initial_sample="yes">
+        <dimension name="x" fourier_space="no" />
+        <dimension name="y" fourier_space="no" />
+        <moments>WR WI</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          _SAMPLE_COMPLEX(W);
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>

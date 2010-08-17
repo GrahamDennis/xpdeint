@@ -34,8 +34,19 @@
     </globals>
   </features>
   
-  <noise_vector name="killme" dimensions="x" kind="poissonian" mean="_i0+0.001" type="real" method="posix" seed="314 159 276">
+  <computed_vector name="sountested" dimensions="" type="real">
+    <components>moment</components>
+    <evaluation>
+      <dependencies>main</dependencies>
+      <![CDATA[
+        moment = mod2(phi+psi);
+      ]]>
+    </evaluation>
+  </computed_vector>
+
+  <noise_vector name="killme" dimensions="x" kind="poissonian" mean="moment+0.001" type="real" method="posix" seed="314 159 276">
     <components>nn_1 nn_2</components>
+    <dependencies>sountested</dependencies>
   </noise_vector>
 
   <vector name="main" initial_space="x" type="complex">
@@ -59,12 +70,11 @@
             L = -i*kx*kx;
           ]]>
         </operator>
-        <dependencies>dupvee</dependencies>
         <integration_vectors>main</integration_vectors>
         <![CDATA[
          // if (_index_x == 1) {
          //   printf("flag difference %e          p_1 is %e   Vd_1 is  %e   t is %e\n",p_1-Vd_1,p_1,Vd_1,t);};
-         dphi_dt = L[phi] - ggamma*phi + phi*complex(Vd_1,Vd_2);
+         dphi_dt = L[phi] - ggamma*phi;
          dpsi_dt = L[psi] - ggamma*psi + psi*complex(p_1,p_2);
         ]]>
       </operators>

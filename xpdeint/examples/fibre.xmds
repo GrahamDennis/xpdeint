@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
   <name>fibre</name>
-  <author>Unknown author</author>
+  <author>Joe Hope and Graham Dennis</author>
   <description>
     Example fibre noise simulation
   </description>
@@ -13,26 +13,24 @@
     </transverse_dimensions>
   </geometry>
   
-  <driver name="mpi-multi-path" paths="50" />
+  <driver name="mpi-multi-path" paths="1024" />
   
   <features>
     <auto_vectorise />
     <benchmark />
     <error_check />
     <bing />
-    <fftw />
-    <!-- <openmp /> -->
-    <stochastic>
-      <noise kind="gaussian" prefix="n" num="2"/>
-      <!-- If there is no seed attribute then seeds will be chosen randomly at run-time -->
-    </stochastic>
     <globals>
       <![CDATA[
       const real ggamma = 1.0;
-      const real beta = sqrt(2.0*M_PI*ggamma/10.0);
+      const real beta = sqrt(M_PI*ggamma/10.0);
       ]]>
     </globals>
   </features>
+  
+  <noise_vector name="drivingNoise" dimensions="x" kind="wiener" type="complex" method="dsfmt" seed="314 159 276">
+    <components>Eta</components>
+  </noise_vector>
   
   <vector name="main" initial_space="x" type="complex">
     <components>phi</components>
@@ -44,7 +42,7 @@
   </vector>
   
   <sequence>
-    <integrate algorithm="ARK89" iterations="3" interval="2.5" steps="200000" tolerance="1e-6">
+    <integrate algorithm="SI" iterations="3" interval="2.5" steps="200000">
       <samples>50</samples>
       <operators>
         <operator kind="ex" constant="yes">
@@ -53,9 +51,10 @@
             L = -i*kx*kx;
           ]]>
         </operator>
+        <dependencies>drivingNoise</dependencies>
         <integration_vectors>main</integration_vectors>
         <![CDATA[
-          dphi_dt = L[phi] - ggamma*phi + beta*complex(n_1, n_2);
+          dphi_dt = L[phi] - ggamma*phi + beta*Eta;
         ]]>
       </operators>
     </integrate>

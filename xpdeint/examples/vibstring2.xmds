@@ -50,6 +50,7 @@
       mom
     </components>
   </vector>
+  
   <computed_vector name="filter1" dimensions="" type="complex">
     <components>moment</components>
     <evaluation>
@@ -91,6 +92,7 @@
       </operators>
     </integrate>
   </sequence>
+  
   <output format="binary" filename="vibstring2.xsil">
     <group>
       <sampling initial_sample="yes">
