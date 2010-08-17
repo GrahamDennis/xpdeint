@@ -12,7 +12,6 @@
     <error_check />
     <bing />
     <fftw plan="exhaustive" />
-    <!-- <openmp /> -->
     <globals>
       <![CDATA[
         const real omegaz = 2*M_PI*20;
@@ -94,13 +93,14 @@
   
   <sequence>
     <filter>
-      <dependencies>normalisation</dependencies>
+        <dependencies>normalisation</dependencies>
       <![CDATA[
         printf("Hello world from a filter segment!\n");
       ]]>
     </filter>
+
     <integrate algorithm="ARK89" interval="1e-4" steps="10000" tolerance="1e-8">
-      <samples>500</samples>
+      <samples>20</samples>
       <filters>
         <filter>
           <dependencies>wavefunction normalisation</dependencies>
@@ -124,10 +124,12 @@
         ]]>
       </operators>
     </integrate>
+
     <breakpoint filename="groundstate_break.xsil" format="ascii">
       <dependencies fourier_space="ky">wavefunction</dependencies>
     </breakpoint>
   </sequence>
+
   <output format="binary" filename="groundstate.xsil">
     <group>
       <sampling initial_sample="no">

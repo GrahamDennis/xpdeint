@@ -9,12 +9,26 @@ One of the best ways to learn XMDS2 is to see several illustrative examples.  He
    
    :ref:`Kubo` (stochastic differential equations)
 
+   :ref:`Fibre` (stochastic partial differential equation using parallel processing)
+
+   :ref:`IntegerDimensionExample` (integer dimensions)
+
+   :ref:`WignerArguments` (two dimensional PDE using parallel processing, passing arguments in at run time)
+
+   :ref:`GroundStateBEC` (PDE with continual renormalisation - computed vectors, filters, breakpoints, aliases)
+
+   :ref:`HermiteGaussGroundStateBEC` (Hermite-Gaussian basis)
+
+   :ref:`SineCross` (PDE with cross propagated fields)
+   
+All of these scripts are available in the include "examples" folder, along with more examples that demonstrate other tricks.  Together, they provide starting points for a huge range of different simulations.
+
 .. _NonLinearSchrodingerEquation:
 
-The nonlinear Schrodinger equation
+The nonlinear Schrödinger equation
 ----------------------------------
 
-This worked example will show a range of new features that can be used in an **XMDS2** script, and we will also examine our first partial differential equation.  We will take the one dimensional nonlinear Schrodinger equation, which is a common nonlinear wave equation.  The equation describing this problem is:
+This worked example will show a range of new features that can be used in an **XMDS2** script, and we will also examine our first partial differential equation.  We will take the one dimensional nonlinear Schrödinger equation, which is a common nonlinear wave equation.  The equation describing this problem is:
 
 .. math::
     \frac{\partial \phi}{\partial \xi} = i \left[\frac{1}{2}\frac{\partial^2 \phi}{\partial \tau^2} + i\Gamma(\tau)\phi+|\phi|^2\right]
@@ -363,4 +377,644 @@ The average over multiple paths can be increasingly smooth.
     :align: center
 
     The mean and standard error of the z variable averaged over 10000 paths, as given by this simulation.  It agrees within the standard error with the expected result of :math:`\exp(-t/2)`.
+
+
+.. _Fibre:
+
+Fibre Noise
+-----------
+
+This simulation is a stochastic partial differential equation, in which a one dimensional damped field is subject to a complex noise. 
+
+.. math::
+    \frac{\partial \psi}{\partial t} = -i \frac{\partial^2 \psi}{\partial x^2} -\gamma \psi+\beta \frac{1}{\sqrt{2}}\left(\eta_1(x)+i\eta_2(x)\right)
+    
+where the noise terms :math:`\eta_j(x,t)` are Wiener noise increments with variance :math:`\frac{\Delta t}{\Delta x}`, and the equation is interpreted as a Stratonovich differential equation.
+
+.. code-block:: xpdeint
+    
+    <simulation xmds-version="2">
+      <name>fibre</name>
+      <author>Joe Hope and Graham Dennis</author>
+      <description>
+        Example fibre noise simulation
+      </description>
+  
+      <geometry>
+        <propagation_dimension> t </propagation_dimension>
+        <transverse_dimensions>
+          <dimension name="x" lattice="64"  domain="(-5, 5)" />
+        </transverse_dimensions>
+      </geometry>
+  
+      <driver name="mpi-multi-path" paths="8" />
+  
+      <features>
+        <auto_vectorise />
+        <benchmark />
+        <error_check />
+        <globals>
+          <![CDATA[
+          const real ggamma = 1.0;
+          const real beta = sqrt(M_PI*ggamma/10.0);
+          ]]>
+        </globals>
+      </features>
+  
+      <noise_vector name="drivingNoise" dimensions="x" kind="wiener" type="complex" method="dsfmt" seed="314 159 276">
+        <components>Eta</components>
+      </noise_vector>
+  
+      <vector name="main" initial_space="x" type="complex">
+        <components>phi</components>
+        <initialisation no_noises="true">
+          <![CDATA[
+            phi = 0.0;
+          ]]>
+        </initialisation>
+      </vector>
+  
+      <sequence>
+        <integrate algorithm="SI" iterations="3" interval="2.5" steps="200000">
+          <samples>50</samples>
+          <operators>
+            <operator kind="ex" constant="yes">
+              <operator_names>L</operator_names>
+              <![CDATA[
+                L = -i*kx*kx;
+              ]]>
+            </operator>
+            <dependencies>drivingNoise</dependencies>
+            <integration_vectors>main</integration_vectors>
+            <![CDATA[
+              dphi_dt = L[phi] - ggamma*phi + beta*Eta;
+            ]]>
+          </operators>
+        </integrate>
+      </sequence>
+  
+      <output format="binary" filename="fibre.xsil">
+        <group>
+          <sampling initial_sample="yes">
+            <dimension name="x" lattice="64" fourier_space="yes" />
+            <moments>pow_dens</moments>
+            <dependencies>main</dependencies>
+            <![CDATA[
+              pow_dens = mod2(phi);
+            ]]>
+          </sampling>
+        </group>
+      </output>
+    </simulation>
+
+Note that the noise vector used in this example is complex-valued, and has the argument ``dimensions="x"`` to define it as a field of delta-correlated noises along the x-dimension.
+
+This simulation demonstrates the ease with which XMDS2 can be used in a parallel processing environment.  Instead of using the stochastic driver "multi-path", we simply replace it with "mpi-multi-path".  This instructs XMDS2 to write a parallel version of the program based on the widespread `MPI standard <http://www.open-mpi.org/>`_.  This protocol allows multiple processors or clusters of computers to work simultaneously on the same problem.  Free open source libraries implementing this standard can be installed on a linux machine, and come standard on Mac OS X.  They are also common on many supercomputer architectures.  Parallel processing can also be used with deterministic problems to great effect, as discussed in the later example :ref:`WignerArguments`.
+
+Executing this program is slightly different with the MPI option.  The details can change between MPI implementations, but as an example:
+
+.. code-block:: none
+
+        $xmds2 fibre.xmds
+        xmds2 version 0.8 "The fish of good hope." (r2392)
+
+        /usr/bin/mpic++ "fibre.cc" -finline-functions -fno-strict-aliasing --param max-inline-insns-single=1800 
+        -msse3 -msse2 -msse -mfpmath=sse -mtune=native -fast -ffast-math -ftree-vectorize 
+        -I/Users/joe/Applications/xmds/xpdeint/xpdeint/includes -lfftw3 -o "fibre" 
+
+        cc1plus: note: -ftree-vectorize enables strict aliasing.  -fno-strict-aliasing is ignored when Auto Vectorization is used.
+
+Note that different compile options (and potentially a different compiler) are used by XMDS2, but this is transparent to the user.  MPI simulations will have to be run using syntax that will depend on the MPI implementation.  Here we show the version based on the popular open source 'Open-MPI <http://www.open-mpi.org/>`_ implementation.
+
+.. code-block:: none
+
+    $ mpirun -np 4 ./fibre
+    Found enlightenment... (Importing wisdom)
+    Planning for x <---> kx transform... done.
+    Beginning full step integration ...
+    Rank[0]: Starting path 1
+    Rank[1]: Starting path 2
+    Rank[2]: Starting path 3
+    Rank[3]: Starting path 4
+    Rank[3]: Starting path 8
+    Rank[0]: Starting path 5
+    Rank[1]: Starting path 6
+    Rank[2]: Starting path 7
+    Rank[3]: Starting path 4
+    Beginning half step integration ...
+    Rank[0]: Starting path 1
+    Rank[2]: Starting path 3
+    Rank[1]: Starting path 2
+    Rank[3]: Starting path 8
+    Rank[0]: Starting path 5
+    Rank[2]: Starting path 7
+    Rank[1]: Starting path 6
+    Generating output for fibre
+    Maximum step error in moment group 1 was 4.893437e-04
+    Time elapsed for simulation is: 20.99 seconds
+    
+In this example we used four processors.  The different processors are labelled by their "Rank", starting at zero.  Because the processors are working independently, the output from the different processors can come in a randomised order.  In the end, however, the .xsil and data files are constructed identically to the single processor outputs.
+
+The analytic solution to the stochastic averages of this equation is given by
+
+.. math::
+    \langle |\psi(k,t)|^2 \rangle = \exp(-2\gamma t)|\psi(k,0)|^2 +\frac{\beta^2 L_x}{4\pi \gamma} \left(1-\exp(-2\gamma t)\right)
+    
+where :math:`L_x` is the length of the x domain.  We see that a single integration of these equations is quite chaotic:
+
+.. figure:: images/fibreSingle.*
+    :align: center
+    
+    The momentum space density of the field as a function of time for a single path realisation.
+
+while an average of 1024 paths converges nicely to this solution:
+
+.. figure:: images/fibre1024.*
+    :align: center
+    
+    The momentum space density of the field as a function of time for an average of 1024 paths.
+
+
+
+.. _IntegerDimensionExample:
+
+Integer Dimensions
+------------------
+
+This example shows how to handle systems with integer-valued transverse dimensions.  We will integrate the following set of equations
+
+.. math::
+    \frac{dx_j}{dt} = x_j \left(x_{j-1}-x_{j+1}\right)
+
+where :math:`x_j` are complex-valued variables defined on a ring, such that :math:`j\in \{0,j_{max}\}` and the :math:`x_{j_{max}+1}` variable is identified with the variable :math:`x_{0}`, and the variable :math:`x_{-1}` is identified with the variable :math:`x_{j_{max}}`.
+
+.. code-block:: xpdeint
+
+    <simulation xmds-version="2">
+      <name>integer_dimensions</name>
+      <author>Graham Dennis</author>
+      <description>
+        XMDS2 script to test integer dimensions.
+      </description>
+
+      <features>
+        <benchmark />
+        <error_check />
+        <bing />
+        <diagnostics /> <!-- This will make sure that all nonlocal accesses of dimensions are safe -->
+      </features>
+
+      <geometry>
+        <propagation_dimension> t </propagation_dimension>
+        <transverse_dimensions>
+          <dimension name="j" type="integer" lattice="5" domain="(0,4)" />
+        </transverse_dimensions>
+      </geometry>
+
+      <vector name="main" type="complex">
+        <components> x </components>
+        <initialisation>
+          <![CDATA[
+          x = 1.0e-3;
+          x(j => 0) = 1.0;
+          ]]>
+        </initialisation>
+      </vector>
+
+      <sequence>
+        <integrate algorithm="ARK45" interval="60" steps="25000" tolerance="1.0e-9">
+          <samples>1000</samples>
+          <operators>
+            <integration_vectors>main</integration_vectors>
+            <![CDATA[
+            long j_minus_one = (j-1) % _lattice_j;
+            if (j_minus_one < 0)
+              j_minus_one += _lattice_j;
+            long j_plus_one  = (j+1) % _lattice_j;
+            dx_dt(j => j) = x(j => j)*(x(j => j_minus_one) - x(j => j_plus_one));
+            ]]>
+          </operators>
+        </integrate>
+      </sequence>
+
+      <output format="ascii">
+        <group>
+          <sampling initial_sample="yes">
+            <dimension name="j" />
+            <moments>xR</moments>
+            <dependencies>main</dependencies>
+            <![CDATA[
+              xR = x.Re();
+            ]]>
+          </sampling>
+        </group>
+      </output>
+    </simulation>
+
+The first extra feature we have used in this script is the ``<diagnostics>`` element.  It performs run-time checking that our generated code does not accidentally attempt to access a part of our vector that does not exist.  Removing this tag will increase the speed of the simulation, but its presence helps catch coding errors.  
+
+The simulation defines a vector with a single transverse dimension labelled "j", of type "integer" ("int" and "long" can also be used as synonyms for "integer").  In the absence of an explicit type, the dimension is assumed to be real-valued.  The dimension has a "domain" argument as normal, defining the minimum and maximum values of the dimension's range.  The lattice element, if specified, is used as a check on the size of the domain, and will create an error if the two do not match.
+
+Integer-valued dimensions can be called non-locally.  Real-valued dimensions are typically coupled non-locally only through local operations in the transformed space of the dimension, but can be called non-locally in certain other situations as described in (FIXME: Advanced section on aliases and -k values is not yet written).  The syntax for calling integer dimensions non-locally can be seen in the initialisation CDATA block:
+
+.. code-block:: xpdeint
+
+          x = 1.0e-3;
+          x(j => 0) = 1.0;
+
+where the syntax ``x(j => 0)`` is used to reference the variable :math:``x_0`` directly.  We see a more elaborate example in the integrate CDATA block:
+
+.. code-block:: xpdeint
+
+            dx_dt(j => j) = x(j => j)*(x(j => j_minus_one) - x(j => j_plus_one));
+
+where the vector "x" is called using locally defined variables.  This syntax is chosen so that multiple dimensions can be addressed non-locally with minimal possibility for confusion.
+
+
+
+
+.. _WignerArguments:
+
+Wigner Function
+---------------
+
+This example integrates the two-dimensional partial differential equation
+
+.. math::
+    \frac{\partial W}{\partial t} = \left[ \left(\omega + \frac{U_{int}}{\hbar}\left(x^2+y^2-1\right)\right) \left(x \frac{\partial}{\partial y} 
+    - y \frac{\partial}{\partial x}\right) - \frac{U_{int}}{16 \hbar}\left(x\left(\frac{\partial^3}{\partial x^2 \partial y}
+    +\frac{\partial^3}{\partial y^3}\right)-y\left(\frac{\partial^3}{\partial y^2 \partial x}+\frac{\partial^3}{\partial x^3}\right)\right)\right]W(x,y,t)
+
+with the added restriction that the derivative is forced to zero outside a certain radius.  This extra condition helps maintain the long-term stability of the integration.
+
+.. code-block:: xpdeint
+
+    <simulation xmds-version="2">
+      <name>wigner</name>
+      <author>Graham Dennis and Joe Hope</author>
+      <description>
+        Simulation of the Wigner function for an anharmonic oscillator with the initial state
+        being a coherent state.
+
+        WARNING: This simulation will take a couple of hours.
+      </description>
+
+      <features>
+        <benchmark />
+        <arguments>
+          <argument name="omega" type="real" default_value="0.0" />
+          <argument name="alpha_0"     type="real" default_value="3.0" />
+          <argument name="absorb"     type="real" default_value="8.0" />
+          <argument name="width" type="real" default_value="0.3" />
+          <argument name="Uint_hbar" type="real" default_value="1.0" />
+        </arguments>
+        <bing />
+        <fftw plan="patient" />
+        <openmp />
+        <globals>
+          <![CDATA[
+          /* derived constants */
+            const real Uint_hbar_on16 = Uint_hbar/16.0;
+          ]]>
+        </globals>
+      </features>
+
+      <driver name="distributed-mpi" />
+
+      <geometry>
+        <propagation_dimension> t </propagation_dimension>
+        <transverse_dimensions>
+          <dimension name="x" lattice="128"  domain="(-6, 6)" />
+          <dimension name="y" lattice="128"  domain="(-6, 6)" />
+        </transverse_dimensions>
+      </geometry>
+
+      <vector name="main" initial_space="x y" type="complex">
+        <components> W </components>
+        <initialisation>
+          <![CDATA[
+            W = 2.0/M_PI * exp(-2.0*(y*y + (x-alpha_0)*(x-alpha_0)));
+          ]]>
+        </initialisation>
+      </vector>
+
+      <vector name="dampConstants" initial_space="x y" type="real">
+        <components>damping</components>
+        <initialisation>
+          <![CDATA[
+          if (sqrt(x*x + y*y) > _max_x-width)
+            damping = 0.0;
+          else
+            damping = 1.0;
+          ]]>
+        </initialisation>
+      </vector>
+
+      <sequence>
+        <integrate algorithm="ARK89" tolerance="1e-7" interval="7.0e-4" steps="100000">
+          <samples>50</samples>
+          <operators>
+            <operator kind="ex" constant="yes">
+              <operator_names>Lx Ly Lxxx Lxxy Lxyy Lyyy</operator_names>
+              <![CDATA[
+                Lx = i*kx;
+                Ly = i*ky;
+                Lxxx = -i*kx*kx*kx;
+                Lxxy = -i*kx*kx*ky;
+                Lxyy = -i*kx*ky*ky;
+                Lyyy = -i*ky*ky*ky;
+              ]]>
+            </operator>
+            <integration_vectors>main</integration_vectors>
+            <dependencies>dampConstants</dependencies>
+            <![CDATA[
+            real rotation = omega + Uint_hbar*(-1.0 + x*x + y*y);
+
+            dW_dt = damping * ( rotation * (x*Ly[W] - y*Lx[W]) 
+                        - Uint_hbar_on16*( x*(Lxxy[W] + Lyyy[W]) - y*(Lxyy[W] + Lxxx[W]) )
+                    );
+            ]]>
+          </operators>
+        </integrate>
+      </sequence>
+
+      <output format="hdf5" filename="wigner.xsil">
+        <group>
+          <sampling initial_sample="yes">
+            <dimension name="x" fourier_space="no" />
+            <dimension name="y" fourier_space="no" />
+            <moments>WR WI</moments>
+            <dependencies>main</dependencies>
+            <![CDATA[
+              _SAMPLE_COMPLEX(W);
+            ]]>
+          </sampling>
+        </group>
+      </output>
+    </simulation>
+
+This example demonstrates two new features of XMDS2.  The first is the use of parallel processing for a deterministic problem.  The FFTW library only allows MPI processing of multidimensional vectors.  For multidimensional simulations, the generated program can be parallelised simply by adding the ``name="distributed-mpi"`` argument to the ``<driver>`` element.  
+
+.. code-block:: xpdeint
+
+    $ xmds2 wigner_argument_mpi.xmds 
+    xmds2 version 0.8 "The fish of good hope." (r2392)
+
+    /usr/bin/mpic++ "wigner.cc" -msse3 -msse2 -msse -mfpmath=sse -mtune=native -fast -ffast-math -I/Users/joe/Applications/xmds/xpdeint/xpdeint/includes -DHAVE_HDF5_HL -DHAVE_H5LEXISTS -lfftw3_mpi -lfftw3 -lhdf5 -lhdf5_hl -o "wigner"
+
+The final program is then called using the (implementation specific) MPI wrapper:
+
+.. code-block:: xpdeint
+
+    $ mpirun -np 2 ./wigner
+    Planning for (distributed x, y) <---> (distributed ky, kx) transform... done.
+    Planning for (distributed x, y) <---> (distributed ky, kx) transform... done.
+    Sampled field (for moment group #1) at t = 0.000000e+00
+    Current timestep: 5.908361e-06
+    Sampled field (for moment group #1) at t = 1.400000e-05
+    Current timestep: 4.543131e-06
+    
+    ...
+
+The possible acceleration achievable when parallelising a given simulation depends on a great many things including available memory and cache.  As a general rule, it will improve as the simulation size gets larger, but the easiest way to find out is to test.  The optimum speed up is obviously proportional to the number of available processing cores.
+
+The second new feature in this simulation is the ``<arguments>`` element in the ``<features>`` block.  This is a way of specifying global variables with a given type that can then be input at run time.  The variables are specified in a self explanatory way
+
+.. code-block:: xpdeint
+
+        <arguments>
+          <argument name="omega" type="real" default_value="0.0" />
+            ...
+          <argument name="Uint_hbar" type="real" default_value="1.0" />
+        </arguments>
+        
+where the "default_value" is used as the valuable of the variable if no arguments are given.  In the absence of the generating script, the program can document its options with the ``--help`` argument:
+
+.. code-block:: none
+
+    $ ./wigner --help
+    Rank[0]: Usage: wigner -o < real > -a < real > -b < real > -w < real > -U < real >
+
+    Details:
+    Option		Type		Default value
+    -o, --omega	real 		0.0
+    -a, --alpha_0	real 		3.0
+    -b, --absorb	real 		8.0
+    -w, --width	real 		0.3
+    -U, --Uint_hbar	real 		1.0
+    [OracFive-2.local:36084] MPI_ABORT invoked on rank 0 in communicator MPI_COMM_WORLD with errorcode 1
+    
+We can change one or more of these variables' values in the simulation by passing it at run time.
+
+.. code-block:: none
+
+    $ mpirun -np 2 ./wigner -o 0.1 -a 2.5 --Uint_hbar 0
+    Found enlightenment... (Importing wisdom)
+    Planning for (distributed x, y) <---> (distributed ky, kx) transform... done.
+    Planning for (distributed x, y) <---> (distributed ky, kx) transform... done.
+    Sampled field (for moment group #1) at t = 0.000000e+00
+    Current timestep: 1.916945e-04
+    
+    ...
+    
+The values that were used for the variables, whether default or passed in, are stored in the output file.
+
+.. code-block:: xpdeint
+
+    <info>
+    Script compiled with XMDS2 version 0.8 "The fish of good hope." (r2392)
+    See http://www.xmds.org for more information.
+
+    Variables that can be specified on the command line:
+      Command line argument omega = 1.000000e-01
+      Command line argument alpha_0 = 2.500000e+00
+      Command line argument absorb = 8.000000e+00
+      Command line argument width = 3.000000e-01
+      Command line argument Uint_hbar = 0.000000e+00
+    </info>
+    
+Finally, note the shorthand used in the output group
+
+.. code-block:: xpdeint
+
+      <![CDATA[
+        _SAMPLE_COMPLEX(W);
+      ]]>
+
+which is short for
+
+.. code-block:: xpdeint
+
+      <![CDATA[
+        WR = W.Re();
+        WI = W.Im();
+      ]]>
+ 
+
+.. _GroundStateBEC:
+
+Finding the Ground State of a BEC (continuous renormalisation)
+--------------------------------------------------------------
+
+This simulation solves another partial differential equation, but introduces several powerful new features in XMDS2.  The nominal problem is the calculation of the lowest energy eigenstate of a non-linear Schrödinger equation:
+
+.. code-block:: xpdeint
+
+    <simulation xmds-version="2">
+      <name>groundstate</name>
+      <author>Graham Dennis</author>
+      <description>
+        Calculate the ground state of a Rubidium BEC in a harmonic magnetic trap.
+      </description>
+  
+      <features>
+        <auto_vectorise />
+        <benchmark />
+        <error_check />
+        <bing />
+        <fftw plan="exhaustive" />
+        <globals>
+          <![CDATA[
+            const real omegaz = 2*M_PI*20;
+            const real omegarho = 2*M_PI*200;
+            const real hbar = 1.05457148e-34;
+            const real M = 1.409539200000000e-25;
+            const real g = 9.8;
+            const real scatteringLength = 5.57e-9;
+            const real transverseLength = 1e-5;
+            const real Uint = 4.0*M_PI*hbar*hbar*scatteringLength/M/transverseLength/transverseLength;
+            const real Nparticles = 5.0e5;
+
+            /* offset constants */
+            const real EnergyOffset = pow(pow(3.0*Nparticles/4*omegarho*Uint,2.0)*M/2.0,1/3.0); // 1D
+
+          ]]>
+        </globals>
+      </features>
+  
+      <geometry>
+        <propagation_dimension> t </propagation_dimension>
+        <transverse_dimensions>
+          <dimension name="y" lattice="1024"  domain="(-2.0e-5, 2.0e-5)" />
+        </transverse_dimensions>
+      </geometry>
+  
+      <vector name="potential" initial_space="y" type="complex">
+        <components>
+          V1
+        </components>
+        <initialisation>
+          <![CDATA[
+            real Vtrap = 0.5*M*(omegarho*omegarho*y*y);
+      
+            V1  = -i/hbar*(Vtrap - EnergyOffset);
+      
+          ]]>
+        </initialisation>
+      </vector>
+  
+      <vector name="wavefunction" initial_space="y" type="complex">
+        <components>
+          phi
+        </components>
+        <initialisation>
+          <![CDATA[
+      
+            if (fabs(y) < 1.0e-5) {
+              phi = 1.0; //sqrt(Nparticles/2.0e-5);
+              // This will be automatically normalised later
+            } else {
+              phi = 0.0;
+            }
+      
+            // This was the sensible initial state
+            // real E = pow(pow(3.0*Nparticles/4*omegarho*Uint,2.0)*M/2.0,1/3.0);
+            // real magnitudeSq = (E - 0.5*M*(omegarho*omegarho*y*y))/Uint;
+            // if (magnitudeSq > 0.0)
+            //   phi = sqrt(magnitudeSq);
+            // else
+            //   phi = 0.0;
+      
+          ]]>
+        </initialisation>
+      </vector>
+  
+      <computed_vector name="normalisation" dimensions="" type="real">
+        <components>
+          Ncalc
+        </components>
+        <evaluation>
+          <dependencies fourier_space="y">wavefunction</dependencies>
+          <![CDATA[
+            // Calculate the current normalisation of the wave function.
+            Ncalc = mod2(phi);
+          ]]>
+        </evaluation>
+      </computed_vector>
+  
+      <sequence>
+        <filter>
+          <![CDATA[
+            printf("Hello world from a filter segment!\n");
+          ]]>
+        </filter>
+
+        <integrate algorithm="ARK89" interval="1e-4" steps="10000" tolerance="1e-8">
+          <samples>20</samples>
+          <filters>
+            <filter>
+              <dependencies>wavefunction normalisation</dependencies>
+              <![CDATA[
+                // Correct normalisation of the wavefunction
+                phi *= sqrt(Nparticles/Ncalc);
+              ]]>
+            </filter>
+          </filters>
+          <operators>
+            <operator kind="ip" constant="yes">
+              <operator_names>T</operator_names>
+              <![CDATA[
+                T = -0.5*hbar/M*ky*ky;
+              ]]>
+            </operator>
+            <integration_vectors>wavefunction</integration_vectors>
+            <dependencies>potential</dependencies>
+            <![CDATA[
+              dphi_dt = T[phi] - (i*V1 + Uint/hbar*mod2(phi))*phi;
+            ]]>
+          </operators>
+        </integrate>
+
+        <breakpoint filename="groundstate_break.xsil" format="ascii">
+          <dependencies fourier_space="ky">wavefunction</dependencies>
+        </breakpoint>
+      </sequence>
+
+      <output format="binary" filename="groundstate.xsil">
+        <group>
+          <sampling initial_sample="no">
+            <dimension name="y" lattice="1024" />
+            <moments>norm_dens</moments>
+            <dependencies>wavefunction normalisation</dependencies>
+            <![CDATA[
+              norm_dens = mod2(phi)/Ncalc;
+            ]]>
+          </sampling>
+        </group>
+      </output>
+    </simulation>
+
+
+
+.. _HermiteGaussGroundStateBEC:
+
+Finding the Ground State of a BEC again
+---------------------------------------
+
+
+.. _SineCross:
+
+Sine Cross Propagation Example
+------------------------------
+
 

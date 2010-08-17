@@ -14,12 +14,10 @@
       <argument name="b"     type="real" default_value="2.67" />
       <argument name="r"     type="real" default_value="28.0" />
       <argument name="time_arg" type="real" default_value="100.0" />
-      <argument name="outputFilename" type="string" default_value="myFilename" />
     </arguments>
     <benchmark />
     <error_check />
     <bing />
-    <!-- That's right, this script breaks the shackles with FFTW! -->
     <validation kind="run-time" />
   </features>
   

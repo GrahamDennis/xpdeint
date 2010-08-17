@@ -3,7 +3,7 @@
   <name>integer_dimensions</name>
   <author>Graham Dennis</author>
   <description>
-    xpdeint script to test integer dimensions.
+    XMDS2 script to test integer dimensions.
   </description>
   
   <features>
@@ -16,24 +16,22 @@
   <geometry>
     <propagation_dimension> t </propagation_dimension>
     <transverse_dimensions>
-      <dimension name="j" type="integer" lattice="5" domain="(0, 4)" />
+      <dimension name="j" type="integer" lattice="5" domain="(0,4)" />
     </transverse_dimensions>
   </geometry>
   
   <vector name="main" type="complex">
-    <components>
-      x
-    </components>
+    <components> x </components>
     <initialisation>
       <![CDATA[
-      x(j => j) = 1.0e-3;
+      x = 1.0e-3;
       x(j => 0) = 1.0;
       ]]>
     </initialisation>
   </vector>
   
   <sequence>
-    <integrate algorithm="RK4" interval="60.0" steps="25000">
+    <integrate algorithm="ARK45" interval="60" steps="25000" tolerance="1.0e-9">
       <samples>1000</samples>
       <operators>
         <integration_vectors>main</integration_vectors>
@@ -47,7 +45,8 @@
       </operators>
     </integrate>
   </sequence>
-  <output format="binary">
+  
+  <output format="ascii">
     <group>
       <sampling initial_sample="yes">
         <dimension name="j" />

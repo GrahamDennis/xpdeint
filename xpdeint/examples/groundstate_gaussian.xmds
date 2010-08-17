@@ -22,9 +22,7 @@
   </geometry>
   
   <vector name="potential" initial_space="y" type="complex">
-    <components>
-      V1
-    </components>
+    <components> V1 </components>
     <initialisation>
       <![CDATA[
         real Vtrap = -exp(-y*y);
@@ -85,10 +83,12 @@
         ]]>
       </operators>
     </integrate>
+    
     <breakpoint filename="groundstate_gaussian_break.xsil" format="hdf5">
       <dependencies>wavefunction potential</dependencies>
     </breakpoint>
   </sequence>
+
   <output format="binary">
     <group>
       <sampling initial_sample="no">
@@ -100,6 +100,7 @@
         ]]>
       </sampling>
     </group>
+
     <group>
       <sampling initial_sample="no">
         <moments>N</moments>
@@ -109,6 +110,7 @@
         ]]>
       </sampling>
     </group>
+
     <group>
       <sampling initial_sample="no">
         <dimension name="y" />
