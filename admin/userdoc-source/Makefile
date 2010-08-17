@@ -9,7 +9,7 @@ PAPER         = a4
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
-ALLSPHINXOPTS   = -d ../userdoc/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
+ALLSPHINXOPTS   = -d ../../documentation/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
 .PHONY: help clean html web pickle htmlhelp latex changes linkcheck
 
@@ -23,17 +23,17 @@ help:
 	@echo "  linkcheck to check all external links for integrity"
 
 clean:
-	-rm -rf ../userdoc
+	-rm -rf ../../documentation
 
 html:
-	mkdir -p ../userdoc ../userdoc/doctrees
-	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) ../userdoc
+	mkdir -p ../../documentation ../../documentation/doctrees
+	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) ../../documentation
 	@echo
 	@echo "Build finished. The HTML pages are in ../userdoc."
 
 pickle:
-	mkdir -p ../userdoc/pickle ../userdoc/doctrees
-	$(SPHINXBUILD) -b pickle $(ALLSPHINXOPTS) ../userdoc/pickle
+	mkdir -p ../../documentation/pickle ../../documentation/doctrees
+	$(SPHINXBUILD) -b pickle $(ALLSPHINXOPTS) ../../documentation/pickle
 	@echo
 	@echo "Build finished; now you can process the pickle files or run"
 	@echo "  sphinx-web ../userdoc/pickle"
@@ -42,15 +42,15 @@ pickle:
 web: pickle
 
 htmlhelp:
-	mkdir -p ../userdoc ../userdoc/doctrees
+	mkdir -p ../../documentation ../../documentation/doctrees
 	$(SPHINXBUILD) -b htmlhelp $(ALLSPHINXOPTS) ../userdoc
 	@echo
 	@echo "Build finished; now you can run HTML Help Workshop with the" \
 	      ".hhp project file in ../userdoc."
 
 latex:
-	mkdir -p ../userdoc/latex ../userdoc/doctrees
-	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) ../userdoc/latex
+	mkdir -p ../../documentation/latex ../../documentation/doctrees
+	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) ../../documentation/latex
 	@echo
 	@echo "Build finished; the LaTeX files are in ../userdoc/latex."
 	@echo "Run \`make all-pdf' or \`make all-ps' in that directory to" \
