@@ -22,7 +22,7 @@ const real _new_var = 1.0 / (${noiseVector.field.volumeElementInBasis(noiseVecto
 const real _old_var = 1.0 / (${noiseVector.field.volumeElementInBasis(noiseVector.initialBasis)} * _old_step);
 
 for (long _i0 = 0; _i0 < _vector_size; _i0++) { 
-  _new_noise_vector[_i0] = _new_var*_poisplit_${noiseVector.id}(_new_step/_old_step, lrint(_old_array[_i0]/_old_var));
+  _active_${noiseVector.id}[_i0] = _new_var*_poisplit_${noiseVector.id}(_new_step/_old_step, lrint(_old_array[_i0]/_old_var));
 }
 
   @#
@@ -104,7 +104,7 @@ real _poidev_${noiseVector.id}(real xm)
   return em;
 }
 
-real _poisplit_${noiseVector.id}(real pp, long n)
+real _poisplit_${noiseVector.id}(real pp, int n)
 {
   /*
   Returns as a floating-point number an integer value that is a random deviate drawn from
