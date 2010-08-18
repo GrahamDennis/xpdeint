@@ -171,6 +171,8 @@ NoiseVector = element noise_vector {
     VectorCommon
     , attribute kind { text },
     attribute mean { text }?,
+    attribute mean-rate { text }?,
+    attribute mean-density { text }?,
     attribute method { text }?,
     attribute seed { text }?
 }

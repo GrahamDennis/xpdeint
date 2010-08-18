@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
   <name>fibre</name>
-  <author>Unknown author</author>
+  <author>Joe Hope</author>
   <description>
     Example fibre noise simulation
   </description>
@@ -22,10 +22,6 @@
     <error_check />
     <bing />
     <fftw />
-    <stochastic>
-      <noise kind="gaussian-posix" mean-rate="4.282" prefix="p" num="2" seed="314 159 276"/>
-      <!-- If there is no seed attribute then seeds will be chosen randomly at run-time -->
-    </stochastic>
     <globals>
       <![CDATA[
       const real ggamma = 1.0;
@@ -34,25 +30,18 @@
     </globals>
   </features>
   
-  <computed_vector name="sountested" dimensions="" type="real">
-    <components>moment</components>
-    <evaluation>
-      <dependencies>main</dependencies>
-      <![CDATA[
-        moment = mod2(phi+psi);
-      ]]>
-    </evaluation>
-  </computed_vector>
-
-  <noise_vector name="killme" dimensions="x" kind="poissonian" mean="moment+0.001" type="real" method="posix" seed="314 159 276">
+  <noise_vector name="fuzzyInitial" dimensions="x" kind="gaussian" type="real" method="dsfmt" seed="314 159 276">
     <components>nn_1 nn_2</components>
-    <dependencies>sountested</dependencies>
+  </noise_vector>
+
+  <noise_vector name="noiseEvolution" dimensions="x" kind="wiener" type="real" method="dsfmt" seed="314 159 276">
+    <components>p_1 p_2</components>
   </noise_vector>
 
   <vector name="main" initial_space="x" type="complex">
     <components>phi psi</components>
     <initialisation>
-        <dependencies>killme</dependencies>
+        <dependencies>fuzzyInitial</dependencies>
       <![CDATA[
         phi = exp(-x*x)+nn_1;
         psi = exp(-x*x)+nn_2;
@@ -61,7 +50,7 @@
   </vector>
 
   <sequence>
-    <integrate algorithm="ARK45" iterations="3" interval="0.25" steps="200000" tolerance="1e-12">
+    <integrate algorithm="SI" iterations="3" interval="0.25" steps="200000">
       <samples>50</samples>
       <operators>
         <operator kind="ip" constant="yes">
@@ -70,28 +59,11 @@
             L = -i*kx*kx;
           ]]>
         </operator>
+        <dependencies>noiseEvolution</dependencies>
         <integration_vectors>main</integration_vectors>
         <![CDATA[
-         // if (_index_x == 1) {
-         //   printf("flag difference %e          p_1 is %e   Vd_1 is  %e   t is %e\n",p_1-Vd_1,p_1,Vd_1,t);};
          dphi_dt = L[phi] - ggamma*phi;
          dpsi_dt = L[psi] - ggamma*psi + psi*complex(p_1,p_2);
-        ]]>
-      </operators>
-    </integrate>
-    <integrate algorithm="ARK45" iterations="3" interval="0.25" steps="200000" tolerance="1e-12">
-      <samples>50</samples>
-      <operators >
-        <operator kind="ip" constant="yes">
-          <operator_names>L</operator_names>
-          <![CDATA[
-            L = -i*kx*kx;
-          ]]>
-        </operator>
-        <integration_vectors>main</integration_vectors>
-        <![CDATA[
-         dphi_dt = L[phi] - ggamma*phi;
-         dpsi_dt = L[psi] - ggamma*psi;
         ]]>
       </operators>
     </integrate>

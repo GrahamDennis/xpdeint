@@ -340,6 +340,12 @@
         <attribute name="mean"/>
       </optional>
       <optional>
+        <attribute name="mean-rate"/>
+      </optional>
+      <optional>
+        <attribute name="mean-density"/>
+      </optional>
+      <optional>
         <attribute name="method"/>
       </optional>
       <optional>
