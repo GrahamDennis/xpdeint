@@ -49,7 +49,7 @@ const real _hermite_gauss_weights_${dimName}[] = {${wrapArray($hermiteGaussWeigh
 @def mainBegin($dict)
   @#
 
-  @if $simulationBuildVariant == 'mpi'
+  @if 'mpi' in $simulationBuildVariant
 #if defined(CBLAS_VECLIB)
 // We are using MPI. If we let vecLib spawn threads then overall performance will suffer
   setenv("VECLIB_MAXIMUM_THREADS", "1", 1);

@@ -384,7 +384,7 @@ def main(argv=None):
     globalNameSpace['simulationUselib'].add('optimise')
   
   buildKWs = {
-    'includes': resource_filename(__name__, 'includes'),
+    'includes': [resource_filename(__name__, 'includes').replace(' ', r'\ ')],
     'uselib': list(globalNameSpace['simulationUselib']),
   }
   
