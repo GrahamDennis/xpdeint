@@ -51,7 +51,7 @@ def scriptTestingFunction(root, scriptName, testDir, absPath, self):
   if not os.path.exists(testDir):
     os.makedirs(testDir)
   
-  proc = subprocess.Popen('xpdeint -n --no-version ' + absPath,
+  proc = subprocess.Popen('xmds2 -n --no-version ' + absPath,
                           shell=True,
                           stdout=subprocess.PIPE,
                           stderr=subprocess.PIPE,

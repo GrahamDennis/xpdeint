@@ -179,6 +179,10 @@ static ${fftwPrefix}_plan _fftw_backward_plan = NULL;
 if (!_fftw_forward_plan) {
   _LOG(_SIMULATION_LOG_LEVEL, "Planning for ${function.description}...");
   @set $transformPair = transformDict['transformPair']
+  @if transformDict['transposedOrder']
+    @# Reverse the order
+    @silent transformPair = transformPair[::-1]
+  @end if
   @set $dataOut = '_data_out' if transformDict.get('outOfPlace', False) else '_data_in'
   
   _fftw_forward_plan = ${fftwPrefix}_mpi_plan_many_transpose(
