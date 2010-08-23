@@ -36,10 +36,10 @@ class _FilterOperator (Operator):
     codeBlock = self.primaryCodeBlock
     codeBlock.field = FieldElement.sortedFieldWithDimensionNames(dimensionNames)
     
-    if codeBlock.dependenciesEntity and codeBlock.dependenciesEntity.xmlElement.hasAttribute('fourier_space'):
+    if codeBlock.dependenciesEntity and codeBlock.dependenciesEntity.xmlElement.hasAttribute('basis'):
       codeBlock.basis = \
         codeBlock.field.basisFromString(
-          codeBlock.dependenciesEntity.xmlElement.getAttribute('fourier_space'),
+          codeBlock.dependenciesEntity.xmlElement.getAttribute('basis'),
           xmlElement = codeBlock.dependenciesEntity.xmlElement
         )
     if not codeBlock.basis:

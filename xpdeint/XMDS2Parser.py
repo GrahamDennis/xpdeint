@@ -1589,8 +1589,8 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
                                                     **self.argumentsToTemplateConstructors)
     
     integrationVectorsElement = operatorsElement.getChildElementByTagName('integration_vectors')
-    if integrationVectorsElement.hasAttribute('fourier_space'):
-      basis = operatorContainer.field.basisFromString(integrationVectorsElement.getAttribute('fourier_space'))
+    if integrationVectorsElement.hasAttribute('basis'):
+      basis = operatorContainer.field.basisFromString(integrationVectorsElement.getAttribute('basis'))
     else:
       basis = operatorContainer.field.defaultCoordinateBasis
     
@@ -1677,9 +1677,9 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
   def parseIPOperatorElement(self, operatorTemplate, operatorElement):
     operatorDefinitionCodeBlock = operatorTemplate.primaryCodeBlock
     
-    if operatorElement.hasAttribute('fourier_space'):
+    if operatorElement.hasAttribute('basis'):
       operatorDefinitionCodeBlock.basis = \
-        operatorTemplate.field.basisFromString(operatorElement.getAttribute('fourier_space'), xmlElement = operatorElement)
+        operatorTemplate.field.basisFromString(operatorElement.getAttribute('basis'), xmlElement = operatorElement)
     else:
       operatorDefinitionCodeBlock.basis = operatorTemplate.field.defaultSpectralBasis
     
@@ -1735,9 +1735,9 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
   def parseEXOperatorElement(self, operatorTemplate, operatorElement):
     operatorDefinitionCodeBlock = operatorTemplate.primaryCodeBlock
     
-    if operatorElement.hasAttribute('fourier_space'):
+    if operatorElement.hasAttribute('basis'):
       operatorDefinitionCodeBlock.basis = \
-        operatorTemplate.field.basisFromString(operatorElement.getAttribute('fourier_space'), xmlElement = operatorElement)
+        operatorTemplate.field.basisFromString(operatorElement.getAttribute('basis'), xmlElement = operatorElement)
     else:
       operatorDefinitionCodeBlock.basis = operatorTemplate.field.defaultSpectralBasis
     
@@ -2004,8 +2004,8 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
         geometryDimension = geometryTemplate.dimensions[geometryTemplate.indexOfDimensionName(dimensionName)]
         
         fourierSpace = False
-        if dimensionElement.hasAttribute('fourier_space') and geometryDimension.isTransformable:
-          spaceString = dimensionElement.getAttribute('fourier_space').strip().lower()
+        if dimensionElement.hasAttribute('basis') and geometryDimension.isTransformable:
+          spaceString = dimensionElement.getAttribute('basis').strip().lower()
           fourierSpace = None
           if spaceString == 'yes':
             fourierSpace = True
@@ -2019,7 +2019,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
           if fourierSpace == None:
             raise ParserException(
               dimensionElement,
-              "fourier_space attribute for dimension '%s' must be 'yes', 'no' or one of %s."
+              "basis attribute for dimension '%s' must be 'yes', 'no' or one of %s."
               % (dimensionName, ', '.join(set([dimRep.name for dimRep in geometryDimension.representations])))
             )
         

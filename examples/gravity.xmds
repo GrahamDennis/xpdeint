@@ -12,11 +12,6 @@
     <bing />
     <!-- <fftw /> -->
     <openmp />
-    <stochastic>
-      <noise kind="gaussian" prefix="p" num="4"/>
-      <noise kind="poissonian" prefix="q" num="1" mean-rate="4.0"/>
-      <!-- If there is no seed attribute then seeds will be chosen randomly at run-time -->
-    </stochastic>
   </features>
   
   <geometry>
@@ -26,12 +21,19 @@
       <dimension name="j" type="integer" lattice="4" domain="(0, 3)" />
     </transverse_dimensions>
   </geometry>
+
+  <noise_vector name="initialMassNoises" kind="poissonian" type="real" mean="4.0" method="posix" seed="157 9348 234">
+        <components>q</components>
+  </noise_vector>
+    
+  <noise_vector name="initialMomentaNoises" kind="gaussian" type="real" method="posix" seed="17 948 2341">
+        <components>p_1 p_2 p_3 p_4</components>
+  </noise_vector>    
   
   <vector name="motion" type="real">
-    <components>
-      x y vx vy
-    </components>
-    <initialisation noises="p">
+    <components> x y vx vy </components>
+    <initialisation>
+    <dependencies>initialMomentaNoises</dependencies>
       <![CDATA[
         x = 2.0*p_1;
         y = 2.0*p_2;
@@ -42,14 +44,13 @@
   </vector>
   
   <vector name="mass" type="real">
-    <components>
-      m
-    </components>
-    <initialisation noises="q">
+    <components> m </components>
+    <initialisation>
+    <dependencies>initialMassNoises</dependencies>
       <![CDATA[
       // Set the mass equal to a poissonian noise.
       // but don't let the mass be zero
-      m = q_1;
+      m = q;
       if (m < 0.01) m = 1.0;
       ]]>
     </initialisation>
@@ -58,7 +59,7 @@
   <sequence>
     <integrate algorithm="ARK89" interval="100" steps="1000" tolerance="1e-8">
       <samples>1000 100</samples>
-      <operators noises="">
+      <operators>
         <integration_vectors>motion</integration_vectors>
         <dependencies>mass</dependencies>
         <![CDATA[

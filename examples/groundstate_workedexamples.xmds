@@ -1,32 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
   <name>groundstate</name>
-  <author>Graham Dennis</author>
+  <author>Joe Hope</author>
   <description>
-    Calculate the ground state of a Rubidium BEC in a harmonic magnetic trap.
+    Calculate the ground state of the non-linear Schrodinger equation in a harmonic magnetic trap.
+    This is done by evolving it in imaginary time while re-normalising each timestep.
   </description>
   
   <features>
     <auto_vectorise />
     <benchmark />
-    <error_check />
     <bing />
     <fftw plan="exhaustive" />
     <globals>
       <![CDATA[
-        const real omegaz = 2*M_PI*20;
-        const real omegarho = 2*M_PI*200;
-        const real hbar = 1.05457148e-34;
-        const real M = 1.409539200000000e-25;
-        const real g = 9.8;
-        const real scatteringLength = 5.57e-9;
-        const real transverseLength = 1e-5;
-        const real Uint = 4.0*M_PI*hbar*hbar*scatteringLength/M/transverseLength/transverseLength;
-        const real Nparticles = 5.0e5;
-
-        /* offset constants */
-        const real EnergyOffset = pow(pow(3.0*Nparticles/4*omegarho*Uint,2.0)*M/2.0,1/3.0); // 1D
-
+        const real Uint = 2.0;
+        const real Nparticles = 5.0;
       ]]>
     </globals>
   </features>
@@ -34,51 +23,35 @@
   <geometry>
     <propagation_dimension> t </propagation_dimension>
     <transverse_dimensions>
-      <dimension name="y" lattice="1024"  domain="(-2.0e-5, 2.0e-5)" />
+      <dimension name="y" lattice="256"  domain="(-15.0, 15.0)" />
     </transverse_dimensions>
   </geometry>
   
   <vector name="potential" initial_space="y" type="real">
-    <components>
-      V1
-    </components>
+    <components> V1 </components>
     <initialisation>
       <![CDATA[
-        V1  = (0.5*M*omegarho*omegarho*y*y - EnergyOffset)/hbar;
+        V1  = 0.5*y*y;
       ]]>
     </initialisation>
   </vector>
   
   <vector name="wavefunction" initial_space="y" type="complex">
-    <components>
-      phi
-    </components>
+    <components> phi </components>
     <initialisation>
       <![CDATA[
-      
-        if (fabs(y) < 1.0e-5) {
-          phi = 1.0; //sqrt(Nparticles/2.0e-5);
+        if (fabs(y) < 3.0) {
+          phi = 1.0;
           // This will be automatically normalised later
         } else {
           phi = 0.0;
         }
-      
-        // This was the sensible initial state
-        // real E = pow(pow(3.0*Nparticles/4*omegarho*Uint,2.0)*M/2.0,1/3.0);
-        // real magnitudeSq = (E - 0.5*M*(omegarho*omegarho*y*y))/Uint;
-        // if (magnitudeSq > 0.0)
-        //   phi = sqrt(magnitudeSq);
-        // else
-        //   phi = 0.0;
-      
-      ]]>
+            ]]>
     </initialisation>
   </vector>
   
   <computed_vector name="normalisation" dimensions="" type="real">
-    <components>
-      Ncalc
-    </components>
+    <components> Ncalc </components>
     <evaluation>
       <dependencies fourier_space="y">wavefunction</dependencies>
       <![CDATA[
@@ -89,16 +62,22 @@
   </computed_vector>
   
   <sequence>
+      <filter>
+        <![CDATA[
+          printf("Hello world from a filter segment!\n");
+        ]]>
+      </filter>
+
     <filter>
-        <dependencies>normalisation</dependencies>
+        <dependencies>normalisation wavefunction</dependencies>
       <![CDATA[
-        printf("Hello world from a filter segment!\n");
+        phi *= sqrt(Nparticles/Ncalc);
       ]]>
     </filter>
 
-    <integrate algorithm="ARK89" interval="1e-4" steps="10000" tolerance="1e-8">
-      <samples>20</samples>
-      <filters>
+    <integrate algorithm="ARK45" interval="1.0" steps="4000" tolerance="1e-10">
+      <samples>25 4000</samples>
+      <filters where="step end">
         <filter>
           <dependencies>wavefunction normalisation</dependencies>
           <![CDATA[
@@ -111,30 +90,40 @@
         <operator kind="ip" constant="yes">
           <operator_names>T</operator_names>
           <![CDATA[
-            T = -0.5*hbar/M*ky*ky;
+            T = -0.5*ky*ky;
           ]]>
         </operator>
         <integration_vectors>wavefunction</integration_vectors>
         <dependencies>potential</dependencies>
         <![CDATA[
-          dphi_dt = T[phi] - (V1 + Uint/hbar*mod2(phi))*phi;
+          dphi_dt = T[phi] - (V1 + Uint*mod2(phi))*phi;
         ]]>
       </operators>
     </integrate>
 
     <breakpoint filename="groundstate_break.xsil" format="ascii">
-      <dependencies fourier_space="ky">wavefunction</dependencies>
+      <dependencies fourier_space="ky">wavefunction </dependencies>
     </breakpoint>
+
   </sequence>
 
   <output format="binary" filename="groundstate.xsil">
     <group>
-      <sampling initial_sample="no">
-        <dimension name="y" lattice="1024" />
+      <sampling initial_sample="yes">
+        <dimension name="y" />
         <moments>norm_dens</moments>
         <dependencies>wavefunction normalisation</dependencies>
         <![CDATA[
-          norm_dens = mod2(phi)/Ncalc;
+          norm_dens = mod2(phi);
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling initial_sample="yes">
+        <moments>norm</moments>
+        <dependencies>normalisation</dependencies>
+        <![CDATA[
+          norm = Ncalc;
         ]]>
       </sampling>
     </group>

@@ -44,11 +44,11 @@ class _BreakpointSegment (_Segment):
   def preflight(self):
     super(_Segment, self).preflight()
     
-    if self.dependenciesEntity.xmlElement.hasAttribute('fourier_space'):
-      spaceString = self.dependenciesEntity.xmlElement.getAttribute('fourier_space')
+    if self.dependenciesEntity.xmlElement.hasAttribute('basis'):
+      spaceString = self.dependenciesEntity.xmlElement.getAttribute('basis')
       self.breakpointBasis = \
         self.field.basisFromString(
-          self.dependenciesEntity.xmlElement.getAttribute('fourier_space'),
+          self.dependenciesEntity.xmlElement.getAttribute('basis'),
           xmlElement = self.dependenciesEntity.xmlElement
         )
     else:

@@ -19,17 +19,17 @@
     <benchmark />
     <!-- <error_check /> -->
     <bing />
-    <stochastic>
-      <noise kind="gaussian" prefix="n" num="1" seed="157 9348 234"/>
-      <!-- If there is no seed attribute then seeds will be chosen randomly at run-time -->
-    </stochastic>
   </features>
-  
+
+  <noise_vector name="noises" kind="wiener" type="real" method="posix" seed="157 9348 234">
+        <components>n_1</components>
+  </noise_vector>
+    
   <vector name="main" type="complex">
     <components>
       z
     </components>
-    <initialisation noises="">
+    <initialisation>
       <![CDATA[
         if (_index_j == 1)
           _LOG(_WARNING_LOG_LEVEL, "_local_lattice_j: %li, _local_offset_j: %li\n", _local_lattice_j, _local_offset_j);
@@ -39,10 +39,11 @@
   </vector>
   
   <sequence>
-    <integrate algorithm="ARK89" interval="10" steps="1000" tolerance="1e-8">
+    <integrate algorithm="SI" interval="10" steps="1000">
       <samples>500 10</samples>
-      <operators noises="n">
+      <operators>
         <integration_vectors>main</integration_vectors>
+        <dependencies>noises</dependencies>
         <![CDATA[
           dz_dt(j => j) = i*z*n_1;
         ]]>

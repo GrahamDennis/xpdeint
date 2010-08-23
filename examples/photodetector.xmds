@@ -12,19 +12,19 @@
     <bing />
     <!-- <fftw /> -->
     <openmp />
-    <stochastic>
-      <noise kind="poissonian" prefix="n" mean-rate="5.0" num="1"/>
-      <!-- If there is no seed attribute then seeds will be chosen randomly at run-time -->
-    </stochastic>
   </features>
   
   <geometry>
     <propagation_dimension> t </propagation_dimension>
   </geometry>
+
+  <noise_vector name="noises" kind="jump" mean-rate="5.0" type="real" method="posix" seed="314 159 276">
+        <components>nn</components>
+  </noise_vector>
   
   <vector name="main" type="real">
     <components> N </components>
-    <initialisation noises="">
+    <initialisation>
       <![CDATA[
         N = 0.0;
       ]]>
@@ -34,10 +34,11 @@
   <sequence>
     <integrate algorithm="RK4" interval="10" steps="1000">
       <samples>1000</samples>
-      <operators noises="n">
+      <operators>
         <integration_vectors>main</integration_vectors>
+        <dependencies>noises</dependencies>
         <![CDATA[
-          dN_dt = n_1;
+          dN_dt = nn;
         ]]>
       </operators>
     </integrate>
