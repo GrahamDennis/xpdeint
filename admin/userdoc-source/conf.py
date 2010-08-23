@@ -38,7 +38,7 @@ master_doc = 'index'
 
 # General substitutions.
 project = u'XMDS2'
-copyright = u'2008-2009, Graham Dennis'
+copyright = u'2008-2010, Graham Dennis and Joe Hope'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
@@ -161,7 +161,7 @@ htmlhelp_basename = 'xpdeintdoc'
 # (source start file, target name, title, author, document class [howto/manual]).
 latex_documents = [
   ('index', 'xmds2.tex', u'XMDS2 Documentation',
-   u'Graham Dennis', 'manual'),
+   u'Joe Hope and Graham Dennis', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of

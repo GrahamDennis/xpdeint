@@ -19,8 +19,6 @@ One of the best ways to learn XMDS2 is to see several illustrative examples.  He
 
    :ref:`HermiteGaussGroundStateBEC` (Hermite-Gaussian basis)
 
-   :ref:`SineCross` (PDE with cross propagated fields)
-   
 All of these scripts are available in the include "examples" folder, along with more examples that demonstrate other tricks.  Together, they provide starting points for a huge range of different simulations.
 
 .. _NonLinearSchrodingerEquation:
@@ -31,7 +29,7 @@ The nonlinear Schrödinger equation
 This worked example will show a range of new features that can be used in an **XMDS2** script, and we will also examine our first partial differential equation.  We will take the one dimensional nonlinear Schrödinger equation, which is a common nonlinear wave equation.  The equation describing this problem is:
 
 .. math::
-    \frac{\partial \phi}{\partial \xi} = i \left[\frac{1}{2}\frac{\partial^2 \phi}{\partial \tau^2} + i\Gamma(\tau)\phi+|\phi|^2\right]
+    \frac{\partial \phi}{\partial \xi} = \frac{i}{2}\frac{\partial^2 \phi}{\partial \tau^2} - \Gamma(\tau)\phi+i|\phi|^2 \phi
 
 where :math:`\phi` is a complex-valued field, and :math:`\Gamma(\tau)` is a :math:`\tau`-dependent damping term.  Let us look at an XMDS2 script that integrates this equation, and then examine it in detail.
 
@@ -478,11 +476,13 @@ Executing this program is slightly different with the MPI option.  The details c
         $xmds2 fibre.xmds
         xmds2 version 0.8 "The fish of good hope." (r2392)
 
-        /usr/bin/mpic++ "fibre.cc" -finline-functions -fno-strict-aliasing --param max-inline-insns-single=1800 
-        -msse3 -msse2 -msse -mfpmath=sse -mtune=native -fast -ffast-math -ftree-vectorize 
+        /usr/bin/mpic++ "fibre.cc" -finline-functions -fno-strict-aliasing 
+        --param max-inline-insns-single=1800 -msse3 -msse2 -msse -mfpmath=sse 
+        -mtune=native -fast -ffast-math -ftree-vectorize 
         -I/Users/joe/Applications/xmds/xpdeint/xpdeint/includes -lfftw3 -o "fibre" 
 
-        cc1plus: note: -ftree-vectorize enables strict aliasing.  -fno-strict-aliasing is ignored when Auto Vectorization is used.
+        cc1plus: note: -ftree-vectorize enables strict aliasing.  
+        -fno-strict-aliasing is ignored when Auto Vectorization is used.
 
 Note that different compile options (and potentially a different compiler) are used by XMDS2, but this is transparent to the user.  MPI simulations will have to be run using syntax that will depend on the MPI implementation.  Here we show the version based on the popular open source 'Open-MPI <http://www.open-mpi.org/>`_ implementation.
 
@@ -858,91 +858,73 @@ Finding the Ground State of a BEC (continuous renormalisation)
 
 This simulation solves another partial differential equation, but introduces several powerful new features in XMDS2.  The nominal problem is the calculation of the lowest energy eigenstate of a non-linear Schrödinger equation:
 
+.. math::
+    \frac{\partial \phi}{\partial t} = i \left[\frac{1}{2}\frac{\partial^2}{\partial y^2} - V(y) - U_{int}|\phi|^2\right]\phi
+
+which can be found by evolving the above equation in imaginary time while keeping the normalisation constant.  This causes eigenstates to exponentially decay at the rate of their eigenvalue, so after a short time only the state with the lowest eigenvalue remains.  The evolution equation is straightforward:
+
+.. math::
+    \frac{\partial \phi}{\partial t} = \left[\frac{1}{2}\frac{\partial^2}{\partial y^2} - V(y) - U_{int}|\phi|^2\right]\phi
+
+but we will need to use new XMDS2 features to manage the normalisation of the function :math:`\phi(y,t)`.  The normalisation for a non-linear Schrödinger equation is given by :math:`\int dy |\phi(y,t)|^2 = N_{particles}`, where :math:`N_{particles}` is the number of particles described by the wavefunction.  
+
+The code for this simulation is:
+
 .. code-block:: xpdeint
 
     <simulation xmds-version="2">
       <name>groundstate</name>
-      <author>Graham Dennis</author>
+      <author>Joe Hope</author>
       <description>
-        Calculate the ground state of a Rubidium BEC in a harmonic magnetic trap.
+        Calculate the ground state of the non-linear Schrodinger equation in a harmonic magnetic trap.
+        This is done by evolving it in imaginary time while re-normalising each timestep.
       </description>
-  
+
       <features>
         <auto_vectorise />
         <benchmark />
-        <error_check />
         <bing />
         <fftw plan="exhaustive" />
         <globals>
           <![CDATA[
-            const real omegaz = 2*M_PI*20;
-            const real omegarho = 2*M_PI*200;
-            const real hbar = 1.05457148e-34;
-            const real M = 1.409539200000000e-25;
-            const real g = 9.8;
-            const real scatteringLength = 5.57e-9;
-            const real transverseLength = 1e-5;
-            const real Uint = 4.0*M_PI*hbar*hbar*scatteringLength/M/transverseLength/transverseLength;
-            const real Nparticles = 5.0e5;
-
-            /* offset constants */
-            const real EnergyOffset = pow(pow(3.0*Nparticles/4*omegarho*Uint,2.0)*M/2.0,1/3.0); // 1D
-
+            const real Uint = 2.0;
+            const real Nparticles = 5.0;
           ]]>
         </globals>
       </features>
-  
+
       <geometry>
         <propagation_dimension> t </propagation_dimension>
         <transverse_dimensions>
-          <dimension name="y" lattice="1024"  domain="(-2.0e-5, 2.0e-5)" />
+          <dimension name="y" lattice="256"  domain="(-15.0, 15.0)" />
         </transverse_dimensions>
       </geometry>
-  
-      <vector name="potential" initial_space="y" type="complex">
-        <components>
-          V1
-        </components>
+
+      <vector name="potential" initial_space="y" type="real">
+        <components> V1 </components>
         <initialisation>
           <![CDATA[
-            real Vtrap = 0.5*M*(omegarho*omegarho*y*y);
-      
-            V1  = -i/hbar*(Vtrap - EnergyOffset);
-      
+            V1  = 0.5*y*y;
           ]]>
         </initialisation>
       </vector>
-  
+
       <vector name="wavefunction" initial_space="y" type="complex">
-        <components>
-          phi
-        </components>
+        <components> phi </components>
         <initialisation>
           <![CDATA[
-      
-            if (fabs(y) < 1.0e-5) {
-              phi = 1.0; //sqrt(Nparticles/2.0e-5);
+            if (fabs(y) < 3.0) {
+              phi = 1.0;
               // This will be automatically normalised later
             } else {
               phi = 0.0;
             }
-      
-            // This was the sensible initial state
-            // real E = pow(pow(3.0*Nparticles/4*omegarho*Uint,2.0)*M/2.0,1/3.0);
-            // real magnitudeSq = (E - 0.5*M*(omegarho*omegarho*y*y))/Uint;
-            // if (magnitudeSq > 0.0)
-            //   phi = sqrt(magnitudeSq);
-            // else
-            //   phi = 0.0;
-      
-          ]]>
+                ]]>
         </initialisation>
       </vector>
-  
+
       <computed_vector name="normalisation" dimensions="" type="real">
-        <components>
-          Ncalc
-        </components>
+        <components> Ncalc </components>
         <evaluation>
           <dependencies fourier_space="y">wavefunction</dependencies>
           <![CDATA[
@@ -951,17 +933,24 @@ This simulation solves another partial differential equation, but introduces sev
           ]]>
         </evaluation>
       </computed_vector>
-  
+
       <sequence>
+          <filter>
+            <![CDATA[
+              printf("Hello world from a filter segment!\n");
+            ]]>
+          </filter>
+
         <filter>
+            <dependencies>normalisation wavefunction</dependencies>
           <![CDATA[
-            printf("Hello world from a filter segment!\n");
+            phi *= sqrt(Nparticles/Ncalc);
           ]]>
         </filter>
 
-        <integrate algorithm="ARK89" interval="1e-4" steps="10000" tolerance="1e-8">
-          <samples>20</samples>
-          <filters>
+        <integrate algorithm="ARK45" interval="1.0" steps="4000" tolerance="1e-10">
+          <samples>25 4000</samples>
+          <filters where="step end">
             <filter>
               <dependencies>wavefunction normalisation</dependencies>
               <![CDATA[
@@ -974,13 +963,13 @@ This simulation solves another partial differential equation, but introduces sev
             <operator kind="ip" constant="yes">
               <operator_names>T</operator_names>
               <![CDATA[
-                T = -0.5*hbar/M*ky*ky;
+                T = -0.5*ky*ky;
               ]]>
             </operator>
             <integration_vectors>wavefunction</integration_vectors>
             <dependencies>potential</dependencies>
             <![CDATA[
-              dphi_dt = T[phi] - (i*V1 + Uint/hbar*mod2(phi))*phi;
+              dphi_dt = T[phi] - (V1 + Uint*mod2(phi))*phi;
             ]]>
           </operators>
         </integrate>
@@ -992,17 +981,109 @@ This simulation solves another partial differential equation, but introduces sev
 
       <output format="binary" filename="groundstate.xsil">
         <group>
-          <sampling initial_sample="no">
-            <dimension name="y" lattice="1024" />
+          <sampling initial_sample="yes">
+            <dimension name="y" />
             <moments>norm_dens</moments>
             <dependencies>wavefunction normalisation</dependencies>
             <![CDATA[
-              norm_dens = mod2(phi)/Ncalc;
+              norm_dens = mod2(phi);
+            ]]>
+          </sampling>
+        </group>
+        <group>
+          <sampling initial_sample="yes">
+            <moments>norm</moments>
+            <dependencies>normalisation</dependencies>
+            <![CDATA[
+              norm = Ncalc;
             ]]>
           </sampling>
         </group>
       </output>
     </simulation>
+
+We have used the ``plan="exhasutive"`` option in the ``<fftw>`` element to ensure that the absolute fastest transform method is found.  Because the FFTW package stores the results of its tests (by default in the ~/.xmds/wisdom directory), this option does not cause significant computational overhead, except perhaps on the very first run of a new program.
+
+This simulation introduces the first example of a very powerful feature in XMDS2: the ``<computed_vector>`` element.  This has syntax like any other vector, including possible dependencies on other vectors, and an ability to be used in any element that can use vectors.  The difference is that, much like noise vectors, computed vectors are recalculated each time they are required.  This means that a computed vector can never be used as an integration vector, as its values are not stored.  However, computed vectors allow a simple and efficient method of describing complicated functions of other vectors.  Computed vectors may depend on other computed vectors, allowing for spectral filtering and other advanced options.  See for example, the :ref:`AdvancedTopics` section on :ref:`Convolutions`.
+
+The difference between a computed vector and a stored vector is emphasised by the replacement of the ``<initialisation>`` element with an ``<evaluation>`` element.  Apart from the name, they have virtually identical purpose and syntax.  
+
+.. code-block:: xpdeint
+
+  <computed_vector name="normalisation" dimensions="" type="real">
+    <components> Ncalc </components>
+    <evaluation>
+      <dependencies fourier_space="y">wavefunction</dependencies>
+      <![CDATA[
+        // Calculate the current normalisation of the wave function.
+        Ncalc = mod2(phi);
+      ]]>
+    </evaluation>
+  </computed_vector>
+
+Here, our computed vector has no transverse dimensions and depends on the components of "wavefunction", so the extra transverse dimensions are integrated out.  This code therefore integrates the square modulus of the field, and returns it in the variable "Ncalc".  This will be used below to renormalise the "phi" field.  Before we examine that process, we have to introduce the ``<filter>`` element.
+
+The ``<filter>`` element can be placed in the ``<sequence>`` element, or inside ``<integrate>`` elements as we will see next.  Elements placed in the ``<sequence>`` element are executed in the order they are found in the .xmds file.  Filter elements place the included CDATA block directly into the generated program at the designated position.  If the element does not contain any dependencies, like in our first example, then the code is placed alone:
+
+.. code-block:: xpdeint
+
+    <filter>
+      <![CDATA[
+        printf("Hello world from a filter segment!\n");
+      ]]>
+    </filter>
+
+This filter block merely prints a string into the output when the generated program is run.  If the ``<filter>`` element contains dependencies, then the variables defined in those vectors (or computed vectors, or noise vectors) will be available, and the CDATA block will be placed inside loops that run over all the transverse dimensions used by the included vectors.  The second filter block in this example depends on both the "wavefunction" and "normalisation" vectors:
+
+.. code-block:: xpdeint
+
+    <filter>
+        <dependencies>normalisation wavefunction</dependencies>
+      <![CDATA[
+        phi *= sqrt(Nparticles/Ncalc);
+      ]]>
+    </filter>
+
+Since this filter depends on a vector with the transverse dimension "y", this filter will execute for each point in "y".  This code multiplies the value of the field "phi" by the factor required to produce a normalised function in the sense that  :math:`\int dy |\phi(y,t)|^2 = N_{particles}`.
+
+The next usage of a ``<filter>`` element in this program is inside the ``<integrate>`` element, where all filters are placed inside a ``<filters>`` element.
+
+.. code-block:: xpdeint
+
+    <filters where="step end">
+      <filter>
+        <dependencies>wavefunction normalisation</dependencies>
+        <![CDATA[
+          // Correct normalisation of the wavefunction
+          phi *= sqrt(Nparticles/Ncalc);
+        ]]>
+      </filter>
+    </filters>
+
+Filters placed in an integration block are applied each integration step.  The "where" flag is used to determine whether the filter should be applied directly before or directly after each integration step.  The default value for the where flag is ``where="step start"``, but in this case we chose "step end" to make sure that the final output was normalised after the last integration step.
+
+At the end of the sequence element we introduce the ``<breakpoint>`` element.  This serves two purposes.  The first is a simple matter of convenience.  Often when we manage our input and output from a simulation, we are interested solely in storing the exact state of our integration vectors.  A breakpoint element does exactly that, storing the components of any vectors contained within, taking all the normal options of the ``<output>`` element but not requiring any ``<group>`` elements as that information is assumed.
+
+.. code-block:: xpdeint
+
+    <breakpoint filename="groundstate_break.xsil" format="ascii">
+      <dependencies fourier_space="ky">wavefunction</dependencies>
+    </breakpoint>
+
+If the filename argument is omitted, the output filenames are numbered sequentially.  Any given ``<breakpoint>`` element must only depend on vectors with identical dimensions.
+
+This program begins with a very crude guess to the ground state, but it rapidly converges to the lowest eigenstate.
+
+.. figure:: images/groundstateU2.*
+    :align: center
+    
+    The shape of the ground state rapidly approaches the lowest eigenstate.  For weak nonlinearities, it is nearly Gaussian.
+    
+.. figure:: images/groundstateU20.*
+    :align: center
+
+    When the nonlinear term is larger (:math:`U=20`), the ground state is wider and more parabolic.
+
 
 
 
@@ -1011,10 +1092,154 @@ This simulation solves another partial differential equation, but introduces sev
 Finding the Ground State of a BEC again
 ---------------------------------------
 
+Here we repeat the same simulation as in the :ref:`GroundStateBEC` example, using a different transform basis.  While spectral methods are very effective, and Fourier transforms are typically very efficient due to the Fast Fourier transform algorithm, it is often desirable to describe nonlocal evolution in bases other than the Fourier basis.  The previous calculation was the Schrödinger equation with a harmonic potential and a nonlinear term.  The eigenstates of such a system are known analytically to be Gaussians multiplied by the Hermite polynomials.
 
-.. _SineCross:
+.. math::
+    \left[-\frac{\hbar}{2 m}\frac{\partial^2}{\partial x^2} + \frac{1}{2}\omega^2 x^2\right]\phi_n(x) = E_n \phi_n(x)
 
-Sine Cross Propagation Example
-------------------------------
+where
+
+.. math::
+    \phi_n(x,t) = \sqrt{\frac{1}{2^n n!}} \left(\frac{m \omega}{\hbar \pi}\right)^\frac{1}{4} e^{-\frac{m \omega x^2}{2\hbar}} H_n\left(\sqrt{\frac{m \omega}{\hbar}x}\right),\;\;\;\;\;\;E_n = \left(n+\frac{1}{2}\right) \omega
+
+where :math:`H_n(u)` are the physicist's version of the Hermite polynomials.  Rather than describing the derivatives as diagonal terms in Fourier space, we therefore have the option of describing the entire :math:`-\frac{\hbar}{2 m}\frac{\partial^2}{\partial x^2} + \frac{1}{2}\omega^2 x^2` term as a diagonal term in the hermite-Gaussian basis.  Here is an XMDS2 simulation that performs the integration in this basis.
+
+.. code-block:: xpdeint
+
+    <simulation xmds-version="2">
+      <name>hermitegauss_groundstate</name>
+      <author>Graham Dennis</author>
+      <description>
+        Solve for the groundstate of the Gross-Pitaevskii equation using the hermite-Gauss basis.
+      </description>
+  
+      <features>
+        <benchmark />
+        <bing />
+        <validation kind="run-time" />
+        <globals>
+          <![CDATA[
+            const real omegaz = 2*M_PI*20;
+            const real omegarho = 2*M_PI*200;
+            const real hbar = 1.05457148e-34;
+            const real M = 1.409539200000000e-25;
+            const real g = 9.8;
+            const real scatteringLength = 5.57e-9;
+            const real transverseLength = 1e-5;
+            const real Uint = 4.0*M_PI*hbar*hbar*scatteringLength/M/transverseLength/transverseLength;
+            const real Nparticles = 5.0e5;
+        
+            /* offset constants */
+            const real EnergyOffset = 0.3*pow(pow(3.0*Nparticles/4*omegarho*Uint,2.0)*M/2.0,1/3.0); // 1D   
+          ]]>
+        </globals>
+      </features>
+  
+      <geometry>
+        <propagation_dimension> t </propagation_dimension>
+        <transverse_dimensions>
+          <dimension name="x" lattice="100" length_scale="sqrt(hbar/(M*omegarho))" transform="hermite-gauss" />
+        </transverse_dimensions>
+      </geometry>
+  
+      <vector name="wavefunction" initial_space="x" type="complex">
+        <components> phi </components>
+        <initialisation>
+          <![CDATA[
+          phi = sqrt(Nparticles) * pow(M*omegarho/(hbar*M_PI), 0.25) * exp(-0.5*(M*omegarho/hbar)*x*x);
+          ]]>
+        </initialisation>
+      </vector>
+  
+      <computed_vector name="normalisation" dimensions="" type="real">
+        <components> Ncalc </components>
+        <evaluation>
+          <dependencies fourier_space="x">wavefunction</dependencies>
+          <![CDATA[
+            // Calculate the current normalisation of the wave function.
+            Ncalc = mod2(phi);
+          ]]>
+        </evaluation>
+      </computed_vector>
+  
+      <sequence>
+        <integrate algorithm="ARK45" interval="1.0e-2" steps="4000"  tolerance="1e-10">
+          <samples>100 100</samples>
+          <filters>
+            <filter>
+              <dependencies>wavefunction normalisation</dependencies>
+              <![CDATA[
+                // Correct normalisation of the wavefunction
+                phi *= sqrt(Nparticles/Ncalc);
+              ]]>
+            </filter>
+          </filters>
+          <operators>
+            <operator kind="ip" constant="yes" type="real">
+              <operator_names>L</operator_names>
+              <![CDATA[
+                L = EnergyOffset/hbar - (nx + 0.5)*omegarho;
+              ]]>
+            </operator>
+            <integration_vectors>wavefunction</integration_vectors>
+            <![CDATA[
+              dphi_dt = L[phi] - Uint/hbar*mod2(phi)*phi;
+            ]]>
+          </operators>
+        </integrate>
+
+        <filter>
+            <dependencies>normalisation wavefunction</dependencies>
+          <![CDATA[
+            phi *= sqrt(Nparticles/Ncalc);
+          ]]>
+        </filter>
+    
+        <breakpoint filename="hermitegauss_groundstate_break.xsil" format="ascii">
+          <dependencies fourier_space="nx">wavefunction</dependencies>
+        </breakpoint>
+      </sequence>
+  
+      <output format="binary">
+        <group>
+          <sampling initial_sample="yes">
+            <dimension name="x" fourier_space="no" />
+            <moments>dens</moments>
+            <dependencies>wavefunction</dependencies>
+            <![CDATA[
+              dens = mod2(phi);
+            ]]>
+          </sampling>
+        </group>
+        <group>
+          <sampling initial_sample="yes">
+            <dimension name="x" fourier_space="yes" />
+            <moments>dens</moments>
+            <dependencies>wavefunction</dependencies>
+            <![CDATA[
+              dens = mod2(phi);
+            ]]>
+          </sampling>
+        </group>
+      </output>
+    </simulation>
+
+The major difference in this simulation code, aside from the switch back from dimensionless units, is the new transverse dimension type in the ``<geometry>`` element.
+
+.. code-block:: xpdeint
+ 
+          <dimension name="x" lattice="100" length_scale="sqrt(hbar/(M*omegarho))" transform="hermite-gauss" />
+
+We have explicitly defined the "transform" option, which by defaults expects the Fourier transform.  The ``transform="hermite-gauss"`` option requires the 'mpmath' package installed, just as Fourier transforms require the FFTW package to be installed.  The "lattice" option details the number of hermite-Gaussian eigenstates to include, and automatically starts from the zeroth order polynomial and increases.  The number of hermite-Gaussian modes fully determines the irregular spatial grid up to an overall scale given by the ``length_scale`` parameter.
+
+The ``length_scale="sqrt(hbar/(M*omegarho))"`` option requires a real number, but since this script defines it in terms of variables, XMDS2 is unable to verify that the resulting function is real-valued at the time of generating the code.  XMDS2 will therefore fail to compile this program without the feature:
+
+.. code-block:: xpdeint
+
+        <validation kind="run-time" />
+
+which disables many of these checks at the time of writing the C-code.
+
+By this point, we have introduced most of the important features in XMDS2.  More details on other transform options and rarely used features can be found in the :ref:`advancedTopics` section.
 
 

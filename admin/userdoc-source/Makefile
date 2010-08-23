@@ -29,42 +29,42 @@ html:
 	mkdir -p ../../documentation ../../documentation/doctrees
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) ../../documentation
 	@echo
-	@echo "Build finished. The HTML pages are in ../userdoc."
+	@echo "Build finished. The HTML pages are in ../../documentation."
 
 pickle:
 	mkdir -p ../../documentation/pickle ../../documentation/doctrees
 	$(SPHINXBUILD) -b pickle $(ALLSPHINXOPTS) ../../documentation/pickle
 	@echo
 	@echo "Build finished; now you can process the pickle files or run"
-	@echo "  sphinx-web ../userdoc/pickle"
+	@echo "  sphinx-web ../../documentation/pickle"
 	@echo "to start the sphinx-web server."
 
 web: pickle
 
 htmlhelp:
 	mkdir -p ../../documentation ../../documentation/doctrees
-	$(SPHINXBUILD) -b htmlhelp $(ALLSPHINXOPTS) ../userdoc
+	$(SPHINXBUILD) -b htmlhelp $(ALLSPHINXOPTS) ../../documentation
 	@echo
 	@echo "Build finished; now you can run HTML Help Workshop with the" \
-	      ".hhp project file in ../userdoc."
+	      ".hhp project file in ../../documentation."
 
 latex:
 	mkdir -p ../../documentation/latex ../../documentation/doctrees
 	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) ../../documentation/latex
 	@echo
-	@echo "Build finished; the LaTeX files are in ../userdoc/latex."
+	@echo "Build finished; the LaTeX files are in ../../documentation/latex."
 	@echo "Run \`make all-pdf' or \`make all-ps' in that directory to" \
 	      "run these through (pdf)latex."
 
 changes:
-	mkdir -p ../userdoc/changes ../userdoc/doctrees
-	$(SPHINXBUILD) -b changes $(ALLSPHINXOPTS) ../userdoc/changes
+	mkdir -p ../../documentation/changes ../../documentation/doctrees
+	$(SPHINXBUILD) -b changes $(ALLSPHINXOPTS) ../../documentation/changes
 	@echo
-	@echo "The overview file is in ../userdoc/changes."
+	@echo "The overview file is in ../../documentation/changes."
 
 linkcheck:
-	mkdir -p ../userdoc/linkcheck ../userdoc/doctrees
-	$(SPHINXBUILD) -b linkcheck $(ALLSPHINXOPTS) ../userdoc/linkcheck
+	mkdir -p ../../documentation/linkcheck ../../documentation/doctrees
+	$(SPHINXBUILD) -b linkcheck $(ALLSPHINXOPTS) ../../documentation/linkcheck
 	@echo
 	@echo "Link check complete; look for any errors in the above output " \
-	      "or in ../userdoc/linkcheck/output.txt."
+	      "or in ../../documentation/linkcheck/output.txt."
