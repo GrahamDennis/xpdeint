@@ -2,17 +2,26 @@
 
 Advanced Topics
 ===============
+
+This section has further details on some important topics.
+
+:ref:`Importing` (importing data into XMDS2, and data formats used in the export)
+
+:ref:`Convolutions` (extra information on the Fourier transforms used in XMDS2, and applications to defining convolutions)
+
+.. _Importing:
+
 Importing data
 --------------
 
-There are many cases where it is advantageous to import previously acquired data into xpdeint. For example, the differential equation you wish to solve may depend on a complicated functional form, which is more easily obtained via an analytical package such as Mathematica or Maple. Furthermore, importing data from another source can be quicker than needlessly performing calculations in xpdeint. In this tutorial, we shall consider an example of importing into xpdeint a function generated in Mathematica, version 6.0. Note, however, that in order to do this it is required that hdf5 is installed (see http://www.hdfgroup.org/HDF5/).
+There are many cases where it is advantageous to import previously acquired data into XMDS2. For example, the differential equation you wish to solve may depend on a complicated functional form, which is more easily obtained via an analytical package such as Mathematica or Maple. Furthermore, importing data from another source can be quicker than needlessly performing calculations in XMDS2. In this tutorial, we shall consider an example of importing into XMDS2 a function generated in Mathematica, version 6.0. Note, however, that in order to do this it is required that hdf5 is installed (see http://www.hdfgroup.org/HDF5/).
 
-Suppose we want to import the following function into xpdeint:
+Suppose we want to import the following function into XMDS2:
 
 .. math::
     f(x) = x^2
 
-The first step is to create an hdf5 file, from xpdeint, which specifies the dimensions of the grid for the x dimension. Create and save a new xpdeint file. For the purposes of this tutorial we shall call it "grid_specifier.xmds" with name "grid_specifier". Within this file, enter the following "dummy" vector - which we shall call "gen_dummy" - which depends on the x dimension:
+The first step is to create an hdf5 file, from XMDS2, which specifies the dimensions of the grid for the x dimension. Create and save a new XMDS2 file. For the purposes of this tutorial we shall call it "grid_specifier.xmds" with name "grid_specifier". Within this file, enter the following "dummy" vector - which we shall call "gen_dummy" - which depends on the x dimension:
 
 .. code-block:: xpdeint
 
@@ -25,7 +34,7 @@ The first step is to create an hdf5 file, from xpdeint, which specifies the dime
       </initialisation>
     </vector>
 
-What "dummy" is is not actually important. It is only necessary that it is a function of :math:`x`. However, it is important that the domain and lattice for the :math:`x` dimension are identical to those in the xpdeint you plan to import the function into. We output the following xsil file (in hdf5 format) by placing a breakpoint in the sequence block as follows:
+What "dummy" is is not actually important. It is only necessary that it is a function of :math:`x`. However, it is important that the domain and lattice for the :math:`x` dimension are identical to those in the XMDS2 you plan to import the function into. We output the following xsil file (in hdf5 format) by placing a breakpoint in the sequence block as follows:
 
 .. code-block:: xpdeint
 
@@ -36,7 +45,7 @@ What "dummy" is is not actually important. It is only necessary that it is a fun
           </dependencies>
       </breakpoint>
 
-In terminal, compile the file "grid_specifier.xmds" in xpdeint and run the c code as usual. This creates two files - "grid.xsil" and "grid.h5". The file "grid.h5" contains the list of points which make up the grids for the x dimensions. This data can now be used to ensure that the function :math:`f(x)` which we will import into xpdeint is compatible with the the specified grid in your primary xpdeint file.
+In terminal, compile the file "grid_specifier.xmds" in XMDS2 and run the c code as usual. This creates two files - "grid.xsil" and "grid.h5". The file "grid.h5" contains the list of points which make up the grids for the x dimensions. This data can now be used to ensure that the function :math:`f(x)` which we will import into XMDS2 is compatible with the the specified grid in your primary XMDS2 file.
 
 In order to read the "grid.h5" data into Mathematica version 6.0, type the following command into terminal:.. code-block::
 
@@ -92,16 +101,16 @@ For the example grid mentioned above, calling "func" gives the following list:
   930.25, 961., 992.25}
   
   
-The next step is to export the list "func" as an h5 file that xpdeint can read. This is done by typing the following command into a Mathematica cell:
+The next step is to export the list "func" as an h5 file that XMDS2 can read. This is done by typing the following command into a Mathematica cell:
   
 .. code-block:: none
   
    SetDirectory[NotebookDirectory[]];
    Export["func.h5", {func, x1}, {"Datasets", { "function_x", "x"}}]
    
-In the directory containing the notebook "grid.nb" you should now see the file "func.h5". This file essentially contains the list ``{func, x1}``. However, the hdf5 format stores func and x1 as separate entities called "Datasets". For importation into xpdeint it is necessary that these datasets are named. This is precisely what the segment ``{"Datasets", { "function_x", "x"}}`` in the above Mathematica command does. The dataset corresponding to the grid x1 needs to be given the name of the dimension that will be used in xpdeint - in our case this is "x". It does not matter what the name of the dataset corresponding to the list "func" is; in our case it is "function_x". 
+In the directory containing the notebook "grid.nb" you should now see the file "func.h5". This file essentially contains the list ``{func, x1}``. However, the hdf5 format stores func and x1 as separate entities called "Datasets". For importation into XMDS2 it is necessary that these datasets are named. This is precisely what the segment ``{"Datasets", { "function_x", "x"}}`` in the above Mathematica command does. The dataset corresponding to the grid x1 needs to be given the name of the dimension that will be used in XMDS2 - in our case this is "x". It does not matter what the name of the dataset corresponding to the list "func" is; in our case it is "function_x". 
 
-The final step is to import the file "func.h5" into your primary xpdeint file. This data will be stored as a vector called "gen_function_x", in component "function_x".
+The final step is to import the file "func.h5" into your primary XMDS2 file. This data will be stored as a vector called "gen_function_x", in component "function_x".
 
 .. code-block:: xpdeint
 
@@ -119,7 +128,7 @@ The situation is slightly more complicated if the function you wish to import de
 .. math::
     g(x,y) = x \sin(y)
 
-As for the single dimensional case, we need to export an hdf5 file from xpdeint which specifies the dimensions of the grid. As in the one dimensional case, this is done by creating a dummy vector which depends on all the relevant dimensions:
+As for the single dimensional case, we need to export an hdf5 file from XMDS2 which specifies the dimensions of the grid. As in the one dimensional case, this is done by creating a dummy vector which depends on all the relevant dimensions:
 
 .. code-block:: xpdeint
 
@@ -134,7 +143,7 @@ As for the single dimensional case, we need to export an hdf5 file from xpdeint 
     
 and exporting it as shown above.
 
-After importing the grid data into Mathematica, define the multi-dimensional function which you wish to import into xpdeint:
+After importing the grid data into Mathematica, define the multi-dimensional function which you wish to import into XMDS2:
 
 .. code-block:: none
 
@@ -153,13 +162,14 @@ This function can be exported as an h5 file,
   SetDirectory[NotebookDirectory[]];
   Export["func.h5", {func, x1, y1}, {"Datasets", { "function_x", "x", "y"}}]
 
-and imported into xpdeint as outlined above.
+and imported into XMDS2 as outlined above.
 
+.. _Convolutions:
 
 Convolutions and Fourier transforms
 -----------------------------------
 
-When evaluating a numerical Fourier transform, xpdeint doesn't behave as expected. While many simulations have ranges in their spatial coordinate (here assumed to be x) that range from some negative value :math:`x_\text{min}` to some positive value :math:`x_\text{max}`, the Fourier transform used in xpdeint treats all spatial coordinates as starting at zero. The result of this is that a phase factor of the form :math:`e^{-i x_\text{min} k}` is applied to the Fourier space functions after all forward (from real space to Fourier space) Fourier transforms, and its conjugate is applied to the Fourier space functions before all backward (from Fourier space to real space) Fourier transforms.
+When evaluating a numerical Fourier transform, XMDS2 doesn't behave as expected. While many simulations have ranges in their spatial coordinate (here assumed to be x) that range from some negative value :math:`x_\text{min}` to some positive value :math:`x_\text{max}`, the Fourier transform used in XMDS2 treats all spatial coordinates as starting at zero. The result of this is that a phase factor of the form :math:`e^{-i x_\text{min} k}` is applied to the Fourier space functions after all forward (from real space to Fourier space) Fourier transforms, and its conjugate is applied to the Fourier space functions before all backward (from Fourier space to real space) Fourier transforms.
 
 The standard Fourier transform is
 
@@ -167,13 +177,13 @@ The standard Fourier transform is
 
 	\mathcal{F}\left[f(x)\right](k) = \frac{1}{2\pi}\int_{x_\text{min}}^{x_\text{max}} f(x) e^{-i x k} dx
 
-The xpdeint Fourier transform is
+The XMDS2 Fourier transform is
 
 .. math::
 	\tilde{\mathcal{F}}\left[f(x)\right](k) &= \frac{1}{2\pi}\int_{x_\text{min}}^{x_\text{max}} f(x) e^{-i (x+ x_\text{min}) k} dx \\
 	&= e^{-i x_\text{min} k} \mathcal{F}\left[f(x)\right](k)
 
-When the number of forward Fourier transforms and backwards Fourier transforms are unequal a phase factor is required. Some examples of using Fourier transforms in xpdeint are shown below.
+When the number of forward Fourier transforms and backwards Fourier transforms are unequal a phase factor is required. Some examples of using Fourier transforms in XMDS2 are shown below.
 
 Example 1
 ^^^^^^^^^

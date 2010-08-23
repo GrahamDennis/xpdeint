@@ -18,9 +18,9 @@ Contents:
    
    installation
    
-   reference
-   
    advanced_topics
+   
+   reference
    
    faq
    
@@ -34,8 +34,6 @@ Contents:
    
 Indices and tables
 ==================
-
-Testing math :math:`a^2`
 
 * :ref:`genindex`
 * :ref:`modindex`
