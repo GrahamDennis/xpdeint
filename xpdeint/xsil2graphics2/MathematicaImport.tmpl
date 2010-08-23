@@ -14,7 +14,7 @@ Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 @def printMathematicaListOrElement(listOrElement)
   @# This is a function to turn an array into a Mathematica list.  Called recursively, and assumes the elements are floats or lists.
   @if isinstance(listOrElement,float):
-$listOrElement@slurp
+${format(float(listOrElement),'f')}@slurp
   @else:
 {${', '.join([$printMathematicaListOrElement(element) for element in listOrElement])}}@slurp
   @end if

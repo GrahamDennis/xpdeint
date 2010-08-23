@@ -102,13 +102,13 @@ Build instructions:
 11. To build the user documentation, you first need to install sphinx, either via your package manager or:
     sudo easy_install Sphinx
 
-    Then, to build the documentation, in the xpdeint/userdoc/ directory run:
+    Then, to build the documentation, in the xpdeint/admin/userdoc-source/ directory run:
     make html
 
-    If this results in an error, you may need run
+    If this results in an error, you may need to run
     sudo ./setup.py develop
 
-    The generated html documentation can now be found at xpdeint/userdoc/build/html/index.html
+    The generated html documentation can now be found at xpdeint/documentation/index.html
 
 
 Highly suggested (but optional) installs:

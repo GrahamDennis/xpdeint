@@ -69,11 +69,11 @@ class _ComputedVector (VectorElement):
     super(_ComputedVector, self).preflight()
     
     evaluationCodeBlock = self.codeBlocks['evaluation']
-    if evaluationCodeBlock.dependenciesEntity and evaluationCodeBlock.dependenciesEntity.xmlElement.hasAttribute('fourier_space'):
+    if evaluationCodeBlock.dependenciesEntity and evaluationCodeBlock.dependenciesEntity.xmlElement.hasAttribute('basis'):
       dependenciesXMLElement = evaluationCodeBlock.dependenciesEntity.xmlElement
       evaluationCodeBlock.basis = \
         evaluationCodeBlock.field.basisFromString(
-          dependenciesXMLElement.getAttribute('fourier_space'),
+          dependenciesXMLElement.getAttribute('basis'),
           xmlElement = dependenciesXMLElement
         )
     if not evaluationCodeBlock.basis:

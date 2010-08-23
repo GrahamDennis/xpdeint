@@ -139,7 +139,7 @@ VectorCommon =
 
 
 Dependencies = element dependencies {
-    attribute fourier_space { text }?
+    attribute basis { text }?
     , text
 }
 
@@ -214,7 +214,7 @@ Operators = element operators {
     , (
         Operator
         | element integration_vectors {
-            attribute fourier_space { text }?
+            attribute basis { text }?
             , text
           }
         | Dependencies
@@ -231,7 +231,7 @@ Operator = element operator {
 IPEXOperatorContents = 
     attribute kind { "ip" | "ex" }
     , attribute constant { Bool }?
-    , attribute fourier_space { text }?
+    , attribute basis { text }?
     , attribute type { text }?
     , element operator_names { text }
     , Dependencies?
@@ -281,7 +281,7 @@ Output = element output {
                 | element dimension {
                     attribute name { text }
                     , attribute lattice { text }?
-                    , attribute fourier_space { text }?
+                    , attribute basis { text }?
                     , empty
                 }
                 | element moments { text }

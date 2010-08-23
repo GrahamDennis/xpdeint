@@ -12,10 +12,6 @@
     <error_check />
     <bing />
     <openmp />
-    <stochastic>
-      <noise kind="gaussian" prefix="n" num="1" seed="157 9348 234"/>
-      <!-- If there is no seed attribute then seeds will be chosen randomly at run-time -->
-    </stochastic>
   </features>
   
   <geometry>
@@ -25,11 +21,13 @@
     </transverse_dimensions>
   </geometry>
   
+  <noise_vector name="noises" kind="wiener" type="real" method="posix" seed="157 9348 234">
+        <components>n_1</components>
+  </noise_vector>
+    
   <vector name="main" type="complex">
-    <components>
-      z
-    </components>
-    <initialisation noises="">
+    <components> z </components>
+    <initialisation>
       <![CDATA[
         z = 1.0;
       ]]>
@@ -37,9 +35,10 @@
   </vector>
   
   <sequence>
-    <integrate algorithm="ARK89" interval="10" steps="1000" tolerance="1e-8">
+    <integrate algorithm="SI" interval="10" steps="1000">
       <samples>100</samples>
-      <operators noises="n">
+      <operators>
+        <dependencies>noises</dependencies>
         <integration_vectors>main</integration_vectors>
         <![CDATA[
           dz_dt(j => j) = i*z*n_1;

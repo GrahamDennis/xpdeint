@@ -283,7 +283,7 @@
   <define name="Dependencies">
     <element name="dependencies">
       <optional>
-        <attribute name="fourier_space"/>
+        <attribute name="basis"/>
       </optional>
       <text/>
     </element>
@@ -423,7 +423,7 @@
           <ref name="Operator"/>
           <element name="integration_vectors">
             <optional>
-              <attribute name="fourier_space"/>
+              <attribute name="basis"/>
             </optional>
             <text/>
           </element>
@@ -455,7 +455,7 @@
       </attribute>
     </optional>
     <optional>
-      <attribute name="fourier_space"/>
+      <attribute name="basis"/>
     </optional>
     <optional>
       <attribute name="type"/>
@@ -546,7 +546,7 @@
                     <attribute name="lattice"/>
                   </optional>
                   <optional>
-                    <attribute name="fourier_space"/>
+                    <attribute name="basis"/>
                   </optional>
                   <empty/>
                 </element>
