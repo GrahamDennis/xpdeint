@@ -77,7 +77,7 @@ Build instructions:
    If you want to install it into your home directory, type "./setup.py develop --prefix=~"
 
 7. a) Test XMDS2 by running (in the xpdeint/xpdeint/examples/ directory):
-      xpdeint kubo.xmds
+      xmds2 kubo.xmds
 7. b) If you have 'numpy' installed, type './run_tests.py' in the xpdeint/ directory
       to run all the tests
 
