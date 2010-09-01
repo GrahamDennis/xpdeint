@@ -48,8 +48,7 @@
   
   <output format="ascii">
     <group>
-      <sampling initial_sample="yes">
-        <dimension name="j" />
+      <sampling basis="j" initial_sample="yes">
         <moments>xR</moments>
         <dependencies>main</dependencies>
         <![CDATA[

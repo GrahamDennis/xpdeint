@@ -129,9 +129,7 @@
   </sequence>
   <output format="binary">
     <group>
-      <sampling initial_sample="no">
-        <dimension name="r" />
-        <dimension name="z" />
+      <sampling basis="r z" initial_sample="no">
         <moments>norm_dens</moments>
         <dependencies>wavefunction normalisation</dependencies>
         <![CDATA[

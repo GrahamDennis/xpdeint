@@ -66,7 +66,7 @@
     <integrate algorithm="RK4" interval="time_interval" steps="24">
       <samples>24</samples>
       <operators>
-        <operator kind="ip" constant="yes" fourier_space="x ky">
+        <operator kind="ip" constant="yes" basis="x ky">
           <operator_names>L</operator_names>
           <![CDATA[
             L = -0.02*ky*ky;
@@ -81,11 +81,7 @@
   </sequence>
   <output format="binary" filename="diffusion_arguments.xsil">
     <group>
-      <sampling initial_sample="yes">
-        <!-- Any dimension not mentioned is assumed to be in real space and its middle element will be sampled -->
-        <!-- Note that dimensions can be in any order. Not that I can think of a reason why you would want to do that -->
-        <dimension name="x" lattice="0" fourier_space="x" />
-        <dimension name="y" lattice="128" fourier_space="y" />
+      <sampling basis="x(0) y" initial_sample="yes">
         <moments>dens</moments>
         <dependencies>main</dependencies>
         <![CDATA[

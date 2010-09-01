@@ -55,7 +55,7 @@
     <!-- If the moments are of type 'real', then all dimensions that aren't integrated
          must be evaluated in 'x' space. -->
     <evaluation>
-      <dependencies fourier_space="kx ky">integrated_u main</dependencies>
+      <dependencies basis="kx ky">integrated_u main</dependencies>
       <![CDATA[
         moment = mod2(u);
       ]]>
@@ -71,7 +71,7 @@
         <!-- If the moments are of type 'real', then all dimensions that aren't integrated
              must be evaluated in 'x' space. -->
         <evaluation>
-          <dependencies fourier_space="kx ky">integrated_u main</dependencies>
+          <dependencies basis="kx ky">integrated_u main</dependencies>
           <![CDATA[
             sparemoment = mod2(u);
           ]]>
@@ -113,13 +113,13 @@
   
   <output format="binary" filename="vibstring3.xsil">
     <group>
-      <sampling initial_sample="yes">
+      <sampling basis="x y" initial_sample="yes">
         <computed_vector name="filter3" dimensions="" type="complex">
           <components>sparemomentagain</components>
           <!-- If the moments are of type 'real', then all dimensions that aren't integrated
                must be evaluated in 'x' space. -->
           <evaluation>
-            <dependencies fourier_space="kx ky">integrated_u main</dependencies>
+            <dependencies basis="kx ky">integrated_u main</dependencies>
             <![CDATA[
               sparemomentagain = mod2(u);
             ]]>
@@ -131,7 +131,6 @@
             L = -T*kx*kx/mu;
           ]]>
         </operator>
-        <dimension name="x" lattice="100" fourier_space="x" />
         <moments>amp ke</moments>
         <dependencies>main filter1</dependencies>
         <![CDATA[

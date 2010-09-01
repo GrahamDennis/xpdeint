@@ -37,7 +37,7 @@
     <integrate algorithm="ARK45" interval="10.0" steps="2400" tolerance="1e-5">
       <samples>24</samples>
       <operators>
-        <operator kind="ip" constant="yes" fourier_space="x ky" type="real">
+        <operator kind="ip" constant="yes" basis="x ky" type="real">
           <operator_names>L</operator_names>
           <![CDATA[
             L = -0.02*ky*ky;
@@ -53,11 +53,7 @@
   
   <output format="binary" filename="diffusion.xsil">
     <group>
-      <sampling initial_sample="yes">
-        <!-- Any dimension not mentioned is assumed to be in real space and its middle element will be sampled -->
-        <!-- Note that dimensions can be in any order. Not that I can think of a reason why you would want to do that -->
-        <dimension name="x" lattice="4" fourier_space="x" />
-        <dimension name="y" lattice="8" fourier_space="y" />
+      <sampling basis="x(4) y(8)" initial_sample="yes">
         <moments>dens empty</moments>
         <dependencies>main</dependencies>
         <![CDATA[

@@ -92,9 +92,7 @@
   </sequence>
   <output format="hdf5">
     <group>
-      <sampling initial_sample="no">
-        <dimension name="r" />
-        <dimension name="z" />
+      <sampling basis="r z" initial_sample="no">
         <moments>dens</moments>
         <dependencies>wavefunction</dependencies>
         <![CDATA[

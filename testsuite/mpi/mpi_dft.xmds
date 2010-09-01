@@ -59,13 +59,13 @@
       <dependencies>main</dependencies>
     </breakpoint>
     <breakpoint filename="mpi_dft_kspace.xsil">
-      <dependencies fourier_space="ky kx">main</dependencies>
+      <dependencies basis="ky kx">main</dependencies>
     </breakpoint>
     <breakpoint filename="mpi_dft_kspace2.xsil">
-      <dependencies fourier_space="ky x">main</dependencies>
+      <dependencies basis="ky x">main</dependencies>
     </breakpoint>
     <breakpoint filename="mpi_dft_xspace2.xsil">
-      <dependencies fourier_space="y x">main</dependencies>
+      <dependencies basis="y x">main</dependencies>
     </breakpoint>
   </sequence>
   <output format="binary">

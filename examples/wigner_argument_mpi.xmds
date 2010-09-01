@@ -90,9 +90,7 @@
   
   <output format="hdf5" filename="wigner.xsil">
     <group>
-      <sampling initial_sample="yes">
-        <dimension name="x" fourier_space="no" />
-        <dimension name="y" fourier_space="no" />
+      <sampling basis="x y" initial_sample="yes">
         <moments>WR WI</moments>
         <dependencies>main</dependencies>
         <![CDATA[

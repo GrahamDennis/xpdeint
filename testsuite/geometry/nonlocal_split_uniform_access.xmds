@@ -69,8 +69,7 @@
   </sequence>
   <output format="binary">
     <group>
-      <sampling initial_sample="yes">
-        <dimension name="x" fourier_space="yes" lattice="256" />
+      <sampling basis="kx" initial_sample="yes">
         <moments>amp amp_reversed</moments>
         <dependencies>main</dependencies>
         <![CDATA[

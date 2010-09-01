@@ -139,8 +139,7 @@
   </sequence>
   <output format="hdf5">
     <group>
-      <sampling initial_sample="yes">
-        <dimension name="z" />
+      <sampling basis="z" initial_sample="yes">
         <moments>dens1 dens0</moments>
         <dependencies>wavefunction</dependencies>
         <![CDATA[
@@ -150,8 +149,7 @@
       </sampling>
     </group>
     <group>
-      <sampling initial_sample="yes">
-        <dimension name="z" fourier_space="yes" />
+      <sampling basis="kz" initial_sample="yes">
         <moments>dens1 dens0</moments>
         <dependencies>wavefunction</dependencies>
         <![CDATA[

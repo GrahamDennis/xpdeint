@@ -76,8 +76,7 @@
   </sequence>
   <output format="hdf5">
     <group>
-      <sampling initial_sample="yes">
-        <dimension name="y" />
+      <sampling basis="y" initial_sample="yes">
         <moments>dens</moments>
         <dependencies>wavefunction</dependencies>
         <![CDATA[

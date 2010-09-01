@@ -48,8 +48,7 @@
   </sequence>
   <output format="binary">
     <group>
-      <sampling initial_sample="yes">
-        <dimension name="j" lattice="0" />
+      <sampling basis="j(0)" initial_sample="yes">
         <moments>zR zI</moments>
         <dependencies>main</dependencies>
         <![CDATA[

@@ -47,7 +47,7 @@
       <computed_vector name="moment_creator" dimensions="" type="real">
         <components>moment</components>
         <evaluation>
-          <dependencies fourier_space="kx"> main </dependencies>
+          <dependencies basis="kx"> main </dependencies>
           <![CDATA[
             moment = mod2(u);
           ]]>
@@ -72,12 +72,7 @@
   </sequence>
   <output format="binary" filename="vibstring_dct.xsil">
     <group>
-      <sampling initial_sample="yes">
-        <!-- Any dimension not mentioned is assumed to be in real space and its middle element will be sampled -->
-        <!-- Note that this is different default behaviour to the filter operator. To integrate, put in a dimension -->
-        <!-- with zero lattice points. -->
-        <!-- Note that dimensions can be in any order. Not that I can think of a reason why you would want to do that -->
-        <dimension name="x" lattice="50" fourier_space="no" />
+      <sampling basis="x(50)" initial_sample="yes">
         <moments>amp</moments>
         <dependencies>main</dependencies>
         <![CDATA[
@@ -86,8 +81,7 @@
       </sampling>
     </group>
     <group>
-      <sampling initial_sample="no">
-        <dimension name="x" lattice="50" fourier_space="yes" />
+      <sampling basis="kx(50)" initial_sample="no">
         <moments>amp</moments>
         <dependencies>main</dependencies>
         <![CDATA[

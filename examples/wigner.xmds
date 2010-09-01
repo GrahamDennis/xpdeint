@@ -106,13 +106,7 @@
   
   <output format="binary" filename="wigner.xsil">
     <group>
-      <sampling initial_sample="yes">
-        <!-- Any dimension not mentioned is assumed to be in real space and its middle element will be sampled -->
-        <!-- Note that this is different default behaviour to the filter operator. To integrate, put in a dimension -->
-        <!-- with zero lattice points. -->
-        <!-- Note that dimensions can be in any order. Not that I can think of a reason why you would want to do that -->
-        <dimension name="x" fourier_space="no" />
-        <dimension name="y" fourier_space="no" />
+      <sampling basis="x y" initial_sample="yes">
         <moments>WR WI</moments>
         <dependencies>main</dependencies>
         <![CDATA[

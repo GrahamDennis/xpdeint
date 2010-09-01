@@ -53,7 +53,7 @@
   <computed_vector name="normalisation" dimensions="" type="real">
     <components> Ncalc </components>
     <evaluation>
-      <dependencies fourier_space="y">wavefunction</dependencies>
+      <dependencies basis="y">wavefunction</dependencies>
       <![CDATA[
         // Calculate the current normalisation of the wave function.
         Ncalc = mod2(phi);
@@ -102,15 +102,14 @@
     </integrate>
 
     <breakpoint filename="groundstate_break.xsil" format="ascii">
-      <dependencies fourier_space="ky">wavefunction </dependencies>
+      <dependencies basis="ky">wavefunction </dependencies>
     </breakpoint>
 
   </sequence>
 
   <output format="binary" filename="groundstate.xsil">
     <group>
-      <sampling initial_sample="yes">
-        <dimension name="y" />
+      <sampling basis="y" initial_sample="yes">
         <moments>norm_dens</moments>
         <dependencies>wavefunction normalisation</dependencies>
         <![CDATA[

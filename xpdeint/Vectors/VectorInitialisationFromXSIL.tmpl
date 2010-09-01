@@ -373,9 +373,10 @@ if (_inputfield${dimRep.loopIndex} < 0 || _inputfield${dimRep.loopIndex} >= _inp
   if (abs(_inputfield_${dimName} - ${dimName}) > 0.1*_dimDelta[${dimensionNumber}])
     // This only happens if your input field grid does not exactly match up with the simulation grid.
     // _LOG will cause the simulation to exit
+    @set dimRepTypeFormat = {'real': 'e', 'long': 'li'}[dimRep.type]
     _LOG(_ERROR_LOG_LEVEL, "The input field coordinate in the '$dimName' dimension does not match up with the field coordinate.\n"
-                           "${dimRep.loopIndex}: %li, ${dimName}: %e, _inputfield${dimRep.loopIndex}: %li, "
-                           "_inputfield_${dimName}: %e, d${dimName}: %e, diff/Delta: %e\n",
+                           "${dimRep.loopIndex}: %li, ${dimName}: %${dimRepTypeFormat}, _inputfield${dimRep.loopIndex}: %li, "
+                           "_inputfield_${dimName}: %e, d${dimName}: %${dimRepTypeFormat}, diff/Delta: %e\n",
                            ${dimRep.loopIndex}, ${dimName}, _inputfield${dimRep.loopIndex},
                            _inputfield_${dimName}, d${dimName}, abs(_inputfield_${dimName} - ${dimName})/_dimDelta[$dimensionNumber]);
 }

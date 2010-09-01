@@ -51,9 +51,7 @@
   
   <output format="binary">
     <group>
-      <sampling initial_sample="yes">
-        <dimension name="x" lattice="50" fourier_space="no" />
-        <dimension name="y" lattice="0" fourier_space="no" />
+      <sampling basis="x(50) y(0)" initial_sample="yes">
         <moments>amp</moments>
         <dependencies>oned twod</dependencies>
         <![CDATA[

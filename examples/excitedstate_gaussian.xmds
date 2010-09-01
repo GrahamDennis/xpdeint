@@ -60,7 +60,7 @@
       Ncalc
     </components>
     <evaluation>
-      <dependencies fourier_space="y">wavefunction</dependencies>
+      <dependencies basis="y">wavefunction</dependencies>
       <![CDATA[
         // Calculate the current normalisation of the wave function.
         Ncalc = mod2(phi1);
@@ -117,8 +117,7 @@
   </sequence>
   <output format="hdf5">
     <group>
-      <sampling initial_sample="no">
-        <dimension name="y" />
+      <sampling basis="y" initial_sample="no">
         <moments>dens</moments>
         <dependencies>wavefunction</dependencies>
         <![CDATA[

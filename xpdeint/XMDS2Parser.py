@@ -1944,6 +1944,12 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     
     geometryTemplate = self.globalNameSpace['geometry']
     
+    geometryDimRepNameMap = {}
+    for dim in geometryTemplate.transverseDimensions: # Skip the propagation dimension
+        for dimRep in dim.representations:
+            geometryDimRepNameMap[dimRep.name] = dim
+    
+    
     momentGroupElements = outputElement.getChildElementsByTagName('group', optional=True)
     for momentGroupNumber, momentGroupElement in enumerate(momentGroupElements):
       samplingElement = momentGroupElement.getChildElementByTagName('sampling')
@@ -1969,7 +1975,6 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
           momentGroupTemplate.requiresInitialSample = True
           sampleCount = 1
       
-      sampleBasis = []
       transformMultiplexer = self.globalNameSpace['features']['TransformMultiplexer']
       samplingDimension = Dimension(name = self.globalNameSpace['globalPropagationDimension'],
                                     transverse = False,
@@ -1986,118 +1991,85 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       
       momentGroupTemplate.outputField.dimensions = [samplingDimension]
       
-      dimensionElements = samplingElement.getChildElementsByTagName('dimension', optional=True)
-      
-      dimensionElementTuples = []
-      
-      for dimensionElement in dimensionElements:
-        if not dimensionElement.hasAttribute('name') or not dimensionElement.getAttribute('name').strip():
-          raise ParserException(dimensionElement, 
-                  'Dimension element needs a name attribute corresponding to a dimension name')
-        
-        dimensionName = dimensionElement.getAttribute('name').strip()
-        
-        if not geometryTemplate.hasDimensionName(dimensionName):
-          raise ParserException(dimensionElement, 
-                  "Dimension name '%(dimensionName)s' doesn't correspond to a previously-defined dimension." % locals())
-        
-        geometryDimension = geometryTemplate.dimensions[geometryTemplate.indexOfDimensionName(dimensionName)]
-        
-        fourierSpace = False
-        if dimensionElement.hasAttribute('basis') and geometryDimension.isTransformable:
-          spaceString = dimensionElement.getAttribute('basis').strip().lower()
-          fourierSpace = None
-          if spaceString == 'yes':
-            fourierSpace = True
-          elif spaceString == 'no':
-            fourierSpace = False
-          else:
-            for dimRep in geometryDimension.representations:
-              if dimRep.name == spaceString:
-                fourierSpace = dimRep.tag
-                break
-          if fourierSpace == None:
-            raise ParserException(
-              dimensionElement,
-              "basis attribute for dimension '%s' must be 'yes', 'no' or one of %s."
-              % (dimensionName, ', '.join(set([dimRep.name for dimRep in geometryDimension.representations])))
-            )
-        
-        dimensionElementTuples.append((dimensionElement, geometryDimension))
-        
-        if isinstance(fourierSpace, bool):
-          if fourierSpace:
-            tagName = 'spectral'
-          else:
-            tagName = 'coordinate'
-        else:
-          tagName = fourierSpace.tagName
-        
-        sampleBasis.append(geometryDimension.firstDimRepWithTagName(tagName).canonicalName)
-      
-      sampleBasis = tuple(sampleBasis)
+      basisString = samplingElement.getAttribute('basis') if samplingElement.hasAttribute('basis') else ''
+      basisStringComponents = basisString.split()
       dimensionsNeedingLatticeUpdates = {}
+      sampleBasis = []
+      singlePointSamplingBasis = []
       
-      for dimensionElement, geometryDimension in dimensionElementTuples:
+      for component in basisStringComponents:
+        # Each component of the basis string is to be of the form 'dimRepName(numberOfPoints)'
+        # where dimRepName is a name of a dimension in a basis,
+        #       numberOfPoints is a non-negative integer,
+        # and where the '(numberOfPoints)' part is optional.  If not provided, 
+        # it defaults to sampling all points in that dimension.
+        dimRepName, sep, latticeString = component.partition('(')
+        sampleBasis.append(dimRepName)
+        latticeString = latticeString.strip(')')
+        if not dimRepName in geometryDimRepNameMap:
+            raise ParserException(samplingElement,
+                      "'%(dimRepName)s' is not recognised as a valid basis specifier." % locals())
+        geometryDimension = geometryDimRepNameMap[dimRepName]
+        dimRep = [rep for rep in geometryDimension.representations if rep.name == dimRepName][0]
+        lattice = dimRep.lattice # Default
+        if latticeString:
+          try:
+            lattice = int(latticeString)
+          except ValueError, err:
+            raise ParserException(samplingElement,
+                        "Unable to interpret '%(latticeString)s' as an integer." % locals())
+        if not lattice >= 0:
+          raise ParserException(samplingElement,
+                      "Lattice size '%(latticeString)s' must be positive." % locals())
         
-        dimRep = geometryDimension.inBasis(sampleBasis)
+        geometryLattice = dimRep.lattice
+        if lattice > geometryLattice:
+          raise ParserException(samplingElement,
+                      "Can't sample more points in dimension '%(dimRepName)s' than there are points in the full dimension.\n"
+                      "%(lattice)i > %(geometryLattice)i." % locals())
+        if issubclass(dimRep.tag, dimRep.tagForName('coordinate')):
+          # Coordinate space: the number of sample points must divide the number of geometry points
+          if lattice > 0 and not (geometryLattice % lattice) == 0:
+            raise ParserException(samplingElement,
+                      "The number of sampling lattice points (%(lattice)i) must divide the number "
+                      "of lattice points on the simulation grid (%(geometryLattice)i)." % locals())
+          # For spectral / auxiliary space, the number of lattice points just needs to be smaller than
+          # the total number of points, something we have already checked.
         
-        lattice = dimRep.lattice
-        
-        if dimensionElement.hasAttribute('lattice'):
-          latticeString = dimensionElement.getAttribute('lattice').strip()
-          if not latticeString:
-            raise ParserException(dimensionElement, "If the lattice attribute is present, it must not be empty.")
-          
-          if not latticeString.isdigit():
-            raise ParserException(dimensionElement,
-                    "Unable to interpret '%(latticeString)s' as an integer" % locals())
-          
-          lattice = int(latticeString)
-          geometryLattice = int(dimRep.lattice)
-          
-          if lattice > geometryLattice:
-            raise ParserException(dimensionElement, 
-                    "Can't sample more points than there are points in the original dimension.")
-          
-          if not fourierSpace:
-            if lattice > 1 and not (geometryLattice % lattice) == 0:
-              raise ParserException(dimensionElement,
-                      "The number of sampling lattice points must divide the number "
-                      "of lattice points on the simulation grid.")
-          # If it is in fourier space, then all we require is that the number of points
-          # is less than the total number of points, something that we have already checked.
-          
         if lattice > 1:
           outputFieldDimension = geometryDimension.copy(parent = outputFieldTemplate)
-          if not dimRep.lattice == lattice:
+          if not geometryLattice == lattice:
             dimensionsNeedingLatticeUpdates[outputFieldDimension.name] = lattice
           samplingFieldTemplate.dimensions.append(outputFieldDimension.copy(parent = samplingFieldTemplate))
           outputFieldTemplate.dimensions.append(outputFieldDimension)
-          
         elif lattice == 1:
-          # In this case, we don't want the dimension in either the moment group, or the sampling field
-          pass
+          # In this case, we don't want the dimension in either the moment group, or the sampling field.
+          # But we do want it in the sampling basis, we have to add it at the end
+          singlePointSamplingBasis.append(dimRepName)
         elif lattice == 0:
           # In this case, the dimension only belongs to the sampling field because we are integrating over it.
           # Note that we previously set the lattice of the dimension to be the same as the number
           # of points in this dimension according to the geometry element.
           
-          samplingFieldTemplate.dimensions.append(geometryDimension.copy(parent=samplingFieldTemplate))
+          samplingFieldTemplate.dimensions.append(geometryDimension.copy(parent = samplingFieldTemplate))
+          
       
       samplingFieldTemplate.sortDimensions()
       outputFieldTemplate.sortDimensions()
-      sampleBasis = samplingFieldTemplate.basisForBasis(sampleBasis)
+      
+      driver = self.globalNameSpace['features']['Driver']
+      
+      sampleBasis = samplingFieldTemplate.basisForBasis(driver.canonicalBasisForBasis(tuple(sampleBasis)))
       outputBasis = momentGroupTemplate.outputField.basisForBasis(
         (propagationDimRep.canonicalName,) + sampleBasis
       )
+      momentGroupTemplate.singlePointSamplingBasis = driver.canonicalBasisForBasis(tuple(singlePointSamplingBasis))
       
       if formatName == 'hdf5':
         # HDF5 doesn't like writing out data when the order of dimensions in the file and
         # in memory aren't the same. It's slow. So we make sure that we sample in the same
         # order that we would write out to file. But only for HDF5 as this requires extra
         # MPI Transpose operations at each sample.
-        driver = self.globalNameSpace['features']['Driver']
         sampleBasis = driver.canonicalBasisForBasis(sampleBasis, noTranspose = True)
         outputBasis = driver.canonicalBasisForBasis(outputBasis, noTranspose = True)
       
