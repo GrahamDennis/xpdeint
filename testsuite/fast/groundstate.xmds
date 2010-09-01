@@ -55,7 +55,7 @@
   <computed_vector name="normalisation" dimensions="" type="real">
     <components> Ncalc </components>
     <evaluation>
-      <dependencies fourier_space="y">wavefunction</dependencies>
+      <dependencies basis="y">wavefunction</dependencies>
       <![CDATA[
         // Calculate the current normalisation of the wave function.
         Ncalc = norm(phi);
@@ -93,10 +93,10 @@
       <dependencies>wavefunction potential</dependencies>
     </breakpoint>
   </sequence>
+  
   <output format="binary">
     <group>
-      <sampling initial_sample="no">
-        <dimension name="y" />
+      <sampling basis="y" initial_sample="no">
         <moments>dens</moments>
         <dependencies>wavefunction</dependencies>
         <![CDATA[
@@ -114,9 +114,8 @@
       </sampling>
     </group>
     <group>
-      <sampling initial_sample="no">
+      <sampling basis="y(0)" initial_sample="no">
         <moments>N</moments>
-        <dimension name="y" lattice="0" />
         <dependencies>wavefunction</dependencies>
         <![CDATA[
           N = norm(phi);

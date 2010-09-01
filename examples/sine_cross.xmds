@@ -105,8 +105,7 @@
   
   <output format="ascii" filename="sine_cross.xsil">
     <group>
-      <sampling initial_sample="no">
-        <dimension name="t" />
+      <sampling basis="t" initial_sample="no">
         <moments>error_u error_v error_w error_x</moments>
         <dependencies>cross</dependencies>
         <![CDATA[

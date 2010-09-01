@@ -59,7 +59,7 @@
     <integrate algorithm="RK4" tolerance="1e-6" interval="1e-3" steps="400">
       <samples>10 1 10</samples>
       <operators>
-        <operator kind="ip" constant="yes" fourier_space="nx ny">
+        <operator kind="ip" constant="yes" basis="nx ny">
           <operator_names>L</operator_names>
           <![CDATA[
             L = -i*(nx + ny + 1.0)*omega;
@@ -74,9 +74,7 @@
   </sequence>
   <output format="binary">
     <group>
-      <sampling initial_sample="yes">
-        <dimension name="x" fourier_space="no" />
-        <dimension name="y" fourier_space="no" />
+      <sampling basis="x y" initial_sample="yes">
         <moments>dens</moments>
         <dependencies>main</dependencies>
         <![CDATA[
@@ -86,9 +84,7 @@
       </sampling>
     </group>
     <group>
-      <sampling initial_sample="no">
-        <dimension name="x" fourier_space="yes" />
-        <dimension name="y" fourier_space="yes" />
+      <sampling basis="kx ky" initial_sample="no">
         <moments>dens</moments>
         <dependencies>main</dependencies>
         <![CDATA[
@@ -98,9 +94,7 @@
       </sampling>
     </group>
     <group>
-      <sampling initial_sample="yes">
-        <dimension name="x" lattice="0" />
-        <dimension name="y" lattice="0" />
+      <sampling basis="x(0) y(0)" initial_sample="yes">
         <moments>mean_x mean_sigmay</moments>
         <dependencies>main normalisation</dependencies>
         <![CDATA[

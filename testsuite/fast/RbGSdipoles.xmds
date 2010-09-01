@@ -113,7 +113,7 @@
   <computed_vector type="complex" name="bilinear" dimensions="x y z">
     <components>b11 bm1m1 b10 b01 bm10 b0m1</components>
     <evaluation>
-      <dependencies fourier_space="x y z">wavefunction</dependencies>
+      <dependencies basis="x y z">wavefunction</dependencies>
         <![CDATA[
           b11 = mod2(phi1);
           bm1m1 = mod2(phim1);
@@ -145,7 +145,7 @@
   <computed_vector name="dipoles" type="complex" dimensions="x y z">
     <components>Dz Dplus Dminus</components>
     <evaluation>
-      <dependencies fourier_space="kx ky kz">DipoleTerms bilinear</dependencies>
+      <dependencies basis="kx ky kz">DipoleTerms bilinear</dependencies>
       <![CDATA[
         Dz = DA*(b11 - bm1m1) - a3dSqrt2 * DC*(b10 + b0m1) - a3dSqrt2 * DCstar*(bm10 + b01);
         Dplus = DB*(b10 + b0m1) -1.5 * DEstar*(b01 + bm10) - a3dSqrt2 * DCstar*(b11 - bm1m1);
@@ -161,7 +161,7 @@
       Ncalc
     </components>
     <evaluation>
-    <dependencies fourier_space="x y z">wavefunction</dependencies>
+    <dependencies basis="x y z">wavefunction</dependencies>
       <![CDATA[
         // Calculate the current normalisation of the wave function.
         Ncalc = mod2(phi1) + mod2(phi0) + mod2(phim1);
@@ -232,10 +232,7 @@
   
   <output format="binary">
     <group>
-      <sampling initial_sample="no">
-        <dimension name="x" lattice="16" fourier_space="no" />
-        <dimension name="y" lattice="16" fourier_space="no" />
-        <dimension name="z" fourier_space="no" />
+      <sampling basis="x(16) y(16) z" initial_sample="no">
         <moments>phi1re dens0 densm1 phi1im dens1</moments>
         <dependencies>wavefunction</dependencies>
         <![CDATA[
@@ -251,10 +248,7 @@
 
     
     <group>
-      <sampling initial_sample="no">
-        <dimension name="x" lattice="16" fourier_space="yes" />
-        <dimension name="y" lattice="16" fourier_space="yes" />
-        <dimension name="z" fourier_space="yes" />
+      <sampling basis="kx(16) ky(16) kz" initial_sample="no">
         <moments>dens1</moments>
         <dependencies>wavefunction</dependencies>
         <![CDATA[
@@ -264,10 +258,7 @@
     </group>
  
     <group>
-      <sampling initial_sample="yes">
-        <dimension name="x" lattice="0" fourier_space="no" />
-        <dimension name="y" lattice="0" fourier_space="no" />
-        <dimension name="z" lattice="0" fourier_space="no" />
+      <sampling basis="x(0) y(0) z(0)" initial_sample="yes">
         <moments>N1 N0 Nm1</moments>
         <dependencies>wavefunction</dependencies>
         <![CDATA[
@@ -278,10 +269,7 @@
       </sampling>
     </group>
     <group>
-      <sampling initial_sample="no">
-        <dimension name="x" lattice="0" fourier_space="no" />
-        <dimension name="y" lattice="0" fourier_space="no" />
-        <dimension name="z" lattice="0" fourier_space="no" />
+      <sampling basis="x(0) y(0) z(0)" initial_sample="no">
         <moments>E1OnHbarRe E1OnHbarIm</moments>
         <operator kind="ex" constant="no">
           <operator_names>T2</operator_names>

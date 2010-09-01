@@ -47,16 +47,16 @@
   
   <sequence>
     <breakpoint filename="hermitegauss_fourier_1.xsil" format="hdf5">
-      <dependencies fourier_space="x">main</dependencies>
+      <dependencies basis="x">main</dependencies>
     </breakpoint>
     <breakpoint filename="hermitegauss_fourier_2.xsil" format="hdf5">
-      <dependencies fourier_space="nx">main</dependencies>
+      <dependencies basis="nx">main</dependencies>
     </breakpoint>
     <breakpoint filename="hermitegauss_fourier_3.xsil" format="hdf5">
-      <dependencies fourier_space="kx">main</dependencies>
+      <dependencies basis="kx">main</dependencies>
     </breakpoint>
     <breakpoint filename="hermitegauss_fourier_4.xsil" format="hdf5">
-      <dependencies fourier_space="x">main</dependencies>
+      <dependencies basis="x">main</dependencies>
     </breakpoint>
   </sequence>
   <output />

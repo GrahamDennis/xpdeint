@@ -82,8 +82,7 @@
   
   <output format="binary">
     <group>
-      <sampling initial_sample="yes">
-        <dimension name="t" lattice="1000" />
+      <sampling basis="t(1000)" initial_sample="yes">
         <moments>pow_dens</moments>
         <dependencies>main</dependencies>
         <![CDATA[
@@ -92,8 +91,7 @@
       </sampling>
     </group>
     <group>
-      <sampling initial_sample="no">
-        <dimension name="t" lattice="1000" />
+      <sampling basis="t(1000)" initial_sample="no">
         <moments>P_out N_out</moments>
         <dependencies>cross</dependencies>
         <![CDATA[

@@ -87,14 +87,13 @@
     </filter>
     
     <breakpoint filename="hermitegauss_groundstate_break.xsil" format="ascii">
-      <dependencies fourier_space="nx">wavefunction</dependencies>
+      <dependencies basis="nx">wavefunction</dependencies>
     </breakpoint>
   </sequence>
   
   <output format="binary">
     <group>
-      <sampling initial_sample="yes">
-        <dimension name="x" fourier_space="no" />
+      <sampling basis="x" initial_sample="yes">
         <moments>dens</moments>
         <dependencies>wavefunction</dependencies>
         <![CDATA[
@@ -103,8 +102,7 @@
       </sampling>
     </group>
     <group>
-      <sampling initial_sample="yes">
-        <dimension name="x" fourier_space="yes" />
+      <sampling basis="kx" initial_sample="yes">
         <moments>dens</moments>
         <dependencies>wavefunction</dependencies>
         <![CDATA[

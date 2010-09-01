@@ -59,13 +59,13 @@
       <dependencies>main</dependencies>
     </breakpoint>
     <breakpoint filename="mpi_dft_hdf5_kspace.xsil" format="hdf5">
-      <dependencies fourier_space="ky kx">main</dependencies>
+      <dependencies basis="ky kx">main</dependencies>
     </breakpoint>
     <breakpoint filename="mpi_dft_hdf5_kspace2.xsil" format="hdf5">
-      <dependencies fourier_space="ky x">main</dependencies>
+      <dependencies basis="ky x">main</dependencies>
     </breakpoint>
     <breakpoint filename="mpi_dft_hdf5_xspace2.xsil" format="hdf5">
-      <dependencies fourier_space="y x">main</dependencies>
+      <dependencies basis="y x">main</dependencies>
     </breakpoint>
   </sequence>
   <output format="binary">

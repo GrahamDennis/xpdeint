@@ -67,7 +67,7 @@
     <integrate algorithm="ARK89" tolerance="1e-8" interval="2e-2" steps="1000">
       <samples>50</samples>
       <operators>
-        <operator kind="ex" constant="yes" fourier_space="x y">
+        <operator kind="ex" constant="yes" basis="x y">
           <operator_names>L</operator_names>
           <![CDATA[
           real r_norm = sqrt(x*x/ellipse_a/ellipse_a + y*y/ellipse_b/ellipse_b);
@@ -78,7 +78,7 @@
             L = 1.0;
           ]]>
         </operator>
-        <integration_vectors fourier_space="kx ky">main</integration_vectors>
+        <integration_vectors basis="kx ky">main</integration_vectors>
         <![CDATA[
           du_dt = uDot;
           duDot_dt = L[-T_mu*(kx*kx+ky*ky)*u];
@@ -88,13 +88,7 @@
   </sequence>
   <output format="binary">
     <group>
-      <sampling initial_sample="yes">
-        <!-- Any dimension not mentioned is assumed to be in real space and its middle element will be sampled -->
-        <!-- Note that this is different default behaviour to the filter operator. To integrate, put in a dimension -->
-        <!-- with zero lattice points. -->
-        <!-- Note that dimensions can be in any order. Not that I can think of a reason why you would want to do that -->
-        <dimension name="x" fourier_space="no" />
-        <dimension name="y" fourier_space="no" />
+      <sampling basis="x y" initial_sample="yes">
         <moments>amp</moments>
         <dependencies>main</dependencies>
         <![CDATA[

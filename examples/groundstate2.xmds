@@ -84,7 +84,7 @@
       Ncalc
     </components>
     <evaluation>
-      <dependencies fourier_space="y">wavefunction</dependencies>
+      <dependencies basis="y">wavefunction</dependencies>
       <![CDATA[
         // Calculate the current normalisation of the wave function.
         Ncalc = mod2(phi);
@@ -119,14 +119,13 @@
       </operators>
     </integrate>
     <breakpoint>
-      <dependencies fourier_space="ky">wavefunction</dependencies>
+      <dependencies basis="ky">wavefunction</dependencies>
     </breakpoint>
   </sequence>
   
   <output format="binary" filename="groundstate2.xsil">
     <group>
-      <sampling initial_sample="no">
-        <dimension name="y" lattice="1024" />
+      <sampling basis="y" initial_sample="no">
         <moments>norm_dens</moments>
         <dependencies>wavefunction normalisation</dependencies>
         <operator kind="functions">

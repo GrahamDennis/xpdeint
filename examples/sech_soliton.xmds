@@ -53,8 +53,7 @@
   
   <output format="binary">
     <group>
-      <sampling initial_sample="yes">
-        <dimension name="x" lattice="512" fourier_space="no" />
+      <sampling basis="x(512)" initial_sample="yes">
         <moments>density</moments>
         <dependencies>wavefunction</dependencies>
         <![CDATA[

@@ -275,15 +275,10 @@ Output = element output {
     , element group {
         element sampling {
             attribute initial_sample { Bool } ?
+            , attribute basis { text }?
             , (
                 ComputedVector
                 | Operator
-                | element dimension {
-                    attribute name { text }
-                    , attribute lattice { text }?
-                    , attribute basis { text }?
-                    , empty
-                }
                 | element moments { text }
                 | Dependencies
                 | text

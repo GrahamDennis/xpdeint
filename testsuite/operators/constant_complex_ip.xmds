@@ -54,8 +54,7 @@
   
   <output format="binary">
     <group>
-      <sampling initial_sample="yes">
-        <dimension name="y" lattice="128" fourier_space="y" />
+      <sampling basis="y" initial_sample="yes">
         <moments>dens</moments>
         <dependencies>main</dependencies>
         <![CDATA[

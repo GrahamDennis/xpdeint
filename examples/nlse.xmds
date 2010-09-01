@@ -72,8 +72,7 @@
 
   <output format="binary" filename="nlse.xsil">
     <group>
-      <sampling initial_sample="yes">
-        <dimension name="tau" lattice="128" />
+      <sampling basis="tau" initial_sample="yes">
         <moments>density</moments>
         <dependencies>wavefunction</dependencies>
         <![CDATA[
@@ -83,8 +82,7 @@
     </group>
 
     <group>
-      <sampling initial_sample="yes">
-        <dimension name="tau" lattice="0" />
+      <sampling basis="tau(0)" initial_sample="yes">
         <moments>normalisation</moments>
         <dependencies>wavefunction</dependencies>
         <![CDATA[
@@ -94,9 +92,8 @@
     </group>
 
     <group>
-      <sampling initial_sample="yes">
+      <sampling basis="ktau(32)" initial_sample="yes">
         <moments>densityK</moments>
-        <dimension name="tau" fourier_space="yes" lattice="32" />
         <dependencies>wavefunction</dependencies>
         <![CDATA[
           densityK = mod2(phi);

@@ -71,8 +71,7 @@
   
   <output format="binary" filename="fibre.xsil">
     <group>
-      <sampling initial_sample="yes">
-        <dimension name="x" lattice="64" fourier_space="yes" />
+      <sampling basis="kx" initial_sample="yes">
         <moments>kdensphi kdenspsi</moments>
         <dependencies>main</dependencies>
         <![CDATA[

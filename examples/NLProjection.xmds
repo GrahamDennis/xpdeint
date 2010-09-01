@@ -46,7 +46,7 @@
       nl
     </components>
     <evaluation>
-      <dependencies fourier_space="x y z">wavefunction</dependencies>
+      <dependencies basis="x y z">wavefunction</dependencies>
       <![CDATA[
         // Calculate the nonlinear term.
         nl = mod2(phi)*phi;
@@ -65,7 +65,7 @@
       nl_4f
     </components>
     <evaluation>
-      <dependencies fourier_space="x_4f y_4f z_4f">wavefunction</dependencies>
+      <dependencies basis="x_4f y_4f z_4f">wavefunction</dependencies>
       <![CDATA[
         // Compute nonlinear term
         nl_4f = mod2(phi) * phi;
@@ -80,7 +80,7 @@
     <!-- In this case, we have no evolution, all we need to do is save the nonlinear term
          in the harmonic oscillator basis to a file. -->
     <breakpoint filename="nlbreak.xsil" format="hdf5">
-      <dependencies fourier_space="nx ny nz">nlterm nlterm_4f</dependencies>
+      <dependencies basis="nx ny nz">nlterm nlterm_4f</dependencies>
     </breakpoint>
   </sequence>
   <output format="hdf5" />

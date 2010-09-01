@@ -62,8 +62,7 @@
   
   <output format="binary">
     <group>
-      <sampling initial_sample="yes">
-        <dimension name="x" lattice="64" fourier_space="yes" />
+      <sampling basis="kx" initial_sample="yes">
         <moments>pow_dens</moments>
         <dependencies>main</dependencies>
         <![CDATA[

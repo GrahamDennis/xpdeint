@@ -77,7 +77,7 @@
     <integrate algorithm="ARK89" tolerance="1e-7" interval="4e-2" steps="1000" home_space="k">
       <samples>100 100 100</samples>
       <operators>
-        <operator kind="ex" constant="yes" fourier_space="x y">
+        <operator kind="ex" constant="yes" basis="x y">
           <operator_names>L</operator_names>
           <![CDATA[
           real r2 = x*x + y*y;
@@ -87,7 +87,7 @@
             L = 1.0;
           ]]>
         </operator>
-        <integration_vectors fourier_space="kx ky">main</integration_vectors>
+        <integration_vectors basis="kx ky">main</integration_vectors>
         <![CDATA[
           du_dt = uDot;
           duDot_dt = L[-T_mu*(kx*kx+ky*ky)*u];
@@ -97,13 +97,7 @@
   </sequence>
   <output format="binary">
     <group>
-      <sampling initial_sample="yes">
-        <!-- Any dimension not mentioned is assumed to be in real space and its middle element will be sampled -->
-        <!-- Note that this is different default behaviour to the filter operator. To integrate, put in a dimension -->
-        <!-- with zero lattice points. -->
-        <!-- Note that dimensions can be in any order. Not that I can think of a reason why you would want to do that -->
-        <dimension name="x" fourier_space="no" />
-        <dimension name="y" fourier_space="no" />
+      <sampling basis="x y" initial_sample="yes">
         <moments>amp</moments>
         <dependencies>main</dependencies>
         <![CDATA[
@@ -112,13 +106,7 @@
       </sampling>
     </group>
     <group>
-      <sampling initial_sample="yes">
-        <!-- Any dimension not mentioned is assumed to be in real space and its middle element will be sampled -->
-        <!-- Note that this is different default behaviour to the filter operator. To integrate, put in a dimension -->
-        <!-- with zero lattice points. -->
-        <!-- Note that dimensions can be in any order. Not that I can think of a reason why you would want to do that -->
-        <dimension name="x" fourier_space="yes" />
-        <dimension name="y" fourier_space="yes" />
+      <sampling basis="kx ky" initial_sample="yes">
         <moments>amp</moments>
         <dependencies>main</dependencies>
         <![CDATA[
@@ -127,13 +115,7 @@
       </sampling>
     </group>
     <group>
-      <sampling initial_sample="yes">
-        <!-- Any dimension not mentioned is assumed to be in real space and its middle element will be sampled -->
-        <!-- Note that this is different default behaviour to the filter operator. To integrate, put in a dimension -->
-        <!-- with zero lattice points. -->
-        <!-- Note that dimensions can be in any order. Not that I can think of a reason why you would want to do that -->
-        <dimension name="x" lattice="0" fourier_space="no" />
-        <dimension name="y" lattice="0" fourier_space="no" />
+      <sampling basis="x(0) y(0)" initial_sample="yes">
         <moments>energy</moments>
         <dependencies>main</dependencies>
         <operator kind="ex" constant="no">

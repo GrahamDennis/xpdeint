@@ -95,12 +95,7 @@
   
   <output format="binary" filename="vibstring2.xsil">
     <group>
-      <sampling initial_sample="yes">
-        <!-- Any dimension not mentioned is assumed to be in real space and its middle element will be sampled -->
-        <!-- Note that this is different default behaviour to the filter operator. To integrate, put in a dimension -->
-        <!-- with zero lattice points. -->
-        <!-- Note that dimensions can be in any order. Not that I can think of a reason why you would want to do that -->
-        <dimension name="x" lattice="100" fourier_space="x" />
+      <sampling basis="x y(1)" initial_sample="yes">
         <moments>amp</moments>
         <dependencies>main</dependencies>
         <![CDATA[

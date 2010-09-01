@@ -117,13 +117,7 @@
   
   <output format="binary">
     <group>
-      <sampling initial_sample="yes">
-        <!-- Any dimension not mentioned is assumed to be in real space and its middle element will be sampled -->
-        <!-- Note that this is different default behaviour to the filter operator. To integrate, put in a dimension -->
-        <!-- with zero lattice points. -->
-        <!-- Note that dimensions can be in any order. Not that I can think of a reason why you would want to do that -->
-        <dimension name="r" fourier_space="no" />
-        <dimension name="theta" fourier_space="no" />
+      <sampling basis="r theta" initial_sample="yes">
         <moments>WER</moments>
         <dependencies>WignerEven</dependencies>
         <![CDATA[
@@ -132,9 +126,7 @@
       </sampling>
     </group>
     <group>
-      <sampling initial_sample="yes">
-        <dimension name="s" fourier_space="no" />
-        <dimension name="theta" />
+      <sampling basis="s theta" initial_sample="yes">
         <moments>WOR</moments>
         <dependencies>WignerOdd</dependencies>
         <![CDATA[
@@ -143,9 +135,7 @@
       </sampling>
     </group>
     <group>
-      <sampling initial_sample="yes">
-        <dimension name="m"/>
-        <dimension name="r" />
+      <sampling basis="m r" initial_sample="yes">
         <moments>hER hEI</moments>
         <dependencies>evens</dependencies>
         <![CDATA[
@@ -154,9 +144,7 @@
       </sampling>
     </group>
     <group>
-      <sampling initial_sample="yes">
-        <dimension name="m"/>
-        <dimension name="s" />
+      <sampling basis="m s" initial_sample="yes">
         <moments>hOR hOI</moments>
         <dependencies>odds</dependencies>
         <![CDATA[
@@ -165,9 +153,7 @@
       </sampling>
     </group>
     <group>
-      <sampling initial_sample="yes">
-        <dimension name="m"/>
-        <dimension name="r" fourier_space="yes" />
+      <sampling basis="m kr" initial_sample="yes">
         <moments>hER hEI</moments>
         <dependencies>evens</dependencies>
         <![CDATA[
@@ -176,9 +162,7 @@
       </sampling>
     </group>
     <group>
-      <sampling initial_sample="yes">
-        <dimension name="m"/>
-        <dimension name="s" fourier_space="yes" />
+      <sampling basis="m ks" initial_sample="yes">
         <moments>hOR hOI</moments>
         <dependencies>odds</dependencies>
         <![CDATA[

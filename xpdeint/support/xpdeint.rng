@@ -536,20 +536,13 @@
                 <ref name="Bool"/>
               </attribute>
             </optional>
+            <optional>
+              <attribute name="basis"/>
+            </optional>
             <oneOrMore>
               <choice>
                 <ref name="ComputedVector"/>
                 <ref name="Operator"/>
-                <element name="dimension">
-                  <attribute name="name"/>
-                  <optional>
-                    <attribute name="lattice"/>
-                  </optional>
-                  <optional>
-                    <attribute name="basis"/>
-                  </optional>
-                  <empty/>
-                </element>
                 <element name="moments">
                   <text/>
                 </element>

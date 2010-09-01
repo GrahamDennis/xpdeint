@@ -52,8 +52,7 @@
   </sequence>
   <output format="binary">
     <group>
-      <sampling initial_sample="yes">
-        <dimension name="j" />
+      <sampling basis="j k(1)" initial_sample="yes">
         <moments>xR</moments>
         <dependencies>main</dependencies>
         <![CDATA[

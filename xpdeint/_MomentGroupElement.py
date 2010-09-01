@@ -10,6 +10,7 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 """
 
 from xpdeint.ScriptElement import ScriptElement
+from xpdeint.ParserException import ParserException
 
 from xpdeint.Function import Function
 from xpdeint.Utilities import lazy_property
@@ -104,17 +105,18 @@ class _MomentGroupElement (ScriptElement):
           vector.field._basisForBasisCache.clear()
           vector.initialBasis = tuple(b for b in vector.initialBasis if not b is propDimRep.canonicalName)
     
-    # FIXME: This is only needed because the way that the output stuff is specified is totally broken
-    # Specifically, if we omit a <dimension /> tag, it means that we do a single-point sample. Totally broken.
     geometry = self.getVar('geometry')
-    loopingDimensionNames = set([dim.name for dim in self.samplingField.dimensions])
+    loopingDimensionNames = set([dim.name for dim in self.samplingField.dimensions]).union(self.singlePointSamplingBasis)
     for dependency in self.codeBlocks['sampling'].dependencies:
-      loopingDimensionNames.update([dim.name for dim in dependency.field.dimensions])
-    dimRepNameToDimNameMap = dict([(dimRep.canonicalName, dimName) for dimName in loopingDimensionNames for dimRep in geometry.dimensionWithName(dimName).representations])
-    for b in self.codeBlocks['sampling'].basis:
-      loopingDimensionNames.remove(dimRepNameToDimNameMap[b])
-    self.codeBlocks['sampling'].basis += tuple(loopingDimensionNames)
-    self.codeBlocks['sampling'].basis = (self.propagationDimension,) + self.codeBlocks['sampling'].basis
+      missingLoopingDimensionNames = set(dim.name for dim in dependency.field.dimensions).difference(loopingDimensionNames)
+      if missingLoopingDimensionNames:
+        raise ParserException(self.codeBlocks['sampling'].xmlElement,
+                    "The dimension(s) %s have not been included in the basis specification.  "
+                    "They are needed by the vector '%s'." % (', '.join(missingLoopingDimensionNames), dependency.name))
+    
+    self.codeBlocks['sampling'].basis = (self.propagationDimension,) \
+                                      + self.codeBlocks['sampling'].basis \
+                                      + self.singlePointSamplingBasis
     
     outputFieldID = self.outputField.id
     propagationDimension = self.propagationDimension
