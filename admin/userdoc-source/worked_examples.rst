@@ -35,16 +35,17 @@ where :math:`\phi` is a complex-valued field, and :math:`\Gamma(\tau)` is a :mat
 
 .. code-block:: xpdeint
 
+    <?xml version="1.0" encoding="UTF-8"?>
     <simulation xmds-version="2">
       <name>nlse</name>
-  
+
       <author>Joe Hope</author>
       <description>
         The nonlinear Schrodinger equation in one dimension, 
         which is a simple partial differential equation.  
         We introduce several new features in this script.
       </description>
-  
+
       <features>
           <benchmark />
           <bing />
@@ -66,7 +67,7 @@ where :math:`\phi` is a complex-valued field, and :math:`\Gamma(\tau)` is a :mat
             <dimension name="tau" lattice="128"  domain="(-6, 6)" />
           </transverse_dimensions>
        </geometry>
-  
+
       <vector name="wavefunction" type="complex" dimensions="tau">
         <components> phi </components>
         <initialisation>
@@ -77,7 +78,7 @@ where :math:`\phi` is a complex-valued field, and :math:`\Gamma(\tau)` is a :mat
           ]]>
         </initialisation>
       </vector>
-  
+
       <vector name="dampingVector" type="real">
         <components> Gamma </components>
         <initialisation>
@@ -105,11 +106,10 @@ where :math:`\phi` is a complex-valued field, and :math:`\Gamma(\tau)` is a :mat
           </operators>
         </integrate>
       </sequence>
-  
+
       <output format="binary" filename="nlse.xsil">
         <group>
-          <sampling initial_sample="yes">
-            <dimension name="tau" lattice="128" />
+          <sampling basis="tau" initial_sample="yes">
             <moments>density</moments>
             <dependencies>wavefunction</dependencies>
             <![CDATA[
@@ -119,8 +119,7 @@ where :math:`\phi` is a complex-valued field, and :math:`\Gamma(\tau)` is a :mat
         </group>
 
         <group>
-          <sampling initial_sample="yes">
-            <dimension name="tau" lattice="0" />
+          <sampling basis="tau(0)" initial_sample="yes">
             <moments>normalisation</moments>
             <dependencies>wavefunction</dependencies>
             <![CDATA[
@@ -130,9 +129,8 @@ where :math:`\phi` is a complex-valued field, and :math:`\Gamma(\tau)` is a :mat
         </group>
 
         <group>
-          <sampling initial_sample="yes">
+          <sampling basis="ktau(32)" initial_sample="yes">
             <moments>densityK</moments>
-            <dimension name="tau" fourier_space="yes" lattice="32" />
             <dependencies>wavefunction</dependencies>
             <![CDATA[
               densityK = mod2(phi);
@@ -193,30 +191,28 @@ Operators can be explicit (``kind="ex"``) or in the interaction picture (``kind=
 
 The output of a partial differential equation offers more possibilities than an ordinary differential equation, and we examine some in this example.
 
-For vectors with transverse dimensions, we can sample functions of the vectors on the full lattice or a subset of the points.  For each of the transverse dimensions we include a ``<dimension>`` element that specifies how many lattice points are to be sampled.  This must be a factor of the lattice size for that dimension.  If the dimension is specified without the lattice, the entire lattice will be sampled.  If the dimension is not described at all, then the output will only sample a single lattice point on that dimension.  
+For vectors with transverse dimensions, we can sample functions of the vectors on the full lattice or a subset of the points.  In the ``<sampling>`` element, we must add a string called "basis" that determines the space in which each transverse dimension is to be sampled, optionally followed by the number of points to be sampled in parentheses.  If the number of points is not specified, it will default to a complete sampling of all points in that dimension.  If a non-zero number of points is specified, it must be a factor of the lattice size for that dimension.  
 
 .. code-block:: xpdeint
 
-        <group>
-          <sampling initial_sample="yes">
-            <dimension name="tau" lattice="128" />
-            <moments>density</moments>
-            <dependencies>wavefunction</dependencies>
-            <![CDATA[
-              density = mod2(phi);
-            ]]>
-          </sampling>
-        </group>
+      <group>
+        <sampling basis="tau" initial_sample="yes">
+          <moments>density</moments>
+          <dependencies>wavefunction</dependencies>
+          <![CDATA[
+            density = mod2(phi);
+          ]]>
+        </sampling>
+      </group>
 
 The first output group samples the mod square of the vector "phi" over the full lattice of 128 points.
 
-If the lattice parameter is set to zero, then the corresponding dimension is integrated.
+If the lattice parameter is set to zero points, then the corresponding dimension is integrated.
 
 .. code-block:: xpdeint
 
         <group>
-          <sampling initial_sample="yes">
-            <dimension name="tau" lattice="0" />
+          <sampling basis="tau(0)" initial_sample="yes">
             <moments>normalisation</moments>
             <dependencies>wavefunction</dependencies>
             <![CDATA[
@@ -225,21 +221,20 @@ If the lattice parameter is set to zero, then the corresponding dimension is int
           </sampling>
         </group>
 
-This second output group samples the normalisation of the wavefunction :math:`\int d\tau |\phi(\tau)|^2` over the domain of :math:`\tau`.  This output requires only a single real number per sample, so we have sampled it many more times than the vectors themselves.
+This second output group samples the normalisation of the wavefunction :math:`\int d\tau |\phi(\tau)|^2` over the domain of :math:`\tau`.  This output requires only a single real number per sample, so in the integrate element we have chosen to sample it many more times than the vectors themselves.
 
 Finally, functions of the vectors can be sampled with their dimensions in Fourier space.
 
 .. code-block:: xpdeint
 
-        <group>
-          <sampling initial_sample="yes">
-            <moments>densityK</moments>
-            <dimension name="tau" fourier_space="yes" lattice="32" />
-            <dependencies>wavefunction</dependencies>
-            <![CDATA[
-              densityK = mod2(phi);
-            ]]>
-          </sampling>
+         <group>
+              <sampling basis="ktau(32)" initial_sample="yes">
+                <moments>densityK</moments>
+                <dependencies>wavefunction</dependencies>
+                <![CDATA[
+                  densityK = mod2(phi);
+                ]]>
+              </sampling>
         </group>
 
 The final output group above samples the mod square of the Fourier-space wavefunction phi on a sample of 32 points.
@@ -453,8 +448,7 @@ where the noise terms :math:`\eta_j(x,t)` are Wiener noise increments with varia
   
       <output format="binary" filename="fibre.xsil">
         <group>
-          <sampling initial_sample="yes">
-            <dimension name="x" lattice="64" fourier_space="yes" />
+          <sampling basis="kx" initial_sample="yes">
             <moments>pow_dens</moments>
             <dependencies>main</dependencies>
             <![CDATA[
@@ -527,7 +521,7 @@ where :math:`L_x` is the length of the x domain.  We see that a single integrati
     
     The momentum space density of the field as a function of time for a single path realisation.
 
-while an average of 1024 paths converges nicely to this solution:
+while an average of 1024 paths converges nicely to the analytic solution:
 
 .. figure:: images/fibre1024.*
     :align: center
@@ -599,8 +593,7 @@ where :math:`x_j` are complex-valued variables defined on a ring, such that :mat
 
       <output format="ascii">
         <group>
-          <sampling initial_sample="yes">
-            <dimension name="j" />
+          <sampling basis="j" initial_sample="yes">
             <moments>xR</moments>
             <dependencies>main</dependencies>
             <![CDATA[
@@ -740,9 +733,7 @@ with the added restriction that the derivative is forced to zero outside a certa
 
       <output format="hdf5" filename="wigner.xsil">
         <group>
-          <sampling initial_sample="yes">
-            <dimension name="x" fourier_space="no" />
-            <dimension name="y" fourier_space="no" />
+          <sampling basis="x y" initial_sample="yes">
             <moments>WR WI</moments>
             <dependencies>main</dependencies>
             <![CDATA[
@@ -926,7 +917,7 @@ The code for this simulation is:
       <computed_vector name="normalisation" dimensions="" type="real">
         <components> Ncalc </components>
         <evaluation>
-          <dependencies fourier_space="y">wavefunction</dependencies>
+          <dependencies basis="y">wavefunction</dependencies>
           <![CDATA[
             // Calculate the current normalisation of the wave function.
             Ncalc = mod2(phi);
@@ -975,14 +966,14 @@ The code for this simulation is:
         </integrate>
 
         <breakpoint filename="groundstate_break.xsil" format="ascii">
-          <dependencies fourier_space="ky">wavefunction</dependencies>
+          <dependencies basis="ky">wavefunction </dependencies>
         </breakpoint>
+
       </sequence>
 
       <output format="binary" filename="groundstate.xsil">
         <group>
-          <sampling initial_sample="yes">
-            <dimension name="y" />
+          <sampling basis="y" initial_sample="yes">
             <moments>norm_dens</moments>
             <dependencies>wavefunction normalisation</dependencies>
             <![CDATA[
@@ -1013,7 +1004,7 @@ The difference between a computed vector and a stored vector is emphasised by th
   <computed_vector name="normalisation" dimensions="" type="real">
     <components> Ncalc </components>
     <evaluation>
-      <dependencies fourier_space="y">wavefunction</dependencies>
+      <dependencies basis="y">wavefunction</dependencies>
       <![CDATA[
         // Calculate the current normalisation of the wave function.
         Ncalc = mod2(phi);
@@ -1067,7 +1058,7 @@ At the end of the sequence element we introduce the ``<breakpoint>`` element.  T
 .. code-block:: xpdeint
 
     <breakpoint filename="groundstate_break.xsil" format="ascii">
-      <dependencies fourier_space="ky">wavefunction</dependencies>
+      <dependencies basis="ky">wavefunction</dependencies>
     </breakpoint>
 
 If the filename argument is omitted, the output filenames are numbered sequentially.  Any given ``<breakpoint>`` element must only depend on vectors with identical dimensions.
@@ -1154,7 +1145,7 @@ where :math:`H_n(u)` are the physicist's version of the Hermite polynomials.  Ra
       <computed_vector name="normalisation" dimensions="" type="real">
         <components> Ncalc </components>
         <evaluation>
-          <dependencies fourier_space="x">wavefunction</dependencies>
+          <dependencies basis="x">wavefunction</dependencies>
           <![CDATA[
             // Calculate the current normalisation of the wave function.
             Ncalc = mod2(phi);
@@ -1196,14 +1187,13 @@ where :math:`H_n(u)` are the physicist's version of the Hermite polynomials.  Ra
         </filter>
     
         <breakpoint filename="hermitegauss_groundstate_break.xsil" format="ascii">
-          <dependencies fourier_space="nx">wavefunction</dependencies>
+          <dependencies basis="nx">wavefunction</dependencies>
         </breakpoint>
       </sequence>
   
       <output format="binary">
         <group>
-          <sampling initial_sample="yes">
-            <dimension name="x" fourier_space="no" />
+          <sampling basis="x" initial_sample="yes">
             <moments>dens</moments>
             <dependencies>wavefunction</dependencies>
             <![CDATA[
@@ -1212,8 +1202,7 @@ where :math:`H_n(u)` are the physicist's version of the Hermite polynomials.  Ra
           </sampling>
         </group>
         <group>
-          <sampling initial_sample="yes">
-            <dimension name="x" fourier_space="yes" />
+          <sampling basis="kx" initial_sample="yes">
             <moments>dens</moments>
             <dependencies>wavefunction</dependencies>
             <![CDATA[

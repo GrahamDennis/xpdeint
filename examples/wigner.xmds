@@ -51,9 +51,7 @@
   </geometry>
   
   <vector name="main" initial_space="x y" type="complex">
-    <components>
-      W
-    </components>
+    <components> W </components>
     <initialisation>
       <![CDATA[
         W = 2.0/M_PI * exp(-2.0*(y*y + (x-alpha_0)*(x-alpha_0)));
