@@ -6,7 +6,7 @@ I already found myself wanting to scan log messages, so I copied the above over 
 Release Instructions:
 *********************
 
-0. Change version in Preferences.py, ChangeLog is an optional change.
+0. Change version in Preferences.py, setup.py, and conf.py.  ChangeLog is an optional change.
 
 1. Make sure everything works with a clean install.  (Check out a clean copy and do tests)
 
@@ -15,7 +15,9 @@ Release Instructions:
 3. "cd admin/userdoc-source", and "make html", and "make latex".
     Then "cd ../documentation/latex" and "make all-pdf".  This makes both kinds of documentation.
     
-4. "cd ../../../" and "tar -zcf xmds2.0pre1.tgz xmds2.0pre1" makes the bundle.
+4. "cd ../../" and "make" to compile the Cheetah code.
+    
+4. "cd .." and "tar -zcf xmds2.0pre1.tgz xmds2.0pre1" makes the bundle.
 
 5. Put that on sourceforge.
 
