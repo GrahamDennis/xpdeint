@@ -1,10 +1,13 @@
 Welcome to XMDS2 (codename: xpdeint).
 If you have any questions, please email xmds-user@lists.sourceforge.net
 
-The best place to start is with the documentation directory.  
-It will explain the program and the installation instructions.  
-Point your browser to path-to-xmds2/documentation/index.html, and begin your journey.
+The best place to start is with the documentation directory. 
+ 
+It will explain the program and the installation instructions. 
+ 
+Point your browser to 
 
-The DEVELOPER_INSTALLATION file contains instructions for those that want to build 
-their copy of XMDS2 from scratch.
+  documentation/index.html
+
+and begin your journey.
 

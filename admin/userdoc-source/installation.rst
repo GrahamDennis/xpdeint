@@ -70,12 +70,12 @@ This guide adds extra notes for users wishing to install XMDS2 using the SVN rep
 #. There are a range of optional installs.  We recommend that you install them if possible:
     .. _hdf5_Installation:
     
-    #. **HDF5** is a library for reading and writing the `Heirachical Data Format <http://www.hdfgroup.org/HDF5/>`_.
-       This is a standardised data format which it is suggested that people use in preference to the older 'binary' output (which is 
-       compatible with xmds-1). The advantage of HDF5 is that this data format is understood by a variety of other tools. xsil2graphics2
-       provides support for loading data created in this format into Mathematica and Matlab.
+    #. **HDF5** is a library for reading and writing the `Hierarchical Data Format <http://www.hdfgroup.org/HDF5/>`_.
+         This is a standardised data format which it is suggested that people use in preference to the older 'binary' output (which is 
+         compatible with xmds-1). The advantage of HDF5 is that this data format is understood by a variety of other tools. xsil2graphics2
+         provides support for loading data created in this format into Mathematica and Matlab.
        
-       After downloading the latest package, install with the ``--prefix=/usr/local/`` option if you want XMDS2 to find the library automatically.
+         After downloading the latest package, install with the ``--prefix=/usr/local/`` option if you want XMDS2 to find the library automatically.
        
     #. **MPI** is an API for doing parallel processing on multi-processor/multi-core computers, or clusters of computers.
          Many supercomputing systems (and Mac OS X) come with MPI libraries pre installed.
@@ -114,7 +114,6 @@ This guide adds extra notes for users wishing to install XMDS2 using the SVN rep
     #. **h5py** is needed for checking the results of XMDS2 tests that generate HDF5 output.
            h5py requires numpy version 1.0.3 or later. 
            
-           Mac OS X Leopard comes with 1.0.1, so this must be upgraded on such systems.
            Upgrading h5py on Mac OS X is best done with the source of the package, as the easy_install option can get confused with multiple numpy versions.
            Mac OS X Snow Leopard comes with version 1.2.1
          
