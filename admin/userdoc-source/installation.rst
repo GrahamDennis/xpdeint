@@ -48,25 +48,6 @@ This guide adds extra notes for users wishing to install XMDS2 using the SVN rep
     Though if the next step fails, you may need to upgrade setuptools.  To do that, type ``sudo easy_install -U setuptools``
 
 
-#. Install Cheetah version 2.0.1 or later, pyparsing, and (optionally) lxml. 
-    If you have root access, this is as easy as:
-    ``sudo easy_install Cheetah``, ``sudo easy_install pyparsing`` and ``sudo easy_install lxml`` respectively.
-    
-        You will need to have 'libxml2' and 'libxslt' installed (via your choice of package manager) if you want to install lxml.  
-        They are preinstalled on Mac OS X.
-
-    If you don't have root access or want to install into your home directory, use:
-    ``easy_install --prefix=~ Cheetah`` (etc.)
-
-    Note that lxml is not required for XMDS2 to run. If it is installed, it is used to validate
-    the xmds script passed to XMDS2 to check that there isn't any invalid syntax or typos that
-    XMDS2 wouldn't have otherwise noticed. Also note that installing lxml is a bit tricky on Mac
-    OS X Leopard because Apple shipped an old version of libxml2 with the system.
-    (This problem does not exist on Snow Leopard.)
-
-    * Developer only instructions: The Cheetah templates (\*.tmpl) must be compiled into python.
-        To do this, run ``make`` in the xmds2/ directory.
-
 #. There are a range of optional installs.  We recommend that you install them if possible:
     .. _hdf5_Installation:
     
@@ -75,8 +56,12 @@ This guide adds extra notes for users wishing to install XMDS2 using the SVN rep
          compatible with xmds-1). The advantage of HDF5 is that this data format is understood by a variety of other tools. xsil2graphics2
          provides support for loading data created in this format into Mathematica and Matlab.
        
-         After downloading the latest package, install with the ``--prefix=/usr/local/`` option if you want XMDS2 to find the library automatically.
-       
+         - Sidebar: Installing HDF5 from source follows a common pattern, which you may find yourself repeating later:  
+            #. After extracting the source directory, type ``configure`` and then add possible options.
+                (For HDF5, install with the ``--prefix=/usr/local/`` option if you want XMDS2 to find the library automatically.  This is rarely needed for other packages.)
+            #. Once that is finished, type ``make``.  Then wait for that to finish, which will often be longer than you think.
+            #. Finally, type ``sudo make install`` to install it into the appropriate directory.
+        
     #. **MPI** is an API for doing parallel processing on multi-processor/multi-core computers, or clusters of computers.
          Many supercomputing systems (and Mac OS X) come with MPI libraries pre installed.
          The `Open MPI <http://www.open-mpi.org/>`_ project has free distributions of this library for other machines.
@@ -95,7 +80,8 @@ This guide adds extra notes for users wishing to install XMDS2 using the SVN rep
          To apply the patch run (in the fftw-3 directory):
          ``patch -p0 < ~/path/to/xmds2/admin/fftw3-SnowLeopard.patch``
          
-         Then configure/compile as normal.
+         Then configure/compile as described in the HDF5 sidebar above.  
+         You may wish to add the ``--enable-mpi --disable-fortran`` options to the ``configure`` command.
 
     #. **mpmath** is a library for arbitrary precision floating point math. 
          This package is needed for the matrix-based transforms like Bessel and Hermite-Gauss.
@@ -115,13 +101,26 @@ This guide adds extra notes for users wishing to install XMDS2 using the SVN rep
            h5py requires numpy version 1.0.3 or later. 
            
            Upgrading h5py on Mac OS X is best done with the source of the package, as the easy_install option can get confused with multiple numpy versions.
-           Mac OS X Snow Leopard comes with version 1.2.1
-         
+           (Mac OS X Snow Leopard comes with version 1.2.1). 
+           After downloading the source, execute ``python ./setup.py build`` in the source directory, and then ``python ./setup.py install`` to install it.  
+
+    #. **lxml** is used to validate the syntax of scripts passed to XMDS2. 
+           If you have root access, this is as easy as:
+           ``sudo easy_install Cheetah``, ``sudo easy_install pyparsing`` and ``sudo easy_install lxml`` respectively.
+
+               You will need to have 'libxml2' and 'libxslt' installed (via your choice of package manager) if you want to install lxml.  
+               Sufficient versions are preinstalled on Mac OS X 10.6.
+
+           If you don't have root access or want to install into your home directory, use:
+           ``easy_install --prefix=~ Cheetah`` (etc.)
 
 #. Install XMDS2 into your python path by running (in the xmds2/ directory):
     ``sudo ./setup.py develop``
 
     If you want to install it into your home directory, type ``./setup.py develop --prefix=~``
+
+    * Developer only instructions: The Cheetah templates (\*.tmpl) must be compiled into python.
+        To do this, run ``make`` in the xmds2/ directory.
 
     * Developer-only instructions: If you have 'numpy' installed, test XMDS2 by typing ``./run_tests.py`` in the xmds2/ directory.
        The package 'numpy' is one of the optional packages, with installation instructions below.
@@ -133,7 +132,7 @@ This guide adds extra notes for users wishing to install XMDS2 using the SVN rep
 
            If this results in an error, you may need to run ``sudo ./setup.py develop``
 
-           The generated html documentation can now be found at xmds2/documentation/index.html
+           The generated html documentation will then be found at xmds2/documentation/index.html
 
 **Congratulations!** You should now have a fully operational copy of xmds2 and xsil2graphics2.  You can test your copy using examples from the "xmds2/examples" directory, and follow the worked examples in the :ref:`QuickStartTutorial` and :ref:`WorkedExamples`.
 
