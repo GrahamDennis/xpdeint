@@ -8,16 +8,18 @@ Release Instructions:
 
 0. Change version in Preferences.py, setup.py, and conf.py.  ChangeLog is an optional change.
 
-1. Make sure everything works with a clean install.  (Check out a clean copy and do tests)
+1. Make sure everything works with a clean install.  
+    (Check out a clean copy and do tests) 
+    "svn checkout https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint xmds2"
 
-2. Check out a clean copy.  ("svn checkout https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint xmds2")
+2. At the top level, use "svn export . [path]" to make an unversioned clean copy in directory [path].
 
-3. "cd admin/userdoc-source", and "make html", and "make latex".
+3. "cd [path]/admin/userdoc-source", and "make html", and "make latex".
     Then "cd ../documentation/latex" and "make all-pdf".  This makes both kinds of documentation.
     
 4. "cd ../../" and "make" to compile the Cheetah code.
     
-4. "cd .." and "tar -zcf xmds2.0pre1.tgz xmds2.0pre1" makes the bundle.
+4. "cd .." and "tar -zcf xmds2.0pre1.tgz [path]" makes the bundle.
 
 5. Put that on sourceforge.
 
