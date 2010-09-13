@@ -106,13 +106,13 @@ This guide adds extra notes for users wishing to install XMDS2 using the SVN rep
 
     #. **lxml** is used to validate the syntax of scripts passed to XMDS2. 
            If you have root access, this is as easy as:
-           ``sudo easy_install Cheetah``, ``sudo easy_install pyparsing`` and ``sudo easy_install lxml`` respectively.
+           ``sudo easy_install lxml``
 
-               You will need to have 'libxml2' and 'libxslt' installed (via your choice of package manager) if you want to install lxml.  
+               You will need to have 'libxml2' and 'libxslt' installed (via your choice of package manager) to install lxml.  
                Sufficient versions are preinstalled on Mac OS X 10.6.
 
            If you don't have root access or want to install into your home directory, use:
-           ``easy_install --prefix=~ Cheetah`` (etc.)
+           ``easy_install --prefix=~ lxml``
 
 #. Install XMDS2 into your python path by running (in the xmds2/ directory):
     ``sudo ./setup.py develop``
