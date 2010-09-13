@@ -113,7 +113,7 @@ This guide adds extra notes for users wishing to install XMDS2 using the SVN rep
     #. **h5py** is needed for checking the results of XMDS2 tests that generate HDF5 output.
            h5py requires numpy version 1.0.3 or later. 
            
-           Upgrading h5py on Mac OS X is best done with the source of the package, as the easy_install option can get confused with multiple numpy versions.
+           Upgrading `h5py <http://h5py.alfven.org/>`_ on Mac OS X is best done with the source of the package, as the easy_install option can get confused with multiple numpy versions.
            (Mac OS X Snow Leopard comes with version 1.2.1). 
            After downloading the source, execute ``python ./setup.py build`` in the source directory, and then ``python ./setup.py install`` to install it.  
 
