@@ -49,6 +49,7 @@ This guide adds extra notes for users wishing to install XMDS2 using the SVN rep
 
 
 #. There are a range of optional installs.  We recommend that you install them if possible:
+
     .. _hdf5_Installation:
     
     #. **HDF5** is a library for reading and writing the `Hierarchical Data Format <http://www.hdfgroup.org/HDF5/>`_.
@@ -56,17 +57,23 @@ This guide adds extra notes for users wishing to install XMDS2 using the SVN rep
          compatible with xmds-1). The advantage of HDF5 is that this data format is understood by a variety of other tools. xsil2graphics2
          provides support for loading data created in this format into Mathematica and Matlab.
        
-         - Sidebar: Installing HDF5 from source follows a common pattern, which you may find yourself repeating later:  
+         \* Sidebar: Installing HDF5 from source follows a common pattern, which you may find yourself repeating later:  
+         
             #. After extracting the source directory, type ``configure`` and then add possible options.
+            
                 (For HDF5, install with the ``--prefix=/usr/local/`` option if you want XMDS2 to find the library automatically.  This is rarely needed for other packages.)
+                
             #. Once that is finished, type ``make``.  Then wait for that to finish, which will often be longer than you think.
+            
             #. Finally, type ``sudo make install`` to install it into the appropriate directory.
         
-    #. **MPI** is an API for doing parallel processing on multi-processor/multi-core computers, or clusters of computers.
+    #. **MPI** is an API for doing parallel processing 
+         on multi-processor/multi-core computers, or clusters of computers.
          Many supercomputing systems (and Mac OS X) come with MPI libraries pre installed.
          The `Open MPI <http://www.open-mpi.org/>`_ project has free distributions of this library for other machines.
-    
-    #. **FFTW** is the library XMDS2 uses for Fourier transforms, which is the transform most people will be using. 
+
+    #. **FFTW** is the library XMDS2 uses for Fourier transforms, 
+         which is the transform most people will be using. 
          If you need
          support for MPI distributed simulations, you must install the alpha version.  Both the stable and alpha versions are available for
          free at the `FFTW website <http://www.fftw.org/>`_.
@@ -83,11 +90,8 @@ This guide adds extra notes for users wishing to install XMDS2 using the SVN rep
          Then configure/compile as described in the HDF5 sidebar above.  
          You may wish to add the ``--enable-mpi --disable-fortran`` options to the ``configure`` command.
 
-    #. **mpmath** is a library for arbitrary precision floating point math. 
-         This package is needed for the matrix-based transforms like Bessel and Hermite-Gauss.
-         Install from package manager or ``sudo easy_install mpmath``
-           
-    #. A Matrix library like `ATLAS <http://math-atlas.sourceforge.net/>`_, or Intel's `MKL <http://software.intel.com/en-us/intel-mkl/>`_ allows efficient implementation of transform spaces other than Fourier space.
+    #. A Matrix library like `ATLAS <http://math-atlas.sourceforge.net/>`_, 
+         or Intel's `MKL <http://software.intel.com/en-us/intel-mkl/>`_ allows efficient implementation of transform spaces other than Fourier space.
          Mac OS X comes with its own (fast) matrix library.
          
          The `GNU Scientific library (GSL) <http://www.gnu.org/software/gsl/>`_ is another free matrix library.
@@ -97,6 +101,15 @@ This guide adds extra notes for users wishing to install XMDS2 using the SVN rep
          
          Mac OS X 10.5 and later come with numpy.
          
+    #. **lxml** is used to validate the syntax of scripts passed to XMDS2. 
+         If you have root access, this can be installed with the command ``sudo easy_install lxml``
+
+            You will need to have 'libxml2' and 'libxslt' installed (via your choice of package manager) to install lxml.  
+            Sufficient versions are preinstalled on Mac OS X 10.6.
+
+        If you don't have root access or want to install into your home directory, use:
+            ``easy_install --prefix=~ lxml``
+
     #. **h5py** is needed for checking the results of XMDS2 tests that generate HDF5 output.
            h5py requires numpy version 1.0.3 or later. 
            
@@ -104,35 +117,28 @@ This guide adds extra notes for users wishing to install XMDS2 using the SVN rep
            (Mac OS X Snow Leopard comes with version 1.2.1). 
            After downloading the source, execute ``python ./setup.py build`` in the source directory, and then ``python ./setup.py install`` to install it.  
 
-    #. **lxml** is used to validate the syntax of scripts passed to XMDS2. 
-           If you have root access, this is as easy as:
-           ``sudo easy_install lxml``
-
-               You will need to have 'libxml2' and 'libxslt' installed (via your choice of package manager) to install lxml.  
-               Sufficient versions are preinstalled on Mac OS X 10.6.
-
-           If you don't have root access or want to install into your home directory, use:
-           ``easy_install --prefix=~ lxml``
-
 #. Install XMDS2 into your python path by running (in the xmds2/ directory):
     ``sudo ./setup.py develop``
 
     If you want to install it into your home directory, type ``./setup.py develop --prefix=~``
 
-    * Developer only instructions: The Cheetah templates (\*.tmpl) must be compiled into python.
+    * Developer only instructions: 
+        The Cheetah templates (\*.tmpl) must be compiled into python.
         To do this, run ``make`` in the xmds2/ directory.
 
-    * Developer-only instructions: If you have 'numpy' installed, test XMDS2 by typing ``./run_tests.py`` in the xmds2/ directory.
-       The package 'numpy' is one of the optional packages, with installation instructions below.
+    * Developer-only instructions: 
+        If you have 'numpy' installed, test XMDS2 by typing ``./run_tests.py`` in the xmds2/ directory.
+        The package 'numpy' is one of the optional packages, with installation instructions below.
        
-    * Developer-only instructions: To build the user documentation, you first need to install sphinx, either via your package manager or:
-           ``sudo easy_install Sphinx``
+    * Developer-only instructions: 
+        To build the user documentation, you first need to install sphinx, either via your package manager or:
+        ``sudo easy_install Sphinx``
 
-           Then, to build the documentation, in the xmds2/admin/userdoc-source/ directory run: ``make html``
+        Then, to build the documentation, in the xmds2/admin/userdoc-source/ directory run: ``make html``
 
-           If this results in an error, you may need to run ``sudo ./setup.py develop``
+        If this results in an error, you may need to run ``sudo ./setup.py develop``
 
-           The generated html documentation will then be found at xmds2/documentation/index.html
+        The generated html documentation will then be found at xmds2/documentation/index.html
 
 **Congratulations!** You should now have a fully operational copy of xmds2 and xsil2graphics2.  You can test your copy using examples from the "xmds2/examples" directory, and follow the worked examples in the :ref:`QuickStartTutorial` and :ref:`WorkedExamples`.
 
