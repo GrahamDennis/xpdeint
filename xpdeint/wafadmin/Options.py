@@ -60,7 +60,7 @@ def create_parser(module=None):
 				cmds_str.append('  %s: %s' % (x.ljust(just), tbl[x].__doc__ or '-'))
 		cmds_str = '\n'.join(cmds_str)
 	else:
-		cmd_str = ' '.join(cmds)
+		cmds_str = ' '.join(cmds)
 
 	parser = OptionParser(conflict_handler="resolve", usage = '''waf [command] [options]
 
