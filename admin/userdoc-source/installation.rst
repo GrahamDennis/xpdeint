@@ -40,9 +40,9 @@ This guide adds extra notes for users wishing to install XMDS2 using the SVN rep
        a) First create the path ~/lib/python2.5/site-packages (assuming you installed python version 2.5) and ~/bin
           Add "export PYTHONPATH=~/lib/python2.5/site-packages:$PYTHONPATH" and "export PATH=~/bin:$PATH" (if necessary)
           to your .bashrc file (and run ". ~/.bashrc")
-
+       
        b) If necessary install setuptools, by executing ez_setup.py from the repository.
-          "python ez_setup.py --prefix=~"
+          ``python ez_setup.py --prefix=~``
           
     If you use Mac OS X 10.5 or later, or installed the Enthought Python Distribution on Windows, then setuptools is already installed.
     Though if the next step fails, you may need to upgrade setuptools.  To do that, type ``sudo easy_install -U setuptools``
@@ -56,6 +56,8 @@ This guide adds extra notes for users wishing to install XMDS2 using the SVN rep
          This is a standardised data format which it is suggested that people use in preference to the older 'binary' output (which is 
          compatible with xmds-1). The advantage of HDF5 is that this data format is understood by a variety of other tools. xsil2graphics2
          provides support for loading data created in this format into Mathematica and Matlab.
+         
+         XMDS2 only requires the single process version of HDF5, so there is no need to install the MPI version.
        
          \* Sidebar: Installing HDF5 from source follows a common pattern, which you may find yourself repeating later:  
          
@@ -121,6 +123,8 @@ This guide adds extra notes for users wishing to install XMDS2 using the SVN rep
     ``sudo ./setup.py develop``
 
     If you want to install it into your home directory, type ``./setup.py develop --prefix=~``
+    
+    This step requires access to the net, as it downloads any dependent packages.  If you are behind a firewall, you may need to set your HTTP_PROXY environment variable in order to do this.
 
     * Developer only instructions: 
         The Cheetah templates (\*.tmpl) must be compiled into python.
@@ -142,4 +146,5 @@ This guide adds extra notes for users wishing to install XMDS2 using the SVN rep
 
 **Congratulations!** You should now have a fully operational copy of xmds2 and xsil2graphics2.  You can test your copy using examples from the "xmds2/examples" directory, and follow the worked examples in the :ref:`QuickStartTutorial` and :ref:`WorkedExamples`.
 
+Optionally, you may also wish to create the directory ".xmds/wisdom" in your home directory.  This will be used by FFTW to store information about how best to perform Fourier transforms for your architecture.
 

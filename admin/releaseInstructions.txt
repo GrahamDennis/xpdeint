@@ -19,8 +19,10 @@ Release Instructions:
     
 4. "cd ../../" and "make" to compile the Cheetah code.
     
-4. "cd .." and "tar -zcf xmds2.0pre1.tgz [path]" makes the bundle.
+5. "rm -rf xpdeint/waf_build/" to remove build errors if some users try to remake the templates. 
 
-5. Put that on sourceforge.
+6. "cd .." and "tar -zcf xmds2.0pre1.tgz [path]" makes the bundle.
 
-6. Announce!
+7. Put that on sourceforge.
+
+8. Announce!
