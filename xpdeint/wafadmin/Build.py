@@ -295,7 +295,7 @@ class BuildContext(object):
 			lst = Utils.listdir(self.cachedir)
 		except OSError, e:
 			if e.errno == errno.ENOENT:
-				raise Utils.WafError('The project was not configured: run "waf configure" first!')
+				raise Utils.WafError('The project was not configured: run "./waf-light configure" first!')
 			else:
 				raise
 
