@@ -136,7 +136,7 @@ def configure(conf):
             )
             
             check_cxx(
-                cxxflags='-openmp',
+                cxxflags='-fopenmp',
                 uselib_store='openmp',
                 msg = "Checking for OpenMP"
             )
