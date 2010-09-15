@@ -2,6 +2,6 @@
 # encoding: utf-8
 import os
 
-versionString = '2.0pre2 "Release eventually, release often."'
+versionString = '2.0 "Shiny!"'
 
 xpdeintUserDataPath = os.path.join(os.path.expanduser('~'), '.xmds')
