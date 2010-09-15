@@ -17,7 +17,7 @@ This guide adds extra notes for users wishing to install XMDS2 using the SVN rep
       (Only do this once.  To update your copy, type ``svn up`` or ``make update`` in the same directory, and then repeat any developer-only instructions below).
     
 #. You will need a working C++ compiler.  
-    For Mac OS X, this means that the developer tools should be installed.
+    For Mac OS X, this means that the developer tools (XCode) should be installed.
     One common free compiler is `gcc <http://gcc.gnu.org/>`_.  It can be downloaded using your favourite package manager.
     XMDS2 can also use Intel's C++ compiler if you have it. 
     Intel's compiler typically generates faster code than gcc, but it isn't free.
