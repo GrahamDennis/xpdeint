@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="initialisation_order_chunked.xsil" expected="initialisation_order_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+  </testing>
+  
+  <name>initialisation_order_chunked</name>
+  <author>Graham Dennis</author>
+  <description>
+    1D TW model of the uniform Peaks system. Groundstate finder.
+    Demonstrates a phase-separated BEC groundstate.
+    Note that the initialisation of the 'wavefunction' vector
+    depends on the 'potential' vector having already been evaluated.
+  </description>
+  
+  <features>
+    <auto_vectorise />
+    <benchmark />
+    <chunked_output size="100KB" />
+    <fftw plan="exhaustive" />
+    <globals>
+      <![CDATA[
+      /* physical constants  */
+       const real omegaz = 2*M_PI*55.0;
+       const real omegarho = 2*M_PI*1020.0;
+       const real hbar = 1.05457148e-34;
+       const real M = 4.0026032*1.66053886e-27;
+       const real scatteringLength = 7.51e-9;
+       const real Uint3 = 4.0*M_PI*hbar*hbar*scatteringLength/M;
+       const real Nparticles = 2.0e6;
+       const real mu = pow(15*Nparticles*Uint3*omegarho*omegarho*omegaz/(8.0*M_PI)*pow(M/2,3.0/2.0),2.0/5.0);
+       const real Uint = Uint3*5.0*omegarho*omegarho*M/(4.0*M_PI*mu);
+       const real Uint_hbar = Uint/hbar;
+       const complex miUint_hbar = -i*Uint_hbar;
+       const real otherScatteringLength = 5.56e-9;
+       const real kappa = otherScatteringLength/scatteringLength;
+       const real eta = 0.5;
+       real Delta;
+       const real hbar_M = hbar/M;
+       
+       /* absorbing boundary constants */
+        const real absorbleft = 5.0e4;
+        const real absorbright = 5.0e4;
+        const real widthPerp = 5.0e-6;
+       
+      ]]>
+    </globals>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="z" lattice="256"  domain="(-36e-5, 36e-5)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="potential" initial_space="z" type="complex">
+    <components>V</components>
+    <initialisation>
+      <![CDATA[
+        V = 0.5*M*omegaz*omegaz*z*z;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <vector name="wavefunction" initial_space="z" type="complex">
+    <components>
+      phi1 phi0
+    </components>
+    <initialisation>
+      <dependencies>potential</dependencies>
+      <![CDATA[
+        phi1 = phi0 = 0.0;
+        if (eta*mu - V.Re() > 0.0) {
+          phi1 = sqrt((eta*mu - V.Re())/Uint);
+        }
+        if ((1.0-eta)*mu - V.Re() > 0.0) {
+          phi0 = sqrt(((1.0-eta)*mu - V.Re())/Uint);
+        }
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <computed_vector name="normalisation" dimensions="" type="real">
+    <components>N1 N0</components>
+    <evaluation>
+      <dependencies>wavefunction</dependencies>
+      <![CDATA[
+        N1 = mod2(phi1);
+        N0 = mod2(phi0);
+      ]]>
+    </evaluation>
+  </computed_vector>
+  
+  <vector name="normalisation_copy" dimensions="" type="real">
+    <components>N1_copy N0_copy</components>
+    <initialisation>
+      <dependencies>normalisation</dependencies>
+      <![CDATA[
+        N1_copy = N1;
+        N0_copy = N0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <filter>
+      <dependencies>wavefunction normalisation_copy</dependencies>
+      <![CDATA[
+        phi1 *= sqrt(eta*Nparticles/N1_copy);
+        phi0 *= sqrt((1.0-eta)*Nparticles/N0_copy);
+      ]]>
+    </filter>
+    <integrate algorithm="RK4" interval="5.0e-4" steps="500">
+      <samples>50 50</samples>
+      <filters>
+        <filter>
+          <dependencies>wavefunction normalisation</dependencies>
+          <![CDATA[
+            phi1 *= sqrt(eta*Nparticles/N1);
+            phi0 *= sqrt((1.0-eta)*Nparticles/N0);
+          ]]>
+        </filter>
+      </filters>
+      <operators>
+        <operator kind="ip" constant="yes">
+          <operator_names>T</operator_names>
+          <![CDATA[
+            T = -0.5*hbar/M*kz*kz;
+          ]]>
+        </operator>
+        <integration_vectors>wavefunction</integration_vectors>
+        <dependencies>potential</dependencies>
+        <![CDATA[
+          dphi1_dt = T[phi1] - 1.0/hbar*(V + Uint*(mod2(phi1) + mod2(phi0)) - eta*mu)*phi1;
+          dphi0_dt = T[phi0] - 1.0/hbar*(V + Uint*(mod2(phi1) + kappa*mod2(phi0)) - (1.0-eta)*mu)*phi0;
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  <output format="hdf5">
+    <group>
+      <sampling basis="z" initial_sample="yes">
+        <moments>dens1 dens0</moments>
+        <dependencies>wavefunction</dependencies>
+        <![CDATA[
+          dens1 = mod2(phi1);
+          dens0 = mod2(phi0);
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling basis="kz" initial_sample="yes">
+        <moments>dens1 dens0</moments>
+        <dependencies>wavefunction</dependencies>
+        <![CDATA[
+          dens1 = mod2(phi1);
+          dens0 = mod2(phi0);
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>

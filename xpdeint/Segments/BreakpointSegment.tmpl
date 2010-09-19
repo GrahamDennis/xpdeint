@@ -60,13 +60,14 @@ const char *_baseFilename = "$baseFilename";
   @end if
   
   @set featureOrdering = ['Output']
-${outputFormat.writeOutSetup({}, '_baseFilename')}@slurp
+${outputFormat.writeOutSetup('_baseFilename')}@slurp
 
   @set $dependentVariables = [{'vector': vector, 'arrayName': c'_active_${vector.id}', 'components': vector.components} for vector in $dependencies]
   @set $writeOutDict = {'field': $field,
                         'basis': $breakpointBasis,
                         'fp': '_outfile',
                         'baseFilename': "_baseFilename",
+                        'outputGroupFilenameSuffix': '',
                         'dependentVariables': dependentVariables,
                         'xsilElementName': "breakpoint",
                         'groupID': 1

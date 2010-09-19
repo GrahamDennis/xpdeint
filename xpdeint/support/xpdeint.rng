@@ -99,6 +99,9 @@
           <element name="cflags">
             <text/>
           </element>
+          <element name="chunked_output">
+            <attribute name="size"/>
+          </element>
           <element name="diagnostics">
             <choice>
               <ref name="Bool"/>

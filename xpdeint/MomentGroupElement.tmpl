@@ -18,6 +18,8 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 @def sampleFunctionContents($function)
   @# Evaluate any computed vectors we have that either we or one
   @# of our operators depends on
+  @set $featureOrdering = ['ChunkedOutput']
+${insertCodeForFeatures('sampleFunctionBegin', $featureOrdering), autoIndent=True}@slurp
   @set $computedVectorDependencies = $codeBlocks['sampling'].dependencies.copy()
   @silent computedVectorDependencies.update($dynamicVectorsNeedingPrecalculationForOperatorContainers($operatorContainers))
 ${evaluateComputedVectors(computedVectorDependencies)}@slurp
@@ -35,10 +37,12 @@ ${codeBlocks['sampling'].loop(self.insideSamplingLoops)}@slurp
   @#
   @if $outputField.hasDimensionName($propagationDimension)
 
-_${outputField.id}_${propagationDimension}[_${outputField.id}_index_${propagationDimension}++] = $propagationDimension;
+${propDimRep.arrayName}[${propDimRep.localOffset} + ${propDimRep.index}++] = $propagationDimension;
   @end if
 
 _LOG(_SAMPLE_LOG_LEVEL, "Sampled field (for moment group #${number + 1}) at ${propagationDimension} = %e\n", ${propagationDimension});
+
+${insertCodeForFeaturesInReverseOrder('sampleFunctionEnd', $featureOrdering), autoIndent=True}@slurp
   @#
 @end def
 

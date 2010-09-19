@@ -50,6 +50,9 @@ int main(int argc, char **argv)
 
 @def mainRoutineInnerContent
   @#
+  @set $preAllocationFeatureOrdering = ['ChunkedOutput']
+${insertCodeForFeatures('preAllocation', $preAllocationFeatureOrdering)}@slurp
+
   @set vectors = set([v for v in $templates if isinstance(v, VectorElement)])
 ${setVectorAllocSizes(vectors)}@slurp
   @#

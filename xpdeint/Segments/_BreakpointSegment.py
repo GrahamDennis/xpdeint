@@ -18,6 +18,7 @@ class _BreakpointSegment (_Segment):
     
     self.filename = None
     self.field = None
+    self.outputGroups = 1
   
   @lazy_property
   def outputComponents(self):
@@ -56,9 +57,11 @@ class _BreakpointSegment (_Segment):
     
     # Use the output format used for output if one isn't specified
     if not self.hasattr('outputFormat'):
-      self.outputFormat = self.getVar('features')['Output'].outputFormat
-    else:
-      self._children.append(self.outputFormat)
+      self.outputFormat = type(self.getVar('features')['Output'].outputFormat)(
+        parent = self,
+        **self.argumentsToTemplateConstructors
+      )
+    self._children.append(self.outputFormat)
     
     if self.outputFormat.name == 'hdf5':
       # HDF5 doesn't like writing out data when the order of dimensions in the file and

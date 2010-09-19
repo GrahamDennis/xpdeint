@@ -36,6 +36,8 @@ def require_mpmath():
     import mpmath
     if not hasattr(mpmath, 'besselj'):
       mpmath.besselj = mpmath.jn
+    mpmath.mp.prec = 64
+    
 
 def require_numpy():
   global numpy
@@ -117,8 +119,11 @@ def hermiteGaussWeightsFromZeros(n, roots):
 
 def besselJZeros(m, a, b):
   require_mpmath()
-  besseljn = lambda x: mpmath.besselj(m, x)
-  results = [mpmath.findroot(besseljn, mpmath.pi*(kp - 1./4 + 0.5*m)) for kp in range(a, b+1)]
+  if not hasattr(mpmath, 'besseljzero'):
+    besseljn = lambda x: mpmath.besselj(m, x)
+    results = [mpmath.findroot(besseljn, mpmath.pi*(kp - 1./4 + 0.5*m)) for kp in range(a, b+1)]
+  else:
+    results = [mpmath.besseljzero(m, i) for i in xrange(a, b+1)]
   # Check that we haven't found double roots or missed a root. All roots should be separated by approximately pi
   assert all([0.6*mpmath.pi < (b - a) < 1.4*mpmath.pi for a, b in zip(results[:-1], results[1:])]), "Separation of Bessel zeros was incorrect."
   return results
@@ -301,10 +306,10 @@ class _MMT (_Transform):
   
   def besselJZeros(self, m, k):
     if not m in self.besselJZeroCache:
-      self.besselJZeroCache[m] = map(float, besselJZeros(m, 1, k))
+      self.besselJZeroCache[m] = besselJZeros(m, 1, k)
     else:
       if len(self.besselJZeroCache[m]) < k:
-        self.besselJZeroCache[m].extend(map(float, besselJZeros(m, len(self.besselJZeroCache[m])+1, k)))
+        self.besselJZeroCache[m].extend(besselJZeros(m, len(self.besselJZeroCache[m])+1, k))
     
     return self.besselJZeroCache[m][:k]
   
@@ -318,12 +323,12 @@ class _MMT (_Transform):
   
   def hermiteZeros(self, n, _cache = {}):
     if not n in _cache:
-      _cache[n] = map(float, hermiteZeros(n))
+      _cache[n] = hermiteZeros(n)
     return _cache[n]
   
   def hermiteGaussWeights(self, n, _cache = {}):
     if not n in _cache:
-      _cache[n] = map(float, hermiteGaussWeightsFromZeros(n, self.hermiteZeros(n)))
+      _cache[n] = hermiteGaussWeightsFromZeros(n, self.hermiteZeros(n))
     return _cache[n]
   
 

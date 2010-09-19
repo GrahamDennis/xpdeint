@@ -6,12 +6,12 @@ Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 *@
 @extends xpdeint.ScriptElement.ScriptElement
 @from xpdeint.PrintfSafeFilter import PrintfSafeFilter
-@from xpdeint.CallOnceGuards import callOnceGuard
+@from xpdeint.CallOnceGuards import callOnceGuard, callOncePerInstanceGuard
 
 @def description: Unnamed Output Format
 @attr $outputFormatClasses = {}
 @attr $outputFormat = False
-@attr $outputArguments = []
+@attr $mpiSafe = False
 
 @@callOnceGuard
 @def functionPrototypes
@@ -99,19 +99,28 @@ void _write_xsil_footer(FILE* fp)
   @#
 @end def
 
-@def writeOutSetup($args, $filename)
+@def writeOutSetup($filename)
 char *_xsilFilename = (char*)malloc(256);
-strncpy(_xsilFilename, $filename, 256);
-strcat(_xsilFilename, ".xsil");
+snprintf(_xsilFilename, 256, "%s.xsil", $filename);
 
 FILE* _outfile = _open_xsil_file(_xsilFilename);
-_write_xsil_header(_outfile);
+
+if (_outfile) {
+  _write_xsil_header(_outfile);
+  ${truncateOutputFiles(filename), autoIndent=True}@slurp
+}
 @end def
 
 @def writeOutTearDown
 _write_xsil_footer(_outfile);
 _close_xsil_file(_outfile);
+free(_xsilFilename);
+_xsilFilename = NULL;
 _outfile = NULL;
+@end def
+
+@@callOncePerInstanceGuard
+@def truncateOutputFiles($baseFilename)
 @end def
 
 @def writeOutFunctionImplementationBegin($dict)

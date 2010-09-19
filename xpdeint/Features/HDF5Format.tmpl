@@ -6,11 +6,9 @@ Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 *@
 @extends xpdeint.Features._HDF5Format
 @from xpdeint.Geometry.SplitUniformDimensionRepresentation import SplitUniformDimensionRepresentation
-@from xpdeint.CallOnceGuards import callOnceGuard
+@from xpdeint.CallOnceGuards import callOnceGuard, callOncePerInstanceGuard
 
 @def description: HDF5 output format
-
-@attr $outputArguments = [('hid_t', 'hdf5_file'), ('const char*', '_dataFilename')]
 
 @attr $name = 'hdf5'
 @attr $mpiSafe = True
@@ -23,27 +21,6 @@ Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 #if defined(HAVE_HDF5_HL)
   #include <hdf5_hl.h>
 #endif
-@end def
-
-@def writeOutSetup($args, $filename)
-  @super(args, filename)
-  @# Due to funkyness, the parameter name here must be the same as the variable name
-  @silent args.update({'hdf5_file': 'hdf5_file', '_dataFilename': '_dataFilename'})
-hid_t hdf5_file;
-
-char _dataFilename[200];
-strncpy(_dataFilename, ${filename}, 200);
-strcat(_dataFilename, ".h5");
-
-/* Create a HDF5 file */
-if (_outfile)
-  hdf5_file = H5Fcreate(_dataFilename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-@end def
-
-@def writeOutTearDown
-if (_outfile)
-  H5Fclose(hdf5_file);
-  @super
 @end def
 
 @def writeOutFunctionImplementationBody($dict)
@@ -64,6 +41,15 @@ ${writeOutFunctionImplementationEnd(dict)}@slurp
   @#
 @end def
 
+@@callOncePerInstanceGuard
+@def truncateOutputFiles($baseFilename)
+char _dataFilename[200];
+snprintf(_dataFilename, 200, "%s.h5", ${baseFilename});
+
+H5Fclose(H5Fcreate(_dataFilename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT));
+@end def
+
+
 @def writeOutFunctionContents($dict)
   @#
   @set $fp = dict['fp']
@@ -81,13 +67,22 @@ ${writeOutFunctionImplementationEnd(dict)}@slurp
   @end for
   @set dict['componentCount'] = componentCount
   @#
+char _h5Filename[200];
+snprintf(_h5Filename, 200, "%s.h5", ${baseFilename});
+
+/* Open the file */
+hid_t hdf5_file = H5Fopen(_h5Filename, H5F_ACC_RDWR, H5P_DEFAULT);
 
 /* Create the group for this data */
-hid_t group = H5Gcreate(hdf5_file, "/${groupID}", H5P_DEFAULT);
+hid_t group;
+if (!H5Lexists(hdf5_file, "/${groupID}", H5P_DEFAULT))
+  group = H5Gcreate(hdf5_file, "/${groupID}", H5P_DEFAULT);
+else
+  group = H5Gopen(hdf5_file, "/${groupID}");
 
 if ($fp) {
   fprintf($fp, "    <Stream><Metalink Format=\"HDF5\" Type=\"Remote\" Group=\"/${groupID}\"/>\n");
-  fprintf($fp, "%s\n", _dataFilename);
+  fprintf($fp, "%s.h5\n", ${baseFilename});
   fprintf($fp, "    </Stream>\n");
 }
 
@@ -99,7 +94,11 @@ hid_t coordinate_dataspace;
 coordinate_length = ${dimRep.globalLattice};
 coordinate_dataspace = H5Screate_simple(1, &coordinate_length, NULL);
     @set $dataType = {'real': 'H5T_NATIVE_REAL', 'long': 'H5T_NATIVE_LONG'}[$dimRep.type]
-hid_t dataset_${dimRep.name} = H5Dcreate(hdf5_file, "/${groupID}/${dimRep.name}", ${dataType}, coordinate_dataspace, H5P_DEFAULT);
+hid_t dataset_${dimRep.name};
+if (!H5Lexists(hdf5_file, "/${groupID}/${dimRep.name}", H5P_DEFAULT))
+  dataset_${dimRep.name} = H5Dcreate(hdf5_file, "/${groupID}/${dimRep.name}", ${dataType}, coordinate_dataspace, H5P_DEFAULT);
+else
+  dataset_${dimRep.name} = H5Dopen(hdf5_file, "/${groupID}/${dimRep.name}");
     @if isinstance(dimRep, SplitUniformDimensionRepresentation)
       @set $dimArrayName = c'${dimRep.name}_data'
 ${dimRep.type}* ${dimArrayName} = (${dimRep.type}*)xmds_malloc(${dimRep.globalLattice} * sizeof(${dimRep.type}));
@@ -121,8 +120,8 @@ H5Sclose(coordinate_dataspace);
   @end for
 
 hsize_t file_dims[] = {${', '.join(dim.inBasis(basis).globalLattice for dim in field.dimensions)}};
-hid_t file_dataspace;
-file_dataspace = H5Screate_simple(${len(field.dimensions)}, file_dims, NULL);
+hid_t file_dataspace = H5Screate_simple(${len(field.dimensions)}, file_dims, NULL);
+
   @for variable in dependentVariables
     @if $variable.vector.type == 'real'
       @set $variable['separatedComponents'] = list(enumerate($variable.components))
@@ -134,7 +133,11 @@ file_dataspace = H5Screate_simple(${len(field.dimensions)}, file_dims, NULL);
       @end for
     @end if
     @for offset, componentName in $variable.separatedComponents
-hid_t dataset_${componentName} = H5Dcreate(hdf5_file, "/${groupID}/${componentName}", H5T_NATIVE_REAL, file_dataspace, H5P_DEFAULT);
+hid_t dataset_${componentName};
+if (!H5Lexists(hdf5_file, "/${groupID}/${componentName}", H5P_DEFAULT))
+  dataset_${componentName} = H5Dcreate(hdf5_file, "/${groupID}/${componentName}", H5T_NATIVE_REAL, file_dataspace, H5P_DEFAULT);
+else
+  dataset_${componentName} = H5Dopen(hdf5_file, "/${groupID}/${componentName}");
 #if defined(HAVE_HDF5_HL)
       @for dimNum, dim in enumerate(field.dimensions)
   H5DSattach_scale(dataset_${componentName}, dataset_${dim.inBasis(basis).name}, ${dimNum});
@@ -169,6 +172,6 @@ H5Dclose(dataset_${componentName});
 
 H5Sclose(file_dataspace);
 H5Gclose(group);
-
+H5Fclose(hdf5_file);
   @#
 @end def

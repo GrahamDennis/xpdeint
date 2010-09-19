@@ -6,6 +6,7 @@ import AutoVectorise
 import Benchmark
 import Bing
 import CFlags
+import ChunkedOutput
 import Diagnostics
 import ErrorCheck
 import Globals

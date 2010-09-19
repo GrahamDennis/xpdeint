@@ -41,9 +41,9 @@ ${interpolateDependencies}@slurp
 
 for (int _iteration = 0; _iteration < ${iterations}; _iteration++) {
   if (_iteration < ${iterations} - 1) {
-    ${callFunction('deltaA', arguments, _step = '0.5*_step', parentFunction=function), autoIndent=True}
+    ${callFunction('deltaA', arguments, _step = '0.5*_step', parentFunction=function), autoIndent=True}@slurp
   } else {
-    ${callFunction('deltaA', arguments, parentFunction=function), autoIndent=True}
+    ${callFunction('deltaA', arguments, parentFunction=function), autoIndent=True}@slurp
   }
   
   ${transformVectorsToBasis($integrationVectors, $homeBasis), autoIndent=True}@slurp

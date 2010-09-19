@@ -1,0 +1,70 @@
+@*
+ChunkedOutput.tmpl
+
+Created by Graham Dennis on 2010-09-17.
+Copyright (c) 2010 __MyCompanyName__. All rights reserved.
+*@
+@extends xpdeint.Features._ChunkedOutput
+
+@def description: Chunked Output
+@attr featureName = 'ChunkedOutput'
+
+@def defines
+  @#
+  @super
+  @#
+
+#define _CHUNK_SIZE ((long)$chunkSize)
+  @#
+@end def
+
+@def preAllocation($dict)
+  @#
+  @for mg in $momentGroups
+    @set propDimRep = mg.propDimRep
+    @if not propDimRep
+      @continue
+    @end if
+${propDimRep.localLattice} = ${propDimRep.globalLattice};
+if (${mg.processedVector.sizeInBasis(mg.codeBlocks['sampling'].basis)})
+  ${propDimRep.localLattice} = (_CHUNK_SIZE-1) / (${mg.processedVector.sizeInBasis(mg.codeBlocks['sampling'].basis)} / ${propDimRep.globalLattice}) + 1;
+${insertCodeForFeatures('findMax', ['Driver'], {'variable': '&' + propDimRep.localLattice, 'count': 1, 'op': 'min', 'type': 'long'}), autoIndent=True}@slurp
+// Now find the minimum and broadcast it.
+  @end for
+  @# Initialise output files
+  @set outputFeature = $features['Output']
+${outputFeature.outputFormat.writeOutSetup(c'"${outputFeature.filename}"')}@slurp
+${outputFeature.outputFormat.writeOutTearDown}@slurp
+  @#
+@end def
+
+@def sampleFunctionEnd($dict)
+  @#
+  @set mg = dict['caller']
+  @set propDimRep = mg.propDimRep
+  @#
+  @if not propDimRep
+    @return
+  @end if
+if (${propDimRep.index} == ${propDimRep.localLattice}) {
+  ${mg.functions['writeOut'].call(_outfile='NULL'), autoIndent=True}
+  _LOG(_SIMULATION_LOG_LEVEL, "Written a chunk of moment group ${mg.number+1} at ${propagationDimension} = %e\n", ${propagationDimension});
+  ${propDimRep.localOffset} += ${propDimRep.index};
+  ${propDimRep.index} = 0;
+  @if mg.integratingComponents
+  ${mg.rawVector.initialise, autoIndent=True}@slurp
+  @end if
+}
+@end def
+
+@def writeOutBegin($dict)
+  @#
+  @for mg in $momentGroups
+    @set propDimRep = mg.propDimRep
+    @if not propDimRep
+      @continue
+    @end if
+${propDimRep.localLattice} = ${propDimRep.index};
+  @end for
+  @#
+@end def

@@ -6,6 +6,7 @@ Copyright (c) 2007-2009 __MyCompanyName__. All rights reserved.
 *@
 @extends xpdeint.Features.OutputFormat
 @from xpdeint.Geometry.NonUniformDimensionRepresentation import NonUniformDimensionRepresentation
+@from xpdeint.CallOnceGuards import callOncePerInstanceGuard
 
 @def description: binary output format
 @attr $name = 'binary'
@@ -30,10 +31,20 @@ ${writeOutFunctionImplementationEnd(dict)}@slurp
   @#
 @end def
 
+@@callOncePerInstanceGuard
+@def truncateOutputFiles($baseFilename)
+char _dataFilename[200];
+for (int _i = 0; _i < ${parent.outputGroups}; _i++) {
+  snprintf(_dataFilename, 200, "%s_mg%i.dat", ${baseFilename}, _i);
+  fclose(fopen(_dataFilename, "wb"));  // truncate the file
+}
+@end def
+
 @def writeOutFunctionContents($dict)
   @#
   @set $fp = dict['fp']
   @set $baseFilename = dict['baseFilename']
+  @set $outputGroupFilenameSuffix = dict['outputGroupFilenameSuffix']
   @set $field = dict['field']
   @set $basis = dict['basis']
   @set $dependentVariables = dict['dependentVariables']
@@ -54,8 +65,7 @@ const char *encoding = NULL;
 #endif
 
 char _datFilename[200];
-strncpy(_datFilename, ${baseFilename}, 200);
-strcat(_datFilename, ".dat");
+snprintf(_datFilename, 200, "%s${outputGroupFilenameSuffix}.dat", ${baseFilename});
 
 if ($fp) {
   const char *unsignedLongType = NULL;
@@ -72,7 +82,7 @@ if ($fp) {
 }
 
 FILE* fpBinary;
-if ((fpBinary = fopen(_datFilename, "wb")) == NULL)
+if ((fpBinary = fopen(_datFilename, "r+b")) == NULL)
   // _LOG will cause the simulation to exit
   _LOG(_ERROR_LOG_LEVEL, "Unable top open output file %s\n"
                          "Chucking a spack...\n", _datFilename);

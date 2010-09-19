@@ -75,7 +75,9 @@ MPI_Allreduce(MPI_IN_PLACE, $arrayName, $size,
   @#
   @set $variable = dict['variable']
   @set $count = dict['count']
-MPI_Allreduce(MPI_IN_PLACE, $variable, $count, MPI_REAL, MPI_MAX, MPI_COMM_WORLD);
+  @set $type = dict.get('type', 'real').upper()
+  @set $op = dict.get('op', 'max').upper()
+MPI_Allreduce(MPI_IN_PLACE, $variable, $count, MPI_${type}, MPI_${op}, MPI_COMM_WORLD);
   @#
 @end def
 

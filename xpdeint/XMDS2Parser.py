@@ -262,14 +262,36 @@ class XMDS2Parser(ScriptParser):
           )
         self.globalNameSpace['precision'] = content
     
+    chunkedOutputElement = featuresParentElement.getChildElementByTagName('chunked_output', optional=True)
+    if chunkedOutputElement:
+      sizeString = chunkedOutputElement.getAttribute('size').strip().lower()
+      match = re.match(r'(\d+)(b|kb|mb|gb|tb)', sizeString)
+      if not match:
+        raise ParserException(
+          chunkedOutputElement,
+          "The 'size' attribute of the 'chunked_output' tag must be an integer followed by one of the suffixes "
+          "'B' (bytes), 'kB' (kilobytes), 'MB' (megabytes), 'GB' (gigabytes) or 'TB' (terabytes)."
+        )
+      chunkSize = int(match.group(1))
+      chunkSize *= 1024 ** {'b': 0, 'kb': 1, 'mb': 2, 'gb': 3, 'tb': 4}[match.group(2)]
+      chunkedOutputFeature = Features.ChunkedOutput.ChunkedOutput(
+        parent = self.simulation,
+        chunkSize = chunkSize,
+        xmlElement = chunkedOutputElement,
+        **self.argumentsToTemplateConstructors
+      )
+
     validationFeatureElement = featuresParentElement.getChildElementByTagName('validation', optional=True)
     if validationFeatureElement and validationFeatureElement.hasAttribute('kind'):
       kindString = validationFeatureElement.getAttribute('kind').strip().lower()
       
       if kindString in ('run-time', 'none'):
-        validationFeature = Features.Validation.Validation(parent = self.simulation,
-                                                           runValidationChecks = kindString == 'run-time',
-                                                           **self.argumentsToTemplateConstructors)
+        validationFeature = Features.Validation.Validation(
+          parent = self.simulation,
+          runValidationChecks = kindString == 'run-time',
+          xmlElement = validationFeatureElement,
+          **self.argumentsToTemplateConstructors
+        )
       elif kindString == 'compile-time':
         pass
       else:
@@ -2003,7 +2025,10 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
         #       numberOfPoints is a non-negative integer,
         # and where the '(numberOfPoints)' part is optional.  If not provided, 
         # it defaults to sampling all points in that dimension.
-        dimRepName, sep, latticeString = component.partition('(')
+        if '(' in component:
+          dimRepName, latticeString = component.split('(')
+        else:
+          dimRepName, latticeString = component, ''
         sampleBasis.append(dimRepName)
         latticeString = latticeString.strip(')')
         if not dimRepName in geometryDimRepNameMap:

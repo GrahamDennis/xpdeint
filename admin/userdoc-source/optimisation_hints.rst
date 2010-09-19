@@ -71,6 +71,18 @@ Parallelisation with MPI
 ^^^^^^^^^^^^^^^^^^^^^^^^
 Some simulations are so large or take so much time that it is not reasonable to run them on a single CPU on a single machine. Fortunately, the `Message Passing Interface <http://www.mpi-forum.org/>`_ was developed to enable different computers working on the same program to exchange data. You will need a MPI package installed to be abel to use this feature with your simulations. One popular implementation of MPI is `OpenMPI <http://www.open-mpi.org>`_.
 
+Miscellaneous hints
+-------------------
+By default, ``xmds2`` keeps all output moments in memory until the end of the simulation.  For high-dimensional simulations or simulations that sample a lot, this can consume large amounts of memory, slowing down the simulation.  In such circumstances, it is better to periodically write the output moments to disk to conserve memory.  This is achieved by using the ``<chunked_output>`` feature.  Simply add the following code to your ``<features>`` block:
+
+.. code-block:: xpdeint
+    
+    <chunked_output size="20MB" />
+
+Replace the size with the size of the output moments that you want to be stored (per node).  Once this has been exceeded, all output moments will be written to disk.  Note that this feature is not compatible with the ``<error_check>`` feature, any of the ``multi-path`` drivers or the ``ascii`` output format.  This feature is of most use with high-dimensional simulations using the ``distributed-mpi`` driver, but it also works for single-CPU simulations.
+
+
+
 Atom-optics-specific hints
 --------------------------
 

@@ -5,9 +5,15 @@ Created by Graham Dennis on 2007-08-26.
 Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 *@
 @extends xpdeint.Features._Feature
+@from xpdeint.Utilities import lazy_property
 
 @def description: output
 @attr $featureName = 'Output'
+
+@@lazy_property
+@def outputGroups
+  @return len($momentGroups)
+@end def
 
 @def functionPrototypes
   @#
@@ -33,14 +39,13 @@ void _write_output()
   @if not $momentGroups
   _LOG(_SIMULATION_LOG_LEVEL, "Warning: No output moment groups.\n");
   @else
-    @set $featureOrdering = ['Driver']
+    @set $featureOrdering = ['Driver', 'ChunkedOutput']
   ${insertCodeForFeatures('writeOutBegin', featureOrdering), autoIndent=True}@slurp
   
-    @set $args = {}
-  ${outputFormat.writeOutSetup(args, c'"$filename"'), autoIndent=True}@slurp
+  ${outputFormat.writeOutSetup(c'"$filename"'), autoIndent=True}@slurp
   
     @for $momentGroup in $momentGroups
-  ${momentGroup.functions['writeOut'].call(args, _outfile = '_outfile')}
+  ${momentGroup.functions['writeOut'].call(_outfile = '_outfile')}
     @end for
   
   ${outputFormat.writeOutTearDown, autoIndent=True}@slurp
@@ -51,10 +56,8 @@ void _write_output()
 @end def
 
 @def writeOutFunctionImplementationBody($dict)
-  @if not 'baseFilename' in dict:
-    @set caller = dict['caller']
-    @set dict['baseFilename'] = c'"${filename}_${caller.name}"'
-  @end if
+  @silent dict.setdefault('baseFilename', c'"$filename"')
+  @silent dict.setdefault('outputGroupFilenameSuffix', '_' + dict['caller'].name)
 ${outputFormat.writeOutFunctionImplementationBody(dict)}@slurp
 @end def
 

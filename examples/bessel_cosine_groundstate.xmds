@@ -13,6 +13,7 @@
     <auto_vectorise />
     <benchmark />
     <bing />
+    <chunked_output size="10KB" />
     <globals>
       <![CDATA[
         const real omegaz = 2*M_PI*20;

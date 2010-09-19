@@ -36,13 +36,13 @@ _active_${vector.id} = _${vector.id};
 for (int _iteration = 0; _iteration < ${iterations}; _iteration++) {
   if (_iteration < ${iterations} - 1) {
   @if $integrator.leftOperatorContainer
-    ${callFunction('leftDeltaA', arguments, _step = '0.5*_step', parentFunction=function), autoIndent=True}
+    ${callFunction('leftDeltaA', arguments, _step = '0.5*_step', parentFunction=function), autoIndent=True}@slurp
   @end if
   @if $integrator.rightOperatorContainer
-    ${callFunction('rightDeltaA', arguments, _step = '0.5*_step', parentFunction=function), autoIndent=True}
+    ${callFunction('rightDeltaA', arguments, _step = '0.5*_step', parentFunction=function), autoIndent=True}@slurp
   @end if
   } else {
-    ${callFunction('deltaA', arguments, parentFunction=function), autoIndent=True}
+    ${callFunction('deltaA', arguments, parentFunction=function), autoIndent=True}@slurp
     
     ${transformVectorsToBasis($integrationVectors, $homeBasis), autoIndent=True}@slurp
     

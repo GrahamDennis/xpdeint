@@ -204,7 +204,7 @@ if (!_half_step) { // For the full step we average the two noises.
     @for noiseVector in integrator.dynamicNoiseVectors
       @#
   _active_${noiseVector.id} = _${noiseVector.id}2;
-  ${noiseVector.functions['evaluate'].call(_step = '_noiseStep'), autoIndent=True}
+  ${noiseVector.functions['evaluate'].call(_step = '_noiseStep'), autoIndent=True}@slurp
   ${loopOverVectorsWithInnerContentTemplate([noiseVector],
   """_${vector.id}[$index] = 0.5*(_${vector.id}[$index] + _${vector.id}2[$index]);
   """, basis = noiseVector.initialBasis), autoIndent=True}@slurp

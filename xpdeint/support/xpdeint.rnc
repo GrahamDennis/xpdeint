@@ -44,10 +44,11 @@ InputXSILFile = element input_xsil_file {
 # Features
 Features = element features {
     (
-        element auto_vectorise  { Bool | empty }
+        element auto_vectorise    { Bool | empty }
         | element benchmark       { Bool | empty }
         | element bing            { Bool | empty }
         | element cflags          { text }
+        | element chunked_output  { attribute size  {text} }
         | element diagnostics     { Bool | empty }
         | element error_check     { Bool | empty }
         | element halt_non_finite { Bool | empty }

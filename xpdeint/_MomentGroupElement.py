@@ -53,6 +53,10 @@ class _MomentGroupElement (ScriptElement):
     children.extend(self.operatorContainers)
     return children
   
+  @lazy_property
+  def propDimRep(self):
+    return self.outputField.dimensionWithName(self.propagationDimension).inBasis(self.outputBasis)
+  
   # Do we actually need to allocate the moment group vector?
   # We may not need to allocate the raw vector if there is no
   # processing of the raw vector to be done before it is written.
@@ -92,8 +96,9 @@ class _MomentGroupElement (ScriptElement):
     
     # Throw out the propagation dimension if it only contains a single sample
     if self.outputField.hasDimensionName(self.propagationDimension):
-      propDimRep = self.outputField.dimensionWithName(self.propagationDimension).inBasis(self.outputBasis)
+      propDimRep = self.propDimRep
       if propDimRep.lattice == 1:
+        self.propDimRep = None
         singlePointDimension = self.outputField.dimensionWithName(self.propagationDimension)
         self.outputField.dimensions.remove(singlePointDimension)
         singlePointDimension.remove()
@@ -122,12 +127,11 @@ class _MomentGroupElement (ScriptElement):
     self.codeBlocks['sampling'].loopArguments['indexOverrides'] = \
       {propagationDimension: {self.outputField: "_%(outputFieldID)s_index_%(propagationDimension)s" % locals()}}
     
-    self.integratingComponents = not self.codeBlocks['sampling'].field.isEquivalentToField(self.outputField)
+    self.integratingComponents = bool(loopingDimensionNames.difference(set([dim.name for dim in self.outputField.dimensions])))
     if self.integratingComponents:
       # We are integrating over dimensions, and therefore the rawVector is an index override
       self.codeBlocks['sampling'].loopArguments['vectorOverrides'] = [self.rawVector]
     
-    self.functions['writeOut'].args.extend(self.getVar('features')['Output'].outputFormat.outputArguments)
   
   
 

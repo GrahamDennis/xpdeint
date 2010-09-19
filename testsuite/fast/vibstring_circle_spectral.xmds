@@ -15,6 +15,7 @@
   <features>
     <benchmark />
     <!-- <error_check /> -->
+    <chunked_output size="10KB" />
     <bing />
     <fftw plan="patient" />
     <openmp />

@@ -18,6 +18,8 @@ from pkg_resources import resource_filename
 import hashlib
 import shutil
 
+DATA_CACHE_VERSION = 1
+
 import cPickle
 
 from xpdeint.Utilities import leopardWebKitHack
@@ -51,7 +53,7 @@ usage: xmds2 [options] fileToBeParsed
 Options and arguments:
 -h                              : Print this message (also --help)
 -o filename                     : This overrides the name of the output file to be generated (also --output)
--d                              : Debug mode (also --debug)
+-g                              : Debug mode (also --debug)
 -n                              : Only generate a source file, don't compile (also --no-compile)
 --configure                     : Run configuration checks for compiling simulations
 --reconfigure                   : Run configuration using the same options as used with the last
@@ -261,6 +263,9 @@ def main(argv=None):
       print >> sys.stderr, "Warning: Unable to load xpdeint data cache."
       if debug: raise
   globalNameSpace['dataCache'] = dataCache
+  
+  if dataCache.get('version', 0) != DATA_CACHE_VERSION:
+    dataCache.clear()
   
   # We need the anyObject function in a few templates, so
   # we add it to the globalNameSpace, so that the function can
