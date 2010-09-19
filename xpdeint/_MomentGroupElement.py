@@ -105,7 +105,6 @@ class _MomentGroupElement (ScriptElement):
           vector.field._basisForBasisCache.clear()
           vector.initialBasis = tuple(b for b in vector.initialBasis if not b is propDimRep.canonicalName)
     
-    geometry = self.getVar('geometry')
     loopingDimensionNames = set([dim.name for dim in self.samplingField.dimensions]).union(self.singlePointSamplingBasis)
     for dependency in self.codeBlocks['sampling'].dependencies:
       missingLoopingDimensionNames = set(dim.name for dim in dependency.field.dimensions).difference(loopingDimensionNames)
@@ -122,7 +121,11 @@ class _MomentGroupElement (ScriptElement):
     propagationDimension = self.propagationDimension
     self.codeBlocks['sampling'].loopArguments['indexOverrides'] = \
       {propagationDimension: {self.outputField: "_%(outputFieldID)s_index_%(propagationDimension)s" % locals()}}
-    self.codeBlocks['sampling'].loopArguments['vectorOverrides'] = [self.rawVector]
+    
+    self.integratingComponents = not self.codeBlocks['sampling'].field.isEquivalentToField(self.outputField)
+    if self.integratingComponents:
+      # We are integrating over dimensions, and therefore the rawVector is an index override
+      self.codeBlocks['sampling'].loopArguments['vectorOverrides'] = [self.rawVector]
     
     self.functions['writeOut'].args.extend(self.getVar('features')['Output'].outputFormat.outputArguments)
   

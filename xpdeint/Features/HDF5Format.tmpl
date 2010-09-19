@@ -85,9 +85,11 @@ ${writeOutFunctionImplementationEnd(dict)}@slurp
 /* Create the group for this data */
 hid_t group = H5Gcreate(hdf5_file, "/${groupID}", H5P_DEFAULT);
 
-fprintf($fp, "    <Stream><Metalink Format=\"HDF5\" Type=\"Remote\" Group=\"/${groupID}\"/>\n");
-fprintf($fp, "%s\n", _dataFilename);
-fprintf($fp, "    </Stream>\n");
+if ($fp) {
+  fprintf($fp, "    <Stream><Metalink Format=\"HDF5\" Type=\"Remote\" Group=\"/${groupID}\"/>\n");
+  fprintf($fp, "%s\n", _dataFilename);
+  fprintf($fp, "    </Stream>\n");
+}
 
 /* Create the coordinate data sets */
 hsize_t coordinate_length;

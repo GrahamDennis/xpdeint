@@ -57,17 +57,19 @@ char _datFilename[200];
 strncpy(_datFilename, ${baseFilename}, 200);
 strcat(_datFilename, ".dat");
 
-const char *unsignedLongType = NULL;
-if (sizeof(unsigned long) == 4)
-  unsignedLongType = "uint32";
-else if (sizeof(unsigned long) == 8)
-  unsignedLongType = "uint64";
-else
-  unsignedLongType = "ulong";
+if ($fp) {
+  const char *unsignedLongType = NULL;
+  if (sizeof(unsigned long) == 4)
+    unsignedLongType = "uint32";
+  else if (sizeof(unsigned long) == 8)
+    unsignedLongType = "uint64";
+  else
+    unsignedLongType = "ulong";
 
-fprintf($fp, "    <Stream><Metalink Format=\"Binary\" UnsignedLong=\"%s\" precision=\"${precision}\" Type=\"Remote\" Encoding=\"%s\"/>\n",
-        unsignedLongType, encoding);
-fprintf($fp, "%s\n", _datFilename);
+  fprintf($fp, "    <Stream><Metalink Format=\"Binary\" UnsignedLong=\"%s\" precision=\"${precision}\" Type=\"Remote\" Encoding=\"%s\"/>\n",
+          unsignedLongType, encoding);
+  fprintf($fp, "%s\n", _datFilename);
+}
 
 FILE* fpBinary;
 if ((fpBinary = fopen(_datFilename, "wb")) == NULL)
@@ -128,7 +130,8 @@ ${writeData(dict), extraIndent=extraIndent}@slurp
 ${insertCodeForFeaturesInReverseOrder('binaryWriteOutWriteDataEnd', $featureOrdering, featureDict)}@slurp
 
 fclose(fpBinary);
-fprintf($fp, "    </Stream>\n");
+if ($fp)
+  fprintf($fp, "    </Stream>\n");
   @#
 @end def
 
