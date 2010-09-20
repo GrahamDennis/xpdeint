@@ -46,9 +46,11 @@ ${outputFeature.outputFormat.writeOutTearDown}@slurp
   @if not propDimRep
     @return
   @end if
-if (${propDimRep.index} == ${propDimRep.localLattice}) {
+if (${propDimRep.index} == ${propDimRep.localLattice}
+    && (${propDimRep.index} + ${propDimRep.localOffset}) != ${propDimRep.globalLattice})
+{
   ${mg.functions['writeOut'].call(_outfile='NULL'), autoIndent=True}
-  _LOG(_SIMULATION_LOG_LEVEL, "Written a chunk of moment group ${mg.number+1} at ${propagationDimension} = %e\n", ${propagationDimension});
+  _LOG(_SIMULATION_LOG_LEVEL, "Written a chunk of moment group ${mg.number+1}\n", ${propagationDimension});
   ${propDimRep.localOffset} += ${propDimRep.index};
   ${propDimRep.index} = 0;
   @if mg.integratingComponents

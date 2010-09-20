@@ -159,7 +159,9 @@ ${insertCodeForFeatures('binaryWriteOutWriteDataBegin', $featureOrdering, featur
   @silent dict['operation'] = 'write'
   @silent dict['variables'] = dict['dependentVariables']
 
-${processData(dict), extraIndent=extraIndent}@slurp
+if (${field.sizeInBasis(basis)}) {
+  ${processData(dict), autoIndent=True, extraIndent=extraIndent}@slurp
+}
 
   @# This is where the rest of the magic MPI code goes
 ${insertCodeForFeaturesInReverseOrder('binaryWriteOutWriteDataEnd', $featureOrdering, featureDict)}@slurp

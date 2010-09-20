@@ -61,8 +61,8 @@ ${distributedTransform.setVectorAllocSizes(vectors)}@slurp
         @assert len(dimReps) == 1
         @set vectorDimRep = dimReps[0]
         @set $indexOverride = indexOverrides[dimRepName][vector.field]
-        @set $arrayName = arrayName + c' + ${indexOverride} * ${vector.field.localPointsInDimensionsAfterDimRepInBasis(vectorDimRep, basis)} * _${vector.id}_ncomponents'
-        @set $size = size + ' / ' + vectorDimRep.globalLattice
+        @set $arrayName = c'${arrayName} + ${indexOverride} * ${vector.field.localPointsInDimensionsAfterDimRepInBasis(vectorDimRep, basis)} * _${vector.id}_ncomponents'
+        @set $size = size + ' / ' + vectorDimRep.localLattice
       @end if
     @end for
 MPI_Allreduce(MPI_IN_PLACE, $arrayName, $size,
