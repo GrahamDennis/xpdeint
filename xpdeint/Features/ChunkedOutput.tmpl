@@ -27,7 +27,7 @@ Copyright (c) 2010 __MyCompanyName__. All rights reserved.
     @end if
 ${propDimRep.localLattice} = ${propDimRep.globalLattice};
 if (${mg.processedVector.sizeInBasis(mg.codeBlocks['sampling'].basis)})
-  ${propDimRep.localLattice} = (_CHUNK_SIZE-1) / (${mg.processedVector.sizeInBasis(mg.codeBlocks['sampling'].basis)} / ${propDimRep.globalLattice}) + 1;
+  ${propDimRep.localLattice} = MIN((_CHUNK_SIZE-1) / (${mg.processedVector.sizeInBasis(mg.codeBlocks['sampling'].basis)} / ${propDimRep.globalLattice} * sizeof(${mg.processedVector.type})) + 1, ${propDimRep.globalLattice});
 ${insertCodeForFeatures('findMax', ['Driver'], {'variable': '&' + propDimRep.localLattice, 'count': 1, 'op': 'min', 'type': 'long'}), autoIndent=True}@slurp
 // Now find the minimum and broadcast it.
   @end for
