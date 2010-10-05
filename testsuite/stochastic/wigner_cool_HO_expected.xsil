@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
   <testing>
-    <xsil_file name="wigner_cool_HO.xsil" expected="wigner_cool_HO_expected.xsil" />
+    <xsil_file name="wigner_cool_HO.xsil" expected="wigner_cool_HO_expected.xsil" absolute_tolerance="5e-2" relative_tolerance="1e-1" />
   </testing>
   <name>wigner_cool_HO</name>
   <author>Michael Hush</author>
@@ -11,17 +11,14 @@
   
   <features>
     <benchmark />
-    <!-- <error_check /> -->
-    <!-- <bing /> -->
     <fftw plan="patient"/>
-    <openmp />
     <stochastic>
       <noise kind="gaussian" prefix="n" num="2" seed="157 9348 234"/>
     </stochastic>
     <globals>
       <![CDATA[
       
-        const double feedp = -1.35;
+        const real feedp = -1.35;
         
       ]]>
     </globals>
@@ -30,22 +27,20 @@
   <geometry>
     <propagation_dimension> t </propagation_dimension>
     <transverse_dimensions>
-      <integer_valued>
-        <dimension name="j" domain="(1, 10000)" />
-      </integer_valued>
+      <dimension name="j" type="integer" domain="(1, 10000)" />
     </transverse_dimensions>
   </geometry>
     
-  <vector type="double" name="variables" dimensions="j">
+  <vector type="real" name="variables" dimensions="j">
     <components> x p </components>
     <initialisation>
       <![CDATA[
       
         //Coherent state initialisation
         
-        double x0 = sqrt(10.0);
-        double p0 = sqrt(10.0);
-        double sigma0 = sqrt(0.5);
+        real x0 = sqrt(10.0);
+        real p0 = sqrt(10.0);
+        real sigma0 = sqrt(0.5);
       
         x = x0 + n_1*sigma0;
         p = p0 + n_2*sigma0;
@@ -54,9 +49,9 @@
     </initialisation>
   </vector>
   
-  <computed_vector type="double" name="observables_evo" dimensions="">
+  <computed_vector type="real" name="observables_evo" dimensions="">
     <components>avg_x_evo avg_p_evo avg_pp_evo</components>
-    <evaluation>
+    <evaluation noises="">
     <dependencies>variables</dependencies>
     <![CDATA[
       avg_p_evo = p/_lattice_j;  
@@ -64,9 +59,9 @@
     </evaluation>
   </computed_vector>
   
-  <computed_vector type="double" name="observables" dimensions="">
+  <computed_vector type="real" name="observables" dimensions="">
     <components>avg_x avg_p avg_E avg_EE avg_exx avg_epp avg_eEE avg_eEEEE</components>
-    <evaluation>
+    <evaluation noises="">
     <dependencies>variables</dependencies>
     <![CDATA[
       
@@ -87,10 +82,10 @@
   
   <sequence>
   
-    <integrate algorithm="ARK89" tolerance="1e-8" interval="10" steps="100">
+    <integrate algorithm="SI" tolerance="1e-8" interval="10" steps="1000">
       <samples>50</samples>
       
-      <operators dimensions="j">
+      <operators>
         <integration_vectors>variables</integration_vectors>
         <dependencies>observables_evo</dependencies>
         <![CDATA[
@@ -129,7 +124,7 @@
   </output>
 
 <info>
-Script compiled with xpdeint version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+Script compiled with XMDS2 version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
 See http://www.xmds.org for more information.
 </info>
 

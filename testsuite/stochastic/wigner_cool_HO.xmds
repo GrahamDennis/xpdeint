@@ -10,13 +10,7 @@
   </description>
   
   <features>
-    <benchmark />
-    <!-- <bing /> -->
     <fftw plan="patient"/>
-    <openmp />
-    <stochastic>
-      <noise kind="gaussian" prefix="n" num="2" seed="157 9348 234"/>
-    </stochastic>
     <globals>
       <![CDATA[
       
@@ -32,20 +26,24 @@
       <dimension name="j" type="integer" domain="(1, 10000)" />
     </transverse_dimensions>
   </geometry>
-    
+  
+  <noise_vector name="noise" kind="gaussian" type="complex" seed="157 9348 234">
+    <components>n_1</components>
+  </noise_vector>
+  
   <vector type="real" name="variables" dimensions="j">
     <components> x p </components>
     <initialisation>
+      <dependencies>noise</dependencies>
       <![CDATA[
       
         //Coherent state initialisation
         
         real x0 = sqrt(10.0);
         real p0 = sqrt(10.0);
-        real sigma0 = sqrt(0.5);
       
-        x = x0 + n_1*sigma0;
-        p = p0 + n_2*sigma0;
+        x = x0 + Re(n_1);
+        p = p0 + Im(n_1);
          
       ]]>
     </initialisation>
@@ -82,12 +80,13 @@
     </evaluation>
   </computed_vector>
   
+  
   <sequence>
   
-    <integrate algorithm="ARK89" tolerance="1e-8" interval="10" steps="100">
+    <integrate algorithm="SI" tolerance="1e-8" interval="10" steps="1000">
       <samples>50</samples>
       
-      <operators dimensions="j">
+      <operators>
         <integration_vectors>variables</integration_vectors>
         <dependencies>observables_evo</dependencies>
         <![CDATA[

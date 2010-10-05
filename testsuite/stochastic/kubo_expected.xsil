@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
   <testing>
-    <xsil_file name="kubo.xsil" expected="kubo_expected.xsil" absolute_tolerance="5e-2" relative_tolerance="1e-1" />
+    <xsil_file name="kubo.xsil" expected="kubo_expected.xsil" absolute_tolerance="2e-2" relative_tolerance="2e-2" />
   </testing>
   
   <name>kubo</name>
@@ -14,13 +14,11 @@
     <propagation_dimension> t </propagation_dimension>
   </geometry>
   
-  <driver name="multi-path" paths="1000" />
+  <driver name="multi-path" paths="10000" />
   
   <features>
-    <benchmark />
-    <bing />
     <stochastic>
-      <noise kind="gaussian" prefix="n" num="1" seed="157 9348 234"/>
+      <noise kind="gaussian" prefix="n" num="1" seed="1348 234"/>
       <!-- If there is no seed attribute then seeds will be chosen randomly at run-time -->
     </stochastic>
   </features>
@@ -37,8 +35,8 @@
   </vector>
   
   <sequence>
-    <integrate algorithm="ARK89" interval="10" steps="1000" tolerance="1e-8">
-      <samples>500 </samples>
+    <integrate algorithm="ARK45" interval="3" steps="1000" tolerance="1e-6">
+      <samples>50 </samples>
       <operators noises="n">
         <integration_vectors>main</integration_vectors>
         <![CDATA[
@@ -61,7 +59,7 @@
   </output>
 
 <info>
-Script compiled with xpdeint version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+Script compiled with XMDS2 version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
 See http://www.xmds.org for more information.
 </info>
 
@@ -74,9 +72,9 @@ t mean_zR mean_zI stderr_zR stderr_zI
     </Stream>
   </Array>
   <Array Name="data" Type="double">
-    <Dim>501</Dim>
+    <Dim>51</Dim>
     <Dim>5</Dim>
-    <Stream><Metalink Format="Binary" UnsignedLong="uint64" precision="double" Type="Remote" Encoding="LittleEndian"/>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
 kubo_expected_mg0.dat
     </Stream>
   </Array>

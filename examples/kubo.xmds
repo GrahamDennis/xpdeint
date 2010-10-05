@@ -17,7 +17,7 @@
     <benchmark />
   </features>
 
-  <noise_vector name="drivingNoise" dimensions="" kind="wiener" type="real" method="dsfmt">
+  <noise_vector name="drivingNoise" kind="wiener" type="real" method="dsfmt">
     <components>dW</components>
   </noise_vector>
   

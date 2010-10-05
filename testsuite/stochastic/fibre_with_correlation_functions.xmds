@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
   <testing>
-    <xsil_file name="fibre_with_correlation_function.xsil" expected="fibre_with_correlation_function_expected.xsil" absolute_tolerance="5e-2" relative_tolerance="1e-1" />
+    <xsil_file name="fibre_with_correlation_function.xsil" expected="fibre_with_correlation_function_expected.xsil" absolute_tolerance="5e-5" relative_tolerance="1e-3" />
   </testing>
   <name>fibre_with_correlation_function</name>
   <author>Unknown author</author>
@@ -16,36 +16,33 @@
     </transverse_dimensions>
   </geometry>
   
-  <driver name="multi-path" paths="5" />
-  
   <features>
     <auto_vectorise />
     <benchmark />
     <bing />
-    <!-- <openmp /> -->
-    <stochastic>
-      <noise kind="gaussian-solirte" prefix="n" num="2" seed="293485"/>
-      <!-- If there is no seed attribute then seeds will be chosen randomly at run-time -->
-    </stochastic>
     <globals>
       <![CDATA[
       const real ggamma = 1.0;
-      const real beta = sqrt(2.0*M_PI*ggamma/10.0);
+      const real beta = sqrt(4.0*M_PI*ggamma/10.0);
       ]]>
     </globals>
   </features>
   
   <vector name="main" initial_space="x" type="complex">
     <components>phi</components>
-    <initialisation no_noises="true">
+    <initialisation>
       <![CDATA[
         phi = 0.0;
       ]]>
     </initialisation>
   </vector>
   
+  <noise_vector name="noise" kind="wiener" type="complex" method="solirte" seed="293485">
+    <components>n_1</components>
+  </noise_vector>
+  
   <sequence>
-    <integrate algorithm="ARK89" iterations="3" interval="2.5" steps="200000" tolerance="1e-6">
+    <integrate algorithm="SI" interval="2.5" steps="200000" tolerance="1e-6">
       <samples>50 1 1</samples>
       <operators>
         <operator kind="ex" constant="yes">
@@ -55,8 +52,9 @@
           ]]>
         </operator>
         <integration_vectors>main</integration_vectors>
+        <dependencies>noise</dependencies>
         <![CDATA[
-          dphi_dt = L[phi] - ggamma*phi + beta*complex(n_1, n_2);
+          dphi_dt = L[phi] - ggamma*phi + beta*n_1;
         ]]>
       </operators>
     </integrate>
