@@ -60,7 +60,6 @@ Features = element features {
               attribute kind { text }
               , empty
           }
-        | Stochastic
         | FFTW
         | element precision { text }
     )+
