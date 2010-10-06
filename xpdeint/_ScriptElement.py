@@ -116,14 +116,6 @@ class _ScriptElement (Template):
     return result
   
   @lazy_property
-  def noiseField(self):
-    """
-    The field that noises should be evaluated in for this object.
-    This defaults to `field`, but can be overridden by subclasses.
-    """
-    return self.field
-  
-  @lazy_property
   def propagationDimension(self):
     """
     Return the name of the current propagation dimension for this template. Note that this

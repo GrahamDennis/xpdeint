@@ -2,9 +2,9 @@
 <simulation xmds-version="2">
   <testing>
     <command_line>mpirun -n 3 ./fibre_integer_dimensions_mpi</command_line>
-    <xsil_file name="fibre_integer_dimensions_mpi.xsil" expected="fibre_integer_dimensions_mpi_expected.xsil" absolute_tolerance="5e-2" relative_tolerance="1e-1" />
-    <xsil_file name="fibre_integer_dimensions_mpi_xspace.xsil" expected="fibre_integer_dimensions_mpi_xspace_expected.xsil" absolute_tolerance="5e-2" relative_tolerance="1e-1" />
-    <xsil_file name="fibre_integer_dimensions_mpi_kspace.xsil" expected="fibre_integer_dimensions_mpi_kspace_expected.xsil" absolute_tolerance="5e-2" relative_tolerance="1e-1" />
+    <xsil_file name="fibre_integer_dimensions_mpi.xsil" expected="fibre_integer_dimensions_mpi_expected.xsil" absolute_tolerance="5e-3" relative_tolerance="1e-2" />
+    <xsil_file name="fibre_integer_dimensions_mpi_xspace.xsil" expected="fibre_integer_dimensions_mpi_xspace_expected.xsil" absolute_tolerance="5e-3" relative_tolerance="1e-2" />
+    <xsil_file name="fibre_integer_dimensions_mpi_kspace.xsil" expected="fibre_integer_dimensions_mpi_kspace_expected.xsil" absolute_tolerance="5e-3" relative_tolerance="1e-2" />
   </testing>
   <name>fibre_integer_dimensions_mpi</name>
   <author>Unknown author</author>
@@ -24,9 +24,7 @@
   
   <features>
     <auto_vectorise />
-    <benchmark />
     <error_check />
-    <bing />
     <stochastic>
       <noise kind="gaussian-solirte" prefix="n" num="2" seed="293485"/>
       <!-- If there is no seed attribute then seeds will be chosen randomly at run-time -->
@@ -49,7 +47,7 @@
   </vector>
   
   <sequence>
-    <integrate algorithm="ARK45" interval="2.5" steps="200000" tolerance="1e-6">
+    <integrate algorithm="RK4" interval="2.5" steps="200000">
       <samples>50</samples>
       <operators>
         <operator kind="ip" constant="yes">
@@ -71,18 +69,16 @@
       <dependencies>main</dependencies>
     </breakpoint>
     <breakpoint filename="fibre_integer_dimensions_mpi_kspace_hdf5.xsil" format='hdf5'>
-      <dependencies fourier_space="j kx">main</dependencies>
+      <dependencies basis="j kx">main</dependencies>
     </breakpoint>
     <breakpoint filename="fibre_integer_dimensions_mpi_kspace.xsil" format='binary'>
-      <dependencies fourier_space="j kx">main</dependencies>
+      <dependencies basis="j kx">main</dependencies>
     </breakpoint>
   </sequence>
   
   <output format="binary">
     <group>
-      <sampling initial_sample="yes">
-        <dimension name="j" lattice="0" />
-        <dimension name="x" lattice="64" fourier_space="yes" />
+      <sampling basis="j(0) kx" initial_sample="yes">
         <moments>pow_dens</moments>
         <dependencies>main</dependencies>
         <![CDATA[
@@ -93,7 +89,7 @@
   </output>
 
 <info>
-Script compiled with xpdeint version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+Script compiled with XMDS2 version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
 See http://www.xmds.org for more information.
 </info>
 
@@ -109,7 +105,7 @@ j x phiR phiI
     <Dim>4</Dim>
     <Dim>64</Dim>
     <Dim>4</Dim>
-    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint64" precision="double" Type="Remote" Encoding="LittleEndian"/>
 fibre_integer_dimensions_mpi_xspace_expected.dat
     </Stream>
   </Array>

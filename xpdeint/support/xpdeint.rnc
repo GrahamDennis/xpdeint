@@ -80,24 +80,6 @@ Argument = element argument {
     , empty
 }
 
-Stochastic = element stochastic {
-    Noise+
-}
-
-Noise = element noise {
-    attribute kind { text }
-    , attribute mean-rate { text }? # Only used by poissonian noises
-    , attribute prefix { text }
-    , attribute num { text }
-    , attribute seed { text }?
-}
-
-NoiseAttributes = 
-    (   
-        attribute noises { text }
-        | attribute no_noises { text }
-    )
-
 FFTW = element fftw {
     attribute plan { text }?
     , attribute threads { text }?
@@ -149,7 +131,6 @@ Vector = element vector {
     , element initialisation {
         attribute kind { text }?
         , attribute geometry_matching_mode { text }?
-        , NoiseAttributes?
         , element filename { 
             attribute group { text }?
             , text
@@ -162,8 +143,7 @@ Vector = element vector {
 ComputedVector = element computed_vector {
     VectorCommon
     , element evaluation {
-        NoiseAttributes?
-        , Dependencies?
+        Dependencies?
         , text
     }
 }
@@ -211,7 +191,6 @@ Filters = element filters {
 
 Operators = element operators {
     attribute dimensions { text }?
-    , NoiseAttributes?
     , (
         Operator
         | element integration_vectors {

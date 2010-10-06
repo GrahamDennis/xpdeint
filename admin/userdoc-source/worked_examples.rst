@@ -278,7 +278,7 @@ where we can interpret this as a Stratonovich or Ito differential equation, depe
   
       <vector name="main" type="complex">
         <components> z </components>
-        <initialisation noises="">
+        <initialisation>
           <![CDATA[
             z = 1.0;
           ]]>
@@ -420,7 +420,7 @@ where the noise terms :math:`\eta_j(x,t)` are Wiener noise increments with varia
   
       <vector name="main" initial_space="x" type="complex">
         <components>phi</components>
-        <initialisation no_noises="true">
+        <initialisation>
           <![CDATA[
             phi = 0.0;
           ]]>

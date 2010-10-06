@@ -2,9 +2,9 @@
 <simulation xmds-version="2">
   <testing>
     <command_line>mpirun -n 3 ./fibre_integer_dimensions_mpi</command_line>
-    <xsil_file name="fibre_integer_dimensions_mpi.xsil" expected="fibre_integer_dimensions_mpi_expected.xsil" absolute_tolerance="5e-2" relative_tolerance="1e-1" />
-    <xsil_file name="fibre_integer_dimensions_mpi_xspace.xsil" expected="fibre_integer_dimensions_mpi_xspace_expected.xsil" absolute_tolerance="5e-2" relative_tolerance="1e-1" />
-    <xsil_file name="fibre_integer_dimensions_mpi_kspace.xsil" expected="fibre_integer_dimensions_mpi_kspace_expected.xsil" absolute_tolerance="5e-2" relative_tolerance="1e-1" />
+    <xsil_file name="fibre_integer_dimensions_mpi.xsil" expected="fibre_integer_dimensions_mpi_expected.xsil" absolute_tolerance="5e-3" relative_tolerance="1e-2" />
+    <xsil_file name="fibre_integer_dimensions_mpi_xspace.xsil" expected="fibre_integer_dimensions_mpi_xspace_expected.xsil" absolute_tolerance="5e-3" relative_tolerance="1e-2" />
+    <xsil_file name="fibre_integer_dimensions_mpi_kspace.xsil" expected="fibre_integer_dimensions_mpi_kspace_expected.xsil" absolute_tolerance="5e-3" relative_tolerance="1e-2" />
   </testing>
   <name>fibre_integer_dimensions_mpi</name>
   <author>Unknown author</author>
@@ -24,32 +24,30 @@
   
   <features>
     <auto_vectorise />
-    <benchmark />
     <error_check />
-    <bing />
-    <stochastic>
-      <noise kind="gaussian-solirte" prefix="n" num="2" seed="293485"/>
-      <!-- If there is no seed attribute then seeds will be chosen randomly at run-time -->
-    </stochastic>
     <globals>
       <![CDATA[
       const real ggamma = 1.0;
-      const real beta = sqrt(2.0*M_PI*ggamma/10.0);
+      const real beta = sqrt(4.0*M_PI*ggamma/10.0);
       ]]>
     </globals>
   </features>
   
   <vector name="main" initial_space="j x" type="complex">
     <components>phi</components>
-    <initialisation no_noises="true">
+    <initialisation>
       <![CDATA[
         phi = 0.0;
       ]]>
     </initialisation>
   </vector>
   
+  <noise_vector name="noise" kind="wiener" method="solirte" type="complex" seed="293485">
+    <components>n_1</components>
+  </noise_vector>
+  
   <sequence>
-    <integrate algorithm="ARK45" interval="2.5" steps="200000" tolerance="1e-6">
+    <integrate algorithm="RK4" interval="2.5" steps="200000">
       <samples>50</samples>
       <operators>
         <operator kind="ip" constant="yes">
@@ -59,8 +57,9 @@
           ]]>
         </operator>
         <integration_vectors>main</integration_vectors>
+        <dependencies>noise</dependencies>
         <![CDATA[
-          dphi_dt = L[phi] - ggamma*phi + beta*complex(n_1, n_2);
+          dphi_dt = L[phi] - ggamma*phi + beta*n_1;
         ]]>
       </operators>
     </integrate>

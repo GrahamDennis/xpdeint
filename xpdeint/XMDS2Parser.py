@@ -72,19 +72,6 @@ from xpdeint import Features
 
 from xpdeint.Features import Transforms
 
-from xpdeint.Features.Noises.POSIX.GaussianPOSIXNoise import GaussianPOSIXNoise
-from xpdeint.Features.Noises.POSIX.UniformPOSIXNoise import UniformPOSIXNoise
-from xpdeint.Features.Noises.POSIX.PoissonianPOSIXNoise import PoissonianPOSIXNoise
-
-from xpdeint.Features.Noises.MKL.GaussianMKLNoise import GaussianMKLNoise
-from xpdeint.Features.Noises.MKL.UniformMKLNoise import UniformMKLNoise
-
-from xpdeint.Features.Noises.DSFMT.GaussianDSFMTNoise import GaussianDSFMTNoise
-from xpdeint.Features.Noises.DSFMT.UniformDSFMTNoise import UniformDSFMTNoise
-from xpdeint.Features.Noises.DSFMT.PoissonianDSFMTNoise import PoissonianDSFMTNoise
-
-from xpdeint.Features.Noises.Solirte.GaussianSolirteNoise import GaussianSolirteNoise
-
 # TODO: Must check that we are never sampling a temporary vector when it doesn't exist.
 # The way to do this is after the template tree has been built to iterate over all elements that can sample
 # and verifying that it isn't sampling a temporary vector that it didn't create (or is a child of the creator).
@@ -365,98 +352,6 @@ class XMDS2Parser(ScriptParser):
                                               **self.argumentsToTemplateConstructors)
       cflagsTemplate.cflagsString = cflagsElement.innerText().strip()
     
-    stochasticFeatureElement, stochasticFeature = parseSimpleFeature('stochastic', Features.Stochastic.Stochastic)
-    
-    if stochasticFeature:
-      stochasticFeature.xmlElement = stochasticFeatureElement
-      noiseElements = stochasticFeatureElement.getChildElementsByTagName('noise')
-      for noiseElement in noiseElements:
-        prefix = noiseElement.getAttribute('prefix').strip()
-        kind = noiseElement.getAttribute('kind').strip().lower()
-        noiseClass = None
-        noiseAttributeDictionary = dict()
-        if kind in ('gauss', 'gaussian', 'gaussian-posix'):
-          noiseClass = GaussianPOSIXNoise
-        elif kind in ('uniform', 'uniform-posix'):
-          noiseClass = UniformPOSIXNoise
-        elif kind in ('poissonian', 'poissonian-posix', 'poissonian-dsfmt'):
-          if kind.endswith('dsfmt'):
-            noiseClass = PoissonianDSFMTNoise
-          else:
-            noiseClass = PoissonianPOSIXNoise
-          
-          if not noiseElement.hasAttribute('mean-rate'):
-            raise ParserException(noiseElement, "Poissonian noise must specify a 'mean-rate' attribute.")
-          
-          meanRateString = noiseElement.getAttribute('mean-rate')
-          try:
-            meanRate = float(meanRateString) # Is it a simple number?
-            if meanRate < 0.0:               # Was the number positive?
-              raise ParserException(noiseElement, "Mean-rate for Poissonian noises must be positive.")
-          except ValueError, err:
-            # We could just barf now, but it could be valid code, and there's no way we can know.
-            # But we only accept code for this value when we have a validation element with a 
-            # run-time kind of validation check
-            if 'Validation' in self.globalNameSpace['features']:
-              validationFeature = self.globalNameSpace['features']['Validation']
-              validationFeature.validationChecks.append("""
-              if (%(meanRateString)s < 0.0)
-                _LOG(_ERROR_LOG_LEVEL, "ERROR: The mean-rate for Poissonian noise %(prefix)s is not positive!\\n"
-                                       "Mean-rate = %%e\\n", %(meanRateString)s);""" % locals())
-            else:
-              raise ParserException(
-                noiseElement,
-                "Unable to understand '%(meanRateString)s' as a positive real value. "
-                "Use the feature <validation kind=\"run-time\"/> to allow for arbitrary code." % locals()
-              )
-          noiseAttributeDictionary['noiseMeanRate'] = meanRateString
-        else:
-          noiseClass = {
-            'gaussian-mkl': GaussianMKLNoise,
-            'uniform-mkl': UniformMKLNoise,
-            'gaussian-dsfmt': GaussianDSFMTNoise,
-            'uniform-dsfmt': UniformDSFMTNoise,
-            'gaussian-solirte': GaussianSolirteNoise,
-          }.get(kind)
-          if not noiseClass:
-            raise ParserException(noiseElement, "Unknown noise kind '%(kind)s'." % locals())
-        noise = noiseClass(parent = stochasticFeature,
-                           **self.argumentsToTemplateConstructors)
-        
-        self.applyAttributeDictionaryToObject(noiseAttributeDictionary, noise)
-        
-        noise.prefix = prefix
-        
-        noiseCountString = noiseElement.getAttribute('num').strip()
-        try:
-          noiseCount = int(noiseCountString)
-        except ValueError, err:
-          raise ParserException(noiseElement, "Cannot understand '%(noiseCountString)s' as an "
-                                              "integer number of noises." % locals())
-        noise.noiseCount = noiseCount
-        
-        noise.seedArray = []
-        if noiseElement.hasAttribute('seed'):
-          seedStringList = noiseElement.getAttribute('seed').split()
-          for seedString in seedStringList:
-            try:
-              seedInt = int(seedString)
-              if seedInt < 0:
-                raise ParserException(noiseElement, "Seeds must be positive integers." % locals())
-            except ValueError, err:
-              if 'Validation' in self.globalNameSpace['features']:
-                validationFeature = self.globalNameSpace['features']['Validation']
-                validationFeature.validationChecks.append("""
-                if (%(seedString)s < 0)
-                  _LOG(_ERROR_LOG_LEVEL, "ERROR: The seed for random noise %(prefix)s is not positive!\\n"
-                  "Seed = %%d\\n", %(seedString)s);""" % locals())
-              else:
-                raise ParserException(noiseElement, "Unable to understand seed '%(seedString)s' as a positive integer. Use the feature <validation kind=\"run-time\"/> to allow for arbitrary code." % locals())
-          
-          noise.seedArray = seedStringList
-        
-        stochasticFeature.noises.append(noise)
-    
     fftwElement = featuresParentElement.getChildElementByTagName('fftw', optional=True)
     
     if fftwElement:
@@ -507,23 +402,7 @@ class XMDS2Parser(ScriptParser):
       self.applyAttributeDictionaryToObject(fftAttributeDictionary, fourierTransform)
   
   def parseFeatureAttributes(self, someElement, someTemplate):
-    self.parseNoisesAttribute(someElement, someTemplate)
     self.parseMaxIterationsAttribute(someElement, someTemplate)
-  
-  def parseNoisesAttribute(self, someElement, someTemplate):
-    if not (someElement.hasAttribute('noises') or someElement.hasAttribute('no_noises')):
-      return
-    
-    if someElement.hasAttribute('noises') and someElement.hasAttribute('no_noises'):
-      raise ParserException(someElement, "You cannot specify both a 'noises' attribute and a 'no_noises' attribute.")
-    
-    if someElement.hasAttribute('noises'):
-      noises = Utilities.symbolsInString(someElement.getAttribute('noises'), xmlElement = someElement)
-      someTemplate.noisesEntity = ParsedEntity(someElement, noises)
-    
-    if someElement.hasAttribute('no_noises'):
-      if someElement.getAttribute('no_noises').strip().lower() in ('yes', 'true'):
-        someTemplate.noisesEntity = ParsedEntity(someElement, [])
   
   def parseMaxIterationsAttribute(self, someElement, someTemplate):
     if not isinstance(someTemplate, Integrators.AdaptiveStep.AdaptiveStep):
@@ -1032,7 +911,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       # Add the noise vector template to the results
       results.append(self.parseNoiseVectorElement(noiseVectorElement, parentTemplate))
     
-    if not 'Stochastic' in self.globalNameSpace['features']:
+    if noiseVectorElements and not 'Stochastic' in self.globalNameSpace['features']:
       Features.Stochastic.Stochastic(parent = self.simulation, **self.argumentsToTemplateConstructors)
     
     

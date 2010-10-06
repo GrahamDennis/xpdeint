@@ -42,12 +42,12 @@
   </vector>
   
   <sequence>
-    <integrate algorithm="ARK89" interval="10" steps="1000" tolerance="1e-8">
+    <integrate algorithm="RK9" interval="10" steps="1000" tolerance="1e-8">
       <samples>500 10</samples>
       <operators noises="n">
         <integration_vectors>main</integration_vectors>
         <![CDATA[
-          dz_dt(j: j) = i*z*n_1;
+          dz_dt(j => j) = i*z*n_1;
         ]]>
       </operators>
     </integrate>
@@ -58,31 +58,30 @@
   
   <output format="binary">
     <group>
-      <sampling initial_sample="yes">
-        <dimension name="j" lattice="0" />
+      <sampling basis="j(0)" initial_sample="yes">
         <moments>zR zI</moments>
-        <dependencies>main 0d_noise</dependencies>
+        <dependencies>main</dependencies>
         <![CDATA[
-          zR = z.re/_lattice_j;
-          zI = z.im/_lattice_j;
+          zR = z.Re()/_lattice_j;
+          zI = z.Im()/_lattice_j;
         ]]>
       </sampling>
     </group>
     <group>
-      <sampling initial_sample="yes">
-        <dimension name="j" />
+      <sampling basis="j" initial_sample="yes">
         <moments>zR zI</moments>
         <dependencies>main</dependencies>
         <![CDATA[
-          zR = z.re;
-          zI = z.im;
+            _SAMPLE_COMPLEX(z);
+          zR = z.Re();
+          zI = z.Im();
         ]]>
       </sampling>
     </group>
   </output>
 
 <info>
-Script compiled with xpdeint version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+Script compiled with XMDS2 version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
 See http://www.xmds.org for more information.
 </info>
 
@@ -97,7 +96,7 @@ j zR zI
   <Array Name="data" Type="double">
     <Dim>1024</Dim>
     <Dim>3</Dim>
-    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint64" precision="double" Type="Remote" Encoding="LittleEndian"/>
 kubo_integer_dimensions_mpi_break_expected.dat
     </Stream>
   </Array>

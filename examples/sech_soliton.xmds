@@ -26,7 +26,7 @@
   
   <vector name="wavefunction" initial_space="x" type="complex">
     <components>psi</components>
-    <initialisation no_noises="true">
+    <initialisation>
       <![CDATA[
         psi = N/cosh(x);
       ]]>

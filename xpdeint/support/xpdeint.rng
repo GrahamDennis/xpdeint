@@ -173,33 +173,6 @@
       <empty/>
     </element>
   </define>
-  <define name="Stochastic">
-    <element name="stochastic">
-      <oneOrMore>
-        <ref name="Noise"/>
-      </oneOrMore>
-    </element>
-  </define>
-  <define name="Noise">
-    <element name="noise">
-      <attribute name="kind"/>
-      <optional>
-        <attribute name="mean-rate"/>
-      </optional>
-      <!-- Only used by poissonian noises -->
-      <attribute name="prefix"/>
-      <attribute name="num"/>
-      <optional>
-        <attribute name="seed"/>
-      </optional>
-    </element>
-  </define>
-  <define name="NoiseAttributes">
-    <choice>
-      <attribute name="noises"/>
-      <attribute name="no_noises"/>
-    </choice>
-  </define>
   <define name="FFTW">
     <element name="fftw">
       <optional>
@@ -303,9 +276,6 @@
             <attribute name="geometry_matching_mode"/>
           </optional>
           <optional>
-            <ref name="NoiseAttributes"/>
-          </optional>
-          <optional>
             <element name="filename">
               <optional>
                 <attribute name="group"/>
@@ -325,9 +295,6 @@
     <element name="computed_vector">
       <ref name="VectorCommon"/>
       <element name="evaluation">
-        <optional>
-          <ref name="NoiseAttributes"/>
-        </optional>
         <optional>
           <ref name="Dependencies"/>
         </optional>
@@ -417,9 +384,6 @@
     <element name="operators">
       <optional>
         <attribute name="dimensions"/>
-      </optional>
-      <optional>
-        <ref name="NoiseAttributes"/>
       </optional>
       <oneOrMore>
         <choice>

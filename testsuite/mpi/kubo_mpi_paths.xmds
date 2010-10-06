@@ -2,7 +2,7 @@
 <simulation xmds-version="2">
   <testing>
     <command_line>mpirun -n 2 ./kubo_mpi_paths</command_line>
-    <xsil_file name="kubo_mpi_paths.xsil" expected="kubo_mpi_paths_expected.xsil" absolute_tolerance="5e-2" relative_tolerance="1e-9" />
+    <xsil_file name="kubo_mpi_paths.xsil" expected="kubo_mpi_paths_expected.xsil" absolute_tolerance="4e-2" relative_tolerance="4e-2" />
   </testing>
   
   <name>kubo_mpi_paths</name>
@@ -15,33 +15,29 @@
     <propagation_dimension> t </propagation_dimension>
   </geometry>
   
-  <driver name="mpi-multi-path" paths="1000" />
-  
-  <features>
-    <benchmark />
-    <bing />
-    <stochastic>
-      <noise kind="gaussian" prefix="n" num="1" seed="157 9348 234"/>
-      <!-- If there is no seed attribute then seeds will be chosen randomly at run-time -->
-    </stochastic>
-  </features>
+  <driver name="mpi-multi-path" paths="10000" />
   
   <vector name="main">
     <components type="complex">
       z
     </components>
-    <initialisation noises="">
+    <initialisation>
       <![CDATA[
         z = 1.0;
       ]]>
     </initialisation>
   </vector>
   
+  <noise_vector name="noise" kind="wiener" type="real">
+    <components>n_1</components>
+  </noise_vector>
+  
   <sequence>
-    <integrate algorithm="ARK89" interval="10" steps="1000" tolerance="1e-8">
-      <samples>500 </samples>
-      <operators noises="n">
+    <integrate algorithm="ARK89" interval="3" steps="1000" tolerance="1e-6">
+      <samples>50 </samples>
+      <operators>
         <integration_vectors>main</integration_vectors>
+        <dependencies>noise</dependencies>
         <![CDATA[
           dz_dt = i*z*n_1;
         ]]>
@@ -55,8 +51,7 @@
         <moments>zR zI</moments>
         <dependencies>main</dependencies>
         <![CDATA[
-          zR = z.Re();
-          zI = z.Im();
+            _SAMPLE_COMPLEX(z);
         ]]>
       </sampling>
     </group>

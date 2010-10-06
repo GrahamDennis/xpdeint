@@ -189,7 +189,7 @@
           ]]>
         </filter>
       </filters>
-      <operators noises="">
+      <operators>
         <operator kind="ip" constant="yes">
           <operator_names>T</operator_names>
           <![CDATA[

@@ -34,7 +34,7 @@
   
   <vector name="main" initial_space="x" type="complex">
     <components>phi</components>
-    <initialisation no_noises="true">
+    <initialisation>
       <![CDATA[
         phi = 0.0;
       ]]>

@@ -23,7 +23,7 @@
   
   <vector name="main" type="complex">
     <components> z </components>
-    <initialisation noises="">
+    <initialisation>
       <![CDATA[
         z = 1.0;
       ]]>
