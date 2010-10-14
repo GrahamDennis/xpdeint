@@ -12,7 +12,6 @@ Copyright (c) 2007 __MyCompanyName__. All rights reserved.
 from xpdeint.ScriptElement import ScriptElement
 
 from xpdeint.ParserException import ParserException, parserWarning
-from xpdeint.Geometry.NonUniformDimensionRepresentation import NonUniformDimensionRepresentation
 
 from xpdeint.Utilities import lazy_property, symbolsInString
 
@@ -113,22 +112,6 @@ class _FieldElement (ScriptElement):
   # Free vectors
   def free(self):
     return self.implementationsForChildren('free')
-  
-  def volumeElementInBasis(self, basis):
-    reps = self.inBasis(basis)
-    result = []
-    for rep in [rep for rep in reps if rep.type == 'real']:
-      if isinstance(rep, NonUniformDimensionRepresentation):
-        parserWarning(
-          self.xmlElement,
-          "You're asking for a noise for a non-uniform dimension. "
-          "If you don't know how to handle this, treat this as an error."
-        )
-        continue
-      result.append(rep.stepSize)
-    if not result:
-        return '1.0'
-    return '(' + ' * '.join(result) + ')'
   
   @lazy_property
   def isDistributed(self):

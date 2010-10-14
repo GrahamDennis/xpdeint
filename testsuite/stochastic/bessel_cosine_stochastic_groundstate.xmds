@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="bessel_cosine_stochastic_groundstate.xsil" expected="bessel_cosine_stochastic_groundstate_expected.xsil" absolute_tolerance="1e-6" relative_tolerance="1e-5" />
+  </testing>
+
+  <author>Graham Dennis</author>
+  <name>bessel_cosine_stochastic_groundstate</name>
+  <description>
+    Calculate the 3D ground state of a Rubidium BEC in a harmonic magnetic trap assuming
+    cylindrical symmetry about the z axis and reflection symmetry about z=0.
+    This permits us to use the cylindrical bessel functions to expand the solution transverse
+    to z and a cosine series to expand the solution along z.
+  </description>
+  
+  <features>
+    <auto_vectorise />
+    <chunked_output size="100KB" />
+    <globals>
+      <![CDATA[
+        const real omegaz = 2*M_PI*20;
+        const real omegarho = 2*M_PI*200;
+        const real hbar = 1.05457148e-34;
+        const real M = 1.409539200000000e-25;
+        const real g = 9.8;
+        const real scatteringLength = 5.57e-9;
+        const real Uint = 4.0*M_PI*hbar*hbar*scatteringLength/M;
+        const real Nparticles = 5.0e5;
+
+        /* offset constants */
+        const real EnergyOffset = pow(15.0*Nparticles*Uint*omegaz*omegarho*omegarho/(8*M_PI), 2.0/5.0)
+                                    * pow(M/2.0, 3.0/5.0);
+
+      ]]>
+    </globals>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="r" lattice="32"  domain="(0.0, 1.0e-5)" transform="bessel" />
+      <dimension name="z" lattice="32"  domain="(0.0, 1.0e-4)" transform="dct" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="potential" type="complex">
+    <components>
+      V1
+    </components>
+    <initialisation>
+      <![CDATA[
+        real Vtrap = 0.5*M*(omegarho*omegarho*r*r + omegaz*omegaz*z*z);
+      
+        V1  = -i/hbar*(Vtrap - EnergyOffset);
+      
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <noise_vector name="noise" kind="gaussian" method="solirte" type="complex" seed="15687 65687 684320 4057 354">
+    <components>eta</components>
+  </noise_vector>
+  
+  <vector name="wavefunction" type="complex">
+    <components>
+      phi
+    </components>
+    <initialisation>
+      <dependencies>noise</dependencies>
+      <![CDATA[
+      
+        if ((abs(r) < 0.9e-5) && abs(z) < 0.9e-4) {
+          phi = eta;
+          // This will be automatically normalised later
+        } else {
+          phi = 0.0;
+        }
+      
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <computed_vector name="normalisation" dimensions="" type="real">
+    <components>
+      Ncalc
+    </components>
+    <evaluation>
+      <dependencies>wavefunction</dependencies>
+      <![CDATA[
+        // Calculate the current normalisation of the wave function.
+        Ncalc = 2.0*(2.0*M_PI)*mod2(phi);
+        // Factor of two is there due to z axis only covering half the condensate.
+        // Factor of two-pi is there for integration over the angular coordinate.
+      ]]>
+    </evaluation>
+  </computed_vector>
+  
+  <sequence>
+    <integrate algorithm="RK4" interval="1e-4" steps="1000">
+      <samples>100</samples>
+      <filters>
+        <filter>
+          <dependencies>wavefunction normalisation</dependencies>
+          <![CDATA[
+            // Correct normalisation of the wavefunction
+            phi *= sqrt(Nparticles/Ncalc);
+          ]]>
+        </filter>
+      </filters>
+      <operators>
+        <operator kind="ip" constant="yes">
+          <operator_names>T</operator_names>
+          <![CDATA[
+            T = -0.5*hbar/M*(kr*kr + kz*kz);
+          ]]>
+        </operator>
+        <integration_vectors>wavefunction</integration_vectors>
+        <dependencies>potential</dependencies>
+        <![CDATA[
+          dphi_dt = T[phi] - (i*V1 + Uint/hbar*mod2(phi))*phi;
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  <output format="hdf5">
+    <group>
+      <sampling basis="r z" initial_sample="no">
+        <moments>norm_dens</moments>
+        <dependencies>wavefunction normalisation</dependencies>
+        <![CDATA[
+          norm_dens = mod2(phi)/Ncalc;
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>

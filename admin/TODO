@@ -108,11 +108,6 @@ Testcases needed:
 
 * xsil2graphics2 needs finishing.
 
-* Noise vectors
-  - Support for non-uniform dimensions
-  - Comprehensive testing
-  - Consider the syntax
-
 * Trigger support (Ask Michael Hush)
 
 * Things that can be done with the new basis system:

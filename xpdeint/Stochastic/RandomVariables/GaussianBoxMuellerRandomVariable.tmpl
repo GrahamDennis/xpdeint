@@ -22,25 +22,12 @@ const real _fac = sqrt(-2.0*_var*log(_rsq)/_rsq);
   @#
 @end def
 
-@def makeNoises
+@def makeFixedVarianceNoises
 @*doc:
   Return the code for the contents of the makeNoises function for
   a gaussian noise generated with the Box Mueller algorithm
 *@
   @set noiseVector = $parent
-  @#
-const real _var =@slurp
-@if noiseVector.type == 'complex':
-0.5@slurp
-@else:
-1.0@slurp
-@end if
-/(${noiseVector.field.volumeElementInBasis(noiseVector.initialBasis)}@slurp
-@if not noiseVector.static:
-*_step@slurp
-@end if
-);
-
 const ptrdiff_t _evenNoises = _vector_size & ~1;
 for (ptrdiff_t _i0 = 0; _i0 < _evenNoises; _i0 += 2) {
   ${boxMuellerAlgorithm, autoIndent=True}@slurp

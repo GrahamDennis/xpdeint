@@ -18,12 +18,24 @@ code, not in the template itself.
   @#
   @set noiseVector = $parent
 // Split a poissonian noise
-const real _new_var = 1.0 / (${noiseVector.field.volumeElementInBasis(noiseVector.initialBasis)} * _new_step);
-const real _old_var = 1.0 / (${noiseVector.field.volumeElementInBasis(noiseVector.initialBasis)} * _old_step);
+const real _new_var = 1.0 / (${noiseVector.spatiallyIndependentVolumeElement} * _new_step);
+const real _old_volume = (${noiseVector.spatiallyIndependentVolumeElement} * _old_step);
 
-for (long _i0 = 0; _i0 < _vector_size; _i0++) { 
-  _active_${noiseVector.id}[_i0] = _new_var*_poisplit_${noiseVector.id}(_new_step/_old_step, lrint(_old_array[_i0]/_old_var));
-}
+  @capture loopString
+    @silent nonUniformDimReps = noiseVector.nonUniformDimReps
+    @if nonUniformDimReps
+      @set volumeFixup = ' * '.join(dimRep.stepSize for dimRep in nonUniformDimReps)
+      @set varFixup = ' / (' + volumeFixup + ')'
+      @set volumeFixup = ' * ' + volumeFixup
+    @else
+      @set volumeFixup = ''
+      @set varFixup = ''
+    @end if
+    @for componentNumber, component in enumerate(noiseVector.components)
+${component} = _newvar${varFixup} * _poisplit_${noiseVector.id}(_new_step/_old_step, lrint(_old_array[_${noiseVector.id}_index_pointer + ${componentNumber}] * _old_volume${volumeFixup}));
+    @end for
+  @end capture
+${loopOverFieldInBasisWithVectorsAndInnerContent(noiseVector.field, noiseVector.initialBasis, [noiseVector], loopString)}@slurp
 
   @#
 @end def
@@ -38,15 +50,27 @@ for (long _i0 = 0; _i0 < _vector_size; _i0++) {
   @#
   @set noiseVector = $parent
   @#
-const real _dVdt = ${noiseVector.field.volumeElementInBasis(noiseVector.initialBasis)}@slurp
+const real _dVdt = ${noiseVector.spatiallyIndependentVolumeElement}@slurp
   @if not noiseVector.static:
-*_step@slurp
+ * _step@slurp
   @end if
 ;
-const real _var = 1.0/_dVdt;
-for (long _i0 = 0; _i0 < _vector_size; _i0++) {
-  _active_${noiseVector.id}[_i0] = _var * _poidev_${noiseVector.id}(${noiseMeanRate} * _dVdt);
-}
+const real _var = 1.0 / _dVdt;
+  @capture loopString
+    @silent nonUniformDimReps = noiseVector.nonUniformDimReps
+    @if nonUniformDimReps
+      @set volumeFixup = ' * '.join(dimRep.stepSize for dimRep in nonUniformDimReps)
+      @set varFixup = ' / (' + volumeFixup + ')'
+      @set volumeFixup = ' * ' + volumeFixup
+    @else
+      @set volumeFixup = ''
+      @set varFixup = ''
+    @end if
+    @for component in noiseVector.components
+${component} = _var${varFixup} * _poidev_${noiseVector.id}(${noiseMeanRate} * _dVdt${volumeFixup});
+    @end for
+  @end capture
+${loopOverFieldInBasisWithVectorsAndInnerContent(noiseVector.field, noiseVector.initialBasis, [noiseVector], loopString)}@slurp
   @#
 @end def
 

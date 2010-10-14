@@ -46,8 +46,21 @@ struct _dtdWstore_segment${integrator.segmentNumber} {
 };
   @end for
   @#
+  @for dimRep in self.nonUniformDimRepsNeededForGaussianNoise
+${dimRep.type}* ${dimRep.stepSizeArrayName}_invsqrt = (${dimRep.type}*) xmds_malloc(sizeof(${dimRep.type}) * (${dimRep.globalLattice}));
+  @end for
+  @#
 @end def
 
+@def mainBegin($dict)
+  @#
+  @for dimRep in self.nonUniformDimRepsNeededForGaussianNoise
+for (long ${dimRep.loopIndex} = 0; ${dimRep.loopIndex} < ${dimRep.globalLattice}; ${dimRep.loopIndex}++) {
+  ${dimRep.stepSizeArrayName}_invsqrt[${dimRep.loopIndex}] = (real)1.0/sqrt(${dimRep.stepSizeArrayName}[${dimRep.loopIndex}]);
+}
+  @end for
+  @#
+@end def
 
 @def topLevelSequenceBegin($dict)
   @#

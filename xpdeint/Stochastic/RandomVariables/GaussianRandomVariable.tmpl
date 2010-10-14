@@ -33,3 +33,30 @@ ${loopOverVectorsWithInnerContentTemplate([$noiseVector],
 
   @#
 @end def
+
+@def makeNoises
+@* Subclasses can implement makeFixedVarianceNoises and the parent will fix up the noises.
+   Alternatively, subclasses may implement makeNoises if they can do the entire thing correctly.
+*@
+  @set noiseVector = $parent
+  @#
+const real _var = ${{'complex': 0.5, 'real': 1.0}[noiseVector.type]} / (${noiseVector.spatiallyIndependentVolumeElement}@slurp
+  @if not noiseVector.static:
+* _step@slurp
+  @end if
+);
+
+${makeFixedVarianceNoises}@slurp
+  @#
+  @set nonUniformDimReps = noiseVector.nonUniformDimReps
+  @if nonUniformDimReps
+    @capture loopString
+      @set fixupString = ' * '.join(c'${dimRep.stepSizeArrayName}_invsqrt[${dimRep.index} + ${dimRep.localOffset}]' for dimRep in nonUniformDimReps)
+      @for component in noiseVector.components
+${component} *= ${fixupString};
+      @end for
+    @end capture
+${loopOverFieldInBasisWithVectorsAndInnerContent(noiseVector.field, noiseVector.initialBasis, [noiseVector], loopString)}@slurp
+  @end if
+  @#
+@end def
