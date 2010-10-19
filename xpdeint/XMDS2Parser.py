@@ -1474,15 +1474,13 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
         operatorTemplate = self.parseOperatorElement(childNode, operatorContainer)
         
         if haveHitDeltaAOperator and not isinstance(operatorTemplate, (FunctionsOperatorTemplate)):
-          # Currently all operators after the CDATA code will trigger this exception, but when we
-          # implement 'functions' operators, they will need to be added to the above list so they don't
-          # trigger this exception.
           raise ParserException(childNode, "You cannot have this kind of operator after the CDATA section\n"
                                            "of the <operators> element. The only operators that can be put\n"
                                            "after the CDATA section are 'functions' operators.")
       
       elif childNode.nodeType == minidom.Node.CDATA_SECTION_NODE:
         deltaAOperatorTemplate = self.parseDeltaAOperator(operatorsElement, operatorContainer)
+        haveHitDeltaAOperator = True
     
   
   def parseDeltaAOperator(self, operatorsElement, operatorContainer):
