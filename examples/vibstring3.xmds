@@ -78,7 +78,7 @@
         </evaluation>
       </computed_vector>
       
-      <operators dimensions="x y">
+      <operators>  <!-- For the x y dimensions -->
         <operator kind="ex" constant="yes">
           <operator_names>L</operator_names>
           <![CDATA[
@@ -92,7 +92,7 @@
         ]]>
       </operators>
       
-      <operators dimensions="">
+      <operators>  <!-- For the zero-dimensional field -->
         <integration_vectors>integrated_u</integration_vectors>
         <dependencies>filter1</dependencies>
         <![CDATA[

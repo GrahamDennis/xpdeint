@@ -64,7 +64,7 @@
   <sequence cycles="10">
     <integrate algorithm="RK9" interval="2e-3" steps="100">
       <samples>10 10</samples>
-      <operators dimensions="x y">
+      <operators> <!-- For the x y dimensions -->
         <operator kind="functions">
           <![CDATA[
             // print one '.' per integration step.
@@ -83,7 +83,7 @@
           duDot_dt = L[u /**/];
         ]]>
       </operators>
-      <operators dimensions="">
+      <operators> <!-- For the zero-dimensional field -->
         <integration_vectors>integrated_u</integration_vectors>
         <dependencies>filter1</dependencies>
         <![CDATA[

@@ -118,6 +118,4 @@ Testcases needed:
     as they are faster when the dimension being transformed is first.
   - Clean up the way dimension representations and their lattices are specified. (Useful for Hermite-Gauss transforms.)
 
-* Make <operators> elements work out their dimensions based on the vectors in the <integration_vectors> element
-
 * Optimisation: IP evolution and renormalisation of FFT's (or other transforms) can be combined in many cases.

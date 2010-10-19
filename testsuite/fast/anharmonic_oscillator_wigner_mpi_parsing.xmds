@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <command_line>mpirun -n 2 ./anharmonic_oscillator_wigner_mpi_parsing</command_line>
+    <input_xsil_file name="anharmonic_oscillator_wigner_mpi_initial_even.xsil" />
+    <input_xsil_file name="anharmonic_oscillator_wigner_mpi_initial_odd.xsil" />
+    <xsil_file name="anharmonic_oscillator_wigner_mpi_parsing.xsil" expected="anharmonic_oscillator_wigner_mpi_expected.xsil" absolute_tolerance="1e-5" relative_tolerance="1e-5" />
+  </testing>
+  
+  <name>anharmonic_oscillator_wigner_mpi_parsing</name>
+  <author>Graham Dennis</author>
+  <description>
+    Simulation of the Truncated Wigner function for an anharmonic oscillator with the initial state
+    being a coherent state.
+  </description>
+  
+  <features>
+    <benchmark />
+    <bing />
+    <fftw plan="patient"/>
+    <globals>
+      <![CDATA[
+
+      /* system constants */
+        const real omega = 0.0;
+        const real g = 1.0;
+        
+      /* initial state constants */
+        const real alpha_0 = 3.0;
+        
+      ]]>
+    </globals>
+    <validation kind="run-time" />
+  </features>
+  
+  <driver name="distributed-mpi" />
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="m" type="integer" lattice="21" domain="(0, 20)" />
+      <dimension name="r" lattice="64"  domain="(0, 6)" transform="dct" />
+      <dimension name="s" lattice="64"  domain="(0, 6)" transform="dst" />
+      <dimension name="theta" lattice="32"  domain="(-M_PI, M_PI)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="evens" dimensions="m r" type="complex">
+    <components>
+      hE
+    </components>
+    <initialisation kind="xsil">
+      <filename>anharmonic_oscillator_wigner_mpi_initial_even.xsil</filename>
+    </initialisation>
+  </vector>
+  
+  <vector name="odds" dimensions="m s" type="complex">
+    <components>
+      hO
+    </components>
+    <initialisation kind="xsil">
+      <filename>anharmonic_oscillator_wigner_mpi_initial_odd.xsil</filename>
+    </initialisation>
+  </vector>
+  
+  <vector name="trig" dimensions="m theta" type="real">
+    <components>cos_me sin_me cos_mo sin_mo</components>
+    <initialisation>
+      <![CDATA[
+        cos_me = cos(2.0*m*theta);
+        sin_me = sin(2.0*m*theta);
+        cos_mo = cos((2.0*m+1.0)*theta);
+        sin_mo = sin((2.0*m+1.0)*theta);
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <computed_vector name="WignerEven" dimensions="r theta" type="real">
+    <components>WE</components>
+    <evaluation>
+      <dependencies>evens trig</dependencies>
+      <![CDATA[
+        WE = hE.Re()*cos_me + hE.Im()*sin_me;
+      ]]>
+    </evaluation>
+  </computed_vector>
+  
+  <computed_vector name="WignerOdd" dimensions="s theta" type="real">
+    <components>WO</components>
+    <evaluation>
+      <dependencies>odds trig</dependencies>
+      <![CDATA[
+        WO = hO.Re()*cos_mo + hO.Im()*sin_mo;
+      ]]>
+    </evaluation>
+  </computed_vector>
+  
+  <sequence>
+    <integrate algorithm="ARK45" cutoff="1e-3" tolerance="1e-5" interval="7.0e-1" steps="100000">
+      <samples>20 20 20 20 20 20</samples>
+      <operators>
+        <integration_vectors>evens</integration_vectors>
+        <![CDATA[
+          const real M = 2*m;
+          dhE_dt = -i*omega*M*hE - i*g*(r*r-1.0)*M*hE;
+        ]]>
+      </operators>
+      <operators>
+        <integration_vectors>odds</integration_vectors>
+        <![CDATA[
+          const real M = 2*m+1.0;
+          dhO_dt = -i*omega*M*hO - i*g*(s*s-1.0)*M*hO;
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  
+  <output format="binary">
+    <group>
+      <sampling basis="r theta" initial_sample="yes">
+        <moments>WER</moments>
+        <dependencies>WignerEven</dependencies>
+        <![CDATA[
+          WER = WE;
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling basis="s theta" initial_sample="yes">
+        <moments>WOR</moments>
+        <dependencies>WignerOdd</dependencies>
+        <![CDATA[
+          WOR = WO;
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling basis="m r" initial_sample="yes">
+        <moments>hER hEI</moments>
+        <dependencies>evens</dependencies>
+        <![CDATA[
+          _SAMPLE_COMPLEX(hE);
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling basis="m s" initial_sample="yes">
+        <moments>hOR hOI</moments>
+        <dependencies>odds</dependencies>
+        <![CDATA[
+          _SAMPLE_COMPLEX(hO);
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling basis="m kr" initial_sample="yes">
+        <moments>hER hEI</moments>
+        <dependencies>evens</dependencies>
+        <![CDATA[
+          _SAMPLE_COMPLEX(hE);
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling basis="m ks" initial_sample="yes">
+        <moments>hOR hOI</moments>
+        <dependencies>odds</dependencies>
+        <![CDATA[
+          _SAMPLE_COMPLEX(hO);
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>

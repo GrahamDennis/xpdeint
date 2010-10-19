@@ -1431,11 +1431,22 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     
     for operatorsElement in operatorsElements:
       if not operatorsElement.hasAttribute('dimensions'):
-        dimensionNames = self.globalNameSpace['geometry'].primaryTransverseDimensionNames
+        integrationVectorsElement = operatorsElement.getChildElementByTagName('integration_vectors')
+        integrationVectorNames = Utilities.symbolsInString(integrationVectorsElement.innerText(), xmlElement = integrationVectorsElement)
+        vectorNameMap = dict((v.name, v) for v in self.globalNameSpace['simulationVectors'])
+        fields = set()
+        for vectorName in integrationVectorNames:
+          if not vectorName in vectorNameMap:
+            raise ParserException(integrationVectorsElement, "Unknown vector '%s'." % vectorName)
+          vector = vectorNameMap[vectorName]
+          fields.add(vector.field)
+        if not len(fields) == 1:
+          raise ParserException(integrationVectorsElement, "All integration vectors must be in the same field!")
+        fieldTemplate = list(fields)[0]
       else:
         dimensionNames = Utilities.symbolsInString(operatorsElement.getAttribute('dimensions'), xmlElement = operatorsElement)
-      
-      fieldTemplate = FieldElementTemplate.sortedFieldWithDimensionNames(dimensionNames, xmlElement = operatorsElement, createIfNeeded = False)
+        
+        fieldTemplate = FieldElementTemplate.sortedFieldWithDimensionNames(dimensionNames, xmlElement = operatorsElement, createIfNeeded = False)
       
       if not fieldTemplate:
         raise ParserException(operatorsElement, "There are no vectors with this combination of dimensions.")
