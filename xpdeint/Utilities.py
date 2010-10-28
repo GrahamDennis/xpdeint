@@ -83,6 +83,7 @@ def setValueForKeyPath(base, value, keyPath):
 
 
 def greatestCommonFactor(num):
+    num = [n for n in num if n > 0]
     t_val = num[0]
     for cnt in range(len(num)-1):
         num1 = t_val
@@ -97,6 +98,7 @@ def greatestCommonFactor(num):
     return t_val
 
 def leastCommonMultiple(num):
+    num = [n for n in num if n > 0]
     if len(num) == 0:
         return 1
     t_val = num[0]
