@@ -294,7 +294,7 @@ class XMDS2Parser(ScriptParser):
         **self.argumentsToTemplateConstructors
       )
       
-      argumentElements = argumentsFeatureElement.getChildElementsByTagName('argument')
+      argumentElements = argumentsFeatureElement.getChildElementsByTagName('argument', optional=True)
       
       argumentsFeature.codeBlocks['postArgumentProcessing'] = _UserCodeBlock(
         xmlElement = argumentsFeatureElement, parent = argumentsFeature,

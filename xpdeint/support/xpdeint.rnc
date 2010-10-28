@@ -68,7 +68,7 @@ Features = element features {
 Bool = "yes" | "no"
 
 Arguments = element arguments {
-    Argument+
+    Argument*
     , text?
 }
 

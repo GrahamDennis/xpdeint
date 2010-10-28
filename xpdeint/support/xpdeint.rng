@@ -156,9 +156,9 @@
   </define>
   <define name="Arguments">
     <element name="arguments">
-      <oneOrMore>
+      <zeroOrMore>
         <ref name="Argument"/>
-      </oneOrMore>
+      </zeroOrMore>
       <optional>
         <text/>
       </optional>
