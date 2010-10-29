@@ -34,7 +34,7 @@ class _Stochastic (_Feature):
       self.nonUniformDimRepsNeededForGaussianNoise.update(dimRep for dimRep in nv.field.inBasis(nv.initialBasis) if isinstance(dimRep, NonUniformDimensionRepresentation))
     
     # For each adaptive step integrator using noises, we need to reduce the order of the integrator
-    for integrator in [ai for ai in self.getVar('templates') if isinstance(ai, AdaptiveStepIntegrator) and ai.dynamicNoiseVectors]:
+    for integrator in [ai for ai in self.getVar('templates') if isinstance(ai, AdaptiveStepIntegrator)]:
       integrator.stepper.integrationOrder /= 2.0
     
     
