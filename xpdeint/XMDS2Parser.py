@@ -1441,7 +1441,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
           vector = vectorNameMap[vectorName]
           fields.add(vector.field)
         if not len(fields) == 1:
-          raise ParserException(integrationVectorsElement, "All integration vectors must be in the same field!")
+          raise ParserException(integrationVectorsElement, "All integration vectors must be in the same field!  Integration vectors having different dimensions must be put in separate <operators> blocks with separate <![CDATA[...]]> blocks (within the same integrator).")
         fieldTemplate = list(fields)[0]
       else:
         dimensionNames = Utilities.symbolsInString(operatorsElement.getAttribute('dimensions'), xmlElement = operatorsElement)
