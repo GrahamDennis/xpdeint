@@ -15,9 +15,11 @@ One of the best ways to learn XMDS2 is to see several illustrative examples.  He
 
    :ref:`WignerArguments` (two dimensional PDE using parallel processing, passing arguments in at run time)
 
-   :ref:`GroundStateBEC` (PDE with continual renormalisation - computed vectors, filters, breakpoints, aliases)
+   :ref:`GroundStateBEC` (PDE with continual renormalisation - computed vectors, filters, breakpoints)
 
    :ref:`HermiteGaussGroundStateBEC` (Hermite-Gaussian basis)
+   
+   :ref:`2DMultistateSE` (combined integer and continuous dimensions with matrix multiplication, aliases)
 
 All of these scripts are available in the include "examples" folder, along with more examples that demonstrate other tricks.  Together, they provide starting points for a huge range of different simulations.
 
@@ -1228,6 +1230,153 @@ The ``length_scale="sqrt(hbar/(M*omegarho))"`` option requires a real number, bu
         <validation kind="run-time" />
 
 which disables many of these checks at the time of writing the C-code.
+
+.. _2DMultistateSE:
+
+Multi-component Schrödinger equation
+------------------------------------
+
+This example demonstrates a simple method for doing matrix calculations in XMDS2.  We are solving the multi-component PDE
+
+.. math::
+    \frac{\partial \phi_j(x,y)}{\partial t} = \frac{i}{2}\left(\frac{\partial^2}{\partial x^2}+\frac{\partial^2}{\partial y^2}\right)\phi_j(x,y) - i U(x,y) \sum_k V_{j k}\phi_k(x,y)
+    
+where the last term is more commonly written as a matrix multiplication.  Writing this term out explicitly is feasible for a small number of components, but when the number of components becomes large, or perhaps :math:`V_{j k}` should be precomputed for efficiency reasons, it is useful to be able to perform this sum over the integer dimensions automatically.  This example show how this can be done naturally using a computed vector.  The XMDS2 script is as follows:
+
+.. code-block:: xpdeint
+
+        <simulation xmds-version="2">
+          <name>2DMSse</name>
+
+          <author>Joe Hope</author>
+          <description>
+            Schroedinger equation for multiple internal states in two spatial dimensions.
+          </description>
+
+          <features>
+              <benchmark />
+              <bing />
+              <fftw plan="patient" />
+              <openmp />
+              <auto_vectorise />
+             </features>
+
+          <geometry>
+              <propagation_dimension> t </propagation_dimension>
+              <transverse_dimensions>
+                  <dimension name="x" lattice="32"  domain="(-6, 6)" />
+                  <dimension name="y" lattice="32"  domain="(-6, 6)" />
+                  <dimension name="j" type="integer" lattice="2" domain="(0,1)" aliases="k"/>
+              </transverse_dimensions>
+           </geometry>
+
+          <vector name="wavefunction" type="complex" dimensions="x y j">
+            <components> phi </components>
+            <initialisation>
+              <![CDATA[
+              phi = j*sqrt(2/sqrt(M_PI/2))*exp(-(x*x+y*y)/4)*exp(i*0.1*x);
+              ]]>
+            </initialisation>
+          </vector>
+
+          <vector name="spatialInteraction" type="real" dimensions="x y">
+            <components> U </components>
+            <initialisation>
+              <![CDATA[
+              U=exp(-(x*x+y*y)/4);
+              ]]>
+            </initialisation>
+          </vector>
+
+          <vector name="internalInteraction" type="real" dimensions="j k">
+            <components> V </components>
+            <initialisation>
+              <![CDATA[
+              V=3*(j*(1-k)+(1-j)*k);
+              ]]>
+            </initialisation>
+          </vector>
+
+          <computed_vector name="coupling" dimensions="x y j" type="complex">
+            <components>
+              VPhi
+            </components>
+            <evaluation>
+              <dependencies basis="x y j k">internalInteraction wavefunction</dependencies>
+              <![CDATA[
+                // Calculate the current normalisation of the wave function.
+                VPhi = V*phi(j => k);
+              ]]>
+            </evaluation>
+          </computed_vector>
+
+          <sequence>
+            <integrate algorithm="ARK45" interval="2.0" tolerance="1e-7">
+              <samples>20 100</samples>
+              <operators>
+                <integration_vectors>wavefunction</integration_vectors>
+                <operator kind="ex" constant="yes">
+                  <operator_names>Ltt</operator_names>
+                  <![CDATA[
+                    Ltt = -i*(kx*kx+ky*ky)*0.5;
+                  ]]>
+                </operator>
+                <![CDATA[
+                dphi_dt = Ltt[phi] -i*U*VPhi;
+                ]]>
+                <dependencies>spatialInteraction coupling</dependencies>
+              </operators>
+            </integrate>
+          </sequence>
+
+          <output format="binary" filename="2DMSse.xsil">
+            <group>
+              <sampling basis="x y j" initial_sample="yes">
+                <moments>density</moments>
+                <dependencies>wavefunction</dependencies>
+                <![CDATA[
+                  density = mod2(phi);
+                ]]>
+              </sampling>
+            </group>
+            <group>
+              <sampling basis="x(0) y(0) j" initial_sample="yes">
+                <moments>normalisation</moments>
+                <dependencies>wavefunction</dependencies>
+                <![CDATA[
+                  normalisation = mod2(phi);
+                ]]>
+              </sampling>
+            </group>
+
+          </output>
+        </simulation>
+
+The only truly new feature in this script is the "aliases" option on a dimension.  The integer-valued dimension in this script indexes the components of the PDE (in this case only two).  The  :math:`V_{j k}` term is required to be a square array of dimension of this number of components.  If we wrote the k-index of :math:`V_{j k}` using a separate ``<dimension>`` element, then we would not be enforcing the requirement that the matrix be square.  Instead, we note that we will be using multiple 'copies' of the j-dimension by using the "aliases" tag.
+
+.. code-block:: xpdeint
+
+                  <dimension name="j" type="integer" lattice="2" domain="(0,1)" aliases="k"/>
+
+This means that we can use the index "k", which will have exactly the same properties as the "j" index.  This is used to define the "V" function in the "internalInteraction" vector.  Now, just as we use a computed vector to perform an integration over our fields, we use a computed vector to calculate the sum.
+
+.. code-block:: xpdeint
+
+        <computed_vector name="coupling" dimensions="x y j" type="complex">
+          <components>
+            VPhi
+          </components>
+          <evaluation>
+            <dependencies basis="x y j k">internalInteraction wavefunction</dependencies>
+            <![CDATA[
+              // Calculate the current normalisation of the wave function.
+              VPhi = V*phi(j => k);
+            ]]>
+          </evaluation>
+        </computed_vector>
+
+Since the output dimensions of the computed vector do not include a "k" index, this index is integrated.  The volume element for this summation is the spacing between neighbouring values of "j", and since this spacing is one, this integration is just a sum over k, as required.
+
 
 By this point, we have introduced most of the important features in XMDS2.  More details on other transform options and rarely used features can be found in the :ref:`advancedTopics` section.
 

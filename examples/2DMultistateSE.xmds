@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <name>2DMSse</name>
+
+  <author>Joe Hope</author>
+  <description>
+    Schroedinger equation for multiple internal states in two spatial dimensions.
+  </description>
+
+  <features>
+      <benchmark />
+      <bing />
+      <fftw plan="patient" />
+      <openmp />
+      <auto_vectorise />
+     </features>
+
+  <geometry>
+      <propagation_dimension> t </propagation_dimension>
+      <transverse_dimensions>
+          <dimension name="x" lattice="32"  domain="(-6, 6)" />
+          <dimension name="y" lattice="32"  domain="(-6, 6)" />
+          <dimension name="j" type="integer" lattice="2" domain="(0,1)" aliases="k"/>
+      </transverse_dimensions>
+   </geometry>
+
+  <vector name="wavefunction" type="complex" dimensions="x y j">
+    <components> phi </components>
+    <initialisation>
+      <![CDATA[
+      phi = j*sqrt(2/sqrt(M_PI/2))*exp(-(x*x+y*y)/4)*exp(i*0.1*x);
+      ]]>
+    </initialisation>
+  </vector>
+
+  <vector name="spatialInteraction" type="real" dimensions="x y">
+    <components> U </components>
+    <initialisation>
+      <![CDATA[
+      U=exp(-(x*x+y*y)/4);
+      ]]>
+    </initialisation>
+  </vector>
+
+  <vector name="internalInteraction" type="real" dimensions="j k">
+    <components> V </components>
+    <initialisation>
+      <![CDATA[
+      V=3*(j*(1-k)+(1-j)*k);
+      ]]>
+    </initialisation>
+  </vector>
+
+  <computed_vector name="coupling" dimensions="x y j" type="complex">
+    <components>
+      VPhi
+    </components>
+    <evaluation>
+      <dependencies basis="x y j k">internalInteraction wavefunction</dependencies>
+      <![CDATA[
+        // Calculate the current normalisation of the wave function.
+        VPhi = V*phi(j => k);
+      ]]>
+    </evaluation>
+  </computed_vector>
+
+  <sequence>
+    <integrate algorithm="ARK45" interval="2.0" tolerance="1e-7">
+      <samples>20 100</samples>
+      <operators>
+        <integration_vectors>wavefunction</integration_vectors>
+        <operator kind="ex" constant="yes">
+          <operator_names>Ltt</operator_names>
+          <![CDATA[
+            Ltt = -i*(kx*kx+ky*ky)*0.5;
+          ]]>
+        </operator>
+        <![CDATA[
+        dphi_dt = Ltt[phi] -i*U*VPhi;
+        ]]>
+        <dependencies>spatialInteraction coupling</dependencies>
+      </operators>
+    </integrate>
+  </sequence>
+
+  <output format="binary" filename="2DMSse.xsil">
+    <group>
+      <sampling basis="x y j" initial_sample="yes">
+        <moments>density</moments>
+        <dependencies>wavefunction</dependencies>
+        <![CDATA[
+          density = mod2(phi);
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling basis="x(0) y(0) j" initial_sample="yes">
+        <moments>normalisation</moments>
+        <dependencies>wavefunction</dependencies>
+        <![CDATA[
+          normalisation = mod2(phi);
+        ]]>
+      </sampling>
+    </group>
+
+  </output>
+</simulation>
+
+
