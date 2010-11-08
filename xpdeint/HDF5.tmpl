@@ -48,6 +48,7 @@ htri_t H5Lexists(hid_t loc_id, const char *name, hid_t lapl_id)
   @set $operation = dict['operation']
   @assert operation in ['read', 'write']
   @set $variables = dict['variables']
+  @set $dimensionOffsets = dict.get('dimensionOffsets', {})
   @set $componentCount = 0
   @for $variable in $variables
     @set $componentCount += len($variable.vector.components)
@@ -61,11 +62,34 @@ htri_t H5Lexists(hid_t loc_id, const char *name, hid_t lapl_id)
   @# File dim reps must be in dimension order as that is the order we desire for write-out
   @set $fileDimReps = [dim.inBasis(basis) for dim in field.dimensions]
   @set $memDimReps = field.inBasis(basis)
+  @# Construct a list of (fileDimNum, memDimNum, dimRep) tuples. This is necessary
+  @# for the case where we are using a distributed MPI driver with FFT's
+  @# and the first two dimensions are transformed. In this situation, the
+  @# first and second dimensions are transposed.
+  @#
+  @set dimRepOrdering = [(fileDimNum, memDimReps.index(dimRep), dimRep) \
+                         for fileDimNum, dimRep in enumerate(fileDimReps)]
+  @#
 hsize_t file_start[${dimensionCount}] = {${', '.join(dimRep.localOffset for dimRep in fileDimReps)}};
 hsize_t mem_dims[${dimensionCount+1}] = {${', '.join(chain((dimRep.localLattice for dimRep in memDimReps), ['1']))}};
 hsize_t mem_start[${dimensionCount+1}] = {${', '.join(['0']*(dimensionCount+1))}};
 hsize_t mem_stride[${dimensionCount+1}] = {${', '.join(['1']*(dimensionCount+1))}};
 hsize_t mem_count[${dimensionCount+1}] = {${', '.join(chain((dimRep.localLattice for dimRep in memDimReps), ['1']))}};
+
+  @for fileDimNum, memDimNum, dimRep in dimRepOrdering
+    @if dimRep.name in dimensionOffsets and not isinstance(dimRep, SplitUniformDimensionRepresentation)
+      @set offset = dimensionOffsets[dimRep.name]
+if (file_start[${fileDimNum}] > ${offset}) {
+  file_start[$fileDimNum] -= ${offset};
+} else {
+  mem_count[${memDimNum}] -= ${offset} - file_start[${fileDimNum}];
+  file_start[${fileDimNum}] = 0;
+}
+if (mem_count[$memDimNum] > file_dims[$fileDimNum]) {
+  mem_count[$memDimNum] = file_dims[$fileDimNum];
+}
+    @end if
+  @end for
 
 hid_t mem_dataspace;
   @for variable in variables
@@ -94,13 +118,6 @@ if (dataset_${componentName})
       @end for
     @end capture
     @#
-    @# Construct a list of (fileDimNum, memDimNum, dimRep) tuples. This is necessary
-    @# for the case where we are using a distributed MPI driver with FFT's
-    @# and the first two dimensions are transformed. In this situation, the
-    @# first and second dimensions are transposed.
-    @#
-    @set dimRepOrdering = [(fileDimNum, memDimReps.index(dimRep), dimRep) \
-                           for fileDimNum, dimRep in enumerate(fileDimReps)]
     @# Permit the driver to modify the writeLoopContents
     @set $featureOrdering = ['Driver']
     @set $dict = {'writeLoopContents': writeLoopContents,
@@ -110,13 +127,13 @@ if (dataset_${componentName})
     @#
     @# The object passed as the first argument to this next call is a 
 // Select hyperslabs of memory and file data spaces for data transfer operation
-${splitUniformDataSelect(dimRepOrdering, writeLoopContents)}@slurp
+${splitUniformDataSelect(dimRepOrdering, writeLoopContents, dimensionOffsets)}@slurp
 
 H5Sclose(mem_dataspace);
   @end for
 @end def
 
-@def splitUniformDataSelect(remainingDimReps, writeLoopContents)
+@def splitUniformDataSelect(remainingDimReps, writeLoopContents, dimensionOffsets)
   @if not remainingDimReps
 ${writeLoopContents}@slurp
   @else
@@ -128,7 +145,12 @@ for (bool _positive_${dimRep.name} = true; ; _positive_${dimRep.name} = false) {
     if ($dimRep.localOffset >= (($dimRep.globalLattice-1)/2 +1)) // No positive values are stored in this rank.
       continue;
     mem_count[$memDimNum] = MIN((($dimRep.globalLattice-1)/2 +1) - $dimRep.localOffset, $dimRep.localLattice);
-    file_start[$fileDimNum] = $dimRep.globalLattice/2 + $dimRep.localOffset;
+    file_start[$fileDimNum] = file_dims[$fileDimNum]/2 + $dimRep.localOffset;
+      @if dimRep.name in dimensionOffsets
+    if ($dimRep.localOffset > ((file_dims[$fileDimNum]-1)/2 +1))
+      continue;
+    mem_count[$memDimNum] = MIN(mem_count[$memDimNum], ((file_dims[$fileDimNum]-1)/2 +1) - $dimRep.localOffset);
+      @end if
   } else {
     if (($dimRep.globalLattice-1)/2+1 < $dimRep.localOffset) // Only negative values are stored in this rank.
       mem_start[$memDimNum] = 0;
@@ -138,15 +160,27 @@ for (bool _positive_${dimRep.name} = true; ; _positive_${dimRep.name} = false) {
     if ($dimRep.localLattice <= mem_start[$memDimNum]) // No negative values are stored in this rank.
       break; // end loop over this dimension
     mem_count[$memDimNum] = $dimRep.localLattice - mem_start[$memDimNum]; // To the end of this dimension
+      @if dimRep.name in dimensionOffsets
+    if (file_start[$fileDimNum] > ${dimensionOffsets[dimRep.name]})
+      file_start[$fileDimNum] -= ${dimensionOffsets[dimRep.name]};
+    else {
+      mem_start[$memDimNum] += ${dimensionOffsets[dimRep.name]} - file_start[$fileDimNum];
+      if (mem_count[$memDimNum] > ${dimensionOffsets[dimRep.name]} - file_start[$fileDimNum])
+        mem_count[$memDimNum] -= ${dimensionOffsets[dimRep.name]} - file_start[$fileDimNum];
+      else
+        break; // end loop over this dimension
+      file_start[$fileDimNum] = 0;
+    }
+      @end if
   }
   
-  ${splitUniformDataSelect(remainingDimReps, writeLoopContents), autoIndent=True}@slurp
+  ${splitUniformDataSelect(remainingDimReps, writeLoopContents, dimensionOffsets), autoIndent=True}@slurp
   
   if (!_positive_${dimRep.name})
     break;
 }
     @else
-${splitUniformDataSelect(remainingDimReps, writeLoopContents)}@slurp
+${splitUniformDataSelect(remainingDimReps, writeLoopContents, dimensionOffsets)}@slurp
     @end if
   @end if
 @end def

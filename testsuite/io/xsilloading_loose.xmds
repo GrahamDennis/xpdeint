@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <input_xsil_file name="breakpoints_kspace_expected.xsil" />
+    <input_xsil_file name="breakpoints_mixed_space2_expected.xsil" />
+    <xsil_file name="xsilloading_loose.xsil" expected="xsilloading_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+  </testing>
+  
+  <name>xsilloading_loose</name>
+  <author>Graham Dennis</author>
+  <description>
+    Test loading xsil files in various spaces with loose geometry matching mode
+  </description>
+  
+  <features>
+    <fftw plan="estimate" />
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="x" lattice="250"  domain="(0, 1)" />
+      <dimension name="y" lattice="512"  domain="(-1, 3)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="oned" dimensions="x" initial_space="kx" type="complex">
+    <components>u</components>
+    <initialisation kind="xsil" geometry_matching_mode="loose">
+      <filename>breakpoints_kspace_expected.xsil</filename>
+    </initialisation>
+  </vector>
+  
+  <vector name="twod" dimensions="x y" initial_space="kx y">
+    <components>v</components>
+    <initialisation kind="xsil" geometry_matching_mode="loose">
+      <filename>breakpoints_mixed_space2_expected.xsil</filename>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <filter>
+      <![CDATA[
+        ;
+      ]]>
+    </filter>
+  </sequence>
+  
+  <output format="binary">
+    <group>
+      <sampling basis="x(50) y(0)" initial_sample="yes">
+        <moments>amp</moments>
+        <dependencies>oned twod</dependencies>
+        <![CDATA[
+          amp = cos(u.Re())*sin(u.Im())/2.0 - v.Re()*v.Re() + v.Im(); // Some crazy function to combine the quantities
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>

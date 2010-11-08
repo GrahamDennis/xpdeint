@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <input_xsil_file name="hermitegauss_fourier_2_expected.xsil" />
+    <xsil_file name="hermitegauss_fourier_loading_break.xsil" expected="hermitegauss_fourier_loading_break_expected.xsil" absolute_tolerance="1e-8" relative_tolerance="1e-5" />
+  </testing>
+
+  <name>hermitegauss_fourier_loading</name>
+  <author>Graham Dennis</author>
+  <description>
+    Loose loading from the Hermite-Gauss bases (checking that it works for integer-valued dimensions)
+  </description>
+  
+  <features>
+    <validation kind="run-time" />
+    <globals>
+      <![CDATA[
+        const real M = 9.1e-31; // Mass of an electron
+        const real hbar = 1.05e-34;
+        const real omega = 2*M_PI*1e3;
+        const real offset = 1.0 * sqrt(hbar/(M*omega));
+        
+      ]]>
+    </globals>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="x" lattice="200" length_scale="sqrt(hbar/(M*omega))" transform="hermite-gauss" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="main" initial_space="nx" type="complex">
+    <components>
+      psi
+    </components>
+    <initialisation kind="hdf5" geometry_matching_mode="loose">
+        <filename>hermitegauss_fourier_2_expected.h5</filename>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <breakpoint filename="hermitegauss_fourier_loading_break.xsil" format="hdf5">
+      <dependencies basis="x">main</dependencies>
+    </breakpoint>
+  </sequence>
+  <output />
+
+<info>
+Script compiled with XMDS2 version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+See http://www.xmds.org for more information.
+</info>
+
+<XSIL Name="breakpoint">
+  <Param Name="n_independent">1</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>3</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+x psiR psiI 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>200</Dim>
+    <Dim>3</Dim>
+    <Stream><Metalink Format="HDF5" Type="Remote" Group="/1"/>
+hermitegauss_fourier_loading_break_expected.h5
+    </Stream>
+  </Array>
+</XSIL>
+</simulation>

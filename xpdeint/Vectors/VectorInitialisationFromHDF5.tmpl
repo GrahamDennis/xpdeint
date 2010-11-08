@@ -7,16 +7,17 @@ Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 @extends xpdeint.Vectors._VectorInitialisationFromHDF5
 
 @from xpdeint.Geometry.SplitUniformDimensionRepresentation import SplitUniformDimensionRepresentation
+@from xpdeint.Geometry.NonUniformDimensionRepresentation import NonUniformDimensionRepresentation
 
 @def description: Vector initialisation from a HDF5 file
 
 @def initialiseVector
   @#
-  @assert $geometryMatchingMode == 'strict', "'Loose' geometry matching mode isn't supported yet by the HDF5 importer. "
   @set $featureOrdering = ['Stochastic']
   @set $featureDict = {'codeBlock': $codeBlocks['initialisation']}
   @set $basis = $vector.initialBasis
   @set $field = $vector.field
+  @set $dimensionOffsets = {}
   @#
 $insertCodeForFeatures('vectorInitialisationBegin', $featureOrdering, featureDict)@slurp
   @#
@@ -68,7 +69,7 @@ else
   _LOG(_ERROR_LOG_LEVEL, "Error: Unable to determine if dimension '${dimRep.name}' exists in HDF5 file. Is the file corrupt?\n");
 hid_t dataspace_${dimRep.name} = H5Dget_space(dataset_${dimRep.name});
 file_dims[$dimNum] = H5Sget_simple_extent_npoints(dataspace_${dimRep.name});
-${dimRep.type}* ${dimRep.name}_inputdata = (${dimRep.type}*)xmds_malloc(H5Sget_simple_extent_npoints(dataspace_${dimRep.name}) * sizeof(${dimRep.type}));
+${dimRep.type}* ${dimRep.name}_inputdata = (${dimRep.type}*)xmds_malloc(file_dims[${dimNum}] * sizeof(${dimRep.type}));
     @set $dataType = {'real': 'H5T_NATIVE_REAL', 'long': 'H5T_NATIVE_LONG'}[$dimRep.type]
 H5Dread(dataset_${dimRep.name}, $dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, ${dimRep.name}_inputdata);
     @if isinstance(dimRep, SplitUniformDimensionRepresentation)
@@ -93,11 +94,37 @@ for (long _i0 = 0; _i0 < ${dimRep.globalLattice}-1; _i0++) {
 }
     @else
       @# Here we implement any checks required for 'loose' geometryMatchingMode
-      @assert False
+      @# We know that the dimension is uniform, therefore we should first check the deltas.
+// Check that the deltas are the same to within 0.1%
+real ${dimRep.name}_step = ${dimArrayName}[1] - ${dimArrayName}[0];
+real ${dimRep.name}_inputdata_step = ${dimRep.name}_inputdata[1] - ${dimRep.name}_inputdata[0];
+if (abs(${dimRep.name}_step - ${dimRep.name}_inputdata_step) > 1e-3*${dimRep.name}_step) {
+  // _LOG will cause the simulation to exit
+  _LOG(_ERROR_LOG_LEVEL, "The step size in the '${dimRep.name}' dimension of the input data and simulation grid do not match.\n"
+                         "The step size in the '${dimRep.name}' dimension was %e, while the input data had step size %e.\n",
+                         (real)${dimRep.name}_step, (real)${dimRep.name}_inputdata_step);
+}
+// Check the input and simulation grids overlap
+if ((${dimArrayName}[0] > ${dimRep.name}_inputdata[file_dims[${dimNum}]-1]) || (${dimArrayName}[${dimRep.globalLattice}-1] < ${dimRep.name}_inputdata[0])) {
+  // _LOG will cause the simulation to exit
+  _LOG(_ERROR_LOG_LEVEL, "The input and simulation grids do not overlap!\n"
+                         "The simulation grid runs from %e to %e, but the input grid runs from %e to %e.\n",
+                         (real)${dimArrayName}[0], (real)${dimArrayName}[${dimRep.globalLattice}-1],
+                         (real)${dimRep.name}_inputdata[0], (real)${dimRep.name}_inputdata[file_dims[${dimNum}]-1]);
+}
+real ${dimRep.name}_fileOffsetR = (${dimRep.name}_inputdata[0]-${dimArrayName}[0])/${dimRep.name}_step;
+if (remainder(${dimRep.name}_inputdata[0]-${dimArrayName}[0], ${dimRep.name}_step) > 0.01*${dimRep.name}_step) {
+  _LOG(_ERROR_LOG_LEVEL, "The input and simulation grids do not overlap sufficiently!\n"
+                         "The calculated offset for the input grid from the simulation grid in the '${dimRep.name}' dimension is %f, and it should be integral!",
+                         (${dimRep.name}_inputdata[0]-${dimArrayName}[0])/${dimRep.name}_step);
+}
+long ${dimRep.name}_fileOffset = lround((${dimRep.name}_inputdata[0]-${dimArrayName}[0])/${dimRep.name}_step);
+_LOG(_SIMULATION_LOG_LEVEL, "${dimRep.name} offset: %f\n", (${dimRep.name}_inputdata[0]-${dimArrayName}[0])/${dimRep.name}_step);
+      @silent dimensionOffsets[dimRep.name] = c'${dimRep.name}_fileOffset'
     @end if
   @end for
 
-  @set $processingDict = {'field': field, 'operation': 'read', 'basis': basis}
+  @set $processingDict = {'field': field, 'operation': 'read', 'basis': basis, 'dimensionOffsets': dimensionOffsets}
   @set $variables = [{'vector': $vector, 'arrayName': c'_active_${vector.id}', 'components': $vector.components}]
 hid_t file_dataspace;
 file_dataspace = H5Screate_simple(${len(field.dimensions)}, file_dims, NULL);
