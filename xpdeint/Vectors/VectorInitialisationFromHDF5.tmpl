@@ -119,7 +119,6 @@ if (remainder(${dimRep.name}_inputdata[0]-${dimArrayName}[0], ${dimRep.name}_ste
                          (${dimRep.name}_inputdata[0]-${dimArrayName}[0])/${dimRep.name}_step);
 }
 long ${dimRep.name}_fileOffset = lround((${dimRep.name}_inputdata[0]-${dimArrayName}[0])/${dimRep.name}_step);
-_LOG(_SIMULATION_LOG_LEVEL, "${dimRep.name} offset: %f\n", (${dimRep.name}_inputdata[0]-${dimArrayName}[0])/${dimRep.name}_step);
       @silent dimensionOffsets[dimRep.name] = c'${dimRep.name}_fileOffset'
     @end if
   @end for
