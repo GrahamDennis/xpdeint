@@ -1,0 +1,7 @@
+Changes since xmds 2.0:
+
+* chunked_output feature.  (r2426-r2429)
+* Noise vectors can now be used in non-uniform dimensions (e.g. dimensions using the Bessel transform for cylindrical symmetry) (r2433)
+* geometry_matching_mode="loose" for HDF5 (r2441-r2442)
+
+* Bug fixes.

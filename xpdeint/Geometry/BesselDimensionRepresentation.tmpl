@@ -38,3 +38,17 @@ _normbesseljzeros_${parent.name}[$index] * ${name}_max@slurp
 2.0 / (besselFactor * besselFactor * _besseljnorm_${parent.name} * _besseljnorm_${parent.name}) * ${name}_max * ${name}_max@slurp
   @#
 @end def
+
+@def indexForSinglePointSample
+  @#
+  @# Take the first point, which is close to r=0
+0@slurp
+  @#
+@end def
+
+@def createCoordinateVariableForSinglePointSample
+  @#
+${type} ${name} = ${arrayName}[0];
+#define d${name} ${stepSizeArrayName}[0]
+  @#
+@end def
