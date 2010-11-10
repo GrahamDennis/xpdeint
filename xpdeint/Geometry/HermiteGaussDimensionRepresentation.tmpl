@@ -21,3 +21,16 @@ _hermite_gauss_weights_${parent.name}[$index] * ${_maximum} / sqrt(${fieldCount 
   @#
 @end def
 
+@def indexForSinglePointSample
+  @#
+  @# Take the middle point, which is in the middle of the array
+${globalLattice}/2@slurp
+  @#
+@end def
+
+@def createCoordinateVariableForSinglePointSample
+  @#
+${type} ${name} = ${arrayName}[${globalLattice}/2];
+#define d${name} ${stepSizeArrayName}[${globalLattice}/2]
+  @#
+@end def
