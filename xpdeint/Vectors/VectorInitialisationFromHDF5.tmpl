@@ -89,7 +89,7 @@ for (long _i0 = 0; _i0 < ${dimRep.globalLattice}-1; _i0++) {
     _LOG(_ERROR_LOG_LEVEL, "Geometry matching mode is strict for dimension '${dimRep.name}'.\n"
                            "This means that the coordinates must be the same as for the input grid.\n"
                            "The problem was found at input_${dimRep.name}: %e, simulation_${dimRep.name}: %e, difference: %e\n",
-                           ${dimRep.name}_inputdata[_i0], ${dimArrayName}[_i0], ${dimRep.name}_inputdata[_i0] - ${dimArrayName}[_i0]);
+                           (real)${dimRep.name}_inputdata[_i0], (real)${dimArrayName}[_i0], (real)${dimRep.name}_inputdata[_i0] - ${dimArrayName}[_i0]);
   }
 }
     @else
