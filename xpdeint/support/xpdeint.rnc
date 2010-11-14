@@ -164,7 +164,7 @@ Sequence = element sequence {
         | Filter
         | Breakpoint
         | Sequence
-      )+
+      )*
 }
 
 Integrate = element integrate {

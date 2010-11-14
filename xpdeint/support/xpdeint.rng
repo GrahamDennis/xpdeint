@@ -328,14 +328,14 @@
       <optional>
         <attribute name="cycles"/>
       </optional>
-      <oneOrMore>
+      <zeroOrMore>
         <choice>
           <ref name="Integrate"/>
           <ref name="Filter"/>
           <ref name="Breakpoint"/>
           <ref name="Sequence"/>
         </choice>
-      </oneOrMore>
+      </zeroOrMore>
     </element>
   </define>
   <define name="Integrate">
