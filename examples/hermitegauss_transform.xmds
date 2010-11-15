@@ -42,7 +42,7 @@
         <operator kind="ip" constant="yes" basis="nx">
           <operator_names>L</operator_names>
           <![CDATA[
-            L = i*(nx + 0.5);
+            L = -i*(nx + 0.5);
           ]]>
         </operator>
         <integration_vectors>main</integration_vectors>

@@ -28,7 +28,7 @@
   <geometry>
     <propagation_dimension> t </propagation_dimension>
     <transverse_dimensions>
-      <dimension name="x" lattice="80" length_scale="sqrt(hbar/(M*omegarho))" transform="hermite-gauss" />
+      <dimension name="x" lattice="81" spectral_lattice="40" length_scale="sqrt(hbar/(M*omegarho))" transform="hermite-gauss" />
     </transverse_dimensions>
   </geometry>
   
@@ -72,7 +72,10 @@
             L = - (nx + 0.5)*omegarho;
           ]]>
         </operator>
-        <integration_vectors>wavefunction</integration_vectors>
+        <!-- The 'x_4f' basis permits exact calculation of |psi|^2 psi provided that lattice="2N+1" with spectral_lattice="N" -->
+        <!-- If there were other terms in the integration code, the nonlinear term could be calculated exactly in a computed vector -->
+        <!-- See the example NLProjection.xmds for an example. -->
+        <integration_vectors basis="x_4f">wavefunction</integration_vectors>
         <![CDATA[
           dphi_dt = L[phi] - Uint/hbar*mod2(phi)*phi;
         ]]>
