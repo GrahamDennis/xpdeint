@@ -1354,19 +1354,20 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       steps = int(stepsString)
       integratorTemplate.stepCount = steps
     
-    samplesElement = integrateElement.getChildElementByTagName('samples')
-    samplesString = samplesElement.innerText()
+    samplesElement = integrateElement.getChildElementByTagName('samples', optional=True)
+    if samplesElement:
+        samplesString = samplesElement.innerText()
     
-    results = RegularExpressionStrings.integersInString(samplesString)
+        results = RegularExpressionStrings.integersInString(samplesString)
     
-    if not results:
-      raise ParserException(samplesElement, "Could not understand '%(samplesString)s' "
-                                            "as a list of integers" % locals())
+        if not results:
+          raise ParserException(samplesElement, "Could not understand '%(samplesString)s' "
+                                                "as a list of integers" % locals())
     
-    if filter(lambda x: x < 0, results):
-      raise ParserException(samplesElement, "All sample counts must be greater than zero.")
+        if filter(lambda x: x < 0, results):
+          raise ParserException(samplesElement, "All sample counts must be greater than zero.")
     
-    integratorTemplate.samplesEntity = ParsedEntity(samplesElement, results)
+        integratorTemplate.samplesEntity = ParsedEntity(samplesElement, results)
     
     integratorTemplate.localVectors.update(self.parseComputedVectorElements(integrateElement, integratorTemplate))
     
