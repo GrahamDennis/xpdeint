@@ -22,7 +22,7 @@ class _Stochastic (_Feature):
     return adaptiveIntegratorList
 
   def xsilOutputInfo(self, dict):
-    return self.implementationsForChildren('xsilOutputInfo', dict)
+    return '\n'.join(nv.implementationsForFunctionName('xsilOutputInfo', dict) for nv in self.noiseVectors)
   
   def preflight(self):
     super(_Stochastic, self).preflight()
