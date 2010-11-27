@@ -20,7 +20,7 @@ class _VectorElement (ScriptElement):
   isNoise = False
   
   def __init__(self, *args, **KWs):
-    localKWs = self.extractLocalKWs(['name', 'field', 'transformFree', 'initialBasis', 'type'], KWs)
+    localKWs = self.extractLocalKWs(['name', 'field', 'initialBasis', 'type'], KWs)
     field = localKWs['field']
     self.name = localKWs['name']
     self.field = field
@@ -32,7 +32,6 @@ class _VectorElement (ScriptElement):
       field.temporaryVectors.add(self)
     
     ScriptElement.__init__(self, *args, **KWs)
-    self.transformFree = localKWs.get('transformFree', False)
     
     # Set default variables
     self.components = []
@@ -74,8 +73,6 @@ class _VectorElement (ScriptElement):
   
   @property
   def needsTransforms(self):
-    if self.transformFree:
-      return False
     return len(self.basesNeeded) > 1
   
   def __hash__(self):
@@ -127,8 +124,6 @@ class _VectorElement (ScriptElement):
       return '2 * ' + self.sizeInBasis(basis)
   
   def isTransformableTo(self, basis):
-    if self.transformFree:
-      return True
     return basis in self.transformMap['bases']
   
   def remove(self):
