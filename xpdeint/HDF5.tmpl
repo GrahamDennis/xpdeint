@@ -161,7 +161,7 @@ for (bool _positive_${dimRep.name} = true; ; _positive_${dimRep.name} = false) {
       break; // end loop over this dimension
     mem_count[$memDimNum] = $dimRep.localLattice - mem_start[$memDimNum]; // To the end of this dimension
       @if dimRep.name in dimensionOffsets
-    if (file_start[$fileDimNum] > ${dimensionOffsets[dimRep.name]})
+    if ((long)file_start[$fileDimNum] > ${dimensionOffsets[dimRep.name]})
       file_start[$fileDimNum] -= ${dimensionOffsets[dimRep.name]};
     else {
       mem_start[$memDimNum] += ${dimensionOffsets[dimRep.name]} - file_start[$fileDimNum];
