@@ -1127,7 +1127,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
             validationFeature = self.globalNameSpace['features']['Validation']
             validationFeature.validationChecks.append("""
             if (%(seedString)s < 0)
-              _LOG(_ERROR_LOG_LEVEL, "ERROR: The seed for random noise %(prefix)s is not positive!\\n"
+              _LOG(_ERROR_LOG_LEVEL, "ERROR: The seed for this noise vector is not positive!\\n"
               "Seed = %%d\\n", %(seedString)s);""" % locals())
           else:
             raise ParserException(noiseVectorElement, "Unable to understand seed '%(seedString)s' as a positive integer. Use the feature <validation kind=\"run-time\"/> to allow for arbitrary code." % locals())
