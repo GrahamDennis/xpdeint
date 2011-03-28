@@ -32,7 +32,7 @@ const real _old_volume = (${noiseVector.spatiallyIndependentVolumeElement} * _ol
       @set varFixup = ''
     @end if
     @for componentNumber, component in enumerate(noiseVector.components)
-${component} = _newvar${varFixup} * _poisplit_${noiseVector.id}(_new_step/_old_step, lrint(_old_array[_${noiseVector.id}_index_pointer + ${componentNumber}] * _old_volume${volumeFixup}));
+${component} = _new_var${varFixup} * _poisplit_${noiseVector.id}(_new_step/_old_step, lrint(_old_array[_${noiseVector.id}_index_pointer + ${componentNumber}] * _old_volume${volumeFixup}));
     @end for
   @end capture
 ${loopOverFieldInBasisWithVectorsAndInnerContent(noiseVector.field, noiseVector.initialBasis, [noiseVector], loopString)}@slurp
