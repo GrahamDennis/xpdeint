@@ -282,11 +282,23 @@ def configure(conf):
             msg = "Checking for Intel's Vector Math Library"
         )
         
-        check_cxx(
-            cxxflags=["-finline-functions", "-fno-strict-aliasing", "--param", "max-inline-insns-single=1800"],
-            uselib_store="dsfmt",
-            msg = "Checking dSFMT's compile flags",
-        )
+        # The max-inline-insns-single=1800 option works for gcc but not icc, so try a series of options to see what works
+        dsfmt_optimisations = [
+          {
+              "cxxflags": ["-finline-functions", "-fno-strict-aliasing", "--param", "max-inline-insns-single=1800"],
+              "msg": "Checking aggressive dSFMT compile flags",
+          },
+          {
+              "cxxflags": ["-finline-functions", "-fno-strict-aliasing"],
+              "msg": "Checking safer dSFMT compile flags",
+          },
+          {
+              "cxxflags": [],
+              "msg": "Checking dSFMT compile flags",
+          },
+        ];
+
+        try_options('dsfmt', dsfmt_optimisations)
         
         # Find CBLAS
         cblas_options = [
