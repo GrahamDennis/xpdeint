@@ -22,6 +22,8 @@ inline complex cis(const real& _t) { return std::polar((real)1.0, _t); }
 namespace std {
   inline complex operator*(const complex& a, const int b) { return a*complex::value_type(b); }
   inline complex operator*(const int b, const complex& a) { return a*complex::value_type(b); }
+  inline complex operator/(const complex& a, const int b) { return a/complex::value_type(b); }
+  inline complex operator/(const int b, const complex& a) { return complex::value_type(b)/a; }
   inline complex operator+(const complex& a, const int b) { return a + complex::value_type(b); }
   inline complex operator+(const int b, const complex& a) { return a + complex::value_type(b); }
   inline complex operator-(const complex& a, const int b) { return a - complex::value_type(b); }
