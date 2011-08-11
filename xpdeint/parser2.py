@@ -309,6 +309,10 @@ def main(argv=None):
     for template in _ScriptElement.simulation.children[:]:
       if not template._haveBeenRemoved:
         template.implementationsForFunctionName('preflight')
+
+    for template in _ScriptElement.simulation.children[:]:
+      if not template._haveBeenRemoved:
+        template.implementationsForFunctionName('post_preflight')
     
     # Preflight is done
     # We don't need the 'simulationVectors' variable any more.

@@ -69,7 +69,7 @@ class _Operator (ScriptElement):
   def name(self):
     return 'operator' + str(self.operatorNumber)
   
-  @lazy_property
+  @property
   def targetVectors(self):
     targetVectors = set()
     
