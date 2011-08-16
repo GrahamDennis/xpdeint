@@ -112,8 +112,10 @@
 // -----------------------------------------------------------------------------
 // All the basic include files.
 // -----------------------------------------------------------------------------
-#if (CFG_PLATFORM == CFG_PLATFORM_LINUX) && (CFG_COMPILER == CFG_COMPILER_GCC) 
-  #define _XOPEN_SOURCE 600
+#if (CFG_PLATFORM == CFG_PLATFORM_LINUX) && (CFG_COMPILER == CFG_COMPILER_GCC)
+  #ifndef CFG_COMPILER 
+    #define _XOPEN_SOURCE 600
+  #endif
 #endif
 
 #if CFG_COMPILER == CFG_COMPILER_MSVC
