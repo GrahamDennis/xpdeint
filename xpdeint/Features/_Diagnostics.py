@@ -34,7 +34,7 @@ class _Diagnostics (_Feature):
     nonlocalAccessString = dict['nonlocalAccessString']
     componentName = dict['componentName']
     
-    args = [(dimRep.type, dimRep.loopIndex) for dimRep in availableDimReps]
+    args = [('long', dimRep.loopIndex) for dimRep in availableDimReps]
     args.extend([('const char*', 'filename'), ('int', 'line_number')])
     
     implementation = lambda func: self.nonlocalAccessValidationFunctionContents(dimRepsNeeded, nonlocalAccessString, componentName, func)
