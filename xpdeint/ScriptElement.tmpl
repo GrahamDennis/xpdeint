@@ -400,7 +400,7 @@ ${insertCodeForFeaturesInReverseOrder('loopOverFieldInBasisWithVectorsAndInnerCo
 unsigned long ${dimRep.loopIndex} = ${indexOverrides[dimRep.name][field]};
   @# loop over the vectors in field $field, because we need to fix up their index pointers
   @# and those vectors with the same dimensions
-  @for $vector in [v for v in vectors if not v.field.dimensions == field.dimensions]
+  @for $vector in [v for v in vectors if v.field.dimensions == field.dimensions]
 _${vector.id}_index_pointer += ${dimRep.loopIndex}@slurp
  * ${field.localPointsInDimensionsAfterDimRepInBasis(dimRep, basis)};
   @end for

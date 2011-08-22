@@ -210,9 +210,9 @@ ${insertCodeForFeatures('updateMaximumError', ['Diagnostics'], {'vector': vector
 
 @def resetFunctionImplementation($vector)
   @#
-void _segment${segmentNumber}_${vector.id}_reset(${vector.type}* _reset_to)
+void _segment${segmentNumber}_${vector.id}_reset(${vector.type}* _reset_to_${vector.id})
 {
-  ${loopOverVectorsWithInnerContentTemplate([$vector], "_${vector.id}[$index] = _reset_to[$index];", basis = $homeBasis), autoIndent=True}@slurp
+  ${copyVectors([vector], destPrefix = '', srcPrefix = '_reset_to'), autoIndent=True}@slurp
 }
   @#
 @end def
