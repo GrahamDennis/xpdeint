@@ -207,6 +207,8 @@ def main(argv=None):
   scriptFile.close()
   del scriptFile
   
+  print "Generating source code..."
+  
   # Parse the XML input script into a set of XML
   # classes
   try:
@@ -385,6 +387,8 @@ def main(argv=None):
   
   file(sourceFilename, 'w').write(simulationContents)
   
+  print "... done"
+  
   if debug:
     globalNameSpace['simulationUselib'].add('debug')
     globalNameSpace['simulationUselib'].discard('vectorise')
@@ -417,10 +421,20 @@ def main(argv=None):
       return -1
   
   if compileScript:
-    print "\n",compilerLine,"\n"
+    print "Compiling simulation..."
+
+    if debug:
+      print "\n",compilerLine,"\n"
     
     proc = subprocess.Popen(compilerLine, shell=True)
-    return proc.wait()
+    result = proc.wait()
+    
+    if result == 0:
+      print "... done. Type './%s' to run." % globalNameSpace['simulationName']
+    else:
+      print "\n\nFATAL ERROR: Failed to compile. Check warnings and errors. The most important will be first."
+      
+    return result
   else:
     # Don't compile the script, but show how we would compile it
     print "\nWould compile with:\n",compilerLine,"\n"
