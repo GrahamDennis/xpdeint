@@ -35,7 +35,12 @@ ${writeOutFunctionImplementationEnd(dict)}@slurp
 @def truncateOutputFiles($baseFilename)
 char _dataFilename[200];
 for (int _i = 0; _i < ${parent.outputGroups}; _i++) {
+	@# FIXME: This is a dodgy, dodgy hack. chunked_output should either be removed or rethought.
+	@if hasattr(self.parent, 'featureName') and self.parent.featureName == 'Output'
   snprintf(_dataFilename, 200, "%s_mg%i.dat", ${baseFilename}, _i);
+	@else
+  snprintf(_dataFilename, 200, "%s.dat", ${baseFilename});
+	@end if
   fclose(fopen(_dataFilename, "wb"));  // truncate the file
 }
 @end def
@@ -84,7 +89,7 @@ if ($fp) {
 FILE* fpBinary;
 if ((fpBinary = fopen(_datFilename, "r+b")) == NULL)
   // _LOG will cause the simulation to exit
-  _LOG(_ERROR_LOG_LEVEL, "Unable top open output file %s\n"
+  _LOG(_ERROR_LOG_LEVEL, "Unable to open output file %s\n"
                          "Chucking a spack...\n", _datFilename);
 
 unsigned long dataSize;
