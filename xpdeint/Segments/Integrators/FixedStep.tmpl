@@ -172,6 +172,14 @@ ${loopOverFieldInBasisWithVectorsAndInnerContent($parent.reducedField, $homeBasi
   @#
 void _${name}_initialise_cross_propagation()
 {
+  @for $vector in $integrationVectorMap.keys()
+    @if $vector.field.basisForBasis($parent.operatorBasis)
+    // Dear Graham Dennis
+    // Sorry for this ugly hack
+    // So have a haiku
+    _${vector.id}_basis = $basisIndexForBasis($vector.field.basisForBasis($parent.operatorBasis)); 
+    @end if
+  @end for  
   @set $positiveIndexOverride = '0'
   @set $basis = $parent.operatorBasis
   @set $propDimRep = $parent.field.dimensionWithName($propagationDimension).inBasis(basis)
