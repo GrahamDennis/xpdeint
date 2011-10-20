@@ -50,7 +50,7 @@ class _ChunkedOutput (_Feature):
             # it didn't exist at the time that the chunked_output feature was created.  Please add a check here
             # for this new feature so that the user recieves a nicer error message.
             error = "any function of xmds2 that creates aliases of moment group processed vectors. "\
-                    "Please send your script and report this error to xmds-devel@lists.sourceforge.net"
+                    "Please send your script and report this error to %s" % self.getVar('bugReportAddress')
           raise ParserException(
             self.xmlElement,
             "The 'chunked_output' feature cannot be used with " + error

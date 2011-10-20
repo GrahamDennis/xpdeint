@@ -180,9 +180,8 @@ void _${name}_initialise_cross_propagation()
   @set $combinedLoopVectorMap = $integrationVectorMap.copy()
   @silent combinedLoopVectorMap.update($dependencyMap)
   @#
-  @set $vectorsNeedingTransforms = set(combinedLoopVectorMap.keys())
+  @set $vectorsNeedingTransforms = set(combinedLoopVectorMap.values())
   @set $boundaryConditionDependencies = $parent.codeBlocks['boundaryCondition'].dependencies
-  @silent vectorsNeedingTransforms.update(combinedLoopVectorMap.values())
   @silent vectorsNeedingTransforms.update(boundaryConditionDependencies)
   ${transformVectorsToBasis(vectorsNeedingTransforms, basis), autoIndent=True}@slurp
   
@@ -199,7 +198,7 @@ void _${name}_initialise_cross_propagation()
 """_active_${reducedVector.id}[_${reducedVector.id}_index_pointer + ${componentIndex}] = _active_${vector.id}[_${vector.id}_index_pointer + ${componentIndex}];
 """, positiveIndexOverride = $positiveIndexOverride, negativeIndexOverride = $negativeIndexOverride), autoIndent=True}@slurp
     @for $reducedVector in $combinedLoopVectorMap.keys()
-      @if $reducedVector.field.basisForBasis($parent.operatorBasis)
+      @if $reducedVector.needsTransforms
       _${reducedVector.id}_basis = $basisIndexForBasis($reducedVector.field.basisForBasis($basis)); 
       @end if
     @end for

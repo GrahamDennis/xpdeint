@@ -81,6 +81,15 @@ to and from arbitrary combinations of fourier-space and normal-space.
 if (_${vector.id}_basis == new_basis)
   return;
 
+if (_${vector.id}_basis == -1) {
+  _LOG(
+    _ERROR_LOG_LEVEL,
+    "Error: Attempted to transform the vector '${vector.id}' to basis %s, but the vector doesn't have a basis specified yet!\n"
+    "       Please report this error to $bugReportAddress\n",
+    _basis_identifiers[new_basis]
+    );
+}
+
 if (_${vector.id}_basis_map.count(_basis_pair(_${vector.id}_basis, new_basis)) == 0) {
   _LOG(
     _ERROR_LOG_LEVEL,
