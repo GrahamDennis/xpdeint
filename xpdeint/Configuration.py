@@ -118,8 +118,12 @@ def run_build(source_name, target_name, variant = 'default', buildKWs = {}):
         f = file(os.path.join(xpdeintUserDataPath, xpdeintSourcePlaceholder), 'w')
         f.write("/* Placeholder file created by xpdeint to keep waf happy */")
         f.close()
-    
-    run_waf('build')
+    try:
+      run_waf('build')
+    except Exception, err:
+      print "waf has become confused.  Running a reconfigure to fix the problem."
+      run_reconfig()
+      run_waf('build')
     logging.info = old_info
     
     if not variant in availableVariants:
