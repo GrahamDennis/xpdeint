@@ -10,28 +10,21 @@ Created by Graham Dennis on 2009-03-01.
 
 import os
 
-import Task
-import TaskGen
-from TaskGen import feature
-from Constants import ASK_LATER, SKIP_ME, RUN_ME
+from waflib import Task, TaskGen #, Constants
+from waflib.TaskGen import feature
+# from Constants import ASK_LATER, SKIP_ME, RUN_ME
 
-srcdir = '.'
-blddir = 'waf_build'
-
-from xpdeint import Configuration
-
-def set_options(opt):
+def options(opt):
     # options provided by modules
-    opt.tool_options('compiler_cxx')
-
+    opt.load('compiler_cxx')
 
 def configure(conf):
-    for key, value in Configuration.wafArguments.iteritems():
-        conf.env[key] = value
+    env = conf.env
     
     def check_cxx(**KWs):
         KWs['execute'] = True
         KWs['returncode'] = True
+        KWs['mandatory'] = False
         def listOption(var):
           if isinstance(var, str):
             return [var]
@@ -54,15 +47,6 @@ def configure(conf):
                 conf.env.append_unique('HEADER_%s' % KWs['uselib_store'], KWs['header_name'])
         return result
     
-    mpi = conf.env.copy()
-    mpi.set_variant('mpi')
-    conf.set_env_name('mpi', mpi)
-    conf.setenv('default')
-    single = conf.env.copy()
-    single.set_variant('default')
-    conf.set_env_name('default', single)
-    conf.setenv('default')
-    
     def try_options(uselib_store, kwOptions, common = None):
         common = common or {}
         for kws in kwOptions:
@@ -73,8 +57,7 @@ def configure(conf):
     
     
     def configure_compiler():
-        conf.check_tool('compiler_cxx')
-        conf.check_tool('osx')
+        conf.load('compiler_cxx')
         
         if conf.env['CXX_NAME'] == 'gcc':
             machine_optimisations = [
@@ -371,12 +354,13 @@ def configure(conf):
     
     print
     print "Configuring for single-process scripts..."
+    conf.setenv('default', env)
     configure_compiler()
     
     # Stuff for MPI variant
     print
     print "Configuring for MPI scripts..."
-    conf.setenv('mpi')
+    conf.setenv('mpi', env)
     if conf.find_program('mpic++', var='MPICXX'):
         
         conf.env['CXX'] = conf.env['MPICXX']
@@ -406,50 +390,3 @@ def configure(conf):
         print "MPI not found. No scripts using MPI can be compiled on this system."
         del conf.all_envs['mpi']
     
-    # Restore default environment and check compiler flags
-    conf.setenv('default')
-
-def build(bld):
-    Configuration.availableVariants = bld.all_envs.keys()
-    
-    if not Configuration.buildVariant in Configuration.availableVariants:
-        return
-    
-    Configuration.availableUselib = bld.env_of_name(Configuration.buildVariant)['uselib']
-    
-    obj = bld.new_task_gen(
-        features = 'cxx cprogram',
-        source=Configuration.xpdeintSourcePlaceholder,
-        target=Configuration.xpdeintTargetPlaceholder,
-        link = 'xpdeint_link',
-        shell = False,
-        env = bld.env_of_name(Configuration.buildVariant),
-        **Configuration.wafArguments
-    )
-    
-    obj.rule = '${CXX} ${CXX_SRC_F}${SRC} ${CXXFLAGS} ${CPPFLAGS} ${_CXXINCFLAGS} ${_CXXDEFFLAGS}'
-    
-    @feature('cxx')
-    def xpdeint_dodgy_hack(self):
-        
-        def dont_run(self):
-            self.run()
-            return SKIP_ME
-        def save_command(self, lst, cwd=None):
-            if self.__class__.__name__ == 'xpdeint_link':
-                Configuration.waf_link_command_callback(lst)
-            else:
-                Configuration.waf_compile_command_callback(lst)
-            
-        for task in self.tasks:
-            task.__class__.runnable_status = dont_run
-            task.__class__.exec_command = save_command
-    
-    
-    TaskGen.declare_order('apply_core', 'xpdeint_dodgy_hack')
-    
-
-xpdeint_link_str = '${LINKFLAGS} ${CXXLNK_TGT_F}${TGT}'
-cls = Task.simple_task_type('xpdeint_link', xpdeint_link_str, color='YELLOW', shell=False)
-
-

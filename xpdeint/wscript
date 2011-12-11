@@ -8,40 +8,28 @@ The waf build script to compile all Cheetah templates.
 Created by Graham Dennis on 2009-02-22.
 """
 
-srcdir = '.'
-blddir = 'waf_build'
+top = '.'
+out = '.'
 
-import os
-import TaskGen
-from TaskGen import feature
-from Task import TaskBase
+def options(opt):
+    opt.load('cheetah', tooldir='waf_extensions')
 
 def configure(conf):
-    conf.check_tool('cheetah', tooldir='waf_extensions')
+    conf.load('cheetah', tooldir='waf_extensions')
     conf.env['CHEETAH_SETTINGS'] = {
-        'directiveStartToken': '@',
-        'commentStartToken': '@#',
-        'multiLineCommentStartToken': '@*',
-        'multiLineCommentEndToken': '*@',
-    }
-    
+            'directiveStartToken': '@',
+            'commentStartToken': '@#',
+            'multiLineCommentStartToken': '@*',
+            'multiLineCommentEndToken': '*@',
+        }
 
 def build(bld):
-    sources = []
-    base = bld.path.abspath()
-    skip_dirs = set(['.svn', 'waf_build'])
-    for root, dirs, files in os.walk(bld.path.abspath()):
-        for dir_name in skip_dirs.intersection(dirs):
-            dirs.remove(dir_name)
-        reldir = root[len(os.path.commonprefix([base, root]))+1:]
-        sources.extend([os.path.join(reldir, f) for f in files if f.endswith('.tmpl')])
-    
-    sources = ' '.join(sources)
-    
-    obj = bld.new_task_gen(
-        name = 'cheetah_compile',
-        features = 'cheetah',
-        cwd=bld.path.abspath(),
-        source=sources)
-    
+    sources = bld.path.ant_glob('**/*.tmpl')
+    if bld.cmd == 'clean':
+        for n in sources:
+            n.change_ext('.py').delete()
+        for n in bld.path.ant_glob('**/*.pyc'):
+            n.delete()
+    else:
+        bld(source=sources)
 

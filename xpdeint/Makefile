@@ -1,23 +1,17 @@
 .PHONY: all update configure clean check
 
-all: waf_build/config.log .lock-wscript wscript waf_build/c4che
-	@./waf-light build
+all: wscript waf_extensions/cheetah.py c4che/
+	@support/waf-light build
 	@sh version.sh
 
 update:
 	@(cd ..; $(MAKE) $(MFLAGS) update;)
 
-.lock-wscript: wscript waf_extensions/cheetah.py
-	@./waf-light configure
-
-waf_build/config.log: wscript waf_extensions/cheetah.py
-	@./waf-light configure
-
-waf_build/c4che: wscript waf_extensions/cheetah.py
-	@./waf-light configure
+c4che: wscript waf_extensions/cheetah.py
+	@support/waf-light configure
 
 clean:
-	@./waf-light clean
+	@support/waf-light clean
 
 # check examples compile
 check:

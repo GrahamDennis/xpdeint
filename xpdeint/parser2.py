@@ -22,10 +22,6 @@ DATA_CACHE_VERSION = 1
 
 import cPickle
 
-from xpdeint.Utilities import leopardWebKitHack
-
-leopardWebKitHack()
-
 from xpdeint.Preferences import xpdeintUserDataPath
 
 # Import the parser stuff
@@ -126,6 +122,7 @@ def main(argv=None):
                       "lib-path=",
                     ]
       )
+      del sys.argv[1:]
     except getopt.error, msg:
       raise Usage(msg)
     
@@ -410,34 +407,24 @@ def main(argv=None):
   
   assert len(variant) == 1
   
-  compilerLine = Configuration.run_build(
-    sourceFilename,
-    sourceFilename[:-3], # strip of trailing '.cc'
-    variant = anyObject(variant),
-    buildKWs = buildKWs
-  )
-  
-  if not compilerLine:
-      return -1
-  
   if compileScript:
-    print "Compiling simulation..."
-
-    if debug:
-      print "\n",compilerLine,"\n"
+      print "Compiling simulation..."
     
-    proc = subprocess.Popen(compilerLine, shell=True)
-    result = proc.wait()
-    
-    if result == 0:
-      print "... done. Type './%s' to run." % globalNameSpace['simulationName']
-    else:
-      print "\n\nFATAL ERROR: Failed to compile. Check warnings and errors. The most important will be first."
+      result = Configuration.run_build(
+        sourceFilename,
+        sourceFilename[:-3], # strip of trailing '.cc'
+        variant = anyObject(variant),
+        buildKWs = buildKWs,
+        debug = debug
+      )
       
-    return result
-  else:
-    # Don't compile the script, but show how we would compile it
-    print "\nWould compile with:\n",compilerLine,"\n"
+      if result == 0:
+        print "... done. Type './%s' to run." % globalNameSpace['simulationName']
+      else:
+        print "\n\nFATAL ERROR: Failed to compile. Check warnings and errors. The most important will be first."
+      
+      return result
+  
 
 if __name__ == "__main__":
   sys.exit(main())

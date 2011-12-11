@@ -109,16 +109,6 @@ def leastCommonMultiple(num):
         t_val = tmp * num1/tmp * num2/tmp
     return t_val
 
-def leopardWebKitHack():
-    """
-    Hack for Mac OS X Leopard and above so that it doesn't import
-    the web rendering framework WebKit when Cheetah tries to import
-    the Python web application framework WebKit.
-    """
-    if sys.platform == 'darwin' and not 'WebKit' in sys.modules:
-        module = type(sys)
-        sys.modules['WebKit'] = module('WebKit')
-
 protectedNamesSet = set("""
 gamma nan ceil floor trunc round remainder abs sqrt hypot
 exp log pow cos sin tan cosh sinh tanh acos asin atan

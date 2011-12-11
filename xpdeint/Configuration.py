@@ -12,148 +12,153 @@ from pkg_resources import resource_filename
 from xpdeint.Preferences import xpdeintUserDataPath
 from xpdeint.Utilities import unique
 
-import cPickle
-
-VERSION="1.5.3"
-
-xpdeintSourcePlaceholder = 'XPDEINT_SOURCE_PLACEHOLDER.cc'
-xpdeintTargetPlaceholder = 'XPDEINT_TARGET_PLACEHOLDER'
-buildVariant = 'default'
-availableUselib = None
-availableVariants = None
-
-wafArguments = {}
-
-def run_waf(command):
-    # Step one, setup sys.path as in waf-light
-    wafadmin = resource_filename(__name__, 'wafadmin')
-    wafdir = os.path.normpath(resource_filename(__name__, '.'))
-    tools = os.path.join(wafadmin, 'Tools')
-    sys.path = [wafadmin, tools] + sys.path
-    
-    # Step two, mess with sys.argv so waf thinks it's being asked to configure
-    # FIXME: In the future, xpdeint should recognise waf arguments
-    sys.argv = ['./waf', command]
-    
-    # Step three, copy the wscript to its destination
-    wscript_path = resource_filename(__name__, 'support/wscript')
-    dest_wscript_path = os.path.join(xpdeintUserDataPath, 'wscript')
-    shutil.copyfile(wscript_path, dest_wscript_path)
-    
-    # Step four, call Scripting as in waf-light
-    oldcwd = os.getcwd()
-    os.chdir(xpdeintUserDataPath)
-    import Scripting
-    Scripting.prepare(tools, '.', VERSION, wafdir)
-    os.chdir(oldcwd)
-    
-    sys.path = sys.path[2:]
-    
-    return 0
+import cPickle, tempfile, shutil, logging
 
 config_arg_cache_filename = os.path.join(xpdeintUserDataPath, 'xpdeint_config_arg_cache')
 
+wafdir = os.path.normpath(resource_filename(__name__, 'support'))
+sys.path.insert(0, wafdir)
+
+from waflib import Context, Options, Configure, Utils, Logs, Errors
+
+waf_initialised = False
+
+def initialise_waf():
+    if waf_initialised: return
+    
+    Logs.init_log()
+    
+    Context.waf_dir = wafdir
+    Context.top_dir = Context.run_dir = xpdeintUserDataPath
+    Context.out_dir = os.path.join(xpdeintUserDataPath, 'waf_configure')
+    
+    wscript_path = resource_filename(__name__, 'support/wscript')
+    Context.g_module = Context.load_module(wscript_path)
+    Context.g_module.root_path = wscript_path
+    Context.g_module.out = Context.out_dir
+    Context.g_module.configure = configure_wrapper(Context.g_module.configure)
+    Context.Context.recurse = \
+        lambda x, y: getattr(Context.g_module, x.cmd or x.fun, Utils.nada)(x)
+    
+    Options.OptionsContext().execute()
+
+
+def configure_wrapper(f):
+    def _(ctx, *args, **kw):
+        ctx.in_msg -= 1
+        return f(ctx, *args, **kw)
+    
+    return _
 
 def run_config(includePaths = None, libPaths = None):
     includePaths = includePaths or []
     libPaths = libPaths or []
     
-    wafArguments['CPPPATH'] = unique(includePaths)
-    wafArguments['LIBPATH'] = unique(libPaths)
+    wafEnvironment = {}
     
-    wafArguments.update([(key, value) for key, value in os.environ.iteritems() if key in ['CXX']])
-    cPickle.dump(wafArguments, file(config_arg_cache_filename, 'w'))
+    wafEnvironment['INCLUDES'] = unique(includePaths)
+    wafEnvironment['LIBPATH'] = unique(libPaths)
     
-    if not sys.platform == 'darwin':
-        wafArguments['RPATH'] = libPaths
+    cPickle.dump(wafEnvironment, file(config_arg_cache_filename, 'w'))
     
-    ret = run_waf('configure')
+    initialise_waf()
     
-    print "Config log saved to ", os.path.join(xpdeintUserDataPath, 'waf_build', 'config.log')
+    ctx = Context.create_context('configure')
+    ctx.options = Options.options
+    
+    env = ctx.env
+    
+    env.append_unique('INCLUDES', includePaths)
+    env.append_unique('LIBPATH', libPaths)
+    env.append_unique('RPATH', libPaths)
+    
+    for key in ['CXX']:
+        if key in os.environ:
+            env[key] = os.environ[key]
+    
+    ctx.in_msg = 1
+    ret = ctx.execute()
+    
+    print "Config log saved to ", os.path.join(xpdeintUserDataPath, 'waf_configure', 'config.log')
     return ret
+
 
 def run_reconfig(includePaths = None, libPaths = None):
     includePaths = includePaths or []
     libPaths = libPaths or []
-    wafArguments.clear()
+    
+    wafEnvironment = {}
     
     if os.path.isfile(config_arg_cache_filename):
-        wafArguments.update(cPickle.load(file(config_arg_cache_filename)))
-    includePaths.extend(wafArguments.get('CPPPATH', []))
-    libPaths.extend(wafArguments.get('LIBPATH', []))
+        wafEnvironment.update(cPickle.load(file(config_arg_cache_filename)))
+    includePaths.extend(wafEnvironment.get('INCLUDES', []))
+    libPaths.extend(wafEnvironment.get('LIBPATH', []))
     
     return run_config(includePaths = includePaths, libPaths = libPaths)
 
-g_compile_command = None
-g_link_command = None
-
-def waf_compile_command_callback(cmd):
-    global g_compile_command
-    g_compile_command = cmd
-
-def waf_link_command_callback(cmd):
-    global g_link_command
-    g_link_command = cmd
-
-def run_build(source_name, target_name, variant = 'default', buildKWs = {}):
-    global g_compile_command
-    global g_link_command
-    g_compile_command = g_link_command = None
+def run_build(source_name, target_name, variant = 'default', buildKWs = {}, debug = False):
+    initialise_waf()
     
-    wafArguments.clear()
-    wafArguments.update(buildKWs)
+    source_name = str(source_name)
+    target_name = str(target_name)
     
-    global buildVariant
-    buildVariant = variant
+    cwd = os.getcwd()
     
-    # Silence waf!
-    def dont_log(str):
-        pass
-    import logging
-    old_info = logging.info
-    logging.info = dont_log
+    ctx = Context.create_context('build', top_dir = cwd, run_dir = cwd)
+    ctx.load_envs()
     
-    placeholderFilePath = os.path.join(xpdeintUserDataPath, xpdeintSourcePlaceholder)
-    if not os.path.isfile(placeholderFilePath):
-        f = file(os.path.join(xpdeintUserDataPath, xpdeintSourcePlaceholder), 'w')
-        f.write("/* Placeholder file created by xpdeint to keep waf happy */")
-        f.close()
-    try:
-      run_waf('build')
-    except Exception, err:
-      print "waf has become confused.  Running a reconfigure to fix the problem."
-      run_reconfig()
-      run_waf('build')
-    logging.info = old_info
+    available_variants = ctx.all_envs.keys()
     
-    if not variant in availableVariants:
+    if not variant in available_variants:
         if variant == 'mpi':
             print "xpdeint could not find MPI. Do you have an MPI library (like OpenMPI) installed?"
             print "If you do, run 'xpdeint --reconfigure' to find it."
         else:
             print "xpdeint could not find build variant '%s'." % variant
-        return
+        return -1
     
-    missing_uselib = set(buildKWs['uselib']).difference(availableUselib)
+    ctx.env = ctx.all_envs[variant]
+    available_uselib = ctx.env.uselib
+    
+    missing_uselib = set(buildKWs['uselib']).difference(available_uselib)
     if missing_uselib:
         print "This script requires libraries or features that xpdeint could not find."
         print "Make sure these requirements are installed and then run 'xpdeint --reconfigure'."
         print "The missing feature(s) were: %s." % ', '.join(missing_uselib)
-        return
+        return -1
     
-    # return build command
-    source_name = '"' + source_name + '"'
-    target_name = '"' + target_name + '"'
+    ctx.out_dir = cwd
+    def build(ctx):
+        ctx.program(
+            source = source_name,
+            target = target_name,
+            **buildKWs
+        )
+    Context.g_module.build = build
     
-    lst = unique(g_compile_command + g_link_command)
+    if not debug:
+        ctx.to_log = lambda x: None
+        Logs.log.setLevel(logging.WARNING)
+    else:
+        Logs.log.setLevel(logging.DEBUG)
     
-    command = ' '.join(lst).strip().replace(
-        os.path.join('..', xpdeintSourcePlaceholder),
-        source_name,
-    ).replace(
-        os.path.join(variant, xpdeintTargetPlaceholder),
-        target_name,
-    )
+    try:
+        ctx.execute()
+        
+        # Now clean up the intermediate file/s
+        tgen = ctx.get_tgen_by_name(target_name)
+        for t in tgen.compiled_tasks:
+            for n in t.outputs:
+                n.delete()
+    except Errors.BuildError, err:
+        if debug:
+            last_cmd = err.tasks[0].last_cmd
+            if type(last_cmd) is list:
+                last_cmd = ' '.join(last_cmd)
+                
+            print "Failed command:"
+            print last_cmd
+        return -1
     
-    return command
+    return 0
 

@@ -6,65 +6,49 @@ cheetah.py
 Created by Graham Dennis on 2009-02-28.
 """
 
-import Task
-from TaskGen import taskgen, extension
-import os
-
-"""
-Hack for Mac OS X Leopard and above so that it doesn't import
-the web rendering framework WebKit when Cheetah tries to import
-the Python web application framework WebKit.
-"""
-import sys
-if sys.platform == 'darwin' and not 'WebKit' in sys.modules:
-    module = type(sys)
-    sys.modules['WebKit'] = module('WebKit')
-
 try:
     from Cheetah.Template import Template
 except ImportError:
     Template = None
 
+from waflib import Task, TaskGen
 
-EXT_CHEETAH = ['.tmpl']
+def configure(conf):
+    conf.start_msg('Checking for the Cheetah python module')
+    if Template:
+        conf.end_msg('ok')
+    else:
+        conf.end_msg('Not found')
 
-@extension(EXT_CHEETAH)
-def cheetah_hook(self, node):
-    tsk = self.create_task('cheetah', self.env)
-    tsk.set_inputs(node)
-    # Cheating
-    tsk.__class__.quiet = True
-    # tsk.set_outputs(node.change_ext('.py'))
-
-def detect(conf):
-    conf.check_message_1("Checking for Cheetah module")
-    if not Template:
-        conf.fatal('The Cheetah module for Python was not found.')
-    conf.check_message_2("ok")
-
-def cheetah_build(task):
-    env = task.env
-    bld = task.generator.bld
+class cheetah(Task.Task):
+    ext_in  = ['.tmpl']
+    ext_out = ['.py']
+    vars = ['CHEETAH_SETTINGS']
     
-    node = task.inputs[0]
-    
-    compiled_path = os.path.splitext(node.abspath(env))[0] + '.py'
-    
-    compilerSettings = 'CHEETAH_SETTINGS' in env and env['CHEETAH_SETTINGS'] or {}
-    
-    basename = node.file_base()
-    
-    pysrc = Template.compile(
-        file = node.abspath(env),
-        compilerSettings = compilerSettings,
-        moduleName = basename,
-        className = basename,
-        returnAClass = False,
-    )
-    out_f = file(compiled_path, 'w')
-    out_f.write(pysrc)
-    out_f.close()
-    return 0
+    def run(self):
+        env = self.env
+        bld = self.generator.bld
 
-Task.task_type_from_func('cheetah', cheetah_build)
+        input_node = self.inputs[0]
+        output_node = self.outputs[0]
 
+        compilerSettings = 'CHEETAH_SETTINGS' in env and env['CHEETAH_SETTINGS'] or {}
+
+        basename = input_node.change_ext('').name
+
+        pysrc = Template.compile(
+            file = input_node.abspath(),
+            compilerSettings = compilerSettings,
+            moduleName = basename,
+            className = basename,
+            returnAClass = False,
+        )
+
+        output_node.write(pysrc)
+        return 0
+    
+
+@TaskGen.extension('.tmpl')
+def cheetah_callback(self, node):
+    out = node.change_ext('.py').name
+    self.create_task('cheetah', node, node.parent.find_or_declare(out))

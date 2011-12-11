@@ -51,7 +51,7 @@ def scriptTestingFunction(root, scriptName, testDir, absPath, self):
   if not os.path.exists(testDir):
     os.makedirs(testDir)
   
-  proc = subprocess.Popen('xmds2 -n --no-version ' + absPath,
+  proc = subprocess.Popen('xmds2 --no-version ' + absPath,
                           shell=True,
                           stdout=subprocess.PIPE,
                           stderr=subprocess.PIPE,
@@ -61,7 +61,7 @@ def scriptTestingFunction(root, scriptName, testDir, absPath, self):
   
   message = ''.join(["\n%(handleName)s:\n%(content)s" % locals() for handleName, content in [('stdout', stdout), ('stderr', stderr)] if content])
   
-  self.assert_(returnCode == 0, ("Failed to generate source." % locals()) + message)
+  self.assert_(returnCode == 0, ("Failed to compile." % locals()) + message)
   
   xmlDocument = minidom.parse(absPath)
   simulationElement = xmlDocument.getChildElementByTagName('simulation')
@@ -84,21 +84,6 @@ def scriptTestingFunction(root, scriptName, testDir, absPath, self):
     if lastKnownGoodChecksum == currentChecksum:
       # The checksums check out, so we don't need to go any further
       return
-  
-  # Checksums aren't the same, so we need to compile and test the output
-  compileString = stdout.rpartition('Would compile with:\n')[2].splitlines()[0]
-  
-  compileProc = subprocess.Popen(compileString,
-                                 shell=True,
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE,
-                                 cwd=testDir)
-  (stdout, stderr) = compileProc.communicate()
-  returnCode = compileProc.wait()
-  
-  message = ''.join(["\n%(handleName)s:\n%(content)s" % locals() for handleName, content in [('stdout', stdout), ('stderr', stderr)] if content])
-  
-  self.assert_(returnCode == 0, "Failed to compile generated source.")
   
   # Now we have compiled, we need to copy any input data needed and then run the simulation
   inputXSILElements = testingElement.getChildElementsByTagName('input_xsil_file', optional=True)
