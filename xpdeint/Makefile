@@ -1,4 +1,4 @@
-.PHONY: all update configure clean check
+.PHONY: all update clean check distclean
 
 all: wscript waf_extensions/cheetah.py c4che/
 	@support/waf-light build
@@ -16,4 +16,7 @@ clean:
 # check examples compile
 check:
 	@for i in examples/*.xmds; do \
-	echo $$i; xpdeint $$i; done
+	echo $$i; xmds2 $$i; done
+
+distclean:
+	@support/waf-light distclean

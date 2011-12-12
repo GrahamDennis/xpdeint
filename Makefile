@@ -1,6 +1,6 @@
 SUBDIRS = xpdeint
 
-.PHONY: all update clean check
+.PHONY: all update clean check distclean
 
 all:
 	@for i in $(SUBDIRS); do \
@@ -19,3 +19,7 @@ clean:
 check:
 	@for i in $(SUBDIRS); do \
 	(cd $$i; $(MAKE) $(MFLAGS) check); done
+
+distclean:
+	@for i in $(SUBDIRS); do \
+	(cd $$i; $(MAKE) $(MFLAGS) distclean); done
