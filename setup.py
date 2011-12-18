@@ -30,7 +30,7 @@ setup(name="xmds2",
       exclude_package_data = {'': ['README', 'TODO']},
       
       # Project requires Cheetah for all of the templates
-      install_requires = ['Cheetah>=2.0.1', 'pyparsing>=1.5.1', 'mpmath'],
+      install_requires = ['Cheetah>=2.0.1', 'pyparsing>=1.5.1', 'mpmath', 'Sphinx>=1.1'],
       
       package_data = {
         'xpdeint': ['examples/*.xmds',
