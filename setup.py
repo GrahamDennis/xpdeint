@@ -6,7 +6,7 @@ import os
 if not os.path.exists('xpdeint'):
     raise Exception("setup.py must be run from the xpdeint main directory.")
 
-packages = []
+packages = ['xpdeint.waf.waflib', 'xpdeint.waf.waflib.Tools', 'xpdeint.waf.waflib.extras'] # The packages needed by waf
 skip_dirs = set(['.svn', 'waf_build'])
 for root, dirs, files in os.walk('xpdeint'):
     for d in skip_dirs.intersection(dirs):
@@ -33,13 +33,13 @@ setup(name="xmds2",
       install_requires = ['Cheetah>=2.0.1', 'pyparsing>=1.5.1', 'mpmath'],
       
       package_data = {
-        'xmds2': ['examples/*.xmds',
+        'xpdeint': ['examples/*.xmds',
                     'includes/*.c',
                     'includes/*.h',
                     'includes/dSFMT/*',
                     'includes/solirte/*',
                     'support/xpdeint.rng',
-                    'support/wscript'
+                    'support/wscript',
                    ]
       },
       

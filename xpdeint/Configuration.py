@@ -16,7 +16,7 @@ import cPickle, tempfile, shutil, logging
 
 config_arg_cache_filename = os.path.join(xpdeintUserDataPath, 'xpdeint_config_arg_cache')
 
-wafdir = os.path.normpath(resource_filename(__name__, 'support'))
+wafdir = os.path.normpath(resource_filename(__name__, 'waf'))
 sys.path.insert(0, wafdir)
 
 from waflib import Context, Options, Configure, Utils, Logs, Errors
