@@ -1,12 +1,14 @@
 #!/bin/sh
 
 # Find out the latest revision
+REVISION="HEAD"
 if test -d ".svn"; then
   REVISION=\""r`svn info . | sed -n 's/Revision: //p'`"\"
 elif test -d "../.git"; then
   REVISION=\""r`git svn info . | sed -n 's/Revision: //p'`"\"
-else
-  REVISION=\""HEAD"\"
+elif test -f "Version.py"; then
+  # File exists, let's not change the version
+  exit
 fi
 echo "#!/usr/bin/env python" > Version.py
 echo "# encoding: utf-8" >> Version.py
