@@ -49,7 +49,8 @@ usage: xmds2 [options] fileToBeParsed
 Options and arguments:
 -h                              : Print this message (also --help)
 -o filename                     : This overrides the name of the output file to be generated (also --output)
--g                              : Debug mode (also --debug)
+-v                              : Verbose mode (also --verbose)
+-g                              : Debug mode (also --debug). Implies --verbose
 -n                              : Only generate a source file, don't compile (also --no-compile)
 --configure                     : Run configuration checks for compiling simulations
 --reconfigure                   : Run configuration using the same options as used with the last
@@ -89,6 +90,7 @@ def main(argv=None):
   # the Python backtrace will be shown in addition to the XML location
   # where the error occurred.
   debug = False
+  verbose = False
   
   compileScript = True
   noVersionInformation = False
@@ -109,9 +111,10 @@ def main(argv=None):
     try:
       opts, args = getopt.gnu_getopt(
                     argv[1:],
-                    "ghno:",
+                    "gvhno:",
                     [
                       "debug",
+                      "verbose",
                       "help",
                       "no-compile",
                       "output=",
@@ -135,7 +138,9 @@ def main(argv=None):
     # option processing
     for option, value in opts:
       if option in ("-g", "--debug"):
-        debug = True
+        debug = verbose = True
+      elif option in ('-v', '--verbose'):
+        verbose = True
       elif option in ("-h", "--help"):
         raise Usage(help_message)
       elif option in ("-o", "--output"):
@@ -415,7 +420,7 @@ def main(argv=None):
         sourceFilename[:-3], # strip of trailing '.cc'
         variant = anyObject(variant),
         buildKWs = buildKWs,
-        debug = debug
+        verbose = verbose
       )
       
       if result == 0:
