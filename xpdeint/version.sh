@@ -1,12 +1,12 @@
 #!/bin/sh
 
 # Find out the latest revision
-REVISION="HEAD"
-if test -d ".svn"; then
+REVISION="\"HEAD\""
+if [ -d "../.svn" ]; then
   REVISION=\""r`svn info . | sed -n 's/Revision: //p'`"\"
-elif test -d "../.git"; then
+elif [ -d "../.git" ]; then
   REVISION=\""r`git svn info . | sed -n 's/Revision: //p'`"\"
-elif test -f "Version.py"; then
+elif [ -f "Version.py" ]; then
   # File exists, let's not change the version
   exit
 fi
