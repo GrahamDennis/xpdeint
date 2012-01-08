@@ -80,6 +80,12 @@ def run_config(includePaths = None, libPaths = None):
     ret = ctx.execute()
     
     print "Config log saved to ", os.path.join(xpdeintUserDataPath, 'waf_configure', 'config.log')
+    
+    # Copy wscript file to indicate what we configured with
+    wscript_path = resource_filename(__name__, 'support/wscript')
+    wscript_userdata_path = os.path.join(xpdeintUserDataPath, 'wscript')
+    
+    shutil.copyfile(wscript_path, wscript_userdata_path)
     return ret
 
 

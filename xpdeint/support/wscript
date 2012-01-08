@@ -8,11 +8,10 @@ The waf script to configure compilation of generated simulations.
 Created by Graham Dennis on 2009-03-01.
 """
 
-import os
+import os, sys
 
-from waflib import Task, TaskGen #, Constants
+from waflib import Task, TaskGen
 from waflib.TaskGen import feature
-# from Constants import ASK_LATER, SKIP_ME, RUN_ME
 
 def options(opt):
     # options provided by modules
@@ -110,6 +109,13 @@ def configure(conf):
                 uselib='optimise',
                 msg = "Checking for cautious math flags"
             )
+            
+            if sys.platform == 'darwin':
+                check_cxx(
+                    linkflags=['-Wl,-no_compact_unwind'],
+                    uselib_store="default",
+                    msg = "Checking for no_compact_unwind linker flags"
+                )
             
             check_cxx(
                 cxxflags='-ftree-vectorize',

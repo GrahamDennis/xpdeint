@@ -178,13 +178,12 @@ def main(argv=None):
     print >> sys.stderr, "\t for help use --help"
     return 2
   
-  if not os.path.isfile(os.path.join(xpdeintUserDataPath, 'wscript')) or \
-    fileContentsHash(os.path.join(xpdeintUserDataPath, 'wscript')) \
-       != fileContentsHash(resource_filename(__name__, 'support/wscript')):
+  wscript_path = resource_filename(__name__, 'support/wscript')
+  wscript_userdata_path = os.path.join(xpdeintUserDataPath, 'wscript')
+  
+  if not os.path.isfile(wscript_userdata_path) or \
+    fileContentsHash(wscript_userdata_path) != fileContentsHash(wscript_path):
     print "Reconfiguring xpdeint (updated config script)..."
-    wscript_path = resource_filename(__name__, 'support/wscript')
-    dest_wscript_path = os.path.join(xpdeintUserDataPath, 'wscript')
-    shutil.copyfile(wscript_path, dest_wscript_path)
     
     Configuration.run_reconfig()
   
@@ -252,7 +251,7 @@ def main(argv=None):
   globalNameSpace['templates'] = set()
   globalNameSpace['precision'] = 'double'
   globalNameSpace['simulationBuildVariant'] = set()
-  globalNameSpace['simulationUselib'] = set()
+  globalNameSpace['simulationUselib'] = set(['default'])
   globalNameSpace['bugReportAddress'] = 'xmds-devel@lists.sourceforge.net'
   
   xpdeintDataCachePath = os.path.join(xpdeintUserDataPath, 'xpdeint_cache')
