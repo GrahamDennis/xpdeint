@@ -20,8 +20,6 @@ Contents:
    
    advanced_topics
    
-   reference
-   
    faq
    
    upgrade
