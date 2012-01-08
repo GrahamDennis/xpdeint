@@ -110,12 +110,9 @@ def configure(conf):
                 msg = "Checking for cautious math flags"
             )
             
+            # Needed to silence some warnings on Mac OS X related to FFTW and AVX
             if sys.platform == 'darwin':
-                check_cxx(
-                    linkflags=['-Wl,-no_compact_unwind'],
-                    uselib_store="default",
-                    msg = "Checking for no_compact_unwind linker flags"
-                )
+                env.append_unique('LINKFLAGS', ['-Wl,-no_compact_unwind'])
             
             check_cxx(
                 cxxflags='-ftree-vectorize',

@@ -251,7 +251,7 @@ def main(argv=None):
   globalNameSpace['templates'] = set()
   globalNameSpace['precision'] = 'double'
   globalNameSpace['simulationBuildVariant'] = set()
-  globalNameSpace['simulationUselib'] = set(['default'])
+  globalNameSpace['simulationUselib'] = set()
   globalNameSpace['bugReportAddress'] = 'xmds-devel@lists.sourceforge.net'
   
   xpdeintDataCachePath = os.path.join(xpdeintUserDataPath, 'xpdeint_cache')
