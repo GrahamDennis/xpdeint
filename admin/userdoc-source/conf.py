@@ -25,6 +25,9 @@ import sys, os
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.mathjax']
 
+if os.path.exists('_static/MathJax/MathJax.js'):
+    mathjax_path = 'MathJax/MathJax.js?config=TeX-AMS_HTML,mathjax-xmds'
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['.templates']
 
@@ -36,15 +39,15 @@ master_doc = 'index'
 
 # General substitutions.
 project = u'XMDS2'
-copyright = u'2008-2010, Graham Dennis and Joe Hope'
+copyright = u'2008-2011, Graham Dennis and Joe Hope'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = '2.0'
+version = '2.1'
 # The full version, including alpha/beta/rc tags.
-release = '2.0'
+release = '2.1'
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -105,7 +108,7 @@ html_style = 'default.css'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-# html_static_path = ['.static']
+html_static_path = ['_static']
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
