@@ -1,0 +1,204 @@
+#!/bin/bash
+
+XMDS2_install_directory=$HOME"/XMDS_2.1"
+NUM_CPUS=`cat /proc/cpuinfo | grep processor | wc -l`
+DEVELOPER_INSTALL=0
+
+# Check for buggy version of python
+#python --version &> python_version.tmp
+#if [ `cat python_version.tmp | grep 2.7.2 | wc -l` -eq 0 ]; then
+#  PYTHON_BUG_PRESENT=FALSE
+#  echo false
+#else
+#  PYTHON_BUG_PRESENT=TRUE
+#  echo true
+#fi
+#rm python_version.tmp
+
+function parse_command_line_arguments {
+  args=("$@")
+  num_args=${#args[@]}
+
+  for (( i=0;i<$num_args;i++)); do
+    if [ ${args[${i}]} = "--help" ] || [ ${args[${i}]} = "-h" ]; then
+      echo
+      echo "This is the XMDS 2.1 installer."
+      echo
+      echo "Usage: ./install [options]"
+      echo
+      echo "Options and arguments:"
+      echo "--help          : this help text"
+      echo "--develop       : perform a developer install, downloading the absolute lastest version of the code"
+      echo
+      echo "If no options are given, a standard install will be performed."
+      echo
+      exit
+    elif [ ${args[${i}]} = "--develop" ]; then
+      DEVELOPER_INSTALL=1
+    else
+      echo "Unknown option:" ${args[${i}]}
+    fi
+  done
+}
+
+function install_FFTW {
+  current_directory=`pwd`
+  echo
+  echo "Installing FFTW. This can can several minutes if you only have a single CPU."
+  FFTW_install_directory=$XMDS2_install_directory"/fftw-3.3"
+  cp fftw-3.3.tar.gz $XMDS2_install_directory
+  cd $XMDS2_install_directory
+  tar -xzf fftw-3.3.tar.gz
+  rm fftw-3.3.tar.gz
+  cd $FFTW_install_directory
+  echo "  Configuring..."
+  ./configure --disable-fortran --enable-mpi --enable-sse2 --prefix=$FFTW_install_directory 1>/dev/null
+  echo "  Compiling..."
+  make -j $NUM_CPUS 1>/dev/null
+  echo "  Copying libraries..."
+  make install > /dev/null
+  cd $current_directory
+  echo
+  echo "FFTW installed!"
+  echo
+}
+
+parse_command_line_arguments $@
+
+echo
+echo
+echo "*** XMDS2 installer v0.1 ***"
+echo
+echo "A standard install downloads the XMDS 2.1 version of the code."
+echo "A developer install will download the latest cutting edge version of"
+echo "the XMDS code, which may include bugs. To perform a developer install,"
+echo "run the installer with the --develop option."
+echo
+echo "In both cases an SVN repository will be created locally, and you can update"
+echo "to the latest version of the code at any time by running the command"
+echo "  make update"
+echo "in the XMDS 2.1 directory."
+echo
+
+if [ $DEVELOPER_INSTALL -eq 1 ]; then
+  echo "Performing developer install"
+else
+  echo "Performing standard install"
+fi
+echo
+
+echo "By default XMDS will be installed in " $XMDS2_install_directory
+echo "Press [ENTER] to accept this default, or enter a new path:"
+read reply
+
+if [ ! -z $reply ]; then
+  XMDS2_install_directory=$reply
+fi
+
+# check if XMDS directory exists
+if [ ! -d $XMDS2_install_directory ]; then
+  echo $XMDS2_install_directory "does not exist. Create it? (Y/N)"
+  read -s -n 1 reply
+  if [ $reply = "Y" -o $reply = "y" ]; then
+    mkdir $XMDS2_install_directory
+  else
+    echo -e "No directory specified, exiting"
+    exit
+  fi
+fi
+
+echo
+echo "Installing required packages..."
+echo
+
+sudo apt-get -y install build-essential libopenmpi-dev openmpi-bin python-setuptools python-cheetah python-pyparsing python-lxml python-numpy python-mpmath libhdf5-serial-dev libgsl0-dev subversion python-sphinx
+
+# Find the optimum ATLAS version (i.e. CBLAS implementation) and install it
+# Older versions of Ubuntu offered pre-optimized packages for various architectures,
+# but newer versions don't, as most of the optimizations are now done at build time.
+if [ `cat /proc/cpuinfo | grep sse3 |wc -l` -gt 0 ]; then
+  if [ `cat /proc/cpuinfo | grep "Core(TM) i7" | wc -l` -ne 0 ] && [ `apt-cache --names-only search libatlas-corei7sse3-dev | wc -l` -ne 0 ]; then
+    sudo apt-get -y install libatlas-corei7sse3-dev
+  elif [ `apt-cache --names-only search libatlas-amd64sse3-dev | wc -l` -ne 0 ]; then
+    sudo apt-get -y install libatlas-amd64sse3-dev
+  else
+    sudo apt-get -y install libatlas-base-dev
+  fi
+else
+  sudo apt-get -y install libatlas-base-dev
+fi
+
+# Install FFTW3.3 under the user's home directory structure. This
+# avoids conflicting with any version of FFTW that may already be
+# installed on the machine.
+install_FFTW
+
+# Extract or fetch the XMDS2 source files
+echo
+echo "Contacting sourceforge to checkout XMDS source code. Please wait..."
+echo
+if [ $DEVELOPER_INSTALL -eq 1 ]; then
+  # Fetch the latest XMDS2 source code from sourceforge
+  cd $XMDS2_install_directory
+  svn checkout https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
+else
+  # Fetch a known good version of the XMDS2 source code from sourceforge
+  cd $XMDS2_install_directory
+  svn checkout -r 2473 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
+fi
+
+# Compile the Cheetah templates into Python
+echo
+echo "Compiling Cheetah templates..."
+echo
+make
+
+# Creates the xmds2 and xsil2graphics2 files in /usr/bin (or wherever), 
+# and copy xmds2 python code into the python install path (typically 
+# something like /usr/lib/python2.7/site-packages), and tells Python
+# about the new package.
+echo
+echo "Installing XMDS..."
+echo
+sudo ./setup.py develop
+
+# Tell XMDS to use the fftw libraries we installed under the user's
+# home directory, rather than any system version.
+echo
+echo "Configuring XMDS..."
+echo
+xmds2 --reconfigure --lib-path $FFTW_install_directory"/lib" --include-path $FFTW_install_directory"/include"
+
+# Work around python 2.7.2 bug
+# The bug can cause a second process to spawn randomly during configuration
+# resulting in a hang until it's killed. To fix this, spawn a separate
+# configuration thread and keep watching it to see if creates a second thread.
+# If it does kill it. Repeat until configuration is done.
+#xmds2 --reconfigure --lib-path $FFTW_install_directory"/lib" --include-path $FFTW_install_directory"/include" &
+#NUM_XMDS_PROCESSES=`ps -ef | grep xmds2 | grep -v "grep" | wc -l`
+#while [ $NUM_XMDS_PROCESSES -gt 0 ]; do
+#  sleep 3
+#  NUM_XMDS_PROCESSES=`ps -ef | grep xmds2 | grep -v "grep" | wc -l`
+#  if [ $NUM_XMDS_PROCESSES -eq 2 ]; then
+#    ROGUE_PROCESS=`ps -ef | grep xmds2 | awk 'NR == 2 { print $2 }'`
+#    kill -9 $ROGUE_PROCESS
+#    echo "*** killed process ***"
+#  fi
+#done
+
+# Build the HTML documentation
+cd $XMDS2_install_directory"/admin/userdoc-source"
+make html
+
+echo
+echo "If no errors are displayed above, XMDS 2.1 is installed!"
+echo
+echo "To see the HTML documentation, point your browser at" $XMDS2_install_directory "/documentation/index.html"
+echo "PDF documentation is available on the XMDS website."
+echo
+echo "Release notes and instructions can be found in " $XMDS2_install_directory
+echo
+echo "You can always update to the latest version of XMDS at any time by running \"make update\" "
+echo "in the top level XMDS_2.1 directory."
+
+
