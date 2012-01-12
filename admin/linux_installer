@@ -4,17 +4,6 @@ XMDS2_install_directory=$HOME"/XMDS_2.1"
 NUM_CPUS=`cat /proc/cpuinfo | grep processor | wc -l`
 DEVELOPER_INSTALL=0
 
-# Check for buggy version of python
-#python --version &> python_version.tmp
-#if [ `cat python_version.tmp | grep 2.7.2 | wc -l` -eq 0 ]; then
-#  PYTHON_BUG_PRESENT=FALSE
-#  echo false
-#else
-#  PYTHON_BUG_PRESENT=TRUE
-#  echo true
-#fi
-#rm python_version.tmp
-
 function parse_command_line_arguments {
   args=("$@")
   num_args=${#args[@]}
@@ -46,8 +35,20 @@ function install_FFTW {
   echo
   echo "Installing FFTW. This can can several minutes if you only have a single CPU."
   FFTW_install_directory=$XMDS2_install_directory"/fftw-3.3"
+  
   cp fftw-3.3.tar.gz $XMDS2_install_directory
   cd $XMDS2_install_directory
+
+  # Make sure the fftw 3.3 archive is present
+  if [ ! -f fftw-3.3.tar.gz ]; then
+    echo "ERROR: Can't find file fftw-3.3.tar.gz."
+    echo "This file should have been bundled with the installer. Aborting install."
+    exit
+  fi
+
+  # Unpack the FFTW 3.3 archive and install it in the user's home directory structure.
+  # This avoids conflicting with any other version of FFTW that may have been
+  # installed system-wide. Later we'll tell XMDS to use this specific version.  
   tar -xzf fftw-3.3.tar.gz
   rm fftw-3.3.tar.gz
   cd $FFTW_install_directory
@@ -69,7 +70,9 @@ echo
 echo
 echo "*** XMDS2 installer v0.1 ***"
 echo
-echo "A standard install downloads the XMDS 2.1 version of the code."
+echo "A standard install downloads the XMDS 2.1 version of the code. This"
+echo "is the default."
+echo
 echo "A developer install will download the latest cutting edge version of"
 echo "the XMDS code, which may include bugs. To perform a developer install,"
 echo "run the installer with the --develop option."
@@ -79,14 +82,15 @@ echo "to the latest version of the code at any time by running the command"
 echo "  make update"
 echo "in the XMDS 2.1 directory."
 echo
-
-if [ $DEVELOPER_INSTALL -eq 1 ]; then
-  echo "Performing developer install"
-else
-  echo "Performing standard install"
-fi
 echo
 
+if [ $DEVELOPER_INSTALL -eq 1 ]; then
+  echo "Performing developer install..."
+else
+  echo "Performing standard install..."
+fi
+echo
+echo
 echo "By default XMDS will be installed in " $XMDS2_install_directory
 echo "Press [ENTER] to accept this default, or enter a new path:"
 read reply
@@ -169,23 +173,6 @@ echo "Configuring XMDS..."
 echo
 xmds2 --reconfigure --lib-path $FFTW_install_directory"/lib" --include-path $FFTW_install_directory"/include"
 
-# Work around python 2.7.2 bug
-# The bug can cause a second process to spawn randomly during configuration
-# resulting in a hang until it's killed. To fix this, spawn a separate
-# configuration thread and keep watching it to see if creates a second thread.
-# If it does kill it. Repeat until configuration is done.
-#xmds2 --reconfigure --lib-path $FFTW_install_directory"/lib" --include-path $FFTW_install_directory"/include" &
-#NUM_XMDS_PROCESSES=`ps -ef | grep xmds2 | grep -v "grep" | wc -l`
-#while [ $NUM_XMDS_PROCESSES -gt 0 ]; do
-#  sleep 3
-#  NUM_XMDS_PROCESSES=`ps -ef | grep xmds2 | grep -v "grep" | wc -l`
-#  if [ $NUM_XMDS_PROCESSES -eq 2 ]; then
-#    ROGUE_PROCESS=`ps -ef | grep xmds2 | awk 'NR == 2 { print $2 }'`
-#    kill -9 $ROGUE_PROCESS
-#    echo "*** killed process ***"
-#  fi
-#done
-
 # Build the HTML documentation
 cd $XMDS2_install_directory"/admin/userdoc-source"
 make html
@@ -196,7 +183,7 @@ echo
 echo "To see the HTML documentation, point your browser at" $XMDS2_install_directory "/documentation/index.html"
 echo "PDF documentation is available on the XMDS website."
 echo
-echo "Release notes and instructions can be found in " $XMDS2_install_directory
+echo "Release notes and instructions can be found in" $XMDS2_install_directory
 echo
 echo "You can always update to the latest version of XMDS at any time by running \"make update\" "
 echo "in the top level XMDS_2.1 directory."
