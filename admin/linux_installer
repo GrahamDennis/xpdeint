@@ -1,5 +1,20 @@
 #!/bin/bash
 
+# This installer only works for Debian and Debian based distros such
+# as Ubuntu. Test to see if apt-get is available. If not, bail out.
+
+if [ `which apt-get | wc -l` -eq 0 ]; then
+  echo
+  echo "ERROR!"
+  echo "This installer only works on Debian and Debian-based distributions such"
+  echo "as Ubuntu and Mint. Since the \"apt-get\" command isn't available, the"
+  echo "installation can't proceed."
+  echo
+  echo "Aborting install."
+  echo
+  exit
+fi
+
 XMDS2_install_directory=$HOME"/XMDS_2.1"
 NUM_CPUS=`cat /proc/cpuinfo | grep processor | wc -l`
 DEVELOPER_INSTALL=0
@@ -36,13 +51,13 @@ function install_FFTW {
   echo "Installing FFTW. This can can several minutes if you only have a single CPU."
   FFTW_install_directory=$XMDS2_install_directory"/fftw-3.3"
   
-  cp fftw-3.3.tar.gz $XMDS2_install_directory
   cd $XMDS2_install_directory
+  wget http://www.fftw.org/fftw-3.3.tar.gz
 
   # Make sure the fftw 3.3 archive is present
   if [ ! -f fftw-3.3.tar.gz ]; then
-    echo "ERROR: Can't find file fftw-3.3.tar.gz."
-    echo "This file should have been bundled with the installer. Aborting install."
+    echo "ERROR: Couldn't obtain fftw-3.3.tar.gz from www.fftw.org."
+    echo "Aborting install."
     exit
   fi
 
@@ -68,7 +83,7 @@ parse_command_line_arguments $@
 
 echo
 echo
-echo "*** XMDS2 installer v0.1 ***"
+echo "*** XMDS2 installer v0.2 ***"
 echo
 echo "A standard install downloads the XMDS 2.1 version of the code. This"
 echo "is the default."
@@ -148,7 +163,7 @@ if [ $DEVELOPER_INSTALL -eq 1 ]; then
 else
   # Fetch a known good version of the XMDS2 source code from sourceforge
   cd $XMDS2_install_directory
-  svn checkout -r 2473 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
+  svn checkout -r 2485 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
 fi
 
 # Compile the Cheetah templates into Python
@@ -180,7 +195,7 @@ make html
 echo
 echo "If no errors are displayed above, XMDS 2.1 is installed!"
 echo
-echo "To see the HTML documentation, point your browser at" $XMDS2_install_directory "/documentation/index.html"
+echo "To see the HTML documentation, point your browser at" $XMDS2_install_directory"/documentation/index.html"
 echo "PDF documentation is available on the XMDS website."
 echo
 echo "Release notes and instructions can be found in" $XMDS2_install_directory
