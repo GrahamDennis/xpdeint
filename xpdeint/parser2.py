@@ -165,7 +165,7 @@ def main(argv=None):
     
     if run_config:
       return Configuration.run_config(includePaths, libPaths)
-    elif run_reconfig:
+    elif run_reconfig or includePaths or libPaths:
       return Configuration.run_reconfig(includePaths, libPaths)
     
     # argument processing
