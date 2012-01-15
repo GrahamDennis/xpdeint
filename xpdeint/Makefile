@@ -1,6 +1,6 @@
 .PHONY: all update clean check distclean
 
-all: wscript waf_extensions/cheetah.py c4che/
+all: wscript waf_extensions/cheetah.py c4che
 	@waf/waf-light build
 	@sh version.sh
 
