@@ -100,7 +100,7 @@ function install_FFTW {
   cd $FFTW_install_directory
 
   echo
-  echo "Installing FFTW. This can can several minutes if you only have a single CPU."
+  echo "Installing FFTW. This can take several minutes if you only have a single CPU."
   
   echo "  Configuring FFTW..."
   if [ $RPM_INSTALL -eq 1 ]; then
@@ -174,7 +174,7 @@ if [ $DEB_INSTALL -eq 1 ]; then
   # End Debian packages install
 elif [ $RPM_INSTALL -eq 1 ]; then
   # Begin RPM packages install
-  sudo yum -y install gcc make automake subversion openmpi-devel python-setuptools python-cheetah pyparsing python-lxml numpy python-mpmath hdf5-devel gsl-devel python-sphinx wget
+  sudo yum -y install gcc gcc-c++ make automake subversion openmpi-devel python-setuptools python-cheetah pyparsing python-lxml numpy python-mpmath hdf5-devel gsl-devel python-sphinx wget
   if [ `cat /proc/cpuinfo | grep sse3 |wc -l` -gt 0 ]; then
     sudo yum -y install atlas-sse3-devel
   elif [ `cat /proc/cpuinfo | grep sse2 |wc -l` -gt 0 ]; then
@@ -213,7 +213,7 @@ if [ $DEVELOPER_INSTALL -eq 1 ]; then
 else
   # Fetch a known good version of the XMDS2 source code from sourceforge
   cd $XMDS2_install_directory
-  svn checkout -r 2488 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
+  svn checkout -r 2491 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
 fi
 
 # Compile the Cheetah templates into Python
@@ -237,17 +237,24 @@ echo
 echo "Configuring XMDS..."
 echo
 
-# Some distros don't have the MPI libs in their library path so tell XMDS where to find them
-# Also tell XMDS to the version of FFTW we just installed
-xmds2 --reconfigure --lib-path $FFTW_install_directory"/lib" --include-path $FFTW_install_directory"/include" --lib-path $MPILIBDIR --include-path $MPIHEADERDIR
-
-# Some distros don't have mpic++ in their default executable path, so add a
-# static link to it if necessary
+# Some distros don't have mpic++ and mpirun in their default executable path, so add a
+# static link to it if necessary. Need to do this before calling xmds2 --reconfigure
 if [ `which mpic++ | wc -l` -eq 0 ]; then
   MPICPPPATH=`locate -b "\mpic++" | head --lines=1`
   echo; echo "Creating static link to $MPICPPPATH"; echo
   sudo ln -s $MPICPPPATH /usr/bin/mpic++
 fi
+
+if [ `which mpirun | wc -l` -eq 0 ]; then
+  MPIRUNPATH=`locate -b "\mpirun" | head --lines=1`
+  echo; echo "Creating static link to $MPICPPPATH"; echo
+  sudo ln -s $MPIRUNPATH /usr/bin/mpirun
+fi
+
+# Some distros don't have the MPI libs in their library path so tell XMDS where to find them
+# Also tell XMDS to the version of FFTW we just installed
+xmds2 --reconfigure --lib-path $FFTW_install_directory"/lib" --include-path $FFTW_install_directory"/include" --lib-path $MPILIBDIR --include-path $MPIHEADERDIR
+
 
 # Build the HTML documentation
 cd $XMDS2_install_directory"/admin/userdoc-source"
