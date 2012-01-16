@@ -1,14 +1,44 @@
 #!/bin/bash
 
-# This installer only works for Debian and Debian based distros such
-# as Ubuntu. Test to see if apt-get is available. If not, bail out.
+# This installer (currently) works for Debian and Debian based distros such
+# as Ubuntu, as well as Fedora and Red Hat. Other distros may or may not work.
 
-if [ `which apt-get | wc -l` -eq 0 ]; then
+# Look for apt-get or yum to decide whether we should use a deb or rpm
+# type of installation. If more distro support is added later, a finer
+# grained detection scheme will probably be necessary.
+
+echo
+echo
+echo "*** XMDS2 installer v0.3 ***"
+echo
+echo "A standard install downloads the XMDS 2.1 version of the code. This"
+echo "is the default."
+echo
+echo "A developer install will download the latest cutting edge version of"
+echo "the XMDS code, which may include bugs. To perform a developer install,"
+echo "run the installer with the --develop option."
+echo
+echo "In both cases an SVN repository will be created locally, and you can update"
+echo "to the latest version of the code at any time by running the command"
+echo "  make update"
+echo "in the XMDS 2.1 directory."
+echo
+echo
+
+DEB_INSTALL=0
+RPM_INSTALL=0
+if [ `which apt-get | wc -l` -ne 0 ]; then
+  echo; echo "apt-get found; assuming Debian packaging scheme"; echo
+  DEB_INSTALL=1
+elif [ `which yum | wc -l` -ne 0 ]; then
+  echo; echo "yum found; assuming RPM packaging scheme"; echo
+  RPM_INSTALL=1
+else
   echo
   echo "ERROR!"
-  echo "This installer only works on Debian and Debian-based distributions such"
-  echo "as Ubuntu and Mint. Since the \"apt-get\" command isn't available, the"
-  echo "installation can't proceed."
+  echo "This installer only works on Debian, Debian-based distributions such"
+  echo "as Ubuntu and Mint, Fedora and Red Hat. Since neither \"apt-get\" "
+  echo "nor \"yum\" is available, installation can't proceed."
   echo
   echo "Aborting install."
   echo
@@ -47,15 +77,16 @@ function parse_command_line_arguments {
 
 function install_FFTW {
   current_directory=`pwd`
-  echo
-  echo "Installing FFTW. This can can several minutes if you only have a single CPU."
+
   FFTW_install_directory=$XMDS2_install_directory"/fftw-3.3"
   
   cd $XMDS2_install_directory
+  echo; echo "Downloading FFTW 3.3 from www.fftw.org..."; echo
   wget http://www.fftw.org/fftw-3.3.tar.gz
 
   # Make sure the fftw 3.3 archive is present
   if [ ! -f fftw-3.3.tar.gz ]; then
+    echo
     echo "ERROR: Couldn't obtain fftw-3.3.tar.gz from www.fftw.org."
     echo "Aborting install."
     exit
@@ -67,10 +98,20 @@ function install_FFTW {
   tar -xzf fftw-3.3.tar.gz
   rm fftw-3.3.tar.gz
   cd $FFTW_install_directory
-  echo "  Configuring..."
+
+  echo
+  echo "Installing FFTW. This can can several minutes if you only have a single CPU."
+  
+  echo "  Configuring FFTW..."
+  if [ $RPM_INSTALL -eq 1 ]; then
+    export CPPFLAGS=$CPPFLAGS" -I"$MPIHEADERDIR
+    export LDFLAGS=$LDFLAGS" -L"$MPILIBDIR
+  fi
   ./configure --disable-fortran --enable-mpi --enable-sse2 --prefix=$FFTW_install_directory 1>/dev/null
-  echo "  Compiling..."
+
+  echo "  Compiling FFTW..."
   make -j $NUM_CPUS 1>/dev/null
+  
   echo "  Copying libraries..."
   make install > /dev/null
   cd $current_directory
@@ -80,24 +121,6 @@ function install_FFTW {
 }
 
 parse_command_line_arguments $@
-
-echo
-echo
-echo "*** XMDS2 installer v0.2 ***"
-echo
-echo "A standard install downloads the XMDS 2.1 version of the code. This"
-echo "is the default."
-echo
-echo "A developer install will download the latest cutting edge version of"
-echo "the XMDS code, which may include bugs. To perform a developer install,"
-echo "run the installer with the --develop option."
-echo
-echo "In both cases an SVN repository will be created locally, and you can update"
-echo "to the latest version of the code at any time by running the command"
-echo "  make update"
-echo "in the XMDS 2.1 directory."
-echo
-echo
 
 if [ $DEVELOPER_INSTALL -eq 1 ]; then
   echo "Performing developer install..."
@@ -130,22 +153,49 @@ echo
 echo "Installing required packages..."
 echo
 
-sudo apt-get -y install build-essential libopenmpi-dev openmpi-bin python-setuptools python-cheetah python-pyparsing python-lxml python-numpy python-mpmath libhdf5-serial-dev libgsl0-dev subversion python-sphinx
+if [ $DEB_INSTALL -eq 1 ]; then
+  # Begin Debian package install
+  sudo apt-get -y install build-essential libopenmpi-dev openmpi-bin python-setuptools python-cheetah python-pyparsing python-lxml python-numpy python-mpmath libhdf5-serial-dev libgsl0-dev subversion python-sphinx
 
-# Find the optimum ATLAS version (i.e. CBLAS implementation) and install it
-# Older versions of Ubuntu offered pre-optimized packages for various architectures,
-# but newer versions don't, as most of the optimizations are now done at build time.
-if [ `cat /proc/cpuinfo | grep sse3 |wc -l` -gt 0 ]; then
-  if [ `cat /proc/cpuinfo | grep "Core(TM) i7" | wc -l` -ne 0 ] && [ `apt-cache --names-only search libatlas-corei7sse3-dev | wc -l` -ne 0 ]; then
-    sudo apt-get -y install libatlas-corei7sse3-dev
-  elif [ `apt-cache --names-only search libatlas-amd64sse3-dev | wc -l` -ne 0 ]; then
-    sudo apt-get -y install libatlas-amd64sse3-dev
+  # Find the optimum ATLAS version (i.e. CBLAS implementation) and install it
+  # Older versions of Ubuntu offered pre-optimized packages for various architectures,
+  # but newer versions don't, as most of the optimizations are now done at build time.
+  if [ `cat /proc/cpuinfo | grep sse3 |wc -l` -gt 0 ]; then
+    if [ `cat /proc/cpuinfo | grep "Core(TM) i7" | wc -l` -ne 0 ] && [ `apt-cache --names-only search libatlas-corei7sse3-dev | wc -l` -ne 0 ]; then
+      sudo apt-get -y install libatlas-corei7sse3-dev
+    elif [ `apt-cache --names-only search libatlas-amd64sse3-dev | wc -l` -ne 0 ]; then
+      sudo apt-get -y install libatlas-amd64sse3-dev
+    else
+      sudo apt-get -y install libatlas-base-dev
+    fi
   else
     sudo apt-get -y install libatlas-base-dev
+  fi 
+  # End Debian packages install
+elif [ $RPM_INSTALL -eq 1 ]; then
+  # Begin RPM packages install
+  sudo yum -y install gcc make automake subversion openmpi-devel python-setuptools python-cheetah pyparsing python-lxml numpy python-mpmath hdf5-devel gsl-devel python-sphinx wget
+  if [ `cat /proc/cpuinfo | grep sse3 |wc -l` -gt 0 ]; then
+    sudo yum -y install atlas-sse3-devel
+  elif [ `cat /proc/cpuinfo | grep sse2 |wc -l` -gt 0 ]; then
+    sudo yum -y install atlas-sse2-devel
+  else
+    sudo yum -y install atlas-devel
   fi
-else
-  sudo apt-get -y install libatlas-base-dev
+  # End RPM packages install
 fi
+
+# Some distros don't put MPI libraries and binaries in a
+# location that is in the default search path, allowing multiple MPI versions
+# to coexist. Since we need to know where they are in order to compile stuff,
+# find where they are located. The scheme below is annoying and fragile.
+# A better way of doing this would be good.
+
+sudo updatedb
+MPIHEADER=`locate "/usr*/mpi.h" | head --lines=1`
+MPILIB=`locate "/usr*mpi_cxx.so" | head --lines=1`
+MPIHEADERDIR=`dirname $MPIHEADER`
+MPILIBDIR=`dirname $MPILIB`
 
 # Install FFTW3.3 under the user's home directory structure. This
 # avoids conflicting with any version of FFTW that may already be
@@ -163,7 +213,7 @@ if [ $DEVELOPER_INSTALL -eq 1 ]; then
 else
   # Fetch a known good version of the XMDS2 source code from sourceforge
   cd $XMDS2_install_directory
-  svn checkout -r 2485 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
+  svn checkout -r 2488 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
 fi
 
 # Compile the Cheetah templates into Python
@@ -186,7 +236,18 @@ sudo ./setup.py develop
 echo
 echo "Configuring XMDS..."
 echo
-xmds2 --reconfigure --lib-path $FFTW_install_directory"/lib" --include-path $FFTW_install_directory"/include"
+
+# Some distros don't have the MPI libs in their library path so tell XMDS where to find them
+# Also tell XMDS to the version of FFTW we just installed
+xmds2 --reconfigure --lib-path $FFTW_install_directory"/lib" --include-path $FFTW_install_directory"/include" --lib-path $MPILIBDIR --include-path $MPIHEADERDIR
+
+# Some distros don't have mpic++ in their default executable path, so add a
+# static link to it if necessary
+if [ `which mpic++ | wc -l` -eq 0 ]; then
+  MPICPPPATH=`locate -b "\mpic++" | head --lines=1`
+  echo; echo "Creating static link to $MPICPPPATH"; echo
+  sudo ln -s $MPICPPPATH /usr/bin/mpic++
+fi
 
 # Build the HTML documentation
 cd $XMDS2_install_directory"/admin/userdoc-source"
