@@ -247,23 +247,6 @@ def configure(conf):
             msg = "Checking for libxmds"
         )
         
-        # Ways of linking GSL
-        gsl_options = [
-            {
-                "lib": 'gsl',
-                "msg": "Checking for GSL",
-            },
-            {
-                "lib": ["gsl", "gslcblas"],
-                "msg": "Checking if GSL requires -lgslcblas",
-            }
-        ]
-        gsl_common = {
-            'header_name': 'gsl/gsl_sf.h',
-            'function_name': 'gsl_sf_bessel_jl',
-        }
-        try_options("gsl", gsl_options, gsl_common)
-        
         check_cxx(
             lib=["iomp", "vml"],
             header_name='mkl_vsl.h',
@@ -322,6 +305,25 @@ def configure(conf):
         }
         
         try_options('cblas', cblas_options, cblas_common)
+        
+        # Ways of linking GSL
+        gsl_options = [
+            {
+                "lib": 'gsl',
+                "msg": "Checking for GSL",
+            },
+            {
+                "lib": "gsl",
+                "uselib": "cblas",
+                "msg": "Checking if GSL requires CBLAS",
+            }
+        ]
+        gsl_common = {
+            'header_name': 'gsl/gsl_sf.h',
+            'function_name': 'gsl_sf_bessel_jl',
+        }
+        try_options("gsl", gsl_options, gsl_common)
+        
         
         check_cxx(
             lib='fftw3',
