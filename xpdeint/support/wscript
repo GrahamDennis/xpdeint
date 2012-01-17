@@ -69,6 +69,10 @@ def configure(conf):
                     "cxxflags": ['-mpim-altivec', '-maltivec'],
                 },
                 {
+                    "msg": "Checking for AVX",
+                    "cxxflags": ["-mavx", "-msse3", "-msse2", "-msse", "-mfpmath=sse"],
+                },
+                {
                     "msg": "Checking for SSE3",
                     "cxxflags": ["-msse3", "-msse2", "-msse", "-mfpmath=sse"],
                 },
