@@ -107,7 +107,24 @@ function install_FFTW {
     export CPPFLAGS=$CPPFLAGS" -I"$MPIHEADERDIR
     export LDFLAGS=$LDFLAGS" -L"$MPILIBDIR
   fi
-  ./configure --disable-fortran --enable-mpi --enable-sse2 --prefix=$FFTW_install_directory 1>/dev/null
+
+  ./configure --disable-fortran --enable-mpi --enable-sse2 --enable-avx --prefix=$FFTW_install_directory > installer.log
+  if [ $? -ne 0 ]; then
+    # Nonzero error code returned, so something went wrong
+    echo "    Configuration failed. Retrying without assuming your compiler supports AVX..."
+    ./configure --disable-fortran --enable-mpi --enable-sse2 --prefix=$FFTW_install_directory > installer.log
+    if [ $? -ne 0 ]; then
+      # Still no success, so bail out
+      echo "Configuration failed due to some unknown reason. Aborting install."
+      echo "Check installer.log in "$FFTW_install_directory " for more information."
+      echo
+      exit
+    else
+      echo "    Configuration successful!"
+    fi
+  fi
+
+  rm -f installer.log > /dev/null
 
   echo "  Compiling FFTW..."
   make -j $NUM_CPUS 1>/dev/null
@@ -213,7 +230,7 @@ if [ $DEVELOPER_INSTALL -eq 1 ]; then
 else
   # Fetch a known good version of the XMDS2 source code from sourceforge
   cd $XMDS2_install_directory
-  svn checkout -r 2491 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
+  svn checkout -r 2496 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
 fi
 
 # Compile the Cheetah templates into Python
@@ -247,7 +264,7 @@ fi
 
 if [ `which mpirun | wc -l` -eq 0 ]; then
   MPIRUNPATH=`locate -b "\mpirun" | head --lines=1`
-  echo; echo "Creating static link to $MPICPPPATH"; echo
+  echo; echo "Creating static link to $MPIRUNPATH"; echo
   sudo ln -s $MPIRUNPATH /usr/bin/mpirun
 fi
 
