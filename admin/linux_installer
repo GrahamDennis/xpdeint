@@ -227,7 +227,7 @@ fi
 # A better way of doing this would be good.
 
 sudo updatedb
-MPIHEADER=`locate "/usr*/mpi.h" | head --lines=1`
+MPIHEADER=`locate "/usr*/mpi.h" | grep -v "src/linux-headers" | head --lines=1`
 MPILIB=`locate "/usr*mpi_cxx.so" | head --lines=1`
 MPIHEADERDIR=`dirname $MPIHEADER`
 MPILIBDIR=`dirname $MPILIB`
@@ -248,7 +248,7 @@ if [ $DEVELOPER_INSTALL -eq 1 ]; then
 else
   # Fetch a known good version of the XMDS2 source code from sourceforge
   cd $XMDS2_install_directory
-  svn checkout -r 2498 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
+  svn checkout -r 2499 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
 fi
 
 # Compile the Cheetah templates into Python
