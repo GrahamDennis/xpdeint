@@ -7,6 +7,26 @@
 # type of installation. If more distro support is added later, a finer
 # grained detection scheme will probably be necessary.
 
+# If entire this script is run as root, all the files created under the user's home
+# directory will be owned by root, which can cause permissioning and deletion
+# problems. Only the copying of the binaries to locations outside the user's
+# directories should be run as sudo, which is taken care of within this script.
+ 
+if [ "$(whoami)" = "root" ]; then
+  echo
+  echo "It seems you are running this installer as root or with the \"sudo\" "
+  echo "command. Unless you're sure you know what you're doing, please exit"
+  echo "and re-run this installer as a normal user (i.e. without \"sudo\")."
+  echo
+  echo "Continue? Y/N"
+
+  read -s -n 1 reply
+  if [ $reply = "N" -o $reply = "n" ]; then
+    exit
+  fi
+fi
+
+
 echo
 echo
 echo "*** XMDS2 installer v0.3 ***"
@@ -24,6 +44,8 @@ echo "  make update"
 echo "in the XMDS 2.1 directory."
 echo
 echo
+
+exit
 
 DEB_INSTALL=0
 RPM_INSTALL=0
@@ -230,7 +252,7 @@ if [ $DEVELOPER_INSTALL -eq 1 ]; then
 else
   # Fetch a known good version of the XMDS2 source code from sourceforge
   cd $XMDS2_install_directory
-  svn checkout -r 2496 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
+  svn checkout -r 2497 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
 fi
 
 # Compile the Cheetah templates into Python
