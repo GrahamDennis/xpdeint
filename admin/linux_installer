@@ -18,14 +18,15 @@ if [ "$(whoami)" = "root" ]; then
   echo "command. Unless you're sure you know what you're doing, please exit"
   echo "and re-run this installer as a normal user (i.e. without \"sudo\")."
   echo
-  echo "Continue? Y/N"
+  echo "Continue? (Y/N)"
 
-  read -s -n 1 reply
+  read reply
   if [ $reply = "N" -o $reply = "n" ]; then
     exit
   fi
 fi
 
+echo $reply
 
 echo
 echo
@@ -34,7 +35,7 @@ echo
 echo "A standard install downloads the XMDS 2.1 version of the code. This"
 echo "is the default."
 echo
-echo "A developer install will download the latest cutting edge version of"
+echo "A developer install will download the latest cutting-edge version of"
 echo "the XMDS code, which may include bugs. To perform a developer install,"
 echo "run the installer with the --develop option."
 echo
@@ -44,8 +45,6 @@ echo "  make update"
 echo "in the XMDS 2.1 directory."
 echo
 echo
-
-exit
 
 DEB_INSTALL=0
 RPM_INSTALL=0
@@ -71,12 +70,9 @@ XMDS2_install_directory=$HOME"/XMDS_2.1"
 NUM_CPUS=`cat /proc/cpuinfo | grep processor | wc -l`
 DEVELOPER_INSTALL=0
 
-function parse_command_line_arguments {
-  args=("$@")
-  num_args=${#args[@]}
-
-  for (( i=0;i<$num_args;i++)); do
-    if [ ${args[${i}]} = "--help" ] || [ ${args[${i}]} = "-h" ]; then
+parse_command_line_arguments() {
+  for i in $@; do
+    if [ $i = "--help" ] || [ $i = "-h" ]; then
       echo
       echo "This is the XMDS 2.1 installer."
       echo
@@ -89,15 +85,15 @@ function parse_command_line_arguments {
       echo "If no options are given, a standard install will be performed."
       echo
       exit
-    elif [ ${args[${i}]} = "--develop" ]; then
+    elif [ $i = "--develop" ]; then
       DEVELOPER_INSTALL=1
     else
-      echo "Unknown option:" ${args[${i}]}
+      echo "Unknown option:" $i
     fi
   done
 }
 
-function install_FFTW {
+install_FFTW() {
   current_directory=`pwd`
 
   FFTW_install_directory=$XMDS2_install_directory"/fftw-3.3"
@@ -179,7 +175,7 @@ fi
 # check if XMDS directory exists
 if [ ! -d $XMDS2_install_directory ]; then
   echo $XMDS2_install_directory "does not exist. Create it? (Y/N)"
-  read -s -n 1 reply
+  read reply
   if [ $reply = "Y" -o $reply = "y" ]; then
     mkdir $XMDS2_install_directory
   else
@@ -224,8 +220,8 @@ elif [ $RPM_INSTALL -eq 1 ]; then
   # End RPM packages install
 fi
 
-# Some distros don't put MPI libraries and binaries in a
-# location that is in the default search path, allowing multiple MPI versions
+# Some distros put MPI libraries and binaries in a location that
+# isn't in the default search path, allowing multiple MPI versions
 # to coexist. Since we need to know where they are in order to compile stuff,
 # find where they are located. The scheme below is annoying and fragile.
 # A better way of doing this would be good.
@@ -252,7 +248,7 @@ if [ $DEVELOPER_INSTALL -eq 1 ]; then
 else
   # Fetch a known good version of the XMDS2 source code from sourceforge
   cd $XMDS2_install_directory
-  svn checkout -r 2497 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
+  svn checkout -r 2498 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
 fi
 
 # Compile the Cheetah templates into Python
