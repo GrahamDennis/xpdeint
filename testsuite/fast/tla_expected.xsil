@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="tla.xsil" expected="tla_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-6" />
+  </testing>
+  <name>tla</name>
+  <author>Unknown</author>
+  <description>
+    Two level atom example simulation. Illustrates a cross-propagating field.
+  </description>
+  
+  <features>
+    <benchmark />
+    <error_check />
+    <bing />
+    <fftw plan="patient" />
+    <globals>
+      <![CDATA[
+      const real g = 1.0;
+      const real t0 = 1.0;
+      ]]>
+    </globals>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> z </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="t" lattice="10000"  domain="(-10, 15)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="main" initial_space="t" type="real">
+    <components>
+      E
+    </components>
+    <initialisation>
+      <![CDATA[
+        E = 2/t0/cosh(t/t0);
+      ]]>
+    </initialisation>
+  </vector>
+
+  <vector name="cross" initial_space="t" type="real">
+    <components>
+      P N
+    </components>
+    <initialisation>
+      <![CDATA[
+        P = 0.0;
+        N = -1.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="RK4" interval="4" steps="200">
+      <samples>100 100</samples>
+      <operators>
+        <operator kind="cross_propagation" algorithm="RK4" propagation_dimension="t">
+          <integration_vectors>cross</integration_vectors>
+          <!-- You can have a dependencies tag in here -->
+          <dependencies>main</dependencies>
+          <boundary_condition kind="left">
+            <!-- You can also have a dependencies tag in here -->
+            <!-- like the one shown below, but none are needed -->
+            <!-- in this example -->
+            <!-- <dependencies>cross</dependencies> -->
+            <![CDATA[
+              P = 0.0;
+              N = -1.0;
+            ]]>
+          </boundary_condition>
+          <![CDATA[
+            dP_dt = E*N;
+            dN_dt = -E*P;
+          ]]>
+        </operator>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+          dE_dz = g*P;
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  
+  <output format="binary" filename="tla.xsil">
+    <group>
+      <sampling basis="t(1000)" initial_sample="yes">
+        <moments>pow_dens</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          pow_dens = E*E;
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling basis="t(1000)" initial_sample="no">
+        <moments>P_out N_out</moments>
+        <dependencies>cross</dependencies>
+        <![CDATA[
+          P_out = P;
+          N_out = N;
+        ]]>
+      </sampling>
+    </group>
+  </output>
+
+<info>
+Script compiled with XMDS2 version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+See http://www.xmds.org for more information.
+</info>
+
+<XSIL Name="moment_group_1">
+  <Param Name="n_independent">2</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>4</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+z t pow_dens error_pow_dens 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>101</Dim>
+    <Dim>1000</Dim>
+    <Dim>4</Dim>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint64" precision="double" Type="Remote" Encoding="LittleEndian"/>
+tla_expected_mg0.dat
+    </Stream>
+  </Array>
+</XSIL>
+
+<XSIL Name="moment_group_2">
+  <Param Name="n_independent">2</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>6</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+z t P_out N_out error_P_out error_N_out 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>100</Dim>
+    <Dim>1000</Dim>
+    <Dim>6</Dim>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint64" precision="double" Type="Remote" Encoding="LittleEndian"/>
+tla_expected_mg1.dat
+    </Stream>
+  </Array>
+</XSIL>
+</simulation>
