@@ -145,7 +145,7 @@ if (_noise_list.empty()) {
   _active_node->_step = _step;
   @for noiseVector in integrator.dynamicNoiseVectors
   
-  _active_${noiseVector.id} =  (${noiseVector.type}*) xmds_malloc(sizeof(${noiseVector.type}) * ${noiseVector.allocSize});
+  _active_${noiseVector.id} =  (${noiseVector.type}*) xmds_malloc(sizeof(${noiseVector.type}) * MAX(${noiseVector.allocSize},1));
   _active_node->_${noiseVector.id} = _active_${noiseVector.id};
   ${noiseVector.functions['evaluate'].call(_step = '_step')}
   @end for
@@ -164,7 +164,7 @@ if (_noise_list.empty()) {
   @for noiseVector in integrator.dynamicNoiseVectors
     @# It is necessary to transform the noise vector back to its original basis, as it may have been transformed in the mean time.
   ${transformVectorsToBasis([noiseVector], noiseVector.initialBasis), autoIndent=True}@slurp
-  _active_${noiseVector.id} = (${noiseVector.type}*) xmds_malloc(sizeof(${noiseVector.type}) * ${noiseVector.allocSize});
+  _active_${noiseVector.id} = (${noiseVector.type}*) xmds_malloc(sizeof(${noiseVector.type}) * MAX(${noiseVector.allocSize},1));
   ${noiseVector.functions['split'].call(_new_step = '_step', _old_step = '_old_smallest_step', _old_array = '_noise_list.begin()->_' + noiseVector.id)}
   
   @end for
