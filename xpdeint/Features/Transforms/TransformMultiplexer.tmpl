@@ -205,7 +205,7 @@ if (_auxiliary_array_size) {
 }
 
 bool _allocated_temporary_array = false;
-if (!_max_vector_array) {
+if (!_max_vector_array && _max_vector_size > 0) {
   _max_vector_array = (real*) xmds_malloc(sizeof(real) * _max_vector_size);
   _allocated_temporary_array = true;
 }
