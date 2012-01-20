@@ -165,11 +165,12 @@ def run_build(source_name, target_name, variant = 'default', buildKWs = {}, verb
     try:
         ctx.execute()
         
-        # Now clean up the intermediate file/s
-        tgen = ctx.get_tgen_by_name(target_name)
-        for t in tgen.compiled_tasks:
-            for n in t.outputs:
-                n.delete()
+        # Now clean up the intermediate file/s if we aren't in verbose mode
+        if not verbose:
+            tgen = ctx.get_tgen_by_name(target_name)
+            for t in tgen.compiled_tasks:
+                for n in t.outputs:
+                    n.delete()
     except Errors.BuildError, err:
         if verbose:
             last_cmd = err.tasks[0].last_cmd
