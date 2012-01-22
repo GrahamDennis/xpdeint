@@ -3,7 +3,38 @@
 Installation
 ============
 
-**XMDS2** can be installed on any unix-like system including linux, Tru64, Mac OS X.  It requires a C++ compiler, python, and several installed packages.  Many of these packages are optional, but a good idea to obtain full functionality.  This installation guide will take you through a typical full install step by step, although many of the packages are likely already available on any given system.
+**XMDS2** can be installed on any unix-like system including linux, Tru64, and Mac OS X.  It requires a C++ compiler, python, and several installed packages.  Many of these packages are optional, but a good idea to obtain full functionality.  
+
+Installers
+----------
+
+The easiest way to get started is with an installer.
+
+.. tabularcolumns:: |c|c|c|
+
+.. list-table::
+    :widths: 15, 5, 5
+    :header-rows: 0
+
+    * - Linux (Ubuntu/Debian/Fedora/RedHat)
+
+      - `Download <http://xmds.svn.sourceforge.net/viewvc/xmds/trunk/xpdeint/admin/linux_installer>`_
+
+      - :ref:`Learn more <linux_installation>`
+
+    * - Mac OS X 10.6/10.7
+
+      - `Download <http://sourceforge.net/projects/xmds/files/xmds-2.1-osx.zip>`_
+
+      - :ref:`Learn more <mac_installation>`
+
+
+.. _ManualInstallation:
+
+Manual installation from source
+-------------------------------
+
+This installation guide will take you through a typical full install step by step, although many of the packages are likely already available on any given system.
 
 This guide adds extra notes for users wishing to install XMDS2 using the SVN repository.  This requires a few extra steps, but allows you to edit your copy, and/or update your copy very efficiently (with all the usual advantages and disadvantages of using unreleased material).
 
