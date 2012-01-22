@@ -7,7 +7,7 @@
 # type of installation. If more distro support is added later, a finer
 # grained detection scheme will probably be necessary.
 
-# If entire this script is run as root, all the files created under the user's home
+# If this entire script is run as root, all the files created under the user's home
 # directory will be owned by root, which can cause permissioning and deletion
 # problems. Only the copying of the binaries to locations outside the user's
 # directories should be run as sudo, which is taken care of within this script.
@@ -153,7 +153,7 @@ install_FFTW() {
   echo "  Copying single precision libraries..."
   make install > /dev/null
 
-  # Note: if precision is specified, FFTW will compile double-precision libs by default
+  # Note: if precision is not specified, FFTW will compile double-precision libs by default
   echo "  Configuring FFTW with double precision option..."
   if [ $NO_COMPILER_SUPPORT_FOR_AVX -eq 0 ]; then
     ./configure --disable-fortran --enable-mpi --enable-sse2 --prefix=$FFTW_install_directory
@@ -266,7 +266,7 @@ if [ $DEVELOPER_INSTALL -eq 1 ]; then
 else
   # Fetch a known good version of the XMDS2 source code from sourceforge
   cd $XMDS2_install_directory
-  svn checkout -r 2499 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
+  svn checkout -r 2507 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
 fi
 
 # Compile the Cheetah templates into Python
@@ -294,13 +294,13 @@ echo
 # static link to it if necessary. Need to do this before calling xmds2 --reconfigure
 if [ `which mpic++ | wc -l` -eq 0 ]; then
   MPICPPPATH=`locate -b "\mpic++" | head --lines=1`
-  echo; echo "Creating static link to $MPICPPPATH"; echo
+  echo; echo "Creating symbolic link to $MPICPPPATH"; echo
   sudo ln -s $MPICPPPATH /usr/bin/mpic++
 fi
 
 if [ `which mpirun | wc -l` -eq 0 ]; then
   MPIRUNPATH=`locate -b "\mpirun" | head --lines=1`
-  echo; echo "Creating static link to $MPIRUNPATH"; echo
+  echo; echo "Creating symbolic link to $MPIRUNPATH"; echo
   sudo ln -s $MPIRUNPATH /usr/bin/mpirun
 fi
 
