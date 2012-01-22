@@ -128,11 +128,11 @@ install_FFTW() {
     export LDFLAGS=$LDFLAGS" -L"$MPILIBDIR
   fi
 
-  ./configure --disable-fortran --enable-mpi --enable-sse2 --enable-avx --prefix=$FFTW_install_directory > installer.log
+  ./configure --disable-fortran --enable-mpi --enable-single --enable-sse2 --enable-avx --prefix=$FFTW_install_directory > installer.log
   if [ $? -ne 0 ]; then
     # Nonzero error code returned, so something went wrong
     echo "    Configuration failed. Retrying without assuming your compiler supports AVX..."
-    ./configure --disable-fortran --enable-mpi --enable-sse2 --prefix=$FFTW_install_directory > installer.log
+    ./configure --disable-fortran --enable-mpi --enable-single --enable-sse2 --prefix=$FFTW_install_directory > installer.log
     if [ $? -ne 0 ]; then
       # Still no success, so bail out
       echo "Configuration failed due to some unknown reason. Aborting install."
