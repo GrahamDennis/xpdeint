@@ -156,9 +156,9 @@ install_FFTW() {
   # Note: if precision is not specified, FFTW will compile double-precision libs by default
   echo "  Configuring FFTW with double precision option..."
   if [ $NO_COMPILER_SUPPORT_FOR_AVX -eq 0 ]; then
-    ./configure --disable-fortran --enable-mpi --enable-sse2 --prefix=$FFTW_install_directory
+    ./configure --disable-fortran --enable-mpi --enable-sse2 --prefix=$FFTW_install_directory 1>/dev/null
   else
-    ./configure --disable-fortran --enable-mpi --enable-sse2 --enable-avx --prefix=$FFTW_install_directory
+    ./configure --disable-fortran --enable-mpi --enable-sse2 --enable-avx --prefix=$FFTW_install_directory 1>/dev/null
   fi
 
   echo "  Compiling FFTW with double precision option..."
