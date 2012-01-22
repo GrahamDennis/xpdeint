@@ -120,7 +120,9 @@ install_FFTW() {
   echo
   echo "Installing FFTW. This can take several minutes if you only have a single CPU."
   
-  echo "  Configuring FFTW..."
+  NO_COMPILER_SUPPORT_FOR_AVX=0  
+
+  echo "  Configuring FFTW with single precision option..."
   if [ $RPM_INSTALL -eq 1 ]; then
     export CPPFLAGS=$CPPFLAGS" -I"$MPIHEADERDIR
     export LDFLAGS=$LDFLAGS" -L"$MPILIBDIR
@@ -139,16 +141,32 @@ install_FFTW() {
       exit
     else
       echo "    Configuration successful!"
+      NO_COMPILER_SUPPORT_FOR_AVX=1
     fi
   fi
 
   rm -f installer.log > /dev/null
 
-  echo "  Compiling FFTW..."
+  echo "  Compiling FFTW with single precision option..."
   make -j $NUM_CPUS 1>/dev/null
   
-  echo "  Copying libraries..."
+  echo "  Copying single precision libraries..."
   make install > /dev/null
+
+  # Note: if precision is specified, FFTW will compile double-precision libs by default
+  echo "  Configuring FFTW with double precision option..."
+  if [ $NO_COMPILER_SUPPORT_FOR_AVX -eq 0 ]; then
+    ./configure --disable-fortran --enable-mpi --enable-sse2 --prefix=$FFTW_install_directory
+  else
+    ./configure --disable-fortran --enable-mpi --enable-sse2 --enable-avx --prefix=$FFTW_install_directory
+  fi
+
+  echo "  Compiling FFTW with double precision option..."
+  make -j $NUM_CPUS 1>/dev/null
+
+  echo "  Copying double precision libraries..."
+  make install > /dev/null
+
   cd $current_directory
   echo
   echo "FFTW installed!"
@@ -190,7 +208,7 @@ echo
 
 if [ $DEB_INSTALL -eq 1 ]; then
   # Begin Debian package install
-  sudo apt-get -y install build-essential libopenmpi-dev openmpi-bin python-setuptools python-cheetah python-pyparsing python-lxml python-numpy python-mpmath libhdf5-serial-dev libgsl0-dev subversion python-sphinx
+  sudo apt-get -y install build-essential libopenmpi-dev openmpi-bin python-setuptools python-cheetah python-pyparsing python-lxml python-numpy python-mpmath libhdf5-serial-dev libgsl0-dev subversion python-sphinx wget
 
   # Find the optimum ATLAS version (i.e. CBLAS implementation) and install it
   # Older versions of Ubuntu offered pre-optimized packages for various architectures,
