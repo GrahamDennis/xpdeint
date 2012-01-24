@@ -30,6 +30,60 @@ The easiest way to get started is with an installer.
       - :ref:`Learn more <mac_installation>`
 
 
+.. _linux_installation:
+
+Linux Installation
+==================
+
+Download
+--------
+
+Linux installer script: http://xmds.svn.sourceforge.net/viewvc/xmds/trunk/xpdeint/admin/linux_installer
+
+
+Using the Linux installer
+-------------------------
+
+The Linux installer for Ubuntu / Debian / Fedora / Red Hat can be downloaded and executed with the following command::
+
+    /bin/bash -c "$(wget -qO - http://xmds.svn.sf.net/viewvc/xmds/trunk/xpdeint/admin/linux_installer)"
+
+Alternatively, you can download it from the link above, and type the following into a terminal::
+
+    bash ./linux_installer
+    
+
+This script installs all XMDS dependencies from your native package manager (``apt-get`` for Ubuntu/Debian, ``yum`` for Fedora/Red Hat).  The script can only operate with administrative privileges.  The script will ask you to enter your admin password at the appropriate steps.  For instructions on how to install XMDS on systems where you lack administrative rights, see :ref:`ManualInstallation`.
+
+By default, this installer will install a known stable version of XMDS, which can be updated at any time by navigating to the XMDS directory amd typing 'make update'.  To install the latest developer version at the beginning, simply run the installer with the "--develop" option.  If your package manager cannot install the required version of FFTW (an important library for doing fast Fourier transforms), then it will install a version in your home directory to avoid current or later conflicts with your package manager.
+
+Once XMDS has been installed, you can run it from the terminal by typing ``xmds2``. See the :ref:`QuickStartTutorial` for next steps.
+
+
+.. _mac_installation:
+
+Mac OS X Installation
+=====================
+
+Download
+--------
+
+Mac OS X 10.6 (Snow Leopard) or later XMDS 2.1 installer: http://sourceforge.net/projects/xmds/files/xmds-2.1-osx.zip
+
+Using the Mac OS X Installer
+----------------------------
+
+A self-contained installer for Mac OS X 10.6 (Snow Leopard) and later is available from the link above. This installer is only compatible with Intel Macs.  This means that the older PowerPC architecture is *not supported*.  Xcode (Apple's developer tools) is required to use this installer. Xcode is available for free from the Mac App Store for 10.7 or later, and is available on the install disk of earlier Macs as an optional install.  For users of earlier operating systems (10.6.8 or earlier), it is possible to find a free copy of earlier versions of XCode on the Apple developer website (3.2.6 is the earliest). You will be prompted to install it if you haven't already.
+
+Once you have downloaded the XMDS installer, installation is as simple as dragging it to your Applications folder or any other location.  Click the XMDS application to launch it, and press the "Launch XMDS Terminal" button to open a Terminal window customised to work with XMDS.  The first time you do this, the application will complete the installation process.  This process can take a few minutes, but is only performed once.
+
+You can run XMDS in the XMDS terminal by typing ``xmds2``. See the :ref:`QuickStartTutorial` for next steps.
+
+To uninstall XMDS, drag the XMDS application to the trash. XMDS places some files in the directory ``~/Library/XMDS``. Remove this directory to completely remove XMDS from your system.
+
+This package includes binaries for `OpenMPI <http://www.open-mpi.org>`_, `FFTW <http://www.fftw.org>`_, `HDF5 <http://www.hdfgroup.org/HDF5>`_ and `GSL <http://www.gnu.org/software/gsl>`_. These binaries are self-contained and do not overwrite any existing installations.
+
+
 .. _ManualInstallation:
 
 Manual installation from source
@@ -181,55 +235,3 @@ This guide adds extra notes for users wishing to install XMDS2 using the SVN rep
 Optionally, you may also wish to create the directory ".xmds/wisdom" in your home directory.  This will be used by FFTW to store information about how best to perform Fourier transforms for your architecture.
 
 
-.. _linux_installation:
-
-Linux Installation
-==================
-
-Download
---------
-
-Linux installer script: http://xmds.svn.sourceforge.net/viewvc/xmds/trunk/xpdeint/admin/linux_installer
-
-
-Using the Linux installer
--------------------------
-
-The Linux installer for Ubuntu / Debian / Fedora / Red Hat can be downloaded and executed with the following command::
-
-    /bin/bash -c "$(wget -qO - http://xmds.svn.sf.net/viewvc/xmds/trunk/xpdeint/admin/linux_installer)"
-
-Alternatively, you can download it from the link above, and type the following into a terminal::
-
-    bash ./linux_installer
-    
-
-This script installs all XMDS dependencies from your native package manager (``apt-get`` for Ubuntu/Debian, ``yum`` for Fedora/Red Hat).  The script can only operate with administrative privileges.  The script will ask you to enter your admin password at the appropriate steps.  For instructions on how to install XMDS on systems where you lack administrative rights, see :ref:`ManualInstallation`.
-
-By default, this installer will install a known stable version of XMDS, which can be updated at any time by navigating to the XMDS directory amd typing 'make update'.  To install the latest developer version at the beginning, simply run the installer with the "--develop" option.  If your package manager cannot install the required version of FFTW (an important library for doing fast Fourier transforms), then it will install a version in your home directory to avoid current or later conflicts with your package manager.
-
-Once XMDS has been installed, you can run it from the terminal by typing ``xmds2``. See the :ref:`QuickStartTutorial` for next steps.
-
-
-.. _mac_installation:
-
-Mac OS X Installation
-=====================
-
-Download
---------
-
-Mac OS X 10.6 (Snow Leopard) or later XMDS 2.1 installer: http://sourceforge.net/projects/xmds/files/xmds-2.1-osx.zip
-
-Using the Mac OS X Installer
-----------------------------
-
-A self-contained installer for Mac OS X 10.6 (Snow Leopard) and later is available from the link above. This installer is only compatible with Intel Macs.  This means that the older PowerPC architecture is *not supported*.  Xcode (Apple's developer tools) is required to use this installer. Xcode is available for free from the Mac App Store for 10.7 or later, and is available on the install disk of earlier Macs as an optional install.  For users of earlier operating systems (10.6.8 or earlier), it is possible to find a free copy of earlier versions of XCode on the Apple developer website (3.2.6 is the earliest). You will be prompted to install it if you haven't already.
-
-Once you have downloaded the XMDS installer, installation is as simple as dragging it to your Applications folder or any other location.  Click the XMDS application to launch it, and press the "Launch XMDS Terminal" button to open a Terminal window customised to work with XMDS.  The first time you do this, the application will complete the installation process.  This process can take a few minutes, but is only performed once.
-
-You can run XMDS in the XMDS terminal by typing ``xmds2``. See the :ref:`QuickStartTutorial` for next steps.
-
-To uninstall XMDS, drag the XMDS application to the trash. XMDS places some files in the directory ``~/Library/XMDS``. Remove this directory to completely remove XMDS from your system.
-
-This package includes binaries for `OpenMPI <http://www.open-mpi.org>`_, `FFTW <http://www.fftw.org>`_, `HDF5 <http://www.hdfgroup.org/HDF5>`_ and `GSL <http://www.gnu.org/software/gsl>`_. These binaries are self-contained and do not overwrite any existing installations.
