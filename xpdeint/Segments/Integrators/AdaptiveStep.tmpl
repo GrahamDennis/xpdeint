@@ -19,7 +19,7 @@ real _segment${segmentNumber}_setup_sampling(bool* _next_sample_flag, long* _nex
   @#
   @for $vector in $integrationVectors
 real _segment${segmentNumber}_${vector.id}_timestep_error(${vector.type}* _checkfield);
-void _segment${segmentNumber}_${vector.id}_reset(${vector.type}* _reset_to);
+bool _segment${segmentNumber}_${vector.id}_reset(${vector.type}* _reset_to);
   @end for
   @#
 @end def
@@ -188,6 +188,24 @@ for (long  _i1 = 0; _i1 < _${vector.id}_ncomponents; _i1++) {
   @#
 @end def
 
+@def insideLookForNaNLoops($vector)
+  @#
+  @# No point in fancy logic trying to exit the test early if a NaN is found, even
+  @# though this is hot path code, since a NaN means we're about to exit the simulation
+  @# anyway. Worth having seperate code depending on whether the vector values are
+  @# real or complex though, since complex requires either two checks or taking the
+  @# modulus. Presumably two seperate Re(), Im() checks are faster than mod2
+  @#
+  for (long _i1 = 0; _i1 < _${vector.id}_ncomponents; _i1++) {
+  @if $vector.type == 'complex'
+    if (_xmds_isnonfinite(_${vector.id}[_${vector.id}_index_pointer + _i1].Re())
+      || _xmds_isnonfinite(_${vector.id}[_${vector.id}_index_pointer + _i1].Im())) bNoNaNsPresent = false;
+  @else
+    if (_xmds_isnonfinite(_${vector.id}[_${vector.id}_index_pointer + _i1])) bNoNaNsPresent = false;
+  @end if
+  }
+  @#
+@end def
 
 @def updateMaximumError($vector)
   @#
@@ -209,9 +227,16 @@ ${insertCodeForFeatures('updateMaximumError', ['Diagnostics'], {'vector': vector
 
 @def resetFunctionImplementation($vector)
   @#
-void _segment${segmentNumber}_${vector.id}_reset(${vector.type}* _reset_to_${vector.id})
+bool _segment${segmentNumber}_${vector.id}_reset(${vector.type}* _reset_to_${vector.id})
 {
   ${copyVectors([vector], destPrefix = '', srcPrefix = '_reset_to'), autoIndent=True}@slurp
+  
+  /* return false if there's a NaN somewhere in the vector, otherwise return true */
+  bool bNoNaNsPresent = true;
+  {
+    ${loopOverVectorsInBasisWithInnerContent([vector], $homeBasis, $insideLookForNaNLoops(vector)), autoIndent=True}@slurp
+  }
+  return bNoNaNsPresent;
 }
   @#
 @end def
@@ -308,10 +333,16 @@ do {
     } else {
       ${insertCodeForFeatures('adaptiveStepFailed', $featureOrderingForToleranceChecking), autoIndent=True}@slurp
       ${propagationDimension} -= _step;
+
   @for $vector in $integrationVectors
-      
-      _${name}_${vector.id}_reset(_${stepper.resetFieldName}_${vector.id});
+      if (_${name}_${vector.id}_reset(_${stepper.resetFieldName}_${vector.id}) == false) {
+
+        _LOG(_WARNING_LOG_LEVEL, "WARNING: NaN present. Integration halted at ${propagationDimension} = %e.\n"
+                           "         Non-finite number in integration vector \"${vector.name}\" in segment ${segmentNumber}.\n", $propagationDimension);
+        ${earlyTerminationCode, autoIndent=True}@slurp 
+      }
   @end for
+
       ${functions['ipEvolve'].call(_exponent = -1, parentFunction=function)}
       
       _discard = true;
