@@ -25,7 +25,7 @@ if (@slurp
       @# Check the real component
       @set $suffix = '.Re()'
     @end if
-${separator}!isfinite(_active_${integrationVector.id}[0]${suffix})@slurp
+${separator}_xmds_isnonfinite(_active_${integrationVector.id}[0]${suffix})@slurp
     @set $separator = ' || '
   @end for
 ) {

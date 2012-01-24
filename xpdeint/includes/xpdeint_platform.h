@@ -552,19 +552,39 @@
   }
 #endif
 
-inline double _private_nan()
+template<typename fp_type> union FP_UNION;
+
+template<> union FP_UNION<double>
 {
-  static const union
-  {
-    uint32_t nan_u32[2];
-    double nan_double;
-  } NANVal =
-  #if CFG_ENDIAN == CFG_ENDIAN_LITTLE
-    {{0x00000000, 0x7ff00000}};
-  #else
-    {{0x7ff00000, 0x00000000}};
-  #endif
-  return NANVal.nan_double;
+    uint64_t as_int;
+    double as_value;
+};
+
+template<> union FP_UNION<float>
+{
+    uint32_t as_int;
+    float as_value;
+};
+
+template<typename fp_type> inline FP_UNION<fp_type> _xmds_nan_mask();
+
+template<> inline FP_UNION<double> _xmds_nan_mask<double>()
+{
+    static const FP_UNION<double> NANVal = {0x7ff0000000000000};
+    return NANVal;
+}
+
+template<> inline FP_UNION<float> _xmds_nan_mask<float>()
+{
+    static const FP_UNION<float> NANVal = {0x7f800000};
+    return NANVal;
+}
+
+template<typename fp_type> inline bool _xmds_isnonfinite(fp_type value)
+{
+    FP_UNION<fp_type> x, NANMask = _xmds_nan_mask<fp_type>();
+    x.as_value = value;
+    return (x.as_int & NANMask.as_int) == NANMask.as_int;
 }
 
 // Define UINT64_C for 64-bit constants
