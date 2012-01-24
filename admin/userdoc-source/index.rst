@@ -13,10 +13,12 @@ Contents:
    introduction
    
    installation
-   
+
    tutorial
    
    worked_examples
+   
+   reference
    
    advanced_topics
    

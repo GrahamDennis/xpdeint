@@ -41,7 +41,7 @@ master_doc = 'index'
 
 # General substitutions.
 project = u'XMDS2'
-copyright = u'2008-2011, Graham Dennis and Joe Hope'
+copyright = u'2008-2012, Graham Dennis and Joe Hope'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
