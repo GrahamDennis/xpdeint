@@ -12,9 +12,10 @@ Installation, Configuration and Runtime options
 ===============================================
 
 Running the 'xmds2' program with the option '--help', gives several options that can change its behaviour at runtime.  These include:
-  * '-g', which gives debug information, including the actual compile line, 
-  * '-o', which overrides the name of the output file to be generated, and 
-  * '-n', which generates the C code for the simulation, but does not try to compile it.
+  * '-g', which gives debug information, including the actual compile line 
+  * '-o', which overrides the name of the output file to be generated
+  * '-n', which generates the C code for the simulation, but does not try to compile it
+  * '-v', which gives verbose output about compilation flags. Currently identical to the -g option
 
 It also has commands to configure XMDS2 and recheck the installation.  If your program requires extra paths to compile, you can configure XMDS2 to include those paths by default.  Simply use the command
 
