@@ -50,7 +50,9 @@ Options and arguments:
 -h                              : Print this message (also --help)
 -o filename                     : This overrides the name of the output file to be generated (also --output)
 -v                              : Verbose mode (also --verbose)
--g                              : Debug mode (also --debug). Implies --verbose
+-g                              : Debug mode (also --debug). Compiler error messages report errors in the .cc
+                                  file, not the .xmds file. Implies --verbose. Mostly useful when debuging xmds
+                                  code generation.
 -n                              : Only generate a source file, don't compile (also --no-compile)
 --configure                     : Run configuration checks for compiling simulations
 --reconfigure                   : Run configuration using the same options as used with the last
