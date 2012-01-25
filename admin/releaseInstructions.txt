@@ -1,4 +1,4 @@
-svn log --xml --verbose | xsltproc admin/svn2cl.xsl - > FullChangeLog
+svn log --xml --verbose | xsltproc admin/svn2cl.xsl - > ChangeLog
 
 We'll eventually need to replace such structures in new version.  
 I already found myself wanting to scan log messages, so I copied the above over from xmds.
@@ -6,23 +6,27 @@ I already found myself wanting to scan log messages, so I copied the above over 
 Release Instructions:
 *********************
 
-0. Change version in Preferences.py, setup.py, and conf.py.  ChangeLog is an optional change.
+0. Change version in the following files:
+    xpdeint/Preferences.py
+    setup.py
+    admin/linux_installer
+    admin/userdoc-source/installation.rst
+    admin/userdoc-source/mac_installation.rst
+    admin/userdoc-source/conf.py.  
+    
+    ChangeLog is an optional change.
 
 1. Make sure everything works with a clean install.  
     (Check out a clean copy and do tests) 
     "svn checkout https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint xmds2"
 
-2. At the top level, use "svn export . [path]" to make an unversioned clean copy in directory [path].
+2. Change the "last known good" choices in the linux and mac installers, and check them.
 
-3. "cd [path]/admin/userdoc-source", and "make html", and "make latex".
-    Then "cd ../documentation/latex" and "make all-pdf".  This makes both kinds of documentation.
-    
-4. "cd ../../" and "make" to compile the Cheetah code.
-    
-5. "make distclean" to remove waf files not needed in release. 
+3. Go into the admin directory, and run "./create_release_version.sh".
 
-6. "cd .." and "tar -zcf xmds2.0pre1.tgz [path]" makes the bundle.
+4. Follow that script's instructions for putting the documentation and tarball on sourceforge
 
-7. Put that on sourceforge.
+5. Update the mac installer file.
 
-8. Announce!
+6. Announce!
+

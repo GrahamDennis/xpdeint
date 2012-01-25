@@ -751,11 +751,15 @@ This example demonstrates two new features of XMDS2.  The first is the use of pa
 .. code-block:: xpdeint
 
     $ xmds2 wigner_argument_mpi.xmds 
-    xmds2 version 0.8 "The fish of good hope." (r2392)
-
-    /usr/bin/mpic++ "wigner.cc" -msse3 -msse2 -msse -mfpmath=sse -mtune=native -fast -ffast-math -I/Users/joe/Applications/xmds/xpdeint/xpdeint/includes -DHAVE_HDF5_HL -DHAVE_H5LEXISTS -lfftw3_mpi -lfftw3 -lhdf5 -lhdf5_hl -o "wigner"
-
-The final program is then called using the (implementation specific) MPI wrapper:
+    xmds2 version 2.1 "Happy Mollusc" (r2514)
+    Copyright 2000-2012 Graham Dennis, Joseph Hope, Mattias Johnsson
+                        and the xmds team
+    Generating source code...
+    ... done
+    Compiling simulation...
+    ... done. Type './wigner' to run.
+        
+To use multiple processors, the final program is then called using the (implementation specific) MPI wrapper:
 
 .. code-block:: xpdeint
 

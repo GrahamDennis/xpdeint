@@ -62,7 +62,7 @@ Standard XML placeholders can be used to simplify some scripts.  For example, th
 Simulation Element
 ==================
 
-The ``<simulation>`` element is the single top level element in an XMDS2 simulation, and contains all the other elements.  All XMDS scripts must contain exactly one simulation element.
+The ``<simulation>`` element is the single top level element in an XMDS2 simulation, and contains all the other elements.  All XMDS scripts must contain exactly one simulation element, and it must have the ``xmds-version="2"`` attribute defined.
 
 
 
@@ -89,9 +89,14 @@ It's often important to know whether you've got errors.
 Driver Element
 ==============
 
-The driver element controls the overall management of the simulation, including how many paths of a stochastic simulation are to be averaged, and whether or not it is to be run using distributed memory parallelisation.
+The driver element controls the overall management of the simulation, including how many paths of a stochastic simulation are to be averaged, and whether or not it is to be run using distributed memory parallelisation.  If it is not included, then the simulation is performed once without using MPI parallelisation.  If it is included, it must have a ``name`` attribute.
 
+The ``name`` attribute can have values of "none" (which is equivalent to the default option of not specifying a driver), "distributed-mpi", "multi=path" or "mpi-multi-path".
 
+Choosing the ``name="distributed-mpi"`` option allows a single integration over multiple processors.  The resulting executable can then be run according to your particular implementation of MPI.  The FFTW library only allows MPI processing of multidimensional vectors, as otherwise shared memory parallel processing requires too much inter-process communication to be efficient.  As noted in the worked example :ref:`WignerArguments`, it is wise to test the speed of the simulation using different numbers of processors.
+
+The ``name="multi-path"`` option is used for stochastic simulations, which are typically run multiple times and averaged.  It requires a ``paths`` attribute with the number of iterations of the integration to be averaged.  The output will report the averages of the desired samples, and the standard error in those averages.  
+The ``name="mpi-multi-path"`` option integrates separate paths on different processors, which is typically a highly efficient process.
 
 
 .. _GeometryElement:
@@ -99,7 +104,13 @@ The driver element controls the overall management of the simulation, including 
 Geometry Element
 ================
 
-The `<geometry>` element describes the dimensions used in your simulation.  Not all arrays are defined on all dimensions.
+The ``<geometry>`` element describes the dimensions used in your simulation, and is required.  The only required element inside is the ``<propagation_dimension>`` element, which defines the name of the dimension along which your simulation will integrate.  Nothing else about this dimension is specified, as requirements for the lattice along the integration dimension is specified by the ``<integrate>`` blocks themselves, as described in section :ref:`IntegrateElement`.
+
+If there are other dimensions in your problem, they are called "transverse dimensions", and are described in the ``<transverse_dimensions>`` element.  Each dimension is then described in its own ``<dimension>`` element.  A transverse dimension must have a unique name defined by a ``name`` attribute.  If it is not specified, the type of dimension will default to "real", otherwise it can be specified with the ``type`` attribute.  Allowable types (other than "real") are "long", "int", and "integer", which are actually all synonyms for an integer-valued dimension.
+
+Each transverse dimension must specify a domain.
+
+Not all arrays are defined on all dimensions.
 
 
 
@@ -116,7 +127,7 @@ Vectors are arrays of data, defined over any subset of the transverse dimensions
 Computed Vector Element
 =======================
 
-Computed vectors are arrays of data much like normal ``vector`` elements, but they are always calculated as they are referenced.  
+Computed vectors are arrays of data much like normal ``<vector>`` elements, but they are always calculated as they are referenced.  
 
 
 

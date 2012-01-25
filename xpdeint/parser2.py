@@ -288,7 +288,7 @@ def main(argv=None):
     
     # We don't have a parser that understands the XML, so we must bail
     if not parser:
-      print >> sys.stderr, "Unable to recognise file as an xmds script."
+      print >> sys.stderr, "Unable to recognise file as an xmds script of the correct version."
       return -1
     
     # Set our magic filter
