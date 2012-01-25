@@ -76,6 +76,7 @@ Features Element
 Features elements are where simulation-wide options are specified.  There are many possible features elements.  We will give a full list here, and then describe each one.
 
     * :ref:`ErrorCheck`
+    * :ref:`Precision`
 
 .. _ErrorCheck:
 
@@ -84,6 +85,18 @@ Error Check
 
 It's often important to know whether you've got errors.
 
+.. _Precision:
+
+Precision
+-----------
+
+This specifies the precision of the XMDS2 ``real`` and ``complex`` datatypes, as well as the precision used when computing transforms. Currently two values are accepted: ``single`` and ``double``. If this feature isn't specified, XMDS2 defaults to using double precision for its variables and internal calculations.
+
+Single precision has approximately 7.2 decimal digits of accuracy, with a minimum value of 1.4×10\ :superscript:`-45` and a maximum of 3.8×10\ :superscript:`34`. Double precision has approximately 16 decimal digits of accuracy, a minimum value of 4.9×10\ :superscript:`-324` and a maximum value of 1.8×10\ :superscript:`308`.
+
+Using single precision can be attractive, as it can be more than twice as fast, depending on whether a simulation is CPU bound, memory bandwidth bound, MPI bound or bottlenecked elsewhere. Caution should be exercised, however. Keep in mind how many timesteps your simulation requires, and take note of the tolerance you have set per step, to see if the result will lie within your acceptable total error - seven digit precision isn't a lot. Quite apart from the precision, the range of single precision can often be inadequate for many physical problems. In atomic physics, for example, intermediate values below 1.4×10\ :superscript:`-45` are easily obtained, and will be taken as zero. Similarly, values above 3.8×10\ :superscript:`34` will result in NaNs and make the simulation results invalid.
+
+Example syntax: ``<precision> single </precision>``
 
 .. _DriverElement:
 
