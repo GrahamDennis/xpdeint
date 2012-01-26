@@ -28,7 +28,7 @@ extensions = ['sphinx.ext.mathjax']
 if os.path.exists('_static/MathJax/MathJax.js'):
     mathjax_path = 'MathJax/MathJax.js?config=TeX-AMS_HTML,mathjax-xmds'
 else:
-    mathjax_path = 'http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML,http://www.xmds.org/mathjax-use-tex-fonts.js'
+    mathjax_path = 'http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML,http://www.xmds.org/_static/mathjax-use-tex-fonts.js'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['.templates']
