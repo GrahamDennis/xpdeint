@@ -74,8 +74,7 @@
         <moments>amp</moments>
         <dependencies>main</dependencies>
         <![CDATA[
-          amp = u.Re();
-        
+          amp = u.Re();   
         ]]>
       </sampling>
     </group>

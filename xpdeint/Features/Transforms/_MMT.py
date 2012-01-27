@@ -186,7 +186,7 @@ class _MMT (_Transform):
                                             % xmlElement.getAttribute('order'))
         else:
           if order < 0:
-            raise ParserException(xmlElement, "The 'order' attribute for Bessel transforms must be non-negative.")
+            raise ParserException(xmlElement, "The 'order' attribute for Bessel transforms must be non-negative integers.")
       orderOffset = 0
       dimRepClass = BesselDimensionRepresentation
       

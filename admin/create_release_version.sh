@@ -46,4 +46,4 @@ tar -czf xmds-${XMDS_VERSION}.tar.gz xmds-${XMDS_VERSION}
 
 echo To release to sourceforge, execute the following commands.
 echo scp staging/xmds-${XMDS_VERSION}.tar.gz username@frs.sf.net:/home/frs/project/x/xm/xmds/
-echo "cd staging; scp -r documentation username@web.sf.net:/home/project-web/xmds/htdocs/"
+echo "cd staging; scp -r documentation/* username@web.sf.net:/home/project-web/xmds/htdocs/"

@@ -12,7 +12,7 @@ Consider symmetry, can you use ``dct`` transforms or ``bessel`` transforms? Do y
 
 Tricks for Bessel and Hermite-Gauss transforms
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Dimensions using matrix transforms should be first for performance reasons.  Unless you're using MPI, in which case ``xpdeint`` can work it out for the first two dimensions.  Ideally, ``xpdeint`` would sort it out in all cases, but it's not that smart yet.
+Dimensions using matrix transforms should be first for performance reasons.  Unless you're using MPI, in which case XMDS can work it out for the first two dimensions.  Ideally, XMDS would sort it out in all cases, but it's not that smart yet.
 
 Reduce code complexity
 ----------------------

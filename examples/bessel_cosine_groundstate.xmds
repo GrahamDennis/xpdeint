@@ -5,7 +5,7 @@
   <description>
     Calculate the 3D ground state of a Rubidium BEC in a harmonic magnetic trap assuming
     cylindrical symmetry about the z axis and reflection symmetry about z=0.
-    This permits us to use the cylindrical bessel functions to expand the solution transverse
+    This permits us to use the cylindrical Bessel functions to expand the solution transverse
     to z and a cosine series to expand the solution along z.
   </description>
   

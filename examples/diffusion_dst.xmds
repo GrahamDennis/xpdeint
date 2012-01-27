@@ -4,7 +4,7 @@
   <author>Graham Dennis</author>
   <description>
     Simple one-dimensional diffusion solved using a Discrete Sine Transform (odd boundary conditions at both ends)
-    Odd boundary conditions essentially mimics zero dirichlet boundary conditions for linear problems.
+    Odd boundary conditions essentially mimics zero Dirichlet boundary conditions for linear problems.
   </description>
   
   <features>

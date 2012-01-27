@@ -124,9 +124,114 @@ The ``<geometry>`` element describes the dimensions used in your simulation, and
 
 If there are other dimensions in your problem, they are called "transverse dimensions", and are described in the ``<transverse_dimensions>`` element.  Each dimension is then described in its own ``<dimension>`` element.  A transverse dimension must have a unique name defined by a ``name`` attribute.  If it is not specified, the type of dimension will default to "real", otherwise it can be specified with the ``type`` attribute.  Allowable types (other than "real") are "long", "int", and "integer", which are actually all synonyms for an integer-valued dimension.
 
-Each transverse dimension must specify a domain.
+Each transverse dimension must specify how many points or modes it requires, and the range over which it is defined.  This is done by the ``lattice`` and ``domain`` attributes respectively.  The ``lattice`` attribute is an integer, and is optional for integer dimensions, where it can be defined implicitly by the domain.  The ``domain`` attribute is specified as a pair of numbers (e.g. ``domain="(-17,3)"``) defining the minimum and maximum of the grid.
 
-Not all arrays are defined on all dimensions.
+Integrals over a dimension can be multiplied by a common prefactor, which is specified using the ``volume_prefactor`` attribute.  For example, this allows the automatic inclusion of a factor of two due to a reflection symmetry by adding the attribute ``volume_prefactor="2"``.
+
+Each transverse dimension can be associated with a transform.  This allows the simulation to manipulate vectors defined on that dimension in the transform space.  The default is Fourier space (with the associated transform being the discrete Fourier transform, or "dft"), but others can be specified with the ``transform`` attribute.  The other options are "none", "dst", "dct", "bessel", "spherical-bessel" and "hermite-gauss".  Using the right transform can dramatically improve the speed of a calculation.
+
+.. _dft_Transform:
+
+The "dft" transform
+-------------------
+
+The "dft" transform is performed using the the normal discrete Fourier transform, which means that it enforces periodic boundary conditions on vectors defined on that dimension.  Another implication is that it can only be used with complex-valued vectors.  The discrete Fourier transform is almost exactly the same as a standard Fourier transform.  The standard Fourier transform is
+
+.. math::
+
+	\mathcal{F}\left[f(x)\right](k) = \frac{1}{2\pi}\int_{x_\text{min}}^{x_\text{max}} f(x) e^{-i x k} dx
+
+The discrete Fourier transform has no information about the domain of the lattice, so the XMDS2 transform is equivalent to
+
+.. math::
+	\tilde{\mathcal{F}}\left[f(x)\right](k) &= \frac{1}{2\pi}\int_{x_\text{min}}^{x_\text{max}} f(x) e^{-i (x+ x_\text{min}) k} dx \\
+	&= e^{-i x_\text{min} k} \mathcal{F}\left[f(x)\right](k)
+
+The standard usage in an XMDS simulation involves moving to Fourier space, applying a transformation, and then moving back.  For this purpose, the two transformations are entirely equivalent as the extra phase factor cancels.  However, when fields are explicitly defined in Fourier space, care must be taken to include this phase factor explicitly.  See section :ref:`Convolutions` in the Advanced Topics section.
+
+When a dimension uses the "dft" transform, then the Fourier space variable is defined as the name of the dimension prefixed with a "k".  For example, the dimensions "x", "y", "z" and "tau" will be referenced in Fourier space as "kx","ky", "kz" and "ktau".  Fourier transforms allow easy calculation of derivatives, as the n :sup:`th` derivative of a field is proportional to the n :sup:`th` moment of the field in Fourier space:
+
+.. math::
+    \mathcal{F}\left[\frac{\partial^n f(x)}{\partial x^n}\right](kx) = \left(i \;kx\right)^n \mathcal{F}\left[f(x)\right](kx)
+
+
+The "dct" transform
+-------------------
+
+The "dct" (discrete cosine transform) is a Fourier-based transform that implies different boundary conditions for associated vectors.  XMDS uses the type-II DCT, often called "the DCT", and its inverse, which is also called the type-III DCT.  This transform assumes that any vector using this dimension is both periodic, and also even around a specific point within each period.  The grid is therefore only defined across a half period in order to sample each unique point once, and can therefore be of any shape where all the odd derivatives are zero at each boundary.  This is a very different boundary condition compared to the DFT, which demands periodic boundary conditions, and is therefore suitable for different simulations.  For example, the DCT is a natural choice when implementing zero Neumann boundary conditions.
+
+As the DCT transform can be defined on real data rather only complex data, it can also be superior to DFT-based spectral methods for simulations of real-valued fields where boundary conditions are artificial.
+
+XMDS labels the cosine transform space variables the same as for :ref:`Fourier transforms<dft_Transform>` and all the even derivatives can be calculated the same way.  Odd moments of the cosine-space variables are in fact *not* related to the corresponding odd derivatives by an inverse cosine transform.
+
+
+The "dst" transform
+-------------------
+
+The "dst" (discrete sine transform) is a counterpart to the DCT transform.  XMDS uses the type-II DST and its inverse, which is also called the tYPe-III DST.  This transform assumes that fields are periodic in this dimension, but also that they are also odd around a specific point within each period.  The grid is therefore only defined across a half period in order to sample each unique point once, and can therefore be of any shape where all the even derivatives are zero at each boundary.  
+
+The DST transform can be defined on real-valued vectors.  As odd-valued functions are zero at the boundaries, this is a natural transform to use when implementing zero Dirichlet boundary conditions.
+
+XMDS labels the sine transform space variables the same as for :ref:`Fourier transforms<dft_Transform>` and all the even derivatives can be calculated the same way.  Odd moments of the sine-space variables are in fact *not* related to the corresponding odd derivatives by an inverse sine transform.
+
+
+The "bessel" transform
+----------------------
+
+Just as the Fourier basis is useful for finding derivatives in Euclidean geometry, the basis of Bessel functions is useful for finding certain common operators in cylindrical co-ordinates.  In particular, we use the Bessel functions of the first kind, :math:`J_\nu(u)`.  The relevant transform is the Hankel transform:
+
+.. math::
+    F_\nu(k) = \mathcal{H}_\nu \left[f\right](k) = \int_0^\infty r f(r) J_\nu(k r) dr
+    
+which has the inverse transform:
+
+.. math::
+    f(r) = \mathcal{H}^{-1}_\nu \left[F_\nu\right](r) = \int_0^\infty k F_\nu(k) J_\nu(k r) dk
+    
+This transform pair has the useful property that the Laplacian in cylindrical co-ordinates is diagonal in this basis:
+
+.. math::
+    \frac{\partial^2 f}{\partial r^2} +\frac{1}{r}\frac{\partial f}{\partial r} -\frac{m^2}{r^2} = \mathcal{H}^{-1}_m \left[(-k^2) F_m(k)\right](r)
+    
+XMDS labels the variables in the transformed space with a prefix of 'k', just as for :ref:`Fourier transforms<dft_Transform>`.  The order :math:`\nu` of the transform is defined by the ``order`` attribute in the ``<dimension>`` element, which must be assigned as a non-negative integer.  If the order is not specified, it defaults to zero.
+
+It can often be useful to have a different sampling in normal space and Hankel space.  Reducing the number of modes in either space dramatically speeds simulations.  To set the number of lattice points in Hankel space to be different to the number of lattice points for the field in its original space, use the attribute ``spectral-lattice``.  All of these lattices are chosen in a non-uniform manner to Gaussian quadrature methods for spectrally accurate transforms.
+
+In non-Euclidean co-ordinates, integrals have non-unit volume elements.  For example, in cylindrical co-ordinates with a radial co-ordinate 'r', integrals over this dimension have a volume element :math:`r dr`.  When performing integrals along a dimension specified by the "bessel" transform, the factor of the radius is included implicitly.  If you are using a geometry with some symmetry, it is common to have prefactors in your integration.  For example, for a two-dimensional volume in cylindrical symmetry, all integrals would have a volume element of :math:`2\pi r dr`.  This extra factor of :math:`2 \pi` can be included for all integrals by specifying the attribute ``volume_prefactor="2*M_PI"``.  See the example bessel_cosine_groundstate.xmds for a demonstration.
+
+
+The "spherical-bessel" transform
+--------------------------------
+
+When working in spherical coordinates, it is often useful to use the spherical Bessel functions :math:`j_l(x)=\sqrt{\frac{\pi}{2x}}J_{l+\frac{1}{2}}(x)` as a basis.  These are solutions of the Helmholtz equation:
+
+.. math::
+    \frac{\partial^2 f}{\partial r^2} +\frac{2}{r}\frac{\partial f}{\partial r} -\frac{r^2 - l(l+1)}{r^2} f(r) = 0
+
+Just as the Bessel basis above, the transformed dimensions are prefixed with a 'k', and it is possible (and usually wise) to use the ``spectral-lattice`` attribute to specify a different lattice size in the transformed space.  Also, the spacing of these lattices are again chosen in a non-uniform manner to Gaussian quadrature methods for spectrally accurate transforms.  Finally, the ``order`` attribute can be used to specify the order of the spherical Bessel functions used.  
+
+If we denote the transformation to and from this basis by :math:`\mathcal{SH}`, then we can write the useful property:
+
+.. math::
+    \frac{\partial^2 f}{\partial r^2} +\frac{2}{r}\frac{\partial f}{\partial r} -\frac{l (l+1)}{r^2} = \mathcal{SH}^{-1}_l \left[(-k^2) F_l(k)\right](r)
+
+In non-Euclidean co-ordinates, integrals have non-unit volume elements.  For example, in spherical co-ordinates with a radial co-ordinate 'r', integrals over this dimension have a volume element :math:`r^2 dr`.  When performing integrals along a dimension specified by the "spherical-bessel" transform, the factor of the square of the radius is included implicitly.  If you are using a geometry with some symmetry, it is common to have prefactors in your integration.  For example, for a three-dimensional volume in spherical symmetry, all integrals would have a volume element of :math:`4\pi r^2 dr`.  This extra factor of :math:`4 \pi` can be included for all integrals by specifying the attribute ``volume_prefactor="4*M_PI"``.  This is demonstrated in the example bessel_transform.xmds.
+
+
+The "hermite-gauss" transform
+-----------------------------
+
+The "hermite-gauss" transform allows transformations to and from the basis of Hermite functions :math:`\psi_n(x)`:
+
+.. math::
+    \psi_n(x) = (-1)^n \left(2^n n! \sqrt(\pi)\right)^{-1/2} \exp{\frac{x^2}{2}} \frac{d^n}{x^n} e^{-x^2}
+    
+which are eigenfunctions of the Schroedinger equation for a harmonic oscillator:
+
+.. math::
+    - \frac{\partial^2 \psi_n}{\partial x^2} + x^2 \psi_n(x) = \left(n+\frac{1}{2}\right) \psi_n(x)
+    
+This transform is different to the others in that it requires a ``length-scale`` attribute rather than a ``domain`` attribute, as the range of the lattice will depend on the number of basis functions used.
 
 
 
