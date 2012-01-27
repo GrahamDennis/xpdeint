@@ -161,14 +161,15 @@ class _MMT (_Transform):
   def newDimension(self, name, lattice, minimum, maximum,
                    parent, transformName, aliases = set(),
                    spectralLattice = None,
-                   type = 'real', xmlElement = None):
+                   type = 'real', volumePrefactor = None,
+                   xmlElement = None):
     assert type == 'real'
     assert transformName in ['bessel', 'spherical-bessel', 'hermite-gauss']
     if not spectralLattice:
       spectralLattice = lattice
     dim = super(_MMT, self).newDimension(name, max(lattice, spectralLattice), minimum, maximum,
                                          parent, transformName, aliases, 
-                                         type, xmlElement)
+                                         type, volumePrefactor, xmlElement)
     self.basisMap[dim.name] = transformName # Needs to be constructed basis here
     
     if transformName in ('bessel', 'spherical-bessel'):

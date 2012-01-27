@@ -56,7 +56,7 @@ ${dimRep.type}* ${dimRep.stepSizeArrayName}_invsqrt = (${dimRep.type}*) xmds_mal
   @#
   @for dimRep in self.nonUniformDimRepsNeededForGaussianNoise
 for (long ${dimRep.loopIndex} = 0; ${dimRep.loopIndex} < ${dimRep.globalLattice}; ${dimRep.loopIndex}++) {
-  ${dimRep.stepSizeArrayName}_invsqrt[${dimRep.loopIndex}] = (real)1.0/sqrt(${dimRep.stepSizeArrayName}[${dimRep.loopIndex}]);
+  ${dimRep.stepSizeArrayName}_invsqrt[${dimRep.loopIndex}] = (real)1.0/sqrt(${dimRep.stepSizeArrayName}[${dimRep.loopIndex}] * (${dimRep.volumePrefactor}));
 }
   @end for
   @#

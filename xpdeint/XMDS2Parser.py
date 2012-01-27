@@ -607,12 +607,16 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
         else:
           spectralLattice = lattice
         
+        volumePrefactor = None
+        if dimensionElement.hasAttribute('volume_prefactor'):
+            volumePrefactor = dimensionElement.getAttribute('volume_prefactor').strip()
+        
         for aliasName in aliasNames:
           dim = transform.newDimension(name = aliasName, lattice = lattice,
                                        spectralLattice = spectralLattice, type = dimensionType,
                                        minimum = minimumString, maximum = maximumString,
                                        parent = geometryTemplate, transformName = transformName,
-                                       aliases = aliasNames,
+                                       aliases = aliasNames, volumePrefactor = volumePrefactor,
                                        xmlElement = dimensionElement)
           geometryTemplate.dimensions.append(dim)
       

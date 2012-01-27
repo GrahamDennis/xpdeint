@@ -500,7 +500,7 @@ ${explicitIndexPointerTermForVectorAndDimRepWithFieldAndBasis(vector, dimRep, fi
 _active_${vector.id}[_${vector.id}_index_pointer + ${componentNumber}] += ${componentName}@slurp
       @# Loop over the dimensions
       @for $dimension in $dimensionsIntegratedOver
- * ${dimension.inBasis(basis).stepSize}@slurp
+ * d${dimension.inBasis(basis).name}@slurp
       @end for
 ;
     @end for

@@ -22,7 +22,7 @@ Copyright (c) 2008 __MyCompanyName__. All rights reserved.
 @def openLoopAscending
   @#
 #define ${name} ${arrayName}[${loopIndex} + ${localOffset}]
-#define d${name} ${stepSize}
+#define d${name} (${stepSize} * (${volumePrefactor}))
 
 for (long ${loopIndex} = 0; ${loopIndex} < ${localLattice}; ${loopIndex}++) {
   @#
@@ -39,7 +39,7 @@ for (long ${loopIndex} = 0; ${loopIndex} < ${localLattice}; ${loopIndex}++) {
 @def openLoopDescending
   @#
 #define ${name} ${arrayName}[${loopIndex} + ${localOffset}]
-#define d${name} ${stepSize}
+#define d${name} (${stepSize} * (${volumePrefactor}))
 
 for (long ${loopIndex} = ${localLattice}-1; ${loopIndex} >= 0; ${loopIndex}--) {
   @#

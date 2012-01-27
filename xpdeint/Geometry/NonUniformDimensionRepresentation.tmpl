@@ -44,7 +44,7 @@ unsigned long ${index} = 0;
   @#
 #define ${name} ${arrayName}[${loopIndex} + ${localOffset}]
   @if $stepSizeArray
-#define d${name} ${stepSizeArrayName}[${loopIndex} + ${localOffset}]
+#define d${name} (${stepSizeArrayName}[${loopIndex} + ${localOffset}] * (${volumePrefactor}))
   @end if
 
 for (long ${loopIndex} = 0; ${loopIndex} < ${localLattice}; ${loopIndex}++) {

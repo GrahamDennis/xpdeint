@@ -21,11 +21,12 @@ class _NoTransform (_Transform):
   
   def newDimension(self, name, lattice, minimum, maximum,
                    parent, transformName, aliases = set(),
-                   type = 'real', spectralLattice = None, xmlElement = None):
+                   type = 'real', spectralLattice = None, volumePrefactor = None,
+                   xmlElement = None):
     assert transformName == 'none'
     dim = super(_NoTransform, self).newDimension(name, lattice, minimum, maximum,
                                                  parent, transformName, aliases,
-                                                 type, xmlElement)
+                                                 type, volumePrefactor, xmlElement)
     if type == 'long':
       stepSize = '1'
     else:

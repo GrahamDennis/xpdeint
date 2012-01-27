@@ -55,12 +55,13 @@ class _FourierTransformFFTW3 (_Transform):
   def newDimension(self, name, lattice, minimum, maximum,
                    parent, transformName, aliases = set(),
                    spectralLattice = None,
-                   type = 'real', xmlElement = None):
+                   type = 'real', volumePrefactor = None,
+                   xmlElement = None):
     assert type == 'real'
     assert transformName in ['dft', 'dct', 'dst']
     dim = super(_FourierTransformFFTW3, self).newDimension(name, lattice, minimum, maximum,
                                                            parent, transformName, aliases,
-                                                           type, xmlElement)
+                                                           type, volumePrefactor, xmlElement)
     self.transformNameMap[dim.name] = transformName
     if transformName == 'dft':
       # x-space representation

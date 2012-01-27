@@ -44,8 +44,8 @@
   <geometry>
     <propagation_dimension> t </propagation_dimension>
     <transverse_dimensions>
-      <dimension name="z" lattice="32"  domain="(0.0, 1.0e-4)" transform="dct" />
-      <dimension name="r" lattice="32"  domain="(0.0, 1.0e-5)" transform="bessel" />
+      <dimension name="z" lattice="32"  domain="(0.0, 1.0e-4)" transform="dct" volume_prefactor="2.0" />
+      <dimension name="r" lattice="32"  domain="(0.0, 1.0e-5)" transform="bessel" volume_prefactor="2.0*M_PI"/>
     </transverse_dimensions>
   </geometry>
   

@@ -141,6 +141,9 @@ class _DimensionRepresentation(ScriptElement):
   def loopIndex(self):
     return '_index_' + self.name
   
+  def volumePrefactor(self):
+      return self.parent.volumePrefactor
+  
   def aliasRepresentationsForFieldInBasis(self, field, basis):
     return set([field.dimensionWithName(aliasName).inBasis(basis) \
                 for aliasName in self.parent.aliases if field.hasDimensionName(aliasName)])

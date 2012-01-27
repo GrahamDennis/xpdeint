@@ -24,7 +24,7 @@ const real _old_volume = (${noiseVector.spatiallyIndependentVolumeElement} * _ol
   @capture loopString
     @silent nonUniformDimReps = noiseVector.nonUniformDimReps
     @if nonUniformDimReps
-      @set volumeFixup = ' * '.join(dimRep.stepSize for dimRep in nonUniformDimReps)
+      @set volumeFixup = ' * '.join('%s * (%s)' % (dimRep.stepSize, dimRep.volumePrefactor) for dimRep in nonUniformDimReps)
       @set varFixup = ' / (' + volumeFixup + ')'
       @set volumeFixup = ' * ' + volumeFixup
     @else
@@ -59,7 +59,7 @@ const real _var = 1.0 / _dVdt;
   @capture loopString
     @silent nonUniformDimReps = noiseVector.nonUniformDimReps
     @if nonUniformDimReps
-      @set volumeFixup = ' * '.join(dimRep.stepSize for dimRep in nonUniformDimReps)
+      @set volumeFixup = ' * '.join('%s * (%s)' % (dimRep.stepSize, dimRep.volumePrefactor) for dimRep in nonUniformDimReps)
       @set varFixup = ' / (' + volumeFixup + ')'
       @set volumeFixup = ' * ' + volumeFixup
     @else

@@ -31,7 +31,7 @@ class _Dimension(ScriptElement):
   """
   
   def __init__(self, *args, **KWs):
-    localKWs = self.extractLocalKWs(['name', 'transverse','transform', 'aliases'], KWs)
+    localKWs = self.extractLocalKWs(['name', 'transverse','transform', 'aliases', 'volumePrefactor'], KWs)
     ScriptElement.__init__(self, *args, **KWs)
     
     self.name = localKWs['name']
@@ -39,6 +39,8 @@ class _Dimension(ScriptElement):
     self.transform = localKWs.get('transform')
     self.aliases = localKWs.get('aliases', set())
     self.aliases.add(self.name)
+    self.volumePrefactor = localKWs.get('volumePrefactor')
+    self.volumePrefactor = self.volumePrefactor if self.volumePrefactor else '1.0'
     
     self.representations = []
   

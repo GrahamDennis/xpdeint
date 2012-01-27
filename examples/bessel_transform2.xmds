@@ -25,7 +25,8 @@
   <geometry>
     <propagation_dimension> t </propagation_dimension>
     <transverse_dimensions>
-      <dimension name="x" lattice="100"  domain="(0, 1)" transform="bessel" order="3" />
+      <!-- Volume prefactor = 2 \pi is to cover the suppressed integration over \theta -->
+      <dimension name="x" lattice="100"  domain="(0, 1)" transform="bessel" order="3" volume_prefactor="2.0*M_PI"/>
     </transverse_dimensions>
   </geometry>
   
