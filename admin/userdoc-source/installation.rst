@@ -9,7 +9,7 @@ Installation
 Installers
 ==========
 
-The easiest way to get started is with an installer.
+The easiest way to get started is with an installer.  If we don't have an installer for your system, follow the :ref:`manual installation <ManualInstallation>` instructions.
 
 .. tabularcolumns:: |c|c|c|
 
@@ -28,6 +28,12 @@ The easiest way to get started is with an installer.
       - `Download <http://sourceforge.net/projects/xmds/files/xmds-2.1-osx.zip>`_
 
       - :ref:`Learn more <mac_installation>`
+        
+    * - Other systems
+
+      - :ref:`Install from source <ManualInstallation>`
+      
+      -
 
 
 .. _linux_installation:
