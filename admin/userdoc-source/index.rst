@@ -31,4 +31,6 @@ Contents:
    xsil2graphics2
 
    developer
+
+   licensing
    
