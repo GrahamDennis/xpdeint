@@ -35,6 +35,7 @@ The easiest way to get started is with an installer.  If we don't have an instal
       
       -
 
+If you have one of the supported operating systems listed above, but you find the installer doesn't work for you, please let us know by emailing xmds-devel <at> lists.sourceforge.net. If you'd like to tweak the linux installer to work on a distribution we haven't tested, we'd love you to do that and let us know!
 
 .. _linux_installation:
 
