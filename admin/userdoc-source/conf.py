@@ -82,6 +82,7 @@ exclude_trees = []
 # pygments_style = 'sphinx'
 pygments_style = 'friendly_plus'
 
+highlight_language='xmds2'
 
 # Options for HTML output
 # -----------------------

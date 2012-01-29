@@ -39,7 +39,7 @@ Useful XML Syntax
 
 Standard XML placeholders can be used to simplify some scripts.  For example, the following (abbreviated) code ensures that the limits of a domain are symmetric.
 
-.. code-block:: none
+.. code-block:: xmds2
 
     <?xml version="1.0" encoding="UTF-8"?>
     <!DOCTYPE simulation [
@@ -65,7 +65,11 @@ Simulation Element
 
 The ``<simulation>`` element is the single top level element in an XMDS2 simulation, and contains all the other elements.  All XMDS scripts must contain exactly one simulation element, and it must have the ``xmds-version="2"`` attribute defined.
 
+Example syntax::
 
+    <simulation xmds-version="2">
+        <!-- Rest of simulation goes here -->
+    </simulation>
 
 
 .. _FeaturesElement:
@@ -85,6 +89,15 @@ Error Check
 
 It's often important to know whether you've got errors.
 
+Example syntax::
+
+    <simulation xmds-version="2">
+        <features>
+            <error_check />
+        </features>
+    </simulation>
+
+
 .. _Precision:
 
 Precision
@@ -96,9 +109,15 @@ Single precision has approximately 7.2 decimal digits of accuracy, with a minimu
 
 Using single precision can be attractive, as it can be more than twice as fast, depending on whether a simulation is CPU bound, memory bandwidth bound, MPI bound or bottlenecked elsewhere. Caution should be exercised, however. Keep in mind how many timesteps your simulation requires, and take note of the tolerance you have set per step, to see if the result will lie within your acceptable total error - seven digit precision isn't a lot. Quite apart from the precision, the range of single precision can often be inadequate for many physical problems. In atomic physics, for example, intermediate values below 1.4×10\ :superscript:`-45` are easily obtained, and will be taken as zero. Similarly, values above 3.8×10\ :superscript:`34` will result in NaNs and make the simulation results invalid.
 
-A further limitation is that not all the combinations of random number generators and probability distributions that are supported in double precision are supported in single precision. For example, neither the solirte nor dsfmt generators support single precision gaussian distributions. The posix generator will always work, but may be very slow.
+A further limitation is that not all the combinations of random number generators and probability distributions that are supported in double precision are supported in single precision. For example, neither the ``solirte`` nor ``dsfmt`` generators support single precision gaussian distributions. The ``posix`` generator will always work, but may be very slow.
 
-Example syntax: ``<precision> single </precision>``
+Example syntax::
+
+    <simulation xmds-version="2">
+        <features>
+            <precision> single </precision>
+        </features>
+    </simulation>
 
 .. _DriverElement:
 
@@ -107,13 +126,22 @@ Driver Element
 
 The driver element controls the overall management of the simulation, including how many paths of a stochastic simulation are to be averaged, and whether or not it is to be run using distributed memory parallelisation.  If it is not included, then the simulation is performed once without using MPI parallelisation.  If it is included, it must have a ``name`` attribute.
 
-The ``name`` attribute can have values of "none" (which is equivalent to the default option of not specifying a driver), "distributed-mpi", "multi=path" or "mpi-multi-path".
+The ``name`` attribute can have values of "none" (which is equivalent to the default option of not specifying a driver), "distributed-mpi", "multi-path" or "mpi-multi-path".
 
 Choosing the ``name="distributed-mpi"`` option allows a single integration over multiple processors.  The resulting executable can then be run according to your particular implementation of MPI.  The FFTW library only allows MPI processing of multidimensional vectors, as otherwise shared memory parallel processing requires too much inter-process communication to be efficient.  As noted in the worked example :ref:`WignerArguments`, it is wise to test the speed of the simulation using different numbers of processors.
 
 The ``name="multi-path"`` option is used for stochastic simulations, which are typically run multiple times and averaged.  It requires a ``paths`` attribute with the number of iterations of the integration to be averaged.  The output will report the averages of the desired samples, and the standard error in those averages.  
 The ``name="mpi-multi-path"`` option integrates separate paths on different processors, which is typically a highly efficient process.
 
+Example syntax::
+
+    <simulation xmds-version="2">
+        <driver name="distributed-mpi" />
+            <!-- or -->
+        <driver name="multi-path" paths="10" />
+            <!-- or -->
+        <driver name="mpi-multi-path" paths="1000" />
+    </simulation>
 
 .. _GeometryElement:
 
@@ -129,6 +157,26 @@ Each transverse dimension must specify how many points or modes it requires, and
 Integrals over a dimension can be multiplied by a common prefactor, which is specified using the ``volume_prefactor`` attribute.  For example, this allows the automatic inclusion of a factor of two due to a reflection symmetry by adding the attribute ``volume_prefactor="2"``.
 
 Each transverse dimension can be associated with a transform.  This allows the simulation to manipulate vectors defined on that dimension in the transform space.  The default is Fourier space (with the associated transform being the discrete Fourier transform, or "dft"), but others can be specified with the ``transform`` attribute.  The other options are "none", "dst", "dct", "bessel", "spherical-bessel" and "hermite-gauss".  Using the right transform can dramatically improve the speed of a calculation.
+
+Example syntax::
+
+    <simulation xmds-version="2">
+        <geometry>
+            <propagation_dimension> t </propagation_dimension>
+            <transverse_dimensions>
+                <!-- A real-valued dimension from -1.5 to 1.5 -->
+                <dimension name="x" lattice="128" domain="(-1.5, 1.5)" />
+                
+                <!-- An integer-valued dimension with the 6 values -2, -1, 0, 1, 2, 3 -->
+                <dimension name="j"               domain="(-2,3)" type="integer" />
+                
+                <!-- A real-valued dimension using the bessel transform for a radial coordinate -->
+                <dimension name="r" lattice="64" domain="(0, 5)"  transform="bessel" volume_prefactor="2.0*M_PI" />
+            </transverse_dimensions>
+        </geometry>
+    </simulation>
+
+
 
 .. _dft_Transform:
 
@@ -154,6 +202,18 @@ When a dimension uses the "dft" transform, then the Fourier space variable is de
 .. math::
     \mathcal{F}\left[\frac{\partial^n f(x)}{\partial x^n}\right](kx) = \left(i \;kx\right)^n \mathcal{F}\left[f(x)\right](kx)
 
+Example syntax::
+
+    <simulation xmds-version="2">
+        <geometry>
+            <propagation_dimension> t </propagation_dimension>
+            <transverse_dimensions>
+                <!-- transform="dft" is the default, omitting it wouldn't change anything -->
+                <dimension name="x" lattice="128" domain="(-1.5, 1.5)" transform="dft" />
+            </transverse_dimensions>
+        </geometry>
+    </simulation>
+
 
 The "dct" transform
 -------------------
@@ -164,15 +224,42 @@ As the DCT transform can be defined on real data rather only complex data, it ca
 
 XMDS labels the cosine transform space variables the same as for :ref:`Fourier transforms<dft_Transform>` and all the even derivatives can be calculated the same way.  Odd moments of the cosine-space variables are in fact *not* related to the corresponding odd derivatives by an inverse cosine transform.
 
+For problems where you are defining the simulation domain over only half of the physical domain to take advantage of reflection symmetry, consider using ``volume_prefactor="2.0"`` so that all volume integrals are over the entire physical domain, not just the simulation domain. i.e. integrals would be over -1 to 1 instead of 0 to 1 if the domain was specified as ``domain="(0,1)"``.
+
+
+Example syntax::
+
+    <simulation xmds-version="2">
+        <geometry>
+            <propagation_dimension> t </propagation_dimension>
+            <transverse_dimensions>
+                <dimension name="x" lattice="128" domain="(-1.5, 1.5)" transform="dct" />
+                    <!-- Or to cause volume integrals to be multiplied by 2 -->
+                <dimension name="y" lattice="128" domain="(0, 1)" transform="dct" volume_prefactor="2.0" />
+            </transverse_dimensions>
+        </geometry>
+    </simulation>
+
 
 The "dst" transform
 -------------------
 
-The "dst" (discrete sine transform) is a counterpart to the DCT transform.  XMDS uses the type-II DST and its inverse, which is also called the tYPe-III DST.  This transform assumes that fields are periodic in this dimension, but also that they are also odd around a specific point within each period.  The grid is therefore only defined across a half period in order to sample each unique point once, and can therefore be of any shape where all the even derivatives are zero at each boundary.  
+The "dst" (discrete sine transform) is a counterpart to the DCT transform.  XMDS uses the type-II DST and its inverse, which is also called the type-III DST.  This transform assumes that fields are periodic in this dimension, but also that they are also odd around a specific point within each period.  The grid is therefore only defined across a half period in order to sample each unique point once, and can therefore be of any shape where all the even derivatives are zero at each boundary.  
 
 The DST transform can be defined on real-valued vectors.  As odd-valued functions are zero at the boundaries, this is a natural transform to use when implementing zero Dirichlet boundary conditions.
 
 XMDS labels the sine transform space variables the same as for :ref:`Fourier transforms<dft_Transform>` and all the even derivatives can be calculated the same way.  Odd moments of the sine-space variables are in fact *not* related to the corresponding odd derivatives by an inverse sine transform.
+
+Example syntax::
+
+    <simulation xmds-version="2">
+        <geometry>
+            <propagation_dimension> t </propagation_dimension>
+            <transverse_dimensions>
+                <dimension name="x" lattice="128" domain="(0, 1.5)" transform="dst" />
+            </transverse_dimensions>
+        </geometry>
+    </simulation>
 
 
 The "bessel" transform
@@ -191,13 +278,25 @@ which has the inverse transform:
 This transform pair has the useful property that the Laplacian in cylindrical co-ordinates is diagonal in this basis:
 
 .. math::
-    \frac{\partial^2 f}{\partial r^2} +\frac{1}{r}\frac{\partial f}{\partial r} -\frac{m^2}{r^2} = \mathcal{H}^{-1}_m \left[(-k^2) F_m(k)\right](r)
+    e^{-i m \theta} \nabla^2 (f(r) e^{i m \theta}) &= \frac{\partial^2 f}{\partial r^2} +\frac{1}{r}\frac{\partial f}{\partial r} -\frac{m^2}{r^2} = \mathcal{H}^{-1}_m \left[(-k^2) F_m(k)\right](r)
     
-XMDS labels the variables in the transformed space with a prefix of 'k', just as for :ref:`Fourier transforms<dft_Transform>`.  The order :math:`\nu` of the transform is defined by the ``order`` attribute in the ``<dimension>`` element, which must be assigned as a non-negative integer.  If the order is not specified, it defaults to zero.
+XMDS labels the variables in the transformed space with a prefix of 'k', just as for :ref:`Fourier transforms<dft_Transform>`.  The order :math:`\nu` of the transform is defined by the ``order`` attribute in the ``<dimension>`` element, which must be assigned as a non-negative integer.  If the order is not specified, it defaults to zero which corresponds to the solution being independent of the angular coordinate :math:`\theta`.
 
-It can often be useful to have a different sampling in normal space and Hankel space.  Reducing the number of modes in either space dramatically speeds simulations.  To set the number of lattice points in Hankel space to be different to the number of lattice points for the field in its original space, use the attribute ``spectral-lattice``.  All of these lattices are chosen in a non-uniform manner to Gaussian quadrature methods for spectrally accurate transforms.
+It can often be useful to have a different sampling in normal space and Hankel space.  Reducing the number of modes in either space dramatically speeds simulations.  To set the number of lattice points in Hankel space to be different to the number of lattice points for the field in its original space, use the attribute ``spectral_lattice``.  All of these lattices are chosen in a non-uniform manner using Gaussian quadrature methods for spectrally accurate transforms.
 
 In non-Euclidean co-ordinates, integrals have non-unit volume elements.  For example, in cylindrical co-ordinates with a radial co-ordinate 'r', integrals over this dimension have a volume element :math:`r dr`.  When performing integrals along a dimension specified by the "bessel" transform, the factor of the radius is included implicitly.  If you are using a geometry with some symmetry, it is common to have prefactors in your integration.  For example, for a two-dimensional volume in cylindrical symmetry, all integrals would have a volume element of :math:`2\pi r dr`.  This extra factor of :math:`2 \pi` can be included for all integrals by specifying the attribute ``volume_prefactor="2*M_PI"``.  See the example bessel_cosine_groundstate.xmds for a demonstration.
+
+Example syntax::
+
+    <simulation xmds-version="2">
+        <geometry>
+            <propagation_dimension> t </propagation_dimension>
+            <transverse_dimensions>
+                <dimension name="r" lattice="128" domain="(0, 3)" transform="bessel" volume_prefactor="2*M_PI" />
+            </transverse_dimensions>
+        </geometry>
+    </simulation>
+
 
 
 The "spherical-bessel" transform
@@ -208,7 +307,7 @@ When working in spherical coordinates, it is often useful to use the spherical B
 .. math::
     \frac{\partial^2 f}{\partial r^2} +\frac{2}{r}\frac{\partial f}{\partial r} -\frac{r^2 - l(l+1)}{r^2} f(r) = 0
 
-Just as the Bessel basis above, the transformed dimensions are prefixed with a 'k', and it is possible (and usually wise) to use the ``spectral-lattice`` attribute to specify a different lattice size in the transformed space.  Also, the spacing of these lattices are again chosen in a non-uniform manner to Gaussian quadrature methods for spectrally accurate transforms.  Finally, the ``order`` attribute can be used to specify the order of the spherical Bessel functions used.  
+Just as the Bessel basis above, the transformed dimensions are prefixed with a 'k', and it is possible (and usually wise) to use the ``spectral-lattice`` attribute to specify a different lattice size in the transformed space.  Also, the spacing of these lattices are again chosen in a non-uniform manner to Gaussian quadrature methods for spectrally accurate transforms.  Finally, the ``order`` attribute can be used to specify the order :math:`l` of the spherical Bessel functions used.  
 
 If we denote the transformation to and from this basis by :math:`\mathcal{SH}`, then we can write the useful property:
 
@@ -217,6 +316,18 @@ If we denote the transformation to and from this basis by :math:`\mathcal{SH}`, 
 
 In non-Euclidean co-ordinates, integrals have non-unit volume elements.  For example, in spherical co-ordinates with a radial co-ordinate 'r', integrals over this dimension have a volume element :math:`r^2 dr`.  When performing integrals along a dimension specified by the "spherical-bessel" transform, the factor of the square of the radius is included implicitly.  If you are using a geometry with some symmetry, it is common to have prefactors in your integration.  For example, for a three-dimensional volume in spherical symmetry, all integrals would have a volume element of :math:`4\pi r^2 dr`.  This extra factor of :math:`4 \pi` can be included for all integrals by specifying the attribute ``volume_prefactor="4*M_PI"``.  This is demonstrated in the example bessel_transform.xmds.
 
+Example syntax::
+
+    <simulation xmds-version="2">
+        <geometry>
+            <propagation_dimension> t </propagation_dimension>
+            <transverse_dimensions>
+                <dimension name="r" lattice="128" domain="(0, 3)" transform="spherical-bessel" volume_prefactor="4*M_PI" />
+            </transverse_dimensions>
+        </geometry>
+    </simulation>
+
+
 
 The "hermite-gauss" transform
 -----------------------------
@@ -224,14 +335,38 @@ The "hermite-gauss" transform
 The "hermite-gauss" transform allows transformations to and from the basis of Hermite functions :math:`\psi_n(x)`:
 
 .. math::
-    \psi_n(x) = (-1)^n \left(2^n n! \sqrt(\pi)\right)^{-1/2} \exp{\frac{x^2}{2}} \frac{d^n}{x^n} e^{-x^2}
+    \psi_n(x) = \left(2^n n! \sigma \sqrt{\pi}\right)^{-1/2} e^{-x^2/2\sigma^2} H_n(\sigma x)
+    
+where the functions :math:`H_n(x)` are the Hermite polynomials:
+
+.. math::
+    H_n(x) &= (-1)^n e^{x^2} \frac{d^n}{dx^n} \left(e^{-x^2}\right)
     
 which are eigenfunctions of the Schroedinger equation for a harmonic oscillator:
 
 .. math::
-    - \frac{\partial^2 \psi_n}{\partial x^2} + x^2 \psi_n(x) = \left(n+\frac{1}{2}\right) \psi_n(x)
+    - \frac{\hbar^2}{2 m} \frac{\partial^2 \psi_n}{\partial x^2} + \frac{1}{2} m \omega^2 x^2 \psi_n(x) = \hbar \omega\left(n+\frac{1}{2}\right) \psi_n(x),
+with :math:`\sigma = \sqrt{\frac{\hbar}{m \omega}}`.
     
-This transform is different to the others in that it requires a ``length-scale`` attribute rather than a ``domain`` attribute, as the range of the lattice will depend on the number of basis functions used.
+This transform is different to the others in that it requires a ``length_scale`` attribute rather than a ``domain`` attribute, as the range of the lattice will depend on the number of basis functions used. The ``length_scale`` attribute defines the scale of the domain as the standard deviation :math:`\sigma` of the lowest order Hermite function :math:`\psi_0(x)`:
+
+.. math::
+    \psi_0(x) = (\sigma^2 \pi)^{-1/4} e^{-x^2/2 \sigma^2}
+
+When a dimension uses the "hermite-gauss" transform, then the variable indexing the basis functions is defined as the name of the dimension prefixed with an "n".  For example, when referencing the basis function indices for the dimensions "x", "y", "z" and "tau", use the variable "nx", "ny", "nz" and "ntau".  The Hermite-Gauss transform permits one to work in energy-space for the harmonic oscillator.  The normal Fourier transform of "hermite-gauss" dimensions can also be referenced using the dimension name prefixed with a "k".  See the examples ``hermitegauss_transform.xmds`` and ``hermitegauss_groundstate.xmds`` for examples.
+
+
+Example syntax::
+
+    <simulation xmds-version="2">
+        <geometry>
+            <propagation_dimension> t </propagation_dimension>
+            <transverse_dimensions>
+                <dimension name="r" lattice="128" length_scale="1.0" transform="hermite-gauss" />
+            </transverse_dimensions>
+        </geometry>
+    </simulation>
+
 
 
 
