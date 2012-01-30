@@ -307,7 +307,7 @@ When working in spherical coordinates, it is often useful to use the spherical B
 .. math::
     \frac{\partial^2 f}{\partial r^2} +\frac{2}{r}\frac{\partial f}{\partial r} -\frac{r^2 - l(l+1)}{r^2} f(r) = 0
 
-Just as the Bessel basis above, the transformed dimensions are prefixed with a 'k', and it is possible (and usually wise) to use the ``spectral-lattice`` attribute to specify a different lattice size in the transformed space.  Also, the spacing of these lattices are again chosen in a non-uniform manner to Gaussian quadrature methods for spectrally accurate transforms.  Finally, the ``order`` attribute can be used to specify the order :math:`l` of the spherical Bessel functions used.  
+Just as the Bessel basis above, the transformed dimensions are prefixed with a 'k', and it is possible (and usually wise) to use the ``spectral_lattice`` attribute to specify a different lattice size in the transformed space.  Also, the spacing of these lattices are again chosen in a non-uniform manner to Gaussian quadrature methods for spectrally accurate transforms.  Finally, the ``order`` attribute can be used to specify the order :math:`l` of the spherical Bessel functions used.  
 
 If we denote the transformation to and from this basis by :math:`\mathcal{SH}`, then we can write the useful property:
 
@@ -353,7 +353,14 @@ This transform is different to the others in that it requires a ``length_scale``
 .. math::
     \psi_0(x) = (\sigma^2 \pi)^{-1/4} e^{-x^2/2 \sigma^2}
 
-When a dimension uses the "hermite-gauss" transform, then the variable indexing the basis functions is defined as the name of the dimension prefixed with an "n".  For example, when referencing the basis function indices for the dimensions "x", "y", "z" and "tau", use the variable "nx", "ny", "nz" and "ntau".  The Hermite-Gauss transform permits one to work in energy-space for the harmonic oscillator.  The normal Fourier transform of "hermite-gauss" dimensions can also be referenced using the dimension name prefixed with a "k".  See the examples ``hermitegauss_transform.xmds`` and ``hermitegauss_groundstate.xmds`` for examples.
+When a dimension uses the "hermite-gauss" transform, then the variable indexing the basis functions is defined as the name of the dimension prefixed with an "n".  For example, when referencing the basis function indices for the dimensions "x", "y", "z" and "tau", use the variable "nx", "ny", "nz" and "ntau".  Applying the operator ``L = nx`` in Hermite space is therefore equivalent to applying the operator
+
+.. math::
+    L = - \frac{1}{\mbox{length_scale}^2}\frac{\partial^2 \psi_n}{\partial x^2} + \left(\mbox{length_scale}^2 x^2 -\frac{1}{2}\right)
+    
+in normal space.  
+
+The Hermite-Gauss transform permits one to work in energy-space for the harmonic oscillator.  The normal Fourier transform of "hermite-gauss" dimensions can also be referenced using the dimension name prefixed with a "k".  See the examples ``hermitegauss_transform.xmds`` and ``hermitegauss_groundstate.xmds`` for examples.
 
 
 Example syntax::
@@ -375,7 +382,33 @@ Example syntax::
 Vector Element
 ==============
 
-Vectors are arrays of data, defined over any subset of the transverse dimensions defined in your :ref:`GeometryElement`.  They are initialised at the beginning of a simulation, either from code or from an input file.  They can then be referenced and/or changed by sequence elements.  Variants of the vector elements are 
+Vectors are arrays of data, defined over any subset of the transverse dimensions defined in your :ref:`GeometryElement`.  These dimensions are listed in the attribute ``dimensions``, which can be an empty string if you wish the vector to not be defined on any dimensions.  If you do not include a ``dimensions`` attribute then the vector defaults to being a function of all transverse dimensions.  Vectors are used to store static or dynamic variables, but you do not have to specify their purpose when they are defined.  They can then be referenced and/or changed by sequence elements, as described below.
+
+Each vector has a unique name, defined by a ``name`` attribute.  It is either complex-valued (the default) or real-valued, which can be specified using the ``type="real"`` attribute.
+
+A vector can be a group of variables, each defined by name in the ``<components>`` attribute.  The name of each component is the name used to reference it later in the simulation.
+
+Vectors are initialised at the beginning of a simulation, either from code or from an input file.  The basis choice for this initialisation defaults to the normal space as defined in the ``<geometry>`` element, but any transverse dimension can be initialised in their transform basis by specifying them in an ``initial_basis`` attribute.  The ``initial_basis`` attribute lists dimensions either by their name as defined by the ``<geometry>`` element, or by their transformed name.  For example, to initialise a two-dimensional vector defined with ``dimensions="x y"`` in Fourier space for the y-dimension, we would include the attribute ``initial_space="x ky"``, or just ``initial_space="ky"``.  
+
+When initialising the vector within the XMDS script, the appropriate code is placed in a 'CDATA' block inside an ``<initialisation>`` element.  This code is in standard C-syntax, and should reference the components of the vector by name.  If you wish to initialise all the components of the vector as zeros, then it suffices to simply add the attribute ``kind="zero"``.  
+
+If you wish to initialise from a file, then you can choose to initialise from an xsil file using ``kind="xsil"``, or from an hdf5 file using ``kind="hdf5"``, and then supply the name of the input file with the ``filename`` attribute.  These are standard data formats, both of which can be generated from XMDS, or from another program.  An example for generating a file in another program for input into XMDS is detailed in the Advanced topic: :ref:`Importing`.
+
+When initialising from a file, the default is to require the lattice of the transverse dimensions to exactly match the lattice defined by XMDS.  There is an option to import data defined on non-identical lattice points.  Obviously, the dimensionality of the imported field still has to be correct, and there are potential inaccuracies introduced by the interpolation.  This option is activated by defining the attribute ``geometry_matching_mode="loose"``.  The default option is defined as ``geometry_matching_mode="strict"``.
+
+.. _Dependencies:
+
+The dependencies element
+------------------------
+
+Often a vector, computed vector, filter, integration operator or output group will reference the values in one or more other vectors, computed vectors or noise vectors.  These dependencies are defined via a ``<dependencies>`` element, which lists the names of the vectors.  The components of those vectors will then be available for use in the 'CDATA' block, and can be referenced by their name.  The basis of the dependent vectors, and therefore the basis of the dimensions available in the 'CDATA' block, are specified by a ``basis`` element in the ``<dependencies>`` block.  
+
+.. _ReferencingNonlocal:
+
+Referencing variables non-locally
+---------------------------------
+
+This can be done.
 
 
 .. _ComputedVectorElement:
@@ -383,7 +416,7 @@ Vectors are arrays of data, defined over any subset of the transverse dimensions
 Computed Vector Element
 =======================
 
-Computed vectors are arrays of data much like normal ``<vector>`` elements, but they are always calculated as they are referenced.  
+Computed vectors are arrays of data much like normal ``<vector>`` elements, but they are always calculated as they are referenced, so they cannot be initialised from file.
 
 
 
@@ -435,3 +468,10 @@ Group Element
 The group elements
 
 Further details will be forthcoming, but for now, try looking at the :ref:`workedExamples`, and a search of the /examples folder.
+
+.. _XMDSCSyntax:
+
+XMDS-specific C syntax
+======================
+
+There are some handy shortcuts included, and we should list them all.
