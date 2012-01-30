@@ -19,13 +19,13 @@ Running the 'xmds2' program with the option '--help', gives several options that
 
 It also has commands to configure XMDS2 and recheck the installation.  If your program requires extra paths to compile, you can configure XMDS2 to include those paths by default.  Simply use the command
 
-.. code-block:: none
+.. code-block:: bash
 
     $ xmds2 --configure --include-path /path/to/include --lib-path /path/to/lib 
 
 Running XMDS2 with the '--configure' option also searches for packages that have been installed since you last installed or configured XMDS2.  If you wish to run 'xmds2 --configure' with the same extra options as last time, simply use the command:
 
-.. code-block:: none
+.. code-block:: bash
 
     $ xmds2 --reconfigure
 
@@ -189,20 +189,24 @@ The "dft" transform is performed using the the normal discrete Fourier transform
 
 .. math::
 
-	\mathcal{F}\left[f(x)\right](k) = \frac{1}{2\pi}\int_{x_\text{min}}^{x_\text{max}} f(x) e^{-i x k} dx
+	\mathcal{F}\left[f(x)\right](k) = \frac{1}{2\pi}\int_{x_\text{min}}^{x_\text{max}} f(x) e^{-i k x} dx
 
 The discrete Fourier transform has no information about the domain of the lattice, so the XMDS2 transform is equivalent to
 
 .. math::
-	\tilde{\mathcal{F}}\left[f(x)\right](k) &= \frac{1}{2\pi}\int_{x_\text{min}}^{x_\text{max}} f(x) e^{-i (x+ x_\text{min}) k} dx \\
+	\tilde{\mathcal{F}}\left[f(x)\right](k) &= \frac{1}{2\pi}\int_{x_\text{min}}^{x_\text{max}} f(x) e^{-i k (x+ x_\text{min})} dx \\
 	&= e^{-i x_\text{min} k} \mathcal{F}\left[f(x)\right](k)
 
 The standard usage in an XMDS simulation involves moving to Fourier space, applying a transformation, and then moving back.  For this purpose, the two transformations are entirely equivalent as the extra phase factor cancels.  However, when fields are explicitly defined in Fourier space, care must be taken to include this phase factor explicitly.  See section :ref:`Convolutions` in the Advanced Topics section.
 
-When a dimension uses the "dft" transform, then the Fourier space variable is defined as the name of the dimension prefixed with a "k".  For example, the dimensions "x", "y", "z" and "tau" will be referenced in Fourier space as "kx","ky", "kz" and "ktau".  Fourier transforms allow easy calculation of derivatives, as the n :sup:`th` derivative of a field is proportional to the n :sup:`th` moment of the field in Fourier space:
+When a dimension uses the "dft" transform, then the Fourier space variable is defined as the name of the dimension prefixed with a "k".  For example, the dimensions "x", "y", "z" and "tau" will be referenced in Fourier space as "kx","ky", "kz" and "ktau".  
+
+Fourier transforms allow easy calculation of derivatives, as the n\ :sup:`th` derivative of a field is proportional to the n\ :sup:`th` moment of the field in Fourier space:
 
 .. math::
-    \mathcal{F}\left[\frac{\partial^n f(x)}{\partial x^n}\right](kx) = \left(i \;kx\right)^n \mathcal{F}\left[f(x)\right](kx)
+    \mathcal{F}\left[\frac{\partial^n f(x)}{\partial x^n}\right](k_x) = \left(i \;k_x\right)^n \mathcal{F}\left[f(x)\right](k_x)
+
+This identity can be used to write the differential operator :math:`\mathcal{L} = \frac{\partial}{\partial x}` as an ``IP`` or ``EX`` operator as ``L = i*kx;`` (see :ref:`OperatorElement` for more details).
 
 Example syntax::
 
@@ -225,6 +229,13 @@ The "dct" (discrete cosine transform) is a Fourier-based transform that implies 
 As the DCT transform can be defined on real data rather only complex data, it can also be superior to DFT-based spectral methods for simulations of real-valued fields where boundary conditions are artificial.
 
 XMDS labels the cosine transform space variables the same as for :ref:`Fourier transforms<dft_Transform>` and all the even derivatives can be calculated the same way.  Odd moments of the cosine-space variables are in fact *not* related to the corresponding odd derivatives by an inverse cosine transform.
+
+Discrete cosine transforms allow easy calculation of even-order derivatives, as the 2n\ :sup:`th` derivative of a field is proportional to the 2n\ :sup:`th` moment of the field in DCT-space:
+
+.. math::
+    \mathcal{F}_\text{DCT}\left[\frac{\partial^{2n} f(x)}{\partial x^{2n}}\right](k_x) = (-k_x^2)^{n}\; \mathcal{F}_\text{DCT}\left[f(x)\right](k_x)
+
+This identity can be used to write the differential operator :math:`\mathcal{L} = \frac{\partial^2}{\partial x^2}` as an ``IP`` or ``EX`` operator as ``L = -kx*kx;`` (see :ref:`OperatorElement` for more details).
 
 For problems where you are defining the simulation domain over only half of the physical domain to take advantage of reflection symmetry, consider using ``volume_prefactor="2.0"`` so that all volume integrals are over the entire physical domain, not just the simulation domain. i.e. integrals would be over -1 to 1 instead of 0 to 1 if the domain was specified as ``domain="(0,1)"``.
 
@@ -252,6 +263,14 @@ The DST transform can be defined on real-valued vectors.  As odd-valued function
 
 XMDS labels the sine transform space variables the same as for :ref:`Fourier transforms<dft_Transform>` and all the even derivatives can be calculated the same way.  Odd moments of the sine-space variables are in fact *not* related to the corresponding odd derivatives by an inverse sine transform.
 
+Discrete sine transforms allow easy calculation of even-order derivatives, as the 2n\ :sup:`th` derivative of a field is proportional to the 2n\ :sup:`th` moment of the field in DST-space:
+
+.. math::
+    \mathcal{F}_\text{DST}\left[\frac{\partial^{2n} f(x)}{\partial x^{2n}}\right](k_x) = (-k_x^2)^{n}\; \mathcal{F}_\text{DST}\left[f(x)\right](k_x)
+
+This identity can be used to write the differential operator :math:`\mathcal{L} = \frac{\partial^2}{\partial x^2}` as an ``IP`` or ``EX`` operator as ``L = -kx*kx;`` (see :ref:`OperatorElement` for more details).
+
+
 Example syntax::
 
     <simulation xmds-version="2">
@@ -267,26 +286,33 @@ Example syntax::
 The "bessel" transform
 ----------------------
 
-Just as the Fourier basis is useful for finding derivatives in Euclidean geometry, the basis of Bessel functions is useful for finding certain common operators in cylindrical co-ordinates.  In particular, we use the Bessel functions of the first kind, :math:`J_\nu(u)`.  The relevant transform is the Hankel transform:
+Just as the Fourier basis is useful for finding derivatives in Euclidean geometry, the basis of Bessel functions is useful for finding certain common operators in cylindrical co-ordinates.  In particular, we use the Bessel functions of the first kind, :math:`J_m(u)`.  The relevant transform is the Hankel transform:
 
 .. math::
-    F_\nu(k) = \mathcal{H}_\nu \left[f\right](k) = \int_0^\infty r f(r) J_\nu(k r) dr
+    F_m(k) = \mathcal{H}_m \left[f\right](k) = \int_0^\infty r f(r) J_m(k r) dr
     
 which has the inverse transform:
 
 .. math::
-    f(r) = \mathcal{H}^{-1}_\nu \left[F_\nu\right](r) = \int_0^\infty k F_\nu(k) J_\nu(k r) dk
+    f(r) = \mathcal{H}^{-1}_m \left[F_m\right](r) = \int_0^\infty k F_m(k) J_m(k r) dk
     
 This transform pair has the useful property that the Laplacian in cylindrical co-ordinates is diagonal in this basis:
 
 .. math::
-    e^{-i m \theta} \nabla^2 (f(r) e^{i m \theta}) &= \frac{\partial^2 f}{\partial r^2} +\frac{1}{r}\frac{\partial f}{\partial r} -\frac{m^2}{r^2} = \mathcal{H}^{-1}_m \left[(-k^2) F_m(k)\right](r)
+    \nabla^2 \left(f(r) e^{i m \theta}\right) &= \left(\frac{\partial^2 f}{\partial r^2} +\frac{1}{r}\frac{\partial f}{\partial r} -\frac{m^2}{r^2} f \right) e^{i m \theta} = \left\{\mathcal{H}^{-1}_m \left[(-k^2) F_m(k)\right](r) \right\} e^{i m \theta}
     
-XMDS labels the variables in the transformed space with a prefix of 'k', just as for :ref:`Fourier transforms<dft_Transform>`.  The order :math:`\nu` of the transform is defined by the ``order`` attribute in the ``<dimension>`` element, which must be assigned as a non-negative integer.  If the order is not specified, it defaults to zero which corresponds to the solution being independent of the angular coordinate :math:`\theta`.
+XMDS labels the variables in the transformed space with a prefix of 'k', just as for :ref:`Fourier transforms<dft_Transform>`.  The order :math:`m` of the transform is defined by the ``order`` attribute in the ``<dimension>`` element, which must be assigned as a non-negative integer.  If the order is not specified, it defaults to zero which corresponds to the solution being independent of the angular coordinate :math:`\theta`.
 
 It can often be useful to have a different sampling in normal space and Hankel space.  Reducing the number of modes in either space dramatically speeds simulations.  To set the number of lattice points in Hankel space to be different to the number of lattice points for the field in its original space, use the attribute ``spectral_lattice``.  All of these lattices are chosen in a non-uniform manner using Gaussian quadrature methods for spectrally accurate transforms.
 
-In non-Euclidean co-ordinates, integrals have non-unit volume elements.  For example, in cylindrical co-ordinates with a radial co-ordinate 'r', integrals over this dimension have a volume element :math:`r dr`.  When performing integrals along a dimension specified by the "bessel" transform, the factor of the radius is included implicitly.  If you are using a geometry with some symmetry, it is common to have prefactors in your integration.  For example, for a two-dimensional volume in cylindrical symmetry, all integrals would have a volume element of :math:`2\pi r dr`.  This extra factor of :math:`2 \pi` can be included for all integrals by specifying the attribute ``volume_prefactor="2*M_PI"``.  See the example bessel_cosine_groundstate.xmds for a demonstration.
+Hankel transforms allow easy calculation of the Laplacian of fields with cylindrical symmetry.  Applying the operator ``L = -kr*kr`` in Hankel space is therefore equivalent to applying the operator
+
+.. math::
+    L = \frac{\partial^2}{\partial r^2} +\frac{1}{r}\frac{\partial}{\partial r} -\frac{m^2}{r^2}
+    
+in coordinate space.
+
+In non-Euclidean co-ordinates, integrals have non-unit volume elements.  For example, in cylindrical co-ordinates with a radial co-ordinate 'r', integrals over this dimension have a volume element :math:`r dr`.  When performing integrals along a dimension specified by the "bessel" transform, the factor of the radius is included implicitly.  If you are using a geometry with some symmetry, it is common to have prefactors in your integration.  For example, for a two-dimensional volume in cylindrical symmetry, all integrals would have a volume element of :math:`2\pi r dr`.  This extra factor of :math:`2 \pi` can be included for all integrals by specifying the attribute ``volume_prefactor="2*M_PI"``.  See the example ``bessel_cosine_groundstate.xmds`` for a demonstration.
 
 Example syntax::
 
@@ -304,10 +330,10 @@ Example syntax::
 The "spherical-bessel" transform
 --------------------------------
 
-When working in spherical coordinates, it is often useful to use the spherical Bessel functions :math:`j_l(x)=\sqrt{\frac{\pi}{2x}}J_{l+\frac{1}{2}}(x)` as a basis.  These are solutions of the Helmholtz equation:
+When working in spherical coordinates, it is often useful to use the spherical Bessel functions :math:`j_l(x)=\sqrt{\frac{\pi}{2x}}J_{l+\frac{1}{2}}(x)` as a basis.  These are eigenfunctions of the radial component of Laplace's equation in spherical coordinates:
 
 .. math::
-    \frac{\partial^2 f}{\partial r^2} +\frac{2}{r}\frac{\partial f}{\partial r} -\frac{r^2 - l(l+1)}{r^2} f(r) = 0
+    \nabla^2 \left[j_l(k r)\; Y^m_l(\theta, \phi)\right] &= \left[\frac{\partial^2 }{\partial r^2} +\frac{2}{r}\frac{\partial }{\partial r} -\frac{l(l+1)}{r^2}\right] j_l(k r) \; Y^m_l(\theta, \phi) = -k^2 j_l(k r)\; Y^m_l(\theta, \phi)
 
 Just as the Bessel basis above, the transformed dimensions are prefixed with a 'k', and it is possible (and usually wise) to use the ``spectral_lattice`` attribute to specify a different lattice size in the transformed space.  Also, the spacing of these lattices are again chosen in a non-uniform manner to Gaussian quadrature methods for spectrally accurate transforms.  Finally, the ``order`` attribute can be used to specify the order :math:`l` of the spherical Bessel functions used.  
 
@@ -315,6 +341,13 @@ If we denote the transformation to and from this basis by :math:`\mathcal{SH}`, 
 
 .. math::
     \frac{\partial^2 f}{\partial r^2} +\frac{2}{r}\frac{\partial f}{\partial r} -\frac{l (l+1)}{r^2} = \mathcal{SH}^{-1}_l \left[(-k^2) F_l(k)\right](r)
+
+Spherical Bessel transforms allow easy calculation of the Laplacian of fields with spherical symmetry. Applying the operator ``L = -kr*kr`` in Spherical Bessel space is therefore equivalent to applying the operator
+
+.. math::
+    L = \frac{\partial^2}{\partial r^2} +\frac{2}{r}\frac{\partial}{\partial r} -\frac{l (l+1)}{r^2}
+    
+in coordinate space.  
 
 In non-Euclidean co-ordinates, integrals have non-unit volume elements.  For example, in spherical co-ordinates with a radial co-ordinate 'r', integrals over this dimension have a volume element :math:`r^2 dr`.  When performing integrals along a dimension specified by the "spherical-bessel" transform, the factor of the square of the radius is included implicitly.  If you are using a geometry with some symmetry, it is common to have prefactors in your integration.  For example, for a three-dimensional volume in spherical symmetry, all integrals would have a volume element of :math:`4\pi r^2 dr`.  This extra factor of :math:`4 \pi` can be included for all integrals by specifying the attribute ``volume_prefactor="4*M_PI"``.  This is demonstrated in the example bessel_transform.xmds.
 
@@ -356,12 +389,14 @@ This transform is different to the others in that it requires a ``length_scale``
 .. math::
     \psi_0(x) = (\sigma^2 \pi)^{-1/4} e^{-x^2/2 \sigma^2}
 
-When a dimension uses the "hermite-gauss" transform, then the variable indexing the basis functions is defined as the name of the dimension prefixed with an "n".  For example, when referencing the basis function indices for the dimensions "x", "y", "z" and "tau", use the variable "nx", "ny", "nz" and "ntau".  Applying the operator ``L = nx`` in Hermite space is therefore equivalent to applying the operator
+When a dimension uses the "hermite-gauss" transform, then the variable indexing the basis functions is defined as the name of the dimension prefixed with an "n".  For example, when referencing the basis function indices for the dimensions "x", "y", "z" and "tau", use the variable "nx", "ny", "nz" and "ntau".  
+
+Applying the operator ``L = nx + 0.5`` in Hermite space is therefore equivalent to applying the operator
 
 .. math::
-    L = - \frac{1}{\mbox{length_scale}^2}\frac{\partial^2 \psi_n}{\partial x^2} + \left(\mbox{length_scale}^2 x^2 -\frac{1}{2}\right)
+    L = - \frac{\sigma^2}{2}\frac{\partial^2 \psi_n}{\partial x^2} + \frac{1}{2 \sigma^2} x^2
     
-in normal space.  
+in coordinate space.  
 
 The Hermite-Gauss transform permits one to work in energy-space for the harmonic oscillator.  The normal Fourier transform of "hermite-gauss" dimensions can also be referenced using the dimension name prefixed with a "k".  See the examples ``hermitegauss_transform.xmds`` and ``hermitegauss_groundstate.xmds`` for examples.
 
@@ -487,6 +522,11 @@ Filter Element
 
 Integrate Element
 -----------------
+
+.. _OperatorElement:
+
+Operator Element
+~~~~~~~~~~~~~~~~
 
 .. _BreakpointElement:
 
