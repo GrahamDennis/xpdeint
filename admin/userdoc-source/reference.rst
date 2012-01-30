@@ -154,6 +154,8 @@ If there are other dimensions in your problem, they are called "transverse dimen
 
 Each transverse dimension must specify how many points or modes it requires, and the range over which it is defined.  This is done by the ``lattice`` and ``domain`` attributes respectively.  The ``lattice`` attribute is an integer, and is optional for integer dimensions, where it can be defined implicitly by the domain.  The ``domain`` attribute is specified as a pair of numbers (e.g. ``domain="(-17,3)"``) defining the minimum and maximum of the grid.
 
+Any dimension can have a number of aliases.  These act exactly like copies of that dimension, but must be included explicitly in the definition of subsequent vectors (i.e. they are not included in the default list of dimensions for a new vector).  The list of aliases for a dimension are included in an ``aliases`` attribute.  They are useful for non-local reference of variables.  See ``groundstate_gaussian.xmds`` and ``2DMultistateSE.xmds`` as examples.
+
 Integrals over a dimension can be multiplied by a common prefactor, which is specified using the ``volume_prefactor`` attribute.  For example, this allows the automatic inclusion of a factor of two due to a reflection symmetry by adding the attribute ``volume_prefactor="2"``.
 
 Each transverse dimension can be associated with a transform.  This allows the simulation to manipulate vectors defined on that dimension in the transform space.  The default is Fourier space (with the associated transform being the discrete Fourier transform, or "dft"), but others can be specified with the ``transform`` attribute.  The other options are "none", "dst", "dct", "bessel", "spherical-bessel" and "hermite-gauss".  Using the right transform can dramatically improve the speed of a calculation.
@@ -346,6 +348,7 @@ which are eigenfunctions of the Schroedinger equation for a harmonic oscillator:
 
 .. math::
     - \frac{\hbar^2}{2 m} \frac{\partial^2 \psi_n}{\partial x^2} + \frac{1}{2} m \omega^2 x^2 \psi_n(x) = \hbar \omega\left(n+\frac{1}{2}\right) \psi_n(x),
+
 with :math:`\sigma = \sqrt{\frac{\hbar}{m \omega}}`.
     
 This transform is different to the others in that it requires a ``length_scale`` attribute rather than a ``domain`` attribute, as the range of the lattice will depend on the number of basis functions used. The ``length_scale`` attribute defines the scale of the domain as the standard deviation :math:`\sigma` of the lowest order Hermite function :math:`\psi_0(x)`:
@@ -382,9 +385,9 @@ Example syntax::
 Vector Element
 ==============
 
-Vectors are arrays of data, defined over any subset of the transverse dimensions defined in your :ref:`GeometryElement`.  These dimensions are listed in the attribute ``dimensions``, which can be an empty string if you wish the vector to not be defined on any dimensions.  If you do not include a ``dimensions`` attribute then the vector defaults to being a function of all transverse dimensions.  Vectors are used to store static or dynamic variables, but you do not have to specify their purpose when they are defined.  They can then be referenced and/or changed by sequence elements, as described below.
+Vectors are arrays of data, defined over any subset of the transverse dimensions defined in your :ref:`GeometryElement`.  These dimensions are listed in the attribute ``dimensions``, which can be an empty string if you wish the vector to not be defined on any dimensions.  If you do not include a ``dimensions`` attribute then the vector defaults to being a function of all transverse dimensions, not including any aliases.  Vectors are used to store static or dynamic variables, but you do not have to specify their purpose when they are defined.  They can then be referenced and/or changed by sequence elements, as described below.
 
-Each vector has a unique name, defined by a ``name`` attribute.  It is either complex-valued (the default) or real-valued, which can be specified using the ``type="real"`` attribute.
+Each ``<vector>`` element has a unique name, defined by a ``name`` attribute.  It is either complex-valued (the default) or real-valued, which can be specified using the ``type="real"`` attribute.
 
 A vector can be a group of variables, each defined by name in the ``<components>`` attribute.  The name of each component is the name used to reference it later in the simulation.
 
@@ -401,14 +404,20 @@ When initialising from a file, the default is to require the lattice of the tran
 The dependencies element
 ------------------------
 
-Often a vector, computed vector, filter, integration operator or output group will reference the values in one or more other vectors, computed vectors or noise vectors.  These dependencies are defined via a ``<dependencies>`` element, which lists the names of the vectors.  The components of those vectors will then be available for use in the 'CDATA' block, and can be referenced by their name.  The basis of the dependent vectors, and therefore the basis of the dimensions available in the 'CDATA' block, are specified by a ``basis`` element in the ``<dependencies>`` block.  
+Often a vector, computed vector, filter, integration operator or output group will reference the values in one or more other vectors, computed vectors or noise vectors.  These dependencies are defined via a ``<dependencies>`` element, which lists the names of the vectors.  The components of those vectors will then be available for use in the 'CDATA' block, and can be referenced by their name.  
+
+For a vector, the basis of the dependent vectors, and therefore the basis of the dimensions available in the 'CDATA' block, are defined by the ``initial_basis`` of the vector.  For a ``<computed_vector>``, ``<filter>`` ``<integration_vector>``, or moment group vector, the basis of the dependencies can be specified by a ``basis`` attribute in the ``<dependencies>`` element.  For example, ``basis="x ny kz"``.
+
+Any transverse dimensions that appear in the ``<dependencies>`` element that do not appear in the ``dimensions`` attribute of the vector are integrated out.  For integer dimensions, this is simply an implicit sum over the dimension.  For real-valued dimensions, this is an implicit integral over the range of that dimension.
 
 .. _ReferencingNonlocal:
 
 Referencing variables non-locally
 ---------------------------------
 
-This can be done.
+While the default XMDS behaviour is to reference all variables locally, any vector can be referenced non-locally.  The notation for referencing the value of a vector 'phi' with a dimension 'j' at a value of 'j=jk' is ``phi(j => jk)``.  Multiple non-local dimensions are addressed by adding the references in a list, e.g. ``phi(j => jk, x => y)``.  See ``2DMultistateSE.xmds`` for an example.
+
+
 
 
 .. _ComputedVectorElement:
@@ -416,8 +425,9 @@ This can be done.
 Computed Vector Element
 =======================
 
-Computed vectors are arrays of data much like normal ``<vector>`` elements, but they are always calculated as they are referenced, so they cannot be initialised from file.
+Computed vectors are arrays of data much like normal ``<vector>`` elements, but they are always calculated as they are referenced, so they cannot be initialised from file.  It is defined with a ``<computed_vector>`` element, which has a ``name`` attribute, optional ``dimensions`` and ``type`` attributes, and a ``<components>`` attribute, just like a ``<vector>`` element.  Instead of an ``<initialisation>`` element, it has an ``<evaluation>`` element that serves the same purpose.  The ``<evaluation>`` element contains a ``<dependencies>`` element (see ``above<Dependencies>``), and a 'CDATA' block containing the code that defines it.
 
+As it is not being stored, a ``<computed_vector>`` does not have or require an ``initial_space`` attribute, as it will be transformed into an appropriate basis for the element that references it.  The basis for its evaluation will be determined entirely by the ``basis`` attribute of the ``<dependencies>`` element.
 
 
 .. _NoiseVectorElement:
@@ -425,7 +435,39 @@ Computed vectors are arrays of data much like normal ``<vector>`` elements, but 
 Noise Vector Element
 ====================
 
-Noise vectors used like computed vectors, but when they are evaluated they generate arrays of random numbers of various kinds. 
+Noise vectors are used like computed vectors, but when they are evaluated they generate arrays of random numbers of various kinds.  They do not depend on other vectors, and are not initialised by code.  They are defined by a ``<noise_vector>`` element, which has a ``name`` attribute, and optional ``dimensions``, ``initial_space`` and ``type`` attributes, which work identically as for normal vectors.  The different types of noise vectors are defined by a mandatory ``kind`` attribute, which must take the value of 'gauss', 'gaussian', 'wiener', 'poissonian','jump' or 'uniform'.  
+
+.. _uniformNoise:
+
+Uniform noise
+-------------
+
+
+
+.. _gaussianNoise:
+
+Gaussian noise
+--------------
+
+.. _wienerNoise:
+
+Wiener noise
+------------
+
+.. _poissionianNoise:
+
+Poissonian noise
+----------------
+
+.. _jumpNoise:
+
+Jump noise
+----------
+
+
+
+
+kind, method, seed
 
 
 
