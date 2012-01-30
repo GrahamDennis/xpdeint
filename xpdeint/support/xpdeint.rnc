@@ -100,6 +100,7 @@ Dimension = element dimension {
     , attribute transform { text }?
     , attribute order { text }?
     , attribute aliases { text }?
+    , attribute volume_prefactor { text }?
     , empty
 }
 

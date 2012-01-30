@@ -223,6 +223,9 @@
       <optional>
         <attribute name="aliases"/>
       </optional>
+      <optional>
+        <attribute name="volume_prefactor"/>
+      </optional>
       <empty/>
     </element>
   </define>
