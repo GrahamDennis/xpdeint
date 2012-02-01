@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
-  <name>2DMSse</name>
+  <name>TwoDMSse</name>
 
   <author>Joe Hope</author>
   <description>
@@ -83,7 +83,7 @@
     </integrate>
   </sequence>
 
-  <output format="binary" filename="2DMSse.xsil">
+  <output format="hdf5" filename="TwoDMSse.xsil">
     <group>
       <sampling basis="x y j" initial_sample="yes">
         <moments>density</moments>
