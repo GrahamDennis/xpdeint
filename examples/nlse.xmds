@@ -70,7 +70,7 @@
     </integrate>
   </sequence>
 
-  <output format="binary" filename="nlse.xsil">
+  <output format="hdf5" filename="nlse.xsil">
     <group>
       <sampling basis="tau" initial_sample="yes">
         <moments>density</moments>

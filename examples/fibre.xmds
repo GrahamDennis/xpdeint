@@ -60,7 +60,7 @@
     </integrate>
   </sequence>
   
-  <output format="binary" filename="fibre.xsil">
+  <output format="hdf5" filename="fibre.xsil">
     <group>
       <sampling basis="kx" initial_sample="yes">
         <moments>pow_dens</moments>

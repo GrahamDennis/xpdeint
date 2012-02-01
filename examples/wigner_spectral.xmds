@@ -108,7 +108,7 @@
     </integrate>
   </sequence>
   
-  <output format="binary">
+  <output format="hdf5">
     <group>
       <sampling basis="x y" initial_sample="yes">
         <moments>WR WI</moments>

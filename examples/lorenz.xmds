@@ -60,7 +60,7 @@
   </sequence>
   
   <!-- This part defines what data will be saved in the output file -->
-  <output format="binary" filename="lorenz.xsil">
+  <output format="hdf5" filename="lorenz.xsil">
     <group>
       <sampling initial_sample="yes">
         <moments>xR yR zR</moments>

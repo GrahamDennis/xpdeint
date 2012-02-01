@@ -53,7 +53,7 @@
     </integrate>
   </sequence>
   
-  <output format="binary">
+  <output format="hdf5">
     <group>
       <sampling basis="y x(0)" initial_sample="yes">
         <moments>dens</moments>

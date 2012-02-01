@@ -46,7 +46,7 @@
       </operators>
     </integrate>
   </sequence>
-  <output format="binary">
+  <output format="hdf5">
     <group>
       <sampling basis="j(0)" initial_sample="yes">
         <moments>zR zI</moments>
