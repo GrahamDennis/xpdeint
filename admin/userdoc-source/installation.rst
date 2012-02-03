@@ -139,9 +139,7 @@ This guide adds extra notes for users wishing to install XMDS2 using the SVN rep
     If you use Mac OS X 10.5 or later, or installed the Enthought Python Distribution on Windows, then setuptools is already installed.
     Though if the next step fails, you may need to upgrade setuptools.  To do that, type ``sudo easy_install -U setuptools``
 
-
-#. There are a range of optional installs.  We recommend that you install them if possible:
-
+#. Install HDF5 and FFTW3 (and optionally MPI).
     .. _hdf5_Installation:
     
     #. **HDF5** is a library for reading and writing the `Hierarchical Data Format <http://www.hdfgroup.org/HDF5/>`_.
@@ -163,26 +161,21 @@ This guide adds extra notes for users wishing to install XMDS2 using the SVN rep
         
     #. **MPI** is an API for doing parallel processing 
          on multi-processor/multi-core computers, or clusters of computers.
-         Many supercomputing systems (and Mac OS X) come with MPI libraries pre installed.
+         Many supercomputing systems come with MPI libraries pre installed.
          The `Open MPI <http://www.open-mpi.org/>`_ project has free distributions of this library for other machines.
+		 
+		 If you intend to take advantage of XMDS2's multi-processing features, you must install MPI, and configure FFTW3 to use it.
 
     #. **FFTW** is the library XMDS2 uses for Fourier transforms, 
          which is the transform most people will be using. 
          If you need
-         support for MPI distributed simulations, you must install the alpha version.  Both the stable and alpha versions are available for
+         support for MPI distributed simulations, you must configure FFTW to use MPI.  FFTW is available for
          free at the `FFTW website <http://www.fftw.org/>`_.
 
-         NOTE: As of current writing, the latest version of fftw3 (3.3alpha1) does not compile on Snow Leopard.
-         FFTW-3.2.2 compiles fine on Snow Leopard, but if you need MPI support, you must use the alpha version.
-         A patch for this bug exists in admin/fftw3-SnowLeopard.patch
-         This patch has been submitted upstream, however no response has been received as yet.
-         I hope that the patch makes it into the next release of fftw3.
-         
-         To apply the patch run (in the fftw-3 directory):
-         ``patch -p0 < ~/path/to/xmds2/admin/fftw3-SnowLeopard.patch``
-         
          Then configure/compile as described in the HDF5 sidebar above.  
          You may wish to add the ``--enable-mpi --disable-fortran`` options to the ``configure`` command.
+
+#. There are a range of optional installs.  We recommend that you install them all if possible:
 
     #. A Matrix library like `ATLAS <http://math-atlas.sourceforge.net/>`_, 
          or Intel's `MKL <http://software.intel.com/en-us/intel-mkl/>`_ allows efficient implementation of transform spaces other than Fourier space.

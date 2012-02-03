@@ -109,7 +109,7 @@ where :math:`\phi` is a complex-valued field, and :math:`\Gamma(\tau)` is a :mat
         </integrate>
       </sequence>
 
-      <output format="binary" filename="nlse.xsil">
+      <output>
         <group>
           <sampling basis="tau" initial_sample="yes">
             <moments>density</moments>
@@ -145,7 +145,7 @@ where :math:`\phi` is a complex-valued field, and :math:`\Gamma(\tau)` is a :mat
 
 Let us examine the new items in the ``<features>`` element that we have demonstrated here.  The existence of the ``<benchmark>`` element causes the simulation to be timed.  The ``<bing>`` element causes the computer to make a sound upon the conclusion of the simulation.  The ``<fftw>`` element is used to pass options to the `FFTW libraries for fast Fourier transforms <http://fftw.org>`_, which are needed to do spectral derivatives for the partial differential equation.  Here we used the option `plan="patient"`, which makes the simulation test carefully to find the fastest method for doing the FFTs.  More information on possible choices can be found in the `FFTW documentation <http://fftw.org>`_.
 
-Finally, we use two tags to make the simulation run faster.  The ``<auto_vectorise>`` element switches on several loop optimisations that exist in later versions of the GCC compiler.  The ``<openmp>`` element turns on threaded parallel processing using the OPENMP standard where possible.  These options are not activated by default as they only exist on certain compilers.  If your code compiles with them on, then they are recommended.
+Finally, we use two tags to make the simulation run faster.  The ``<auto_vectorise>`` element switches on several loop optimisations that exist in later versions of the GCC compiler.  The ``<openmp>`` element turns on threaded parallel processing using the OpenMP standard where possible.  These options are not activated by default as they only exist on certain compilers.  If your code compiles with them on, then they are recommended.
 
 Let us examine the ``<geometry>`` element.
 
@@ -250,7 +250,7 @@ Kubo Oscillator
 This example demonstrates the integration of a stochastic differential equation.  We examine the Kubo oscillator, which is a complex variable whose phase is evolving according to a Wiener noise.  In a suitable rotating frame, the equation of motion for the variable is
 
 .. math::
-    dz = i z dW
+    dz = i z\, dW
 
 where we can interpret this as a Stratonovich or Ito differential equation, depending on the choice of rotating frame.  This equation is solved by the following XMDS2 script:
 
@@ -300,7 +300,7 @@ where we can interpret this as a Stratonovich or Ito differential equation, depe
         </integrate>
       </sequence>
 
-      <output format="ascii" filename="kubo.xsil">
+      <output>
         <group>
           <sampling initial_sample="yes">
             <moments>zR zI</moments>
@@ -448,7 +448,7 @@ where the noise terms :math:`\eta_j(x,t)` are Wiener noise increments with varia
         </integrate>
       </sequence>
   
-      <output format="binary" filename="fibre.xsil">
+      <output>
         <group>
           <sampling basis="kx" initial_sample="yes">
             <moments>pow_dens</moments>
@@ -593,7 +593,7 @@ where :math:`x_j` are complex-valued variables defined on a ring, such that :mat
         </integrate>
       </sequence>
 
-      <output format="ascii">
+      <output>
         <group>
           <sampling basis="j" initial_sample="yes">
             <moments>xR</moments>
@@ -733,7 +733,7 @@ with the added restriction that the derivative is forced to zero outside a certa
         </integrate>
       </sequence>
 
-      <output format="hdf5" filename="wigner.xsil">
+      <output>
         <group>
           <sampling basis="x y" initial_sample="yes">
             <moments>WR WI</moments>
@@ -971,13 +971,13 @@ The code for this simulation is:
           </operators>
         </integrate>
 
-        <breakpoint filename="groundstate_break.xsil" format="ascii">
+        <breakpoint filename="groundstate_break.xsil">
           <dependencies basis="ky">wavefunction </dependencies>
         </breakpoint>
 
       </sequence>
 
-      <output format="binary" filename="groundstate.xsil">
+      <output>
         <group>
           <sampling basis="y" initial_sample="yes">
             <moments>norm_dens</moments>
@@ -1063,7 +1063,7 @@ At the end of the sequence element we introduce the ``<breakpoint>`` element.  T
 
 .. code-block:: xpdeint
 
-    <breakpoint filename="groundstate_break.xsil" format="ascii">
+    <breakpoint filename="groundstate_break.xsil">
       <dependencies basis="ky">wavefunction</dependencies>
     </breakpoint>
 
@@ -1197,7 +1197,7 @@ where :math:`H_n(u)` are the physicist's version of the Hermite polynomials.  Ra
         </breakpoint>
       </sequence>
   
-      <output format="binary">
+      <output>
         <group>
           <sampling basis="x" initial_sample="yes">
             <moments>dens</moments>
@@ -1333,7 +1333,7 @@ where the last term is more commonly written as a matrix multiplication.  Writin
             </integrate>
           </sequence>
 
-          <output format="binary" filename="2DMSse.xsil">
+          <output filename="TwoDMSse.xsil">
             <group>
               <sampling basis="x y j" initial_sample="yes">
                 <moments>density</moments>

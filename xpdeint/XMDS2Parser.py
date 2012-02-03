@@ -1841,7 +1841,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     outputFeature = Features.Output.Output(parent = self.simulation, xmlElement = outputElement,
                                            **self.argumentsToTemplateConstructors)
     
-    formatName = 'ascii'
+    formatName = 'hdf5'
     
     if outputElement.hasAttribute('format'):
       formatName = outputElement.getAttribute('format').strip().lower()

@@ -79,7 +79,7 @@
       </operators>
     </integrate>
   </sequence>
-  <output format="hdf5" filename="diffusion_arguments.xsil">
+  <output filename="diffusion_arguments.xsil">
     <group>
       <sampling basis="x(0) y" initial_sample="yes">
         <moments>dens</moments>

@@ -69,7 +69,7 @@
     </integrate>
   </sequence>
   
-  <output format="hdf5" filename="fibre.xsil">
+  <output filename="fibre.xsil">
     <group>
       <sampling basis="kx" initial_sample="yes">
         <moments>kdensphi kdenspsi</moments>

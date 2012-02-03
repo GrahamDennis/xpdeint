@@ -83,5 +83,5 @@
       <dependencies basis="nx ny nz">nlterm nlterm_4f</dependencies>
     </breakpoint>
   </sequence>
-  <output format="hdf5" />
+  <output />
 </simulation>

@@ -116,7 +116,7 @@
       </operators>
     </integrate>
   </sequence>
-  <output format="hdf5" filename="bc_groundstate.xsil">
+  <output filename="bc_groundstate.xsil">
     <group>
       <sampling basis="r z" initial_sample="no">
         <moments>norm_dens</moments>

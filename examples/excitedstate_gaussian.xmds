@@ -115,7 +115,8 @@
       <dependencies>wavefunction</dependencies>
     </breakpoint>
   </sequence>
-  <output format="hdf5">
+  
+  <outpu>
     <group>
       <sampling basis="y" initial_sample="no">
         <moments>dens</moments>

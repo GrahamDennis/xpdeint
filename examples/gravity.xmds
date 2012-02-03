@@ -79,7 +79,7 @@
     </integrate>
   </sequence>
   
-  <output format="hdf5">
+  <output>
     <group>
       <sampling basis="j" initial_sample="yes">
         <moments>xR yR vxR vyR</moments>
