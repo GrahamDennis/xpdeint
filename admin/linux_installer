@@ -255,9 +255,8 @@ fi
 # find where they are located. The scheme below is annoying and fragile.
 # A better way of doing this would be good.
 
-sudo updatedb
-MPIHEADER=`locate "/usr*/mpi.h" | grep -v "src/linux-headers" | head --lines=1`
-MPILIB=`locate "/usr*mpi_cxx.so" | head --lines=1`
+MPIHEADER=`sudo find /usr -name mpi.h | grep -v "src/linux-headers" | head --lines=1`
+MPILIB=`sudo find /usr /lib -name *mpi_cxx.so | head --lines=1`
 MPIHEADERDIR=`dirname $MPIHEADER`
 MPILIBDIR=`dirname $MPILIB`
 
@@ -275,7 +274,7 @@ if [ $DEVELOPER_INSTALL -eq 1 ]; then
 else
   # Fetch a known good version of the XMDS2 source code from sourceforge
   cd $XMDS2_install_directory
-  svn checkout -r 2539 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
+  svn checkout -r 2543 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
 fi
 
 # Compile the Cheetah templates into Python
@@ -302,13 +301,13 @@ echo
 # Some distros don't have mpic++ and mpirun in their default executable path, so add a
 # static link to it if necessary. Need to do this before calling xmds2 --reconfigure
 if [ `which mpic++ | wc -l` -eq 0 ]; then
-  MPICPPPATH=`locate -b "\mpic++" | head --lines=1`
+  MPICPPPATH=`sudo find /usr /etc -name mpic++ | head --lines=1`
   echo; echo "Creating symbolic link to $MPICPPPATH"; echo
   sudo ln -s $MPICPPPATH /usr/bin/mpic++
 fi
 
 if [ `which mpirun | wc -l` -eq 0 ]; then
-  MPIRUNPATH=`locate -b "\mpirun" | head --lines=1`
+  MPIRUNPATH=`sudo find /usr /etc /sbin -name mpirun | head --lines=1`
   echo; echo "Creating symbolic link to $MPIRUNPATH"; echo
   sudo ln -s $MPIRUNPATH /usr/bin/mpirun
 fi
