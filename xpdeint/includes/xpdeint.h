@@ -1,6 +1,6 @@
 /*
  * xpdeint.h
- * Copyright (C) 2008-2009 Graham Dennis (graham.dennis@anu.edu.au). All rights reserved.
+ * Copyright (C) 2008-2012 Graham Dennis (graham.dennis@anu.edu.au) and Joe Hope. All rights reserved.
  *
 */
 
