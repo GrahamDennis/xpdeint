@@ -309,7 +309,7 @@ elif [ $RPM_INSTALL -eq 1 ]; then
   # Check if this package is available. If it is, install via the 
   # package manager, otherwise download, compile and install the HDF5 source code.
 
-  if [ package available ]; then
+  if [ `yum info hdf5-devel | grep hdf5-devel | wc -l` -gt 0 ]; then
     sudo yum -y install hdf5-devel
   else
     echo
