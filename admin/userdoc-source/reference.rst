@@ -160,6 +160,8 @@ Integrals over a dimension can be multiplied by a common prefactor, which is spe
 
 Each transverse dimension can be associated with a transform.  This allows the simulation to manipulate vectors defined on that dimension in the transform space.  The default is Fourier space (with the associated transform being the discrete Fourier transform, or "dft"), but others can be specified with the ``transform`` attribute.  The other options are "none", "dst", "dct", "bessel", "spherical-bessel" and "hermite-gauss".  Using the right transform can dramatically improve the speed of a calculation.
 
+An advanced feature discussed further in :ref:`DimensionAliases` are dimension aliases, which are specified by the ``aliases`` attribute.  This feature is useful for example, when calculating correlation functions.
+
 Example syntax::
 
     <simulation xmds-version="2">
@@ -189,13 +191,13 @@ The "dft" transform is performed using the the normal discrete Fourier transform
 
 .. math::
 
-	\mathcal{F}\left[f(x)\right](k) = \frac{1}{2\pi}\int_{x_\text{min}}^{x_\text{max}} f(x) e^{-i k x} dx
+    \mathcal{F}\left[f(x)\right](k) = \frac{1}{2\pi}\int_{x_\text{min}}^{x_\text{max}} f(x) e^{-i k x} dx
 
 The discrete Fourier transform has no information about the domain of the lattice, so the XMDS2 transform is equivalent to
 
 .. math::
-	\tilde{\mathcal{F}}\left[f(x)\right](k) &= \frac{1}{2\pi}\int_{x_\text{min}}^{x_\text{max}} f(x) e^{-i k (x+ x_\text{min})} dx \\
-	&= e^{-i x_\text{min} k} \mathcal{F}\left[f(x)\right](k)
+    \tilde{\mathcal{F}}\left[f(x)\right](k) &= \frac{1}{2\pi}\int_{x_\text{min}}^{x_\text{max}} f(x) e^{-i k (x+ x_\text{min})} dx \\
+    &= e^{-i x_\text{min} k} \mathcal{F}\left[f(x)\right](k)
 
 The standard usage in an XMDS simulation involves moving to Fourier space, applying a transformation, and then moving back.  For this purpose, the two transformations are entirely equivalent as the extra phase factor cancels.  However, when fields are explicitly defined in Fourier space, care must be taken to include this phase factor explicitly.  See section :ref:`Convolutions` in the Advanced Topics section.
 
@@ -426,13 +428,47 @@ Each ``<vector>`` element has a unique name, defined by a ``name`` attribute.  I
 
 A vector can be a group of variables, each defined by name in the ``<components>`` attribute.  The name of each component is the name used to reference it later in the simulation.
 
-Vectors are initialised at the beginning of a simulation, either from code or from an input file.  The basis choice for this initialisation defaults to the normal space as defined in the ``<geometry>`` element, but any transverse dimension can be initialised in their transform basis by specifying them in an ``initial_basis`` attribute.  The ``initial_basis`` attribute lists dimensions either by their name as defined by the ``<geometry>`` element, or by their transformed name.  For example, to initialise a two-dimensional vector defined with ``dimensions="x y"`` in Fourier space for the y-dimension, we would include the attribute ``initial_space="x ky"``, or just ``initial_space="ky"``.  
+Vectors are initialised at the beginning of a simulation, either from code or from an input file.  The basis choice for this initialisation defaults to the normal space as defined in the ``<geometry>`` element, but any transverse dimension can be initialised in their transform basis by specifying them in an ``initial_basis`` attribute.  The ``initial_basis`` attribute lists dimensions either by their name as defined by the ``<geometry>`` element, or by their transformed name.  For example, to initialise a two-dimensional vector defined with ``dimensions="x y"`` in Fourier space for the y-dimension, we would include the attribute ``initial_basis="x ky"``, or just ``initial_basis="ky"``.  
 
-When initialising the vector within the XMDS script, the appropriate code is placed in a 'CDATA' block inside an ``<initialisation>`` element.  This code is in standard C-syntax, and should reference the components of the vector by name.  If you wish to initialise all the components of the vector as zeros, then it suffices to simply add the attribute ``kind="zero"``.  
+When initialising the vector within the XMDS script, the appropriate code is placed in a 'CDATA' block inside an ``<initialisation>`` element.  This code is in standard C-syntax, and should reference the components of the vector by name.  If you wish to initialise all the components of the vector as zeros, then it suffices to simply add the attribute ``kind="zero"`` or to omit the ``<initialisation>`` element entirely.  
 
-If you wish to initialise from a file, then you can choose to initialise from an xsil file using ``kind="xsil"``, or from an hdf5 file using ``kind="hdf5"``, and then supply the name of the input file with the ``filename`` attribute.  These are standard data formats, both of which can be generated from XMDS, or from another program.  An example for generating a file in another program for input into XMDS is detailed in the Advanced topic: :ref:`Importing`.
+If you wish to initialise from a file, then you can choose to initialise from a hdf5 file using ``kind="hdf5"``, and then supply the name of the input file with a ``filename`` element.  These are standard data formats, both of which can be generated from XMDS, or from another program.  An example for generating a file in another program for input into XMDS is detailed in the Advanced topic: :ref:`Importing`.
 
-When initialising from a file, the default is to require the lattice of the transverse dimensions to exactly match the lattice defined by XMDS.  There is an option to import data defined on non-identical lattice points.  Obviously, the dimensionality of the imported field still has to be correct, and there are potential inaccuracies introduced by the interpolation.  This option is activated by defining the attribute ``geometry_matching_mode="loose"``.  The default option is defined as ``geometry_matching_mode="strict"``.
+When initialising from a file, the default is to require the lattice of the transverse dimensions to exactly match the lattice defined by XMDS.  There is an option to import data defined on a subset or superset of the lattice points.  Obviously, the dimensionality of the imported field still has to be correct.  This option is activated by defining the attribute ``geometry_matching_mode="loose"``.  The default option is defined as ``geometry_matching_mode="strict"``.  A requirement of the initialisation geometry is that the lattice points of the input file are spaced identically to those of the simulation grid.  This allows expanding or contracting a domain between simulations.  If used in Fourier space, this feature can be used for coarsening or refining a simulation grid.  See :ref:`LooseGeometryMatchingMode` for details.
+
+Example syntax::
+
+    <simulation xmds-version="2">
+        <geometry>
+            <propagation_dimension> t </propagation_dimension>
+            <transverse_dimensions>
+                <dimension name="x" lattice="128" domain="(-1, 1)" />
+            </transverse_dimensions>
+        </geometry>
+    
+        <!-- A one-dimensional vector with dimension 'x' -->
+        <vector name="wavefunction" initial_basis="x" type="complex">
+            <components> phi </components>
+            <initialisation>
+                <![CDATA[
+                    // 'cis(x)' is cos(x) + i * sin(x)
+                    phi = exp(-0.5 * x * x) * cis(40 * x);
+                ]]>
+            </initialisation>
+        </vector>
+        
+        <!-- A zero-dimensional real vector with components u and v -->
+        <vector name="zero_dim" dimensions="" type="real">
+            <components>
+                u v
+            </components>
+            <initialisation kind="hdf5">
+                <filename>data.h5</filename>
+            </initialisation>
+        </vector>
+    </simulation>
+
+
 
 .. _Dependencies:
 
@@ -444,6 +480,46 @@ Often a vector, computed vector, filter, integration operator or output group wi
 For a vector, the basis of the dependent vectors, and therefore the basis of the dimensions available in the 'CDATA' block, are defined by the ``initial_basis`` of the vector.  For a ``<computed_vector>``, ``<filter>`` ``<integration_vector>``, or moment group vector, the basis of the dependencies can be specified by a ``basis`` attribute in the ``<dependencies>`` element.  For example, ``basis="x ny kz"``.
 
 Any transverse dimensions that appear in the ``<dependencies>`` element that do not appear in the ``dimensions`` attribute of the vector are integrated out.  For integer dimensions, this is simply an implicit sum over the dimension.  For real-valued dimensions, this is an implicit integral over the range of that dimension.
+
+Example syntax::
+
+    <simulation xmds-version="2">
+        <geometry>
+            <propagation_dimension> t </propagation_dimension>
+            <transverse_dimensions>
+                <dimension name="x" lattice="128" domain="(-1, 1)" />
+                <dimension name="y" lattice="10" domain="(-3, 2)" transform="dct" />
+            </transverse_dimensions>
+        </geometry>
+    
+        <!-- A one-dimensional vector with dimension 'x' -->
+        <vector name="wavefunction" dimensions="x" initial_basis="x" type="complex">
+            <components> phi </components>
+            <initialisation>
+                <!-- 
+                    The initialisation of the vector 'wavefunction' depends on information
+                    in the 'two_dim' vector.  The vector two_dim is DCT-transformed into the
+                    (x, ky) basis, and the ky dimension is implicitly integrated over in the
+                    following initialisation code
+                  -->
+                <dependencies basis="x ky">two_dim</dependencies>
+                <![CDATA[
+                    // 'cis(x)' is cos(x) + i * sin(x)
+                    phi = exp(-0.5 * x * x + v) * cis(u * x);
+                ]]>
+            </initialisation>
+        </vector>
+        
+        <!-- A two-dimensional real vector with components u and v -->
+        <vector name="two_dim" type="real">
+            <components>
+                u v
+            </components>
+            <initialisation kind="hdf5">
+                <filename>data.h5</filename>
+            </initialisation>
+        </vector>
+    </simulation>
 
 .. _ReferencingNonlocal:
 
@@ -462,7 +538,43 @@ Computed Vector Element
 
 Computed vectors are arrays of data much like normal ``<vector>`` elements, but they are always calculated as they are referenced, so they cannot be initialised from file.  It is defined with a ``<computed_vector>`` element, which has a ``name`` attribute, optional ``dimensions`` and ``type`` attributes, and a ``<components>`` attribute, just like a ``<vector>`` element.  Instead of an ``<initialisation>`` element, it has an ``<evaluation>`` element that serves the same purpose.  The ``<evaluation>`` element contains a ``<dependencies>`` element (see ``above<Dependencies>``), and a 'CDATA' block containing the code that defines it.
 
-As it is not being stored, a ``<computed_vector>`` does not have or require an ``initial_space`` attribute, as it will be transformed into an appropriate basis for the element that references it.  The basis for its evaluation will be determined entirely by the ``basis`` attribute of the ``<dependencies>`` element.
+As it is not being stored, a ``<computed_vector>`` does not have or require an ``initial_basis`` attribute, as it will be transformed into an appropriate basis for the element that references it.  The basis for its evaluation will be determined entirely by the ``basis`` attribute of the ``<dependencies>`` element.
+
+Example syntax::
+
+    <simulation xmds-version="2">
+        <geometry>
+            <propagation_dimension> t </propagation_dimension>
+            <transverse_dimensions>
+                <dimension name="x" lattice="128" domain="(-1, 1)" />
+            </transverse_dimensions>
+        </geometry>
+    
+        <!-- A one-dimensional vector with dimension 'x' -->
+        <vector name="wavefunction" type="complex">
+            <components> phi </components>
+            <initialisation>
+                <![CDATA[
+                    // 'cis(x)' is cos(x) + i * sin(x)
+                    phi = exp(-0.5 * x * x) * cis(40 * x);
+                ]]>
+            </initialisation>
+        </vector>
+        
+        <!-- A zero-dimensional real computed vector with components Ncalc -->
+        <computed_vector name="zero_dim" dimensions="" type="real">
+            <components>
+                Ncalc
+            </components>
+            <evaluation>
+                <dependencies>wavefunction</dependencies>
+                <![CDATA[
+                    // Implicitly integrating over the dimension 'x'
+                    Ncalc = mod2(phi);
+                ]]>
+            </evaluation>
+        </vector>
+    </simulation>
 
 
 .. _NoiseVectorElement:
@@ -470,7 +582,30 @@ As it is not being stored, a ``<computed_vector>`` does not have or require an `
 Noise Vector Element
 ====================
 
-Noise vectors are used like computed vectors, but when they are evaluated they generate arrays of random numbers of various kinds.  They do not depend on other vectors, and are not initialised by code.  They are defined by a ``<noise_vector>`` element, which has a ``name`` attribute, and optional ``dimensions``, ``initial_space`` and ``type`` attributes, which work identically as for normal vectors.  The different types of noise vectors are defined by a mandatory ``kind`` attribute, which must take the value of 'gauss', 'gaussian', 'wiener', 'poissonian','jump' or 'uniform'.  
+Noise vectors are used like computed vectors, but when they are evaluated they generate arrays of random numbers of various kinds.  They do not depend on other vectors, and are not initialised by code.  They are defined by a ``<noise_vector>`` element, which has a ``name`` attribute, and optional ``dimensions``, ``initial_basis`` and ``type`` attributes, which work identically as for normal vectors.  The different types of noise vectors are defined by a mandatory ``kind`` attribute, which must take the value of 'gauss', 'gaussian', 'wiener', 'poissonian','jump' or 'uniform'.  
+
+Example syntax::
+
+    <simulation xmds-version="2">
+        <geometry>
+            <propagation_dimension> t </propagation_dimension>
+            <transverse_dimensions>
+                <dimension name="x" lattice="128" domain="(-1, 1)" />
+            </transverse_dimensions>
+        </geometry>
+    
+        <!-- 
+            A one-dimensional complex wiener noise vector.
+            This noise is appropriate for using in the complex
+            random-walk equation of motion:
+                dz_dt = eta;
+        -->
+        <noise_vector name="noise" kind="wiener">
+            <components>
+                eta
+            </components>
+        </vector>
+    </simulation>
 
 .. _uniformNoise:
 

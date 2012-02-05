@@ -217,3 +217,13 @@ Example 3
     :align: center
     
 Sometimes when the convolution theorem is used one of the forward Fourier transforms is calculated analytically and input in Fourier space. In this case only one forward numerical Fourier transform and one backward numerical Fourier transform is used. The number of forward and backward transforms are equal, so no phase factor is required.
+
+.. _LooseGeometryMatchingMode:
+
+'Loose' ``geometry_matching_mode``
+----------------------------------
+
+.. _DimensionAliases:
+
+Dimension aliases
+-----------------

@@ -98,13 +98,13 @@ You can compile and run this script with **XMDS2**. To compile the script, just 
     .. code-block:: none
 
         $ xmds2 lorenz.xmds
-		xmds2 version 2.1 "Happy Mollusc" (r2527)
-		Copyright 2000-2012 Graham Dennis, Joseph Hope, Mattias Johnsson
-		                    and the xmds team
-		Generating source code...
-		... done
-		Compiling simulation...
-		... done. Type './lorenz' to run.
+        xmds2 version 2.1 "Happy Mollusc" (r2527)
+        Copyright 2000-2012 Graham Dennis, Joseph Hope, Mattias Johnsson
+                            and the xmds team
+        Generating source code...
+        ... done
+        Compiling simulation...
+        ... done. Type './lorenz' to run.
 
 Now we can execute the generated program 'lorenz'.
 
@@ -178,7 +178,7 @@ The next element we have used can be skipped entirely if you wish to use the def
          </globals>
        </features>
 
-The ``<features>`` element can be used to choose a large number of features that will be discussed later, but here we have only used it to define a ``<globals>`` element.  This element contains a block of text with ``<![CDATA[`` at the start and ``]]>`` at the end.  These 'CDATA' blocks  are used in several places in an XMDS script, and define a block of text that will be pasted directly into the generated C-code.  They must therefore be formatted in legal C-syntax, and any legal C-syntax can be used.  The ``<globals>`` element is placed at the top of the generated code, and can therefore be used to define any variables used in any other part of the simulation.   Here we have defined our three real parameters.  It is also possible to define variables that can be passed into the program at run-time, an example of which is given in one of the worked examples.  FIXME: add link
+The ``<features>`` element can be used to choose a large number of features that will be discussed later, but here we have only used it to define a ``<globals>`` element.  This element contains a block of text with ``<![CDATA[`` at the start and ``]]>`` at the end.  These 'CDATA' blocks  are used in several places in an XMDS script, and define a block of text that will be pasted directly into the generated C-code.  They must therefore be formatted in legal C-syntax, and any legal C-syntax can be used.  The ``<globals>`` element is placed at the top of the generated code, and can therefore be used to define any variables used in any other part of the simulation.   Here we have defined our three real parameters.  It is also possible to define variables that can be passed into the program at run-time, an example of which is given in the :ref:`WignerArguments` worked example.
 
 The next element is the essential ``<geometry>`` element.
 

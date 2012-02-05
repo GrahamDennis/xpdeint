@@ -162,7 +162,7 @@ This is the first example that includes a transverse dimension.  We have only on
 
 Two vector elements have been defined in this simulation.  One defines the complex-valued wavefunction "phi" that we wish to evolve.  We define the transverse dimensions over which this vector is defined by the ``dimensions`` tag in the description.  By default, it is defined over all of the transverse dimensions in the ``<geometry>`` element, so even though we have omitted this tag for the second vector, it also assumes that the vector is defined over all of tau.  
 
-The second vector element contains the component "Gamma" which is a function of the transverse variable tau, as specified in the equation of motion for the field.  This second vector could have been avoided in two ways.  First, the function could have been written explicitly in the integrate block where it is required, but calculating it once and then recalling it from memory is far more efficient.  Second, it could have been included in the "wavefunction" vector as another component, but then it would have been unnecessarily complex-valued, it would have needed an explicit derivative in the equations of motion (presumably "dGamma_dxi = 0;"), and it would have been Fourier transformed whenever the phi component was transformed.  So separating it as its own vector is far more efficient.
+The second vector element contains the component "Gamma" which is a function of the transverse variable tau, as specified in the equation of motion for the field.  This second vector could have been avoided in two ways.  First, the function could have been written explicitly in the integrate block where it is required, but calculating it once and then recalling it from memory is far more efficient.  Second, it could have been included in the "wavefunction" vector as another component, but then it would have been unnecessarily complex-valued, it would have needed an explicit derivative in the equations of motion (presumably ``dGamma_dxi = 0;``), and it would have been Fourier transformed whenever the phi component was transformed.  So separating it as its own vector is far more efficient.
 
 The ``<integrate>`` element for a partial differential equation has some new features:
 
@@ -189,7 +189,7 @@ There are some trivial changes from the tutorial script, such as the fact that w
 
 The equation of motion as written in the CDATA block looks almost identical to our desired equation of motion, except for the term based on the second derivative, which introduces an important new concept.  Inside the ``<operators>`` element, we can define any number of operators.  Operators are used to define functions in the transformed space of each dimension, which in this case is Fourier space.  The derivative of a function is equivalent to multiplying by :math:`-i*k` in Fourier space, so the :math:`\frac{i}{2}\frac{\partial^2 \phi}{\partial \tau^2}` term in our equation of motion is equivalent to multiplying by :math:`-\frac{i}{2}k_\tau^2` in Fourier space.  In this example we define "Ltt" as an operator of exactly that form, and in the equation of motion it is applied to the field "phi".  
 
-Operators can be explicit (``kind="ex"``) or in the interaction picture (``kind="ip"``).  The interaction picture can be more efficient, but it restricts the possible syntax of the equation of motion.  Safe utilisation of interaction picture operators will be described later, but for now let us emphasise that **explicit operators should be used** unless the user is clear what they are doing.  The ``constant="yes"`` option in the operator block means that the operator is not a function of the propagation dimension "xi", and therefore only needs to be calculated once at the start of the simulation.
+Operators can be explicit (``kind="ex"``) or in the interaction picture (``kind="ip"``).  The interaction picture can be more efficient, but it restricts the possible syntax of the equation of motion.  Safe utilisation of interaction picture operators will be described later, but for now let us emphasise that **explicit operators should be used** unless the user is clear what they are doing.  That said, **XMDS2** will generate an error if the user tries to use interaction picture operators incorrectly.  The ``constant="yes"`` option in the operator block means that the operator is not a function of the propagation dimension "xi", and therefore only needs to be calculated once at the start of the simulation.
 
 The output of a partial differential equation offers more possibilities than an ordinary differential equation, and we examine some in this example.
 
@@ -252,7 +252,7 @@ This example demonstrates the integration of a stochastic differential equation.
 .. math::
     dz = i z\, dW
 
-where we can interpret this as a Stratonovich or Ito differential equation, depending on the choice of rotating frame.  This equation is solved by the following XMDS2 script:
+where we can interpret this as a Stratonovich or Itō differential equation, depending on the choice of rotating frame.  This equation is solved by the following XMDS2 script:
 
 .. code-block:: xpdeint
 
@@ -420,7 +420,7 @@ where the noise terms :math:`\eta_j(x,t)` are Wiener noise increments with varia
         <components>Eta</components>
       </noise_vector>
   
-      <vector name="main" initial_space="x" type="complex">
+      <vector name="main" initial_basis="x" type="complex">
         <components>phi</components>
         <initialisation>
           <![CDATA[
@@ -470,15 +470,13 @@ Executing this program is slightly different with the MPI option.  The details c
 .. code-block:: none
 
         $xmds2 fibre.xmds
-        xmds2 version 0.8 "The fish of good hope." (r2392)
-
-        /usr/bin/mpic++ "fibre.cc" -finline-functions -fno-strict-aliasing 
-        --param max-inline-insns-single=1800 -msse3 -msse2 -msse -mfpmath=sse 
-        -mtune=native -fast -ffast-math -ftree-vectorize 
-        -I/Users/joe/Applications/xmds/xpdeint/xpdeint/includes -lfftw3 -o "fibre" 
-
-        cc1plus: note: -ftree-vectorize enables strict aliasing.  
-        -fno-strict-aliasing is ignored when Auto Vectorization is used.
+        xmds2 version 2.1 "Happy Mollusc" (r2543)
+        Copyright 2000-2012 Graham Dennis, Joseph Hope, Mattias Johnsson
+                            and the xmds team
+        Generating source code...
+        ... done
+        Compiling simulation...
+        ... done. Type './fibre' to run.
 
 Note that different compile options (and potentially a different compiler) are used by XMDS2, but this is transparent to the user.  MPI simulations will have to be run using syntax that will depend on the MPI implementation.  Here we show the version based on the popular open source 'Open-MPI <http://www.open-mpi.org/>`_ implementation.
 
@@ -610,14 +608,14 @@ The first extra feature we have used in this script is the ``<diagnostics>`` ele
 
 The simulation defines a vector with a single transverse dimension labelled "j", of type "integer" ("int" and "long" can also be used as synonyms for "integer").  In the absence of an explicit type, the dimension is assumed to be real-valued.  The dimension has a "domain" argument as normal, defining the minimum and maximum values of the dimension's range.  The lattice element, if specified, is used as a check on the size of the domain, and will create an error if the two do not match.
 
-Integer-valued dimensions can be called non-locally.  Real-valued dimensions are typically coupled non-locally only through local operations in the transformed space of the dimension, but can be called non-locally in certain other situations as described in (FIXME: Advanced section on aliases and -k values is not yet written).  The syntax for calling integer dimensions non-locally can be seen in the initialisation CDATA block:
+Integer-valued dimensions can be called non-locally.  Real-valued dimensions are typically coupled non-locally only through local operations in the transformed space of the dimension, but can be called non-locally in certain other situations as described in :ref:`ReferencingNonlocal`.  The syntax for calling integer dimensions non-locally can be seen in the initialisation CDATA block:
 
 .. code-block:: xpdeint
 
           x = 1.0e-3;
           x(j => 0) = 1.0;
 
-where the syntax ``x(j => 0)`` is used to reference the variable :math:``x_0`` directly.  We see a more elaborate example in the integrate CDATA block:
+where the syntax ``x(j => 0)`` is used to reference the variable :math:`x_0` directly.  We see a more elaborate example in the integrate CDATA block:
 
 .. code-block:: xpdeint
 
@@ -636,9 +634,12 @@ Wigner Function
 This example integrates the two-dimensional partial differential equation
 
 .. math::
-    \frac{\partial W}{\partial t} = \left[ \left(\omega + \frac{U_{int}}{\hbar}\left(x^2+y^2-1\right)\right) \left(x \frac{\partial}{\partial y} 
-    - y \frac{\partial}{\partial x}\right) - \frac{U_{int}}{16 \hbar}\left(x\left(\frac{\partial^3}{\partial x^2 \partial y}
-    +\frac{\partial^3}{\partial y^3}\right)-y\left(\frac{\partial^3}{\partial y^2 \partial x}+\frac{\partial^3}{\partial x^3}\right)\right)\right]W(x,y,t)
+    \begin{split}
+    \frac{\partial W}{\partial t} &= \Bigg[ \left(\omega + \frac{U_{int}}{\hbar}\left(x^2+y^2-1\right)\right) \left(x \frac{\partial}{\partial y} 
+    - y \frac{\partial}{\partial x}\right)\\
+    &\phantom{=\Bigg[} - \frac{U_{int}}{16 \hbar}\left(x\left(\frac{\partial^3}{\partial x^2 \partial y}
+    +\frac{\partial^3}{\partial y^3}\right)-y\left(\frac{\partial^3}{\partial y^2 \partial x}+\frac{\partial^3}{\partial x^3}\right)\right)\Bigg]W(x,y,t)
+    \end{split}
 
 with the added restriction that the derivative is forced to zero outside a certain radius.  This extra condition helps maintain the long-term stability of the integration.
 
@@ -684,7 +685,7 @@ with the added restriction that the derivative is forced to zero outside a certa
         </transverse_dimensions>
       </geometry>
 
-      <vector name="main" initial_space="x y" type="complex">
+      <vector name="main" initial_basis="x y" type="complex">
         <components> W </components>
         <initialisation>
           <![CDATA[
@@ -693,7 +694,7 @@ with the added restriction that the derivative is forced to zero outside a certa
         </initialisation>
       </vector>
 
-      <vector name="dampConstants" initial_space="x y" type="real">
+      <vector name="dampConstants" initial_basis="x y" type="real">
         <components>damping</components>
         <initialisation>
           <![CDATA[
@@ -897,7 +898,7 @@ The code for this simulation is:
         </transverse_dimensions>
       </geometry>
 
-      <vector name="potential" initial_space="y" type="real">
+      <vector name="potential" initial_basis="y" type="real">
         <components> V1 </components>
         <initialisation>
           <![CDATA[
@@ -906,7 +907,7 @@ The code for this simulation is:
         </initialisation>
       </vector>
 
-      <vector name="wavefunction" initial_space="y" type="complex">
+      <vector name="wavefunction" initial_basis="y" type="complex">
         <components> phi </components>
         <initialisation>
           <![CDATA[
@@ -1139,7 +1140,7 @@ where :math:`H_n(u)` are the physicist's version of the Hermite polynomials.  Ra
         </transverse_dimensions>
       </geometry>
   
-      <vector name="wavefunction" initial_space="x" type="complex">
+      <vector name="wavefunction" initial_basis="x" type="complex">
         <components> phi </components>
         <initialisation>
           <![CDATA[
