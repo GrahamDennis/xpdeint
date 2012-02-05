@@ -132,10 +132,10 @@ def run_build(source_name, target_name, variant = 'default', buildKWs = {}, verb
     
     if not variant in available_variants:
         if variant == 'mpi':
-            print "xpdeint could not find MPI. Do you have an MPI library (like OpenMPI) installed?"
-            print "If you do, run 'xpdeint --reconfigure' to find it."
+            print "xmds2 could not find MPI. Do you have an MPI library (like OpenMPI) installed?"
+            print "If you do, run 'xmds2 --reconfigure' to find it."
         else:
-            print "xpdeint could not find build variant '%s'." % variant
+            print "xmds2 could not find build variant '%s'." % variant
         return -1
     
     ctx.env = ctx.all_envs[variant]
@@ -143,8 +143,8 @@ def run_build(source_name, target_name, variant = 'default', buildKWs = {}, verb
     
     missing_uselib = set(buildKWs['uselib']).difference(available_uselib)
     if missing_uselib:
-        print "This script requires libraries or features that xpdeint could not find."
-        print "Make sure these requirements are installed and then run 'xpdeint --reconfigure'."
+        print "This script requires libraries or features that xmds2 could not find."
+        print "Make sure these requirements are installed and then run 'xmds2 --reconfigure'."
         print "The missing feature(s) were: %s." % ', '.join(missing_uselib)
         return -1
     

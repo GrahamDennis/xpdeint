@@ -202,7 +202,7 @@ def main(argv=None):
   
   if not os.path.isfile(wscript_userdata_path) or \
     fileContentsHash(wscript_userdata_path) != fileContentsHash(wscript_path):
-    print "Reconfiguring xpdeint (updated config script)..."
+    print "Reconfiguring xmds2 (updated config script)..."
     
     Configuration.run_reconfig()
   
@@ -282,7 +282,7 @@ def main(argv=None):
       dataCacheFile.close()
       del dataCacheFile
     except Exception, err:
-      print >> sys.stderr, "Warning: Unable to load xpdeint data cache."
+      print >> sys.stderr, "Warning: Unable to load xmds2 data cache."
       if debug: raise
   globalNameSpace['dataCache'] = dataCache
   
@@ -383,7 +383,7 @@ def main(argv=None):
     try:
       dataCacheFile = file(xpdeintDataCachePath, 'w')
     except IOError, err:
-      print >> sys.stderr, "Warning: Unable to write xpdeint data cache. " \
+      print >> sys.stderr, "Warning: Unable to write xmds2 data cache. " \
                            "Ensure '%(xpdeintUserDataPath)s' exists and is writable." % locals()
     else:
       cPickle.dump(dataCache, dataCacheFile, protocol = 2)
