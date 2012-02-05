@@ -310,7 +310,7 @@ It can often be useful to have a different sampling in normal space and Hankel s
 Hankel transforms allow easy calculation of the Laplacian of fields with cylindrical symmetry.  Applying the operator ``L = -kr*kr`` in Hankel space is therefore equivalent to applying the operator
 
 .. math::
-    L = \frac{\partial^2}{\partial r^2} +\frac{1}{r}\frac{\partial}{\partial r} -\frac{m^2}{r^2}
+    \mathcal{L} = \left(\frac{\partial^2}{\partial r^2} +\frac{1}{r}\frac{\partial}{\partial r} -\frac{m^2}{r^2} \right)
     
 in coordinate space.
 
@@ -347,7 +347,7 @@ If we denote the transformation to and from this basis by :math:`\mathcal{SH}`, 
 Spherical Bessel transforms allow easy calculation of the Laplacian of fields with spherical symmetry. Applying the operator ``L = -kr*kr`` in Spherical Bessel space is therefore equivalent to applying the operator
 
 .. math::
-    L = \frac{\partial^2}{\partial r^2} +\frac{2}{r}\frac{\partial}{\partial r} -\frac{l (l+1)}{r^2}
+    \mathcal{L} = \left( \frac{\partial^2}{\partial r^2} +\frac{2}{r}\frac{\partial}{\partial r} -\frac{l (l+1)}{r^2} \right)
     
 in coordinate space.  
 
@@ -396,7 +396,7 @@ When a dimension uses the "hermite-gauss" transform, then the variable indexing 
 Applying the operator ``L = nx + 0.5`` in Hermite space is therefore equivalent to applying the operator
 
 .. math::
-    L = - \frac{\sigma^2}{2}\frac{\partial^2 \psi_n}{\partial x^2} + \frac{1}{2 \sigma^2} x^2
+   \mathcal{L} = \left(- \frac{\sigma^2}{2}\frac{\partial^2 \psi_n}{\partial x^2} + \frac{1}{2 \sigma^2} x^2 \right)
     
 in coordinate space.  
 
