@@ -396,7 +396,7 @@ When a dimension uses the "hermite-gauss" transform, then the variable indexing 
 Applying the operator ``L = nx + 0.5`` in Hermite space is therefore equivalent to applying the operator
 
 .. math::
-   \mathcal{L} = \left(- \frac{\sigma^2}{2}\frac{\partial^2 \psi_n}{\partial x^2} + \frac{1}{2 \sigma^2} x^2 \right)
+   \mathcal{L} = \left(- \frac{\sigma^2}{2}\frac{\partial^2}{\partial x^2} + \frac{1}{2 \sigma^2} x^2 \right)
     
 in coordinate space.  
 
