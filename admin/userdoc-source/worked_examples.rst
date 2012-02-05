@@ -252,7 +252,7 @@ This example demonstrates the integration of a stochastic differential equation.
 .. math::
     dz = i z\, dW
 
-where we can interpret this as a Stratonovich or Itō differential equation, depending on the choice of rotating frame.  This equation is solved by the following XMDS2 script:
+where we can interpret this as a Stratonovich or Ito differential equation, depending on the choice of rotating frame.  This equation is solved by the following XMDS2 script:
 
 .. code-block:: xpdeint
 

@@ -76,6 +76,7 @@ Download
 --------
 
 .. Mac OS X 10.6 (Snow Leopard) or later XMDS 2.1 installer: http://sourceforge.net/projects/xmds/files/xmds-2.1-osx.zip
+
 Mac OS X 10.6 (Snow Leopard) or later XMDS 2.1 installer: https://github.com/downloads/grahamdennis/xmds-mac/XMDS%202.1beta4.zip
 
 
