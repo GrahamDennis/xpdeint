@@ -69,6 +69,7 @@ fi
 XMDS2_install_directory=$HOME"/XMDS_2.1"
 NUM_CPUS=`cat /proc/cpuinfo | grep processor | wc -l`
 DEVELOPER_INSTALL=0
+HDF5_installed_from_source=0
 
 parse_command_line_arguments() {
   for i in $@; do
@@ -191,6 +192,63 @@ install_FFTW() {
   echo
 }
 
+
+install_HDF5_from_source() {
+  HDF5_installed_from_source=1
+  current_directory=`pwd`
+
+  HDF5_install_directory=$XMDS2_install_directory"/hdf5-1.8.8"
+  
+  cd $XMDS2_install_directory
+  echo; echo "Downloading HDF5 1.8.8 from www.hdfgroup.org.."; echo
+  wget http://www.hdfgroup.org/ftp/HDF5/prev-releases/hdf5-1.8.8/src/hdf5-1.8.8.tar.gz
+
+  # Make sure the HDF5 1.8.8 archive is present
+  if [ ! -f hdf5-1.8.8.tar.gz ]; then
+    echo
+    echo "ERROR: Couldn't obtain hdf5-1.8.8.tar.gz from www.hdfgroup.org."
+    echo "Aborting install."
+    exit
+  fi
+
+  # Unpack the HDF5 1.8.8 archive and install it in the user's home directory structure.
+  # This avoids conflicting with any other version of HDF5 that may have been
+  # installed system-wide. Later we'll tell XMDS to use this specific version.  
+  tar -xzf hdf5-1.8.8.tar.gz
+  rm hdf5-1.8.8.tar.gz
+  cd $HDF5_install_directory
+
+  echo
+  echo "Installing HDF5. This can take several minutes if you only have a single CPU."
+  echo "  Configuring HDF5..."
+  ./configure --prefix=$HDF5_install_directory > installer.log
+  if [ $? -ne 0 ]; then
+    # Nonzero error code returned, so something went wrong
+    echo "\nConfiguration failed due to some unknown reason."
+    echo "As HDF5 is required for XMDS2, I am aborting the install."
+    echo "Check installer.log in "$HDF5_install_directory " for more information."
+    echo
+    exit
+  fi
+
+  rm -f installer.log > /dev/null
+
+  echo "  Compiling HDF5..."
+  # The HDF5 compile produces stupid amounts of warnings, so if
+  # I echo the error stream to standard out, the user will see pages
+  # and pages of scary stuff. Consequently just dump everything to /dev/null
+  make -j $NUM_CPUS > /dev/null
+  
+  echo "  Copying libraries..."
+  make install > /dev/null
+
+  cd $current_directory
+  echo
+  echo "HDF5 installed!"
+  echo
+}
+
+
 parse_command_line_arguments $@
 
 if [ $DEVELOPER_INSTALL -eq 1 ]; then
@@ -238,7 +296,7 @@ if [ $DEB_INSTALL -eq 1 ]; then
   # End Debian packages install
 elif [ $RPM_INSTALL -eq 1 ]; then
   # Begin RPM packages install
-  sudo yum -y install gcc gcc-c++ make automake subversion openmpi-devel python-setuptools python-cheetah pyparsing python-lxml numpy python-mpmath hdf5-devel gsl-devel python-sphinx wget
+  sudo yum -y install gcc gcc-c++ make automake subversion openmpi-devel python-setuptools python-cheetah pyparsing python-lxml numpy python-mpmath gsl-devel python-sphinx wget
   if [ `cat /proc/cpuinfo | grep sse3 |wc -l` -gt 0 ]; then
     sudo yum -y install atlas-sse3-devel
   elif [ `cat /proc/cpuinfo | grep sse2 |wc -l` -gt 0 ]; then
@@ -246,6 +304,20 @@ elif [ $RPM_INSTALL -eq 1 ]; then
   else
     sudo yum -y install atlas-devel
   fi
+
+  # The default Red Hat repo doesn't have hdf5-dev, but Fedora does. 
+  # Check if this package is available. If it is, install via the 
+  # package manager, otherwise download, compile and install the HDF5 source code.
+
+  if [ package available ]; then
+    sudo yum -y install hdf5-devel
+  else
+    echo
+    echo "The HDF5 package isn't available in your standard repositories."
+    echo "I will download, compile and install the HDF5 source code."
+    install_HDF5_from_source
+  fi
+  
   # End RPM packages install
 fi
 
@@ -274,7 +346,7 @@ if [ $DEVELOPER_INSTALL -eq 1 ]; then
 else
   # Fetch a known good version of the XMDS2 source code from sourceforge
   cd $XMDS2_install_directory
-  svn checkout -r 2543 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
+  svn checkout -r 2549 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
 fi
 
 # Compile the Cheetah templates into Python
@@ -292,8 +364,6 @@ echo "Installing XMDS..."
 echo
 sudo ./setup.py develop
 
-# Tell XMDS to use the fftw libraries we installed under the user's
-# home directory, rather than any system version.
 echo
 echo "Configuring XMDS..."
 echo
@@ -325,8 +395,11 @@ fi
 #  xmds2 --reconfigure --lib-path $FFTW_install_directory"/lib" --include-path $FFTW_install_directory"/include" --lib-path $MPILIBDIR --include-path $MPIHEADERDIR
 #fi
 
-xmds2 --reconfigure --lib-path $FFTW_install_directory"/lib" --include-path $FFTW_install_directory"/include" --lib-path $MPILIBDIR --include-path $MPIHEADERDIR
-
+if [ $HDF5_installed_from_source -eq 1 ]; then
+  xmds2 --reconfigure --lib-path $FFTW_install_directory"/lib" --include-path $FFTW_install_directory"/include" --lib-path $HDF5_install_directory"/lib" --include-path $HDF5_install_directory"/include" --lib-path $MPILIBDIR --include-path $MPIHEADERDIR
+else
+  xmds2 --reconfigure --lib-path $FFTW_install_directory"/lib" --include-path $FFTW_install_directory"/include" --lib-path $MPILIBDIR --include-path $MPIHEADERDIR
+fi
 
 # Build the HTML documentation
 cd $XMDS2_install_directory"/admin/userdoc-source"
