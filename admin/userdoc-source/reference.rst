@@ -87,7 +87,7 @@ Features elements are where simulation-wide options are specified.  There are ma
 Error Check
 -----------
 
-It's often important to know whether you've got errors.
+It's often important to know whether you've got errors.  This feature runs each integration twice: once with the specified error tolerance or defined lattice spacing in the propagation dimension, and then again with half the lattice spacing, or an equivalently lower error tolerance.  Each component of the output then shows the difference between these two integrations as an estimate of the error.  This feature is particularly useful when integrating stochastic equations, as it treats the noise generation correctly between the two runs, and thus makes a reasonable estimate of the strong convergence of the equations.
 
 Example syntax::
 
@@ -118,6 +118,24 @@ Example syntax::
             <precision> single </precision>
         </features>
     </simulation>
+
+
+.. _Validation:
+
+Validation
+----------
+
+XMDS makes a large number of checks in the code generation process to verify that the values for all parameters are safe choices.  Sometimes we wish to allow these parameters to be specified by variables.  This opens up many possibilities, but requires that any safety checks for parameters be performed during the execution of the program itself.  The ``<validation>`` feature activates that option, with allowable attributes being "run-time", "compile-time" and "none".
+
+Example syntax::
+
+    <simulation xmds-version="2">
+        <features>
+            <validation kind="run-time" />
+        </features>
+    </simulation>
+
+
 
 .. _DriverElement:
 
@@ -432,7 +450,7 @@ Vectors are initialised at the beginning of a simulation, either from code or fr
 
 When initialising the vector within the XMDS script, the appropriate code is placed in a 'CDATA' block inside an ``<initialisation>`` element.  This code is in standard C-syntax, and should reference the components of the vector by name.  If you wish to initialise all the components of the vector as zeros, then it suffices to simply add the attribute ``kind="zero"`` or to omit the ``<initialisation>`` element entirely.  
 
-If you wish to initialise from a file, then you can choose to initialise from a hdf5 file using ``kind="hdf5"``, and then supply the name of the input file with a ``filename`` element.  These are standard data formats, both of which can be generated from XMDS, or from another program.  An example for generating a file in another program for input into XMDS is detailed in the Advanced topic: :ref:`Importing`.
+If you wish to initialise from a file, then you can choose to initialise from an hdf5 file using ``kind="hdf5"``, and then supply the name of the input file with the ``filename`` attribute.  These are standard data formats, both of which can be generated from XMDS, or from another program.  An example for generating a file in another program for input into XMDS is detailed in the Advanced topic: :ref:`Importing`.
 
 When initialising from a file, the default is to require the lattice of the transverse dimensions to exactly match the lattice defined by XMDS.  There is an option to import data defined on a subset or superset of the lattice points.  Obviously, the dimensionality of the imported field still has to be correct.  This option is activated by defining the attribute ``geometry_matching_mode="loose"``.  The default option is defined as ``geometry_matching_mode="strict"``.  A requirement of the initialisation geometry is that the lattice points of the input file are spaced identically to those of the simulation grid.  This allows expanding or contracting a domain between simulations.  If used in Fourier space, this feature can be used for coarsening or refining a simulation grid.  See :ref:`LooseGeometryMatchingMode` for details.
 
@@ -577,12 +595,19 @@ Example syntax::
     </simulation>
 
 
+
 .. _NoiseVectorElement:
 
 Noise Vector Element
 ====================
 
-Noise vectors are used like computed vectors, but when they are evaluated they generate arrays of random numbers of various kinds.  They do not depend on other vectors, and are not initialised by code.  They are defined by a ``<noise_vector>`` element, which has a ``name`` attribute, and optional ``dimensions``, ``initial_basis`` and ``type`` attributes, which work identically as for normal vectors.  The different types of noise vectors are defined by a mandatory ``kind`` attribute, which must take the value of 'gauss', 'gaussian', 'wiener', 'poissonian','jump' or 'uniform'.  
+Noise vectors are used like computed vectors, but when they are evaluated they generate arrays of random numbers of various kinds.  They do not depend on other vectors, and are not initialised by code.  They are defined by a ``<noise_vector>`` element, which has a ``name`` attribute, and optional ``dimensions``, ``initial_basis`` and ``type`` attributes, which work identically as for normal vectors.  
+
+The choice of pseudo-random number generator (RNG) can be specified with the ``method`` attribute, which has options "posix" (the default), "mkl", "solirte" and "dsfmt".  It is only possible to use any particular method if that library is available.
+
+The random number generators can be provided with a seed using the ``seed`` attribute, which should typically consist of a list of three integers.  All RNGs require positive integers as seeds.  It is possible to use the :ref:`<validation kind="run-time"/><Validation>` feature to use passed variables as seeds.  It is advantageous to used fixed seeds rather than timer-based seeds, as the :ref:`<error_check><ErrorCheck>` element can test for strong convergence if the same seeds are used for both integrations.  If the ``seed`` attribute is not specified, then fixed seeds will be generated as the code is generated.
+
+The different types of noise vectors are defined by a mandatory ``kind`` attribute, which must take the value of 'gauss', 'gaussian', 'wiener', 'poissonian','jump' or 'uniform'.  
 
 Example syntax::
 
@@ -607,11 +632,21 @@ Example syntax::
         </vector>
     </simulation>
 
+
 .. _uniformNoise:
 
 Uniform noise
 -------------
 
+Uniform noises defined over any transverse dimensions are simply uniformly distributed random numbers between zero and one.  This noise is an example of a "static" noise, i.e. one suitable for initial conditions of a field.  If it were included in the equations of motion for a field, then the effect of the noise would depend on the lattice spacing of the propagation dimension.  XMDS therefore does not allow this noise type to be used in integration elements.
+
+Example syntax::
+
+    <simulation xmds-version="2">
+        <noise_vector name="drivingNoise" dimensions="x" kind="uniform" type="complex" method="dsfmt" seed="314 159 276">
+          <components>Eta</components>
+        </noise_vector>
+    </simulation>
 
 
 .. _gaussianNoise:
@@ -619,15 +654,45 @@ Uniform noise
 Gaussian noise
 --------------
 
+Noise generated with the "gaussian" method is gaussian distributed with zero mean.  For a real-valued noise vector, the variance at each point is the inverse of the volume element of the transverse dimensions in the vector.  This volume element for a single transverse dimension is that used to perform integrals over that dimension.  For example, it would include a factor of :math:`r^2` for a dimension "r" defined with a ``spherical-bessel`` transform.  It can be non-uniform for dimensions based on non-Fourier transforms, and will include the product of the ``volume_prefactor`` attribute as specified in the :ref:`Geometry<Geometry>` element.  The volume element for an integer-type dimension is unity (i.e. where the integral is just a sum).  The volume element for a ``noise_vector`` with multiple dimensions is simply the product of the volume elements of the individual dimensions.
+
+This lattice-dependent variance is typical in most applications of partial differential equations with stochastic initial conditions, as the physical quantity is the variance of the field over some finite volume, which does not change if the variance at each lattice site varies as described above.
+
+For complex-valued noise vector, the real and imaginary parts of the noise are independent, and each have half the variance of a real-valued noise.  This means that the modulus squared of a complex-valued noise vector has the same variance as a real valued noise vector at each point.
+
+This noise is an example of a "static" noise, i.e. one suitable for initial conditions of a field.  If it were included in the equations of motion for a field, then the effect of the noise would depend on the lattice spacing of the propagation dimension.  XMDS therefore does not allow this noise type to be used in integration elements.
+
+Example syntax::
+
+    <simulation xmds-version="2">
+        <noise_vector name="initialNoise" dimensions="x" kind="gauss" type="real" method="posix" seed="314 159 276">
+          <components>fuzz</components>
+        </noise_vector>
+    </simulation>
+
+
 .. _wienerNoise:
 
 Wiener noise
 ------------
 
+Noise generated with the "wiener" method is gaussian distributed with zero mean and the same variance as the static "gaussian" noise defined above, multiplied by a factor of the lattice step in the propagation dimension.  This means that these noise vectors can be used to define Wiener noises for standard stochastic ordinary or partial differential equations.  Most integrators in XMDS effectively interpret these noises as Stratonovich increments.
+
+Example syntax::
+
+    <simulation xmds-version="2">
+        <noise_vector name="diffusion" dimensions="x" kind="wiener" type="real" method="solirte" seed="314 159 276">
+          <components>dW</components>
+        </noise_vector>
+    </simulation>
+
+
 .. _poissionianNoise:
 
 Poissonian noise
 ----------------
+
+A noise vector using the "poissonian" method generates a random variable from a Poissonian distribution.  The 
 
 .. _jumpNoise:
 
@@ -635,9 +700,6 @@ Jump noise
 ----------
 
 
-
-
-kind, method, seed
 
 
 
