@@ -277,7 +277,7 @@ echo
 
 if [ $DEB_INSTALL -eq 1 ]; then
   # Begin Debian package install
-  sudo apt-get -y install build-essential libopenmpi-dev openmpi-bin python-setuptools python-cheetah python-pyparsing python-lxml python-numpy python-mpmath libhdf5-serial-dev libgsl0-dev subversion python-sphinx wget
+  sudo apt-get -y install build-essential libopenmpi-dev openmpi-bin python-setuptools python-cheetah python-pyparsing python-lxml python-numpy python-mpmath libhdf5-serial-dev libgsl0-dev subversion python-sphinx python-h5py wget
 
   # Find the optimum ATLAS version (i.e. CBLAS implementation) and install it
   # Older versions of Ubuntu offered pre-optimized packages for various architectures,
@@ -296,7 +296,7 @@ if [ $DEB_INSTALL -eq 1 ]; then
   # End Debian packages install
 elif [ $RPM_INSTALL -eq 1 ]; then
   # Begin RPM packages install
-  sudo yum -y install gcc gcc-c++ make automake subversion openmpi-devel python-setuptools python-cheetah pyparsing python-lxml numpy python-mpmath gsl-devel python-sphinx wget
+  sudo yum -y install gcc gcc-c++ make automake subversion openmpi-devel python-setuptools python-cheetah numpy gsl-devel python-sphinx wget
   if [ `cat /proc/cpuinfo | grep sse3 |wc -l` -gt 0 ]; then
     sudo yum -y install atlas-sse3-devel
   elif [ `cat /proc/cpuinfo | grep sse2 |wc -l` -gt 0 ]; then
@@ -318,6 +318,34 @@ elif [ $RPM_INSTALL -eq 1 ]; then
     install_HDF5_from_source
   fi
   
+  # The packages h5py, pyparsing, python-lxml, and python-mpmath are not available
+  # in the default Red Hat repository, but are are in the EPEL repository. See if
+  # they're available; if so use yum to get them, if not use easy_install
+
+  if [ `yum info pyparsing | grep pyparsing | wc -l` -gt 0 ]; then
+    sudo yum -y install pyparsing
+  else
+    sudo easy_install pyparsing
+  fi
+
+  if [ `yum info python-lxml | grep python-lxml | wc -l` -gt 0 ]; then
+    sudo yum -y install python-lxml
+  else
+    sudo easy_install python-lxml
+  fi
+
+  if [ `yum info h5py | grep h5py | wc -l` -gt 0 ]; then
+    sudo yum -y install h5py
+  else
+    sudo easy_install h5py
+  fi
+
+  if [ `yum info python-mpmath | grep python-mpmath | wc -l` -gt 0 ]; then
+    sudo yum -y install python-mpmath
+  else
+    sudo easy_install python-mpmath
+  fi
+
   # End RPM packages install
 fi
 
@@ -346,7 +374,7 @@ if [ $DEVELOPER_INSTALL -eq 1 ]; then
 else
   # Fetch a known good version of the XMDS2 source code from sourceforge
   cd $XMDS2_install_directory
-  svn checkout -r 2549 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
+  svn checkout -r 2554 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
 fi
 
 # Compile the Cheetah templates into Python
