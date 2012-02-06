@@ -60,9 +60,9 @@ Alternatively, you can download it from the link above, and type the following i
   bash ./linux_installer
 
 
-This script installs all XMDS dependencies from your native package manager (``apt-get`` for Ubuntu/Debian, ``yum`` for Fedora/Red Hat). The installer should *not* be run with administrative privileges. It will ask you to enter your admin password at the appropriate point. For instructions on how to install XMDS on systems where you lack administrative rights, see :ref:`ManualInstallation`.
+This script installs all XMDS dependencies from your native package manager where possible (``apt-get`` for Ubuntu/Debian, ``yum`` for Fedora/Red Hat) but will download and compile the source code for libraries not available through the package manager. This means you'll need to be connected to the internet when running the installer. The installer should not be run with administrative privileges; it will ask you to enter your admin password at the appropriate point. For instructions on how to install XMDS on systems where you lack administrative rights, see :ref:`ManualInstallation`.
 
-By default, this installer will install a known stable version of XMDS, which can be updated at any time by navigating to the XMDS directory amd typing 'make update'. To install the latest developer version at the beginning, simply run the installer with the "--develop" option.  If your package manager cannot install the required version of FFTW (an important library for doing fast Fourier transforms), it will install a version in your home directory to avoid current or later conflicts with your package manager.
+By default, this installer will install a known stable version of XMDS, which can be updated at any time by navigating to the XMDS directory amd typing 'make update'. To install the latest developer version at the beginning, simply run the installer with the "--develop" option.
 
 Once XMDS has been installed, you can run it from the terminal by typing ``xmds2``. See the :ref:`QuickStartTutorial` for next steps.
 
