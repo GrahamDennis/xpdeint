@@ -30,7 +30,7 @@ echo $reply
 
 echo
 echo
-echo "*** XMDS2 installer v0.3 ***"
+echo "*** XMDS2 installer v0.4 ***"
 echo
 echo "A standard install downloads the XMDS 2.1 version of the code. This"
 echo "is the default."
@@ -69,7 +69,7 @@ fi
 XMDS2_install_directory=$HOME"/XMDS_2.1"
 NUM_CPUS=`cat /proc/cpuinfo | grep processor | wc -l`
 DEVELOPER_INSTALL=0
-HDF5_installed_from_source=0
+XMDS_CONFIGURE_STRING=""
 
 parse_command_line_arguments() {
   for i in $@; do
@@ -186,6 +186,9 @@ install_FFTW() {
   echo "  Copying double precision libraries..."
   make install > /dev/null
 
+  XMDS_CONFIGURE_STRING=$XMDS_CONFIGURE_STRING" --lib-path "$FFTW_install_directory"/lib"
+  XMDS_CONFIGURE_STRING=$XMDS_CONFIGURE_STRING" --include-path "$FFTW_install_directory"/include"
+
   cd $current_directory
   echo
   echo "FFTW installed!"
@@ -194,7 +197,6 @@ install_FFTW() {
 
 
 install_HDF5_from_source() {
-  HDF5_installed_from_source=1
   current_directory=`pwd`
 
   HDF5_install_directory=$XMDS2_install_directory"/hdf5-1.8.8"
@@ -242,6 +244,9 @@ install_HDF5_from_source() {
   echo "  Copying libraries..."
   make install > /dev/null
 
+  XMDS_CONFIGURE_STRING=$XMDS_CONFIGURE_STRING" --lib-path "$HDF5_install_directory"/lib"
+  XMDS_CONFIGURE_STRING=$XMDS_CONFIGURE_STRING" --include-path "$HDF5_install_directory"/include"
+
   cd $current_directory
   echo
   echo "HDF5 installed!"
@@ -277,7 +282,7 @@ echo
 
 if [ $DEB_INSTALL -eq 1 ]; then
   # Begin Debian package install
-  sudo apt-get -y install build-essential libopenmpi-dev openmpi-bin python-setuptools python-cheetah python-pyparsing python-lxml python-numpy python-mpmath libhdf5-serial-dev libgsl0-dev subversion python-sphinx python-h5py wget
+  sudo apt-get -y install build-essential subversion libopenmpi-dev openmpi-bin python-setuptools python-cheetah python-numpy python-pyparsing python-lxml python-mpmath libhdf5-serial-dev libgsl0-dev python-sphinx python-h5py wget
 
   # Find the optimum ATLAS version (i.e. CBLAS implementation) and install it
   # Older versions of Ubuntu offered pre-optimized packages for various architectures,
@@ -351,14 +356,38 @@ fi
 
 # Some distros put MPI libraries and binaries in a location that
 # isn't in the default search path, allowing multiple MPI versions
-# to coexist. Since we need to know where they are in order to compile stuff,
-# find where they are located. The scheme below is annoying and fragile.
-# A better way of doing this would be good.
+# to coexist. This can also happen with the ATLAS CBLAS libraries.
+# Since we need to know where they are in order to compile stuff,
+# find where they are located.
 
+if [ `sudo /sbin/ldconfig -p | grep mpi_cxx.so | grep -v "\.[0-9]" | head --lines=1 | wc -l` -eq 0 ]; then
+  # mpi_cxx lib not in library path
+  MPILIB=`sudo find /usr /lib -name *mpi_cxx.so | head --lines=1`
+  MPILIBDIR=`dirname $MPILIB`
+  XMDS_CONFIGURE_STRING=$XMDS_CONFIGURE_STRING" --lib-path "$MPILIBDIR
+fi
 MPIHEADER=`sudo find /usr -name mpi.h | grep -v "src/linux-headers" | head --lines=1`
-MPILIB=`sudo find /usr /lib -name *mpi_cxx.so | head --lines=1`
 MPIHEADERDIR=`dirname $MPIHEADER`
-MPILIBDIR=`dirname $MPILIB`
+if [ ! $MPIHEADERDIR = "/usr/include" ]; then
+  if [ ! $MPIHEADERDIR = "/usr/local/include" ]; then
+    XMDS_CONFIGURE_STRING=$XMDS_CONFIGURE_STRING" --include-path "$MPIHEADERDIR
+  fi
+fi
+
+if [ `sudo /sbin/ldconfig -p | grep cblas.so | grep -v "\.[0-9]" | grep -v -i gsl | head --lines=1 | wc -l` -eq 0 ]; then
+  # cblas lib not in library path
+  # Find it, and make sure it's not GSL's CBLAS implementation
+  CBLASLIB=`sudo find /usr /lib -name *cblas.so | grep -v -i gsl | head --lines=1`
+  CBLASLIBDIR=`dirname $CBLASLIB`
+  XMDS_CONFIGURE_STRING=$XMDS_CONFIGURE_STRING" --lib-path "$CBLASLIBDIR
+fi
+CBLASHEADER=`sudo find /usr -name cblas.h | grep -v -i gsl | head --lines=1`
+CBLASHEADERDIR=`dirname $CBLASHEADER`
+if [ ! $CBLASHEADERDIR = "/usr/include" ]; then
+  if [ ! $CBLASHEADERDIR = "/usr/local/include" ]; then
+    XMDS_CONFIGURE_STRING=$XMDS_CONFIGURE_STRING" --include-path "$CBLASHEADERDIR
+  fi
+fi
 
 # Install FFTW3.3 from package manager if available, otherwise build from source
 install_FFTW
@@ -374,7 +403,7 @@ if [ $DEVELOPER_INSTALL -eq 1 ]; then
 else
   # Fetch a known good version of the XMDS2 source code from sourceforge
   cd $XMDS2_install_directory
-  svn checkout -r 2557 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
+  svn checkout -r 2558 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
 fi
 
 # Compile the Cheetah templates into Python
@@ -393,7 +422,7 @@ echo
 sudo ./setup.py develop
 
 echo
-echo "Configuring XMDS..."
+echo "Configuring XMDS with configure string: " $XMDS_CONFIGURE_STRING
 echo
 
 # Some distros don't have mpic++ and mpirun in their default executable path, so add a
@@ -423,11 +452,7 @@ fi
 #  xmds2 --reconfigure --lib-path $FFTW_install_directory"/lib" --include-path $FFTW_install_directory"/include" --lib-path $MPILIBDIR --include-path $MPIHEADERDIR
 #fi
 
-if [ $HDF5_installed_from_source -eq 1 ]; then
-  xmds2 --reconfigure --lib-path $FFTW_install_directory"/lib" --include-path $FFTW_install_directory"/include" --lib-path $HDF5_install_directory"/lib" --include-path $HDF5_install_directory"/include" --lib-path $MPILIBDIR --include-path $MPIHEADERDIR
-else
-  xmds2 --reconfigure --lib-path $FFTW_install_directory"/lib" --include-path $FFTW_install_directory"/include" --lib-path $MPILIBDIR --include-path $MPIHEADERDIR
-fi
+xmds2 --reconfigure $XMDS_CONFIGURE_STRING
 
 # Build the HTML documentation
 cd $XMDS2_install_directory"/admin/userdoc-source"
