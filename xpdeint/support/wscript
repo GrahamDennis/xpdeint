@@ -305,7 +305,15 @@ def configure(conf):
             {# ATLAS CBLAS
                 'defines': 'CBLAS_ATLAS',
                 'lib': 'cblas',
-                'header_name': 'cblas.h',
+                'fragment': '''
+                    extern "C" {
+                    #include <cblas.h>
+                    	int main() {
+                    	    void *p=(void*)(cblas_dgemm);
+                    	    return 0;
+                        }
+                    }
+                ''',
                 'msg': "Checking for ATLAS's CBLAS."
             },
             {# GSL CBLAS

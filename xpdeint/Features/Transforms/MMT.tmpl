@@ -37,7 +37,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #elif defined(CBLAS_VECLIB)
   #include <vecLib/cblas.h>
 #elif defined(CBLAS_ATLAS)
-  #include <cblas.h>
+  @# ATLAS CBLAS usually isn't wrapped by an extern "C" block, so we need to.
+  extern "C" {
+    #include <cblas.h>
+  }
 #elif defined(CBLAS_GSL)
   #include <gsl/gsl_cblas.h>
 #endif
