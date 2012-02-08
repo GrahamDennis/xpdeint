@@ -336,7 +336,7 @@ elif [ $RPM_INSTALL -eq 1 ]; then
   if [ `yum info python-lxml | grep python-lxml | wc -l` -gt 0 ]; then
     sudo yum -y install python-lxml
   else
-    sudo easy_install python-lxml
+    sudo easy_install lxml
   fi
 
   if [ `yum info h5py | grep h5py | wc -l` -gt 0 ]; then
@@ -348,7 +348,7 @@ elif [ $RPM_INSTALL -eq 1 ]; then
   if [ `yum info python-mpmath | grep python-mpmath | wc -l` -gt 0 ]; then
     sudo yum -y install python-mpmath
   else
-    sudo easy_install python-mpmath
+    sudo easy_install mpmath
   fi
 
   # End RPM packages install
