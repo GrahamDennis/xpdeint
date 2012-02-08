@@ -167,7 +167,7 @@ install_FFTW() {
   rm -f installer.log > /dev/null
 
   echo "  Compiling FFTW with single precision option..."
-  make -j $NUM_CPUS 1>/dev/null
+  make -j $NUM_CPUS > /dev/null
   
   echo "  Copying single precision libraries..."
   make install > /dev/null
@@ -175,13 +175,13 @@ install_FFTW() {
   # Note: if precision is not specified, FFTW will compile double-precision libs by default
   echo "  Configuring FFTW with double precision option..."
   if [ $NO_COMPILER_SUPPORT_FOR_AVX -eq 1 ]; then
-    ./configure --disable-fortran --enable-mpi --enable-sse2 --prefix=$FFTW_install_directory 1>/dev/null
+    ./configure --disable-fortran --enable-mpi --enable-sse2 --prefix=$FFTW_install_directory > /dev/null
   else
-    ./configure --disable-fortran --enable-mpi --enable-sse2 --enable-avx --prefix=$FFTW_install_directory 1>/dev/null
+    ./configure --disable-fortran --enable-mpi --enable-sse2 --enable-avx --prefix=$FFTW_install_directory > /dev/null
   fi
 
   echo "  Compiling FFTW with double precision option..."
-  make -j $NUM_CPUS 1>/dev/null
+  make -j $NUM_CPUS > /dev/null
 
   echo "  Copying double precision libraries..."
   make install > /dev/null
@@ -239,7 +239,7 @@ install_HDF5_from_source() {
   # The HDF5 compile produces stupid amounts of warnings, so if
   # I echo the error stream to standard out, the user will see pages
   # and pages of scary stuff. Consequently just dump everything to /dev/null
-  make -j $NUM_CPUS > /dev/null
+  make -j $NUM_CPUS 2>&1 > /dev/null
   
   echo "  Copying libraries..."
   make install > /dev/null
