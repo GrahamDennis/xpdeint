@@ -239,7 +239,7 @@ install_HDF5_from_source() {
   # The HDF5 compile produces stupid amounts of warnings, so if
   # I echo the error stream to standard out, the user will see pages
   # and pages of scary stuff. Consequently just dump everything to /dev/null
-  make -j $NUM_CPUS 2>&1 > /dev/null
+  make -j $NUM_CPUS > /dev/null 2>&1
   
   echo "  Copying libraries..."
   make install > /dev/null
