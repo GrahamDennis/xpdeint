@@ -167,7 +167,9 @@ install_FFTW() {
   rm -f installer.log > /dev/null
 
   echo "  Compiling FFTW with single precision option..."
-  make -j $NUM_CPUS > /dev/null
+  # The single precision install produces lots of warnings, so redirect both stdout and
+  # stderror to /dev/null
+  make -j $NUM_CPUS > /dev/null 2>&1
   
   echo "  Copying single precision libraries..."
   make install > /dev/null
@@ -282,7 +284,7 @@ echo
 
 if [ $DEB_INSTALL -eq 1 ]; then
   # Begin Debian package install
-  sudo apt-get -y install build-essential subversion libopenmpi-dev openmpi-bin python-setuptools python-cheetah python-numpy python-pyparsing python-lxml python-mpmath libhdf5-serial-dev libgsl0-dev python-sphinx python-h5py wget
+  sudo apt-get -y install build-essential subversion libopenmpi-dev openmpi-bin python-dev python-setuptools python-cheetah python-numpy python-pyparsing python-lxml python-mpmath libhdf5-serial-dev libgsl0-dev python-sphinx python-h5py wget
 
   # Find the optimum ATLAS version (i.e. CBLAS implementation) and install it
   # Older versions of Ubuntu offered pre-optimized packages for various architectures,
@@ -301,7 +303,7 @@ if [ $DEB_INSTALL -eq 1 ]; then
   # End Debian packages install
 elif [ $RPM_INSTALL -eq 1 ]; then
   # Begin RPM packages install
-  sudo yum -y install gcc gcc-c++ make automake subversion openmpi-devel python-setuptools python-cheetah numpy gsl-devel python-sphinx wget
+  sudo yum -y install gcc gcc-c++ make automake subversion openmpi-devel python-devel python-setuptools python-cheetah numpy gsl-devel python-sphinx wget
   if [ `cat /proc/cpuinfo | grep sse3 |wc -l` -gt 0 ]; then
     sudo yum -y install atlas-sse3-devel
   elif [ `cat /proc/cpuinfo | grep sse2 |wc -l` -gt 0 ]; then
@@ -360,27 +362,32 @@ fi
 # Since we need to know where they are in order to compile stuff,
 # find where they are located.
 
-if [ `sudo /sbin/ldconfig -p | grep mpi_cxx.so | grep -v "\.[0-9]" | head --lines=1 | wc -l` -eq 0 ]; then
-  # mpi_cxx lib not in library path
-  MPILIB=`sudo find /usr /lib -name *mpi_cxx.so | head --lines=1`
-  MPILIBDIR=`dirname $MPILIB`
-  XMDS_CONFIGURE_STRING=$XMDS_CONFIGURE_STRING" --lib-path "$MPILIBDIR
-fi
-MPIHEADER=`sudo find /usr -name mpi.h | grep -v "src/linux-headers" | head --lines=1`
-MPIHEADERDIR=`dirname $MPIHEADER`
-if [ ! $MPIHEADERDIR = "/usr/include" ]; then
-  if [ ! $MPIHEADERDIR = "/usr/local/include" ]; then
-    XMDS_CONFIGURE_STRING=$XMDS_CONFIGURE_STRING" --include-path "$MPIHEADERDIR
-  fi
+ld_search_string=`ld --verbose | grep SEARCH`
+
+# Find the MPI library and see if it's in the linker's search path
+# We need to be able to link to the MPI lib to build fftw
+MPILIB=`sudo find /usr /lib -name *mpi_cxx.so | head --lines=1`
+MPILIBDIR=`dirname $MPILIB`
+
+#if [ `echo $ld_search_string | grep $MPILIBDIR | wc -w` -gt 0 ]; then
+#  # MPI library is in standard linker path, so we don't need the $MPILIB variable
+#  MPILIBDIR=""
+#fi
+
+# Find the MPI header file, and see if it's a standard location
+# Actually we don't seem to need this to build fftw, so forget it
+# MPIHEADER=`sudo find /usr -name mpi.h | grep -v "src/linux-headers" | head --lines=1`
+# MPIHEADERDIR=`dirname $MPIHEADER`
+
+# Find the CBLAS library, and make sure it's not the GSL one
+CBLASLIB=`sudo find /usr /lib -name *cblas.so | grep -v -i gsl | head --lines=1`
+CBLASLIBDIR=`dirname $CBLASLIB`
+if [ `echo $ld_search_string | grep $CBLASLIBDIR | wc -w` -eq 0 ]; then
+  # CBLAS library not in standard linker path
+  # Need to add it to the XMDS configure string
+  XMDS_CONFIGURE_STRING=$XMDS_CONFIGURE_STRING" --include-path "$CBLASHEADERDIR
 fi
 
-if [ `sudo /sbin/ldconfig -p | grep cblas.so | grep -v "\.[0-9]" | grep -v -i gsl | head --lines=1 | wc -l` -eq 0 ]; then
-  # cblas lib not in library path
-  # Find it, and make sure it's not GSL's CBLAS implementation
-  CBLASLIB=`sudo find /usr /lib -name *cblas.so | grep -v -i gsl | head --lines=1`
-  CBLASLIBDIR=`dirname $CBLASLIB`
-  XMDS_CONFIGURE_STRING=$XMDS_CONFIGURE_STRING" --lib-path "$CBLASLIBDIR
-fi
 CBLASHEADER=`sudo find /usr -name cblas.h | grep -v -i gsl | head --lines=1`
 CBLASHEADERDIR=`dirname $CBLASHEADER`
 if [ ! $CBLASHEADERDIR = "/usr/include" ]; then
@@ -403,7 +410,7 @@ if [ $DEVELOPER_INSTALL -eq 1 ]; then
 else
   # Fetch a known good version of the XMDS2 source code from sourceforge
   cd $XMDS2_install_directory
-  svn checkout -r 2558 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
+  svn checkout -r 2562 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
 fi
 
 # Compile the Cheetah templates into Python
