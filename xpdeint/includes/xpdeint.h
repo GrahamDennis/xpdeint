@@ -20,6 +20,15 @@ inline complex::value_type mod2(const complex& _t) { return std::norm(_t); }
 inline complex cis(const real& _t) { return std::polar((real)1.0, _t); }
 
 namespace std {
+  inline Complex<float> operator*(const Complex<float>& a, const double b) { return a*float(b); }
+  inline Complex<float> operator*(const double b, const Complex<float>& a) { return a*float(b); }
+  inline Complex<float> operator/(const Complex<float>& a, const double b) { return a/float(b); }
+  inline Complex<float> operator/(const double b, const Complex<float>& a) { return float(b)/a; }
+  inline Complex<float> operator+(const Complex<float>& a, const double b) { return a + float(b); }
+  inline Complex<float> operator+(const double b, const Complex<float>& a) { return a + float(b); }
+  inline Complex<float> operator-(const Complex<float>& a, const double b) { return a - float(b); }
+  inline Complex<float> operator-(const double b, const Complex<float>& a) { return float(b) - a; }
+
   inline complex operator*(const complex& a, const int b) { return a*complex::value_type(b); }
   inline complex operator*(const int b, const complex& a) { return a*complex::value_type(b); }
   inline complex operator/(const complex& a, const int b) { return a/complex::value_type(b); }
