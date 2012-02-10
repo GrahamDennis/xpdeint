@@ -107,9 +107,13 @@ This specifies the precision of the XMDS2 ``real`` and ``complex`` datatypes, as
 
 Single precision has approximately 7.2 decimal digits of accuracy, with a minimum value of 1.4×10\ :superscript:`-45` and a maximum of 3.8×10\ :superscript:`34`. Double precision has approximately 16 decimal digits of accuracy, a minimum value of 4.9×10\ :superscript:`-324` and a maximum value of 1.8×10\ :superscript:`308`.
 
-Using single precision can be attractive, as it can be more than twice as fast, depending on whether a simulation is CPU bound, memory bandwidth bound, MPI bound or bottlenecked elsewhere. Caution should be exercised, however. Keep in mind how many timesteps your simulation requires, and take note of the tolerance you have set per step, to see if the result will lie within your acceptable total error - seven digit precision isn't a lot. Quite apart from the precision, the range of single precision can often be inadequate for many physical problems. In atomic physics, for example, intermediate values below 1.4×10\ :superscript:`-45` are easily obtained, and will be taken as zero. Similarly, values above 3.8×10\ :superscript:`34` will result in NaNs and make the simulation results invalid.
+Using single precision can be attractive, as it can be more than twice as fast, depending on whether a simulation is CPU bound, memory bandwidth bound, MPI bound or bottlenecked elsewhere, although in some situations you may see no speed-up at all. Caution should be exercised, however. Keep in mind how many timesteps your simulation requires, and take note of the tolerance you have set per step, to see if the result will lie within your acceptable total error - seven digit precision isn't a lot. Quite apart from the precision, the range of single precision can often be inadequate for many physical problems. In atomic physics, for example, intermediate values below 1.4×10\ :superscript:`-45` are easily obtained, and will be taken as zero. Similarly, values above 3.8×10\ :superscript:`34` will result in NaNs and make the simulation results invalid.
+
+Also note that when using an adaptive step integrator, setting a tolerance close to limits of the precision can lead to very slow performance.
 
 A further limitation is that not all the combinations of random number generators and probability distributions that are supported in double precision are supported in single precision. For example, neither the ``solirte`` nor ``dsfmt`` generators support single precision gaussian distributions. The ``posix`` generator will always work, but may be very slow.
+
+WARNING: Single precision mode has not been tested anywhere near as thoroughly as the default double precision mode, and there is a higher chance you will run into bugs.
 
 Example syntax::
 
