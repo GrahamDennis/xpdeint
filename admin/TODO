@@ -1,51 +1,20 @@
-* Add ASCII/binary vector initialisation options
-
 * Add the ability to distribute stochastic simulations using MPI with the scheduling method
-
-* Make sure that all the things that Andy has been doing to enable various simulation
-  parameters can be controlled at simulation run time can be done in xpdeint.
-    - Implemented: <integrate "interval">, <noise "mean-rate"> (for Poissonian), <noise "seed">
-                   and <dimension "domain"> for transverse dimensions. Same as xmds-1?
-                   Pre-processing of arguments works and the example diffusion_arguments.xmds 
-                   shows how this can work.
-    - High priority: <dimension "domain"> for integer dimensions. May not be simple as lattice
-                     and domain are linked. Why do integer dimensions accept both lattice and domain??
-                     GD: For integer dimensions, lattice is optional and is used as a check for the values
-                         provided in 'domain'.
-    - Challenging: <dimension "lattice"> in geometries, and samples (and for integer dimensions)
-                   <integrate "steps"> and <samples>
-    - Weird/low-priority: Number of cycles
-                          Tolerance and cut-off for adaptive algorithms
-    - Any requests?
-
-* Rewrite parser so that it isn't so long. (Ask Gabriel McManus)
 
 * Documentation needs to be written (both user and developer). The developer documentation
   needs to be converted from current straight comments to use docstrings.
 
-* Licenses: The BSD License header needs to be put on all of the source files for this project.
-  I've been very lazy and have just used the default of the text editor I have been using
-  which is simply "copyright (c) Graham Dennis" or the like. My intention is that the whole
-  project should be under BSD (or modified BSD) unless there is some compelling reason why it
-  should be under something else.
-
 * Example library
-
-* Runtime-limiting support (as in xmds-1)
 
 * In adaptive integrators, the ability to set an absolute cutoff (per vector component) in addition to a relative cutoff
   for step-error calculations.
 
-* Check that all bug fixes to xmds-1 since September 1, 2007 have been added to xpdeint. 
-  In particular, I don't think the changes to the adaptive step error-calculation routine have been made.
-  
 * Add a 'moment group 0' which contains simulation constants. 
   This moment group would be zero-d and would contain various constants depending on the
   exact simulation. Constants that should be included are: the final value of the propagation dimension,
    any passed-in arguments, the number of paths (if appropriate), and anything else appropriate.
   - This can be added in the HDF5 output file.
 
-* Add support for moment post-processing. This is only necessary for multi-path simulations where a temporal fourier transform needs to be averaged.  Currently you can probably get around this limitation by using cross-propagation for the integration. I *think* you can have noises in cross-propagation integrators.
+* Add support for moment post-processing. This is only necessary for multi-path simulations where a temporal fourier transform needs to be averaged.
 
 * Rewrite bindNamedVectors/preflight system. It's a mess. bindNamedVectors/preflight should probably be renamed to something like 'localPreflight'/'nonlocalPreflight'.
 
@@ -73,17 +42,7 @@
   - Next priorities: getting fftw3 working and porting the benchmark code...
   - Investigate MinGW GCC 4.3 performance versus Visual Studio performance.
 
-* Permit general Dirichlet boundary conditions to be specified as a special kind of filter that automatically prevents amplitude from
-  straying into these regions. It would also perform optimisations in the looping code to only loop over the parts of the grid that
-  aren't zero. I'm thinking specifically here of the Projected-GPE type things and creating a general optimisation for these kinds of
-  problems where only a small subset of the fourier space is cared about, but the transform is done on the entire grid. The optimisation
-  would probably use something like run-length encoding to determine the parts of the grid that need to be looped over.
-
 * Breakpoint on signal? (e.g. USR1)
-
-Things to be done by AIP:
-* Windows compatibility
-* 'D_' operators (for ease of use by new users)
 
 Testcases needed:
 * MPI with Fourier transforms testing looping over both MPI dimensions with a vector that only has one of the two MPI dimensions.
@@ -93,29 +52,7 @@ Testcases needed:
 * More testcases doing stupid things with loading and dumping of various formats of data, including loading in MPI
   simulations, writing of ascii/binary/HDF5 data and loading of binary/HDF5 data.
 
-* Replace 'space' with the more general notion of 'basis'. Change the transform system to not require transforms to define
-  how to perform every possible transform, but instead just the fundamental operations that can then be chained together as
-  necessary. This will enable more general bases like (r, theta) -> (kr, m) so that nonsymmetric polar problems can be treated
-  naturally. This will also permit the possibility of more than two representations for a given dimension, for example it 
-  could be useful to have a Hermite-Gauss with x, nx and kx representations.
-  A 'basis' is an ordered list of dimensionRepresentations with possible local offsets for the dimReps. The dimReps should have
-  no notion of local offsets or local lattices. Each 'basis' has a unique identifying number, this becomes the equivalent of the
-  'space' number.
-
-* Fix Linux testsuite failures
-
-* Loose geometry matching mode for HDF5.
-
 * xsil2graphics2 needs finishing.
 
 * Trigger support (Ask Michael Hush)
 
-* Things that can be done with the new basis system:
-  - Abel transforms and Fourier transforms for Hermite-Gauss bases
-  - Non-commutative transforms like plane polar and spherical polar
-  - Local transpose operations.
-  - Local transpose operations -- useful for matrix multiplication operations
-    as they are faster when the dimension being transformed is first.
-  - Clean up the way dimension representations and their lattices are specified. (Useful for Hermite-Gauss transforms.)
-
-* Optimisation: IP evolution and renormalisation of FFT's (or other transforms) can be combined in many cases.
