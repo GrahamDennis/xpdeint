@@ -142,10 +142,6 @@ install_FFTW() {
   NO_COMPILER_SUPPORT_FOR_AVX=0  
 
   echo "  Configuring FFTW with single precision option..."
-  if [ $RPM_INSTALL -eq 1 ]; then
-    export CPPFLAGS=$CPPFLAGS" -I"$MPIHEADERDIR
-    export LDFLAGS=$LDFLAGS" -L"$MPILIBDIR
-  fi
 
   ./configure --disable-fortran --enable-mpi --enable-single --enable-sse2 --enable-avx --prefix=$FFTW_install_directory > installer.log
   if [ $? -ne 0 ]; then
