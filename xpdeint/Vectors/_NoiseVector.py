@@ -77,6 +77,7 @@ class _NoiseVector (VectorElement):
         pass # Integer step, so nothing interesting
       elif rep.type == 'real':
         result.append(rep.stepSize)
+        result.append(rep.parent.volumePrefactor)
       else:
         assert False, "Unknown dimension representation type %s" % rep.type
     if not result:
