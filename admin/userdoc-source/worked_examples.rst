@@ -420,7 +420,7 @@ where the noise terms :math:`\eta_j(x,t)` are Wiener noise increments with varia
         <components>Eta</components>
       </noise_vector>
   
-      <vector name="main" initial_basis="x" type="complex">
+      <vector name="main" initial_space="x" type="complex">
         <components>phi</components>
         <initialisation>
           <![CDATA[
@@ -685,7 +685,7 @@ with the added restriction that the derivative is forced to zero outside a certa
         </transverse_dimensions>
       </geometry>
 
-      <vector name="main" initial_basis="x y" type="complex">
+      <vector name="main" initial_space="x y" type="complex">
         <components> W </components>
         <initialisation>
           <![CDATA[
@@ -694,7 +694,7 @@ with the added restriction that the derivative is forced to zero outside a certa
         </initialisation>
       </vector>
 
-      <vector name="dampConstants" initial_basis="x y" type="real">
+      <vector name="dampConstants" initial_space="x y" type="real">
         <components>damping</components>
         <initialisation>
           <![CDATA[
@@ -898,7 +898,7 @@ The code for this simulation is:
         </transverse_dimensions>
       </geometry>
 
-      <vector name="potential" initial_basis="y" type="real">
+      <vector name="potential" initial_space="y" type="real">
         <components> V1 </components>
         <initialisation>
           <![CDATA[
@@ -907,7 +907,7 @@ The code for this simulation is:
         </initialisation>
       </vector>
 
-      <vector name="wavefunction" initial_basis="y" type="complex">
+      <vector name="wavefunction" initial_space="y" type="complex">
         <components> phi </components>
         <initialisation>
           <![CDATA[
@@ -1140,7 +1140,7 @@ where :math:`H_n(u)` are the physicist's version of the Hermite polynomials.  Ra
         </transverse_dimensions>
       </geometry>
   
-      <vector name="wavefunction" initial_basis="x" type="complex">
+      <vector name="wavefunction" initial_space="x" type="complex">
         <components> phi </components>
         <initialisation>
           <![CDATA[

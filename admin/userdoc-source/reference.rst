@@ -81,6 +81,7 @@ Features elements are where simulation-wide options are specified.  There are ma
 
     * :ref:`ErrorCheck`
     * :ref:`Precision`
+    * :ref:`Validation`
 
 .. _ErrorCheck:
 
@@ -450,7 +451,7 @@ Each ``<vector>`` element has a unique name, defined by a ``name`` attribute.  I
 
 A vector can be a group of variables, each defined by name in the ``<components>`` attribute.  The name of each component is the name used to reference it later in the simulation.
 
-Vectors are initialised at the beginning of a simulation, either from code or from an input file.  The basis choice for this initialisation defaults to the normal space as defined in the ``<geometry>`` element, but any transverse dimension can be initialised in their transform basis by specifying them in an ``initial_basis`` attribute.  The ``initial_basis`` attribute lists dimensions either by their name as defined by the ``<geometry>`` element, or by their transformed name.  For example, to initialise a two-dimensional vector defined with ``dimensions="x y"`` in Fourier space for the y-dimension, we would include the attribute ``initial_basis="x ky"``, or just ``initial_basis="ky"``.  
+Vectors are initialised at the beginning of a simulation, either from code or from an input file.  The basis choice for this initialisation defaults to the normal space as defined in the ``<geometry>`` element, but any transverse dimension can be initialised in their transform basis by specifying them in an ``initial_space`` attribute.  The ``initial_space`` attribute lists dimensions either by their name as defined by the ``<geometry>`` element, or by their transformed name.  For example, to initialise a two-dimensional vector defined with ``dimensions="x y"`` in Fourier space for the y-dimension, we would include the attribute ``initial_space="x ky"``, or just ``initial_space="ky"``.  
 
 When initialising the vector within the XMDS script, the appropriate code is placed in a 'CDATA' block inside an ``<initialisation>`` element.  This code is in standard C-syntax, and should reference the components of the vector by name.  If you wish to initialise all the components of the vector as zeros, then it suffices to simply add the attribute ``kind="zero"`` or to omit the ``<initialisation>`` element entirely.  
 
@@ -469,7 +470,7 @@ Example syntax::
         </geometry>
     
         <!-- A one-dimensional vector with dimension 'x' -->
-        <vector name="wavefunction" initial_basis="x" type="complex">
+        <vector name="wavefunction" initial_space="x" type="complex">
             <components> phi </components>
             <initialisation>
                 <![CDATA[
@@ -499,7 +500,7 @@ The dependencies element
 
 Often a vector, computed vector, filter, integration operator or output group will reference the values in one or more other vectors, computed vectors or noise vectors.  These dependencies are defined via a ``<dependencies>`` element, which lists the names of the vectors.  The components of those vectors will then be available for use in the 'CDATA' block, and can be referenced by their name.  
 
-For a vector, the basis of the dependent vectors, and therefore the basis of the dimensions available in the 'CDATA' block, are defined by the ``initial_basis`` of the vector.  For a ``<computed_vector>``, ``<filter>`` ``<integration_vector>``, or moment group vector, the basis of the dependencies can be specified by a ``basis`` attribute in the ``<dependencies>`` element.  For example, ``basis="x ny kz"``.
+For a vector, the basis of the dependent vectors, and therefore the basis of the dimensions available in the 'CDATA' block, are defined by the ``initial_space`` of the vector.  For a ``<computed_vector>``, ``<filter>`` ``<integration_vector>``, or moment group vector, the basis of the dependencies can be specified by a ``basis`` attribute in the ``<dependencies>`` element.  For example, ``basis="x ny kz"``.
 
 Any transverse dimensions that appear in the ``<dependencies>`` element that do not appear in the ``dimensions`` attribute of the vector are integrated out.  For integer dimensions, this is simply an implicit sum over the dimension.  For real-valued dimensions, this is an implicit integral over the range of that dimension.
 
@@ -515,7 +516,7 @@ Example syntax::
         </geometry>
     
         <!-- A one-dimensional vector with dimension 'x' -->
-        <vector name="wavefunction" dimensions="x" initial_basis="x" type="complex">
+        <vector name="wavefunction" dimensions="x" initial_space="x" type="complex">
             <components> phi </components>
             <initialisation>
                 <!-- 
@@ -560,7 +561,7 @@ Computed Vector Element
 
 Computed vectors are arrays of data much like normal ``<vector>`` elements, but they are always calculated as they are referenced, so they cannot be initialised from file.  It is defined with a ``<computed_vector>`` element, which has a ``name`` attribute, optional ``dimensions`` and ``type`` attributes, and a ``<components>`` attribute, just like a ``<vector>`` element.  Instead of an ``<initialisation>`` element, it has an ``<evaluation>`` element that serves the same purpose.  The ``<evaluation>`` element contains a ``<dependencies>`` element (see ``above<Dependencies>``), and a 'CDATA' block containing the code that defines it.
 
-As it is not being stored, a ``<computed_vector>`` does not have or require an ``initial_basis`` attribute, as it will be transformed into an appropriate basis for the element that references it.  The basis for its evaluation will be determined entirely by the ``basis`` attribute of the ``<dependencies>`` element.
+As it is not being stored, a ``<computed_vector>`` does not have or require an ``initial_space`` attribute, as it will be transformed into an appropriate basis for the element that references it.  The basis for its evaluation will be determined entirely by the ``basis`` attribute of the ``<dependencies>`` element.
 
 Example syntax::
 
@@ -605,7 +606,7 @@ Example syntax::
 Noise Vector Element
 ====================
 
-Noise vectors are used like computed vectors, but when they are evaluated they generate arrays of random numbers of various kinds.  They do not depend on other vectors, and are not initialised by code.  They are defined by a ``<noise_vector>`` element, which has a ``name`` attribute, and optional ``dimensions``, ``initial_basis`` and ``type`` attributes, which work identically as for normal vectors.  
+Noise vectors are used like computed vectors, but when they are evaluated they generate arrays of random numbers of various kinds.  They do not depend on other vectors, and are not initialised by code.  They are defined by a ``<noise_vector>`` element, which has a ``name`` attribute, and optional ``dimensions``, ``initial_space`` and ``type`` attributes, which work identically as for normal vectors.  
 
 The choice of pseudo-random number generator (RNG) can be specified with the ``method`` attribute, which has options "posix" (the default), "mkl", "solirte" and "dsfmt".  It is only possible to use any particular method if that library is available.
 
@@ -658,13 +659,13 @@ Example syntax::
 Gaussian noise
 --------------
 
-Noise generated with the "gaussian" method is gaussian distributed with zero mean.  For a real-valued noise vector, the variance at each point is the inverse of the volume element of the transverse dimensions in the vector.  This volume element for a single transverse dimension is that used to perform integrals over that dimension.  For example, it would include a factor of :math:`r^2` for a dimension "r" defined with a ``spherical-bessel`` transform.  It can be non-uniform for dimensions based on non-Fourier transforms, and will include the product of the ``volume_prefactor`` attribute as specified in the :ref:`Geometry<GeometryElement>` element.  The volume element for an integer-type dimension is unity (i.e. where the integral is just a sum).  The volume element for a ``noise_vector`` with multiple dimensions is simply the product of the volume elements of the individual dimensions.
+Noise generated with the "gaussian" method is gaussian distributed with zero mean.  For a real-valued noise vector, the variance at each point is the inverse of the volume element of the transverse dimensions in the vector.  This volume element for a single transverse dimension is that used to perform integrals over that dimension.  For example, it would include a factor of :math:`r^2` for a dimension "r" defined with a ``spherical-bessel`` transform.  It can be non-uniform for dimensions based on non-Fourier transforms, and will include the product of the ``volume_prefactor`` attribute as specified in the :ref:`Geometry<GeometryElement>` element.  The volume element for an integer-type dimension is unity (i.e. where the integral is just an unweighted sum).  The volume element for a ``noise_vector`` with multiple dimensions is simply the product of the volume elements of the individual dimensions.
 
 This lattice-dependent variance is typical in most applications of partial differential equations with stochastic initial conditions, as the physical quantity is the variance of the field over some finite volume, which does not change if the variance at each lattice site varies as described above.
 
 For complex-valued noise vector, the real and imaginary parts of the noise are independent, and each have half the variance of a real-valued noise.  This means that the modulus squared of a complex-valued noise vector has the same variance as a real valued noise vector at each point.
 
-This noise is an example of a "static" noise, i.e. one suitable for initial conditions of a field.  If it were included in the equations of motion for a field, then the effect of the noise would depend on the lattice spacing of the propagation dimension.  XMDS therefore does not allow this noise type to be used in integration elements.
+Gaussian noise vectors are an example of a "static" noise, i.e. one suitable for initial conditions of a field.  If they were included in the equations of motion for a field, then the effect of the noise would depend on the lattice spacing of the propagation dimension.  XMDS therefore does not allow this noise type to be used in integration elements.
 
 Example syntax::
 
@@ -682,6 +683,8 @@ Wiener noise
 
 Noise generated with the "wiener" method is gaussian distributed with zero mean and the same variance as the static "gaussian" noise defined above, multiplied by a factor of the lattice step in the propagation dimension.  This means that these noise vectors can be used to define Wiener noises for standard stochastic ordinary or partial differential equations.  Most integrators in XMDS effectively interpret these noises as Stratonovich increments.
 
+As a dynamic noise, a Wiener process is not well-defined except in an ``integrate`` element.
+
 Example syntax::
 
     <simulation xmds-version="2">
@@ -696,14 +699,37 @@ Example syntax::
 Poissonian noise
 ----------------
 
-A noise vector using the "poissonian" method generates a random variable from a Poissonian distribution.  The 
+A noise vector using the "poissonian" method generates a random variable from a Poissonian distribution.  While the the Poisson distribution is integer-valued, the variable will be cast as a real number.  The rate of the Poissonian distribution is given by the ``mean`` or ``mean-density`` attributes.  These are are synonyms, and must be defined as positive real numbers.  For Poissonian noises defined over real-valued transverse dimensions, the rate is given by the product of this ``mean-density`` attribute and the volume element at that point, taking into account all transverse dimensions, including their ``volume_prefactor`` attributes.
+
+Poissonian noise vectors are an example of a "static" noise, i.e. one suitable for initial conditions of a field.  If they were included in the equations of motion for a field, then the effect of the noise would depend on the lattice spacing of the propagation dimension.  XMDS therefore does not allow this noise type to be used in integration elements.
+
+Example syntax::
+
+    <simulation xmds-version="2">
+        <noise_vector name="initialDistribution" dimensions="x" kind="poissonian" type="real" mean-density="2.7" method="solirte" seed="314 159 276">
+          <components>Pdist</components>
+        </noise_vector>
+    </simulation>
+
 
 .. _jumpNoise:
 
 Jump noise
 ----------
 
+A noise vector using the "jump" method is the dynamic version of the poissonian noise method, and must have the ``mean-rate`` attribute specified as a positive real number.  The variable at each point is chosen from a Poissonian distribution with a mean equal to the product of three variables: the ``mean-rate`` attribute; the volume of the element as defined by its transverse dimensions (including their ``volume_prefactor`` attributes); and the step size in the propagation dimension.  Normally defined in the limit where the noise value is zero almost always, with a few occurrences where it is unity, and none of any higher value, this type of noise is commonly used in differential equations with a Poissonian jump process.
 
+It is common to wish to vary the mean rate of a jump process, which means that the ``mean-rate`` attribute must be a variable or a piece of code.  These cannot be verified to be a positive real number at compile time, so they must be used with the :ref:`<validation><Validation>` feature with either the ``kind="none"`` or ``kind="run-time"`` attributes.
+
+As a dynamic noise, a jump process is not well-defined except in an ``integrate`` element.
+
+Example syntax::
+
+    <simulation xmds-version="2">
+        <noise_vector name="initialDistribution" dimensions="" kind="jump" type="real" mean-rate="2.7" method="solirte" seed="314 159 276">
+          <components>dN</components>
+        </noise_vector>
+    </simulation>
 
 
 
