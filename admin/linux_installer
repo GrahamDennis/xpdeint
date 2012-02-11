@@ -377,7 +377,7 @@ fi
 ld_search_string=`ld --verbose | grep SEARCH`
 
 # Find the CBLAS library, and make sure it's not the GSL one
-CBLASLIB=`sudo find /usr/lib -name *cblas.so | grep -v -i gsl | head --lines=1`
+CBLASLIB=`sudo find /usr/lib* -name *libcblas.so | grep -v -i gsl | head --lines=1`
 CBLASLIBDIR=`dirname $CBLASLIB`
 if [ `echo $ld_search_string | grep $CBLASLIBDIR | wc -w` -eq 0 ]; then
   # CBLAS library not in standard linker path
