@@ -622,7 +622,7 @@ def check(self, *k, **kw):
 
 	ret = self.post_check(*k, **kw)
 	if not ret:
-		self.fatal('The configuration failed %r' % ret)
+		self.fatal('The configuration failed %r kws: %r' % (ret, kw))
 	return ret
 
 class test_exec(Task.Task):
@@ -645,6 +645,8 @@ class test_exec(Task.Task):
 				self.generator.bld.retval = self.generator.bld.cmd_and_log([self.inputs[0].abspath()], env=env)
 			else:
 				self.generator.bld.retval = self.generator.bld.exec_command([self.inputs[0].abspath()], env=env)
+		if self.generator.bld.logger:
+			self.generator.bld.logger.debug('test_exec: retval = %r' % self.generator.bld.retval)
 
 @feature('test_exec')
 @after_method('apply_link')

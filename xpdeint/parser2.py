@@ -142,6 +142,7 @@ def main(argv=None):
                       "reconfigure",
                       "include-path=",
                       "lib-path=",
+                      "waf-verbose"
                     ]
       )
       del sys.argv[1:]
@@ -160,6 +161,8 @@ def main(argv=None):
         debug = verbose = True
       elif option in ('-v', '--verbose'):
         verbose = True
+      elif option == "--waf-verbose":
+        Configuration.Logs.verbose = 3
       elif option in ("-h", "--help"):
         raise Usage(help_message)
       elif option in ("-o", "--output"):
