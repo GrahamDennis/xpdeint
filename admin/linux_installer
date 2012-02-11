@@ -452,20 +452,6 @@ echo
 echo "Configuring XMDS with configure string: " $XMDS_CONFIGURE_STRING
 echo
 
-# Some distros don't have mpic++ and mpirun in their default executable path, so add a
-# static link to it if necessary. Need to do this before calling xmds2 --reconfigure
-if [ `which mpic++ | wc -l` -eq 0 ]; then
-  MPICPPPATH=`sudo find /usr /etc -name mpic++ | head --lines=1`
-  echo; echo "Creating symbolic link to $MPICPPPATH"; echo
-  sudo ln -s $MPICPPPATH /usr/bin/mpic++
-fi
-
-if [ `which mpirun | wc -l` -eq 0 ]; then
-  MPIRUNPATH=`sudo find /usr /etc /sbin -name mpirun | head --lines=1`
-  echo; echo "Creating symbolic link to $MPIRUNPATH"; echo
-  sudo ln -s $MPIRUNPATH /usr/bin/mpirun
-fi
-
 # Some distros don't have the MPI libs in their library path so tell XMDS where to find them
 # Also tell XMDS where the version of FFTW we just installed is, if it wasn't installed
 # via the package manager
