@@ -403,7 +403,7 @@ if [ `which mpicc | wc -l` -eq 0 ]; then
         COMPLETION_MESSAGE="You must add the line 'load_openmpi' to the end of your login script (probably ~/.bashrc) to use MPI."
     elif [ `which module | wc -l` -eq 1 ]; then
         module load mpi;
-        COMPLETION_MESSAGE"You must add the line 'module load mpi' to the end of your login script (probably ~/.bashrc) to use MPI."
+        COMPLETION_MESSAGE="You must add the line 'module load mpi' to the end of your login script (probably ~/.bashrc) to use MPI."
     fi
 fi
 
