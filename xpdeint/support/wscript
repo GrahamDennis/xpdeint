@@ -37,7 +37,6 @@ def configure(conf):
     
     def check_cxx(**KWs):
         KWs['execute'] = True
-        KWs['returncode'] = True
         KWs['mandatory'] = False
         def listOption(var):
           if isinstance(var, str):
@@ -57,8 +56,6 @@ def configure(conf):
         result = conf.check_cxx(**KWs) not in [None, False]
         if result and 'uselib_store' in KWs:
             conf.env.append_unique('uselib', KWs['uselib_store'])
-            if 'header_name' in KWs:
-                conf.env.append_unique('HEADER_%s' % KWs['uselib_store'], KWs['header_name'])
         return result
     
     def try_options(uselib_store, kwOptions, common = None):
