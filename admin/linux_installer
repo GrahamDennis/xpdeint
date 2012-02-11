@@ -299,7 +299,7 @@ if [ $DEB_INSTALL -eq 1 ]; then
   # End Debian packages install
 elif [ $RPM_INSTALL -eq 1 ]; then
   # Begin RPM packages install
-  sudo yum -y install gcc gcc-c++ make automake subversion openmpi-devel python-devel python-setuptools python-cheetah numpy gsl-devel python-sphinx wget libxml2-devel
+  sudo yum -y install gcc gcc-c++ make automake subversion openmpi-devel python-devel python-setuptools python-cheetah numpy gsl-devel python-sphinx wget libxml2-devel libxslt-devel
   if [ `cat /proc/cpuinfo | grep sse3 |wc -l` -gt 0 ]; then
     sudo yum -y install atlas-sse3-devel
   elif [ `cat /proc/cpuinfo | grep sse2 |wc -l` -gt 0 ]; then
