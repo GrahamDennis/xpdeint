@@ -364,28 +364,13 @@ fi
 
 ld_search_string=`ld --verbose | grep SEARCH`
 
-# Find the MPI library and see if it's in the linker's search path
-# We need to be able to link to the MPI lib to build fftw
-MPILIB=`sudo find /usr /lib -name *mpi_cxx.so | head --lines=1`
-MPILIBDIR=`dirname $MPILIB`
-
-#if [ `echo $ld_search_string | grep $MPILIBDIR | wc -w` -gt 0 ]; then
-#  # MPI library is in standard linker path, so we don't need the $MPILIB variable
-#  MPILIBDIR=""
-#fi
-
-# Find the MPI header file, and see if it's a standard location
-# Actually we don't seem to need this to build fftw, so forget it
-# MPIHEADER=`sudo find /usr -name mpi.h | grep -v "src/linux-headers" | head --lines=1`
-# MPIHEADERDIR=`dirname $MPIHEADER`
-
 # Find the CBLAS library, and make sure it's not the GSL one
 CBLASLIB=`sudo find /usr /lib -name *cblas.so | grep -v -i gsl | head --lines=1`
 CBLASLIBDIR=`dirname $CBLASLIB`
 if [ `echo $ld_search_string | grep $CBLASLIBDIR | wc -w` -eq 0 ]; then
   # CBLAS library not in standard linker path
   # Need to add it to the XMDS configure string
-  XMDS_CONFIGURE_STRING=$XMDS_CONFIGURE_STRING" --include-path "$CBLASHEADERDIR
+  XMDS_CONFIGURE_STRING=$XMDS_CONFIGURE_STRING" --lib-path "$CBLASLIBDIR
 fi
 
 CBLASHEADER=`sudo find /usr -name cblas.h | grep -v -i gsl | head --lines=1`
