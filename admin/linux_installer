@@ -392,6 +392,30 @@ if [ ! $CBLASHEADERDIR = "/usr/include" ]; then
   fi
 fi
 
+# Some distros don't have mpicc, mpic++ and mpirun in their default executable path, so add a
+# symbolic link to it if necessary. 
+# Need mpic++ before calling xmds2 --reconfigure
+# Need mpicc before calling fftw's ./configure
+if [ `which mpicc | wc -l` -eq 0 ]; then
+  MPICCPATH=`sudo find /usr /etc -name mpicc | head --lines=1`
+  echo; echo "Creating symbolic link to $MPICCPATH"; echo
+  sudo ln -s $MPICCPATH /usr/bin/mpicc
+fi
+
+if [ `which mpic++ | wc -l` -eq 0 ]; then
+  MPICPPPATH=`sudo find /usr /etc -name mpic++ | head --lines=1`
+  echo; echo "Creating symbolic link to $MPICPPPATH"; echo
+  sudo ln -s $MPICPPPATH /usr/bin/mpic++
+fi
+
+if [ `which mpirun | wc -l` -eq 0 ]; then
+  MPIRUNPATH=`sudo find /usr /etc /sbin -name mpirun | head --lines=1`
+  echo; echo "Creating symbolic link to $MPIRUNPATH"; echo
+  sudo ln -s $MPIRUNPATH /usr/bin/mpirun
+fi
+
+
+
 # Install FFTW3.3 from package manager if available, otherwise build from source
 install_FFTW
 
