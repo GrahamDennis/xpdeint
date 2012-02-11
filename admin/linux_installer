@@ -340,7 +340,11 @@ elif [ $RPM_INSTALL -eq 1 ]; then
   if [ `yum info h5py | grep h5py | wc -l` -gt 0 ]; then
     sudo yum -y install h5py
   else
-    sudo easy_install h5py
+    if [ -z $HDF5_install_directory ]; then
+      sudo easy_install h5py
+    else
+      sudo /bin/bash -c "export HDF5_DIR=${HDF5_install_directory}; easy_install h5py;"
+    fi
   fi
 
   if [ `yum info python-mpmath | grep python-mpmath | wc -l` -gt 0 ]; then
