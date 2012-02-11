@@ -393,28 +393,19 @@ if [ ! $CBLASHEADERDIR = "/usr/include" ]; then
   fi
 fi
 
-# Some distros don't have mpicc, mpic++ and mpirun in their default executable path, so add a
-# symbolic link to it if necessary. 
-# Need mpic++ before calling xmds2 --reconfigure
-# Need mpicc before calling fftw's ./configure
+# Some distros don't have mpicc, mpic++ and mpirun in their default executable path, so we need to do stuff
+# to be able to use it. The user also must do stuff.
 if [ `which mpicc | wc -l` -eq 0 ]; then
-  MPICCPATH=`sudo find /usr /etc -name mpicc | head --lines=1`
-  echo; echo "Creating symbolic link to $MPICCPATH"; echo
-  sudo ln -s $MPICCPATH /usr/bin/mpicc
+    # On some RedHat systems, we need to source /etc/profile.d/openmpi.sh
+    if [ -r /etc/profile.d/openmpi.sh ]; then
+        source /etc/profile.d/openmpi.sh;
+        load_openmpi;
+        COMPLETION_MESSAGE="You must add the line 'load_openmpi' to the end of your login script (probably ~/.bashrc) to use MPI."
+    elif [ `which module | wc -l` -eq 1 ]; then
+        module load mpi;
+        COMPLETION_MESSAGE"You must add the line 'module load mpi' to the end of your login script (probably ~/.bashrc) to use MPI."
+    fi
 fi
-
-if [ `which mpic++ | wc -l` -eq 0 ]; then
-  MPICPPPATH=`sudo find /usr /etc -name mpic++ | head --lines=1`
-  echo; echo "Creating symbolic link to $MPICPPPATH"; echo
-  sudo ln -s $MPICPPPATH /usr/bin/mpic++
-fi
-
-if [ `which mpirun | wc -l` -eq 0 ]; then
-  MPIRUNPATH=`sudo find /usr /etc /sbin -name mpirun | head --lines=1`
-  echo; echo "Creating symbolic link to $MPIRUNPATH"; echo
-  sudo ln -s $MPIRUNPATH /usr/bin/mpirun
-fi
-
 
 
 # Install FFTW3.3 from package manager if available, otherwise build from source
@@ -482,5 +473,5 @@ echo "Release notes and instructions can be found in" $XMDS2_install_directory
 echo
 echo "You can always update to the latest version of XMDS at any time by running \"make update\" "
 echo "in the top level XMDS_2.1 directory."
-
+echo ${COMPLETION_MESSAGE}
 
