@@ -451,7 +451,7 @@ Each ``<vector>`` element has a unique name, defined by a ``name`` attribute.  I
 
 A vector can be a group of variables, each defined by name in the ``<components>`` attribute.  The name of each component is the name used to reference it later in the simulation.
 
-Vectors are initialised at the beginning of a simulation, either from code or from an input file.  The basis choice for this initialisation defaults to the normal space as defined in the ``<geometry>`` element, but any transverse dimension can be initialised in their transform basis by specifying them in an ``initial_space`` attribute.  The ``initial_space`` attribute lists dimensions either by their name as defined by the ``<geometry>`` element, or by their transformed name.  For example, to initialise a two-dimensional vector defined with ``dimensions="x y"`` in Fourier space for the y-dimension, we would include the attribute ``initial_space="x ky"``, or just ``initial_space="ky"``.  
+Vectors are initialised at the beginning of a simulation, either from code or from an input file.  The basis choice for this initialisation defaults to the normal space as defined in the ``<geometry>`` element, but any transverse dimension can be initialised in their transform basis by specifying them in an ``initial_basis`` attribute.  The ``initial_basis`` attribute lists dimensions either by their name as defined by the ``<geometry>`` element, or by their transformed name.  For example, to initialise a two-dimensional vector defined with ``dimensions="x y"`` in Fourier space for the y-dimension, we would include the attribute ``initial_basis="x ky"``, or just ``initial_basis="ky"``.  
 
 When initialising the vector within the XMDS script, the appropriate code is placed in a 'CDATA' block inside an ``<initialisation>`` element.  This code is in standard C-syntax, and should reference the components of the vector by name.  If you wish to initialise all the components of the vector as zeros, then it suffices to simply add the attribute ``kind="zero"`` or to omit the ``<initialisation>`` element entirely.  
 
@@ -470,7 +470,7 @@ Example syntax::
         </geometry>
     
         <!-- A one-dimensional vector with dimension 'x' -->
-        <vector name="wavefunction" initial_space="x" type="complex">
+        <vector name="wavefunction" initial_basis="x" type="complex">
             <components> phi </components>
             <initialisation>
                 <![CDATA[
@@ -500,7 +500,7 @@ The dependencies element
 
 Often a vector, computed vector, filter, integration operator or output group will reference the values in one or more other vectors, computed vectors or noise vectors.  These dependencies are defined via a ``<dependencies>`` element, which lists the names of the vectors.  The components of those vectors will then be available for use in the 'CDATA' block, and can be referenced by their name.  
 
-For a vector, the basis of the dependent vectors, and therefore the basis of the dimensions available in the 'CDATA' block, are defined by the ``initial_space`` of the vector.  For a ``<computed_vector>``, ``<filter>`` ``<integration_vector>``, or moment group vector, the basis of the dependencies can be specified by a ``basis`` attribute in the ``<dependencies>`` element.  For example, ``basis="x ny kz"``.
+For a vector, the basis of the dependent vectors, and therefore the basis of the dimensions available in the 'CDATA' block, are defined by the ``initial_basis`` of the vector.  For a ``<computed_vector>``, ``<filter>`` ``<integration_vector>``, or moment group vector, the basis of the dependencies can be specified by a ``basis`` attribute in the ``<dependencies>`` element.  For example, ``basis="x ny kz"``.
 
 Any transverse dimensions that appear in the ``<dependencies>`` element that do not appear in the ``dimensions`` attribute of the vector are integrated out.  For integer dimensions, this is simply an implicit sum over the dimension.  For real-valued dimensions, this is an implicit integral over the range of that dimension.
 
@@ -516,7 +516,7 @@ Example syntax::
         </geometry>
     
         <!-- A one-dimensional vector with dimension 'x' -->
-        <vector name="wavefunction" dimensions="x" initial_space="x" type="complex">
+        <vector name="wavefunction" dimensions="x" initial_basis="x" type="complex">
             <components> phi </components>
             <initialisation>
                 <!-- 
@@ -561,7 +561,7 @@ Computed Vector Element
 
 Computed vectors are arrays of data much like normal ``<vector>`` elements, but they are always calculated as they are referenced, so they cannot be initialised from file.  It is defined with a ``<computed_vector>`` element, which has a ``name`` attribute, optional ``dimensions`` and ``type`` attributes, and a ``<components>`` attribute, just like a ``<vector>`` element.  Instead of an ``<initialisation>`` element, it has an ``<evaluation>`` element that serves the same purpose.  The ``<evaluation>`` element contains a ``<dependencies>`` element (see ``above<Dependencies>``), and a 'CDATA' block containing the code that defines it.
 
-As it is not being stored, a ``<computed_vector>`` does not have or require an ``initial_space`` attribute, as it will be transformed into an appropriate basis for the element that references it.  The basis for its evaluation will be determined entirely by the ``basis`` attribute of the ``<dependencies>`` element.
+As it is not being stored, a ``<computed_vector>`` does not have or require an ``initial_basis`` attribute, as it will be transformed into an appropriate basis for the element that references it.  The basis for its evaluation will be determined entirely by the ``basis`` attribute of the ``<dependencies>`` element.
 
 Example syntax::
 
@@ -606,7 +606,7 @@ Example syntax::
 Noise Vector Element
 ====================
 
-Noise vectors are used like computed vectors, but when they are evaluated they generate arrays of random numbers of various kinds.  They do not depend on other vectors, and are not initialised by code.  They are defined by a ``<noise_vector>`` element, which has a ``name`` attribute, and optional ``dimensions``, ``initial_space`` and ``type`` attributes, which work identically as for normal vectors.  
+Noise vectors are used like computed vectors, but when they are evaluated they generate arrays of random numbers of various kinds.  They do not depend on other vectors, and are not initialised by code.  They are defined by a ``<noise_vector>`` element, which has a ``name`` attribute, and optional ``dimensions``, ``initial_basis`` and ``type`` attributes, which work identically as for normal vectors.  
 
 The choice of pseudo-random number generator (RNG) can be specified with the ``method`` attribute, which has options "posix" (the default), "mkl", "solirte" and "dsfmt".  It is only possible to use any particular method if that library is available.
 
