@@ -39,7 +39,7 @@ const real _old_volume = (${noiseVector.spatiallyIndependentVolumeElement} * _ol
   @capture loopString
     @silent nonUniformDimReps = noiseVector.nonUniformDimReps
     @if nonUniformDimReps
-      @set volumeFixup = ' * '.join('%s * (%s)' % (dimRep.stepSize, dimRep.parent.volumePrefactor) for dimRep in nonUniformDimReps)
+      @set volumeFixup = ' * '.join('%s * (%s)' % (dimRep.stepSize, dimRep.volumePrefactor) for dimRep in nonUniformDimReps)
       @set varFixup = ' / (' + volumeFixup + ')'
       @set volumeFixup = ' * ' + volumeFixup
     @else
@@ -70,17 +70,19 @@ const real _dVdt = ${noiseVector.spatiallyIndependentVolumeElement}@slurp
  * _step@slurp
   @end if
 ;
+const real _var = 1.0 / _dVdt;
   @capture loopString
-   @silent nonUniformDimReps = noiseVector.nonUniformDimReps
-      @if nonUniformDimReps
-        @set nonUniformComponentsOfVolume = ''.join(' * %s' % (dimRep.stepSize) for dimRep in nonUniformDimReps)
-      @end if
+    @silent nonUniformDimReps = noiseVector.nonUniformDimReps
+    @if nonUniformDimReps
+      @set volumeFixup = ' * '.join('%s * (%s)' % (dimRep.stepSize, dimRep.volumePrefactor) for dimRep in nonUniformDimReps)
+      @set varFixup = ' / (' + volumeFixup + ')'
+      @set volumeFixup = ' * ' + volumeFixup
+    @else
+      @set volumeFixup = ''
+      @set varFixup = ''
+    @end if
     @for component in noiseVector.components
-${component} = _poidev_${noiseVector.id}(${noiseMeanRate} * _dVdt${nonUniformComponentsOfVolume} )@slurp
- @if not noiseVector.static:
-/_step@slurp
- @end if
-;
+${component} = _var${varFixup} * _poidev_${noiseVector.id}(${noiseMeanRate} * _dVdt${volumeFixup});
     @end for
   @end capture
 ${loopOverFieldInBasisWithVectorsAndInnerContent(noiseVector.field, noiseVector.initialBasis, [noiseVector], loopString)}@slurp

@@ -156,6 +156,7 @@ class _DimensionRepresentation(ScriptElement):
   def loopIndex(self):
     return '_index_' + self.name
   
+  @property
   def volumePrefactor(self):
       return self.parent.volumePrefactor
   

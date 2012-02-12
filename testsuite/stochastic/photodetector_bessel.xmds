@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="photodetector_bessel.xsil" expected="photodetector_bessel_expected.xsil" absolute_tolerance="4e-5" relative_tolerance="4e-5" />
+  </testing>
+
+  <name>photodetector_bessel</name>
+  <author>Graham Dennis</author>
+  <description>
+    Example poissonian noise simulation
+  </description>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+        <dimension name="x" domain="(0, 1)" lattice="100" transform="bessel" volume_prefactor="2.0*M_PI" />
+    </transverse_dimensions>
+  </geometry>
+
+  <noise_vector name="noises" kind="jump" mean-rate="10.0" type="real" method="posix" seed="314 159 276">
+      <!-- A mean rate of 10 per volume. This means that over 10 time units and an area of pi * 1^2, we expect 314.15... 
+           total events on average -->
+        <components>nn</components>
+  </noise_vector>
+  
+  <vector name="main" type="real">
+    <components> rho </components>
+    <initialisation>
+      <![CDATA[
+        rho = 0.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="RK4" interval="10" steps="1000">
+      <samples>1000 100</samples>
+      <operators>
+        <integration_vectors>main</integration_vectors>
+        <dependencies>noises</dependencies>
+        <![CDATA[
+          drho_dt = nn;
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  <output format="hdf5" filename="photodetector_bessel.xsil">
+    <group>
+      <sampling basis="x(0)" initial_sample="yes">
+        <moments>Ndet</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          Ndet = rho;
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling basis="x" initial_sample="yes">
+        <moments>dens</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          dens = rho;
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>

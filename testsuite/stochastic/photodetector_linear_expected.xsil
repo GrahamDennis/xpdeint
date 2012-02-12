@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="photodetector_linear.xsil" expected="photodetector_linear_expected.xsil" absolute_tolerance="4e-5" relative_tolerance="4e-5" />
+  </testing>
+
+  <name>photodetector_linear</name>
+  <author>Graham Dennis</author>
+  <description>
+    Example poissonian noise simulation
+  </description>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+        <dimension name="x" domain="(-1, 1)" lattice="100" />
+    </transverse_dimensions>
+  </geometry>
+
+  <noise_vector name="noises" kind="jump" mean-rate="5.0" type="real" method="posix" seed="314 159 276">
+        <components>nn</components>
+  </noise_vector>
+  
+  <vector name="main" type="real">
+    <components> rho </components>
+    <initialisation>
+      <![CDATA[
+        rho = 0.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="RK4" interval="10" steps="1000">
+      <samples>1000 100</samples>
+      <operators>
+        <integration_vectors>main</integration_vectors>
+        <dependencies>noises</dependencies>
+        <![CDATA[
+          drho_dt = nn;
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  <output format="hdf5" filename="photodetector_linear.xsil">
+    <group>
+      <sampling basis="x(0)" initial_sample="yes">
+        <moments>Ndet</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          Ndet = rho;
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling basis="x" initial_sample="yes">
+        <moments>dens</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          dens = rho;
+        ]]>
+      </sampling>
+    </group>
+  </output>
+
+<info>
+Script compiled with XMDS2 version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+See http://www.xmds.org for more information.
+</info>
+
+<XSIL Name="moment_group_1">
+  <Param Name="n_independent">1</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>2</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t Ndet 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>1001</Dim>
+    <Dim>2</Dim>
+    <Stream><Metalink Format="HDF5" Type="Remote" Group="/1"/>
+photodetector_linear_expected.h5
+    </Stream>
+  </Array>
+</XSIL>
+
+<XSIL Name="moment_group_2">
+  <Param Name="n_independent">2</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>3</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t x dens 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>101</Dim>
+    <Dim>100</Dim>
+    <Dim>3</Dim>
+    <Stream><Metalink Format="HDF5" Type="Remote" Group="/2"/>
+photodetector_linear_expected.h5
+    </Stream>
+  </Array>
+</XSIL>
+</simulation>
