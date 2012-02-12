@@ -96,22 +96,6 @@ parse_command_line_arguments() {
 
 install_FFTW() {
 
-  # If version 3.3 of FFTW is available in the repos, use the package manager.
-  # If it isn't, install it locally from source under the user's home directory.
-  # Comment this code out until a distro actually includes fftw 3.3 in their
-  # repository so I can test it, and make sure it comes with both single and
-  # double precision libraries, and uses all the compile flags like mpi and avx
-  #if [ DEB_INSTALL -eq 1 ]; then
-  #  if [ `apt-cache policy libfftw3-dev | grep -i Candidate | grep 3.3 | wc -l -gt 0` ]; then
-  #    sudo apt-get -y install libfftw3-dev
-  #    $FFTW_install_directory=""
-  #    return
-  #  fi
-  #else
-  #  # Not sure how to handle rpms yet
-  #  # $FFTW_install_directory=""
-  #fi   
-
   # FFTW 3.3 wasn't in the repos, so install manually from source
   current_directory=`pwd`
 
@@ -269,10 +253,14 @@ if [ ! -z $reply ]; then
   XMDS2_install_directory=$reply
 fi
 
-# check if XMDS directory exists
+# check if XMDS directory exists, if not create it
 if [ ! -d $XMDS2_install_directory ]; then
   mkdir $XMDS2_install_directory
 fi
+
+# Create wisdom directory to stop XMDS warning that it can't find it
+# each time a script is run
+mkdir -p ~/.xmds/wisdom
 
 echo
 echo "Installing required packages..."
@@ -422,7 +410,7 @@ if [ $DEVELOPER_INSTALL -eq 1 ]; then
 else
   # Fetch a known good version of the XMDS2 source code from sourceforge
   cd $XMDS2_install_directory
-  svn checkout -r 2562 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
+  svn checkout -r 2585 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
 fi
 
 # Compile the Cheetah templates into Python
@@ -443,19 +431,6 @@ sudo ./setup.py develop
 echo
 echo "Configuring XMDS with configure string: " $XMDS_CONFIGURE_STRING
 echo
-
-# Some distros don't have the MPI libs in their library path so tell XMDS where to find them
-# Also tell XMDS where the version of FFTW we just installed is, if it wasn't installed
-# via the package manager
-# Again, comment this code out until I actually have a distro that has fftw 3.3 in its
-# repository so I can test the code works
-#if [ $FFTW_install_directory="" ]
-#  # FFTW installed via package manager
-#  xmds2 --reconfigure --lib-path $MPILIBDIR --include-path $MPIHEADERDIR
-#else
-#  # FFTW installed from source under the user's directory
-#  xmds2 --reconfigure --lib-path $FFTW_install_directory"/lib" --include-path $FFTW_install_directory"/include" --lib-path $MPILIBDIR --include-path $MPIHEADERDIR
-#fi
 
 xmds2 --reconfigure $XMDS_CONFIGURE_STRING
 
