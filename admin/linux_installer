@@ -388,10 +388,10 @@ if [ `which mpicc | wc -l` -eq 0 ]; then
     if [ -r /etc/profile.d/openmpi.sh ]; then
         source /etc/profile.d/openmpi.sh;
         load_openmpi;
-        COMPLETION_MESSAGE="You must add the line 'load_openmpi' to the end of your login script (probably ~/.bashrc) to use MPI."
+        COMPLETION_MESSAGE="\nYou must add the line 'load_openmpi' to the end of your login script (probably ~/.bashrc) to use MPI.\n"
     elif [ `which modulecmd | wc -l` -eq 1 ]; then
         module load mpi;
-        COMPLETION_MESSAGE="You must add the line 'module load mpi' to the end of your login script (probably ~/.bashrc) to use MPI."
+        COMPLETION_MESSAGE="\nYou must add the line 'module load mpi' to the end of your login script (probably ~/.bashrc) to use MPI.\n"
     fi
 fi
 
@@ -410,7 +410,7 @@ if [ $DEVELOPER_INSTALL -eq 1 ]; then
 else
   # Fetch a known good version of the XMDS2 source code from sourceforge
   cd $XMDS2_install_directory
-  svn checkout -r 2585 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
+  svn checkout -r 2586 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
 fi
 
 # Compile the Cheetah templates into Python
@@ -438,6 +438,28 @@ xmds2 --reconfigure $XMDS_CONFIGURE_STRING
 cd $XMDS2_install_directory"/admin/userdoc-source"
 make html
 
+# Fedora uses an OpenMPI library that assumes infiniband support. This 
+# results in warnings when MPI-enabled scripts are run. Inform the user
+# that these warnings can be killed if they really don't have the hardware
+if [ $RPM_INSTALL -eq 1 ]; then
+  # If the user doesn't have at least 2 processors they're not going to use MPI
+  if [ $NUM_CPUS -gt 1 ]; then
+    cd $XMDS2_install_directory"/examples"
+    xmds2 diffusion_mpi.xmds > /dev/null 2>&1
+    mpirun -np 2 diffusion_mpi > mpi_test_log 2>&1
+    if [ `grep "unable to find any relevant network interfaces" mpi_test_log | wc -l` -gt 0 ]; then
+      OMPI_CONF_FILE=`sudo find /etc -name openmpi-mca-params.conf | head --lines=1`
+      COMPLETION_MESSAGE=$COMPLETION_MESSAGE"Your machine appears to lack Infiniband hardware, which means if you run\n"
+      COMPLETION_MESSAGE=$COMPLETION_MESSAGE"MPI-enabled XMDS2 scripts you will get warnings that the hardware can't be\n"
+      COMPLETION_MESSAGE=$COMPLETION_MESSAGE"found. If you know your machine doesn't have such hardware, it is safe to\n"
+      COMPLETION_MESSAGE=$COMPLETION_MESSAGE"disable these warnings now by entering\n"
+      COMPLETION_MESSAGE=$COMPLETION_MESSAGE"sudo sh -c \"echo 'btl = ^openib' >> "$OMPI_CONF_FILE"\"\n"
+    fi
+  fi
+fi
+
+rm mpi_test_log
+
 echo
 echo "If no errors are displayed above, XMDS 2.1 is installed!"
 echo
@@ -448,5 +470,8 @@ echo "Release notes and instructions can be found in" $XMDS2_install_directory
 echo
 echo "You can always update to the latest version of XMDS at any time by running \"make update\" "
 echo "in the top level XMDS_2.1 directory."
-echo ${COMPLETION_MESSAGE}
+echo
+echo "NOTES ON YOUR PARTICULAR INSTALL:"
+echo
+echo -e ${COMPLETION_MESSAGE}
 
