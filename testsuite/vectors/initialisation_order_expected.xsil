@@ -53,7 +53,7 @@
     </transverse_dimensions>
   </geometry>
   
-  <vector name="potential" initial_space="z" type="complex">
+  <vector name="potential" initial_basis="z" type="complex">
     <components>V</components>
     <initialisation>
       <![CDATA[
@@ -62,7 +62,7 @@
     </initialisation>
   </vector>
   
-  <vector name="wavefunction" initial_space="z" type="complex">
+  <vector name="wavefunction" initial_basis="z" type="complex">
     <components>
       phi1 phi0
     </components>

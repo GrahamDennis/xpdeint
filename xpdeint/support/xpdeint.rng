@@ -252,6 +252,9 @@
       <attribute name="initial_space"/>
     </optional>
     <optional>
+      <attribute name="initial_basis"/>
+    </optional>
+    <optional>
       <attribute name="type"/>
     </optional>
     <element name="components">

@@ -32,7 +32,7 @@
     </transverse_dimensions>
   </geometry>
   
-  <vector name="main" initial_space="x" type="complex">
+  <vector name="main" initial_basis="x" type="complex">
     <components>
       u uDot
     </components>
@@ -43,7 +43,7 @@
       ]]>
     </initialisation>
   </vector>
-  <vector name="boundary" initial_space="x" type="real">
+  <vector name="boundary" initial_basis="x" type="real">
     <components>
       bc
     </components>

@@ -38,7 +38,7 @@
     <components>p_1 p_2</components>
   </noise_vector>
 
-  <vector name="main" initial_space="x" type="complex">
+  <vector name="main" initial_basis="x" type="complex">
     <components>phi psi</components>
     <initialisation>
         <dependencies>fuzzyInitial</dependencies>

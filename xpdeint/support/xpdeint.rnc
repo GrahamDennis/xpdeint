@@ -117,6 +117,7 @@ VectorCommon =
     attribute name { text }
     , attribute dimensions { text }?
     , attribute initial_space { text }?
+	, attribute initial_basis { text }?
     , attribute type { text }?
     , element components { text }
 

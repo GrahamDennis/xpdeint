@@ -24,7 +24,7 @@
     </globals>
   </features>
   
-  <vector name="wavefunction" initial_space="x" type="complex">
+  <vector name="wavefunction" initial_basis="x" type="complex">
     <components>psi</components>
     <initialisation>
       <![CDATA[

@@ -33,7 +33,7 @@
     </transverse_dimensions>
   </geometry>
   
-  <vector name="main" initial_space="x" type="double">
+  <vector name="main" initial_basis="x" type="double">
     <components>
       u uDot
     </components>

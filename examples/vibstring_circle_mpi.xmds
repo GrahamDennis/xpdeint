@@ -35,7 +35,7 @@
   
   <driver name="distributed-mpi" />
   
-  <vector name="main" initial_space="x y" type="complex">
+  <vector name="main" initial_basis="x y" type="complex">
     <components>
       u uDot
     </components>
@@ -47,7 +47,7 @@
     </initialisation>
   </vector>
   
-  <vector name="boundary" initial_space="x y" type="real">
+  <vector name="boundary" initial_basis="x y" type="real">
     <components>
       bc
     </components>

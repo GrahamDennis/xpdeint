@@ -28,7 +28,7 @@
   
   <driver name="distributed-mpi" />
   
-  <vector name="main" initial_space="x y" type="complex">
+  <vector name="main" initial_basis="x y" type="complex">
     <components>
       phi
     </components>

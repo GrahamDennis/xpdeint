@@ -24,7 +24,7 @@
     </transverse_dimensions>
   </geometry>
   
-  <vector name="main" initial_space="x" type="complex">
+  <vector name="main" initial_basis="x" type="complex">
     <components>
       psi
     </components>

@@ -27,14 +27,14 @@
     </transverse_dimensions>
   </geometry>
   
-  <vector name="oned" dimensions="x" initial_space="kx" type="complex">
+  <vector name="oned" dimensions="x" initial_basis="kx" type="complex">
     <components>u</components>
     <initialisation kind="xsil">
       <filename>breakpoints_kspace_expected.xsil</filename>
     </initialisation>
   </vector>
   
-  <vector name="twod" dimensions="x y" initial_space="kx y">
+  <vector name="twod" dimensions="x y" initial_basis="kx y">
     <components>v</components>
     <initialisation kind="xsil">
       <filename>breakpoints_mixed_space2_expected.xsil</filename>

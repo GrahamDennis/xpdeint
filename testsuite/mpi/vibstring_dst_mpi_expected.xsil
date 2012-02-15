@@ -40,7 +40,7 @@
   
   <driver name="distributed-mpi" />
   
-  <vector name="main" initial_space="x y" type="double">
+  <vector name="main" initial_basis="x y" type="double">
     <components>
       u uDot
     </components>

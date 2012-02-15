@@ -31,7 +31,7 @@
     </transverse_dimensions>
   </geometry>
   
-  <vector name="oned" dimensions="x" initial_space="x" type="complex">
+  <vector name="oned" dimensions="x" initial_basis="x" type="complex">
     <components>u</components>
     <initialisation>
       <![CDATA[
@@ -40,7 +40,7 @@
     </initialisation>
   </vector>
   
-  <vector name="twod" dimensions="x y" initial_space="x y">
+  <vector name="twod" dimensions="x y" initial_basis="x y">
     <components>v</components>
     <initialisation>
       <![CDATA[

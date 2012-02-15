@@ -689,9 +689,13 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     ## Make sure no-one else takes the name
     self.globalNameSpace['symbolNames'].add(vectorName)
     
+    # Backwards compatibility
     if vectorElement.hasAttribute('initial_space'):
+      vectorElement.setAttribute('initial_basis')
+    
+    if vectorElement.hasAttribute('initial_basis'):
       initialBasis = fieldTemplate.basisFromString(
-        vectorElement.getAttribute('initial_space'),
+        vectorElement.getAttribute('initial_basis'),
         xmlElement = vectorElement
       )
     else:
@@ -971,9 +975,13 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     
     fieldTemplate = FieldElementTemplate.sortedFieldWithDimensionNames(dimensionNames, xmlElement = noiseVectorElement)
 
+    # Backwards compatibility
     if noiseVectorElement.hasAttribute('initial_space'):
+      noiseVectorElement.setAttribute('initial_basis')
+    
+    if noiseVectorElement.hasAttribute('initial_basis'):
       initialBasis = fieldTemplate.basisFromString(
-          noiseVectorElement.getAttribute('initial_space'),
+          noiseVectorElement.getAttribute('initial_basis'),
           xmlElement = noiseVectorElement
       )
     else:

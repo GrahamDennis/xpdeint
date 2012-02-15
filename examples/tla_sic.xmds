@@ -26,7 +26,7 @@
     </transverse_dimensions>
   </geometry>
   
-  <vector name="main" initial_space="t" type="real">
+  <vector name="main" initial_basis="t" type="real">
     <components>
       E
     </components>
@@ -37,7 +37,7 @@
     </initialisation>
   </vector>
 
-  <vector name="cross" initial_space="t" type="real">
+  <vector name="cross" initial_basis="t" type="real">
     <components>
       P N
     </components>

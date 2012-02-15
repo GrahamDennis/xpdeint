@@ -64,7 +64,7 @@
     </initialisation>
   </vector>
   
-  <vector name="matrixterms" dimensions="kz p q" initial_space="kz" type="complex">
+  <vector name="matrixterms" dimensions="kz p q" initial_basis="kz" type="complex">
     <components>matrix</components>
     <initialisation>
       <![CDATA[

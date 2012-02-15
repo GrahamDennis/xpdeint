@@ -38,7 +38,7 @@
     </transverse_dimensions>
   </geometry>
   
-  <vector name="potential" initial_space="y" type="real">
+  <vector name="potential" initial_basis="y" type="real">
     <components>
       V1
     </components>
@@ -49,7 +49,7 @@
     </initialisation>
   </vector>
   
-  <vector name="wavefunction" initial_space="y" type="complex">
+  <vector name="wavefunction" initial_basis="y" type="complex">
     <components>
       phi
     </components>

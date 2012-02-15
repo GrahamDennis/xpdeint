@@ -20,7 +20,7 @@
     </transverse_dimensions>
   </geometry>
   
-  <vector name="potential" initial_space="y" type="complex">
+  <vector name="potential" initial_basis="y" type="complex">
     <components>
       V1
     </components>
@@ -30,7 +30,7 @@
     </initialisation>
   </vector>
   
-  <vector name="excitedstate" initial_space="y" type="complex">
+  <vector name="excitedstate" initial_basis="y" type="complex">
     <components>
       phi1
     </components>
@@ -39,7 +39,7 @@
     </initialisation>
   </vector>
   
-  <vector name="groundstate" initial_space="y" type="complex">
+  <vector name="groundstate" initial_basis="y" type="complex">
     <components>phi</components>
     <initialisation kind="hdf5">
       <filename>groundstate_gaussian_break.h5</filename>

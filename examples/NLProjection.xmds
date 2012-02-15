@@ -24,7 +24,7 @@
   </geometry>
   
   <!-- A vector is a set of variables that can be evolved. -->
-  <vector name="wavefunction" initial_space="nx ny nz" type="real">
+  <vector name="wavefunction" initial_basis="nx ny nz" type="real">
     <components>
       phi
     </components>

@@ -62,7 +62,7 @@
   </geometry>
 
   
-  <vector name="wavefunction" initial_space="x y z" type="complex">
+  <vector name="wavefunction" initial_basis="x y z" type="complex">
     <components>
       phi1 phi0 phim1
     </components>
@@ -126,7 +126,7 @@
   </computed_vector>
  
  
-  <vector name="DipoleTerms" type="complex" initial_space="kx ky kz">
+  <vector name="DipoleTerms" type="complex" initial_basis="kx ky kz">
     <components>DA DB DC DCstar DE DEstar</components>
     <initialisation>
       <![CDATA[

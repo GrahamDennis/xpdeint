@@ -51,7 +51,7 @@ const real alpha=0.00; //m^2/s
     </transverse_dimensions>
   </geometry>
   
-  <vector name="main" initial_space="z x y" type="complex">
+  <vector name="main" initial_basis="z x y" type="complex">
     <components>
     alpha12
     </components>
@@ -63,7 +63,7 @@ const real alpha=0.00; //m^2/s
     </initialisation>
   </vector>
 
-    <vector name="crossinitial" initial_space="x y" type="complex">
+    <vector name="crossinitial" initial_basis="x y" type="complex">
     <components>
     beamprofile
     </components>
@@ -74,7 +74,7 @@ const real alpha=0.00; //m^2/s
     </initialisation>
   </vector>
 
-<vector name="cross1" initial_space="x y z" type="complex">
+<vector name="cross1" initial_basis="x y z" type="complex">
     <components>
      E
     </components>
