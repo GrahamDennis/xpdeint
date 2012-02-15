@@ -72,9 +72,19 @@ def configure(conf):
         conf.load('compiler_cxx')
         
         conf.check_cxx(
-            msg = "Checking whether the compiler works"
+            msg = "Checking whether the compiler works",
+            errmsg = "The compiler doesn't seem to work"
         )
         
+        conf.check_cxx(
+            msg = "Checking that we have a C++ compiler",
+            fragment = """
+            #include <iostream>
+            int main() { return 0; }
+            """,
+            errmsg = "Please specify a C++ compiler."
+        )
+
         conf.env['is_cross_compile'] = not conf.check_cxx(
             msg = "Checking whether we are cross compiling",
             okmsg = "no",

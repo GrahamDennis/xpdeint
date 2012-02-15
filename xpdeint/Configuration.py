@@ -92,7 +92,12 @@ def run_config(includePaths = None, libPaths = None):
             env[key] = os.environ[key]
     
     ctx.in_msg = 1
-    ret = ctx.execute()
+    
+    ret = -1
+    try:
+        ret = ctx.execute()
+    except Errors.ConfigurationError as e:
+        print "Configuration failed.  Address the above issue to use xmds2."
     
     print "Config log saved to ", os.path.join(xpdeintUserDataPath, 'waf_configure', 'config.log')
     
