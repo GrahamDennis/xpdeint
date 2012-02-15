@@ -36,7 +36,8 @@ def configure(conf):
     env = conf.env
     
     def check_cxx(**KWs):
-        KWs['execute'] = True
+        # Don't execute when cross-compiling.
+        KWs['execute'] = not conf.env['is_cross_compile']
         KWs['mandatory'] = False
         def listOption(var):
           if isinstance(var, str):
@@ -69,6 +70,18 @@ def configure(conf):
     
     def configure_compiler():
         conf.load('compiler_cxx')
+        
+        conf.check_cxx(
+            msg = "Checking whether the compiler works"
+        )
+        
+        conf.env['is_cross_compile'] = not conf.check_cxx(
+            msg = "Checking whether we are cross compiling",
+            okmsg = "no",
+            errmsg = "maybe, assuming we are",
+            execute = True,
+            mandatory = False,
+        )
         
         if conf.env['CXX_NAME'] == 'gcc':
             machine_optimisations = [
