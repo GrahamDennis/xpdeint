@@ -111,7 +111,13 @@ def configure(conf):
                 }
             ]
             
-            try_options('optimise', machine_optimisations)
+            try_options('optimise', machine_optimisations,
+                { # This is so that the compiler will generate SIMD instructions
+                  # If the linker / assembler doesn't support those instructions,
+                  # Then we'll pick it up this way.
+                    "fragment": "int main() { double __volatile__ a = 1.0; a *= 1.03; return 0; }"
+                }
+            )
             
             check_cxx(
                 cxxflags='-mtune=native',
