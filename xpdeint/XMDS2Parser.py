@@ -690,7 +690,8 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     
     # Backwards compatibility
     if vectorElement.hasAttribute('initial_space'):
-      vectorElement.setAttribute('initial_basis')
+      basis_string = vectorElement.getAttribute('initial_space')
+      vectorElement.setAttribute('initial_basis', basis_string)
     
     if vectorElement.hasAttribute('initial_basis'):
       initialBasis = fieldTemplate.basisFromString(
@@ -976,7 +977,8 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
 
     # Backwards compatibility
     if noiseVectorElement.hasAttribute('initial_space'):
-      noiseVectorElement.setAttribute('initial_basis')
+      basis_string = noiseVectorElement.getAttribute('initial_space')
+      noiseVectorElement.setAttribute('initial_basis', basis_string)
     
     if noiseVectorElement.hasAttribute('initial_basis'):
       initialBasis = fieldTemplate.basisFromString(
