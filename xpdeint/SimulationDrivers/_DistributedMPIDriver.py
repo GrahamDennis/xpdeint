@@ -61,6 +61,7 @@ class _DistributedMPIDriver (SimulationDriver, MPI):
     super(_DistributedMPIDriver, self).preflight()
     
     outputFormats = [o for o in self.getVar('templates') if isinstance(o, OutputFormat)]
+    outputFeature = self.getVar('features')['Output']
     
     for outputFormat in outputFormats:
       if not outputFormat.mpiSafe:
