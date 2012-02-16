@@ -425,7 +425,8 @@ def main(argv=None):
   }
   
   if 'CFlags' in globalNameSpace['features']:
-    buildKWs['CXXFLAGS'] = globalNameSpace['features']['CFlags'].cflags()
+    buildKWs['cxxflags'] = [globalNameSpace['features']['CFlags'].cflags()]
+    buildKWs['linkflags'] = [globalNameSpace['features']['CFlags'].cflags()]
   
   variant = globalNameSpace['simulationBuildVariant']
   if not variant:

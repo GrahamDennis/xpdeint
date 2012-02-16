@@ -11,6 +11,12 @@
     <error_check />
     <bing />
     <fftw plan="estimate" />
+    <cflags>
+        <!-- Compile and/or link flags. Useful if you want to link to a random external library -->
+        <![CDATA[
+            -Wall
+        ]]>
+    </cflags>
     <openmp />
     <globals>
       <![CDATA[
