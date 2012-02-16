@@ -335,7 +335,7 @@
     void *RetVal;
     int error;
     if ((error = posix_memalign(&RetVal, alignment, size))) {
-        _LOG(_ERROR_LOG_LEVEL, "Couldn't allocate %i bytes of %i-byte aligned memory! Error: %i\nBarfing!\n", size, alignment, error);
+        _LOG(_ERROR_LOG_LEVEL, "Couldn't allocate %lu bytes of %lu-byte aligned memory! Error: %i\nBarfing!\n", size, alignment, error);
     }
     return RetVal;
   }
