@@ -58,6 +58,171 @@ Standard XML placeholders can be used to simplify some scripts.  For example, th
          </geometry>
 
 
+.. _HighLevelStructure:
+
+High-level XMDS2 script structure
+=================================
+
+There are many, many XML tags that can make up an XMDS2 script. Most of them are optional, or have default values if not specified. It is, however, useful to know which elements are possible, and their position and relationship to other elements in the script. Shown below is the full XML tree for XMDS2, which shows all possible elements and their position in the tree. The possible attributes and attribute values for each element are not shown; see the individual entries in the rest of the Reference section for details.
+
+.. code-block:: xmds2
+
+    <?xml version="1.0" encoding="UTF-8"?>
+    <simulation xmds-version="2">
+      <name> </name>
+      <author> </author>
+      <description> </description>
+  
+      <features>
+        <arguments>
+          <argument />
+          <argument />
+          ...
+        </arguments>
+        <auto_vectorise />
+        <benchmark />
+        <bing />
+        <cflags> </cflags>
+        <diagnostics />
+        <error_check>
+        <halt_non_finite />
+        <fftw />
+        <globals> </globals>
+        <mmt />
+        <openmp />
+        <precision> </precision>
+        <testing> </testing>
+        <validation />
+      </features>
+
+      <driver />
+  
+      <geometry>
+        <propagation_dimension> </propagation_dimension>
+        <transverse_dimensions>
+          <dimension />
+          <dimension />
+          ...
+        </transverse_dimensions>
+      </geometry>
+  
+      <noise_vector>
+        <components> </components>
+      </noise_vector>
+
+      <noise_vector> ... </noise_vector>
+      <noise_vector> ... </noise_vector>
+      ...
+
+      <vector>
+        <dependencies> </dependencies>
+        <components> </components>
+        <initialisation>
+          <filename />
+          <![CDATA[
+          ]]>
+        </initialisation>
+      </vector>
+
+      <vector> ... </vector>
+      <vector> ... </vector>
+      ...
+
+      <computed_vector>
+        <components> </components>
+        <evaluation>
+          <dependencies> </dependencies>
+          <![CDATA[
+          ]]>
+        </evaluation>
+      </computed_vector>
+
+      <computed_vector> ... </computed_vector>
+      <computed_vector> ... </computed_vector>
+      ...
+
+      <sequence>
+
+        <filter>
+          <dependencies> </dependencies>
+          <![CDATA[
+          ]]>
+        </filter>
+
+        <integrate>
+          <samples> </samples>
+
+          <computed_vector>
+            <components> </components>
+            <evaluation>
+              <dependencies> </dependencies>
+              <![CDATA[
+              ]]>
+            </evaluation>
+          </computed_vector>
+
+          <filters>
+            <filter> ... </filter>
+            <filter> ... </filter>
+            ...
+          </filters>
+      
+          <operators>
+
+            <operator>
+              <operator_names> </operator_names>
+              <dependencies> </dependencies>
+              <boundary_condition>
+                <dependencies> </dependencies>
+                <![CDATA[
+                ]]>
+              </boundary_condition>
+              <![CDATA[
+              ]]>
+            </operator>
+
+            <operator> ... </operator>
+            <operator> ... </operator>
+            ...
+
+            <integration_vectors> </integration_vectors>
+            <dependencies> </dependencies>
+            <![CDATA[
+            ]]>
+
+          </operators>
+
+        </integrate>
+    
+        <breakpoint>
+          <dependencies> </dependencies>
+        </breakpoint>
+
+      </sequence>
+  
+      <output>
+        <group>
+          <sampling>  
+            <dependencies> </dependencies>
+            <moments> </moments>
+            <computed_vector> ... </computed_vector>
+            <operator> ... <operator>        
+            <![CDATA[
+            ]]>
+          </sampling>
+        </group>
+
+        <group> </group>
+        <group> </group>
+        ...
+
+      </output>
+
+    </simulation>
+
+
+
+
 .. _SimulationElement:
 
 Simulation Element
