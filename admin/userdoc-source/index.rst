@@ -18,6 +18,8 @@ Contents:
    
    worked_examples
    
+   schema
+
    reference
    
    advanced_topics
