@@ -58,6 +58,30 @@ Standard XML placeholders can be used to simplify some scripts.  For example, th
          </geometry>
 
 
+.. _NameElement:
+
+Name Element
+============
+
+
+.. _AuthorElement:
+
+Author Element
+==============
+
+
+.. _DescriptionElement:
+
+Description Element
+===================
+
+
+
+.. _TestingElement:
+
+Testing Element
+===============
+
 
 
 .. _SimulationElement:
@@ -85,11 +109,54 @@ Features elements are where simulation-wide options are specified.  There are ma
     * :ref:`Precision`
     * :ref:`Validation`
 
+
+.. _ArgumentsElement:
+
+Arguments Element
+-----------------
+
+
+.. _ArgumentElement:
+
+argument element
+~~~~~~~~~~~~~~~~
+
+
+
+.. _AutoVectorise:
+
+auto_vectorise element
+----------------------
+
+
+.. _Benchmark:
+
+Benchmark
+---------
+
+
+.. _Bing:
+
+Bing
+----
+
+
+.. _CFlags:
+
+C Flags
+-------
+
+
+.. _Diagnostics:
+
+Diagnostics
+-----------
+
+
 .. _ErrorCheck:
 
 Error Check
 -----------
-
 It's often important to know whether you've got errors.  This feature runs each integration twice: once with the specified error tolerance or defined lattice spacing in the propagation dimension, and then again with half the lattice spacing, or an equivalently lower error tolerance.  Each component of the output then shows the difference between these two integrations as an estimate of the error.  This feature is particularly useful when integrating stochastic equations, as it treats the noise generation correctly between the two runs, and thus makes a reasonable estimate of the strong convergence of the equations.
 
 Example syntax::
@@ -99,6 +166,30 @@ Example syntax::
             <error_check />
         </features>
     </simulation>
+
+
+.. _HaltNonFinite:
+
+Halt_Non_Finite
+---------------
+
+
+.. _FFTW:
+
+fftw element
+------------
+
+
+.. _Globals:
+
+Globals
+-------
+
+
+.. _OpenMP:
+
+openmp
+------
 
 
 .. _Precision:
@@ -205,6 +296,23 @@ Example syntax::
         </geometry>
     </simulation>
 
+
+.. _PropagationDimensionElement:
+
+The propagation_dimension element
+---------------------------------
+
+
+.. _TransverseDimensionsElement:
+
+The transverse_dimensions element
+---------------------------------
+
+
+.. _DimensionElement:
+
+The dimension element
+---------------------------------
 
 
 .. _dft_Transform:
@@ -494,6 +602,24 @@ Example syntax::
     </simulation>
 
 
+.. _ComponentsElement:
+
+The components element
+----------------------
+
+
+.. _InitialisationElement:
+
+The initialisation element
+--------------------------
+
+
+.. _FilenameElement:
+
+The filename element
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
 
 .. _Dependencies:
 
@@ -600,6 +726,12 @@ Example syntax::
             </evaluation>
         </vector>
     </simulation>
+
+
+.. _EvaluationElement:
+
+Evaluation Element
+------------------
 
 
 
@@ -741,30 +873,71 @@ Sequence Element
 ================
 
 
+.. _FiltersElement:
+
+Filters element
+===============
+
+
+
 .. _FilterElement:
 
-Filter Element
+Filter element
 --------------
 
 
 .. _IntegrateElement:
 
-Integrate Element
+Integrate element
 -----------------
+
+
+.. _SamplesElement:
+
+Samples element
+~~~~~~~~~~~~~~~
+
+
+.. _OperatorsElement:
+
+Operators element
+~~~~~~~~~~~~~~~~~
+
 
 .. _OperatorElement:
 
-Operator Element
+Operator element
 ~~~~~~~~~~~~~~~~
+
+
+.. _OperatorNamesElement:
+
+Operator_names element
+~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+.. _BoundaryConditionElement:
+
+Boundary condition element
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+.. _IntegrationVectorsElement:
+
+integration_vectors element
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 .. _BreakpointElement:
 
-Breakpoint Element
+Breakpoint element
 ------------------
+
 
 .. _OutputElement:
 
-Output Element
+Output element
 ==============
 
 The ``<output>`` element describes the output of the program.  It is often inefficient to output the complete state of all vectors at all times during a large simulation, so the purpose of this function is to define subsets of the information required for output.  Each different format of information is described in a different ``<group>`` element inside the output element.  The ``<output>`` element may contain any number of ``<group>`` elements.
@@ -779,6 +952,19 @@ Group Element
 The group elements
 
 Further details will be forthcoming, but for now, try looking at the :ref:`workedExamples`, and a search of the /examples folder.
+
+
+.. _SamplingElement:
+
+Sampling Element
+~~~~~~~~~~~~~~~~
+
+
+.. _MomentsElement:
+
+Moments Element
+~~~~~~~~~~~~~~~~
+
 
 .. _XMDSCSyntax:
 

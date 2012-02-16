@@ -7,153 +7,157 @@ XMDS2 XML Schema
 
 There are many, many XML tags that can make up an XMDS2 script. Most of them are optional, or have default values if not specified. It is, however, useful to know which elements are possible, and their position and relationship to other elements in the script. Shown below is the full XML tree for XMDS2, which shows all possible elements and their position in the tree. An ellipsis (...) outside an element indicates the element above can be repeated indefinitely, and an ellipsis inside an element (<element> ... </element>) indicates that the structure of that element has already been shown previously.
 
-The possible attributes and attribute values for each element are not shown; see the individual entries in the rest of the Reference section for details.
+The syntax <element /> can be used for lowest-level elements that have attributes but no content, and are shorthand for <element> </element>. This shorthand notation can also be used for elements which can only contain the content "yes" or "no"; in this case the presence of <element /> is equivalent to <element> yes </element>, and the absence of such an element is equivalent to <element> no </element>
+
+The possible attributes and attribute values for each element are not shown; see the individual entries in the Reference section for details.
+
+
 
 .. parsed-literal::
 
     <?xml version="1.0" encoding="UTF-8"?>
     <:ref:`simulation <SimulationElement>` xmds-version="2">
-      <name> </name>
-      <author> </author>
-      <description> </description>
+      <:ref:`name <NameElement>`> <:ref:`/name <NameElement>`>
+      <:ref:`author <AuthorElement>`> <:ref:`author <AuthorElement>`>
+      <:ref:`description <DescriptionElement>`> <:ref:`/description <DescriptionElement>`>
 
-      <testing> </testing>
+      <:ref:`testing <TestingElement>`> <:ref:`/testing <TestingElement>`>
   
       <:ref:`features <FeaturesElement>`>
-        <arguments>
-          <argument />
-          <argument />
+        <:ref:`arguments <ArgumentsElement>`>
+          <:ref:`argument <ArgumentElement>` />
+          <:ref:`argument <ArgumentElement>` />
           ...
-        </arguments>
-        <auto_vectorise />
-        <benchmark />
-        <bing />
-        <cflags> </cflags>
-        <diagnostics />
+        <:ref:`/arguments <ArgumentsElement>`>
+        <:ref:`auto_vectorise <AutoVectorise>` />
+        <:ref:`benchmark <Benchmark>` />
+        <:ref:`bing <Bing>` />
+        <:ref:`cflags <CFlags>`> <:ref:`/cflags <CFlags>`>
+        <:ref:`diagnostics <Diagnostics>` />
         <:ref:`error_check <ErrorCheck>` />
-        <halt_non_finite />
-        <fftw />
-        <globals> </globals>
-        <openmp />
+        <:ref:`halt_non_finite <HaltNonFinite>` />
+        <:ref:`fftw <FFTW>` />
+        <:ref:`globals <Globals>`> <:ref:`/globals <Globals>`>
+        <:ref:`openmp <OpenMP>` />
         <:ref:`precision <Precision>`> <:ref:`/precision <Precision>`>
-        <validation />
-      </features>
+        <:ref:`validation <Validation>` />
+      <:ref:`/features <FeaturesElement>`>
 
-      <driver />
+      <:ref:`driver <DriverElement>` />
   
-      <geometry>
-        <propagation_dimension> </propagation_dimension>
-        <transverse_dimensions>
-          <dimension />
-          <dimension />
+      <:ref:`geometry <GeometryElement>`>
+        <:ref:`propagation_dimension <PropagationDimensionElement>`> <:ref:`/propagation_dimension <PropagationDimensionElement>`>
+        <:ref:`transverse_dimensions <TransverseDimensionsElement>`>
+          <:ref:`dimension <DimensionElement>` />
+          <:ref:`dimension <DimensionElement>` />
           ...
-        </transverse_dimensions>
-      </geometry>
+        <:ref:`/transverse_dimensions <TransverseDimensionsElement>`>
+      <:ref:`/geometry <GeometryElement>`>
   
-      <noise_vector>
-        <components> </components>
-      </noise_vector>
+      <:ref:`noise_vector <NoiseVectorElement>`>
+        <:ref:`components <ComponentsElement>`> <:ref:`/components <ComponentsElement>`>
+      <:ref:`/noise_vector <NoiseVectorElement>`>
 
-      <noise_vector> ... </noise_vector>
-      <noise_vector> ... </noise_vector>
+      <:ref:`noise_vector <NoiseVectorElement>`> ... <:ref:`/noise_vector <NoiseVectorElement>`>
+      <:ref:`noise_vector <NoiseVectorElement>`> ... <:ref:`/noise_vector <NoiseVectorElement>`>
       ...
 
-      <vector>
-        <components> </components>
-        <initialisation>
-          <dependencies> </dependencies>
-          <filename />
-          <![CDATA[
+      <:ref:`vector <VectorElement>`>
+        <:ref:`components <ComponentsElement>`> <:ref:`/components <ComponentsElement>`>
+        <:ref:`initialisation <InitialisationElement>`>
+          <:ref:`dependencies <Dependencies>`> <:ref:`/dependencies <Dependencies>`>
+          <:ref:`filename <FilenameElement>`>
+          <![:ref:`CDATA <XMDSCSyntax>` [
           ]]>
-        </initialisation>
-      </vector>
+        <:ref:`/initialisation <InitialisationElement>`>
+      <:ref:`/vector <VectorElement>`>
 
-      <vector> ... </vector>
-      <vector> ... </vector>
+      <:ref:`vector <VectorElement>`> ... <:ref:`/vector <VectorElement>`>
+      <:ref:`vector <VectorElement>`> ... <:ref:`/vector <VectorElement>`>
       ...
 
-      <computed_vector>
-        <components> </components>
-        <evaluation>
-          <dependencies> </dependencies>
-          <![CDATA[
+      <:ref:`computed_vector <ComputedVectorElement>`>
+        <:ref:`components <ComponentsElement>`> <:ref:`/components <ComponentsElement>`>
+        <:ref:`evaluation <EvaluationElement>`>
+          <:ref:`dependencies <Dependencies>`> <:ref:`/dependencies <Dependencies>`>
+          <![:ref:`CDATA <XMDSCSyntax>` [
           ]]>
-        </evaluation>
-      </computed_vector>
+        <:ref:`/evaluation <EvaluationElement>`>
+      <:ref:`/computed_vector <ComputedVectorElement>`>
 
-      <computed_vector> ... </computed_vector>
-      <computed_vector> ... </computed_vector>
+      <:ref:`computed_vector <ComputedVectorElement>`> ... <:ref:`/computed_vector <ComputedVectorElement>`>
+      <:ref:`computed_vector <ComputedVectorElement>`> ... <:ref:`/computed_vector <ComputedVectorElement>`>
       ...
 
-      <sequence>
+      <:ref:`sequence <SequenceElement>`>
 
-        <filter>
-          <dependencies> </dependencies>
-          <![CDATA[
+        <:ref:`filter <FilterElement>`>
+          <:ref:`dependencies <Dependencies>`> <:ref:`/dependencies <Dependencies>`>
+          <![:ref:`CDATA <XMDSCSyntax>` [
           ]]>
-        </filter>
+        <:ref:`/filter <FilterElement>`>
 
-        <integrate>
-          <samples> </samples>
+        <:ref:`integrate <IntegrateElement>`>
+          <:ref:`samples <SamplesElement>`> <:ref:`/samples <SamplesElement>`>
 
-          <computed_vector> ... </computed_vector>
+          <:ref:`computed_vector <ComputedVectorElement>`> ... <:ref:`/computed_vector <ComputedVectorElement>`>
 
-          <filters>
-            <filter> ... </filter>
-            <filter> ... </filter>
+          <:ref:`filters <FiltersElement>`>
+            <:ref:`filter <FilterElement>`> ... <:ref:`/filter <FilterElement>`>
+            <:ref:`filter <FilterElement>`> ... <:ref:`/filter <FilterElement>`>
             ...
-          </filters>
+          <:ref:`/filters <FiltersElement>`>
       
-          <operators>
+          <:ref:`operators <OperatorsElement>`>
 
-            <operator>
-              <boundary_condition>
-                <dependencies> </dependencies>
-                <![CDATA[
+            <:ref:`operator <OperatorElement>`>
+              <:ref:`boundary_condition <BoundaryConditionElement>`>
+                <:ref:`dependencies <Dependencies>`> <:ref:`/dependencies <Dependencies>`>
+                <![:ref:`CDATA <XMDSCSyntax>` [
                 ]]>
-              </boundary_condition>
-              <operator_names> </operator_names>
-              <dependencies> </dependencies>
-              <![CDATA[
+              <:ref:`/boundary_condition <BoundaryConditionElement>`>
+              <:ref:`operator_names <OperatorNamesElement>`> <:ref:`/operator_names <OperatorNamesElement>`>
+              <:ref:`dependencies <Dependencies>`> <:ref:`/dependencies <Dependencies>`>
+              <![:ref:`CDATA <XMDSCSyntax>` [
               ]]>
-            </operator>
+            <:ref:`/operator <OperatorElement>`>
 
-            <operator> ... </operator>
-            <operator> ... </operator>
+            <:ref:`operator <OperatorElement>`> ... <:ref:`/operator <OperatorElement>`>
+            <:ref:`operator <OperatorElement>`> ... <:ref:`/operator <OperatorElement>`>
             ...
 
-            <integration_vectors> </integration_vectors>
-            <dependencies> </dependencies>
-            <![CDATA[
+            <:ref:`integration_vectors <IntegrationVectorsElement>`> <:ref:`/integration_vectors <IntegrationVectorsElement>`>
+            <:ref:`dependencies <Dependencies>`> <:ref:`/dependencies <Dependencies>`>
+            <![:ref:`CDATA <XMDSCSyntax>` [
             ]]>
 
-          </operators>
+          <:ref:`/operators <OperatorsElement>`>
 
-        </integrate>
+        <:ref:`/integrate <IntegrateElement>`>
     
-        <breakpoint>
-          <dependencies> </dependencies>
-        </breakpoint>
+        <:ref:`breakpoint <BreakpointElement>`>
+          <:ref:`dependencies <Dependencies>`> <:ref:`/dependencies <Dependencies>`>
+        <:ref:`/breakpoint <BreakpointElement>`>
 
-      </sequence>
+      <:ref:`/sequence <SequenceElement>`>
   
-      <output>
-        <group>
-          <sampling>  
-            <dependencies> </dependencies>
-            <moments> </moments>
-            <operator> ... </operator>        
-            <![CDATA[
+      <:ref:`output <OutputElement>`>
+        <:ref:`group <GroupElement>`>
+          <:ref:`sampling <SamplingElement>`>
+            <:ref:`dependencies <Dependencies>`> <:ref:`/dependencies <Dependencies>`>
+            <:ref:`moments <MomentsElement>`> <:ref:`/moments <MomentsElement>`>
+            <:ref:`operator <OperatorElement>`> ... <:ref:`/operator <OperatorElement>`>       
+            <![:ref:`CDATA <XMDSCSyntax>` [
             ]]>
-          </sampling>
-        </group>
+          <:ref:`/sampling <SamplingElement>`>
+        <:ref:`/group <GroupElement>`>
 
-        <group> ... </group>
-        <group> ... </group>
+        <:ref:`group <GroupElement>`> ... <:ref:`/group <GroupElement>`>
+        <:ref:`group <GroupElement>`> ... <:ref:`/group <GroupElement>`>
         ...
 
-      </output>
+      <:ref:`/output <OutputElement>`>
 
-    </simulation>
+    <:ref:`/simulation <SimulationElement>`>
 
 
