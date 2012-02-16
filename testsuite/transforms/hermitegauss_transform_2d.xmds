@@ -12,10 +12,7 @@
   
   <features>
     <benchmark />
-    <!-- <error_check /> -->
     <bing />
-    <!-- <fftw plan="estimate" /> -->
-    <mmt />
     <validation kind="run-time" />
     <globals>
       <![CDATA[

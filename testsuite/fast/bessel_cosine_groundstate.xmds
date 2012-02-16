@@ -20,9 +20,6 @@
     <auto_vectorise />
     <benchmark />
     <bing />
-    <fftw />
-    <mmt />
-    <!-- <openmp /> -->
     <globals>
       <![CDATA[
         const real omegaz = 2*M_PI*20;

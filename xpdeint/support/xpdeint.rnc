@@ -52,7 +52,6 @@ Features = element features {
         | element diagnostics     { Bool | empty }
         | element error_check     { Bool | empty }
         | element halt_non_finite { Bool | empty }
-        | element mmt             { Bool | empty }
         | element openmp          { Bool | empty }
         | Arguments
         | element globals { text }

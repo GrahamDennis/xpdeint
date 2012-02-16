@@ -251,7 +251,6 @@ class XMDS2Parser(ScriptParser):
     parseSimpleFeature('openmp', Features.OpenMP.OpenMP)
     parseSimpleFeature('halt_non_finite', Features.HaltNonFinite.HaltNonFinite)
     parseSimpleFeature('diagnostics', Features.Diagnostics.Diagnostics)
-    parseSimpleFeature('mmt', Transforms.MMT.MMT)
     
     precisionElement = featuresParentElement.getChildElementByTagName('precision', optional=True)
     if precisionElement:
@@ -2075,6 +2074,10 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
           if not kindString in ('functions', 'ex'):
             raise ParserException(operatorElement, "Unrecognised operator kind '%(kindString)s'. "
                                                    "The only valid operator kinds in sampling elements are 'functions' and 'ex'." % locals())
+          
+          if kindString == 'ex':
+            # We can't handle constant=yes in this case, so we'll just replace it with the value we can support
+            operatorElement.setAttribute('constant', 'no')
           operatorTemplate = self.parseOperatorElement(operatorElement, operatorContainer)
           if isinstance(operatorTemplate, ConstantEXOperatorTemplate):
             raise ParserException(operatorElement, "You cannot have a constant EX operator in moment group sampling. Try constant=\"no\".")

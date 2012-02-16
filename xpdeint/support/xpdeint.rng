@@ -120,12 +120,6 @@
               <empty/>
             </choice>
           </element>
-          <element name="mmt">
-            <choice>
-              <ref name="Bool"/>
-              <empty/>
-            </choice>
-          </element>
           <element name="openmp">
             <choice>
               <ref name="Bool"/>

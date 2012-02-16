@@ -116,7 +116,7 @@
     </breakpoint>
   </sequence>
   
-  <outpu>
+  <output>
     <group>
       <sampling basis="y" initial_sample="no">
         <moments>dens</moments>

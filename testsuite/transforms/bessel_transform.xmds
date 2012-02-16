@@ -15,7 +15,6 @@
   <features>
     <benchmark />
     <bing />
-    <mmt />
     <globals>
       <![CDATA[
       const real T = 10.0;

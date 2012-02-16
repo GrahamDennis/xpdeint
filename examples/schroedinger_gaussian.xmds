@@ -58,7 +58,7 @@
   
   <sequence>
     <integrate algorithm="RK9" interval="10.0" steps="10000" tolerance="1e-8">
-      <samples>500</samples>
+      <samples>500 500</samples>
       <operators>
         <operator kind="ip" constant="no" type="imaginary">
           <operator_names>T</operator_names>
@@ -81,6 +81,24 @@
         <dependencies>wavefunction</dependencies>
         <![CDATA[
           dens = mod2(psi);
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling basis="y" initial_sample="yes">
+        <moments>T V</moments>
+        <dependencies>wavefunction potential</dependencies>
+        <operator kind="ex">
+            <operator_names>L</operator_names>
+            <![CDATA[
+                L = i*ky;
+            ]]>
+        </operator>
+        <![CDATA[
+            // Calculate the potential energy at each point
+            V = (-V1.Im()) * mod2(psi);
+            // Calculate the kinetic energy at each point
+            T = 0.5*mod2(L[psi]);
         ]]>
       </sampling>
     </group>
