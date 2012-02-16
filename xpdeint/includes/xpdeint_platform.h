@@ -333,9 +333,9 @@
   inline void *_aligned_malloc(size_t size, size_t alignment)
   {
     void *RetVal;
-    if (posix_memalign(&RetVal, alignment, size)) {
-      fprintf(stderr, "Couldn't allocate aligned memory!\nBarfing!\n");
-      exit(1);
+    int error;
+    if ((error = posix_memalign(&RetVal, alignment, size))) {
+        _LOG(_ERROR_LOG_LEVEL, "Couldn't allocate %i bytes of %i-byte aligned memory! Error: %i\nBarfing!\n", size, alignment, error);
     }
     return RetVal;
   }
