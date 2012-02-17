@@ -62,18 +62,32 @@ Standard XML placeholders can be used to simplify some scripts.  For example, th
 
 Name Element
 ============
+::
+
+  Optional: Yes
+  Required attributes: None
+  Optional attributes: None
 
 
 .. _AuthorElement:
 
 Author Element
 ==============
+::
 
+  Optional: Yes
+  Required attributes: None
+  Optional attributes: None
 
 .. _DescriptionElement:
 
 Description Element
 ===================
+::
+
+  Optional: Yes
+  Required attributes: None
+  Optional attributes: None
 
 
 
@@ -81,6 +95,11 @@ Description Element
 
 Testing Element
 ===============
+::
+
+  Optional: Yes
+  Required attributes: None
+  Optional attributes: None
 
 
 
@@ -88,6 +107,12 @@ Testing Element
 
 Simulation Element
 ==================
+::
+
+  Optional: No
+  Required attributes: xmds-version {'2'}
+  Optional attributes: None
+
 
 The ``<simulation>`` element is the single top level element in an XMDS2 simulation, and contains all the other elements.  All XMDS scripts must contain exactly one simulation element, and it must have the ``xmds-version="2"`` attribute defined.
 
@@ -98,10 +123,16 @@ Example syntax::
     </simulation>
 
 
+
 .. _FeaturesElement:
 
 Features Elements
 =================
+::
+
+  Optional: Yes
+  Required attributes: None
+  Optional attributes: None
 
 Features elements are where simulation-wide options are specified.  There are many possible features elements.  We will give a full list here, and then describe each one.
 
@@ -110,53 +141,99 @@ Features elements are where simulation-wide options are specified.  There are ma
     * :ref:`Validation`
 
 
+
 .. _ArgumentsElement:
 
 Arguments Element
 -----------------
+::
+
+  Optional: Yes
+  Required attributes: None
+  Optional attributes: None
 
 
 .. _ArgumentElement:
 
 argument element
 ~~~~~~~~~~~~~~~~
+::
 
+  Optional: Yes
+  Required attributes: name {text}, type {'int' | 'integer' | 'long' | 'real' | 'string}, default_value {'int' | 'integer' | 'long' | 'real' | 'string'}
+  Optional attributes: None
 
 
 .. _AutoVectorise:
 
 auto_vectorise element
 ----------------------
+::
+
+  Optional: Yes
+  Required attributes: None
+  Optional attributes: None
+
 
 
 .. _Benchmark:
 
 Benchmark
 ---------
+::
+
+  Optional: Yes
+  Required attributes: None
+  Optional attributes: None
+
 
 
 .. _Bing:
 
 Bing
 ----
+::
+
+  Optional: Yes
+  Required attributes: None
+  Optional attributes: None
+
 
 
 .. _CFlags:
 
 C Flags
 -------
+::
+
+  Optional: Yes
+  Required attributes: None
+  Optional attributes: None
+
 
 
 .. _Diagnostics:
 
 Diagnostics
 -----------
+::
+
+  Optional: Yes
+  Required attributes: None
+  Optional attributes: None
+
 
 
 .. _ErrorCheck:
 
 Error Check
 -----------
+::
+
+  Optional: Yes
+  Required attributes: None
+  Optional attributes: None
+
 It's often important to know whether you've got errors.  This feature runs each integration twice: once with the specified error tolerance or defined lattice spacing in the propagation dimension, and then again with half the lattice spacing, or an equivalently lower error tolerance.  Each component of the output then shows the difference between these two integrations as an estimate of the error.  This feature is particularly useful when integrating stochastic equations, as it treats the noise generation correctly between the two runs, and thus makes a reasonable estimate of the strong convergence of the equations.
 
 Example syntax::
@@ -172,12 +249,22 @@ Example syntax::
 
 Halt_Non_Finite
 ---------------
+::
+
+  Optional: Yes
+  Required attributes: None
+  Optional attributes: None
 
 
 .. _FFTW:
 
 fftw element
 ------------
+::
+
+  Optional: Yes
+  Required attributes: None
+  Optional attributes: plan {patient | exhaustive}
 
 
 .. _Globals:
