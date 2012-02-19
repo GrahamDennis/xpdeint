@@ -19,13 +19,13 @@ The easiest way to get started is with an installer.  If we don't have an instal
 
     * - Linux (Ubuntu/Debian/Fedora/RedHat)
 
-      - `Download <http://xmds.svn.sourceforge.net/viewvc/xmds/trunk/xpdeint/admin/linux_installer>`_
+      - `Download Linux Installer <http://xmds.svn.sourceforge.net/viewvc/xmds/trunk/xpdeint/admin/linux_installer>`_
 
       - :ref:`Learn more <linux_installation>`
 
-    * - Mac OS X 10.6/10.7
+    * - OS X 10.6/10.7
 
-      - `Download <http://sourceforge.net/projects/xmds/files/XMDS-2.1beta6-osx.zip>`_
+      - `Download OS X Installer <http://sourceforge.net/projects/xmds/files/XMDS-2.1beta6-osx.zip>`_
 
       - :ref:`Learn more <mac_installation>`
         

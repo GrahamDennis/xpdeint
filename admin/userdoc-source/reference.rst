@@ -136,11 +136,19 @@ Features Elements
 
 Features elements are where simulation-wide options are specified.  There are many possible features elements.  We will give a full list here, and then describe each one.
 
+    * :ref:`ArgumentsElement`
+    * :ref:`Autovectorise`
+    * :ref:`Benchmark`
+    * :ref:`Bing`
+    * :ref:`CFlags`
+    * :ref:`Diagnostics`
     * :ref:`ErrorCheck`
+    * :ref:`HaltNonFinite`
+    * :ref:`FFTW`
+    * :ref:`Globals`
+    * :ref:`OpenMP`
     * :ref:`Precision`
     * :ref:`Validation`
-
-
 
 .. _ArgumentsElement:
 
@@ -523,9 +531,9 @@ This transform pair has the useful property that the Laplacian in cylindrical co
 .. math::
     \nabla^2 \left(f(r) e^{i m \theta}\right) &= \left(\frac{\partial^2 f}{\partial r^2} +\frac{1}{r}\frac{\partial f}{\partial r} -\frac{m^2}{r^2} f \right) e^{i m \theta} = \left\{\mathcal{H}^{-1}_m \left[(-k^2) F_m(k)\right](r) \right\} e^{i m \theta}
     
-XMDS labels the variables in the transformed space with a prefix of 'k', just as for :ref:`Fourier transforms<dft_Transform>`.  The order :math:`m` of the transform is defined by the ``order`` attribute in the ``<dimension>`` element, which must be assigned as a non-negative integer.  If the order is not specified, it defaults to zero which corresponds to the solution being independent of the angular coordinate :math:`\theta`.
+XMDS labels the variables in the transformed space with a prefix of 'k', just as for :ref:`Fourier transforms<dft_Transform>`.  The order :math:`m` of the transform is defined by the ``order`` attribute in the ``<dimension>`` element, which must be assigned as a non-negative integer.  If the order is not specified, it defaults to zero which corresponds to the solution being independent of the angular coordinate :math:`\theta`.  
 
-It can often be useful to have a different sampling in normal space and Hankel space.  Reducing the number of modes in either space dramatically speeds simulations.  To set the number of lattice points in Hankel space to be different to the number of lattice points for the field in its original space, use the attribute ``spectral_lattice``.  All of these lattices are chosen in a non-uniform manner using Gaussian quadrature methods for spectrally accurate transforms.
+It can often be useful to have a different sampling in normal space and Hankel space.  Reducing the number of modes in either space dramatically speeds simulations.  To set the number of lattice points in Hankel space to be different to the number of lattice points for the field in its original space, use the attribute ``spectral_lattice``.  The Bessel space lattice is chosen such that the boundary condition at the edge of the domain is zero.  This ensures that all of the Bessel modes are orthogonal.  The spatial lattice is also chosen in a non-uniform manner so that Gaussian quadrature methods can be usedfor spectrally accurate transforms.
 
 Hankel transforms allow easy calculation of the Laplacian of fields with cylindrical symmetry.  Applying the operator ``L = -kr*kr`` in Hankel space is therefore equivalent to applying the operator
 
@@ -920,7 +928,7 @@ Example syntax::
 Poissonian noise
 ----------------
 
-A noise vector using the "poissonian" method generates a random variable from a Poissonian distribution.  While the the Poisson distribution is integer-valued, the variable will be cast as a real number.  The rate of the Poissonian distribution is given by the ``mean`` or ``mean-density`` attributes.  These are are synonyms, and must be defined as positive real numbers.  For Poissonian noises defined over real-valued transverse dimensions, the rate is given by the product of this ``mean-density`` attribute and the volume element at that point, taking into account all transverse dimensions, including their ``volume_prefactor`` attributes.
+A noise vector using the "poissonian" method generates a random variable from a Poissonian distribution.  While the the Poisson distribution is integer-valued, the variable will be cast as a real number.  The rate of the Poissonian distribution is defined by the ``mean`` or ``mean-density`` attributes.  These are are synonyms, and must be defined as positive real numbers.  For Poissonian noises defined over real-valued transverse dimensions, the rate is given by the product of this ``mean-density`` attribute and the volume element at that point, taking into account all transverse dimensions, including their ``volume_prefactor`` attributes.  The result is that each
 
 Poissonian noise vectors are an example of a "static" noise, i.e. one suitable for initial conditions of a field.  If they were included in the equations of motion for a field, then the effect of the noise would depend on the lattice spacing of the propagation dimension.  XMDS therefore does not allow this noise type to be used in integration elements.
 
