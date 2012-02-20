@@ -1,3 +1,19 @@
+.. raw:: html
+
+  <style> .attributes-code {color:#0000BB; font-family:'monospace'; font-style:italic} </style>
+
+.. raw:: html
+
+  <style> .attributes-standard {color:#0000BB; font-family:'monospace'; font-style:italic; font-size:smaller} </style>
+
+.. raw:: html
+
+  <style> .smaller-font {font-size:smaller} </style>
+
+.. role:: attributes-code
+.. role:: attributes-standard
+.. role:: smaller-font
+
 .. _ReferenceElements:
 
 *********************
@@ -10,28 +26,49 @@ This section outlines all the elements and options available in an XMDS2 script.
 
 .. _NameElement:
 
-Name Element
+Name element
 ============
 
+The name of your simulation. This element is optional, but recommended. If it is set, it will be the name of the executable file generated from this script. It will also be the name of the output file (with an appropriate extension) if the ``filename`` attribute is not given a value in the ``<output>`` element.
+
+Example syntax::
+
+    <name> funky_solver </name>
 
 
 .. _AuthorElement:
 
-Author Element
+Author element
 ==============
+
+The author(s) of this script. This element is optional, but can be useful if you need to find the person who has written an incomprehensible script and thinks comments are for the weak.
+
+Example syntax::
+
+    <author> Ima Mollusc </author>
 
 
 .. _DescriptionElement:
 
-Description Element
+Description element
 ===================
 
+A description of what the simulation does. Optional, but recommended, in case you (or someone else) has to revist the script at some distant point in the future.
+
+Example syntax::
+
+    <description>
+      Calculate the 3D ground state of a Rubidium BEC in a harmonic magnetic trap assuming
+      cylindrical symmetry about the z axis and reflection symmetry about z=0.
+      This permits us to use the cylindrical Bessel functions to expand the solution transverse
+      to z and a cosine series to expand the solution along z.
+    </description>
 
 
 
 .. _TestingElement:
 
-Testing Element
+Testing element
 ===============
 
 
@@ -39,7 +76,7 @@ Testing Element
 
 .. _SimulationElement:
 
-Simulation Element
+Simulation element
 ==================
 
 The ``<simulation>`` element is the single top level element in an XMDS2 simulation, and contains all the other elements.  All XMDS scripts must contain exactly one simulation element, and it must have the ``xmds-version="2"`` attribute defined.
@@ -58,49 +95,91 @@ Features Elements
 =================
 
 
-Features elements are where simulation-wide options are specified.  There are many possible features elements.  We will give a full list here, and then describe each one.
+Features elements are where simulation-wide options are specified. The ``<features>`` element wraps one or more elements describing features. There are many possible feature elements. Currently, a full list of the features supported is:
 
-    * :ref:`ArgumentsElement`
-    * :ref:`Autovectorise`
-    * :ref:`Benchmark`
-    * :ref:`Bing`
-    * :ref:`CFlags`
-    * :ref:`Diagnostics`
-    * :ref:`ErrorCheck`
-    * :ref:`HaltNonFinite`
-    * :ref:`FFTW`
-    * :ref:`Globals`
-    * :ref:`OpenMP`
-    * :ref:`Precision`
-    * :ref:`Validation`
+    * :ref:`arguments <ArgumentsElement>`
+    * :ref:`auto_vectorise <Autovectorise>`
+    * :ref:`benchmark <Benchmark>`
+    * :ref:`bing <Bing>`
+    * :ref:`cflags <CFlags>`
+    * :ref:`diagnostics <Diagnostics>`
+    * :ref:`error_check <ErrorCheck>`
+    * :ref:`halt_non_finite <HaltNonFinite>`
+    * :ref:`fftw <FFTW>`
+    * :ref:`globals <Globals>`
+    * :ref:`openmp <OpenMP>`
+    * :ref:`precision <Precision>`
+    * :ref:`validation <Validation>`
+
+Example syntax::
+
+    <simulation xmds-version="2">
+      <features>
+        <bing />
+        <precision> double </precision>
+        ...
+      </features>
+    </simulation>
+
 
 .. _ArgumentsElement:
 
 Arguments Element
 -----------------
 
+The ``<arguments>`` element is optional, and allows defining variables that can be passed to the simulation at run time. These variables are then globally accessible throughout the simulation script. Each of the variables must be defined in an ``<argument>`` element (see below). The variables can then be passed to the simulation executable as options on the command line. For example, one could define the variables ``size``, ``number``, and ``pulse_shape`` ::
+
+    <name> arguments_test </name>
+    <features>
+      <arguments>
+        <argument name="size" type="real" default_value="20.0"/>
+        <argument name="number" type="integer" default_value="7"/>
+        <argument name="pulse_shape" type="string" default_value="gaussian"/>
+      </arguments>
+    </features>
+
+When ``XMDS2`` is run on this script the executable ``arguments_test`` is created. The values of ``size``, ``number``, and ``pulse_shape`` can then be set to whatever is desired at runtime via
+
+::
+
+  ./arguments_test --size=1.3 --number=2 --pulse_shape=lorentzian
 
 
 .. _ArgumentElement:
 
-argument element
+Argument element
 ~~~~~~~~~~~~~~~~
-
 .. parsed-literal::
 
-  <font color="#990000">This text is hexcolor #990000</font>
-  optional **<argument>** none **</argument>**
-  Child of:   **<features>**
-  Default:    none
-  attributes: name {*text*}, 
-              type {*'int'* | *'integer'* | *'long'* | *'real'* | *'string'*}, 
-              default_value {*int* | *integer* | *long* | *real* | *string*}
+  <**argument** :attributes-code:`name type default_value`>
+    :attributes-code:`name`: A string which is the name of the argument
+    :attributes-code:`type`: ('integer', 'real', 'string') The type of the argument.
+    :attributes-code:`default_value`: (integer, real, string) The default value of the argument.
 
+Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here.
+
+
+| <**argument** :attributes-standard:`name type default_value`>
+|  :attributes-standard:`name`: A string which is the name of the argument
+|  :attributes-standard:`type`: ('integer', 'real', 'string') The type of the argument.
+|  :attributes-standard:`default_value`: (integer, real, string) The default value of the argument.
+
+Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here.
+
+
+| <argument :attributes-standard:`name type default_value`>
+|  :attributes-standard:`name`: :smaller-font:`A string which is the name of the argument`
+|  :attributes-standard:`type`: :smaller-font:`('integer', 'real', 'string') The type of the argument.`
+|  :attributes-standard:`default_value`: :smaller-font:`(integer, real, string) The default value of the argument.`
+
+Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here.
+
+Each ``<argument>`` element describes one variable that can be passed to the simulation at runtime via the command line. There are three mandatory attributes: ``name``, ``type``, and ``default_value``. ``name`` is the name by which you can refer to that variable later in the script, as well as the name of the command line parameter. ``type`` defines the data type of the variable, and ``default_value`` is the value to which the variable is set if it is not given a value on the command line.
 
 
 .. _AutoVectorise:
 
-auto_vectorise element
+Auto_vectorise element
 ----------------------
 
 
@@ -170,10 +249,22 @@ fftw element
 
 .. parsed-literal::
 
-  optional **<fftw>** *yes* | *no* **</fftw>**
-  Child of:   **<features>**
-  Default:    *yes*
-  attributes: [plan={ *patient* | *exhaustive* }]  (default = *patient*)
+  <**fftw** :attributes-code:`[plan]`>
+    :attributes-code:`plan`: ('estimate', 'measure', 'patient', 'exhaustive') Degree of effort put into optimising FFT algorithm
+
+Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here.
+
+
+| <**fftw** :attributes-standard:`[plan]`>
+|  :attributes-standard:`plan`: ('estimate', 'measure', 'patient', 'exhaustive') Degree of effort put into optimising FFT algorithm
+
+Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here.
+
+
+| <fftw :attributes-standard:`[plan]`>
+|  :attributes-standard:`plan`: :smaller-font:`('estimate', 'measure', 'patient', 'exhaustive') Degree of effort put into optimising FFT algorithm`
+
+Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here.
 
 
 .. _Globals:
