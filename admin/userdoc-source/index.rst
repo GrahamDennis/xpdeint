@@ -17,10 +17,8 @@ Contents:
    tutorial
    
    worked_examples
-   
-   schema
 
-   reference
+   reference_index
    
    advanced_topics
    

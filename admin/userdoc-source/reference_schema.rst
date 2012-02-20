@@ -1,4 +1,4 @@
-.. _Schema:
+.. _ReferenceSchema:
 
 ****************
 XMDS2 XML Schema
@@ -12,7 +12,6 @@ The syntax <element /> can be used for lowest-level elements that have attribute
 The possible attributes and attribute values for each element are not shown; see the individual entries in the Reference section for details.
 
 
-
 .. parsed-literal::
 
     <?xml version="1.0" encoding="UTF-8"?>
@@ -20,7 +19,6 @@ The possible attributes and attribute values for each element are not shown; see
       <:ref:`name <NameElement>`> <:ref:`/name <NameElement>`>
       <:ref:`author <AuthorElement>`> <:ref:`author <AuthorElement>`>
       <:ref:`description <DescriptionElement>`> <:ref:`/description <DescriptionElement>`>
-
       <:ref:`testing <TestingElement>`> <:ref:`/testing <TestingElement>`>
   
       <:ref:`features <FeaturesElement>`>
@@ -159,5 +157,3 @@ The possible attributes and attribute values for each element are not shown; see
       <:ref:`/output <OutputElement>`>
 
     <:ref:`/simulation <SimulationElement>`>
-
-

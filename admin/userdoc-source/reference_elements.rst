@@ -1,93 +1,31 @@
-.. _Reference:
+.. _ReferenceElements:
 
-***************
-XMDS2 Reference
-***************
+*********************
+XMDS2 script elements
+*********************
 
 This section outlines all the elements and options available in an XMDS2 script.  This is very much a **work in progress**, beginning with placeholders in most cases, as we have prioritised the tutorials for new users.  One of the most productive ways that non-developer veterans can contribute to the project is to help develop this documentation.
 
-.. _InstallationConfigurationRuntime:
-
-Installation, Configuration and Runtime options
-===============================================
-
-Running the 'xmds2' program with the option '--help', gives several options that can change its behaviour at runtime.  These include:
-  * '-o', which overrides the name of the output file to be generated
-  * '-n', which generates the C code for the simulation, but does not try to compile it
-  * '-v', which gives verbose output about compilation flags.
-  * '-g', which compiles the simulation in debug mode (compilation errors refer to lines in the source, not the .xmds file). This option implies '-v'. This option is mostly useful when debugging XMDS code generation.
-
-It also has commands to configure XMDS2 and recheck the installation.  If your program requires extra paths to compile, you can configure XMDS2 to include those paths by default.  Simply use the command
-
-.. code-block:: bash
-
-    $ xmds2 --configure --include-path /path/to/include --lib-path /path/to/lib 
-
-Running XMDS2 with the '--configure' option also searches for packages that have been installed since you last installed or configured XMDS2.  If you wish to run 'xmds2 --configure' with the same extra options as last time, simply use the command:
-
-.. code-block:: bash
-
-    $ xmds2 --reconfigure
-
-A detailed log of the checks is saved in the file '~/.xmds/waf_configure/config.log'.  This can be used to identify issues with packages that XMDS2 is not recognised, but you think that you have successfully installed on your system.
-
-
-.. _UsefulXMLSyntax:
-
-Useful XML Syntax
-=================
-
-Standard XML placeholders can be used to simplify some scripts.  For example, the following (abbreviated) code ensures that the limits of a domain are symmetric.
-
-.. code-block:: xmds2
-
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE simulation [
-    <!ENTITY Npts    "64">
-    <!ENTITY L      "3.0e-5">
-    ]>
-      <simulation xmds-version="2">
-      
-        . . .
-        
-        <geometry>
-            <propagation_dimension> t </propagation_dimension>
-            <transverse_dimensions>
-              <dimension name="x" lattice="&Npts;"  domain="(-&L;, &L;)" />
-            </transverse_dimensions>
-         </geometry>
 
 
 .. _NameElement:
 
 Name Element
 ============
-::
 
-  Optional: Yes
-  Required attributes: None
-  Optional attributes: None
 
 
 .. _AuthorElement:
 
 Author Element
 ==============
-::
 
-  Optional: Yes
-  Required attributes: None
-  Optional attributes: None
 
 .. _DescriptionElement:
 
 Description Element
 ===================
-::
 
-  Optional: Yes
-  Required attributes: None
-  Optional attributes: None
 
 
 
@@ -95,11 +33,7 @@ Description Element
 
 Testing Element
 ===============
-::
 
-  Optional: Yes
-  Required attributes: None
-  Optional attributes: None
 
 
 
@@ -107,12 +41,6 @@ Testing Element
 
 Simulation Element
 ==================
-::
-
-  Optional: No
-  Required attributes: xmds-version {'2'}
-  Optional attributes: None
-
 
 The ``<simulation>`` element is the single top level element in an XMDS2 simulation, and contains all the other elements.  All XMDS scripts must contain exactly one simulation element, and it must have the ``xmds-version="2"`` attribute defined.
 
@@ -128,11 +56,7 @@ Example syntax::
 
 Features Elements
 =================
-::
 
-  Optional: Yes
-  Required attributes: None
-  Optional attributes: None
 
 Features elements are where simulation-wide options are specified.  There are many possible features elements.  We will give a full list here, and then describe each one.
 
@@ -154,33 +78,31 @@ Features elements are where simulation-wide options are specified.  There are ma
 
 Arguments Element
 -----------------
-::
 
-  Optional: Yes
-  Required attributes: None
-  Optional attributes: None
 
 
 .. _ArgumentElement:
 
 argument element
 ~~~~~~~~~~~~~~~~
-::
 
-  Optional: Yes
-  Required attributes: name {text}, type {'int' | 'integer' | 'long' | 'real' | 'string}, default_value {'int' | 'integer' | 'long' | 'real' | 'string'}
-  Optional attributes: None
+.. parsed-literal::
+
+  <font color="#990000">This text is hexcolor #990000</font>
+  optional **<argument>** none **</argument>**
+  Child of:   **<features>**
+  Default:    none
+  attributes: name {*text*}, 
+              type {*'int'* | *'integer'* | *'long'* | *'real'* | *'string'*}, 
+              default_value {*int* | *integer* | *long* | *real* | *string*}
+
 
 
 .. _AutoVectorise:
 
 auto_vectorise element
 ----------------------
-::
 
-  Optional: Yes
-  Required attributes: None
-  Optional attributes: None
 
 
 
@@ -188,11 +110,7 @@ auto_vectorise element
 
 Benchmark
 ---------
-::
 
-  Optional: Yes
-  Required attributes: None
-  Optional attributes: None
 
 
 
@@ -200,11 +118,7 @@ Benchmark
 
 Bing
 ----
-::
 
-  Optional: Yes
-  Required attributes: None
-  Optional attributes: None
 
 
 
@@ -212,11 +126,7 @@ Bing
 
 C Flags
 -------
-::
 
-  Optional: Yes
-  Required attributes: None
-  Optional attributes: None
 
 
 
@@ -224,11 +134,7 @@ C Flags
 
 Diagnostics
 -----------
-::
 
-  Optional: Yes
-  Required attributes: None
-  Optional attributes: None
 
 
 
@@ -236,11 +142,7 @@ Diagnostics
 
 Error Check
 -----------
-::
 
-  Optional: Yes
-  Required attributes: None
-  Optional attributes: None
 
 It's often important to know whether you've got errors.  This feature runs each integration twice: once with the specified error tolerance or defined lattice spacing in the propagation dimension, and then again with half the lattice spacing, or an equivalently lower error tolerance.  Each component of the output then shows the difference between these two integrations as an estimate of the error.  This feature is particularly useful when integrating stochastic equations, as it treats the noise generation correctly between the two runs, and thus makes a reasonable estimate of the strong convergence of the equations.
 
@@ -257,22 +159,21 @@ Example syntax::
 
 Halt_Non_Finite
 ---------------
-::
 
-  Optional: Yes
-  Required attributes: None
-  Optional attributes: None
+
 
 
 .. _FFTW:
 
 fftw element
 ------------
-::
 
-  Optional: Yes
-  Required attributes: None
-  Optional attributes: plan {patient | exhaustive}
+.. parsed-literal::
+
+  optional **<fftw>** *yes* | *no* **</fftw>**
+  Child of:   **<features>**
+  Default:    *yes*
+  attributes: [plan={ *patient* | *exhaustive* }]  (default = *patient*)
 
 
 .. _Globals:
