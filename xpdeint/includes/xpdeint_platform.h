@@ -335,7 +335,7 @@
     void *RetVal;
     int error;
     if ((error = posix_memalign(&RetVal, alignment, size))) {
-        _LOG(_ERROR_LOG_LEVEL, "Couldn't allocate %zu bytes of %zu-byte aligned memory! Error: %i\nBarfing!\n", size, alignment, error);
+        fprintf(stderr, "Couldn't allocate %zu bytes of %zu-byte aligned memory! Error: %i\nBarfing!\n", size, alignment, error);
     }
     return RetVal;
   }
@@ -552,41 +552,6 @@
   }
 #endif
 
-template<typename fp_type> union FP_UNION;
-
-template<> union FP_UNION<double>
-{
-    uint64_t as_int;
-    double as_value;
-};
-
-template<> union FP_UNION<float>
-{
-    uint32_t as_int;
-    float as_value;
-};
-
-template<typename fp_type> inline FP_UNION<fp_type> _xmds_nan_mask();
-
-template<> inline FP_UNION<double> _xmds_nan_mask<double>()
-{
-    static const FP_UNION<double> NANVal = {0x7ff0000000000000};
-    return NANVal;
-}
-
-template<> inline FP_UNION<float> _xmds_nan_mask<float>()
-{
-    static const FP_UNION<float> NANVal = {0x7f800000};
-    return NANVal;
-}
-
-template<typename fp_type> inline bool _xmds_isnonfinite(fp_type value)
-{
-    FP_UNION<fp_type> x, NANMask = _xmds_nan_mask<fp_type>();
-    x.as_value = value;
-    return (x.as_int & NANMask.as_int) == NANMask.as_int;
-}
-
 // Define UINT64_C for 64-bit constants
 #ifndef UINT64_C
   #if (CFG_COMPILER == CFG_COMPILER_GCC) || (CFG_COMPILER == CFG_COMPILER_SUNCC) || (CFG_COMPILER == CFG_COMPILER_ICC)
@@ -599,6 +564,41 @@ template<typename fp_type> inline bool _xmds_isnonfinite(fp_type value)
     #error Could not define UINT64_C. Need a compiler-specific fix.
   #endif
 #endif
+
+  template<typename fp_type> union FP_UNION;
+
+  template<> union FP_UNION<double>
+  {
+      uint64_t as_int;
+      double as_value;
+  };
+
+  template<> union FP_UNION<float>
+  {
+      uint32_t as_int;
+      float as_value;
+  };
+
+  template<typename fp_type> inline FP_UNION<fp_type> _xmds_nan_mask();
+
+  template<> inline FP_UNION<double> _xmds_nan_mask<double>()
+  {
+      static const FP_UNION<double> NANVal = {UINT64_T(0x7ff0000000000000)};
+      return NANVal;
+  }
+
+  template<> inline FP_UNION<float> _xmds_nan_mask<float>()
+  {
+      static const FP_UNION<float> NANVal = {0x7f800000};
+      return NANVal;
+  }
+
+  template<typename fp_type> inline bool _xmds_isnonfinite(fp_type value)
+  {
+      FP_UNION<fp_type> x, NANMask = _xmds_nan_mask<fp_type>();
+      x.as_value = value;
+      return (x.as_int & NANMask.as_int) == NANMask.as_int;
+  }
 
 // Floating point casting.
 #if (CFG_HAVE_LRINT == 1) || (CFG_HAVE_LRINTF == 1)
