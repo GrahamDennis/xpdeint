@@ -336,6 +336,7 @@
     int error;
     if ((error = posix_memalign(&RetVal, alignment, size))) {
         fprintf(stderr, "Couldn't allocate %zu bytes of %zu-byte aligned memory! Error: %i\nBarfing!\n", size, alignment, error);
+        exit(-1);
     }
     return RetVal;
   }
