@@ -583,7 +583,7 @@
 
   template<> inline FP_UNION<double> _xmds_nan_mask<double>()
   {
-      static const FP_UNION<double> NANVal = {UINT64_T(0x7ff0000000000000)};
+      static const FP_UNION<double> NANVal = {UINT64_C(0x7ff0000000000000)};
       return NANVal;
   }
 
