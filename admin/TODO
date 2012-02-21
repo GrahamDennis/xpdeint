@@ -56,3 +56,7 @@ Testcases needed:
 
 * Trigger support (Ask Michael Hush)
 
+* Make it possible to output variables in moment groups without having to write stupid code like:
+  xR = x;
+  yR = y;
+  It's redundant.  If 'x' is an output variable, and 'x' is a component of a dependency, then it's obvious!
