@@ -413,6 +413,8 @@
       <choice>
         <value>ip</value>
         <value>ex</value>
+        <value>IP</value>
+        <value>EX</value>
       </choice>
     </attribute>
     <optional>

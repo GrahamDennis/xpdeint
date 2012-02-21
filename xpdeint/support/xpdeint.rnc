@@ -209,7 +209,7 @@ Operator = element operator {
 }
 
 IPEXOperatorContents = 
-    attribute kind { "ip" | "ex" }
+    attribute kind { "ip" | "ex" | "IP" | "EX" }
     , attribute constant { Bool }?
     , attribute basis { text }?
     , attribute type { text }?
