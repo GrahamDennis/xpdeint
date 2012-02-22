@@ -34,7 +34,8 @@ if (_rank != _size - 1)
 else {
   // The last rank takes up everything else
   // this should be less than or equal to _block_size
-  ${mpiDimRep.localLattice} = ${mpiDimRep.globalLattice} - _block_size * (_size - 1);
+  // And if there's nothing left, we don't have a local lattice.
+  ${mpiDimRep.localLattice} = MAX(${mpiDimRep.globalLattice} - _block_size * (_size - 1), 0);
 }
 
   @for $field in $fields
@@ -51,8 +52,8 @@ if (_rank == 0) {
   ${fieldMPIDimRep.localLattice} = (${mpiDimRep.localLattice}-1)/_${field.name}_skip_size + 1;
 } else {
   ${fieldMPIDimRep.localOffset} = (${mpiDimRep.localOffset}-1)/_${field.name}_skip_size + 1;
-  ${fieldMPIDimRep.localLattice} = (${mpiDimRep.localOffset} + ${mpiDimRep.localLattice} - 1)/_${field.name}_skip_size
-                                         + 1 - ${fieldMPIDimRep.localOffset};
+  ${fieldMPIDimRep.localLattice} = MIN((${mpiDimRep.localOffset} + ${mpiDimRep.localLattice} - 1)/_${field.name}_skip_size
+                                         + 1 - ${fieldMPIDimRep.localOffset}, MAX(${fieldMPIDimRep.globalLattice} - ${fieldMPIDimRep.localOffset}, 0));
 }
 
   @end for

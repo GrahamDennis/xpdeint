@@ -71,12 +71,12 @@ if (!_fftw_forward_plan) {
   
   int _transform_sizes_index = 0, _loop_sizes_index = 0;
   
-  if (_prefix_lattice) {
+  if (_prefix_lattice > 1) {
     _iodim_ptr = &_loop_sizes[_loop_sizes_index++];
     _iodim_ptr->n = _prefix_lattice;
     _iodim_ptr->is = _iodim_ptr->os = _postfix_lattice * ${' * '.join([dimRep.globalLattice for dimRep in transformPair[0]])};
   }
-  if (_postfix_lattice) {
+  if (_postfix_lattice > 1) {
     _iodim_ptr = &_loop_sizes[_loop_sizes_index++];
     _iodim_ptr->n = _postfix_lattice;
     _iodim_ptr->is = _iodim_ptr->os = 1;
@@ -102,9 +102,14 @@ if (!_fftw_forward_plan) {
   @set $dataOut = '_data_out' if transformDict.get('outOfPlace', False) else '_data_in'
   @set $flags = ' | FFTW_DESTROY_INPUT' if transformDict.get('outOfPlace', False) else ''
   @#
-  ${guruPlanFunction(transformDict, 'forward', dataOut, flags), autoIndent=True}@slurp
-  ${guruPlanFunction(transformDict, 'backward', dataOut, flags), autoIndent=True}@slurp
   
+  if (_prefix_lattice && _postfix_lattice) {
+      ${guruPlanFunction(transformDict, 'forward', dataOut, flags), autoIndent=True}@slurp
+      ${guruPlanFunction(transformDict, 'backward', dataOut, flags), autoIndent=True}@slurp
+  } else {
+    // Sentinel value so we don't try to create plans later even though we don't need them.
+      _fftw_forward_plan = _fftw_backward_plan = (fftw_plan)1;
+  }
   // Save wisdom
   #if CFG_OSAPI == CFG_OSAPI_POSIX
   ${saveWisdom, autoIndent=True}@slurp
@@ -112,6 +117,8 @@ if (!_fftw_forward_plan) {
   
   _LOG(_SIMULATION_LOG_LEVEL, " done.\n");
 }
+
+if (!(_prefix_lattice && _postfix_lattice)) return;
 
 if (_forward) {
   ${fftwPrefix}_execute_${executeSuffix}(

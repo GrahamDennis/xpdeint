@@ -186,6 +186,8 @@ $result@slurp
 
 @def logFunctionInnerContent
   @#
+if (logLevel & (_ERROR_LOG_LEVEL | _WARNING_LOG_LEVEL)) \
+    printf("%s:%i: ", __FILE__, __LINE__); \
 printf(__VA_ARGS__); \
 fflush(stdout); \
   @#

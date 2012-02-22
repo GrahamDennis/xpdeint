@@ -1,0 +1,118 @@
+<simulation xmds-version="2">
+  <testing>
+    <command_line>mpirun -n 8 ./lorenz_mpi</command_line>
+    <xsil_file name="lorenz_mpi.xsil" expected="lorenz_mpi_expected.xsil" absolute_tolerance="4e-2" relative_tolerance="4e-2" />
+  </testing>
+  
+  <name>lorenz_mpi</name>
+  
+  <!-- While not strictly necessary, the following two tags are handy. -->
+  <author>Graham Dennis</author>
+  <description>
+    The Lorenz Attractor, an example of chaos.
+    
+    This example is designed to check that when the number of processors is of the same order
+    as the number of lattice points that things don't go awry
+  </description>
+  
+  <!-- 
+  This element defines some constants.  It can be used for other 
+  features as well, but we will go into that in more detail later.
+  -->
+  <features>
+    <globals>
+        <![CDATA[
+        real b = 8.0/3.0;
+        real r = 28.0;
+        ]]>
+     </globals>
+     <arguments>
+         <![CDATA[
+             printf("Hello from rank %i\n", _rank);
+         ]]>
+     </arguments>
+   </features>
+   
+  <!-- 
+  This part defines all of the dimensions used in the problem,
+  in this case, only the dimension of 'time' is needed.
+  -->
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+        <dimension name="sigma" domain="(5.0,15.0)" lattice="10" transform="none"/>
+    </transverse_dimensions>
+  </geometry>
+  
+  <driver name="distributed-mpi" />
+  
+  <!-- A 'vector' describes the variables that we will be evolving. -->
+  <vector name="position" type="real">
+    <components>
+      x y z
+    </components>
+    <initialisation>
+      <![CDATA[
+      x = y = z = 1.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <!--
+    Here we define what differential equations need to be solved
+    and what algorithm we want to use.
+    -->
+    <integrate algorithm="ARK89" interval="20.0" tolerance="1e-7">
+      <samples>5</samples>
+      <operators>
+        <integration_vectors>position</integration_vectors>
+        <![CDATA[
+        dx_dt = sigma*(y-x);
+        dy_dt = r*x - y - x*z;
+        dz_dt = x*y - b*z;
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  
+  <!-- This part defines what data will be saved in the output file -->
+  <output format="binary">
+    <group>
+      <sampling basis="sigma" initial_sample="yes">
+        <moments>xR yR zR</moments>
+        <dependencies>position</dependencies>
+        <![CDATA[
+          xR = x;
+          yR = y;
+          zR = z;
+        ]]>
+      </sampling>
+    </group>
+  </output>
+
+<info>
+Script compiled with XMDS2 version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+See http://www.xmds.org for more information.
+
+Variables that can be specified on the command line:
+</info>
+
+<XSIL Name="moment_group_1">
+  <Param Name="n_independent">2</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>5</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t sigma xR yR zR 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>6</Dim>
+    <Dim>10</Dim>
+    <Dim>5</Dim>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint64" precision="double" Type="Remote" Encoding="LittleEndian"/>
+lorenz_mpi_expected_mg0.dat
+    </Stream>
+  </Array>
+</XSIL>
+</simulation>
