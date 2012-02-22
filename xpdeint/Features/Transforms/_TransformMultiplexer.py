@@ -484,7 +484,8 @@ class _TransformMultiplexer (_Feature):
     def functionImplementation(func):
       transform = func.transform
       transformFunction = transform.get('transformFunction')
-      return transformFunction(*func.transformFunctionArgs) if transformFunction else ''
+      transformFunctionPrelude = "if (_prefix_lattice <= 0 || _postfix_lattice <= 0) return;\n"
+      return transformFunctionPrelude + transformFunction(*func.transformFunctionArgs) if transformFunction else ''
     
     for tID, transform in enumerate(self.neededTransformations):
       description = transform.get('description')

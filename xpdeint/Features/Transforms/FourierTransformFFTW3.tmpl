@@ -110,15 +110,9 @@ if (!_fftw_forward_plan) {
     // Sentinel value so we don't try to create plans later even though we don't need them.
       _fftw_forward_plan = _fftw_backward_plan = (fftw_plan)1;
   }
-  // Save wisdom
-  #if CFG_OSAPI == CFG_OSAPI_POSIX
-  ${saveWisdom, autoIndent=True}@slurp
-  #endif // POSIX
   
   _LOG(_SIMULATION_LOG_LEVEL, " done.\n");
 }
-
-if (!(_prefix_lattice && _postfix_lattice)) return;
 
 if (_forward) {
   ${fftwPrefix}_execute_${executeSuffix}(
@@ -178,31 +172,31 @@ ${loadWisdom}@slurp
 
 @def loadWisdom
   @#
-char _hostName[256];
-gethostname(_hostName, 256);
-_hostName[255] = '\0'; // just in case
-
-string _pathToWisdom = getenv("HOME");
-_pathToWisdom += "/.xmds/wisdom/";
-
-string _wisdomFileName = _hostName;
-_wisdomFileName += ".wisdom";
-_wisdomFileName += "${wisdomExtension}";
-
-FILE *_fp = NULL;
-
-_fp = fopen(_pathToWisdom.c_str(), "r");
-if (_fp) {
-  fclose(_fp);
-} else {
-  _LOG(_WARNING_LOG_LEVEL, "Warning: Cannot find enlightenment, the path to wisdom ~/.xmds/wisdom doesn't seem to exist.\n"
-                           "         I'll use the current path instead.\n");
-  _pathToWisdom = ""; // present directory
-}
-
-_fftwWisdomPath = _pathToWisdom + _wisdomFileName;
-
 {
+  char _hostName[256];
+  gethostname(_hostName, 256);
+  _hostName[255] = '\0'; // just in case
+  
+  string _pathToWisdom = getenv("HOME");
+  _pathToWisdom += "/.xmds/wisdom/";
+  
+  string _wisdomFileName = _hostName;
+  _wisdomFileName += ".wisdom";
+  _wisdomFileName += "${wisdomExtension}";
+  
+  FILE *_fp = NULL;
+  
+  _fp = fopen(_pathToWisdom.c_str(), "r");
+  if (_fp) {
+    fclose(_fp);
+  } else {
+    _LOG(_WARNING_LOG_LEVEL, "Warning: Cannot find enlightenment, the path to wisdom ~/.xmds/wisdom doesn't seem to exist.\n"
+                             "         I'll use the current path instead.\n");
+    _pathToWisdom = ""; // present directory
+  }
+  
+  _fftwWisdomPath = _pathToWisdom + _wisdomFileName;
+  
   FILE *_wisdomFile = NULL;
   if ( (_wisdomFile = fopen(_fftwWisdomPath.c_str(), "r")) != NULL) {
     _LOG(_SIMULATION_LOG_LEVEL, "Found enlightenment... (Importing wisdom)\n");
@@ -229,6 +223,12 @@ _fftwWisdomPath = _pathToWisdom + _wisdomFileName;
 
 @def mainEnd($dict)
   @#
+
+// Save wisdom
+#if CFG_OSAPI == CFG_OSAPI_POSIX
+${saveWisdom, autoIndent=True}@slurp
+#endif // POSIX
+
 ${fftwPrefix}_cleanup();
   @#
 @end def
