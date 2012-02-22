@@ -79,6 +79,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <time.h>
 #include <list>
 #include <vector>
+#include <algorithm>
 
 @for $child in $children
   @# Prevent writing zero-length defines
@@ -134,6 +135,13 @@ $result@slurp
 // ********************************************************
 // GLOBALS
 // ********************************************************
+
+// Need a global variable to hold the name of any label that may
+// be attached to the output filename. We'll assign in the main()
+// function where the command line arguments are parsed. That C code
+// is generated in Arguments.tmpl
+std::string gStringToAppendToOutputFilename = "";
+
 @# only loop over the elements that implement the globals function
 @for $child in $children
   @# Prevent writing zero-length globals

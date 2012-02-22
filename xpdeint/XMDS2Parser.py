@@ -310,6 +310,11 @@ class XMDS2Parser(ScriptParser):
       
       argumentElements = argumentsFeatureElement.getChildElementsByTagName('argument', optional=True)
       
+      if argumentsFeatureElement.getAttribute('append_args_to_output_filename') == "yes":
+        argumentsFeature.appendArgsToOutputFilename = True
+      else:
+        argumentsFeature.appendArgsToOutputFilename = False
+
       argumentsFeature.codeBlocks['postArgumentProcessing'] = _UserCodeBlock(
         xmlElement = argumentsFeatureElement, parent = argumentsFeature,
         **self.argumentsToTemplateConstructors
@@ -787,7 +792,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
         initialisationTemplate.geometryMatchingMode = geometryMatchingMode
         
         filenameElement = initialisationElement.getChildElementByTagName('filename')
-        
+
         if kindString == 'xsil':
           momentGroupName = 'NULL'
           if filenameElement.hasAttribute('group'):

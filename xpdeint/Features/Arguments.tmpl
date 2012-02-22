@@ -81,7 +81,10 @@ void _print_usage()
 @def mainBegin($dict)
 // *********** Parse the command line for arguments, and set  *********
 // *********** the appropriate global variables               *********
+
 int resp;
+std::vector<string> vInputArgsAndValues;
+
 while (1) {
   static struct option long_options[] = 
     {
@@ -101,13 +104,15 @@ $argument.shortName:@slurp
   
   if (resp == -1)
     break;
-  
+
   switch (resp) {
     case 'h':
       _print_usage(); // This causes the simulation to exit
+
   @for $argument in $argumentList
-      
+    
     case '$argument.shortName':
+      vInputArgsAndValues.push_back(string(".") + string("$argument.name") + string("_") + string(optarg));
     @if $argument.type == 'string'
       $argument.name = string(optarg);
     @elif $argument.type in ('integer', 'int', 'long'):
@@ -122,6 +127,15 @@ $argument.shortName:@slurp
       _LOG(_ERROR_LOG_LEVEL, "Internal error in processing arguments.\n");
   }
 }
+
+  @if $appendArgsToOutputFilename == True
+// We want the output filename to have the same ordering of arguments
+// regardless of the order in which they were passed on the command line
+sort(vInputArgsAndValues.begin(), vInputArgsAndValues.end());
+for (unsigned int index=0; index < vInputArgsAndValues.size(); index++) {
+  gStringToAppendToOutputFilename += vInputArgsAndValues[index];
+}
+  @end if
 
 if (optind < argc)
   _print_usage(); // This causes the simulation to exit.

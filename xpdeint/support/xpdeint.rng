@@ -150,6 +150,9 @@
   </define>
   <define name="Arguments">
     <element name="arguments">
+      <optional>
+        <attribute name="append_args_to_output_filename"/>
+      </optional>
       <zeroOrMore>
         <ref name="Argument"/>
       </zeroOrMore>

@@ -67,6 +67,7 @@ Features = element features {
 Bool = "yes" | "no"
 
 Arguments = element arguments {
+    attribute append_args_to_output_filename { Bool }?
     Argument*
     , text?
 }
