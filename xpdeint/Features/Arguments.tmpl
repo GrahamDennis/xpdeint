@@ -83,7 +83,7 @@ void _print_usage()
 // *********** the appropriate global variables               *********
 
 int resp;
-std::vector<string> vInputArgsAndValues;
+std::map<string, string> mInputArgsAndValues;
 
 while (1) {
   static struct option long_options[] = 
@@ -95,7 +95,7 @@ while (1) {
     };
   
   int option_index = 0;
-  
+
   resp = getopt_long(argc, argv, "h@slurp
   @for $argument in $argumentList
 $argument.shortName:@slurp
@@ -108,11 +108,12 @@ $argument.shortName:@slurp
   switch (resp) {
     case 'h':
       _print_usage(); // This causes the simulation to exit
-
   @for $argument in $argumentList
     
     case '$argument.shortName':
-      vInputArgsAndValues.push_back(string(".") + string("$argument.name") + string("_") + string(optarg));
+    @if $appendArgsToOutputFilename
+      mInputArgsAndValues.insert ( pair<string, string> (string("$argument.name"), string(optarg)));
+    @end if
     @if $argument.type == 'string'
       $argument.name = string(optarg);
     @elif $argument.type in ('integer', 'int', 'long'):
@@ -128,12 +129,24 @@ $argument.shortName:@slurp
   }
 }
 
-  @if $appendArgsToOutputFilename == True
-// We want the output filename to have the same ordering of arguments
-// regardless of the order in which they were passed on the command line
-sort(vInputArgsAndValues.begin(), vInputArgsAndValues.end());
-for (unsigned int index=0; index < vInputArgsAndValues.size(); index++) {
-  gStringToAppendToOutputFilename += vInputArgsAndValues[index];
+  @# Set the global variable containing the base filename for the output files
+  @if $baseOutputFilename
+gsBaseFilename = "${baseOutputFilename}";
+  @end if
+
+  @if $appendArgsToOutputFilename
+// Try and insert all the default arguments; the insert will fail if that
+// argument is already in the map. This way we make sure that all the 
+// possible command line arguments are in the map, even if they weren't passed. 
+
+    @for $argument in $argumentList
+mInputArgsAndValues.insert ( pair<string, string> (string("$argument.name"), string("$argument.defaultValue")));
+    @end for
+
+// Since the command line arguments and their values are to be appended to the
+// output filenames, modify the base output filename to include them
+for (map<string, string>::iterator iter=mInputArgsAndValues.begin() ; iter != mInputArgsAndValues.end(); iter++ ) {
+  gsBaseFilename += string(".") + (*iter).first + string("_") + (*iter).second;
 }
   @end if
 

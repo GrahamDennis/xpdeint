@@ -1885,6 +1885,8 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     outputFeature.filename = filename
     outputFeature._children.append(outputFormat)
     outputFeature.outputFormat = outputFormat
+
+    Features.Arguments.Arguments.baseOutputFilename = filename
     
     geometryTemplate = self.globalNameSpace['geometry']
     
