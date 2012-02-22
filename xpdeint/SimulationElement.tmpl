@@ -59,6 +59,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   @#
   @super
   @#
+
+// Need a global variable to hold the base name of the output file.
+// This name will also include the command line arguments and their
+// values if the "append_args_to_output_filename" attribute in the
+// <arguments> tag is set to "yes".
+  @if $baseOutputFilename
+std::string gsBaseFilename = "${baseOutputFilename}";
+  @end if
+
 real ${propagationDimension};
   @#
 @end def

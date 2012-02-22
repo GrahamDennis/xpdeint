@@ -129,11 +129,6 @@ $argument.shortName:@slurp
   }
 }
 
-  @# Set the global variable containing the base filename for the output files
-  @if $baseOutputFilename
-gsBaseFilename = "${baseOutputFilename}";
-  @end if
-
   @if $appendArgsToOutputFilename
 // Try and insert all the default arguments; the insert will fail if that
 // argument is already in the map. This way we make sure that all the 

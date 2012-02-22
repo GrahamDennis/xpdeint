@@ -136,12 +136,6 @@ $result@slurp
 // GLOBALS
 // ********************************************************
 
-// Need a global variable to hold the base name of the output file.
-// This name will also include the command line arguments and their
-// values if the "append_args_to_output_filename" attribute in the
-// <arguments> tag is set to "yes".
-std::string gsBaseFilename = "";
-
 @# only loop over the elements that implement the globals function
 @for $child in $children
   @# Prevent writing zero-length globals
