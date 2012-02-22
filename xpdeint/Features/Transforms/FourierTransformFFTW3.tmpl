@@ -103,13 +103,8 @@ if (!_fftw_forward_plan) {
   @set $flags = ' | FFTW_DESTROY_INPUT' if transformDict.get('outOfPlace', False) else ''
   @#
   
-  if (_prefix_lattice && _postfix_lattice) {
-      ${guruPlanFunction(transformDict, 'forward', dataOut, flags), autoIndent=True}@slurp
-      ${guruPlanFunction(transformDict, 'backward', dataOut, flags), autoIndent=True}@slurp
-  } else {
-    // Sentinel value so we don't try to create plans later even though we don't need them.
-      _fftw_forward_plan = _fftw_backward_plan = (fftw_plan)1;
-  }
+  ${guruPlanFunction(transformDict, 'forward', dataOut, flags), autoIndent=True}@slurp
+  ${guruPlanFunction(transformDict, 'backward', dataOut, flags), autoIndent=True}@slurp
   
   _LOG(_SIMULATION_LOG_LEVEL, " done.\n");
 }
