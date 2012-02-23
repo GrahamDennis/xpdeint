@@ -32,31 +32,64 @@ def options(opt):
     # options provided by modules
     opt.load('compiler_cxx')
 
+def optionAsList(var):
+    if isinstance(var, str):
+        return [var]
+    elif isinstance(var, list):
+        return var
+    assert False
+
+
+# This doesn't have great performance, but it's a small dataset we'll be working on
+def append_to_unordered_set(dest, value):
+    if value in dest:
+        dest.remove(value)
+    dest.append(value)
+
+def expand_dependencies(dest, uselib, env):
+    append_to_unordered_set(dest, uselib)
+    if not uselib in env.uselib_dependencies: return
+    expand_dependencies_of_list(dest, env.uselib_dependencies[uselib], env)
+
+def expand_dependencies_of_list(dest, uselibs, env):
+    for uselib in uselibs:
+        expand_dependencies(dest, uselib, env)
+
+
 def configure(conf):
     env = conf.env
     
-    def check_cxx(**KWs):
+    env.uselib_dependencies = {}
+    
+    def _check_cxx(**KWs):
         # Don't execute when cross-compiling.
         KWs['execute'] = not conf.env['is_cross_compile']
         KWs['mandatory'] = False
-        def listOption(var):
-          if isinstance(var, str):
-            return [var]
-          elif isinstance(var, list):
-            return var
-          assert False
         
         if 'cxxflags' in KWs:
-          cxxflags = listOption(KWs['cxxflags'])
+          cxxflags = optionAsList(KWs['cxxflags'])
           
           linkflags = []
           if 'linkflags' in KWs:
-            linkflags.extend(listOption(KWs['linkflags']))
-          linkflags.extend(cxxflags)
+            linkflags.extend(optionAsList(KWs['linkflags']))
           KWs['linkflags'] = linkflags
+        
+        original_uselib = []
+        
+        if 'uselib' in KWs:
+            current_uselib = optionAsList(KWs['uselib'])
+            original_uselib = current_uselib[:]
+            expand_dependencies_of_list(current_uselib, original_uselib[:], conf.env)
+            KWs['uselib'] = current_uselib
+        
         result = conf.check_cxx(**KWs) not in [None, False]
         if result and 'uselib_store' in KWs:
             conf.env.append_unique('uselib', KWs['uselib_store'])
+            if original_uselib:
+                current_uselib_dep = conf.env.uselib_dependencies.setdefault(KWs['uselib_store'], [])
+                for uselib in original_uselib:
+                    if uselib == KWs['uselib_store']: continue
+                    append_to_unordered_set(current_uselib_dep, uselib)
         return result
     
     def try_options(uselib_store, kwOptions, common = None):
@@ -66,6 +99,27 @@ def configure(conf):
             allKWs.update(kws)
             if check_cxx(uselib_store=uselib_store, **allKWs):
                 break
+    
+    def check_cxx(**KWs):
+        # Prefer a static library over a dynamic one if available
+        if ('lib' not in KWs) or ('uselib_store' not in KWs) or ('_skip' in KWs):
+            return _check_cxx(**KWs)
+        
+        lib = KWs['lib']
+        uselib_store = KWs['uselib_store']
+        KWs['_skip'] = True
+        del KWs['uselib_store']
+        options = [
+            {'stlib': lib,   'msg': "%s (static library)" % KWs['msg']},
+            {'lib'  : lib,   'msg': "%s (dynamic library)" % KWs['msg']},
+        ]
+        if not conf.env['STLIB_MARKER']:
+            options = [
+            # On systems link Mac OS X, it seems we can't force the linker to prefer static libraries over dynamic ones
+            # Except of course by including them by listing the full path.
+                {'lib': lib}
+            ]
+        try_options(uselib_store, options, KWs)
     
     
     def configure_compiler():
@@ -84,7 +138,18 @@ def configure(conf):
             """,
             errmsg = "Please specify a C++ compiler."
         )
-
+        
+        # If we have a static library marker, try to link the simulation statically for performance.
+        if conf.env['STLIB_MARKER']:
+            conf.env['FINAL_LINK_VAR'] = conf.env['STLIB_MARKER']
+            result = conf.check_cxx(
+                msg = "Checking whether we can compile statically",
+                errmsg = "no",
+                mandatory = False,
+            )
+            if not result:
+                del conf.env['FINAL_LINK_VAR']
+        
         conf.env['is_cross_compile'] = not conf.check_cxx(
             msg = "Checking whether we are cross compiling",
             okmsg = "no",
@@ -139,10 +204,12 @@ def configure(conf):
                 {
                     "msg": "Checking for the 'go fast' compiler option",
                     "cxxflags": ["-fast", "-ffast-math"],
+                    "linkflags": ["-fast"],
                 },
                 {
                     "msg": "Checking for fallback optimisation flags",
                     "cxxflags": ['-O3', '-ffast-math', '-funroll-all-loops', '-fomit-frame-pointer'],
+                    "linkflags": ['-O3'],
                 }
             ]
             
@@ -168,12 +235,14 @@ def configure(conf):
             
             check_cxx(
                 cxxflags='-fopenmp',
+                linkflags="-fopenmp",
                 uselib_store='openmp',
                 msg = "Checking for OpenMP"
             )
             
             check_cxx(
                 cxxflags="-pthread",
+                linkflags="-pthread",
                 uselib_store="threads",
                 msg = "Checking for pthreads",
             )
@@ -182,14 +251,17 @@ def configure(conf):
                 {
                     "msg": "Checking for the 'go fast' compiler option",
                     "cxxflags": ['-fast', '-ffast-math', '-complex-limited-range', '-fomit-frame-pointer'],
+                    "linkflags": ["-fast"],
                 },
                 {
                     "msg": "Checking for fallback optimisation flags",
                     "cxxflags": ['-O3', '-ipo', '-ffast-math', '-complex-limited-range', '-fomit-frame-pointer'],
+                    "linkflags": ['-O3'],
                 },
                 {
                     "msg": "Checking safe optimisation flags",
                     "cxxflags": "-O3",
+                    "linkflags": "-O3"
                 }
             ]
             
@@ -238,12 +310,14 @@ def configure(conf):
             
             check_cxx(
                 cxxflags='-openmp',
+                linkflags="-openmp",
                 uselib_store="openmp",
                 msg = "Checking for OpenMP"
             )
             
             check_cxx(
                 cxxflags="-pthread",
+                linkflags="-pthread",
                 uselib_store="threads",
                 msg = "Checking for pthreads"
             )
@@ -255,35 +329,49 @@ def configure(conf):
             msg = "Checking for compiler debug flags"
         )
         
+        # Check for zlib, used by hdf5
+        check_cxx(
+            lib='z',
+            function_name="deflate",
+            header_name="zlib.h",
+            uselib_store="zlib",
+            msg = "Checking for zlib"
+        )
+        
         check_cxx(
             lib='hdf5',
-            header_name=['hdf5.h'],
-            function_name='H5check_version',
-            uselib_store='hdf5',
-            msg = 'Checking for HDF5'
+            header_name="hdf5.h",
+            function_name="H5check_version",
+            uselib_store="hdf5",
+            uselib="zlib" if "zlib" in conf.env['uselib'] else "",
+            msg = "Checking for HDF5",
         )
         
         if 'hdf5' in conf.env['uselib']:
             check_cxx(
-                defines='HAVE_HDF5_HL',
                 lib='hdf5_hl',
+                defines='HAVE_HDF5_HL',
                 header_name=['hdf5.h', 'hdf5_hl.h'],
                 function_name='H5DSset_scale',
                 uselib_store='hdf5',
-                uselib = 'hdf5',
-                msg = "Checking for HDF5 High-level library"
+                uselib='hdf5',
+                msg = "Checking for HDF5 High-level library",
             )
+            
+            # We need to reverse the library order because hdf5_hl depends on hdf5
+            if conf.env['STLIB_hdf5']: conf.env['STLIB_hdf5'] = list(reversed(conf.env.get_flat('STLIB_hdf5').split()))
+            if conf.env['SHLIB_hdf5']: conf.env['SHLIB_hdf5'] = list(reversed(conf.env.get_flat('SHLIB_hdf5').split()))
+            
             check_cxx(
                 header_name=['hdf5.h'],
                 defines='HAVE_H5LEXISTS',
                 function_name='H5Lexists',
                 uselib = 'hdf5',
-                uselib_store = 'hdf5'
+                uselib_store = 'hdf5',
             )
         
         check_cxx(
             lib='xmds',
-            # function_name='initialiseFieldFromXSILFile',
             uselib_store='xmds',
             msg = "Checking for libxmds"
         )
@@ -311,7 +399,7 @@ def configure(conf):
               "msg": "Checking dSFMT compile flags",
           },
         ];
-
+        
         try_options('dsfmt', dsfmt_optimisations)
         
         # Find CBLAS
@@ -319,7 +407,7 @@ def configure(conf):
             {# Intel MKL
                 'defines': 'CBLAS_MKL',
                 'lib': ['mkl_intel_lp64', 'mkl_intel_thread', 'mkl_core'],
-                'linkflags': '-openmp', # FIXME: Dodgy hack. We should mark the uselib 'openmp' as a dependency
+                'uselib': 'openmp',
                 'header_name': 'mkl.h',
                 'msg': "Checking for Intel's Math Kernel Library",
             },
@@ -409,6 +497,9 @@ def configure(conf):
                 msg = "Checking for threading support in single-precision FFTW3",
             )
         
+        # Destroy all those unnecessary #define's generated by waf.
+        # Any we actually want will be attached to a uselib var.
+        del conf.env["DEFINES"]
     
     print
     print "Configuring for single-process scripts..."
