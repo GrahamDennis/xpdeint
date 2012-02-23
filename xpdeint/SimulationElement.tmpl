@@ -63,11 +63,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Need a global variable to hold the base name of the output file.
 // This name will also include the command line arguments and their
 // values if the "append_args_to_output_filename" attribute in the
-// <arguments> tag is set to "yes".
-  @if $baseOutputFilename
-std::string gsBaseFilename = "${baseOutputFilename}";
-  @end if
-
+// <arguments> tag is set to "yes". These arguments and values are
+// added to the filename in the Arguments.tmpl code.
+  @set outputFeature = $features['Output']
+char *gsBaseFilename = strdup("${outputFeature.filename}");
+  
 real ${propagationDimension};
   @#
 @end def

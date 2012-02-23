@@ -140,9 +140,13 @@ mInputArgsAndValues.insert ( pair<string, string> (string("$argument.name"), str
 
 // Since the command line arguments and their values are to be appended to the
 // output filenames, modify the base output filename to include them
+string strTemp = string(gsBaseFilename);
 for (map<string, string>::iterator iter=mInputArgsAndValues.begin() ; iter != mInputArgsAndValues.end(); iter++ ) {
-  gsBaseFilename += string(".") + (*iter).first + string("_") + (*iter).second;
+  strTemp += string(".") + (*iter).first + string("_") + (*iter).second;
 }
+  // gsBaseFilename was originally created with strdup, so let's be tidy
+  free(gsBaseFilename);
+  gsBaseFilename = strdup(strTemp.c_str());
   @end if
 
 if (optind < argc)
