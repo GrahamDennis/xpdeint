@@ -410,7 +410,7 @@ if [ $DEVELOPER_INSTALL -eq 1 ]; then
 else
   # Fetch a known good version of the XMDS2 source code from sourceforge
   cd $XMDS2_install_directory
-  svn checkout -r 2586 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
+  svn checkout -r 2630 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
 fi
 
 # Compile the Cheetah templates into Python
@@ -455,10 +455,10 @@ if [ $RPM_INSTALL -eq 1 ]; then
       COMPLETION_MESSAGE=$COMPLETION_MESSAGE"disable these warnings now by entering\n"
       COMPLETION_MESSAGE=$COMPLETION_MESSAGE"sudo sh -c \"echo 'btl = ^openib' >> "$OMPI_CONF_FILE"\"\n"
     fi
+    rm mpi_test_log
   fi
 fi
 
-rm mpi_test_log
 
 echo
 echo "If no errors are displayed above, XMDS 2.1 is installed!"
