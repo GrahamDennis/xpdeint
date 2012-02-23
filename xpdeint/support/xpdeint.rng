@@ -39,6 +39,7 @@
           <element name="command_line">
             <text/>
           </element>
+          <ref name="Arguments"/>
           <ref name="XSILFile"/>
           <ref name="InputXSILFile"/>
         </choice>
