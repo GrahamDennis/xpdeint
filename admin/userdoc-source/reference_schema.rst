@@ -32,7 +32,7 @@ The possible attributes and attribute values for each element are not shown; see
           <:ref:`moment_group <MomentGroupElement>` />
           <:ref:`moment_group <MomentGroupElement>` />
           ...
-        <:ref:`/xsil_file <ArgumentsElement>`>
+        <:ref:`/xsil_file <XSILFileElement>`>
       <:ref:`/testing <TestingElement>`>
   
       <:ref:`features <FeaturesElement>`>
