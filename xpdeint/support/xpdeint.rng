@@ -288,10 +288,12 @@
               <text/>
             </element>
           </optional>
-          <optional>
-            <ref name="Dependencies"/>
-          </optional>
-          <text/>
+          <interleave>
+            <text/>
+            <optional>
+              <ref name="Dependencies"/>
+            </optional>
+          </interleave>
         </element>
       </optional>
     </element>
@@ -300,10 +302,12 @@
     <element name="computed_vector">
       <ref name="VectorCommon"/>
       <element name="evaluation">
-        <optional>
-          <ref name="Dependencies"/>
-        </optional>
-        <text/>
+        <interleave>
+          <optional>
+            <ref name="Dependencies"/>
+          </optional>
+          <text/>
+        </interleave>
       </element>
     </element>
   </define>
@@ -434,13 +438,15 @@
     <optional>
       <attribute name="type"/>
     </optional>
-    <element name="operator_names">
+    <interleave>
+      <element name="operator_names">
+        <text/>
+      </element>
+      <optional>
+        <ref name="Dependencies"/>
+      </optional>
       <text/>
-    </element>
-    <optional>
-      <ref name="Dependencies"/>
-    </optional>
-    <text/>
+    </interleave>
   </define>
   <define name="FunctionsOperatorContents">
     <attribute name="kind">
@@ -477,10 +483,12 @@
   </define>
   <define name="Filter">
     <element name="filter">
-      <optional>
-        <ref name="Dependencies"/>
-      </optional>
-      <text/>
+      <interleave>
+        <optional>
+          <ref name="Dependencies"/>
+        </optional>
+        <text/>
+      </interleave>
     </element>
   </define>
   <define name="Breakpoint">

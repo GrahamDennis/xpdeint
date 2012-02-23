@@ -136,9 +136,9 @@ Vector = element vector {
         , element filename { 
             attribute group { text }?
             , text
-        }?
-        , Dependencies?
-        , text
+            }?
+        , ( text
+        & Dependencies? )
     }?
 }
 
@@ -146,7 +146,7 @@ ComputedVector = element computed_vector {
     VectorCommon
     , element evaluation {
         Dependencies?
-        , text
+        & text
     }
 }
 
@@ -215,9 +215,9 @@ IPEXOperatorContents =
     , attribute constant { Bool }?
     , attribute basis { text }?
     , attribute type { text }?
-    , element operator_names { text }
-    , Dependencies?
-    , text
+    , ( element operator_names { text }
+    & Dependencies?
+    & text )
 
 FunctionsOperatorContents = 
     attribute kind { "functions" }
@@ -242,7 +242,7 @@ CrossPropagationOperatorContents =
 
 Filter = element filter {
     Dependencies?
-    , text
+    & text
 }
 
 Breakpoint = element breakpoint {
