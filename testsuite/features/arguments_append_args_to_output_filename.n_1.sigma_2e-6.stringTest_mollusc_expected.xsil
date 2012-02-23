@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+
+  <testing>
+    <arguments>--sigma 2e-6 --stringTest mollusc</arguments>
+    <xsil_file name="arguments_append_args_to_output_filename.n_1.sigma_2e-6.stringTest_mollusc.xsil" expected="arguments_append_args_to_output_filename.n_1.sigma_2e-6.stringTest_mollusc_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+  </testing>
+
+  <name>arguments_append_args_to_output_filename</name>
+  <author>Mattias Johnsson</author>
+  <description>
+    Two level atoms, 1D, two counter propagating lasers, adiabatically
+    eliminated upper level to give one state only.
+    Implements a beam splitter using a pi/2 Bragg pulse 
+  </description>
+  
+  <features>
+    <arguments append_args_to_output_filename = "yes" >
+      <argument name="n"              type="real" default_value="1" />
+      <argument name="sigma"          type="real" default_value="1e-6" />
+      <argument name="stringTest"     type="string" default_value="strDefault" />
+    <![CDATA[
+      if (stringTest != "mollusc") exit(1);
+    ]]>
+    </arguments>
+    <auto_vectorise />
+    <benchmark />
+    <bing />
+    <validation kind="run-time" />
+    <fftw plan="patient" />
+    <globals>
+      <![CDATA[
+         const real hbar = 1.05457148e-34;
+         const real mass = 1.45e-25;
+         const real lambda = 780e-9;
+         const real OmegaAmplitude = 1e4;
+         const real kspread = 4e5;
+
+         const real klight = 2.0*M_PI/lambda; 
+         
+         // Note that katoms and SimTime are merely *declared* here, as the
+         // globals block can't pick up passed-in parameters yet.
+         // Their values are actually *set* in the initialization block.      
+         real katoms = 0;              
+         real SimTime = 0; 
+      ]]>
+    </globals>
+
+  </features>
+  
+<!-- To get periodic boundary conditions need grid (-L,L) where L=j*lambda -->
+<!-- This ensures both the lattice and exp(i*n*k*L) plane waves match at +/- L boundaries -->
+
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="z" lattice="256"  domain="(-3.9e-06, 3.9e-06)" />
+    </transverse_dimensions>
+  </geometry>
+
+  <vector name="potential" initial_basis="z" type="real">
+    <components>
+      V
+    </components>
+    <initialisation>
+      <![CDATA[
+        V  = cos(klight*z)*cos(klight*z);
+      ]]>
+printf("n=%e, OmegaAmplitude=%e\n",n, OmegaAmplitude);
+    </initialisation>
+  </vector>
+
+<!-- 200nK has k-sigma 5.9813e6 for k density, 1.414 this for k amplitude -->
+<!-- 6e4 is 100um BEC width --> 
+ <vector name="wavefunction" initial_basis="kz" type="complex">
+    <components> psi0 </components>
+    <initialisation>
+      <![CDATA[
+        // Set SimTime here because if I do it in the globals block, XMDS2 isn't able to pick
+        // up the passed-in value of sigma at that point
+        SimTime=10.0*sigma;
+        katoms = n*klight;
+
+        // Note +i give momentum kick in the -ve direction, -i in the +ve direction
+        // +i gives initial state with +ve momentum, -i gives initial state with -ve momentum
+        psi0 = exp(-(kz-katoms)*(kz-katoms)/(2.0*(sqrt(2)*kspread)*(sqrt(2)*kspread)));
+        
+        //printf("sigma=%e, SimTime=%e, OmegaAmplitude=%e\n", sigma, SimTime, OmegaAmplitude);
+      ]]>
+    </initialisation>
+  </vector>
+
+  <computed_vector name="pulseshape" dimensions="" type="real">
+    <components>
+      W
+    </components>
+    <evaluation>
+      <![CDATA[
+        W = OmegaAmplitude*exp(-(t-SimTime/2.0)*(t-SimTime/2.0) /(2.0*sigma*sigma));
+      ]]>
+    </evaluation>
+  </computed_vector>
+
+  <sequence>
+    <integrate algorithm="ARK45" interval="10.0*sigma" tolerance="1e-8">
+      <samples>5</samples>
+      <operators>
+        <integration_vectors>wavefunction</integration_vectors> 
+        <dependencies>potential pulseshape</dependencies>
+
+        <operator kind="ip" constant="yes" type="imaginary">
+          <operator_names>Ltt</operator_names>
+          <![CDATA[
+            Ltt = -i*0.5*hbar*kz*kz/mass;
+          ]]>
+        </operator>
+        <![CDATA[
+
+          dpsi0_dt = Ltt[psi0] - i*2.0 * W * V * psi0;
+
+        ]]>
+      </operators>
+
+    </integrate>
+
+
+
+  </sequence>
+
+   <output format="hdf5">
+
+    <group>
+      <sampling initial_sample="yes" basis="kz">
+        <moments>densPsi0k</moments>
+        <dependencies>wavefunction</dependencies> 
+        <![CDATA[
+          densPsi0k = mod2(psi0);
+        ]]>
+      </sampling>
+    </group>
+
+  </output>
+
+
+<info>
+Script compiled with XMDS2 version 2.1 "Happy Mollusc" (r2616)
+See http://www.xmds.org for more information.
+
+Variables that can be specified on the command line:
+  Command line argument n = 1.000000e+00
+  Command line argument sigma = 2.000000e-06
+  Command line argument stringTest = mollusc
+</info>
+
+<XSIL Name="moment_group_1">
+  <Param Name="n_independent">2</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>3</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t kz densPsi0k 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>6</Dim>
+    <Dim>256</Dim>
+    <Dim>3</Dim>
+    <Stream><Metalink Format="HDF5" Type="Remote" Group="/1"/>
+arguments_append_args_to_output_filename.n_1.sigma_2e-6.stringTest_mollusc_expected.h5
+    </Stream>
+  </Array>
+</XSIL>
+</simulation>
