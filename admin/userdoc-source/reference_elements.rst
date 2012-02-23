@@ -24,6 +24,23 @@ This section outlines all the elements and options available in an XMDS2 script.
 
 
 
+
+.. _SimulationElement:
+
+Simulation element
+==================
+
+The ``<simulation>`` element is the single top level element in an XMDS2 simulation, and contains all the other elements.  All XMDS scripts must contain exactly one simulation element, and it must have the ``xmds-version="2"`` attribute defined.
+
+Example syntax::
+
+    <simulation xmds-version="2">
+        <!-- Rest of simulation goes here -->
+    </simulation>
+
+
+
+
 .. _NameElement:
 
 Name element
@@ -70,22 +87,32 @@ Example syntax::
 
 Testing element
 ===============
+ 
 
 
+.. _CommandLineElement:
+
+command_line element
+--------------------
 
 
-.. _SimulationElement:
+.. _InputXSILFileElement:
 
-Simulation element
-==================
+input_xsil_file element
+-----------------------
 
-The ``<simulation>`` element is the single top level element in an XMDS2 simulation, and contains all the other elements.  All XMDS scripts must contain exactly one simulation element, and it must have the ``xmds-version="2"`` attribute defined.
 
-Example syntax::
+.. _XSILFileElement:
 
-    <simulation xmds-version="2">
-        <!-- Rest of simulation goes here -->
-    </simulation>
+xsil_file element
+-----------------
+
+
+.. _MomentGroupElement:
+
+moment_group element
+--------------------
+
 
 
 
@@ -960,23 +987,25 @@ Sequence Element
 ================
 
 
+
+.. _IntegrateElement:
+
+Integrate element
+-----------------
+
+
+
 .. _FiltersElement:
 
 Filters element
-===============
+~~~~~~~~~~~~~~~
 
 
 
 .. _FilterElement:
 
 Filter element
---------------
-
-
-.. _IntegrateElement:
-
-Integrate element
------------------
+~~~~~~~~~~~~~~
 
 
 .. _SamplesElement:
