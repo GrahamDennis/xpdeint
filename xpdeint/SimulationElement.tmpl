@@ -60,13 +60,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   @super
   @#
 
-// Need a global variable to hold the base name of the output file.
-// This name will also include the command line arguments and their
-// values if the "append_args_to_output_filename" attribute in the
-// <arguments> tag is set to "yes". These arguments and values are
-// added to the filename in the Arguments.tmpl code.
-  @set outputFeature = $features['Output']
-char *gsBaseFilename = strdup("${outputFeature.filename}");
+@# If the simulation uses <Arguments append_args_to_output_filename="yes" >	
+@# we'll need to store the args and their values in a global string for
+@# use when we construct output filenames.
+@# The arguments and values are assigned to this string in the Arguments.tmpl code.
+string gsArgsAndValues = "";
   
 real ${propagationDimension};
   @#

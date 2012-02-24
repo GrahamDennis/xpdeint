@@ -57,8 +57,7 @@ void _write_output()
     @set $featureOrdering = ['Driver', 'ChunkedOutput']
   ${insertCodeForFeatures('writeOutBegin', featureOrdering), autoIndent=True}@slurp
   
-  ${outputFormat.writeOutSetup('gsBaseFilename'), autoIndent=True}@slurp
-  
+  ${outputFormat.writeOutSetup(c'("${filename}" + gsArgsAndValues).c_str()'), autoIndent=True}@slurp
     @for $momentGroup in $momentGroups
   ${momentGroup.functions['writeOut'].call(_outfile = '_outfile')}
     @end for
@@ -71,7 +70,7 @@ void _write_output()
 @end def
 
 @def writeOutFunctionImplementationBody($dict)
-  @silent dict.setdefault('baseFilename', 'gsBaseFilename')
+  @silent dict.setdefault('baseFilename', c'("${filename}" + gsArgsAndValues).c_str()')
   @silent dict.setdefault('outputGroupFilenameSuffix', '_' + dict['caller'].name)
 ${outputFormat.writeOutFunctionImplementationBody(dict)}@slurp
 @end def

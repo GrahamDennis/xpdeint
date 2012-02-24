@@ -60,20 +60,20 @@ ${insertCodeForFeaturesInReverseOrder('breakpointEnd', $featureOrdering, dict)}@
 
 @def breakpointFunctionContents
   @#
+char *_baseFilename = (char*)malloc(255);
   @if not $filename
     @# If we don't have a filename, then we are auto-naming
 _breakpointAutoNameCounter++;
-char *_baseFilename = (char*)malloc(100);
-snprintf(_baseFilename, 100, "%li", _breakpointAutoNameCounter);
+snprintf(_baseFilename, 255, "%li%s", _breakpointAutoNameCounter, gsArgsAndValues.c_str());
   @else
     @# We have a name, rip off the extension if its 'xsil'
     @set baseFilename = $filename
     @if baseFilename.endswith('.xsil')
       @set baseFilename = baseFilename[0:-5]
     @end if
-const char *_baseFilename = "$baseFilename";
+snprintf(_baseFilename, 255, "%s%s", "$baseFilename", gsArgsAndValues.c_str());
   @end if
-  
+
   @set featureOrdering = ['Output']
 ${outputFormat.writeOutSetup('_baseFilename')}@slurp
 
