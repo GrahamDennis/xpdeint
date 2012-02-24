@@ -37,6 +37,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define xmds_free ${fftwPrefix}_free
 
 #include <fftw3.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 @end def
 
 @def globals
@@ -185,9 +187,14 @@ ${loadWisdom}@slurp
   if (_fp) {
     fclose(_fp);
   } else {
-    _LOG(_WARNING_LOG_LEVEL, "Warning: Cannot find enlightenment, the path to wisdom ~/.xmds/wisdom doesn't seem to exist.\n"
-                             "         I'll use the current path instead.\n");
-    _pathToWisdom = ""; // present directory
+    int _result = mkdir((string(getenv("HOME")) + "/.xmds").c_str(), S_IRWXU);
+    if (mkdir(_pathToWisdom.c_str(), S_IRWXU)) {
+      // We failed to create the ~/.xmds/wisdom directory
+      _LOG(_WARNING_LOG_LEVEL, "Warning: Cannot find enlightenment, the path to wisdom ~/.xmds/wisdom doesn't seem to exist and we couldn't create it.\n"
+                               "         I'll use the current path instead.\n");
+      _pathToWisdom = ""; // present directory
+    }
+    
   }
   
   _fftwWisdomPath = _pathToWisdom + _wisdomFileName;
