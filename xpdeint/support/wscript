@@ -525,6 +525,8 @@ def configure(conf):
                 uselib='fftw3f',
                 msg = "Checking for single-precision FFTW3 with MPI"
             )
+        
+        del conf.env["DEFINES"]
     else:
         print "MPI not found. No scripts using MPI can be compiled on this system."
         del conf.all_envs['mpi']
