@@ -60,3 +60,5 @@ Testcases needed:
   xR = x;
   yR = y;
   It's redundant.  If 'x' is an output variable, and 'x' is a component of a dependency, then it's obvious!
+  
+On Mac OS X, it's probably theoretically possible to compile for x86_64 on a pure i386 machine, or compile with AVX support on a machine that doesn't have it.  How do we detect and resolve this situation?
