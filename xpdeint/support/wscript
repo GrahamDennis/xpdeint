@@ -190,20 +190,15 @@ def configure(conf):
                 msg = "Trying to make compiler tune for this machine"
             )
             
-            compiler_optimisations = [
-                {
-                    "msg": "Checking for the 'go fast' compiler option",
-                    "cxxflags": ["-fast", "-ffast-math"],
-                    "linkflags": ["-fast"],
-                },
-                {
-                    "msg": "Checking for fallback optimisation flags",
-                    "cxxflags": ['-O3', '-ffast-math', '-funroll-all-loops', '-fomit-frame-pointer'],
-                    "linkflags": ['-O3'],
-                }
+            optimisation_flags = [
+                '-O3', '-ffast-math', '-funroll-all-loops', '-fomit-frame-pointer', '-falign-loops', '-fstrict-aliasing', '-momit-leaf-frame-pointer'
             ]
             
-            try_options('optimise', compiler_optimisations)
+            for optimisation_flag in optimisation_flags:
+                check_cxx(
+                    cxxflags=optimisation_flag,
+                    uselib_store="optimise"
+                )
             
             check_cxx(
                 cxxflags=['-fno-unsafe-math-optimizations', '-fno-finite-math-only'],
