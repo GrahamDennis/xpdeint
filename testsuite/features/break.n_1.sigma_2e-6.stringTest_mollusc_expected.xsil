@@ -4,7 +4,7 @@
   <testing>
     <arguments>--sigma 2e-6 --stringTest mollusc</arguments>
     <xsil_file name="arguments_append_args_to_output_filename.n_1.sigma_2e-6.stringTest_mollusc.xsil" expected="arguments_append_args_to_output_filename.n_1.sigma_2e-6.stringTest_mollusc_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
-    <xsil_file name="break.n_1.sigma_2e-6.stringTest_mollusc.xsil" expected="break.n_1.sigma_2e-6.stringTest_mollusc_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="breakpoint.n_1.sigma_2e-6.stringTest_mollusc.xsil" expected="breakpoint.n_1.sigma_2e-6.stringTest_mollusc_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
   </testing>
 
   <name>arguments_append_args_to_output_filename</name>
@@ -145,5 +145,31 @@
 
   </output>
 
-</simulation>
 
+<info>
+Script compiled with XMDS2 version 2.1 "Happy Mollusc" (r2638)
+See http://www.xmds.org for more information.
+
+Variables that can be specified on the command line:
+  Command line argument n = 1.000000e+00
+  Command line argument sigma = 2.000000e-06
+  Command line argument stringTest = mollusc
+</info>
+
+<XSIL Name="breakpoint">
+  <Param Name="n_independent">1</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>3</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+z psi0R psi0I 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>256</Dim>
+    <Dim>3</Dim>
+    <Stream><Metalink Format="HDF5" Type="Remote" Group="/1"/>
+break.n_1.sigma_2e-6.stringTest_mollusc_expected.h5
+    </Stream>
+  </Array>
+</XSIL>
+</simulation>
