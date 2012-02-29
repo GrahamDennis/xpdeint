@@ -25,7 +25,7 @@ The easiest way to get started is with an installer.  If we don't have an instal
 
     * - OS X 10.6/10.7
 
-      - `Download OS X Installer <http://sourceforge.net/projects/xmds/files/XMDS-2.1beta6-osx.zip>`_
+      - `Download OS X Installer <http://sourceforge.net/projects/xmds/files/XMDS-2.1beta7-osx.zip>`_
 
       - :ref:`Learn more <mac_installation>`
         
@@ -75,7 +75,7 @@ Mac OS X Installation
 Download
 --------
 
-Mac OS X 10.6 (Snow Leopard) or later XMDS 2.1 installer: http://sourceforge.net/projects/xmds/files/XMDS-2.1beta6-osx.zip
+Mac OS X 10.6 (Snow Leopard) or later XMDS 2.1 installer: http://sourceforge.net/projects/xmds/files/XMDS-2.1beta7-osx.zip
 
 
 
