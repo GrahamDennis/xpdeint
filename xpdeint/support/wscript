@@ -372,11 +372,11 @@ def configure(conf):
         # The max-inline-insns-single=1800 option works for gcc but not icc, so try a series of options to see what works
         dsfmt_optimisations = [
           {
-              "cxxflags": ["-finline-functions", "-fno-strict-aliasing", "--param", "max-inline-insns-single=1800"],
+              "cxxflags": ["-finline-functions", "--param", "max-inline-insns-single=1800"],
               "msg": "Checking aggressive dSFMT compile flags",
           },
           {
-              "cxxflags": ["-finline-functions", "-fno-strict-aliasing"],
+              "cxxflags": ["-finline-functions"],
               "msg": "Checking safer dSFMT compile flags",
           },
           {
