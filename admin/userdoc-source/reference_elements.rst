@@ -176,30 +176,7 @@ When ``XMDS2`` is run on this script the executable ``arguments_test`` is create
 
 Argument element
 ~~~~~~~~~~~~~~~~
-.. parsed-literal::
 
-  <**argument** :attributes-code:`name type default_value`>
-    :attributes-code:`name`: A string which is the name of the argument
-    :attributes-code:`type`: ('integer', 'real', 'string') The type of the argument.
-    :attributes-code:`default_value`: (integer, real, string) The default value of the argument.
-
-Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here.
-
-
-| <**argument** :attributes-standard:`name type default_value`>
-|  :attributes-standard:`name`: A string which is the name of the argument
-|  :attributes-standard:`type`: ('integer', 'real', 'string') The type of the argument.
-|  :attributes-standard:`default_value`: (integer, real, string) The default value of the argument.
-
-Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here.
-
-
-| <argument :attributes-standard:`name type default_value`>
-|  :attributes-standard:`name`: :smaller-font:`A string which is the name of the argument`
-|  :attributes-standard:`type`: :smaller-font:`('integer', 'real', 'string') The type of the argument.`
-|  :attributes-standard:`default_value`: :smaller-font:`(integer, real, string) The default value of the argument.`
-
-Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here.
 
 Each ``<argument>`` element describes one variable that can be passed to the simulation at runtime via the command line. There are three mandatory attributes: ``name``, ``type``, and ``default_value``. ``name`` is the name by which you can refer to that variable later in the script, as well as the name of the command line parameter. ``type`` defines the data type of the variable, and ``default_value`` is the value to which the variable is set if it is not given a value on the command line.
 
@@ -274,24 +251,7 @@ Halt_Non_Finite
 fftw element
 ------------
 
-.. parsed-literal::
 
-  <**fftw** :attributes-code:`[plan]`>
-    :attributes-code:`plan`: ('estimate', 'measure', 'patient', 'exhaustive') Degree of effort put into optimising FFT algorithm
-
-Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here.
-
-
-| <**fftw** :attributes-standard:`[plan]`>
-|  :attributes-standard:`plan`: ('estimate', 'measure', 'patient', 'exhaustive') Degree of effort put into optimising FFT algorithm
-
-Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here.
-
-
-| <fftw :attributes-standard:`[plan]`>
-|  :attributes-standard:`plan`: :smaller-font:`('estimate', 'measure', 'patient', 'exhaustive') Degree of effort put into optimising FFT algorithm`
-
-Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here. Longer description goes in here.
 
 
 .. _Globals:
