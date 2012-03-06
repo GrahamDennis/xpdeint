@@ -9,7 +9,7 @@ Release Instructions:
 0. Change version in the following files:
     xpdeint/Preferences.py
     setup.py
-    admin/linux_installer
+    admin/linux_installer.sh
     admin/userdoc-source/installation.rst
     admin/userdoc-source/mac_installation.rst
     admin/userdoc-source/conf.py.  

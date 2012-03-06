@@ -19,7 +19,7 @@ The easiest way to get started is with an installer.  If we don't have an instal
 
     * - Linux (Ubuntu/Debian/Fedora/RedHat)
 
-      - `Download Linux Installer <http://xmds.svn.sourceforge.net/viewvc/xmds/trunk/xpdeint/admin/linux_installer>`_
+      - `Download Linux Installer <http://xmds.svn.sourceforge.net/viewvc/xmds/trunk/xpdeint/admin/linux_installer.sh>`_
 
       - :ref:`Learn more <linux_installation>`
 
@@ -45,7 +45,7 @@ Linux Installation
 Download
 --------
 
-Linux installer script: http://xmds.svn.sourceforge.net/viewvc/xmds/trunk/xpdeint/admin/linux_installer
+Linux installer script: http://xmds.svn.sourceforge.net/viewvc/xmds/trunk/xpdeint/admin/linux_installer.sh
 
 
 Using the Linux installer
@@ -53,11 +53,11 @@ Using the Linux installer
 
 The Linux installer for Ubuntu / Debian / Fedora / Red Hat can be downloaded and executed with the following command::
 
-  /bin/bash -c "$(wget -qO - http://xmds.svn.sf.net/viewvc/xmds/trunk/xpdeint/admin/linux_installer)"
+  /bin/bash -c "$(wget -qO - http://xmds.svn.sf.net/viewvc/xmds/trunk/xpdeint/admin/linux_installer.sh)"
 
 Alternatively, you can download it from the link above, and type the following into a terminal::
 
-  bash ./linux_installer
+  bash ./linux_installer.sh
 
 
 This script installs all XMDS dependencies from your native package manager where possible (``apt-get`` for Ubuntu/Debian, ``yum`` for Fedora/Red Hat) but will download and compile the source code for libraries not available through the package manager. This means you'll need to be connected to the internet when running the installer. The installer should not be run with administrative privileges; it will ask you to enter your admin password at the appropriate point. For instructions on how to install XMDS on systems where you lack administrative rights, see :ref:`ManualInstallation`.
