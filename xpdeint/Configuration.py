@@ -148,7 +148,7 @@ def run_build(source_name, target_name, variant = 'default', buildKWs = {}, verb
     
     uselib = buildKWs['uselib']
     # Expand the dependencies of any uselib variables
-    Context.g_module.expand_dependencies_of_list(uselib, uselib, ctx.env)
+    Context.g_module.expand_dependencies_of_list(uselib, uselib[:], ctx.env)
     
     missing_uselib = set(buildKWs['uselib']).difference(available_uselib)
     if missing_uselib:

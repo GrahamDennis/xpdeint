@@ -52,7 +52,7 @@ def expand_dependencies(dest, uselib, env):
     expand_dependencies_of_list(dest, env.uselib_dependencies[uselib], env)
 
 def expand_dependencies_of_list(dest, uselibs, env):
-    for uselib in uselibs:
+    for uselib in uselibs[:]:
         expand_dependencies(dest, uselib, env)
 
 
@@ -96,7 +96,8 @@ def configure(conf):
             allKWs = common.copy()
             allKWs.update(kws)
             if check_cxx(uselib_store=uselib_store, **allKWs):
-                break
+                return True
+        return False
     
     def check_cxx(**KWs):
         # Prefer a static library over a dynamic one if available
@@ -104,6 +105,7 @@ def configure(conf):
             return _check_cxx(**KWs)
         
         lib = KWs['lib']
+        del KWs['lib']
         uselib_store = KWs['uselib_store']
         KWs['_skip'] = True
         del KWs['uselib_store']
@@ -117,7 +119,7 @@ def configure(conf):
             # Except of course by including them by listing the full path.
                 {'lib': lib}
             ]
-        try_options(uselib_store, options, KWs)
+        return try_options(uselib_store, options, KWs)
     
     
     def configure_compiler():
@@ -428,24 +430,13 @@ def configure(conf):
         
         try_options('cblas', cblas_options, cblas_common)
         
-        # Ways of linking GSL
-        gsl_options = [
-            {
-                "lib": 'gsl',
-                "msg": "Checking for GSL",
-            },
-            {
-                "lib": "gsl",
-                "uselib": "cblas",
-                "msg": "Checking if GSL requires CBLAS",
-            }
-        ]
-        gsl_common = {
-            'header_name': 'gsl/gsl_sf.h',
-            'function_name': 'gsl_sf_bessel_jl',
-        }
-        try_options("gsl", gsl_options, gsl_common)
-        
+        check_cxx(
+            lib='gsl',
+            uselib='cblas',
+            header_name='gsl/gsl_sf.h',
+            function_name='gsl_sf_bessel_jl',
+            msg="Checking for GSL"
+        )
         
         check_cxx(
             lib='fftw3',
