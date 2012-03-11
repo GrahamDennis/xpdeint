@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  
+  <testing>
+    <xsil_file name="dsfmt_single_precision.xsil" expected="dsfmt_single_precision_expected.xsil" absolute_tolerance="1e-4" relative_tolerance="1e-4" />
+  </testing>
+  
+  <name>dsfmt_single_precision</name>
+  <author>Mattias Johnsson</author>
+  <description>
+    Tests single precision, DSFMT-generated, uniform, gaussian, poissonian, wiener and 
+    jump noises in a single script. It does this by choosing rates and coefficients 
+    such that each type of noise has roughly the same impact on the evolution.
+
+    This is not a physically realistic simulation; rather it is just supposed to test
+    that single-precision DSFMT noises behave the same way in the future.
+  </description>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <!-- Uniform noise is comparable in magnitude to the others if the
+           inverse volume element is unity
+      -->
+      <dimension name="x" lattice="128"  domain="(-64, 64)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <features>
+    <precision> single </precision> 
+    <auto_vectorise />
+    <benchmark />
+    <error_check />
+    <bing />
+    <fftw />
+  </features>
+  
+  <noise_vector name="uniform_noise" dimensions="x" kind="uniform" type="real" method="dsfmt" seed="31 41 59">
+    <components>nu</components>
+  </noise_vector>
+
+  <noise_vector name="gaussian_noise" dimensions="x" kind="gaussian" type="real" method="dsfmt" seed="26 53 58">
+    <components>ng</components>
+  </noise_vector>
+
+  <noise_vector name="wiener_noise" dimensions="x" kind="wiener" type="real" method="dsfmt" seed="97 93 23">
+    <components>nw</components>
+  </noise_vector>
+
+  <noise_vector name="poissonian_noise" dimensions="x" kind="poissonian" type="real" mean="2.0" method="dsfmt" seed="84 62 64 ">
+    <components>np</components>
+  </noise_vector>
+
+  <noise_vector name="jump_noise" dimensions="x" kind="jump" type="real" mean-rate="2.0" method="dsfmt" seed="33 83 27">
+    <components>nj</components>
+  </noise_vector>
+
+  <vector name="main" initial_basis="x" type="real">
+    <components> phi </components>
+    <initialisation>
+      <dependencies> uniform_noise gaussian_noise poissonian_noise </dependencies>
+      <![CDATA[
+        phi = nu + ng + np; 
+      ]]>
+    </initialisation>
+  </vector>
+
+  <sequence>
+    <integrate algorithm="SI" iterations="3" interval="1.0" steps="1000">
+      <samples>25</samples>
+      <operators>
+        <dependencies> jump_noise wiener_noise </dependencies>
+        <integration_vectors> main </integration_vectors>
+        <![CDATA[
+         dphi_dt = 1.5*(nw + nj)*phi;
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  
+  <output filename="dsfmt_single_precision.xsil" format="hdf5">
+    <group>
+      <sampling basis="x" initial_sample="yes">
+        <moments>Phi</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          Phi = phi;
+        ]]>
+      </sampling>
+    </group>
+  </output>
+
+<info>
+Script compiled with XMDS2 version 2.1 "Happy Mollusc" (r2645)
+See http://www.xmds.org for more information.
+</info>
+
+<XSIL Name="moment_group_1">
+  <Param Name="n_independent">2</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>4</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t x Phi error_Phi 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="single">
+    <Dim>26</Dim>
+    <Dim>128</Dim>
+    <Dim>4</Dim>
+    <Stream><Metalink Format="HDF5" Type="Remote" Group="/1"/>
+dsfmt_single_precision.h5
+    </Stream>
+  </Array>
+</XSIL>
+</simulation>

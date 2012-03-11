@@ -279,7 +279,7 @@ Using single precision can be attractive, as it can be more than twice as fast, 
 
 Also note that when using an adaptive step integrator, setting a tolerance close to limits of the precision can lead to very slow performance.
 
-A further limitation is that not all the combinations of random number generators and probability distributions that are supported in double precision are supported in single precision. For example, neither the ``solirte`` nor ``dsfmt`` generators support single precision gaussian distributions. The ``posix`` generator will always work, but may be very slow.
+A further limitation is that not all the combinations of random number generators and probability distributions that are supported in double precision are supported in single precision. For example, the ``solirte`` generator does not support single precision gaussian distributions. ``dsfmt``, however, is one of the fastest generators, and does support single precision.
 
 WARNING: Single precision mode has not been tested anywhere near as thoroughly as the default double precision mode, and there is a higher chance you will run into bugs.
 
