@@ -30,9 +30,7 @@
     <precision> single </precision> 
     <auto_vectorise />
     <benchmark />
-    <error_check />
     <bing />
-    <fftw />
   </features>
   
   <noise_vector name="uniform_noise" dimensions="x" kind="uniform" type="real" method="dsfmt" seed="31 41 59">
@@ -91,22 +89,22 @@
   </output>
 
 <info>
-Script compiled with XMDS2 version 2.1 "Happy Mollusc" (r2645)
+Script compiled with XMDS2 version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
 See http://www.xmds.org for more information.
 </info>
 
 <XSIL Name="moment_group_1">
   <Param Name="n_independent">2</Param>
   <Array Name="variables" Type="Text">
-    <Dim>4</Dim>
+    <Dim>3</Dim>
     <Stream><Metalink Format="Text" Delimiter=" \n"/>
-t x Phi error_Phi 
+t x Phi 
     </Stream>
   </Array>
   <Array Name="data" Type="single">
     <Dim>26</Dim>
     <Dim>128</Dim>
-    <Dim>4</Dim>
+    <Dim>3</Dim>
     <Stream><Metalink Format="HDF5" Type="Remote" Group="/1"/>
 dsfmt_single_precision_expected.h5
     </Stream>

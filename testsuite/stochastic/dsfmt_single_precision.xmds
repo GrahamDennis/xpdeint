@@ -30,9 +30,7 @@
     <precision> single </precision> 
     <auto_vectorise />
     <benchmark />
-    <error_check />
     <bing />
-    <fftw />
   </features>
   
   <noise_vector name="uniform_noise" dimensions="x" kind="uniform" type="real" method="dsfmt" seed="31 41 59">
