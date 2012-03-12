@@ -108,7 +108,7 @@ t x Phi error_Phi
     <Dim>128</Dim>
     <Dim>4</Dim>
     <Stream><Metalink Format="HDF5" Type="Remote" Group="/1"/>
-dsfmt_single_precision.h5
+dsfmt_single_precision_expected.h5
     </Stream>
   </Array>
 </XSIL>
