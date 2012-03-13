@@ -59,9 +59,11 @@ $generatorType ${generatorName};
   @#
 @end def
 
-@if $precision == 'single'
-  @@callOnceGuard
-  @def static_globals
+@@callOnceGuard
+@def static_globals
+  @if $precision == 'single'
+// ********************************************************
+//   Struct and typedef to help convert a double to two floats
 union float_double {
        uint64_t u;
        uint32_t u32[2];
@@ -70,26 +72,32 @@ union float_double {
 };
 
 typedef union float_double float_double_t;
-  @end def
+  @end if
+@end def
 
-  @@callOnceGuard
-  @def static_defines
+@@callOnceGuard
+@def static_defines
+  @if $precision == 'single'
 // defines to help convert a double to two floats
 #define LOWER_FLOAT_MASK   0x00000000007fffffULL
 #define UPPER_FLOAT_MASK   0x007fffff00000000ULL
 #define UPPER_FLOAT_LSHIFT 3
 #define EXPONENT_BITS      0x3f8000003f800000ULL
-  @end def
+  @end if  
+@end def
 
-  @@callOnceGuard
-  @def static_functionPrototypes
+@@callOnceGuard
+@def static_functionPrototypes
+  @if $precision == 'single'
 float generate_float_close1_open2_via_dsfmt(dsfmt_t *dsfmt_array);
 void generate_float_pair_close1_open2_via_dsfmt(dsfmt_t *dsfmt_array, float &f1, float &f2);
 void generate_float_array_close0_open1(dsfmt_t *noise, real array[], int vector_size);
-  @end def
+  @end if  
+@end def
 
-  @@callOnceGuard
-  @def static_functionImplementations
+@@callOnceGuard
+@def static_functionImplementations
+  @if $precision == 'single'
     @set noiseVector = $parent.parent
 // Converts a double in the range [1,2) into two floats in the range [1,2)
 // returns one and stores the other in reserve for the next call to this
@@ -160,13 +168,13 @@ void generate_float_array_close0_open1(dsfmt_t *noise, real noiseVector[], int v
     }
   }
 }
-  @end def
-@end if
+  @end if
+@end def
 
 
 @def constructArrayUniformRandomNumbers
-  @set noiseVector = $parent.parent
   @if $precision == 'single'
+    @set noiseVector = $parent.parent
 generate_float_array_close0_open1(${generatorName}, reinterpret_cast<real*>(_active_${noiseVector.id}), _vector_size);
   @else
 if (!(_vector_size & 0x1) && _vector_size > dsfmt_get_min_array_size())
