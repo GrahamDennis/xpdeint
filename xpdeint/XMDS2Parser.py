@@ -408,6 +408,8 @@ class XMDS2Parser(ScriptParser):
       if threadCount > 1:
         if fourierTransformClass == Transforms.FourierTransformFFTW3.FourierTransformFFTW3:
           fourierTransformClass = Transforms.FourierTransformFFTW3Threads.FourierTransformFFTW3Threads
+          if 'OpenMP' in self.globalNameSpace['features']:
+              fourierTransformClass.fftwSuffix = 'omp'
         elif fourierTransformClass == Transforms._NoTransform._NoTransform:
           raise ParserException(fftwElement, "Can't use threads with no fourier transforms.")
         else:
