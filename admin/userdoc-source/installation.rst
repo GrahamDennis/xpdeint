@@ -39,32 +39,27 @@ If you have one of the supported operating systems listed above, but you find th
 
 .. _linux_installation:
 
-Linux Installation
-==================
+Linux installer instructions
+============================
 
-Download
---------
+The installer can be downloaded from: http://xmds.svn.sourceforge.net/viewvc/xmds/trunk/xpdeint/admin/linux_installer.sh
 
-Linux installer script: http://xmds.svn.sourceforge.net/viewvc/xmds/trunk/xpdeint/admin/linux_installer.sh
+Once you have downloaded it, make the installer executable and run it by typing the following into a terminal::
 
+  chmod u+x linux_installer.sh
+  bash ./linux_installer.sh
 
-Using the Linux installer
--------------------------
-
-The Linux installer for Ubuntu / Debian / Fedora / Red Hat can be downloaded and executed with the following command::
+Alternatively, if you wish to download and run the installer in a single step, you can use the following command::
 
   /bin/bash -c "$(wget -qO - http://xmds.svn.sf.net/viewvc/xmds/trunk/xpdeint/admin/linux_installer.sh)"
 
-Alternatively, you can download it from the link above, and type the following into a terminal::
+The linux installer installs all XMDS2 dependencies from your native package manager where possible (``apt-get`` for Ubuntu/Debian, ``yum`` for Fedora/Red Hat) but will download and compile the source code for libraries not available through the package manager. This means you'll need to be connected to the internet when running the installer. The installer should not be run with administrative privileges; it will ask you to enter your admin password at the appropriate point. 
 
-  bash ./linux_installer.sh
+For instructions on how to install XMDS2 on systems where you lack administrative rights, see :ref:`ManualInstallation`.
 
+By default, this installer will install a known stable version of XMDS, which can be updated at any time by navigating to the XMDS directory and typing 'make update'. To install the latest developer version at the beginning, simply run the installer with the ``--develop`` option.
 
-This script installs all XMDS dependencies from your native package manager where possible (``apt-get`` for Ubuntu/Debian, ``yum`` for Fedora/Red Hat) but will download and compile the source code for libraries not available through the package manager. This means you'll need to be connected to the internet when running the installer. The installer should not be run with administrative privileges; it will ask you to enter your admin password at the appropriate point. For instructions on how to install XMDS on systems where you lack administrative rights, see :ref:`ManualInstallation`.
-
-By default, this installer will install a known stable version of XMDS, which can be updated at any time by navigating to the XMDS directory amd typing 'make update'. To install the latest developer version at the beginning, simply run the installer with the "--develop" option.
-
-Once XMDS has been installed, you can run it from the terminal by typing ``xmds2``. See the :ref:`QuickStartTutorial` for next steps.
+Once XMDS2 has been installed, you can run it from the terminal by typing ``xmds2``. See the :ref:`QuickStartTutorial` for next steps.
 
 
 .. _mac_installation:
@@ -119,7 +114,7 @@ This guide adds extra notes for users wishing to install XMDS2 using the SVN rep
 #. You will need a `python distribution <http://www.python.org/>`_.  
 
    * Mac OS X: It is pre-installed on Mac OS X 10.5 or later.
-   * Linux: Install this using your favourite package manager.
+   * Linux: It should be pre-installed. If not, install using your favourite package manager.
    * Windows: One way to install Python and related packages is via the `Enthought Python Distribution <http://www.enthought.com/products/epd.php>`_. 
    
     We require python 2.4 or greater. (2.5 recommended).
@@ -233,6 +228,5 @@ This guide adds extra notes for users wishing to install XMDS2 using the SVN rep
 
 **Congratulations!** You should now have a fully operational copy of xmds2 and xsil2graphics2.  You can test your copy using examples from the "xmds2/examples" directory, and follow the worked examples in the :ref:`QuickStartTutorial` and :ref:`WorkedExamples`.
 
-Optionally, you may also wish to create the directory ".xmds/wisdom" in your home directory.  This will be used by FFTW to store information about how best to perform Fourier transforms for your architecture.
 
 
