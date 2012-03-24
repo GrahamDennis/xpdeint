@@ -73,7 +73,7 @@ def configure(conf):
           KWs['linkflags'] = linkflags
         
         original_uselib = []
-        
+
         if 'uselib' in KWs:
             current_uselib = optionAsList(KWs['uselib'])
             original_uselib = current_uselib[:]
@@ -433,6 +433,7 @@ def configure(conf):
         check_cxx(
             lib='gsl',
             uselib='cblas',
+            uselib_store='gsl',
             header_name='gsl/gsl_sf.h',
             function_name='gsl_sf_bessel_jl',
             msg="Checking for GSL"
