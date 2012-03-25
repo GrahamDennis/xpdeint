@@ -208,9 +208,16 @@ for (unsigned int _component = 0; _component < _${vector.id}_ncomponents; _compo
 // There is no stage 2.
   @else
 
+// The purpose of the following define is to give a (somewhat helpful) compile-time error
+// if the user has attempted to use the propagation dimension variable in the initialisation
+// block of a <vector> element. If they're trying to do this, what they really want is a 
+// <computed_vector> instead.
+#define ${propagationDimension} Dont_use_propagation_dimension_${propagationDimension}_in_vector_element_CDATA_block___Use_a_computed_vector_instead
+
 // ********** Initialisation code ***************
 ${codeString}@slurp
 // **********************************************
+#undef ${propagationDimension}
   @end if
   @#
 @end def
