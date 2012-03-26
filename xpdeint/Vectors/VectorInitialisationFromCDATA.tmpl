@@ -31,15 +31,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   Initialise a vector
 *@
 @def initialiseVector
-  @#
-  @set $featureOrdering = ['Stochastic']
-  @set $featureDict = {'codeBlock': $codeBlocks['initialisation']}
-  @#
-$insertCodeForFeatures('vectorInitialisationBegin', $featureOrdering, featureDict)@slurp
+ @#
 $codeBlocks['initialisation'].loop(self.insideInitialisationLoops)@slurp
-$insertCodeForFeaturesInReverseOrder('vectorInitialisationEnd', $featureOrdering, featureDict)@slurp
-  @#
+ @#
 @end def
+
 
 @def insideInitialisationLoops($codeString)
 // The purpose of the following define is to give a (somewhat helpful) compile-time error

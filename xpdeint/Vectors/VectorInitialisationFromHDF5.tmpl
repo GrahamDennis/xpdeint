@@ -28,13 +28,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 @def initialiseVector
   @#
-  @set $featureOrdering = ['Stochastic']
-  @set $featureDict = {'codeBlock': $codeBlocks['initialisation']}
   @set $basis = $vector.initialBasis
   @set $field = $vector.field
   @set $dimensionOffsets = {}
-  @#
-$insertCodeForFeatures('vectorInitialisationBegin', $featureOrdering, featureDict)@slurp
   @#
   @set $initialisationCodeBlock = $codeBlocks['initialisation']
 // HDF5 initialisation has three stages.
@@ -192,8 +188,6 @@ H5Dclose(dataset_${dimRep.name});
 if (hdf5_parent != hdf5_file)
   H5Gclose(hdf5_parent);
 H5Fclose(hdf5_file);
-
-$insertCodeForFeaturesInReverseOrder('vectorInitialisationEnd', $featureOrdering, featureDict)@slurp
   @#
 @end def
 

@@ -124,11 +124,6 @@ inline double XMDSSwapDouble(double __in)
 *@
 @def initialiseVector
   @#
-  @set $featureOrdering = ['Stochastic']
-  @set $featureDict = {'codeBlock': $codeBlocks['initialisation']}
-  @#
-$insertCodeForFeatures('vectorInitialisationBegin', $featureOrdering, featureDict)@slurp
-  @#
   @set $initialisationCodeBlock = $codeBlocks['initialisation']
 // XSIL initialisation has three stages.
 // 1. Initialise the vector to zero.
@@ -329,8 +324,6 @@ for (int __i = 0; __i < _${vector.field.name}_ndims; __i++) {
     delete [] _inputData[__i]._floatPtr;
 }
 delete [] _inputData;
-
-$insertCodeForFeaturesInReverseOrder('vectorInitialisationEnd', $featureOrdering, featureDict)@slurp
   @#
 @end def
 
