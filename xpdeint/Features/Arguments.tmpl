@@ -61,18 +61,18 @@ void _print_usage();
 void _print_usage()
 {
   // This function does not return.
-  _LOG(_ERROR_LOG_LEVEL, "Usage: $simulationName@slurp
+  fprintf(stderr, "\n\nUsage: $simulationName@slurp
 @for $argument in $argumentList
- -$argument.shortName < $argument.type >@slurp
+ --$argument.name <$argument.type>@slurp
 @end for
 \n\n"
                          "Details:\n"
                          "Option\t\tType\t\tDefault value\n"
 @for $argument in $argumentList
-                         "-$argument.shortName, --$argument.name\t$argument.type \t\t$argument.defaultValue\n"
+                         "-$argument.shortName,  --$argument.name\t$argument.type \t\t$argument.defaultValue\n"
 @end for
                          );
-  // Simulation will have exited due to _LOG
+  exit(-1);
 }
   @#
 @end def
@@ -92,6 +92,7 @@ while (1) {
   @for $argument in $argumentList
       {"$argument.name", required_argument, 0, '$argument.shortName'},
   @end for
+      {NULL, 0, 0, 0}
     };
   
   int option_index = 0;
@@ -106,6 +107,10 @@ $argument.shortName:@slurp
     break;
 
   switch (resp) {
+    case '?':
+      // An unknown option was passed. Show allowed options and exit. 
+      _print_usage(); // This causes the simulation to exit
+
     case 'h':
       _print_usage(); // This causes the simulation to exit
   @for $argument in $argumentList
