@@ -61,7 +61,7 @@ void _print_usage();
 void _print_usage()
 {
   // This function does not return.
-  fprintf(stderr, "\n\nUsage: $simulationName@slurp
+  _LOG(_NO_ERROR_TERMINATE_LOG_LEVEL, "\n\nUsage: $simulationName@slurp
 @for $argument in $argumentList
  --$argument.name <$argument.type>@slurp
 @end for
@@ -72,7 +72,7 @@ void _print_usage()
                          "-$argument.shortName,  --$argument.name\t$argument.type \t\t$argument.defaultValue\n"
 @end for
                          );
-  exit(-1);
+  // _LOG terminates the simulation.
 }
   @#
 @end def

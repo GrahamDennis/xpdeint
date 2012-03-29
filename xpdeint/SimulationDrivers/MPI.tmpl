@@ -48,8 +48,8 @@ int _rank, _size;
   @#
   @# Insert code at the start of the _LOG function
   @#
-if ((_rank == 0) || (logLevel & ~(_SIMULATION_LOG_LEVEL | _SEGMENT_LOG_LEVEL | _SAMPLE_LOG_LEVEL))) { \
-  if (logLevel & ~(_SIMULATION_LOG_LEVEL | _SEGMENT_LOG_LEVEL | _SAMPLE_LOG_LEVEL)) \
+if ((_rank == 0) || (logLevel & ~(_SIMULATION_LOG_LEVEL | _SEGMENT_LOG_LEVEL | _SAMPLE_LOG_LEVEL | _NO_ERROR_TERMINATE_LOG_LEVEL))) { \
+  if (logLevel & ~(_SIMULATION_LOG_LEVEL | _SEGMENT_LOG_LEVEL | _SAMPLE_LOG_LEVEL | _NO_ERROR_TERMINATE_LOG_LEVEL)) \
     printf("Rank[%i]: ", _rank); \
   @set $dict['extraIndent'] += 2
   @#
@@ -61,6 +61,8 @@ if ((_rank == 0) || (logLevel & ~(_SIMULATION_LOG_LEVEL | _SEGMENT_LOG_LEVEL | _
 } \
 if (logLevel & _ERROR_LOG_LEVEL) \
   MPI_Abort(MPI_COMM_WORLD, 1); \
+else if (logLevel & _NO_ERROR_TERMINATE_LOG_LEVEL) \
+  MPI_Finalize(); \
   @#
 @end def
 
