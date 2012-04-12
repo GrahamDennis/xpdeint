@@ -173,8 +173,8 @@ void generate_float_array_close0_open1(dsfmt_t *noise, real noiseVector[], int v
 
 
 @def constructArrayUniformRandomNumbers
-  @if $precision == 'single'
-    @set noiseVector = $parent.parent
+  @set noiseVector = $parent.parent
+  @if $precision == 'single'  
 generate_float_array_close0_open1(${generatorName}, reinterpret_cast<real*>(_active_${noiseVector.id}), _vector_size);
   @else
 if (!(_vector_size & 0x1) && _vector_size > dsfmt_get_min_array_size())
