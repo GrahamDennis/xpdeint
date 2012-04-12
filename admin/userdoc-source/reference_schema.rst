@@ -20,21 +20,6 @@ The possible attributes and attribute values for each element are not shown; see
       <:ref:`author <AuthorElement>`> <:ref:`author <AuthorElement>`>
       <:ref:`description <DescriptionElement>`> <:ref:`/description <DescriptionElement>`>
       
-      <:ref:`testing <TestingElement>`> 
-        <:ref:`command_line <CommandLineElement>`> <:ref:`/command_line <CommandLineElement>`>
-        <:ref:`arguments <ArgumentsElement>`>
-          <:ref:`argument <ArgumentElement>` />
-          <:ref:`argument <ArgumentElement>` />
-          ...
-        <:ref:`/arguments <ArgumentsElement>`>
-        <:ref:`input_xsil_file <InputXSILFileElement>` />
-        <:ref:`xsil_file <XSILFileElement>`>
-          <:ref:`moment_group <MomentGroupElement>` />
-          <:ref:`moment_group <MomentGroupElement>` />
-          ...
-        <:ref:`/xsil_file <XSILFileElement>`>
-      <:ref:`/testing <TestingElement>`>
-  
       <:ref:`features <FeaturesElement>`>
         <:ref:`arguments <ArgumentsElement>`>
           <:ref:`argument <ArgumentElement>` />

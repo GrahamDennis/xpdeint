@@ -83,39 +83,6 @@ Example syntax::
 
 
 
-.. _TestingElement:
-
-Testing element
-===============
- 
-
-
-.. _CommandLineElement:
-
-command_line element
---------------------
-
-
-.. _InputXSILFileElement:
-
-input_xsil_file element
------------------------
-
-
-.. _XSILFileElement:
-
-xsil_file element
------------------
-
-
-.. _MomentGroupElement:
-
-moment_group element
---------------------
-
-
-
-
 .. _FeaturesElement:
 
 Features Elements
@@ -262,7 +229,7 @@ Globals
 
 .. _OpenMP:
 
-openmp
+OPENMP
 ------
 
 
