@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  
+  <testing>
+    <xsil_file name="double_precision_noise_tests.xsil" expected="double_precision_noise_tests_expected.xsil" absolute_tolerance="1e-4" relative_tolerance="1e-4" />
+  </testing>
+  
+  <name>dsfmt_single_precision</name>
+  <author>Mattias Johnsson</author>
+  <description>
+    Tests double precision uniform, gaussian, poissonian, wiener and 
+    jump noises, using DSFMT, solirte and posix generators. It does this by
+    choosing rates and coefficients such that each type of noise has roughly the 
+    same impact on the evolution.
+
+    Note: Solirte currently can't do uniform, jump or poissonian noises, so 
+    those aren't tested.
+
+    This is not a physically realistic simulation; rather it is just supposed to test
+    that double-precision noises behave the same way in the future.
+  </description>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <!-- Uniform noise is comparable in magnitude to the others if the
+           inverse volume element is unity
+      -->
+      <dimension name="x" lattice="128"  domain="(-64, 64)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <features>
+    <precision> double </precision> 
+    <auto_vectorise />
+    <benchmark />
+    <bing />
+  </features>
+  
+  <noise_vector name="uniform_noise_dsfmt" dimensions="x" kind="uniform" type="real" method="dsfmt" seed="31 41 59">
+    <components>nu_dsfmt</components>
+  </noise_vector>
+  <noise_vector name="gaussian_noise_dsfmt" dimensions="x" kind="gaussian" type="real" method="dsfmt" seed="26 53 58">
+    <components>ng_dsfmt</components>
+  </noise_vector>
+  <noise_vector name="wiener_noise_dsfmt" dimensions="x" kind="wiener" type="real" method="dsfmt" seed="97 93 23">
+    <components>nw_dsfmt</components>
+  </noise_vector>
+  <noise_vector name="poissonian_noise_dsfmt" dimensions="x" kind="poissonian" type="real" mean="2.0" method="dsfmt" seed="84 62 64 ">
+    <components>np_dsfmt</components>
+  </noise_vector>
+  <noise_vector name="jump_noise_dsfmt" dimensions="x" kind="jump" type="real" mean-rate="2.0" method="dsfmt" seed="33 83 27">
+    <components>nj_dsfmt</components>
+  </noise_vector>
+<!--
+  <noise_vector name="uniform_noise_solirte" dimensions="x" kind="uniform" type="real" method="solirte" seed="31 41 59">
+    <components>nu_solirte</components>
+  </noise_vector>
+-->
+  <noise_vector name="gaussian_noise_solirte" dimensions="x" kind="gaussian" type="real" method="solirte" seed="26 53 58">
+    <components>ng_solirte</components>
+  </noise_vector>
+  <noise_vector name="wiener_noise_solirte" dimensions="x" kind="wiener" type="real" method="solirte" seed="97 93 23">
+    <components>nw_solirte</components>
+  </noise_vector>
+
+  <noise_vector name="uniform_noise_posix" dimensions="x" kind="uniform" type="real" method="posix" seed="31 41 59">
+    <components>nu_posix</components>
+  </noise_vector>
+  <noise_vector name="gaussian_noise_posix" dimensions="x" kind="gaussian" type="real" method="posix" seed="26 53 58">
+    <components>ng_posix</components>
+  </noise_vector>
+  <noise_vector name="wiener_noise_posix" dimensions="x" kind="wiener" type="real" method="posix" seed="97 93 23">
+    <components>nw_posix</components>
+  </noise_vector>
+  <noise_vector name="poissonian_noise_posix" dimensions="x" kind="poissonian" type="real" mean="2.0" method="posix" seed="84 62 64 ">
+    <components>np_posix</components>
+  </noise_vector>
+  <noise_vector name="jump_noise_posix" dimensions="x" kind="jump" type="real" mean-rate="2.0" method="posix" seed="33 83 27">
+    <components>nj_posix</components>
+  </noise_vector>
+
+  <vector name="main" initial_basis="x" type="real">
+    <components> phi1 phi2 phi3 </components>
+    <initialisation>
+      <dependencies>
+         uniform_noise_dsfmt   gaussian_noise_dsfmt   poissonian_noise_dsfmt 
+                               gaussian_noise_solirte 
+         uniform_noise_posix   gaussian_noise_posix   poissonian_noise_posix
+      </dependencies>
+      <![CDATA[
+        phi1 = nu_dsfmt   + ng_dsfmt + np_dsfmt; 
+        phi2 =              ng_solirte; 
+        phi3 = nu_posix   + ng_posix + np_posix; 
+      ]]>
+    </initialisation>
+  </vector>
+
+  <sequence>
+    <integrate algorithm="SI" iterations="3" interval="1.0" steps="1000">
+      <samples>25</samples>
+      <operators>
+        <dependencies>
+          jump_noise_dsfmt wiener_noise_dsfmt
+                           wiener_noise_solirte
+          jump_noise_posix wiener_noise_posix
+ </dependencies>
+        <integration_vectors> main </integration_vectors>
+        <![CDATA[
+         dphi1_dt = 1.5 * (nw_dsfmt   + nj_dsfmt  ) * phi1;
+         dphi2_dt = 1.5 * (nw_solirte             ) * phi2;
+         dphi3_dt = 1.5 * (nw_posix   + nj_posix  ) * phi3;
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  
+  <output filename="double_precision_noise_tests.xsil" format="hdf5">
+    <group>
+      <sampling basis="x" initial_sample="yes">
+        <moments>Phi1 Phi2 Phi3</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          Phi1 = phi1;
+          Phi2 = phi2;
+          Phi3 = phi3;
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>
