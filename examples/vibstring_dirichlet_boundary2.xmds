@@ -4,6 +4,12 @@
   <author>Graham Dennis</author>
   <description>
     Vibrating string with Dirichlet boundary conditions.
+	
+	This script is the second of two scripts that demonstrate how to refine or coarsen a grid between simulations.
+	This simulation loads the final state of the previous simulation (vibstring_dirichlet_boundary.xmds) and initialises from
+	the results of that simulation in Fourier space, but with a higher (spatial) resolution.  Because the spatial grid widths are
+	the same, the step size in Fourier space is the same, and so the higher resolution simulation simply initialises the lower kx
+	values from the results of the lower resolution simulation and all higher fourier components are set to zero.
   </description>
   
   <features>
@@ -27,16 +33,16 @@
   <geometry>
     <propagation_dimension> t </propagation_dimension>
     <transverse_dimensions>
-      <dimension name="x" lattice="256"  domain="(-1, 1)" />
+      <dimension name="x" lattice="512"  domain="(-1, 1)" />
     </transverse_dimensions>
   </geometry>
   
-  <vector name="main" initial_basis="x" type="complex">
+  <vector name="main" initial_basis="kx" type="complex">
     <components>
       u uDot
     </components>
-    <initialisation kind="xsil" geometry_matching_mode="strict">
-      <filename moment_group="2">vibstring_dirichlet_boundary.xsil</filename>
+    <initialisation kind="hdf5" geometry_matching_mode="loose">
+      <filename group="2">vibstring_dirichlet_boundary.h5</filename>
     </initialisation>
   </vector>
   

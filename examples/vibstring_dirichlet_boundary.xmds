@@ -4,6 +4,17 @@
   <author>Graham Dennis</author>
   <description>
     Vibrating string with Dirichlet boundary conditions.
+	
+	This script is the first of two scripts that demonstrate how to refine or coarsen a grid between simulations.
+	This simulation saves the final state as part of the output moment groups in Fourier space, and the next
+	simulation (vibstring_dirichlet_boundary2.xmds) initialises from the results of this simulation in Fourier space,
+	but with a higher (spatial) resolution.  Because the spatial grid widths are the same, the step size in Fourier space
+	is the same, and so the higher resolution simulation simply initialises the lower kx values from the results of the lower
+	resolution simulation and all higher fourier components are set to zero.
+	
+	Note that when saving the state of the simulation for later loading by another simulation, it is better to use a breakpoint
+	element rather than a moment_group as used below.  A moment group is used in this case to demonstrate how to load from a
+	specific moment group rather than a breakpoint, which is demonstrated elsewhere.
   </description>
   
   <features>
@@ -92,7 +103,7 @@
       </sampling>
     </group>
     <group>
-      <sampling basis="x" initial_sample="no">
+      <sampling basis="kx" initial_sample="no">
         <moments>uR uI uDotR uDotI</moments>
         <dependencies>main</dependencies>
         <![CDATA[
