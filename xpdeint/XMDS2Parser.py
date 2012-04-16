@@ -299,7 +299,20 @@ class XMDS2Parser(ScriptParser):
         raise ParserException(validationFeatureElement, "The 'kind' attribute of the <validation> tag must be one of "
                                                         "'compile-time', 'run-time' or 'none'.")
       
+    # We want the Globals element to be parsed before the Arguments element so that the globals for globals
+    # appear in the generated source before the globals for Arguments.  This prevents anyone inadvertently using
+    # the arguments in the initialisation of the globals.  To achieve this, people should put code in the CDATA
+    # block for arguments.
     
+    globalsElement = featuresParentElement.getChildElementByTagName('globals', optional=True)
+    if globalsElement:
+      globalsTemplate = Features.Globals.Globals(parent = self.simulation,
+                                                 **self.argumentsToTemplateConstructors)
+      globalsTemplate.codeBlocks['globalsCode'] = _UserCodeBlock(
+        parent = globalsTemplate, xmlElement = globalsElement,
+        **self.argumentsToTemplateConstructors
+      )
+
     argumentsFeatureElement = featuresParentElement.getChildElementByTagName('arguments', optional=True)
     
     if argumentsFeatureElement:
@@ -356,14 +369,7 @@ class XMDS2Parser(ScriptParser):
       argumentsFeature.argumentList = argumentList
     
     
-    globalsElement = featuresParentElement.getChildElementByTagName('globals', optional=True)
-    if globalsElement:
-      globalsTemplate = Features.Globals.Globals(parent = self.simulation,
-                                                 **self.argumentsToTemplateConstructors)
-      globalsTemplate.codeBlocks['globalsCode'] = _UserCodeBlock(
-        parent = globalsTemplate, xmlElement = globalsElement,
-        **self.argumentsToTemplateConstructors
-      )
+
     
     cflagsElement = featuresParentElement.getChildElementByTagName('cflags', optional=True)
     if cflagsElement:
