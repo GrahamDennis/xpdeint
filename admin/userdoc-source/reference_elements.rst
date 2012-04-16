@@ -138,6 +138,22 @@ When ``XMDS2`` is run on this script the executable ``arguments_test`` is create
 
   ./arguments_test --size=1.3 --number=2 --pulse_shape=lorentzian
 
+It is also possible to include an optional ``CDATA`` block inside the ``<arguments>`` block. This code will run after the arguments have been initialised with the values passed from the command line. This code block could be used, for example, to sanity check the parameters passed in, or for assigning values to global variables based on those parameters. For example, one could have the following ::
+
+    <features>
+      <globals>
+        <![CDATA[
+          real atom_kick;
+        ]]>
+      <globals>
+      <arguments>
+        <argument name="bragg_order" type="integer" default_value="2"/>
+        <![CDATA[
+          atom_kick = bragg_order * 2*M_PI / 780e-9;
+        ]]>
+      </arguments>
+    </features>
+
 
 .. _ArgumentElement:
 
