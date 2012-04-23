@@ -94,12 +94,18 @@ hsize_t mem_count[${dimensionCount+1}] = {${', '.join(chain((dimRep.localLattice
   @for fileDimNum, memDimNum, dimRep in dimRepOrdering
     @if dimRep.name in dimensionOffsets and not isinstance(dimRep, SplitUniformDimensionRepresentation)
       @set offset = dimensionOffsets[dimRep.name]
-if (((long)file_start[${fileDimNum}]) > ${offset}) {
-  file_start[$fileDimNum] -= ${offset};
-} else {
-  mem_count[${memDimNum}] -= ${offset} - file_start[${fileDimNum}];
+if (file_start[${fileDimNum}] < ${offset}) {
+  if (mem_count[${memDimNum}] < ${offset} - file_start[${fileDimNum}])
+    mem_count[${memDimNum}] = 0;
+  else {
+    mem_count[${memDimNum}] -= ${offset} - file_start[${fileDimNum}];
+    mem_start[${memDimNum}] += ${offset} - file_start[${fileDimNum}];
+  }
   file_start[${fileDimNum}] = 0;
+} else {
+  file_start[${fileDimNum}] -= ${offset};
 }
+
 if (mem_count[$memDimNum] > file_dims[$fileDimNum]) {
   mem_count[$memDimNum] = file_dims[$fileDimNum];
 }

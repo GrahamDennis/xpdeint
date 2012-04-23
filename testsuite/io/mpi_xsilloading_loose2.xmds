@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <command_line>mpirun -n 3 ./mpi_xsilloading_loose2</command_line>
+    <input_xsil_file name="breakpoints_kspace_expected.xsil" />
+    <input_xsil_file name="breakpoints_mixed_space2_expected.xsil" />
+    <xsil_file name="mpi_xsilloading_loose2.xsil" expected="xsilloading_expected2.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+  </testing>
+  
+  <name>mpi_xsilloading_loose2</name>
+  <author>Graham Dennis</author>
+  <description>
+    Test loading xsil files in various spaces
+  </description>
+  
+  <features>
+    <fftw plan="estimate" />
+  </features>
+  
+  <driver name="distributed-mpi" />
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="x" lattice="250"  domain="(0, 1)" />
+      <dimension name="y" lattice="512"  domain="(-2, 2)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="oned" dimensions="x" initial_basis="kx" type="complex">
+    <components>u</components>
+    <initialisation kind="xsil" geometry_matching_mode="loose">
+      <filename>breakpoints_kspace_expected.xsil</filename>
+    </initialisation>
+  </vector>
+  
+  <vector name="twod" dimensions="x y" initial_basis="kx y">
+    <components>v</components>
+    <initialisation kind="xsil" geometry_matching_mode="loose">
+      <filename>breakpoints_mixed_space2_expected.xsil</filename>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <filter>
+      <![CDATA[
+        ;
+      ]]>
+    </filter>
+  </sequence>
+  
+  <output format="binary">
+    <group>
+      <sampling basis="x(50) y(0)" initial_sample="yes">
+        <moments>amp</moments>
+        <dependencies>oned twod</dependencies>
+        <![CDATA[
+	            amp = cos(u.Re())*sin(u.Im())/2.0 - v.Re()*v.Re()*x*y + sin(y)*v.Im(); // Some crazy function to combine the quantities
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>
