@@ -250,9 +250,14 @@ Kubo Oscillator
 This example demonstrates the integration of a stochastic differential equation.  We examine the Kubo oscillator, which is a complex variable whose phase is evolving according to a Wiener noise.  In a suitable rotating frame, the equation of motion for the variable is
 
 .. math::
-    dz = i z\, dW
+    \frac{dz}{dt} = i z \;\eta
 
-where we can interpret this as a Stratonovich or Ito differential equation, depending on the choice of rotating frame.  This equation is solved by the following XMDS2 script:
+where :math:`\eta(t)` is the Wiener differential, and we interpret this as a Stratonovich equation.  In other common notation, this is sometimes written:
+
+.. math::
+    dz = i z \;\circ dW
+
+Most algorithms employed by XMDS require the equations to be input in the Stratonovich form.  Ito differential equations can always be transformed into Stratonovich euqations, and in this case the difference is equivalent to the choice of rotating frame.  This equation is solved by the following XMDS2 script:
 
 .. code-block:: xpdeint
 
@@ -275,7 +280,7 @@ where we can interpret this as a Stratonovich or Ito differential equation, depe
       </features>
 
       <noise_vector name="drivingNoise" dimensions="" kind="wiener" type="real" method="dsfmt" seed="314 159 276">
-        <components>dW</components>
+        <components>eta</components>
       </noise_vector>
   
       <vector name="main" type="complex">
@@ -294,7 +299,7 @@ where we can interpret this as a Stratonovich or Ito differential equation, depe
             <integration_vectors>main</integration_vectors>
             <dependencies>drivingNoise</dependencies>
             <![CDATA[
-              dz_dt = i*z*dW;
+              dz_dt = i*z*eta;
             ]]>
           </operators>
         </integrate>
@@ -323,7 +328,7 @@ We define the stochastic elements in a simulation with the ``<noise_vector>`` el
 .. code-block:: xpdeint
 
     <noise_vector name="drivingNoise" dimensions="" kind="wiener" type="real" method="dsfmt" seed="314 159 276">
-     <components>dW</components>
+     <components>eta</components>
     </noise_vector>
   
 This defines a vector that is used like any other, but it will be randomly generated with particular statistics and characteristics rather than initialised.  The name, dimensions and type tags are defined just as for normal vectors.  The names of the components are also defined in the same way.  The noise is defined as a Wiener noise here (``kind = "wiener"``), which is a zero-mean Gaussian random noise with an average variance equal to the discretisation volume (here it is just the step size in the propagation dimension, as it is not defined over transverse dimensions).  Other noise types are possible, including uniform and Poissonian noises, but we will not describe them in detail here.  
@@ -379,12 +384,12 @@ The average over multiple paths can be increasingly smooth.
 Fibre Noise
 -----------
 
-This simulation is a stochastic partial differential equation, in which a one dimensional damped field is subject to a complex noise. 
+This simulation is a stochastic partial differential equation, in which a one-dimensional damped field is subject to a complex noise. 
 
 .. math::
     \frac{\partial \psi}{\partial t} = -i \frac{\partial^2 \psi}{\partial x^2} -\gamma \psi+\beta \frac{1}{\sqrt{2}}\left(\eta_1(x)+i\eta_2(x)\right)
     
-where the noise terms :math:`\eta_j(x,t)` are Wiener noise increments with variance :math:`\frac{\Delta t}{\Delta x}`, and the equation is interpreted as a Stratonovich differential equation.
+where the noise terms :math:`\eta_j(x,t)` are Wiener differentials and the equation is interpreted as a Stratonovich differential equation.  On a finite grid, these increments have variance :math:`\frac{1}{\Delta x \Delta t}`.
 
 .. code-block:: xpdeint
     
@@ -478,7 +483,7 @@ Executing this program is slightly different with the MPI option.  The details c
         Compiling simulation...
         ... done. Type './fibre' to run.
 
-Note that different compile options (and potentially a different compiler) are used by XMDS2, but this is transparent to the user.  MPI simulations will have to be run using syntax that will depend on the MPI implementation.  Here we show the version based on the popular open source 'Open-MPI <http://www.open-mpi.org/>`_ implementation.
+Note that different compile options (and potentially a different compiler) are used by XMDS2, but this is transparent to the user.  MPI simulations will have to be run using syntax that will depend on the MPI implementation.  Here we show the version based on the popular open source `Open-MPI <http://www.open-mpi.org/>`_ implementation.
 
 .. code-block:: none
 
@@ -608,7 +613,7 @@ The first extra feature we have used in this script is the ``<diagnostics>`` ele
 
 The simulation defines a vector with a single transverse dimension labelled "j", of type "integer" ("int" and "long" can also be used as synonyms for "integer").  In the absence of an explicit type, the dimension is assumed to be real-valued.  The dimension has a "domain" argument as normal, defining the minimum and maximum values of the dimension's range.  The lattice element, if specified, is used as a check on the size of the domain, and will create an error if the two do not match.
 
-Integer-valued dimensions can be called non-locally.  Real-valued dimensions are typically coupled non-locally only through local operations in the transformed space of the dimension, but can be called non-locally in certain other situations as described in :ref:`ReferencingNonlocal`.  The syntax for calling integer dimensions non-locally can be seen in the initialisation CDATA block:
+Integer-valued dimensions can be called non-locally.  Real-valued dimensions are typically coupled non-locally only through local operations in the transformed space of the dimension, but can be called non-locally in certain other situations as described in :ref:`the reference<ReferencingNonlocal>`.  The syntax for calling integer dimensions non-locally can be seen in the initialisation CDATA block:
 
 .. code-block:: xpdeint
 

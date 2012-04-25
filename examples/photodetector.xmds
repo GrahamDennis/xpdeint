@@ -3,7 +3,7 @@
   <name>photodetector</name>
   <author>Graham Dennis</author>
   <description>
-    Example poissonian noise simulation
+    Example Poissonian noise simulation
   </description>
   
   <features>
@@ -35,11 +35,11 @@
     <integrate algorithm="RK4" interval="10" steps="1000">
       <samples>1000</samples>
       <operators>
-        <integration_vectors>main</integration_vectors>
         <dependencies>noises</dependencies>
         <![CDATA[
           dN_dt = nn;
         ]]>
+        <integration_vectors>main</integration_vectors>
       </operators>
     </integrate>
   </sequence>

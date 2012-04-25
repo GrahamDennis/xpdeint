@@ -30,6 +30,7 @@ The possible attributes and attribute values for each element are not shown; see
         <:ref:`benchmark <Benchmark>` />
         <:ref:`bing <Bing>` />
         <:ref:`cflags <CFlags>`> <:ref:`/cflags <CFlags>`>
+        <:ref:`chunked_output <ChunkedOutput>`> <:ref:`/chunked_output <ChunkedOutput>`>
         <:ref:`diagnostics <Diagnostics>` />
         <:ref:`error_check <ErrorCheck>` />
         <:ref:`halt_non_finite <HaltNonFinite>` />
@@ -51,20 +52,12 @@ The possible attributes and attribute values for each element are not shown; see
         <:ref:`/transverse_dimensions <TransverseDimensionsElement>`>
       <:ref:`/geometry <GeometryElement>`>
   
-      <:ref:`noise_vector <NoiseVectorElement>`>
-        <:ref:`components <ComponentsElement>`> <:ref:`/components <ComponentsElement>`>
-      <:ref:`/noise_vector <NoiseVectorElement>`>
-
-      <:ref:`noise_vector <NoiseVectorElement>`> ... <:ref:`/noise_vector <NoiseVectorElement>`>
-      <:ref:`noise_vector <NoiseVectorElement>`> ... <:ref:`/noise_vector <NoiseVectorElement>`>
-      ...
-
       <:ref:`vector <VectorElement>`>
         <:ref:`components <ComponentsElement>`> <:ref:`/components <ComponentsElement>`>
         <:ref:`initialisation <InitialisationElement>`>
           <:ref:`dependencies <Dependencies>`> <:ref:`/dependencies <Dependencies>`>
           <:ref:`filename <FilenameElement>`>
-          <![:ref:`CDATA <XMDSCSyntax>` [
+          <![:ref:`CDATA <InitialisationElement>` [
           ]]>
         <:ref:`/initialisation <InitialisationElement>`>
       <:ref:`/vector <VectorElement>`>
@@ -77,13 +70,21 @@ The possible attributes and attribute values for each element are not shown; see
         <:ref:`components <ComponentsElement>`> <:ref:`/components <ComponentsElement>`>
         <:ref:`evaluation <EvaluationElement>`>
           <:ref:`dependencies <Dependencies>`> <:ref:`/dependencies <Dependencies>`>
-          <![:ref:`CDATA <XMDSCSyntax>` [
+          <![:ref:`CDATA <InitialisationElement>` [
           ]]>
         <:ref:`/evaluation <EvaluationElement>`>
       <:ref:`/computed_vector <ComputedVectorElement>`>
 
       <:ref:`computed_vector <ComputedVectorElement>`> ... <:ref:`/computed_vector <ComputedVectorElement>`>
       <:ref:`computed_vector <ComputedVectorElement>`> ... <:ref:`/computed_vector <ComputedVectorElement>`>
+      ...
+
+      <:ref:`noise_vector <NoiseVectorElement>`>
+        <:ref:`components <ComponentsElement>`> <:ref:`/components <ComponentsElement>`>
+      <:ref:`/noise_vector <NoiseVectorElement>`>
+
+      <:ref:`noise_vector <NoiseVectorElement>`> ... <:ref:`/noise_vector <NoiseVectorElement>`>
+      <:ref:`noise_vector <NoiseVectorElement>`> ... <:ref:`/noise_vector <NoiseVectorElement>`>
       ...
 
       <:ref:`sequence <SequenceElement>`>
@@ -140,13 +141,13 @@ The possible attributes and attribute values for each element are not shown; see
   
       <:ref:`output <OutputElement>`>
         <:ref:`group <GroupElement>`>
-          <:ref:`sampling <SamplingElement>`>
+          <:ref:`sampling <GroupElement>`>
             <:ref:`dependencies <Dependencies>`> <:ref:`/dependencies <Dependencies>`>
-            <:ref:`moments <MomentsElement>`> <:ref:`/moments <MomentsElement>`>
+            <:ref:`moments <GroupElement>`> <:ref:`/moments <GroupElement>`>
             <:ref:`operator <OperatorElement>`> ... <:ref:`/operator <OperatorElement>`>       
             <![:ref:`CDATA <XMDSCSyntax>` [
             ]]>
-          <:ref:`/sampling <SamplingElement>`>
+          <:ref:`/sampling <GroupElement>`>
         <:ref:`/group <GroupElement>`>
 
         <:ref:`group <GroupElement>`> ... <:ref:`/group <GroupElement>`>

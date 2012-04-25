@@ -1874,7 +1874,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     outputFormatClass = Features.OutputFormat.OutputFormat.outputFormatClasses.get(formatName)
     if not outputFormatClass:
       validFormats = ', '.join(["'%s'" % formatName for formatName in Features.OutputFormat.OutputFormat.outputFormatClasses.keys()])
-      raise ParserException(outputElement, "Breakpoint format attribute '%(formatString)s' unknown.\n"
+      raise ParserException(outputElement, "Breakpoint format attribute '%(formatName)s' unknown.\n"
                                            "The valid formats are %(validFormats)s." % locals())
     
     if not outputElement.hasAttribute('filename'):

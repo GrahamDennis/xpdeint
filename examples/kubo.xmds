@@ -18,7 +18,7 @@
   </features>
 
   <noise_vector name="drivingNoise" kind="wiener" type="real" method="dsfmt">
-    <components>dW</components>
+    <components>eta</components>
   </noise_vector>
   
   <vector name="main" type="complex">
@@ -37,7 +37,7 @@
         <integration_vectors>main</integration_vectors>
         <dependencies>drivingNoise</dependencies>
         <![CDATA[
-          dz_dt = i*z*dW;
+          dz_dt = i*z*eta;
         ]]>
       </operators>
     </integrate>
