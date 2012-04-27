@@ -1763,6 +1763,10 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     crossStepperClass = None
     algorithmSpecificOptionsDict = {}
     
+    integrator = operatorTemplate.parent.parent
+    if algorithmString != 'SI' and isinstance(integrator, Integrators.FixedStepWithCross.FixedStepWithCross):
+      raise ParserException(operatorElement, "The SIC integrator can only be used with SI cross-propagators.  Please change the algorithm of this cross-propagator to 'SI'.")      
+    
     if algorithmString == 'RK4':
       crossIntegratorClass = Integrators.FixedStep.FixedStep
       crossStepperClass = Integrators.RK4Stepper.RK4Stepper
