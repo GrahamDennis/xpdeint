@@ -950,6 +950,17 @@ A ``<filter>`` element can be placed inside a ``<sequence>`` element or an :ref:
     
 One of the common uses of a filter element is to apply discontinuous changes to the vectors and variables of the simulation.
 
+Example syntax::
+
+    <sequence>
+        <filter>
+           <dependencies>normalisation wavefunction</dependencies>
+           <![CDATA[
+             phi *= sqrt(Nparticles/Ncalc);
+           ]]>
+        </filter>
+    </sequence>
+
 
 .. _IntegrateElement:
 
