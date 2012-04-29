@@ -76,6 +76,14 @@ def scriptTestingFunction(root, scriptName, testDir, absPath, self):
   
   message = ''.join(["\n%(handleName)s:\n%(content)s" % locals() for handleName, content in [('stdout', stdout), ('stderr', stderr)] if content])
   
+  # A few tests require XMDS1. If XMDS1 isn't present we should just
+  # skip that test rather than failing.
+  # The skip functionality for the unittest class is only available
+  # in python 2.7 and later, so check for that too.
+  if returnCode != 0 and sys.version_info[:2] >= (2, 7):
+    if "The missing feature(s) were: xmds" in message:
+      self.skipTest("Skipping test as XMDS1 is required and not installed")
+
   self.assert_(returnCode == 0, ("Failed to compile." % locals()) + message)
   
   xmlDocument = minidom.parse(absPath)
