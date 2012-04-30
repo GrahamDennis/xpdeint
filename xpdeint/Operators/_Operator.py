@@ -128,6 +128,12 @@ class _Operator (ScriptElement):
     super(_Operator, self).preflight()
     
     if self.primaryCodeBlock.dependenciesEntity:
+      # If this operator has dependencies, then the integrator cannot be initialised early.
+      # This only affects the multi-path drivers, which try to initialise integrators once
+      # per node, rather than once per path.  The following code disables this optimisation
+      # in this situation
+      if self.operatorVector:
+        self.parent.parent.canBeInitialisedEarly = False
       for dependency in self.primaryCodeBlock.dependencies:
         if self.vectorsMustBeInSubsetsOfIntegrationField and not dependency.field.isSubsetOfField(self.field):
           raise ParserException(self.primaryCodeBlock.dependenciesEntity.xmlElement,
