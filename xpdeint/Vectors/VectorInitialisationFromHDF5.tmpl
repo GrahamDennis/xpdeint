@@ -126,7 +126,7 @@ if ((${dimArrayName}[0] > ${dimRep.name}_inputdata[file_dims[${dimNum}]-1]) || (
 real ${dimRep.name}_fileOffsetR = (${dimRep.name}_inputdata[0]-${dimArrayName}[0])/${dimRep.name}_step;
 if (remainder(${dimRep.name}_inputdata[0]-${dimArrayName}[0], ${dimRep.name}_step) > 0.01*${dimRep.name}_step) {
   _LOG(_ERROR_LOG_LEVEL, "The input and simulation grids do not overlap sufficiently!\n"
-                         "The calculated offset for the input grid from the simulation grid in the '${dimRep.name}' dimension is %f, and it should be integral!",
+                         "The calculated offset for the input grid from the simulation grid in the '${dimRep.name}' dimension is %f, and it should be integral!\n",
                          (${dimRep.name}_inputdata[0]-${dimArrayName}[0])/${dimRep.name}_step);
 }
 long ${dimRep.name}_fileOffset = lround((${dimRep.name}_inputdata[0]-${dimArrayName}[0])/${dimRep.name}_step);
