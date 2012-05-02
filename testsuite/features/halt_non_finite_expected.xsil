@@ -16,8 +16,8 @@
     <halt_non_finite />
     <globals>
       <![CDATA[
-      const double x0 = 1.0;
-      const double t0 = 1.0123456789;
+      const real x0 = 1.0;
+      const real t0 = 1.0123456789;
       ]]>
     </globals>
   </features>
@@ -26,7 +26,7 @@
     <propagation_dimension> t </propagation_dimension>
   </geometry>
   
-  <vector name="main" type="double">
+  <vector name="main" type="real">
     <components> x </components>
     <initialisation>
       <![CDATA[
@@ -36,7 +36,7 @@
   </vector>
   
   <sequence>
-    <integrate algorithm="ARK45" interval="2" steps="10000" tolerance="1e-5">
+    <integrate algorithm="RK4" interval="2" steps="1000">
       <samples>200</samples>
       <operators>
         <integration_vectors>main</integration_vectors>
@@ -61,7 +61,7 @@
   
 
 <info>
-Script compiled with xpdeint version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+Script compiled with XMDS2 version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
 See http://www.xmds.org for more information.
 </info>
 
@@ -76,7 +76,7 @@ t xOut
   <Array Name="data" Type="double">
     <Dim>201</Dim>
     <Dim>2</Dim>
-    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint64" precision="double" Type="Remote" Encoding="LittleEndian"/>
 halt_non_finite_expected_mg0.dat
     </Stream>
   </Array>

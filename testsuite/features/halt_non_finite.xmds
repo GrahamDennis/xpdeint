@@ -36,7 +36,7 @@
   </vector>
   
   <sequence>
-    <integrate algorithm="ARK45" interval="2" steps="10000" tolerance="1e-5">
+    <integrate algorithm="RK4" interval="2" steps="1000">
       <samples>200</samples>
       <operators>
         <integration_vectors>main</integration_vectors>

@@ -1,0 +1,432 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="highdimcrossprop.xsil" expected="highdimcrossprop_expected.xsil" absolute_tolerance="1e-5" relative_tolerance="1e-4" />
+  </testing>
+  <name>highdimcrossprop</name>
+  
+  <features>
+    <benchmark />
+   
+    <bing />
+      <globals>
+<![CDATA[
+const real pi=3.14159265358979;
+const real g =2*pi*11.4005; // Sqrt(density)/Hz
+const real sample_length = 0.2; //m
+const real time_input =2.5e-6; // sec (5)
+const real sigma=1e-6; // sec (2)
+const real inp_hgt=1e3; //photonnum
+const real gama=2*pi*5.6e6; //Hz
+const real eta =2*pi*10e6/sample_length; //Hz/m (was 2*pi*10e6)
+const real omc=2*pi*20e6; //Hz (was 2*pi*20e6)
+
+const real gama0=0; //2*pi*2e3; //Hz
+const real gamac=0; //2*pi*1e3; //Hz
+const real c=3e8; // m/s
+const real timeswitchz=10e-6; // sec (10)
+
+const real N=1e18; // density 
+const real gNonc = g*N/c; 
+const real delta=2*pi*3e9; //Hz
+
+const real width = 0.001; //m
+const real k0 = 6.28 / (795e-9);
+
+const real alpha=0.00; //m^2/s
+
+]]> 
+  </globals>
+    
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+           <dimension name="x" lattice="16" domain="(-0.004,0.004)"  /> 
+           <dimension name="y" lattice="16" domain="(-0.003,0.003)"  /> 
+           <dimension name="z" lattice="512"  domain="(0,0.2)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="main" initial_basis="z x y" type="complex">
+    <components>
+    alpha12
+    </components>
+    <initialisation>
+      <![CDATA[
+      alpha12 =  0.0;
+    
+      ]]>
+    </initialisation>
+  </vector>
+
+    <vector name="crossinitial" initial_basis="x y" type="complex">
+    <components>
+    beamprofile
+    </components>
+    <initialisation>
+      <![CDATA[
+      beamprofile=inp_hgt * (2*sqrt(2)*x/width) * exp(-x*x/(width*width)) * exp(-y*y/(width*width))* exp(-i*k0*(x*x+y*y)/0.5);
+      ]]>
+    </initialisation>
+  </vector>
+
+<vector name="cross1" initial_basis="x y z" type="complex">
+    <components>
+     E
+    </components>
+  </vector>
+  
+  
+  <sequence>
+    <integrate algorithm="RK4" interval="20e-8" steps="20" tolerance="1.0e-6">
+          <samples>2 1 2 2 1 1 1 1 1 1</samples>
+      
+       <operators>
+        <operator kind="cross_propagation" algorithm="RK4"  propagation_dimension="z">
+            <operator kind="ip" constant="yes">
+              <operator_names>Btt</operator_names>
+              <![CDATA[
+                Btt = 0; //i*(kx*kx + ky*ky)/(2*k0);
+              ]]>
+            </operator>
+
+          <integration_vectors>cross1</integration_vectors>
+          <!-- You can have a dependencies tag in here -->
+          <dependencies>main</dependencies>
+          <boundary_condition kind="left">
+            <!-- You can also have a dependencies tag in here -->
+            <!-- like the one shown below, but none are needed -->
+            <!-- in this example -->
+                        <dependencies>crossinitial</dependencies> 
+      <![CDATA[
+          
+          //E=inp_hgt*exp(-(t-time_input)*(t-time_input)/(sigma*sigma)) * exp(-x*x/(width*width))*exp(-y*y/(width*width));
+          E = exp(-(t-time_input)*(t-time_input)/(sigma*sigma)) * beamprofile;
+                        
+                        ]]>
+          </boundary_condition>
+          <![CDATA[
+      complex aalpha13 = (alpha12*omc+g*E)/delta;
+          
+          dE_dz =  i*gNonc*(aalpha13) + Btt[E]; 
+           
+          ]]>
+        </operator>
+           <operator kind="ip" constant="yes">
+              <operator_names>Ltt</operator_names>
+              <![CDATA[
+                Ltt = -alpha*(kz*kz+kx*kx+ky*ky);
+              ]]>
+            </operator>
+        
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+
+complex sw  = -1.0;
+
+complex aalpha13 = (alpha12*omc+g*E)/(delta-i*(gamac/2+gama+gama0/2));
+dalpha12_dt  = ((-gama0 - gamac-i*(sw*eta*(z-sample_length/2) +(omc*omc)/delta))*alpha12+i*aalpha13*(omc)) + Ltt[alpha12];
+
+
+        ]]>
+      </operators>
+      
+    </integrate>
+  </sequence>
+  
+  <output format="hdf5" filename="highdimcrossprop.xsil">
+    <group>
+      <sampling basis="x(16) y(16) z(128)" initial_sample="yes">
+        <moments>bprobereal bprobeimag</moments>
+        <dependencies>cross1</dependencies>
+        <![CDATA[
+bprobereal = E.Re();
+bprobeimag = E.Im();
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling basis="kx(16) ky(16) kz(128)" initial_sample="yes">
+        <moments>bproberealK bprobeimagK bintensityK</moments>
+        <dependencies>cross1</dependencies>
+        <![CDATA[
+          bproberealK = E.Re();
+          bprobeimagK = E.Im();
+          bintensityK = mod2(E);
+        ]]>
+      </sampling>
+     </group>
+    <group>
+      <sampling basis="x(16) y(16) z(256)" initial_sample="yes">
+        <moments>balpreal12 balpimag12</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+balpreal12 = (alpha12).Re();
+balpimag12 = (alpha12).Im();
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling basis="kx(2) ky(2) kz(256)" initial_sample="yes">
+        <moments>balpreal12K balpimag12K</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          balpreal12K = (alpha12).Re();
+          balpimag12K = (alpha12).Im();
+        ]]>
+      </sampling>
+     </group>
+     <group>
+      <sampling basis="x(0) y(0) z(512)" initial_sample="yes">
+        <moments>bprobereal bprobeimag</moments>
+        <dependencies>cross1</dependencies>
+        <![CDATA[
+bprobereal = E.Re();
+bprobeimag = E.Im();
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling basis="x(0) y(16) z(0)" initial_sample="yes">
+        <moments>bprobereal bprobeimag</moments>
+        <dependencies>cross1</dependencies>
+        <![CDATA[
+bprobereal = E.Re();
+bprobeimag = E.Im();
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling basis="x(16) y(0) z(0)" initial_sample="yes">
+        <moments>bprobereal bprobeimag</moments>
+        <dependencies>cross1</dependencies>
+        <![CDATA[
+bprobereal = E.Re();
+bprobeimag = E.Im();
+        ]]>
+      </sampling>
+    </group>
+     <group>
+      <sampling basis="x(0) y(0) z(512)" initial_sample="no">
+        <moments>balpreal12 balpimag12</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          balpreal12 = Re(alpha12);
+          balpimag12 = Im(alpha12);
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling basis="x(16) y(0) z(0)" initial_sample="no">
+        <moments>balpreal12 balpimag12</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          balpreal12 = Re(alpha12);
+          balpimag12 = Im(alpha12);
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling basis="x(0) y(16) z(0)" initial_sample="no">
+        <moments>balpreal12 balpimag12</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          balpreal12 = Re(alpha12);
+          balpimag12 = Im(alpha12);
+        ]]>
+      </sampling>
+    </group>
+  </output>
+
+<info>
+Script compiled with XMDS2 version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+See http://www.xmds.org for more information.
+</info>
+
+<XSIL Name="moment_group_1">
+  <Param Name="n_independent">4</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>6</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t x y z bprobereal bprobeimag 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>3</Dim>
+    <Dim>16</Dim>
+    <Dim>16</Dim>
+    <Dim>128</Dim>
+    <Dim>6</Dim>
+    <Stream><Metalink Format="HDF5" Type="Remote" Group="/1"/>
+highdimcrossprop_expected.h5
+    </Stream>
+  </Array>
+</XSIL>
+
+<XSIL Name="moment_group_2">
+  <Param Name="n_independent">4</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>7</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t kx ky kz bproberealK bprobeimagK bintensityK 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>2</Dim>
+    <Dim>16</Dim>
+    <Dim>16</Dim>
+    <Dim>128</Dim>
+    <Dim>7</Dim>
+    <Stream><Metalink Format="HDF5" Type="Remote" Group="/2"/>
+highdimcrossprop_expected.h5
+    </Stream>
+  </Array>
+</XSIL>
+
+<XSIL Name="moment_group_3">
+  <Param Name="n_independent">4</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>6</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t x y z balpreal12 balpimag12 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>3</Dim>
+    <Dim>16</Dim>
+    <Dim>16</Dim>
+    <Dim>256</Dim>
+    <Dim>6</Dim>
+    <Stream><Metalink Format="HDF5" Type="Remote" Group="/3"/>
+highdimcrossprop_expected.h5
+    </Stream>
+  </Array>
+</XSIL>
+
+<XSIL Name="moment_group_4">
+  <Param Name="n_independent">4</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>6</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t kx ky kz balpreal12K balpimag12K 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>3</Dim>
+    <Dim>2</Dim>
+    <Dim>2</Dim>
+    <Dim>256</Dim>
+    <Dim>6</Dim>
+    <Stream><Metalink Format="HDF5" Type="Remote" Group="/4"/>
+highdimcrossprop_expected.h5
+    </Stream>
+  </Array>
+</XSIL>
+
+<XSIL Name="moment_group_5">
+  <Param Name="n_independent">2</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>4</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t z bprobereal bprobeimag 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>2</Dim>
+    <Dim>512</Dim>
+    <Dim>4</Dim>
+    <Stream><Metalink Format="HDF5" Type="Remote" Group="/5"/>
+highdimcrossprop_expected.h5
+    </Stream>
+  </Array>
+</XSIL>
+
+<XSIL Name="moment_group_6">
+  <Param Name="n_independent">2</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>4</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t y bprobereal bprobeimag 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>2</Dim>
+    <Dim>16</Dim>
+    <Dim>4</Dim>
+    <Stream><Metalink Format="HDF5" Type="Remote" Group="/6"/>
+highdimcrossprop_expected.h5
+    </Stream>
+  </Array>
+</XSIL>
+
+<XSIL Name="moment_group_7">
+  <Param Name="n_independent">2</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>4</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t x bprobereal bprobeimag 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>2</Dim>
+    <Dim>16</Dim>
+    <Dim>4</Dim>
+    <Stream><Metalink Format="HDF5" Type="Remote" Group="/7"/>
+highdimcrossprop_expected.h5
+    </Stream>
+  </Array>
+</XSIL>
+
+<XSIL Name="moment_group_8">
+  <Param Name="n_independent">1</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>3</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+z balpreal12 balpimag12 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>512</Dim>
+    <Dim>3</Dim>
+    <Stream><Metalink Format="HDF5" Type="Remote" Group="/8"/>
+highdimcrossprop_expected.h5
+    </Stream>
+  </Array>
+</XSIL>
+
+<XSIL Name="moment_group_9">
+  <Param Name="n_independent">1</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>3</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+x balpreal12 balpimag12 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>16</Dim>
+    <Dim>3</Dim>
+    <Stream><Metalink Format="HDF5" Type="Remote" Group="/9"/>
+highdimcrossprop_expected.h5
+    </Stream>
+  </Array>
+</XSIL>
+
+<XSIL Name="moment_group_10">
+  <Param Name="n_independent">1</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>3</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+y balpreal12 balpimag12 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>16</Dim>
+    <Dim>3</Dim>
+    <Stream><Metalink Format="HDF5" Type="Remote" Group="/10"/>
+highdimcrossprop_expected.h5
+    </Stream>
+  </Array>
+</XSIL>
+</simulation>

@@ -2,7 +2,7 @@
 <simulation xmds-version="2">
   <testing>
     <command_line>mpirun -n 2 ./mpi_highdimcrossprop</command_line>
-    <xsil_file name="mpi_highdimcrossprop.xsil" expected="mpi_highdimcrossprop_expected.xsil" absolute_tolerance="1e-5" relative_tolerance="1e-3" />
+    <xsil_file name="mpi_highdimcrossprop.xsil" expected="../operators/highdimcrossprop_expected.xsil" absolute_tolerance="1e-5" relative_tolerance="1e-4" />
   </testing>
   <name>mpi_highdimcrossprop</name>
   
@@ -82,7 +82,7 @@ const real alpha=0.00; //m^2/s
   
   
   <sequence>
-    <integrate algorithm="ARK45" interval="20e-8" steps="2000" tolerance="1.0e-6">
+    <integrate algorithm="RK4" interval="20e-8" steps="20" tolerance="1.0e-6">
           <samples>2 1 2 2 1 1 1 1 1 1</samples>
       
        <operators>
@@ -126,7 +126,7 @@ const real alpha=0.00; //m^2/s
         <integration_vectors>main</integration_vectors>
         <![CDATA[
 
-complex sw  = ( t<timeswitchz ? -1.0:1.0);
+complex sw  = -1.0; //( t<timeswitchz ? -1.0:1.0);
 
 complex aalpha13 = (alpha12*omc+g*E)/(delta-i*(gamac/2+gama+gama0/2));
 dalpha12_dt  = ((-gama0 - gamac-i*(sw*eta*(z-sample_length/2) +(omc*omc)/delta))*alpha12+i*aalpha13*(omc)) + Ltt[alpha12];

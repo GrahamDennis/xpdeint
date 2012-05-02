@@ -369,7 +369,7 @@ do {
     
     // Resize step
     if (_error < 0.5*_tolerance || _error > _tolerance) {
-      const real _safetyFactor = 0.98;
+      const real _safetyFactor = 0.90;
       real _scalingFactor = _safetyFactor * pow(abs(_error/_tolerance), real(-0.7/${integrationOrder})) * pow(_last_norm_error, real(0.4/${integrationOrder}));
       _scalingFactor = MAX(_scalingFactor, 1.0/5.0);
       _scalingFactor = MIN(_scalingFactor, 7.0);
