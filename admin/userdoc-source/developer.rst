@@ -85,7 +85,7 @@ All ``.tmpl`` files are Cheetah template files.  These are used to generate C++ 
 * ``xpdeint/``: 
 	* ``Features/``: Code for all ``<feature>`` elements, such as ``<globals>`` and ``<auto_vectorise>``
 		* ``Transforms/``: Code for the Fourier and matrix-based transforms (including MPI variants).
-	* ``Geometry/``: Code for describing the geometry of simulation dimensions and domains.  Includes code for ``Geometry``, ``Field`` and all ``DimensionRepresentation``s.
+	* ``Geometry/``: Code for describing the geometry of simulation dimensions and domains.  Includes code for ``Geometry``, ``Field`` and all ``DimensionRepresentations``.
 	* ``Operators/``: Code for all ``<operator>`` elements, including ``IP``, ``EX`` and the temporal derivative operator ``DeltaA``.
 	* ``Segments/``: Code for all elements that can appear in a ``<segments>`` tag.  This includes ``<integrate>``, ``<filter>``, and ``<breakpoint>``.
 		* ``Integrators``: Code for fixed and adaptive integration schemes, and all steppers (e.g. ``RK4``, ``RK45``, ``RK9``, etc.)
