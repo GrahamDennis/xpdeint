@@ -2067,6 +2067,9 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
         parent = momentGroupTemplate, basis = sampleBasis,
         **self.argumentsToTemplateConstructors)
       samplingCodeBlock.dependenciesEntity = self.parseDependencies(samplingElement)
+      if samplingCodeBlock.dependenciesEntity.xmlElement.hasAttribute("basis"):
+          parserWarning(samplingCodeBlock.dependenciesEntity.xmlElement, "'basis' attribute is ignored on the <dependencies> tag in a sampling block. "
+                        "Instead specify the basis on the <sampling> tag itself.")
       # The raw vector will be needed during looping
       samplingCodeBlock.targetVector = rawVectorTemplate
       momentGroupTemplate.codeBlocks['sampling'] = samplingCodeBlock
