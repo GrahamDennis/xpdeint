@@ -21,7 +21,7 @@ One of the best ways to learn XMDS2 is to see several illustrative examples.  He
    
    :ref:`2DMultistateSE` (combined integer and continuous dimensions with matrix multiplication, aliases)
 
-All of these scripts are available in the include "examples" folder, along with more examples that demonstrate other tricks.  Together, they provide starting points for a huge range of different simulations.
+All of these scripts are available in the included "examples" folder, along with more examples that demonstrate other tricks.  Together, they provide starting points for a huge range of different simulations.
 
 .. _NonLinearSchrodingerEquation:
 
@@ -384,7 +384,7 @@ The average over multiple paths can be increasingly smooth.
 Fibre Noise
 -----------
 
-This simulation is a stochastic partial differential equation, in which a one-dimensional damped field is subject to a complex noise. 
+This simulation is a stochastic partial differential equation, in which a one-dimensional damped field is subject to a complex noise. It can be found as fibre.xmds in the examples/ directory.
 
 .. math::
     \frac{\partial \psi}{\partial t} = -i \frac{\partial^2 \psi}{\partial x^2} -\gamma \psi+\beta \frac{1}{\sqrt{2}}\left(\eta_1(x)+i\eta_2(x)\right)
@@ -526,7 +526,7 @@ where :math:`L_x` is the length of the x domain.  We see that a single integrati
     
     The momentum space density of the field as a function of time for a single path realisation.
 
-while an average of 1024 paths converges nicely to the analytic solution:
+while an average of 1024 paths (change ``paths="8"`` to ``paths="1024"`` in the ``<driver>`` element) converges nicely to the analytic solution:
 
 .. figure:: images/fibre1024.*
     :align: center
@@ -646,7 +646,7 @@ This example integrates the two-dimensional partial differential equation
     +\frac{\partial^3}{\partial y^3}\right)-y\left(\frac{\partial^3}{\partial y^2 \partial x}+\frac{\partial^3}{\partial x^3}\right)\right)\Bigg]W(x,y,t)
     \end{split}
 
-with the added restriction that the derivative is forced to zero outside a certain radius.  This extra condition helps maintain the long-term stability of the integration.
+with the added restriction that the derivative is forced to zero outside a certain radius.  This extra condition helps maintain the long-term stability of the integration. The script can be found in examples/wigner_arguments_mpi.xmds in your XMDS2 installation directory.
 
 .. code-block:: xpdeint
 
@@ -656,28 +656,28 @@ with the added restriction that the derivative is forced to zero outside a certa
       <description>
         Simulation of the Wigner function for an anharmonic oscillator with the initial state
         being a coherent state.
-
-        WARNING: This simulation will take a couple of hours.
       </description>
-
       <features>
         <benchmark />
+        <globals>
+          <![CDATA[
+            real Uint_hbar_on16;
+          ]]>
+        </globals>
         <arguments>
           <argument name="omega" type="real" default_value="0.0" />
           <argument name="alpha_0"     type="real" default_value="3.0" />
           <argument name="absorb"     type="real" default_value="8.0" />
           <argument name="width" type="real" default_value="0.3" />
           <argument name="Uint_hbar" type="real" default_value="1.0" />
+          <![CDATA[
+            /* derived constants */
+            Uint_hbar_on16 = Uint_hbar/16.0;
+          ]]>
         </arguments>
         <bing />
         <fftw plan="patient" />
         <openmp />
-        <globals>
-          <![CDATA[
-          /* derived constants */
-            const real Uint_hbar_on16 = Uint_hbar/16.0;
-          ]]>
-        </globals>
       </features>
 
       <driver name="distributed-mpi" />
@@ -739,7 +739,7 @@ with the added restriction that the derivative is forced to zero outside a certa
         </integrate>
       </sequence>
 
-      <output>
+      <output format="hdf5">
         <group>
           <sampling basis="x y" initial_sample="yes">
             <moments>WR WI</moments>
@@ -757,7 +757,7 @@ This example demonstrates two new features of XMDS2.  The first is the use of pa
 .. code-block:: xpdeint
 
     $ xmds2 wigner_argument_mpi.xmds 
-    xmds2 version 2.1 "Happy Mollusc" (r2514)
+    xmds2 version 2.1 "Happy Mollusc" (r2680)
     Copyright 2000-2012 Graham Dennis, Joseph Hope, Mattias Johnsson
                         and the xmds team
     Generating source code...
@@ -796,22 +796,21 @@ where the "default_value" is used as the valuable of the variable if no argument
 .. code-block:: none
 
     $ ./wigner --help
-    Rank[0]: Usage: wigner -o < real > -a < real > -b < real > -w < real > -U < real >
+    Usage: wigner --omega <real> --alpha_0 <real> --absorb <real> --width <real> --Uint_hbar <real>
 
     Details:
     Option		Type		Default value
-    -o, --omega	real 		0.0
-    -a, --alpha_0	real 		3.0
-    -b, --absorb	real 		8.0
-    -w, --width	real 		0.3
-    -U, --Uint_hbar	real 		1.0
-    [OracFive-2.local:36084] MPI_ABORT invoked on rank 0 in communicator MPI_COMM_WORLD with errorcode 1
-    
+    -o,  --omega	real 		0.0
+    -a,  --alpha_0	real 		3.0
+    -b,  --absorb	real 		8.0
+    -w,  --width	real 		0.3
+    -U,  --Uint_hbar	real 		1.0
+
 We can change one or more of these variables' values in the simulation by passing it at run time.
 
 .. code-block:: none
 
-    $ mpirun -np 2 ./wigner -o 0.1 -a 2.5 --Uint_hbar 0
+    $ mpirun -np 2 ./wigner --omega 0.1 --alpha_0 2.5 --Uint_hbar 0
     Found enlightenment... (Importing wisdom)
     Planning for (distributed x, y) <---> (distributed ky, kx) transform... done.
     Planning for (distributed x, y) <---> (distributed ky, kx) transform... done.
@@ -820,12 +819,12 @@ We can change one or more of these variables' values in the simulation by passin
     
     ...
     
-The values that were used for the variables, whether default or passed in, are stored in the output file.
+The values that were used for the variables, whether default or passed in, are stored in the output file (wigner.xsil).
 
 .. code-block:: xpdeint
 
     <info>
-    Script compiled with XMDS2 version 0.8 "The fish of good hope." (r2392)
+    Script compiled with XMDS2 version 2.1 "Happy Mollusc" (r2680)
     See http://www.xmds.org for more information.
 
     Variables that can be specified on the command line:
