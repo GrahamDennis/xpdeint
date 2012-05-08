@@ -5,28 +5,31 @@
   <description>
     Simulation of the Wigner function for an anharmonic oscillator with the initial state
     being a coherent state.
-    
-    WARNING: This simulation will take a couple of hours.
   </description>
   
   <features>
     <benchmark />
+    
+    <globals>
+      <![CDATA[
+        real Uint_hbar_on16;
+      ]]>
+    </globals>
+
     <arguments>
       <argument name="omega" type="real" default_value="0.0" />
       <argument name="alpha_0"     type="real" default_value="3.0" />
       <argument name="absorb"     type="real" default_value="8.0" />
       <argument name="width" type="real" default_value="0.3" />
       <argument name="Uint_hbar" type="real" default_value="1.0" />
+      <![CDATA[
+      /* derived constants */
+        Uint_hbar_on16 = Uint_hbar/16.0;
+      ]]>
     </arguments>
     <bing />
     <fftw plan="patient" />
     <openmp />
-    <globals>
-      <![CDATA[
-      /* derived constants */
-        const real Uint_hbar_on16 = Uint_hbar/16.0;
-      ]]>
-    </globals>
   </features>
 
   <driver name="distributed-mpi" />
