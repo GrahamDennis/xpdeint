@@ -109,7 +109,7 @@ where :math:`\phi` is a complex-valued field, and :math:`\Gamma(\tau)` is a :mat
         </integrate>
       </sequence>
 
-      <output>
+      <output format="hdf5" filename="nlse.xsil">
         <group>
           <sampling basis="tau" initial_sample="yes">
             <moments>density</moments>
@@ -261,6 +261,7 @@ Most algorithms employed by XMDS require the equations to be input in the Strato
 
 .. code-block:: xpdeint
 
+    <?xml version="1.0" encoding="UTF-8"?>
     <simulation xmds-version="2">
       <name>kubo</name>
       <author>Graham Dennis and Joe Hope</author>
@@ -305,7 +306,7 @@ Most algorithms employed by XMDS require the equations to be input in the Strato
         </integrate>
       </sequence>
 
-      <output>
+      <output format="ascii" filename="kubo.xsil">
         <group>
           <sampling initial_sample="yes">
             <moments>zR zI</moments>
@@ -384,7 +385,7 @@ The average over multiple paths can be increasingly smooth.
 Fibre Noise
 -----------
 
-This simulation is a stochastic partial differential equation, in which a one-dimensional damped field is subject to a complex noise. It can be found as fibre.xmds in the examples/ directory.
+This simulation is a stochastic partial differential equation, in which a one-dimensional damped field is subject to a complex noise. This script can be found in ``examples/fibre.xmds``.
 
 .. math::
     \frac{\partial \psi}{\partial t} = -i \frac{\partial^2 \psi}{\partial x^2} -\gamma \psi+\beta \frac{1}{\sqrt{2}}\left(\eta_1(x)+i\eta_2(x)\right)
@@ -393,6 +394,7 @@ where the noise terms :math:`\eta_j(x,t)` are Wiener differentials and the equat
 
 .. code-block:: xpdeint
     
+    <?xml version="1.0" encoding="UTF-8"?>
     <simulation xmds-version="2">
       <name>fibre</name>
       <author>Joe Hope and Graham Dennis</author>
@@ -453,7 +455,7 @@ where the noise terms :math:`\eta_j(x,t)` are Wiener differentials and the equat
         </integrate>
       </sequence>
   
-      <output>
+      <output filename="fibre.xsil">
         <group>
           <sampling basis="kx" initial_sample="yes">
             <moments>pow_dens</moments>
@@ -549,6 +551,7 @@ where :math:`x_j` are complex-valued variables defined on a ring, such that :mat
 
 .. code-block:: xpdeint
 
+    <?xml version="1.0" encoding="UTF-8"?>
     <simulation xmds-version="2">
       <name>integer_dimensions</name>
       <author>Graham Dennis</author>
@@ -646,10 +649,11 @@ This example integrates the two-dimensional partial differential equation
     +\frac{\partial^3}{\partial y^3}\right)-y\left(\frac{\partial^3}{\partial y^2 \partial x}+\frac{\partial^3}{\partial x^3}\right)\right)\Bigg]W(x,y,t)
     \end{split}
 
-with the added restriction that the derivative is forced to zero outside a certain radius.  This extra condition helps maintain the long-term stability of the integration. The script can be found in examples/wigner_arguments_mpi.xmds in your XMDS2 installation directory.
+with the added restriction that the derivative is forced to zero outside a certain radius.  This extra condition helps maintain the long-term stability of the integration. The script can be found in ``examples/wigner_arguments_mpi.xmds`` under your XMDS2 installation directory.
 
 .. code-block:: xpdeint
 
+    <?xml version="1.0" encoding="UTF-8"?>
     <simulation xmds-version="2">
       <name>wigner</name>
       <author>Graham Dennis and Joe Hope</author>
@@ -739,7 +743,7 @@ with the added restriction that the derivative is forced to zero outside a certa
         </integrate>
       </sequence>
 
-      <output format="hdf5">
+      <output format="hdf5" filename="wigner.xsil">
         <group>
           <sampling basis="x y" initial_sample="yes">
             <moments>WR WI</moments>
@@ -870,10 +874,11 @@ which can be found by evolving the above equation in imaginary time while keepin
 
 but we will need to use new XMDS2 features to manage the normalisation of the function :math:`\phi(y,t)`.  The normalisation for a non-linear Schrödinger equation is given by :math:`\int dy |\phi(y,t)|^2 = N_{particles}`, where :math:`N_{particles}` is the number of particles described by the wavefunction.  
 
-The code for this simulation is:
+The code for this simulation can be found in ``examples/groundstate_workedexamples.xmds``:
 
 .. code-block:: xpdeint
 
+    <?xml version="1.0" encoding="UTF-8"?>
     <simulation xmds-version="2">
       <name>groundstate</name>
       <author>Joe Hope</author>
@@ -982,7 +987,7 @@ The code for this simulation is:
 
       </sequence>
 
-      <output>
+      <output format="hdf5" filename="groundstate.xsil">
         <group>
           <sampling basis="y" initial_sample="yes">
             <moments>norm_dens</moments>
@@ -1104,10 +1109,11 @@ where
 .. math::
     \phi_n(x,t) = \sqrt{\frac{1}{2^n n!}} \left(\frac{m \omega}{\hbar \pi}\right)^\frac{1}{4} e^{-\frac{m \omega x^2}{2\hbar}} H_n\left(\sqrt{\frac{m \omega}{\hbar}x}\right),\;\;\;\;\;\;E_n = \left(n+\frac{1}{2}\right) \omega
 
-where :math:`H_n(u)` are the physicist's version of the Hermite polynomials.  Rather than describing the derivatives as diagonal terms in Fourier space, we therefore have the option of describing the entire :math:`-\frac{\hbar}{2 m}\frac{\partial^2}{\partial x^2} + \frac{1}{2}\omega^2 x^2` term as a diagonal term in the hermite-Gaussian basis.  Here is an XMDS2 simulation that performs the integration in this basis.
+where :math:`H_n(u)` are the physicist's version of the Hermite polynomials.  Rather than describing the derivatives as diagonal terms in Fourier space, we therefore have the option of describing the entire :math:`-\frac{\hbar}{2 m}\frac{\partial^2}{\partial x^2} + \frac{1}{2}\omega^2 x^2` term as a diagonal term in the hermite-Gaussian basis.  Here is an XMDS2 simulation that performs the integration in this basis. The following is a simplified version of the ``examples/hermitegauss_groundstate.xmds`` script.
 
 .. code-block:: xpdeint
 
+    <?xml version="1.0" encoding="UTF-8"?>
     <simulation xmds-version="2">
       <name>hermitegauss_groundstate</name>
       <author>Graham Dennis</author>
@@ -1254,6 +1260,7 @@ where the last term is more commonly written as a matrix multiplication.  Writin
 
 .. code-block:: xpdeint
 
+        <?xml version="1.0" encoding="UTF-8"?>
         <simulation xmds-version="2">
           <name>2DMSse</name>
 
@@ -1338,7 +1345,7 @@ where the last term is more commonly written as a matrix multiplication.  Writin
             </integrate>
           </sequence>
 
-          <output filename="TwoDMSse.xsil">
+          <output format="hdf5" filename="TwoDMSse.xsil">
             <group>
               <sampling basis="x y j" initial_sample="yes">
                 <moments>density</moments>
