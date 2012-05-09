@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <name>groundstate_demo2</name>
+  <author>Joe Hope and Graham Dennis</author>
+  <description>
+    Calculate the ground state of the non-linear Schrodinger equation in a harmonic magnetic trap.
+    This is done by evolving it in imaginary time while re-normalising each timestep.
+	We demonstrate calculating the energy, energy per particle, and chemical potential at each time step to
+	monitor the convergence of the imaginary time algorithm.
+  </description>
+  
+  <features>
+    <auto_vectorise />
+    <benchmark />
+    <error_check />
+    <bing />
+    <fftw plan="exhaustive" />
+    <globals>
+      <![CDATA[
+        const real Uint = 1.0e2;
+        const real Nparticles = 1;
+
+        /* offset constants */
+        const real EnergyOffset = pow(pow(3.0*Nparticles/4*Uint,2.0)/2.0,1/3.0); // 1D
+
+      ]]>
+    </globals>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="y" lattice="1024"  domain="(-10.0, 10.0)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="potential" initial_basis="y" type="complex">
+    <components>
+      V1
+    </components>
+    <initialisation>
+      <![CDATA[
+        real Vtrap = 0.5*y*y;
+      
+        V1  = -i*(Vtrap - EnergyOffset);
+      
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <vector name="wavefunction" initial_basis="y" type="complex">
+    <components> phi </components>
+    <initialisation>
+      <![CDATA[
+        if (fabs(y) < 1.0) {
+          phi = 1.0;
+          // This will be automatically normalised later
+        } else {
+          phi = 0.0;
+        }
+            ]]>
+    </initialisation>
+  </vector>
+  
+  <!-- Calculate the kinetic energy as an integral in fourier space -->
+  <computed_vector name="kinetic_energy" dimensions="" type="real">
+    <components>KE</components>
+    <evaluation>
+      <dependencies basis="ky">wavefunction</dependencies>
+      <![CDATA[
+                  KE = 0.5*ky*ky*mod2(phi);
+      ]]>
+    </evaluation>
+  </computed_vector>
+  
+  <!-- Calculate the spatial energy terms as integrals in position space -->
+  <computed_vector name="spatial_energy" dimensions="" type="real">
+    <components>VE NLE</components>
+    <evaluation>
+      <dependencies basis="y">potential wavefunction</dependencies>
+      <![CDATA[
+            VE = -Im(V1) * mod2(phi);
+            NLE = 0.5*Uint *mod2(phi) * mod2(phi);
+      ]]>
+    </evaluation>
+  </computed_vector>
+  
+  <!-- 
+  Add the energy contributions.  We can't add a 'KE' term to the spatial_energy computed_vector because then we'd be integrating the scalar
+  over the physical volume, and we'd add KE * V to any term, instead of just KE.
+   -->
+  <computed_vector name="energy" dimensions="" type="real">
+    <components>E E_over_N mu</components>
+    <evaluation>
+      <dependencies>spatial_energy kinetic_energy normalisation</dependencies>
+      <![CDATA[
+            E = KE + VE + NLE;
+            E_over_N = E/Ncalc;
+            mu = (KE + VE + 2.0*NLE) / Ncalc;
+      ]]>
+    </evaluation>
+  </computed_vector>
+  
+  <computed_vector name="normalisation" dimensions="" type="real">
+    <components>
+      Ncalc
+    </components>
+    <evaluation>
+      <dependencies basis="y">wavefunction</dependencies>
+      <![CDATA[
+        // Calculate the current normalisation of the wave function.
+        Ncalc = mod2(phi);
+      ]]>
+    </evaluation>
+  </computed_vector>
+  
+  <sequence>
+    <integrate algorithm="RK4" interval="1e0" steps="10000" tolerance="1e-8">
+      <samples>20 20</samples>
+      <filters>
+        <filter>
+          <dependencies>wavefunction normalisation</dependencies>
+          <![CDATA[
+            // Correct normalisation of the wavefunction
+            phi *= sqrt(Nparticles/Ncalc);
+          ]]>
+        </filter>
+      </filters>
+      <operators>
+        <operator kind="ip" constant="yes">
+          <operator_names>T</operator_names>
+          <![CDATA[
+            T = -0.5*ky*ky;
+          ]]>
+        </operator>
+        <integration_vectors>wavefunction</integration_vectors>
+        <dependencies>potential</dependencies>
+        <![CDATA[
+          dphi_dt = T[phi] - (i*V1 + Uint*mod2(phi))*phi;
+        ]]>
+      </operators>
+    </integrate>
+
+    <breakpoint filename="groundstate_break.xsil" format="ascii">
+      <dependencies basis="ky">wavefunction</dependencies>
+    </breakpoint>
+  </sequence>
+
+  <output format="hdf5" filename="groundstate.xsil">
+    <group>
+      <sampling basis="y" initial_sample="no">
+        <moments>norm_dens</moments>
+        <dependencies>wavefunction normalisation</dependencies>
+        <![CDATA[
+          norm_dens = mod2(phi)/Ncalc;
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling basis="" initial_sample="no">
+        <moments>ER E_over_NR NR muR max_densR</moments>
+        <dependencies>energy normalisation peak_density</dependencies>
+        <![CDATA[
+        ER = E;
+        E_over_NR = E_over_N;
+        NR = Ncalc;
+        muR = mu;
+        max_densR = max_dens;
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>
