@@ -51,7 +51,7 @@
     </integrate>
   </sequence>
   
-  <output format="hdf5" filename="diffusion.xsil">
+  <output filename="diffusion.xsil">
     <group>
       <sampling basis="x(4) y(8)" initial_sample="yes">
         <moments>dens empty</moments>

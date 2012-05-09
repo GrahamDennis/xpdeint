@@ -85,7 +85,7 @@
     </integrate>
   </sequence>
   
-  <output format="hdf5">
+  <output>
     <group>
       <sampling basis="x" initial_sample="yes">
         <moments>amp</moments>

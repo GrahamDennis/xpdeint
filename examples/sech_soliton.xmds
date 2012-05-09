@@ -51,7 +51,7 @@
     </integrate>
   </sequence>
   
-  <output format="hdf5">
+  <output>
     <group>
       <sampling basis="x(512)" initial_sample="yes">
         <moments>density</moments>

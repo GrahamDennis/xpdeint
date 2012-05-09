@@ -83,7 +83,7 @@
     </integrate>
   </sequence>
 
-  <output format="hdf5" filename="TwoDMSse.xsil">
+  <output filename="TwoDMSse.xsil">
     <group>
       <sampling basis="x y j" initial_sample="yes">
         <moments>density</moments>

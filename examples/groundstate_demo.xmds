@@ -112,7 +112,7 @@
     </breakpoint>
   </sequence>
 
-  <output format="hdf5" filename="groundstate.xsil">
+  <output filename="groundstate.xsil">
     <group>
       <sampling basis="y" initial_sample="no">
         <moments>norm_dens</moments>

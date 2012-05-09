@@ -93,7 +93,7 @@
     </integrate>
   </sequence>
   
-  <output format="hdf5" filename="vibstring2.xsil">
+  <output filename="vibstring2.xsil">
     <group>
       <sampling basis="x y(1)" initial_sample="yes">
         <moments>amp</moments>

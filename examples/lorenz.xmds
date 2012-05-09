@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
   <name>lorenz</name>
   
@@ -60,7 +61,7 @@
   </sequence>
   
   <!-- This part defines what data will be saved in the output file -->
-  <output format="hdf5" filename="lorenz.xsil">
+  <output filename="lorenz.xsil">
     <group>
       <sampling initial_sample="yes">
         <moments>xR yR zR</moments>

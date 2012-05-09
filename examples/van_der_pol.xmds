@@ -48,7 +48,7 @@
       </operators>
     </integrate>
   </sequence>
-  <output format="hdf5" filename="van_der_pol.xsil">
+  <output filename="van_der_pol.xsil">
     <group>
       <sampling initial_sample="yes">
         <moments>yR yDotR</moments>

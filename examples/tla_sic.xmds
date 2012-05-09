@@ -80,7 +80,7 @@
     </integrate>
   </sequence>
   
-  <output format="hdf5">
+  <output>
     <group>
       <sampling basis="t(1000)" initial_sample="yes">
         <moments>pow_dens</moments>

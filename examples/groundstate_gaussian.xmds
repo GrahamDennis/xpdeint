@@ -89,7 +89,7 @@
     </breakpoint>
   </sequence>
 
-  <output format="hdf5">
+  <output>
     <group>
       <sampling basis="y" initial_sample="no">
         <moments>dens</moments>

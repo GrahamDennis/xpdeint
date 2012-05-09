@@ -43,7 +43,7 @@
       </operators>
     </integrate>
   </sequence>
-  <output format="hdf5" filename="photodetector.xsil">
+  <output filename="photodetector.xsil">
     <group>
       <sampling initial_sample="yes">
         <moments>Ndet</moments>

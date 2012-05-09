@@ -80,7 +80,7 @@
     </integrate>
   </sequence>
   
-  <output format="hdf5" filename="tla.xsil">
+  <output filename="tla.xsil">
     <group>
       <sampling basis="t(1000)" initial_sample="yes">
         <moments>pow_dens</moments>

@@ -43,7 +43,7 @@
     </integrate>
   </sequence>
   
-  <output format="hdf5">
+  <output>
     <group>
       <sampling initial_sample="yes">
         <moments>xOut</moments>
