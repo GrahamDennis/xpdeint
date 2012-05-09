@@ -102,7 +102,7 @@
     </integrate>
   </sequence>
   
-  <output filename="wigner.xsil">
+  <output>
     <group>
       <sampling basis="x y" initial_sample="yes">
         <moments>WR WI</moments>

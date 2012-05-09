@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
-  <name>wigner</name>
+  <name>wigner_argument_mpi</name>
   <author>Graham Dennis and Joe Hope</author>
   <description>
     Simulation of the Wigner function for an anharmonic oscillator with the initial state
@@ -91,7 +91,7 @@
     </integrate>
   </sequence>
   
-  <output filename="wigner.xsil">
+  <output>
     <group>
       <sampling basis="x y" initial_sample="yes">
         <moments>WR WI</moments>

@@ -60,7 +60,7 @@
     </integrate>
   </sequence>
   
-  <output filename="fibre.xsil">
+  <output>
     <group>
       <sampling basis="kx" initial_sample="yes">
         <moments>pow_dens</moments>

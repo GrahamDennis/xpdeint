@@ -43,7 +43,7 @@
       </operators>
     </integrate>
   </sequence>
-  <output filename="photodetector.xsil">
+  <output>
     <group>
       <sampling initial_sample="yes">
         <moments>Ndet</moments>

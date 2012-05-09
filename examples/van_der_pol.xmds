@@ -48,7 +48,7 @@
       </operators>
     </integrate>
   </sequence>
-  <output filename="van_der_pol.xsil">
+  <output>
     <group>
       <sampling initial_sample="yes">
         <moments>yR yDotR</moments>

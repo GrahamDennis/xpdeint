@@ -80,7 +80,7 @@
     </integrate>
   </sequence>
   
-  <output filename="tla.xsil">
+  <output>
     <group>
       <sampling basis="t(1000)" initial_sample="yes">
         <moments>pow_dens</moments>

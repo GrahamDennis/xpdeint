@@ -111,7 +111,7 @@
     </integrate>
   </sequence>
   
-  <output filename="vibstring3.xsil">
+  <output>
     <group>
       <sampling basis="x y" initial_sample="yes">
         <computed_vector name="filter3" dimensions="" type="complex">

@@ -83,7 +83,7 @@
     </integrate>
   </sequence>
 
-  <output filename="TwoDMSse.xsil">
+  <output>
     <group>
       <sampling basis="x y j" initial_sample="yes">
         <moments>density</moments>

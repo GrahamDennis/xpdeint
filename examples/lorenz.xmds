@@ -61,7 +61,7 @@
   </sequence>
   
   <!-- This part defines what data will be saved in the output file -->
-  <output filename="lorenz.xsil">
+  <output>
     <group>
       <sampling initial_sample="yes">
         <moments>xR yR zR</moments>

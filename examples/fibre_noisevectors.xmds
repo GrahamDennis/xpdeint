@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
-  <name>fibre</name>
+  <name>fibre_noisevectors</name>
   <author>Joe Hope</author>
   <description>
     Example fibre noise simulation
@@ -69,7 +69,7 @@
     </integrate>
   </sequence>
   
-  <output filename="fibre.xsil">
+  <output>
     <group>
       <sampling basis="kx" initial_sample="yes">
         <moments>kdensphi kdenspsi</moments>
