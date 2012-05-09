@@ -16,6 +16,7 @@ Below is a script that solves this problem (it's also saved as examples/lorenz.x
 
 .. code-block:: xpdeint
     
+    <?xml version="1.0" encoding="UTF-8"?>
     <simulation xmds-version="2">
       <name>lorenz</name>
       
@@ -169,7 +170,7 @@ The first line, ``<?xml ...>``, just specifies the encoding and XML version. It 
 
 The ``<simulation>`` element is mandatory, and encloses the entire simulation script.
 
-The ``<name>`` element is also mandatory, and it defines the name of the executable program that will be generated.  
+The ``<name>`` element is optional, but recommended. It defines the name of the executable program that will be generated, as well as the default name of the output data files (although this can be over-ridden in the ``<output>`` element if desired). If ``<name>`` is not present, it will default to the filename of the script.
 
 The next element we have used can be skipped entirely if you wish to use the default set of features and you don't want to define any global constants for your simulation.  
 

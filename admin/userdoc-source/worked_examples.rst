@@ -37,7 +37,6 @@ where :math:`\phi` is a complex-valued field, and :math:`\Gamma(\tau)` is a :mat
 
 .. code-block:: xpdeint
 
-    <?xml version="1.0" encoding="UTF-8"?>
     <simulation xmds-version="2">
       <name>nlse</name>
 
@@ -109,7 +108,7 @@ where :math:`\phi` is a complex-valued field, and :math:`\Gamma(\tau)` is a :mat
         </integrate>
       </sequence>
 
-      <output format="hdf5" filename="nlse.xsil">
+      <output>
         <group>
           <sampling basis="tau" initial_sample="yes">
             <moments>density</moments>
@@ -261,7 +260,6 @@ Most algorithms employed by XMDS require the equations to be input in the Strato
 
 .. code-block:: xpdeint
 
-    <?xml version="1.0" encoding="UTF-8"?>
     <simulation xmds-version="2">
       <name>kubo</name>
       <author>Graham Dennis and Joe Hope</author>
@@ -306,7 +304,7 @@ Most algorithms employed by XMDS require the equations to be input in the Strato
         </integrate>
       </sequence>
 
-      <output format="ascii" filename="kubo.xsil">
+      <output>
         <group>
           <sampling initial_sample="yes">
             <moments>zR zI</moments>
@@ -394,7 +392,6 @@ where the noise terms :math:`\eta_j(x,t)` are Wiener differentials and the equat
 
 .. code-block:: xpdeint
     
-    <?xml version="1.0" encoding="UTF-8"?>
     <simulation xmds-version="2">
       <name>fibre</name>
       <author>Joe Hope and Graham Dennis</author>
@@ -455,7 +452,7 @@ where the noise terms :math:`\eta_j(x,t)` are Wiener differentials and the equat
         </integrate>
       </sequence>
   
-      <output filename="fibre.xsil">
+      <output>
         <group>
           <sampling basis="kx" initial_sample="yes">
             <moments>pow_dens</moments>
@@ -551,7 +548,6 @@ where :math:`x_j` are complex-valued variables defined on a ring, such that :mat
 
 .. code-block:: xpdeint
 
-    <?xml version="1.0" encoding="UTF-8"?>
     <simulation xmds-version="2">
       <name>integer_dimensions</name>
       <author>Graham Dennis</author>
@@ -653,7 +649,6 @@ with the added restriction that the derivative is forced to zero outside a certa
 
 .. code-block:: xpdeint
 
-    <?xml version="1.0" encoding="UTF-8"?>
     <simulation xmds-version="2">
       <name>wigner</name>
       <author>Graham Dennis and Joe Hope</author>
@@ -743,7 +738,7 @@ with the added restriction that the derivative is forced to zero outside a certa
         </integrate>
       </sequence>
 
-      <output format="hdf5" filename="wigner.xsil">
+      <output>
         <group>
           <sampling basis="x y" initial_sample="yes">
             <moments>WR WI</moments>
@@ -878,7 +873,6 @@ The code for this simulation can be found in ``examples/groundstate_workedexampl
 
 .. code-block:: xpdeint
 
-    <?xml version="1.0" encoding="UTF-8"?>
     <simulation xmds-version="2">
       <name>groundstate</name>
       <author>Joe Hope</author>
@@ -987,7 +981,7 @@ The code for this simulation can be found in ``examples/groundstate_workedexampl
 
       </sequence>
 
-      <output format="hdf5" filename="groundstate.xsil">
+      <output>
         <group>
           <sampling basis="y" initial_sample="yes">
             <moments>norm_dens</moments>
@@ -1113,7 +1107,6 @@ where :math:`H_n(u)` are the physicist's version of the Hermite polynomials.  Ra
 
 .. code-block:: xpdeint
 
-    <?xml version="1.0" encoding="UTF-8"?>
     <simulation xmds-version="2">
       <name>hermitegauss_groundstate</name>
       <author>Graham Dennis</author>
@@ -1260,7 +1253,6 @@ where the last term is more commonly written as a matrix multiplication.  Writin
 
 .. code-block:: xpdeint
 
-        <?xml version="1.0" encoding="UTF-8"?>
         <simulation xmds-version="2">
           <name>2DMSse</name>
 
@@ -1345,7 +1337,7 @@ where the last term is more commonly written as a matrix multiplication.  Writin
             </integrate>
           </sequence>
 
-          <output format="hdf5" filename="TwoDMSse.xsil">
+          <output>
             <group>
               <sampling basis="x y j" initial_sample="yes">
                 <moments>density</moments>
