@@ -99,25 +99,25 @@ install_FFTW() {
   # FFTW 3.3 wasn't in the repos, so install manually from source
   current_directory=`pwd`
 
-  FFTW_install_directory=$XMDS2_install_directory"/fftw-3.3"
+  FFTW_install_directory=$XMDS2_install_directory"/fftw-3.3.1"
   
   cd $XMDS2_install_directory
-  echo; echo "Downloading FFTW 3.3 from www.fftw.org..."; echo
-  wget http://www.fftw.org/fftw-3.3.tar.gz
+  echo; echo "Downloading FFTW 3.3.1 from www.fftw.org..."; echo
+  wget ftp://ftp.fftw.org/pub/fftw/old/fftw-3.3.1.tar.gz
 
-  # Make sure the fftw 3.3 archive is present
-  if [ ! -f fftw-3.3.tar.gz ]; then
+  # Make sure the fftw 3.3.1 archive is present
+  if [ ! -f fftw-3.3.1.tar.gz ]; then
     echo
-    echo "ERROR: Couldn't obtain fftw-3.3.tar.gz from www.fftw.org."
+    echo "ERROR: Couldn't obtain fftw-3.3.1.tar.gz from www.fftw.org."
     echo "Aborting install."
     exit
   fi
 
-  # Unpack the FFTW 3.3 archive and install it in the user's home directory structure.
+  # Unpack the FFTW 3.3.1 archive and install it in the user's home directory structure.
   # This avoids conflicting with any other version of FFTW that may have been
   # installed system-wide. Later we'll tell XMDS to use this specific version.  
-  tar -xzf fftw-3.3.tar.gz
-  rm fftw-3.3.tar.gz
+  tar -xzf fftw-3.3.1.tar.gz
+  rm fftw-3.3.1.tar.gz
   cd $FFTW_install_directory
 
   echo
