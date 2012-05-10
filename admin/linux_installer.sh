@@ -102,23 +102,35 @@ install_FFTW() {
   FFTW_install_directory=$XMDS2_install_directory"/fftw-3.3.1"
   
   cd $XMDS2_install_directory
-  echo; echo "Downloading FFTW 3.3.1 from www.fftw.org..."; echo
-  wget ftp://ftp.fftw.org/pub/fftw/old/fftw-3.3.1.tar.gz
 
-  # Make sure the fftw 3.3.1 archive is present
-  if [ ! -f fftw-3.3.1.tar.gz ]; then
-    echo
-    echo "ERROR: Couldn't obtain fftw-3.3.1.tar.gz from www.fftw.org."
-    echo "Aborting install."
-    exit
+  echo; echo "Downloading FFTW from www.fftw.org..."; echo
+
+  wget http://www.fftw.org/fftw-3.3.2.tar.gz
+  fftwversion="3.3.2"
+  if [ ! -f fftw-3.3.2.tar.gz ]; then
+    # Fall back to the known-to-exist 3.3.1
+    wget ftp://ftp.fftw.org/pub/fftw/old/fftw-3.3.1.tar.gz
+    fftwversion="3.3.1"
+
+    # If *that's* not present, we can't continue
+    if [ ! -f fftw-3.3.1.tar.gz ]; then
+      echo
+      echo "ERROR: Couldn't obtain fftw-3.3.2.tar.gz or fftw-3.3.1.tar.gz from www.fftw.org."
+      echo "Aborting install."
+      exit
+    fi
   fi
 
-  # Unpack the FFTW 3.3.1 archive and install it in the user's home directory structure.
+  # Unpack the FFTW archive and install it under the user's home directory structure.
   # This avoids conflicting with any other version of FFTW that may have been
-  # installed system-wide. Later we'll tell XMDS to use this specific version.  
-  tar -xzf fftw-3.3.1.tar.gz
-  rm fftw-3.3.1.tar.gz
-  cd $FFTW_install_directory
+  # installed system-wide. Later we'll tell XMDS to use this specific version.
+
+  FFTW_install_directory=$XMDS2_install_directory"/fftw-"$fftwversion
+  tar -xzf fftw-${fftwversion}.tar.gz
+  rm fftw-${fftwversion}.tar.gz
+
+  # Need quotes in the below in case path contains spaces
+  cd "$FFTW_install_directory"
 
   echo
   echo "Installing FFTW. This can take several minutes if you only have a single CPU."
@@ -151,7 +163,7 @@ install_FFTW() {
   # stderror to /dev/null
   make -j $NUM_CPUS > /dev/null 2>&1
   
-  echo "  Copying single precision libraries..."
+  echo "  Installing single precision libraries..."
   make install > /dev/null
 
   # Note: if precision is not specified, FFTW will compile double-precision libs by default
@@ -165,7 +177,7 @@ install_FFTW() {
   echo "  Compiling FFTW with double precision option..."
   make -j $NUM_CPUS > /dev/null
 
-  echo "  Copying double precision libraries..."
+  echo "  Installing double precision libraries..."
   make install > /dev/null
 
   XMDS_CONFIGURE_STRING=$XMDS_CONFIGURE_STRING" --lib-path "$FFTW_install_directory"/lib"
@@ -401,7 +413,7 @@ install_FFTW
 
 # Fetch the XMDS2 source files
 echo
-echo "Contacting sourceforge to checkout XMDS source code. Please wait..."
+echo "Contacting sourceforge to checkout XMDS2 source code. Please wait..."
 echo
 if [ $DEVELOPER_INSTALL -eq 1 ]; then
   # Fetch the latest XMDS2 source code from sourceforge
@@ -410,7 +422,7 @@ if [ $DEVELOPER_INSTALL -eq 1 ]; then
 else
   # Fetch a known good version of the XMDS2 source code from sourceforge
   cd $XMDS2_install_directory
-  svn checkout -r 2684 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
+  svn checkout -r 2691 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
 fi
 
 # Compile the Cheetah templates into Python
