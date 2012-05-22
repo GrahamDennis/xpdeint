@@ -117,7 +117,7 @@ def scriptTestingFunction(root, scriptName, testDir, absPath, self):
     name = inputXSILElement.getAttribute('name').strip()
     filesToCopy.append(name)
     inputXSILFile = XSILFile(os.path.join(os.path.split(absPath)[0], name), loadData=False)
-    filesToCopy.extend([xsil.data.filename for xsil in inputXSILFile.xsilObjects if hasattr(xsil.data, 'filename')])
+    filesToCopy.extend([os.path.join(os.path.split(name)[0], xsil.data.filename) for xsil in inputXSILFile.xsilObjects if hasattr(xsil.data, 'filename')])
   
   for fileToCopy in filesToCopy:
     sourceFile = os.path.join(os.path.split(absPath)[0], fileToCopy)

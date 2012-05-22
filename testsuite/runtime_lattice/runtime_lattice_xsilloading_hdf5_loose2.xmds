@@ -2,9 +2,9 @@
 <simulation xmds-version="2">
   <testing>
     <arguments>--x_lattice 250 --y_lattice 512</arguments>
-    <input_xsil_file name="breakpoints_hdf5_kspace_expected.xsil" />
-    <input_xsil_file name="breakpoints_hdf5_mixed_space2_expected.xsil" />
-    <xsil_file name="runtime_lattice_xsilloading_hdf5_loose2.xsil" expected="xsilloading_expected2.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <input_xsil_file name="../io/breakpoints_hdf5_kspace_expected.xsil" />
+    <input_xsil_file name="../io/breakpoints_hdf5_mixed_space2_expected.xsil" />
+    <xsil_file name="runtime_lattice_xsilloading_hdf5_loose2.xsil" expected="../io/xsilloading_expected2.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
   </testing>
   
   <name>runtime_lattice_xsilloading_hdf5_loose2</name>

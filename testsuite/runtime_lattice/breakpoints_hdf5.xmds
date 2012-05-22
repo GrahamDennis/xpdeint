@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="breakpoints_hdf5_xspace.xsil"          expected="../io/breakpoints_xspace_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="breakpoints_hdf5_kspace.xsil"          expected="../io/breakpoints_kspace_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="breakpoints_hdf5_2d_xspace.xsil"       expected="../io/breakpoints_2d_xspace_expected.xsil"  absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="breakpoints_hdf5_mixed_space1.xsil"    expected="../io/breakpoints_mixed_space1_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="breakpoints_hdf5_mixed_space2.xsil"    expected="../io/breakpoints_mixed_space2_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="breakpoints_hdf5_xspace.xsil"          expected="../io/breakpoints_hdf5_xspace_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="breakpoints_hdf5_kspace.xsil"          expected="../io/breakpoints_hdf5_kspace_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="breakpoints_hdf5_2d_xspace.xsil"       expected="../io/breakpoints_hdf5_2d_xspace_expected.xsil"  absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="breakpoints_hdf5_mixed_space1.xsil"    expected="../io/breakpoints_hdf5_mixed_space1_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="breakpoints_hdf5_mixed_space2.xsil"    expected="../io/breakpoints_hdf5_mixed_space2_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+  </testing>
+  
+  <name>breakpoints_hdf5</name>
+  <author>Graham Dennis</author>
+  <description>
+    Test making a breakpoints in various spaces
+  </description>
+  
+  <features>
+    <fftw plan="estimate" />
+    <validation kind="run-time" />
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="x" lattice="100*1"  domain="(0, 1)" />
+      <dimension name="y" lattice="256*1"  domain="(-1, 1)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="oned" dimensions="x" initial_basis="x" type="complex">
+    <components>u</components>
+    <initialisation>
+      <![CDATA[
+        u = exp(-100.0*(x-0.5)*(x-0.5))*(sin(x) + i*cos(2*x)*cos(2*x));
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <vector name="twod" dimensions="x y" initial_basis="x y">
+    <components>v</components>
+    <initialisation>
+      <![CDATA[
+        v = abs(x - 0.5) < 0.3 ? 1.0 : 0.0;
+        v *= abs(y) < 0.5 ? (cos(y) + i*sin(x)*sin(y)) : complex(0.0, 0.0);
+      
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <breakpoint filename="breakpoints_hdf5_xspace.xsil">
+      <dependencies basis="x">oned</dependencies>
+    </breakpoint>
+    <breakpoint filename="breakpoints_hdf5_kspace.xsil">
+      <dependencies basis="kx">oned</dependencies>
+    </breakpoint>
+    <breakpoint filename="breakpoints_hdf5_2d_xspace.xsil">
+      <dependencies basis="x y">twod</dependencies>
+    </breakpoint>
+    <breakpoint filename="breakpoints_hdf5_mixed_space1.xsil">
+      <dependencies basis="x ky">twod</dependencies>
+    </breakpoint>
+    <breakpoint filename="breakpoints_hdf5_mixed_space2.xsil">
+      <dependencies basis="kx y">twod</dependencies>
+    </breakpoint>
+  </sequence>
+  <output format="hdf5" />
+</simulation>
