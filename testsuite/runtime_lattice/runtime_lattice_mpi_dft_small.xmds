@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+<testing>
+    <arguments>--latticesize_x 10 --latticesize_y 10</arguments>
+    <command_line>mpirun -n 8 ./runtime_lattice_mpi_dft_small</command_line>
+    <xsil_file name="runtime_lattice_mpi_dft_small_xspace1.xsil" expected="../mpi/mpi_dft_small_xspace_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="runtime_lattice_mpi_dft_small_kspace.xsil"  expected="../mpi/mpi_dft_small_kspace_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="runtime_lattice_mpi_dft_small_kspace2.xsil" expected="../mpi/mpi_dft_small_kspace2_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="runtime_lattice_mpi_dft_small_xspace2.xsil" expected="../mpi/mpi_dft_small_xspace_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+  </testing>
+
+  
+  <name>runtime_lattice_mpi_dft_small</name>
+  <author>Graham Dennis</author>
+  <description>
+    Test of the fourier transforms using MPI.
+    
+    Checking that when the number of processors is of the same order as the number of grid points that things don't go awry
+  </description>
+  
+  <features>
+    <benchmark />
+    <bing />
+    <fftw plan="patient" />
+    <openmp />
+    <globals>
+      <![CDATA[
+      const real T = 10.0;
+      const real mass = 1e-3;
+      const real length = 1.0;
+      const real mu = mass/length;
+      
+      const real width = 0.1;
+      const real absorb = 80.0;
+      ]]>
+    </globals>
+    <validation kind="run-time"/>
+    <arguments>
+      <argument name="latticesize_x" type="integer" default_value="50"/>
+      <argument name="latticesize_y" type="integer" default_value="70"/>
+    </arguments>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="x" lattice="latticesize_x"  domain="(-1, 1)" />
+      <dimension name="y" lattice="latticesize_y"  domain="(-1, 1)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <driver name="distributed-mpi" />
+  
+  <vector name="main" initial_basis="x y" type="complex">
+    <components>
+      u
+    </components>
+    <initialisation>
+      <![CDATA[
+        u = exp(-100.0*((x-0.5)*(x-0.5) + y*y));
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <breakpoint filename="runtime_lattice_mpi_dft_small_xspace1.xsil">
+      <dependencies>main</dependencies>
+    </breakpoint>
+    <breakpoint filename="runtime_lattice_mpi_dft_small_kspace.xsil">
+      <dependencies basis="ky kx">main</dependencies>
+    </breakpoint>
+    <breakpoint filename="runtime_lattice_mpi_dft_small_kspace2.xsil">
+      <dependencies basis="ky x">main</dependencies>
+    </breakpoint>
+    <breakpoint filename="runtime_lattice_mpi_dft_small_xspace2.xsil">
+      <dependencies basis="y x">main</dependencies>
+    </breakpoint>
+  </sequence>
+  <output format="binary">
+  </output>
+</simulation>

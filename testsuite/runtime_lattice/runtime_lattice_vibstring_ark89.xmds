@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  
+  <testing>
+    <arguments>--latticesize 100</arguments>
+    <xsil_file name="runtime_lattice_vibstring_ark89.xsil" expected="../integrators/vibstring_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5">
+      <moment_group number="1" absolute_tolerance="1e-7" relative_tolerance="1e-6" />
+      <moment_group number="2" absolute_tolerance="1e-3" relative_tolerance="1e-6" />
+    </xsil_file>
+  </testing>
+  
+  <name>runtime_lattice_vibstring_ark89</name>
+  <author>Mattias Johnsson</author>
+  <description>
+    Vibrating string
+  </description>
+  
+  <features>
+    <benchmark />
+    <bing />
+    <fftw plan="estimate" />
+    <validation kind="run-time"/>
+    
+    <globals>
+      <![CDATA[
+      const real T = 10.0;
+      const real mass = 1e-3;
+      const real length = 1.0;
+      const real mu = mass/length;
+      ]]>
+    </globals>
+
+    <arguments>
+      <argument name="latticesize" type="integer" default_value="50"/>
+    </arguments>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="x" lattice="latticesize"  domain="(0, 1)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="main" initial_basis="x" type="complex">
+    <components>
+      u uDot
+    </components>
+    <initialisation>
+      <![CDATA[
+        u = exp(-100.0*(x-0.5)*(x-0.5));
+        uDot = 0.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="ARK89" interval="2e-3" steps="100" tolerance="1e-7">
+      <samples>50 50</samples>
+      <operators>
+        <operator kind="ex" constant="yes">
+          <operator_names>L</operator_names>
+          <![CDATA[
+            L = -T*kx*kx/mu;
+          ]]>
+        </operator>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+          du_dt = uDot;
+          duDot_dt = L[u];
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  <output format="binary">
+    <group>
+      <sampling basis="x" initial_sample="yes">
+        <moments>amp</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          amp = u.Re();
+        ]]>
+      </sampling>
+    </group>
+    <group>
+      <sampling basis="kx(50)" initial_sample="no">
+        <moments>amp</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          amp = u.Re();
+
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>

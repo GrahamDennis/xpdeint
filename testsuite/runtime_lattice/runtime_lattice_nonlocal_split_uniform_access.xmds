@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <arguments>--x_lattice 256</arguments>
+    <xsil_file name="runtime_lattice_nonlocal_split_uniform_access.xsil" expected="../geometry/nonlocal_split_uniform_access_expected.xsil" absolute_tolerance="1e-6" relative_tolerance="1e-5" />
+  </testing>
+  
+  <name>runtime_lattice_nonlocal_split_uniform_access</name>
+  <author>Graham Dennis</author>
+  <description>
+    Script to test accessing a fourier-transformed dimension backwards.
+    Based off of vibstring.xmds
+  </description>
+  
+  <features>
+    <benchmark />
+    <bing />
+    <fftw plan="patient" />
+    <globals>
+      <![CDATA[
+      const real T = 10.0;
+      const real mass = 1e-3;
+      const real length = 1.0;
+      const real mu = mass/length;
+      const real T_mu = T/mu;
+      
+      const real xmax = _max_x;
+      const real width = 0.1;
+      const real absorb = 80.0;
+      ]]>
+    </globals>
+    <arguments>
+      <argument name="x_lattice" type="integer" default_value="300" />
+    </arguments>
+    <validation kind="run-time" />
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="x" lattice="x_lattice"  domain="(-1, 1)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="main" initial_basis="x" type="complex">
+    <components>
+      u uDot
+    </components>
+    <initialisation>
+      <![CDATA[
+        u = exp(-100.0*(x-0.5)*(x-0.5))*exp(i*200*x);
+        uDot = u*i*200*sqrt(T_mu);
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="ARK45" tolerance="1e-5" interval="2e-3" steps="1000">
+      <samples>5</samples>
+      <operators>
+        <operator kind="ex" constant="no">
+          <operator_names>L</operator_names>
+          <![CDATA[
+            L = -T_mu*kx*kx;
+          ]]>
+        </operator>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+          du_dt = uDot;
+          duDot_dt = L[u];
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  <output format="binary">
+    <group>
+      <sampling basis="kx" initial_sample="yes">
+        <moments>amp amp_reversed</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          amp = mod2(u);
+          amp_reversed = mod2(u(kx => -kx));
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>

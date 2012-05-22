@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <arguments>--latticesize 128</arguments>
+    <xsil_file name="runtime_lattice_diffusion_dst.xsil" expected="../transforms/diffusion_dst_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+  </testing>
+  
+  <name>runtime_lattice_diffusion_dst</name>
+  <author>Graham Dennis</author>
+  <description>
+    Simple one-dimensional diffusion solved using a Discrete Sine Transform (odd boundary conditions at both ends)
+    Odd boundary conditions essentially mimics zero dirichlet boundary conditions for linear problems.
+  </description>
+  
+  <features>
+    <benchmark />
+    <error_check />
+    <bing />
+    <fftw plan="exhaustive" />
+    <openmp />
+    <validation kind="run-time"/>
+    <arguments>
+      <argument name="latticesize" type="integer" default_value="70"/>
+    </arguments>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="y" lattice="latticesize" domain="(-1.0, 1.0)" transform="dst" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="main" initial_basis="y" type="real">
+    <components>
+      phi
+    </components>
+    <initialisation>
+      <![CDATA[
+        phi = exp(-3*y*y);
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="ARK45" interval="20.0" steps="2400" tolerance="1e-5">
+      <samples>48</samples>
+      <operators>
+        <operator kind="ip" constant="yes" basis="ky">
+          <operator_names>L</operator_names>
+          <![CDATA[
+            L = -0.02*ky*ky;
+          ]]>
+        </operator>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+          dphi_dt = L[phi];
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  
+  <output format="binary">
+    <group>
+      <sampling basis="y" initial_sample="yes">
+        <moments>dens</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          dens = mod2(phi);
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>

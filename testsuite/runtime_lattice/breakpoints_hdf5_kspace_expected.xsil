@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="breakpoints_hdf5_xspace.xsil" expected="breakpoints_xspace_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="breakpoints_hdf5_kspace.xsil" expected="breakpoints_kspace_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="breakpoints_hdf5_2d_xspace.xsil" expected="breakpoints_2d_xspace_expected.xsil"  absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="breakpoints_hdf5_mixed_space1.xsil" expected="breakpoints_mixed_space1_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="breakpoints_hdf5_mixed_space2.xsil" expected="breakpoints_mixed_space2_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="breakpoints_hdf5_xspace.xsil" expected="breakpoints_hdf5_xspace_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="breakpoints_hdf5_kspace.xsil" expected="breakpoints_hdf5_kspace_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="breakpoints_hdf5_2d_xspace.xsil" expected="breakpoints_hdf5_2d_xspace_expected.xsil"  absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="breakpoints_hdf5_mixed_space1.xsil" expected="breakpoints_hdf5_mixed_space1_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="breakpoints_hdf5_mixed_space2.xsil" expected="breakpoints_hdf5_mixed_space2_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+  </testing>
+  
+  <name>breakpoints_hdf5</name>
+  <author>Graham Dennis</author>
+  <description>
+    Test making a breakpoints in various spaces
+  </description>
+  
+  <features>
+    <fftw plan="estimate" />
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="x" lattice="100"  domain="(0, 1)" />
+      <dimension name="y" lattice="256"  domain="(-1, 1)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="oned" dimensions="x" initial_basis="x" type="complex">
+    <components>u</components>
+    <initialisation>
+      <![CDATA[
+        u = exp(-100.0*(x-0.5)*(x-0.5))*(sin(x) + i*cos(2*x)*cos(2*x));
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <vector name="twod" dimensions="x y" initial_basis="x y">
+    <components>v</components>
+    <initialisation>
+      <![CDATA[
+        v = fabs(x - 0.5) < 0.3 ? 1.0 : 0.0;
+        v *= fabs(y) < 0.5 ? (cos(y) + i*sin(x)*sin(y)) : rcomplex(0.0, 0.0);
+      
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <breakpoint filename="breakpoints_hdf5_xspace.xsil">
+      <dependencies fourier_space="x">oned</dependencies>
+    </breakpoint>
+    <breakpoint filename="breakpoints_hdf5_kspace.xsil">
+      <dependencies fourier_space="kx">oned</dependencies>
+    </breakpoint>
+    <breakpoint filename="breakpoints_hdf5_2d_xspace.xsil">
+      <dependencies fourier_space="x y">twod</dependencies>
+    </breakpoint>
+    <breakpoint filename="breakpoints_hdf5_mixed_space1.xsil">
+      <dependencies fourier_space="x ky">twod</dependencies>
+    </breakpoint>
+    <breakpoint filename="breakpoints_hdf5_mixed_space2.xsil">
+      <dependencies fourier_space="kx y">twod</dependencies>
+    </breakpoint>
+  </sequence>
+  <output format="hdf5" />
+
+<info>
+Script compiled with xpdeint version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+See http://www.xmds.org for more information.
+</info>
+
+<XSIL Name="breakpoint">
+  <Param Name="n_independent">1</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>3</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+kx uR uI 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>100</Dim>
+    <Dim>3</Dim>
+    <Stream><Metalink Format="HDF5" Type="Remote" Group="/1"/>
+breakpoints_hdf5_kspace_expected.h5
+    </Stream>
+  </Array>
+</XSIL>
+</simulation>
