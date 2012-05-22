@@ -23,6 +23,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 @def description: Distributed MPI Simulation Driver
 
+@def preAllocation($dict)
+  @#
+  ${distributedTransform.setLocalLatticeAndOffsetVariables, autoIndent=True}@slurp
+  @#
+@end def
+
 @def mainRoutine
   @#
 int main(int argc, char **argv)
@@ -30,9 +36,7 @@ int main(int argc, char **argv)
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &_size);
   MPI_Comm_rank(MPI_COMM_WORLD, &_rank);
-  
-  ${distributedTransform.setLocalLatticeAndOffsetVariables, autoIndent=True}@slurp
-  
+
   ${mainRoutineInnerContent, autoIndent=True}@slurp
   
   MPI_Finalize();

@@ -78,7 +78,12 @@ void _print_usage()
 @end def
 
 
-@def mainBegin($dict)
+
+@# This code needs to go at the very beginning of the main function
+@# so we use the preAllocation code insertion point instead of mainBegin.
+@# See SimulationDriver.tmpl for ordering of insertion points.
+
+@def preAllocation($dict)
 // *********** Parse the command line for arguments, and set  *********
 // *********** the appropriate global variables               *********
 

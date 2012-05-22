@@ -53,9 +53,9 @@ string _fftwWisdomPath;
 
 @def transformFunction(transformID, transformDict, function)
   @#
-  @set mpiPrefix, prefixLattice, postfixLattice = transformDict['transformSpecifier']
-// _prefix_lattice should be ${prefixLattice}${''.join([' * ' + mpiLattice for mpiLattice in mpiPrefix])}
-// _postfix_lattice should be ${postfixLattice}
+  @set runtimePrefix, prefixLattice, postfixLattice, runtimePostfix = transformDict['transformSpecifier']
+// _prefix_lattice should be ${prefixLattice}${''.join([' * ' + runtimeLattice for runtimeLattice in runtimePrefix])}
+// _postfix_lattice should be ${postfixLattice}${''.join([' * ' + runtimeLattice for runtimeLattice in runtimePostfix])}
 static ${fftwPrefix}_plan _fftw_forward_plan = NULL;
 static ${fftwPrefix}_plan _fftw_backward_plan = NULL;
 

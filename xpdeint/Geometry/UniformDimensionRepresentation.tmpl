@@ -69,15 +69,10 @@ for (long ${loopIndex} = ${localLattice}-1; ${loopIndex} >= 0; ${loopIndex}--) {
 @end def
 
 @def localIndexFromIndexForDimensionRep($dimRep)
-  @if $dimRep.lattice == $lattice or $dimRep.reductionMethod == $ReductionMethod.fixedStep
+  @if $dimRep.runtimeLattice == $runtimeLattice or $dimRep.reductionMethod == $ReductionMethod.fixedStep
 ${dimRep.loopIndex} + ${dimRep.localOffset} - ${localOffset}@slurp
   @elif $dimRep.reductionMethod == $ReductionMethod.fixedRange
     @# We are using a fixed-range reduction method.
-    @#
-    @# Check that our lattice is a multiple of the lattice on which we want the
-    @# index. In other words, that for every dimensionRep point, there is a corresponding
-    @# point in our lattice. We might be more dense though.
-    @assert $lattice % dimRep.lattice == 0
     @#
 (${dimRep.loopIndex} + ${dimRep.localOffset}) * (${globalLattice}/${dimRep.globalLattice}) - ${localOffset}@slurp
   @else

@@ -466,7 +466,7 @@ ${explicitIndexPointerTermForVectorAndDimRepWithFieldAndBasis(vector, dimRep, fi
     @# If the lattices are the same, then there is nothing special to be done for this dimension
     @# We also require that there are neither dimension could have a local offset
     @set $hasLocalOffset = dimRep.hasLocalOffset or fieldDimRep.hasLocalOffset
-    @if dimRep.lattice == fieldDimRep.lattice and not hasLocalOffset
+    @if dimRep.runtimeLattice == fieldDimRep.runtimeLattice and not hasLocalOffset
    + ${fieldDimRep.loopIndex}@slurp
  * $vector.field.localPointsInDimensionsAfterDimRepInBasis(dimRep, basis)@slurp
     @else

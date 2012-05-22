@@ -72,8 +72,10 @@ for (long ${alternateLoopIndex} = -(${globalLattice}/2); ${alternateLoopIndex} <
 @end def
 
 @def localIndexFromIndexForDimensionRep($dimRep)
-  @# Check that our lattice has more points than the other lattice
-  @assert $lattice >= dimRep.lattice
+  @# Check that our lattice has more points than the other lattice (provided we
+  @# know how many points each lattice actually has - if the lattice is defined
+  @# at runtime we'll just have string rather than a number, so we can't judge).
+  @assert isinstance($runtimeLattice, basestring) or isinstance(dimRep.runtimeLattice, basestring) or $runtimeLattice >= dimRep.runtimeLattice
   @#
 ${dimRep.loopIndex} + ${dimRep.localOffset} - ${localOffset} + (signbit(${dimRep.name}) ? (${globalLattice} - ${dimRep.globalLattice}) : 0)@slurp
   @#

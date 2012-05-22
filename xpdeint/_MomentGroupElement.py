@@ -101,7 +101,7 @@ class _MomentGroupElement (ScriptElement):
     
   
   def addSamplePoints(self, samplePoints):
-    self.outputField.dimensionWithName(self.propagationDimension).inBasis(self.outputBasis).lattice += samplePoints
+    self.outputField.dimensionWithName(self.propagationDimension).inBasis(self.outputBasis).runtimeLattice += samplePoints
   
   def preflight(self):
     super(_MomentGroupElement, self).preflight()
@@ -112,7 +112,7 @@ class _MomentGroupElement (ScriptElement):
     # Throw out the propagation dimension if it only contains a single sample
     if self.outputField.hasDimensionName(self.propagationDimension):
       propDimRep = self.propDimRep
-      if propDimRep.lattice == 1:
+      if propDimRep.runtimeLattice == 1:
         self.propDimRep = None
         singlePointDimension = self.outputField.dimensionWithName(self.propagationDimension)
         self.outputField.dimensions.remove(singlePointDimension)

@@ -207,7 +207,7 @@ class _TransformMultiplexer (_Feature):
             
             costMultiplier = reduce(
               operator.mul,
-              [self.representationMap[repName].lattice \
+              [self.representationMap[repName].latticeEstimate \
                 for repName in currentBasis if not repName in matchedSourceBasis],
               1
             )
@@ -392,11 +392,12 @@ class _TransformMultiplexer (_Feature):
           prefixDimReps = basisToDimRepBasis(prefixBasis)
           postfixDimReps = basisToDimRepBasis(postfixBasis)
           
-          mpiPrefix = tuple([dimRep.localLattice for dimRep in prefixDimReps if dimRep.hasLocalOffset])
+          runtimePrefixDimensions = tuple([dimRep.localLattice for dimRep in prefixDimReps if dimRep.hasLocalOffset or isinstance(dimRep.runtimeLattice, basestring)])
+          runtimePostfixDimensions = tuple([dimRep.localLattice for dimRep in postfixDimReps if dimRep.hasLocalOffset or isinstance(dimRep.runtimeLattice, basestring)])
           
-          prefixLattice = [(dimRep.lattice, dimRep.localLattice) for dimRep in prefixDimReps if not dimRep.hasLocalOffset]
+          prefixLattice = [(dimRep.latticeEstimate, dimRep.localLattice) for dimRep in prefixDimReps if not (dimRep.hasLocalOffset or isinstance(dimRep.runtimeLattice, basestring))]
           
-          postfixLattice = [(dimRep.lattice, dimRep.localLattice) for dimRep in postfixDimReps]
+          postfixLattice = [(dimRep.latticeEstimate, dimRep.localLattice) for dimRep in postfixDimReps if not (dimRep.hasLocalOffset or isinstance(dimRep.runtimeLattice, basestring))]
           postfixLattice.append((vector.nComponents, '_' + vector.id + '_ncomponents'))
           
           if transformation.get('transformType', 'real') is 'real' and vector.type == 'complex':
@@ -426,18 +427,20 @@ class _TransformMultiplexer (_Feature):
           
           if transformation.get('geometryDependent', False):
             geometrySpecification = (
-              mpiPrefix,
+              runtimePrefixDimensions,
               reduce(operator.mul, [lattice[0] for lattice in prefixLattice], 1),
-              reduce(operator.mul, [lattice[0] for lattice in postfixLattice], 1)
+              reduce(operator.mul, [lattice[0] for lattice in postfixLattice], 1),
+              runtimePostfixDimensions
             )
           
           transformDescriptor = (transformID, geometrySpecification, tuple(basisToDimRepBasis(b) for b in transformPair))
           if transformDescriptor not in transformsNeeded:
             transformsNeeded.append(transformDescriptor)
           
-          prefixLatticeStrings = list(mpiPrefix)
+          prefixLatticeStrings = list(runtimePrefixDimensions)
           prefixLatticeStrings.extend([lattice[1] for lattice in prefixLattice])
-          postfixLatticeStrings = [lattice[1] for lattice in postfixLattice]
+          postfixLatticeStrings = list(runtimePostfixDimensions)
+          postfixLatticeStrings.extend([lattice[1] for lattice in postfixLattice])
           
           prefixLatticeString = ' * '.join(prefixLatticeStrings) or '1'
           postfixLatticeString = ' * '.join(postfixLatticeStrings) or '1'

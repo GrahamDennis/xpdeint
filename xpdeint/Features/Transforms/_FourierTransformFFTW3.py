@@ -80,13 +80,13 @@ class _FourierTransformFFTW3 (_Transform):
     self.transformNameMap[dim.name] = transformName
     if transformName == 'dft':
       # x-space representation
-      xspace = UniformDimensionRepresentation(name = name, type = type, lattice = lattice,
+      xspace = UniformDimensionRepresentation(name = name, type = type, runtimeLattice = lattice,
                                               _minimum = minimum, _maximum = maximum, parent = dim,
                                               tag = self.coordinateSpaceTag,
                                               **self.argumentsToTemplateConstructors)
       # kspace representation
       kspace = SplitUniformDimensionRepresentation(
-        name = 'k' + name, type = type, lattice = lattice,
+        name = 'k' + name, type = type, runtimeLattice = lattice,
         _range = '%s - %s' % (xspace.maximum, xspace.minimum),
         parent = dim, tag = self.fourierSpaceTag,
         reductionMethod = SplitUniformDimensionRepresentation.ReductionMethod.fixedStep,
@@ -96,7 +96,7 @@ class _FourierTransformFFTW3 (_Transform):
       # x-space representation
       stepSize = '((real)%(maximum)s - %(minimum)s)/(%(lattice)s)' % locals()
       xspace = UniformDimensionRepresentation(
-        name = name, type = type, lattice = lattice,
+        name = name, type = type, runtimeLattice = lattice,
         _stepSize = stepSize, tag = self.coordinateSpaceTag,
         parent = dim, **self.argumentsToTemplateConstructors
       )
@@ -106,7 +106,7 @@ class _FourierTransformFFTW3 (_Transform):
       if transformName == 'dct':
         # kspace representation
         kspace = UniformDimensionRepresentation(
-          name = 'k' + name, type = type, lattice = lattice,
+          name = 'k' + name, type = type, runtimeLattice = lattice,
           _minimum = '0.0', _stepSize = '(M_PI/(%(maximum)s - %(minimum)s))' % locals(),
           tag = self.fourierSpaceTag,
           reductionMethod = UniformDimensionRepresentation.ReductionMethod.fixedStep,
@@ -115,7 +115,7 @@ class _FourierTransformFFTW3 (_Transform):
         kspace._maximum = '%s * %s' % (kspace.stepSize, kspace.globalLattice)
       else:
         kspace = UniformDimensionRepresentation(
-          name = 'k' + name, type = type, lattice = lattice,
+          name = 'k' + name, type = type, runtimeLattice = lattice,
           _stepSize = '(M_PI/(%(maximum)s - %(minimum)s))' % locals(),
           tag = self.fourierSpaceTag,
           reductionMethod = UniformDimensionRepresentation.ReductionMethod.fixedStep,
@@ -137,8 +137,8 @@ class _FourierTransformFFTW3 (_Transform):
   def fftCost(self, dimNames):
     geometry = self.getVar('geometry')
     untransformedDimReps = dict([(dimName, geometry.dimensionWithName(dimName).representations[0]) for dimName in dimNames])
-    cost = sum([int(math.ceil(math.log(untransformedDimReps[dimName].lattice))) for dimName in dimNames], 0)
-    cost *= reduce(operator.mul, [untransformedDimReps[dimName].lattice for dimName in dimNames], 1)
+    cost = sum([int(math.ceil(math.log(untransformedDimReps[dimName].latticeEstimate))) for dimName in dimNames], 0)
+    cost *= reduce(operator.mul, [untransformedDimReps[dimName].latticeEstimate for dimName in dimNames], 1)
     return cost
   
   @staticmethod

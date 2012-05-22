@@ -226,7 +226,7 @@ class _MMT (_Transform):
         raise ParserException(xmlElement, "The domain for Bessel transform dimensions must begin at 0.")
       
       # Real space representation
-      xspace = dimRepClass(name = name, type = type, lattice = lattice,
+      xspace = dimRepClass(name = name, type = type, runtimeLattice = lattice,
                            stepSizeArray = True, parent = dim,
                            tag = self.coordinateSpaceTag,
                            _maximum = maximum, _order = order,
@@ -234,7 +234,7 @@ class _MMT (_Transform):
       dim.addRepresentation(xspace)
       
       # Spectral space representation
-      kspace = dimRepClass(name = 'k' + name, type = type, lattice = spectralLattice,
+      kspace = dimRepClass(name = 'k' + name, type = type, runtimeLattice = spectralLattice,
                            stepSizeArray = True, parent = dim,
                            _maximum = '(_besseljnorm_%(name)s/((real)%(maximum)s))' % locals(),
                            _order = order,
@@ -264,7 +264,7 @@ class _MMT (_Transform):
       
       # Real space representation
       xspace = HermiteGaussDimensionRepresentation(
-        name = name, type = type, lattice = lattice, _maximum = maximum,
+        name = name, type = type, runtimeLattice = lattice, _maximum = maximum,
         stepSizeArray = True, parent = dim, tag = self.coordinateSpaceTag,
         **self.argumentsToTemplateConstructors
       )
@@ -272,7 +272,7 @@ class _MMT (_Transform):
       
       # Spectral space representation
       nspace = UniformDimensionRepresentation(
-        name = 'n' + name, type = 'long', lattice = spectralLattice,
+        name = 'n' + name, type = 'long', runtimeLattice = spectralLattice,
         _minimum = '0', _maximum = spectralLattice, _stepSize = '1',
         parent = dim, tag = self.spectralSpaceTag,
         reductionMethod = UniformDimensionRepresentation.ReductionMethod.fixedStep,
@@ -284,14 +284,14 @@ class _MMT (_Transform):
       # FIXME: We may want to make this have a fixedStep ReductionMethod, but that requires support from
       # the DimRep and from FourierTransformFFTW3MPI in the case that this dimension is distributed.
       kspace = HermiteGaussDimensionRepresentation(
-        name = 'k' + name, type = type, lattice = lattice, _maximum = "(1.0 / (%s))" % maximum,
+        name = 'k' + name, type = type, runtimeLattice = lattice, _maximum = "(1.0 / (%s))" % maximum,
         stepSizeArray = True, parent = dim, tag = self.auxiliarySpaceTag,
         **self.argumentsToTemplateConstructors
       )
       dim.addRepresentation(kspace)
       
       fourFieldCoordinateSpace = HermiteGaussDimensionRepresentation(
-        name = name + '_4f', type = type, lattice = lattice, _maximum = maximum,
+        name = name + '_4f', type = type, runtimeLattice = lattice, _maximum = maximum,
         stepSizeArray = True, parent = dim, tag = self.auxiliarySpaceTag, fieldCount = 4.0,
         **self.argumentsToTemplateConstructors
       )
@@ -312,7 +312,7 @@ class _MMT (_Transform):
         basisReps = [[rep for rep in dimReps if rep.name == repName][0] for repName in transformPair]
         results.append(dict(
           transformations = [transformPair],
-          cost = reduce(operator.mul, [rep.lattice for rep in basisReps]),
+          cost = reduce(operator.mul, [rep.latticeEstimate for rep in basisReps]),
           outOfPlace = True,
           transformFunction = basis.transformFunction,
           transformType = basis.matrixType,

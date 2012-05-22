@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     @stop
   @end if
   @#
-#define ${globalLattice} (${lattice})
+#define ${globalLattice} ((int)${runtimeLattice})
   @#
 @end def
 
@@ -40,9 +40,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     @stop
   @end if
   @#
-  @if $lattice
-  @# We allocate an extra point just in case
-${type}* ${arrayName} = (${type}*) xmds_malloc(sizeof(${type}) * (${globalLattice}+1));
+  @# Note: Here we just *define* the variables for which we're going to
+  @# allocate space later (in allocate() below). This is needed in case the
+  @# lattice size is specified at runtime - if we allocate space here, it
+  @# will use the default argument lattice size, rather than the one set
+  @# in the argument processing code in the main() function.
+  @#
+  @# Make sure we don't create a variable for the propagtion direction dimension
+  @if $runtimeLattice
+${type}* ${arrayName} = NULL;
   @end if
   @#
   @if $hasLocalOffset
@@ -51,3 +57,15 @@ ptrdiff_t $localOffset = 0;
   @end if
   @#
 @end def
+
+@def allocate(self)
+  @if $silent
+    @stop
+  @end if
+  @# We allocate an extra point just in case
+  @# Also make sure we don't create a variable for the propagtion direction dimension
+  @if $runtimeLattice
+${arrayName} = (${type}*) xmds_malloc(sizeof(${type}) * (${globalLattice}+1));
+  @end if
+@end def
+

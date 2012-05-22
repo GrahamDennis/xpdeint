@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   @if $silent
     @stop
   @end if
-  @if $lattice
+  @if $runtimeLattice
     @super
 #define ${minimum}     (${arrayName}[0])
 #define ${maximum}     (${arrayName}[${globalLattice}-1])
@@ -45,7 +45,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   @#
   @super
   @#
-  @if $lattice
+  @if $runtimeLattice
     @if $stepSizeArray
 ${type}* ${stepSizeArrayName} = (${type}*) xmds_malloc(sizeof(${type}) * (${globalLattice}));
     @else

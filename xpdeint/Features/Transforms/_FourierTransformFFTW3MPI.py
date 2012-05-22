@@ -131,7 +131,7 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
       untransformedBasis = tuple(untransformedDimReps[dimName].name for dimName in dimNames)
       transformedBasis = tuple(transformedDimReps[dimName].name for dimName in dimNames)
       transformCost = self.fftCost([dimName for dimName in dimNames])
-      communicationsCost = reduce(operator.mul, [untransformedDimReps[dimName].lattice for dimName in dimNames])
+      communicationsCost = reduce(operator.mul, [untransformedDimReps[dimName].latticeEstimate for dimName in dimNames])
       
       results.append(dict(
         transformations = [tuple([self.canonicalBasisForBasis(untransformedBasis), self.canonicalBasisForBasis(transformedBasis)])],
@@ -149,7 +149,7 @@ class _FourierTransformFFTW3MPI (FourierTransformFFTW3):
     # Create transpose operations
     transposeOperations = []
     for firstDimRep, secondDimRep in permutations(*[[rep for rep in dim.representations if not rep.hasLocalOffset] for dim in self.mpiDimensions]):
-      communicationsCost = firstDimRep.lattice * secondDimRep.lattice
+      communicationsCost = firstDimRep.latticeEstimate * secondDimRep.latticeEstimate
       basisA = ('distributed ' + firstDimRep.name, secondDimRep.name)
       basisB = ('distributed ' + secondDimRep.name, firstDimRep.name)
       if not self.hasFFTWDistributedTransforms:

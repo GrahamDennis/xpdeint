@@ -102,9 +102,9 @@ class _Dimension(ScriptElement):
     dimRep = self.inBasis(basis)
     reductionMethod = dimRep.reductionMethod
     assert dimRep.ReductionMethod.validate(reductionMethod)
-    if dimRep.lattice == newLattice: return
+    if dimRep.runtimeLattice == newLattice: return
     newDimRep = dimRep.copy(parent = self)
-    newDimRep.lattice = newLattice
+    newDimRep.runtimeLattice = newLattice
     self._children.append(newDimRep)
     self.representations[self.representations.index(dimRep)] = newDimRep
     self.invalidateRepresentationsOtherThan(newDimRep)

@@ -44,10 +44,17 @@ class _DimensionRepresentation(ScriptElement):
   
   tags = {}
   
-  instanceAttributes = ['name',  'type', 'lattice', '_localVariablePrefix', 'reductionMethod', 'tag']
+  # We define two lattice attributes: latticeEstimate and runtimeLattice.
+  # If the size of the geometry lattice is a number specified in the XMDS script, 
+  # both "latticeEstimate" and "runtimeLattice" are set to this value. If the size is undefined
+  # at parse time and specified at run time, "runtimeLattice" holds a string which is
+  # the C-code global variable that will give the lattice size at run time, and
+  # "latticeEstimate" is set to a sane numeric placeholder (e.g. 128) for parsing purposes.
+  
+  instanceAttributes = ['name',  'type', 'runtimeLattice', '_localVariablePrefix', 'reductionMethod', 'tag']
   
   instanceDefaults = dict(
-    lattice = 0,
+    runtimeLattice = 0,
     reductionMethod = ReductionMethod.fixedRange,
     tag = -1
   )
@@ -160,6 +167,15 @@ class _DimensionRepresentation(ScriptElement):
   def volumePrefactor(self):
       return self.parent.volumePrefactor
   
+  @property
+  def latticeEstimate(self):
+    # Note this will always be a number, even if runtimeLattice is a string
+    if isinstance(self.runtimeLattice, basestring):
+      return 128
+    else:
+      return self.runtimeLattice
+
+
   def aliasRepresentationsForFieldInBasis(self, field, basis):
     return set([field.dimensionWithName(aliasName).inBasis(basis) \
                 for aliasName in self.parent.aliases if field.hasDimensionName(aliasName)])

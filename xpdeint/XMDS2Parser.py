@@ -540,6 +540,26 @@ class XMDS2Parser(ScriptParser):
                                                     "'integer'/'int'/'long' (synonyms)." % locals())
         
         
+        transform = None
+        transformName = 'none'
+        transformMultiplexer = self.globalNameSpace['features']['TransformMultiplexer']
+        
+        if dimensionType == 'real' and dimensionElement.hasAttribute('transform'):
+          transformName = dimensionElement.getAttribute('transform').strip()
+          transform = transformMultiplexer.transformWithName(transformName.lower())
+          if not transform:
+            raise ParserException(dimensionElement, "Unknown transform of type '%(transformName)s'." % locals())
+        
+        if dimensionType == 'long':
+          transform = transformMultiplexer.transformWithName('none')
+        
+        if not transform:
+          # default to 'dft'
+          # FIXME: This is debatable. Perhaps a default of 'none' is more sensible.
+          transformName = 'dft'
+          transform = transformMultiplexer.transformWithName('dft')
+
+
         if dimensionElement.hasAttribute('domain'):
           ## Grab the domain strings
           
@@ -582,16 +602,48 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
           ## Grab the number of lattice points and make sure it's a positive integer
           latticeString = parseAttribute('lattice')
           if not latticeString.isdigit():
-            raise ParserException(dimensionElement, "Could not understand lattice value "
+            # This might be okay if the user has asked for run-time validation, so that
+            # the lattice value is actually a variable to be specified later.
+            # Only allow this for real valued dimensions for now, though.
+            if dimensionType == 'long':
+              raise ParserException(dimensionElement, "Could not understand lattice value "
                                                     "'%(latticeString)s' as a positive integer." % locals())
-          lattice = int(latticeString)
-          if dimensionType == 'long' and (maximumValue - minimumValue + 1) != lattice:
-            raise ParserException(dimensionElement, "The lattice value of '%(latticeString)s' doesn't match with the domain "
+
+            # Check to see if run-time validation has been selected
+            runTimeValidationSelected = False
+            if 'Validation' in self.globalNameSpace['features']:
+              if self.globalNameSpace['features']['Validation'].runValidationChecks == True:
+                runTimeValidationSelected = True
+
+            # Real dimension, lattice attribute isn't a number, so is run-time validation on?
+            if runTimeValidationSelected == False:
+              # Not on, so barf
+              raise ParserException(dimensionElement, "Could not understand lattice value "
+                                                    "'%(latticeString)s' as a positive integer. "
+                                                    "If you want to specify the lattice value at runtime you need "
+                                                    "to add <validation kind=\"run-time\"/> to your features block."  % locals())
+
+            # For now only allow run-time lattice definition for 'none', 'dft', 'dct' and 'dst' transforms.
+            # This is because lattice points for Hermite-Gauss and Bessel transforms are not uniformly spaced,
+            # and currently the spacing is worked out in _MMT.py at parse time, which requires the number
+            # of lattice points to be known.            
+            if transformName not in ['dft', 'dct', 'dst', 'none']:
+              raise ParserException(dimensionElement, "Defining the lattice size at run time is currently only "
+                                                      "implemented for transform types 'dft', 'dct', 'dst' and 'none'. "
+                                                      "You are using transform type '%(transformName)s'. Aborting." % locals())
+
+            # All right, we have real dimension, run-time validation is on, an acceptable tranform is in
+            # use, so let's allow a non-numeric lattice value
+            lattice = latticeString
+          else:
+            # The lattice string a digit, so everything is cool
+            lattice = int(latticeString)
+            if dimensionType == 'long' and (maximumValue - minimumValue + 1) != lattice:
+              raise ParserException(dimensionElement, "The lattice value of '%(latticeString)s' doesn't match with the domain "
                                                     "'%(domainString)s'." % locals())
         else:
           # Only for 'long' dimensions
           lattice = maximumValue - minimumValue + 1
-        
         
         aliasNames = set()
         if dimensionElement.hasAttribute('aliases'):
@@ -601,26 +653,6 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
               raise ParserException(dimensionElement, "Cannot use '%(aliasName)s' as an alias name for dimension '%(dimensionName)s\n"
                                                       "This name is already in use." % locals())
             self.globalNameSpace['symbolNames'].add(aliasName)
-        
-        
-        transform = None
-        transformName = 'none'
-        transformMultiplexer = self.globalNameSpace['features']['TransformMultiplexer']
-        
-        if dimensionType == 'real' and dimensionElement.hasAttribute('transform'):
-          transformName = dimensionElement.getAttribute('transform').strip()
-          transform = transformMultiplexer.transformWithName(transformName.lower())
-          if not transform:
-            raise ParserException(dimensionElement, "Unknown transform of type '%(transformName)s'." % locals())
-        
-        if dimensionType == 'long':
-          transform = transformMultiplexer.transformWithName('none')
-        
-        if not transform:
-          # default to 'dft'
-          # FIXME: This is debatable. Perhaps a default of 'none' is more sensible.
-          transformName = 'dft'
-          transform = transformMultiplexer.transformWithName('dft')
         
         aliasNames.add(dimensionName)
         
@@ -1940,7 +1972,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       
       propagationDimRep = NonUniformDimensionRepresentation(name = self.globalNameSpace['globalPropagationDimension'],
                                                             type = 'real',
-                                                            lattice = sampleCount,
+                                                            runtimeLattice = sampleCount,
                                                             parent = samplingDimension,
                                                             **self.argumentsToTemplateConstructors)
       samplingDimension.addRepresentation(propagationDimRep)
@@ -1959,6 +1991,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
         #       numberOfPoints is a non-negative integer,
         # and where the '(numberOfPoints)' part is optional.  If not provided, 
         # it defaults to sampling all points in that dimension.
+        
         if '(' in component:
           dimRepName, latticeString = component.split('(')
         else:
@@ -1970,35 +2003,93 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
                       "'%(dimRepName)s' is not recognised as a valid basis specifier." % locals())
         geometryDimension = geometryDimRepNameMap[dimRepName]
         dimRep = [rep for rep in geometryDimension.representations if rep.name == dimRepName][0]
-        lattice = dimRep.lattice # Default
+        lattice = dimRep.runtimeLattice # Default
         if latticeString:
           try:
             lattice = int(latticeString)
           except ValueError, err:
             raise ParserException(samplingElement,
                         "Unable to interpret '%(latticeString)s' as an integer." % locals())
-        if not lattice >= 0:
-          raise ParserException(samplingElement,
+        
+        if not isinstance(lattice, basestring):
+          if not lattice >= 0:
+            raise ParserException(samplingElement,
                       "Lattice size '%(latticeString)s' must be positive." % locals())
         
-        geometryLattice = dimRep.lattice
-        if lattice > geometryLattice:
-          raise ParserException(samplingElement,
-                      "Can't sample more points in dimension '%(dimRepName)s' than there are points in the full dimension.\n"
-                      "%(lattice)i > %(geometryLattice)i." % locals())
-        if issubclass(dimRep.tag, dimRep.tagForName('coordinate')):
-          # Coordinate space: the number of sample points must divide the number of geometry points
-          if lattice > 0 and not (geometryLattice % lattice) == 0:
+        # Now we check that the number of sample points is not larger than the 
+        # number of points in the geometry lattice. Also check that the number of sample
+        # points divide the geometry lattice (if sampling in coord space) or is smaller
+        # than the total number of points (spectral or auxillary space).
+        # There is an additional complication if run-time validation has been selected, and
+        # the number of lattice points is a variable to be passed in at run time, rather than
+        # a number given at the script parse-time.
+        # If this is the case, set up the checks (e.g. sample points must be less than
+        # total lattice points etc) to be done at run-time rather than here.
+
+        # Check to see if run-time validation has been selected
+        runTimeValidationSelected = False
+        if 'Validation' in self.globalNameSpace['features']:
+          if self.globalNameSpace['features']['Validation'].runValidationChecks == True:
+            runTimeValidationSelected = True
+
+        geometryLattice = dimRep.runtimeLattice
+
+        if isinstance(geometryLattice, basestring):
+          if runTimeValidationSelected == False:
+            # Theoretically this code won't execute, since the only way geometryLattice
+            # can be a run-time variable at this point is if run-time validation is
+            # on. Still, make the check in case something is screwed up.
+            raise ParserException(samplingElement, 
+                    "Sampling: Geometry lattice not a number, and run-time validation is off! \n"
+                    "This shouldn't happen. Please report this to xmds-devel@lists.sourceforge.net.\n")
+          else:
+            # Run-time validation is on, so we need to set up some run-time checks
+            # to make sure the geometry lattice size given at run-time is sensible for
+            # sampling that has been specified.
+            validationFeature = self.globalNameSpace['features']['Validation']
+            validationFeature.validationChecks.append("""
+              if (%(lattice)s > %(geometryLattice)s)
+                _LOG(_ERROR_LOG_LEVEL, "ERROR: Can't sample more points in dimension '%(dimRepName)s' than\\n"
+                                       "there are points in the full dimension.\\n"
+                                       "%%i > %%i.\\n", (int)%(lattice)s, (int)%(geometryLattice)s);""" % locals())
+            
+            # Coordinate space: the number of sample points must divide the number of geometry points
+            if issubclass(dimRep.tag, dimRep.tagForName('coordinate')):
+              validationFeature.validationChecks.append("""
+                if ( (%(lattice)s > 0) && (%(geometryLattice)s %% %(lattice)s !=0) )
+                  _LOG(_ERROR_LOG_LEVEL, "ERROR: The number of sampling lattice points (%%i) must divide the number\\n"
+                                       "of lattice points on the simulation grid (%%i).\\n", (int)%(lattice)s, (int)%(geometryLattice)s);\n""" % locals())
+
+        else:
+          # the geometry lattice is a number, not a run-time variable, so we can do the 
+          # following checks now 
+          if lattice > geometryLattice:
             raise ParserException(samplingElement,
-                      "The number of sampling lattice points (%(lattice)i) must divide the number "
-                      "of lattice points on the simulation grid (%(geometryLattice)i)." % locals())
-          # For spectral / auxiliary space, the number of lattice points just needs to be smaller than
-          # the total number of points, something we have already checked.
+                        "Can't sample more points in dimension '%(dimRepName)s' than there are points in the full dimension.\n"
+                        "%(lattice)i > %(geometryLattice)i." % locals())
+          if issubclass(dimRep.tag, dimRep.tagForName('coordinate')):
+            # Coordinate space: the number of sample points must divide the number of geometry points
+            if lattice > 0 and not (geometryLattice % lattice) == 0:
+              raise ParserException(samplingElement,
+                        "The number of sampling lattice points (%(lattice)i) must divide the number "
+                        "of lattice points on the simulation grid (%(geometryLattice)i)." % locals())
+            # For spectral / auxiliary space, the number of lattice points just needs to be smaller than
+            # the total number of points, something we have already checked.
         
-        if lattice > 1:
+        # This code sets up the sampling for various dimensions. There are three
+        # cases: lattice>1, lattice=1, and lattice=0, where lattice is the number
+        # of points to sample on the full geometry lattice.
+        # If lattice>1 and lattice<geometry lattice, we're subsampling.
+        # We have to note that in the case where the geometry lattice is specified
+        # at runtime (so it's a string, not a number), if no number was explicitly
+        # given for the sampling lattice, then it inherits the string as a value
+        # from the geometry lattice. In this case, we don't need to subsample, but
+        # we should be aware that lattice can be a string.
+        if isinstance(lattice, basestring) or lattice > 1:
           outputFieldDimension = geometryDimension.copy(parent = outputFieldTemplate)
-          if not geometryLattice == lattice:
-            dimensionsNeedingLatticeUpdates[outputFieldDimension.name] = lattice
+          if geometryLattice != lattice:
+             # Yes, we are subsampling
+             dimensionsNeedingLatticeUpdates[outputFieldDimension.name] = lattice
           samplingFieldTemplate.dimensions.append(outputFieldDimension.copy(parent = samplingFieldTemplate))
           outputFieldTemplate.dimensions.append(outputFieldDimension)
         elif lattice == 1:
@@ -2009,7 +2100,6 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
           # In this case, the dimension only belongs to the sampling field because we are integrating over it.
           # Note that we previously set the lattice of the dimension to be the same as the number
           # of points in this dimension according to the geometry element.
-          
           samplingFieldTemplate.dimensions.append(geometryDimension.copy(parent = samplingFieldTemplate))
           
       

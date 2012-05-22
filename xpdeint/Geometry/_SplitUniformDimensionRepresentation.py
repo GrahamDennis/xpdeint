@@ -63,7 +63,7 @@ class _SplitUniformDimensionRepresentation(DimensionRepresentation):
     # accessing dimension are the same. i.e. no sub-sampling and non-local access at the same time.
     if not field.hasDimensionName(matchingAliasRep.parent.name): return
     loopDimRep = field.dimensionWithName(matchingAliasRep.parent.name).inBasis(basis)
-    if not matchingAliasRep.lattice == loopDimRep.lattice: return
+    if not matchingAliasRep.runtimeLattice == loopDimRep.runtimeLattice: return
     loopingIndex = loopDimRep.loopIndex
     globalLattice = matchingAliasRep.globalLattice
     return '(%(globalLattice)s - %(loopingIndex)s) %% %(globalLattice)s' % locals()
