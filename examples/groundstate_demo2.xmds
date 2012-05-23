@@ -158,14 +158,13 @@
     </group>
     <group>
       <sampling basis="" initial_sample="no">
-        <moments>ER E_over_NR NR muR max_densR</moments>
+        <moments>ER E_over_NR NR muR</moments>
         <dependencies>energy normalisation</dependencies>
         <![CDATA[
         ER = E;
         E_over_NR = E_over_N;
         NR = Ncalc;
         muR = mu;
-        max_densR = max_dens;
         ]]>
       </sampling>
     </group>
