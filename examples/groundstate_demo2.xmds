@@ -159,7 +159,7 @@
     <group>
       <sampling basis="" initial_sample="no">
         <moments>ER E_over_NR NR muR max_densR</moments>
-        <dependencies>energy normalisation peak_density</dependencies>
+        <dependencies>energy normalisation</dependencies>
         <![CDATA[
         ER = E;
         E_over_NR = E_over_N;
