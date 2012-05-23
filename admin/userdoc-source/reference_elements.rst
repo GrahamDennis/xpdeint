@@ -310,17 +310,32 @@ Example syntax::
 Validation
 ----------
 
-XMDS makes a large number of checks in the code generation process to verify that the values for all parameters are safe choices.  Sometimes we wish to allow these parameters to be specified by variables.  This opens up many possibilities, but requires that any safety checks for parameters be performed during the execution of the program itself.  The ``<validation>`` feature activates that option, with allowable attributes being "run-time", "compile-time" and "none".
+XMDS2 makes a large number of checks in the code generation process to verify that the values for all parameters are safe choices.  Sometimes we wish to allow these parameters to be specified by variables.  This opens up many possibilities, but requires that any safety checks for parameters be performed during the execution of the program itself.  The ``<validation>`` feature activates that option, with allowable attributes being "run-time", "compile-time" and "none".
 
-Example syntax::
+As an example, one may wish to define the number of grid points and the range of the grid at run-time rather than explicitly define them in the XMDS2 script. To accomplish this, one could do the following::
 
-    <simulation xmds-version="2">
-        <features>
-            <validation kind="run-time" />
-        </features>
-    </simulation>
+    <name> validation_test </name>
+    <features>
+      <validation kind="run-time" />
+      <arguments>
+        <argument name="xmin" type="real" default_value="-1.0"/>
+        <argument name="xmax" type="real" default_value="1.0"/>
+        <argument name="numGridPoints" type="integer" default_value="128"/>
+      </arguments>
+    </features>
 
+    <geometry>
+      <propagation_dimension> t </propagation_dimension>
+      <transverse_dimensions>
+        <dimension name="x" lattice="numGridPoints"  domain="(xmin, xmax)" />
+      </transverse_dimensions>
+   </geometry>
 
+and then run the resulting executable with::
+
+  ./validation_test --xmin=-2.0 --xmax=2.0 --numGridPoints=64
+
+This approach means that when XMDS2 is parsing the script it is unable to tell, for example, if the number of sampling points requested is less than or equal to the lattice size. Consequently it will create an executable with "numGridPoints" as an internal variable, and make the check at run-time, when it knows the value of "numGridPoints" rather than at compile time, when it doesn't.
 
 .. _DriverElement:
 

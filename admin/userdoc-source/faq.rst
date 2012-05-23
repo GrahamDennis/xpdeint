@@ -33,6 +33,16 @@ Standard vectors can't have time dependence (or, more accurately, depend on the 
 Alternatively, you can explicitly use the ``propagation_dimension`` variable in your differential equation inside the ``<operators>`` block.
 
 
+Can I specify the range of my domain and number of grid points at run-time?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Yes, you can. In your script, specify the domain and number of grid points as arguments to be passed in at run-time, use those variables in your ``<geometry>`` block rather than explicitly specifying them, and use the ``<validation kind="run-time" />`` feature. See the :ref:`Validation <Validation>` entry in the Reference section for an example.
+
+While the domain can always be specified in this way, specifying the lattice size at run-time is currently only allowed with the following transforms: 'dct', 'dst', 'dft' and 'none' (see :ref:`Transforms <Validation>` in the Reference section).
+
+Also note that for some multi-dimensional spaces using different transforms, XMDS2 will sometimes optimise the code it generates based on the relative sizes of the dimensions. If one or more of the lattices are specified at run-time it is unable to do this and will have to make guesses. In some situations this may result in slightly slower code.
+
+
 When can I use IP operators and when must I use EX operators?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
