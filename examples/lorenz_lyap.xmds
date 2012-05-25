@@ -84,8 +84,7 @@
     </integrate>
   </sequence>
   <output>
-    <group>
-      <sampling initial_sample="yes">
+      <sampling_group initial_sample="yes">
         <moments>xR yR zR le</moments>
         <dependencies>position lyapunov</dependencies>
         <![CDATA[
@@ -94,18 +93,15 @@
           zR = z;
           le=lyap/t; // This value should asymptotically approach ~0.906
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
 	
-	<group>
-      <sampling initial_sample="yes">
+      <sampling_group initial_sample="yes">
         <moments>distance</moments>
         <dependencies>position</dependencies>
         <![CDATA[
           distance = sqrt(x*x + y*y +z*z);
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
 
   </output>
 </simulation>

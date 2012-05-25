@@ -502,6 +502,27 @@
       <ref name="Dependencies"/>
     </element>
   </define>
+  <define name="SamplingContents">
+    <optional>
+      <attribute name="initial_sample">
+        <ref name="Bool"/>
+      </attribute>
+    </optional>
+    <optional>
+      <attribute name="basis"/>
+    </optional>
+    <oneOrMore>
+      <choice>
+        <ref name="ComputedVector"/>
+        <ref name="Operator"/>
+        <element name="moments">
+          <text/>
+        </element>
+        <ref name="Dependencies"/>
+        <text/>
+      </choice>
+    </oneOrMore>
+  </define>
   <define name="Output">
     <element name="output">
       <optional>
@@ -511,29 +532,16 @@
         <attribute name="filename"/>
       </optional>
       <zeroOrMore>
-        <element name="group">
-          <element name="sampling">
-            <optional>
-              <attribute name="initial_sample">
-                <ref name="Bool"/>
-              </attribute>
-            </optional>
-            <optional>
-              <attribute name="basis"/>
-            </optional>
-            <oneOrMore>
-              <choice>
-                <ref name="ComputedVector"/>
-                <ref name="Operator"/>
-                <element name="moments">
-                  <text/>
-                </element>
-                <ref name="Dependencies"/>
-                <text/>
-              </choice>
-            </oneOrMore>
+        <choice>
+          <element name="group">
+            <element name="sampling">
+              <ref name="SamplingContents"/>
+            </element>
           </element>
-        </element>
+          <element name="sampling_group">
+            <ref name="SamplingContents"/>
+          </element>
+        </choice>
       </zeroOrMore>
     </element>
   </define>

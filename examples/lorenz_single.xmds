@@ -51,16 +51,14 @@
     </integrate>
   </sequence>
   <output>
-    <group>
-      <sampling initial_sample="yes">
-        <moments>xR yR zR</moments>
-        <dependencies>main</dependencies>
-        <![CDATA[
-          xR = x;
-          yR = y;
-          zR = z;
-        ]]>
-      </sampling>
-    </group>
+    <sampling_group initial_sample="yes">
+      <moments>xR yR zR</moments>
+      <dependencies>main</dependencies>
+      <![CDATA[
+        xR = x;
+        yR = y;
+        zR = z;
+      ]]>
+    </sampling_group>
   </output>
 </simulation>

@@ -32,16 +32,14 @@
   </sequence>
   
   <output>
-    <group>
-      <sampling>
-        <moments>xR yR zR</moments>
-        <dependencies>position</dependencies>
-        <![CDATA[
-          xR = x;
-          yR = y;
-          zR = z;
-        ]]>
-      </sampling>
-    </group>
+    <sampling_group>
+      <moments>xR yR zR</moments>
+      <dependencies>position</dependencies>
+      <![CDATA[
+        xR = x;
+        yR = y;
+        zR = z;
+      ]]>
+    </sampling_group>
   </output>
 </simulation>

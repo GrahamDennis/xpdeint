@@ -43,6 +43,18 @@ def getChildElementsByTagName(self, tagName, optional=False):
     raise ParserException(self, "There must be at least one '%(tagName)s' element." % locals())
   return elements
 
+def getChildElementsByTagNames(self, tagNames, optional=False):
+  """
+  Return child XML elements that have tag names in the collection `tagNames`.
+  
+  This function will raise an exception if there are no children with a tag name in `tagNames`
+  unless the keyword argument `optional` is `True`.
+  """
+  
+  elements = [element for element in self.childNodes if element.nodeType == minidom.Node.ELEMENT_NODE and element.tagName in tagNames]
+  if not optional and len(elements) == 0:
+    raise ParserException(self, "There must be at least one element from the set {%s}." % ", ".join(tagNames))
+  return elements
 
 def getChildElementByTagName(self, tagName, optional=False):
   """
@@ -204,8 +216,12 @@ def install_minidom_extras():
   minidom.Element.getChildElementsByTagName  = getChildElementsByTagName
   minidom.Document.getChildElementsByTagName = getChildElementsByTagName
   
+  minidom.Element.getChildElementsByTagNames  = getChildElementsByTagNames
+  minidom.Document.getChildElementsByTagNames = getChildElementsByTagNames
+  
   minidom.Element.getChildElementByTagName  = getChildElementByTagName
   minidom.Document.getChildElementByTagName = getChildElementByTagName
+  
   minidom.Document.createCDATASection = composeFunctions(minidom.Document.createCDATASection, setLineNumberForCDATASection)
   
   minidom.Element.innerText = innerText

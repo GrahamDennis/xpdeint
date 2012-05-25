@@ -1950,9 +1950,9 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
             geometryDimRepNameMap[dimRep.name] = dim
     
     
-    momentGroupElements = outputElement.getChildElementsByTagName('group', optional=True)
+    momentGroupElements = outputElement.getChildElementsByTagNames(['group', 'sampling_group'], optional=True)
     for momentGroupNumber, momentGroupElement in enumerate(momentGroupElements):
-      samplingElement = momentGroupElement.getChildElementByTagName('sampling')
+      samplingElement = momentGroupElement if momentGroupElement.tagName == 'sampling_group' else momentGroupElement.getChildElementByTagName('sampling')
       
       momentGroupTemplate = MomentGroupTemplate(number = momentGroupNumber, xmlElement = momentGroupElement,
                                                 parent = self.simulation,

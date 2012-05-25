@@ -251,20 +251,29 @@ Breakpoint = element breakpoint {
     , Dependencies
 }
 
+SamplingContents = 
+  attribute initial_sample { Bool } ?
+  , attribute basis { text }?
+  , (
+      ComputedVector
+      | Operator
+      | element moments { text }
+      | Dependencies
+      | text
+  )+
+
+
 Output = element output {
     attribute format { text }?
     , attribute filename { text }?
-    , element group {
-        element sampling {
-            attribute initial_sample { Bool } ?
-            , attribute basis { text }?
-            , (
-                ComputedVector
-                | Operator
-                | element moments { text }
-                | Dependencies
-                | text
-            )+
+    , (
+        element group {
+          element sampling {
+            SamplingContents
+          }
         }
-    }*
+        | element sampling_group {
+            SamplingContents
+          }
+      )*
 }
