@@ -36,7 +36,11 @@ class _ComputedVector (VectorElement):
     VectorElement.__init__(self, *args, **KWs)
     
     # Set default variables
+    
+    # Computed vectors don't need explicit initialisation.  If we're integrating over components, VectorElement will automatically set the vector to zero.
     self._integratingComponents = False
+    self.initialiser = None
+    
     evaluateFunctionName = ''.join(['_', self.id, '_evaluate'])
     evaluateFunction = Function(name = evaluateFunctionName,
                                args = [],

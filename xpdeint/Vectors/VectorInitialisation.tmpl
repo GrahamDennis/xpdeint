@@ -37,5 +37,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   Initialise a vector
 *@
 @def initialiseVector
-$loopOverVectorsWithInnerContentTemplate([$vector], '_active_${vector.id}[$index] = 0.0;')@slurp
+bzero(_active_${vector.id}, sizeof(${vector.type}) * ${vector.allocSize});
 @end def
