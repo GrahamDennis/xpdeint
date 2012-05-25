@@ -573,6 +573,14 @@ class XMDS2Parser(ScriptParser):
         else:
           raise ParserException(dimensionElement, "Each dimension element must have a non-empty 'domain' attribute\n"
                                                   "(or in the case of the 'hermite-gauss' transform a 'length_scale' attribute).")
+
+        # Check to see if run-time validation has been selected
+        runTimeValidationSelected = False
+        validationFeature = None
+        if 'Validation' in self.globalNameSpace['features']:
+          validationFeature = self.globalNameSpace['features']['Validation']
+          if validationFeature.runValidationChecks == True:
+            runTimeValidationSelected = True
         
         if dimensionType == 'real':
           domainPairType = float
@@ -583,8 +591,7 @@ class XMDS2Parser(ScriptParser):
           minimumValue = domainPairType(minimumString)
           maximumValue = domainPairType(maximumString)
         except ValueError, err: # If not floats then we check the validation feature.
-          if 'Validation' in self.globalNameSpace['features']:
-            validationFeature = self.globalNameSpace['features']['Validation']
+          if runTimeValidationSelected:
             validationFeature.validationChecks.append("""
             if (%(minimumString)s >= %(maximumString)s)
               _LOG(_ERROR_LOG_LEVEL, "ERROR: The end point of the dimension '%(maximumString)s' must be "
@@ -598,22 +605,13 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
             raise ParserException(dimensionElement, "The end point of the dimension, '%(maximumString)s', must be "
                                                     "greater than the start point, '%(minimumString)s'." % locals())
         
+
         if dimensionType == 'real' or dimensionElement.hasAttribute('lattice'):
           ## Grab the number of lattice points and make sure it's a positive integer
           latticeString = parseAttribute('lattice')
           if not latticeString.isdigit():
             # This might be okay if the user has asked for run-time validation, so that
             # the lattice value is actually a variable to be specified later.
-            # Only allow this for real valued dimensions for now, though.
-            if dimensionType == 'long':
-              raise ParserException(dimensionElement, "Could not understand lattice value "
-                                                    "'%(latticeString)s' as a positive integer." % locals())
-
-            # Check to see if run-time validation has been selected
-            runTimeValidationSelected = False
-            if 'Validation' in self.globalNameSpace['features']:
-              if self.globalNameSpace['features']['Validation'].runValidationChecks == True:
-                runTimeValidationSelected = True
 
             # Real dimension, lattice attribute isn't a number, so is run-time validation on?
             if runTimeValidationSelected == False:
@@ -638,12 +636,26 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
           else:
             # The lattice string a digit, so everything is cool
             lattice = int(latticeString)
-            if dimensionType == 'long' and (maximumValue - minimumValue + 1) != lattice:
+            if dimensionType == 'long' and (not runTimeValidationSelected) and (maximumValue - minimumValue + 1) != lattice:
               raise ParserException(dimensionElement, "The lattice value of '%(latticeString)s' doesn't match with the domain "
                                                     "'%(domainString)s'." % locals())
+          
+          # If we are validating at run time, an explicit lattice has been provided, and we are a long dimension then we need to check that the lattice
+          # agrees with the minimum / maximum values of the dimension.
+          if runTimeValidationSelected and dimensionType == 'long':
+            validationFeature.validationChecks.append("""
+            if ((%(latticeString)s) != ((%(maximumString)s) - (%(minimumString)s) + 1))
+              _LOG(_ERROR_LOG_LEVEL, "ERROR: The lattice value of '%(latticeString)s'=%%li doesn't match with the domain "
+                                     "'%(minimumString)s'=%%li to '%(maximumString)s'=%%li (%%li lattice points).\\n",
+                                     %(latticeString)s, %(minimumString)s, %(maximumString)s, ((%(maximumString)s) - (%(minimumString)s)+1));
+            """ % locals())
         else:
           # Only for 'long' dimensions
-          lattice = maximumValue - minimumValue + 1
+          if not runTimeValidationSelected:
+            lattice = maximumValue - minimumValue + 1
+          else:
+            lattice = "((%(maximumString)s) - (%(minimumString)s) + 1)" % locals()
+        
         
         aliasNames = set()
         if dimensionElement.hasAttribute('aliases'):

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <name>integer_dimensions_with_runtime_lattice</name>
+  <author>Graham Dennis</author>
+  <description>
+    XMDS2 script to test integer dimensions.
+  </description>
+  
+  <features>
+    <benchmark />
+    <error_check />
+    <bing />
+    <diagnostics /> <!-- This will make sure that all nonlocal accesses of dimensions are safe -->
+	<validation kind="run-time" />
+	<arguments>
+		<argument name="j_max" type="integer" default_value="10" />
+	</arguments>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="j" type="integer" lattice="11" domain="(0,j_max)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="main" type="complex">
+    <components> x </components>
+    <initialisation>
+      <![CDATA[
+      x = 1.0e-3;
+      x(j => 0) = 1.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="ARK45" interval="60" steps="25000" tolerance="1.0e-9">
+      <samples>1000</samples>
+      <operators>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+        long j_minus_one = (j-1) % _lattice_j;
+        if (j_minus_one < 0)
+          j_minus_one += _lattice_j;
+        long j_plus_one  = (j+1) % _lattice_j;
+        dx_dt(j => j) = x(j => j)*(x(j => j_minus_one) - x(j => j_plus_one));
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  
+  <output format="hdf5">
+    <group>
+      <sampling basis="j" initial_sample="yes">
+        <moments>xR</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          xR = x.Re();
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>

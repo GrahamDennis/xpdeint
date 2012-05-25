@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <arguments>--j_max 4</arguments>
+    <xsil_file name="integer_dimensions_with_runtime_lattice.xsil" expected="../geometry/integer_dimensions_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+  </testing>
+  
+  <name>integer_dimensions_with_runtime_lattice</name>
+  <author>Graham Dennis</author>
+  <description>
+    xpdeint script to test integer dimensions.
+  </description>
+  
+  <features>
+    <benchmark />
+    <bing />
+	<validation kind="run-time" />
+	<arguments>
+		<argument name="j_max" type="integer" default_value="100" />
+	</arguments>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="j" type="integer" lattice="5*1" domain="(0, j_max)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="main" type="complex">
+    <components>
+      x
+    </components>
+    <initialisation>
+      <![CDATA[
+      x(j => j) = 1.0e-3;
+      x(j => 0) = 1.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="RK4" interval="60.0" steps="25000">
+      <samples>100</samples>
+      <operators>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+        long j_minus_one = (j-1) % _lattice_j;
+        if (j_minus_one < 0)
+          j_minus_one += _lattice_j;
+        long j_plus_one  = (j+1) % _lattice_j;
+        dx_dt(j => j) = x(j => j)*(x(j => j_minus_one) - x(j => j_plus_one));
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  <output format="binary">
+    <group>
+      <sampling basis="j" initial_sample="yes">
+        <moments>xR</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          xR = x.Re();
+        ]]>
+      </sampling>
+    </group>
+  </output>
+</simulation>
