@@ -131,7 +131,18 @@ inline double XMDSSwapDouble(double __in)
 // 3. Read data from the XSIL file.
 
 {
-  ${initialisationCodeBlock.loop(self.insideInitialisationLoops), autoIndent=True}@slurp
+  // Stage 1 of initialisation
+  bzero(_active_${vector.id}, sizeof(${vector.type}) * ${vector.allocSize});
+  @if $initialisationCodeBlock.codeString.isspace()
+  // There is no stage 2
+  @else
+    @set $vectorOverrides = []
+    @if $vector.integratingComponents
+      @silent vectorOverrides.append($vector)
+    @end if
+  // Stage 2 of initialisation
+  ${initialisationCodeBlock.loop(self.insideInitialisationLoops, vectorOverrides=vectorOverrides), autoIndent=True}@slurp
+  @end if
 }
 
 char **_dimNames  = new char* [_${vector.field.name}_ndims];
@@ -329,14 +340,7 @@ delete [] _inputData;
 
 @def insideInitialisationLoops($codeString)
   @#
-// Stage 1 of initialisation
-for (unsigned int _component = 0; _component < _${vector.id}_ncomponents; _component++)
-  _active_${vector.id}[_${vector.id}_index_pointer + _component] = 0.0;
-
 // Stage 2 of initialisation
-  @if $codeString.isspace()
-// There is no stage 2.
-  @else
 
 // The purpose of the following define is to give a (somewhat helpful) compile-time error
 // if the user has attempted to use the propagation dimension variable in the initialisation
@@ -348,7 +352,6 @@ for (unsigned int _component = 0; _component < _${vector.id}_ncomponents; _compo
 ${codeString}@slurp
 // **********************************************
 #undef ${propagationDimension}
-  @end if
   @#
 @end def
 

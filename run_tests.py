@@ -144,7 +144,7 @@ def scriptTestingFunction(root, scriptName, testDir, absPath, self):
   self.assert_(returnCode == 0, "Failed to execute compiled simulation correctly." % locals())
   
   # The next thing to check is that the generated data agrees with the expected data to within the set error margins.
-  xsilFileElements = testingElement.getChildElementsByTagName('xsil_file')
+  xsilFileElements = testingElement.getChildElementsByTagName('xsil_file', optional=True)
   for xsilFileElement in xsilFileElements:
     sourceFile = xsilFileElement.getAttribute('name').strip()
     expectedResultsFile = xsilFileElement.getAttribute('expected').strip()

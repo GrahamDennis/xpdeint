@@ -65,6 +65,11 @@ ptrdiff_t _${id}_basis = -1;
 *@
 @def initialiseFunctionContents($function)
   @#
+  @if $integratingComponents
+// Because we're integrating over dimensions, we need to set the vector to zero first.
+bzero(_active_${id}, sizeof(${type}) * ${allocSize});
+  @end if
+  
 ${initialiser.initialiseVector}@slurp
   @if $needsTransforms
 

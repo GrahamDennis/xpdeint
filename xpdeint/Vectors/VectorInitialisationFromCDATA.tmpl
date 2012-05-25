@@ -32,7 +32,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *@
 @def initialiseVector
  @#
-$codeBlocks['initialisation'].loop(self.insideInitialisationLoops)@slurp
+ @set $vectorOverrides = []
+ @if $vector.integratingComponents
+   @silent vectorOverrides.append($vector)
+ @end if
+$codeBlocks['initialisation'].loop(self.insideInitialisationLoops, vectorOverrides=vectorOverrides)@slurp
  @#
 @end def
 

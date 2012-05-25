@@ -1,0 +1,70 @@
+<simulation xmds-version="2">
+  <testing>
+    <!-- This script has no test XSIL files because it is simply testing that this script compiles -->
+    <xsil_file name="transverse_integration_in_vector_initialisation.xsil" expected="transverse_integration_in_vector_initialisation_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+  </testing>
+
+
+ <name>transverse_integration_in_vector_initialisation</name>
+ <author> Sebastian Wuester (Feb 2012)</author>
+ <description>
+   Solve Master-equation for system density matrix in super-matrix form
+</description>
+
+ <geometry>
+   <propagation_dimension> t </propagation_dimension>
+   <transverse_dimensions>
+    <dimension name="Rpos" type="integer" lattice="3" domain="(0, 2)" />        <!-- atom positions -->  
+    <dimension name="r" type="real" lattice="2" domain="(0,2)" />
+   </transverse_dimensions>
+ </geometry>
+
+ <vector name="atompositions" type="real" initial_space="r" dimensions="r"> 
+   <components> RR </components>
+   <initialisation>  
+         <![CDATA[
+RR = r*r*r*0.2;
+    ]]>
+   </initialisation>
+ </vector>
+
+  <vector name="first_positions" type="real" dimensions="">
+   <components> dummy2 </components>
+   <initialisation>  
+     <dependencies basis="r"> atompositions </dependencies>
+     <![CDATA[
+                dummy2 = RR*r;
+     ]]>
+   </initialisation>
+ </vector>
+
+ <sequence>
+   <breakpoint filename="transverse_integration_in_vector_initialisation.xsil">
+     <dependencies>first_positions</dependencies>
+   </breakpoint>
+   </sequence>
+
+ <output format="hdf5">
+ </output>
+
+<info>
+Script compiled with XMDS2 version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+See http://www.xmds.org for more information.
+</info>
+
+<XSIL Name="breakpoint">
+  <Param Name="n_independent">0</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>1</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+dummy2 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>1</Dim>
+    <Stream><Metalink Format="HDF5" Type="Remote" Group="/1"/>
+transverse_integration_in_vector_initialisation_expected.h5
+    </Stream>
+  </Array>
+</XSIL>
+</simulation>

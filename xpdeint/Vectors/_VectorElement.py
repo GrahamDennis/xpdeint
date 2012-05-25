@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from xpdeint.ScriptElement import ScriptElement
+from xpdeint.Geometry.FieldElement import FieldElement
 from xpdeint.Vectors.VectorInitialisation import VectorInitialisation
 
 from xpdeint.Function import Function
@@ -51,6 +52,7 @@ class _VectorElement (ScriptElement):
     # Set default variables
     self.components = []
     self._needsInitialisation = True
+    self._integratingComponents = False
     self.type = localKWs['type']
     self.aliases = set()
     self.basesNeeded = set()
@@ -125,6 +127,18 @@ class _VectorElement (ScriptElement):
   needsInitialisation = property(_getNeedsInitialisation, _setNeedsInitialisation)
   del _getNeedsInitialisation, _setNeedsInitialisation
   
+  def _getIntegratingComponents(self):
+    return self._integratingComponents
+  
+  def _setIntegratingComponents(self, value):
+    self._integratingComponents = value
+    # The computed vector only needs initialisation to zero if we are integrating.
+    self.needsInitialisation = value
+  
+  integratingComponents = property(_getIntegratingComponents, _setIntegratingComponents)
+  del _getIntegratingComponents, _setIntegratingComponents
+  
+  
   @lazy_property
   def allocSize(self):
     return '_' + self.id + '_alloc_size'
@@ -146,6 +160,42 @@ class _VectorElement (ScriptElement):
     self.field.temporaryVectors.discard(self)
     
     super(_VectorElement, self).remove()
+  
+  @property
+  def primaryCodeBlock(self):
+    try:
+      return self.initialiser.codeBlocks['initialisation']
+    except (AttributeError, KeyError), err:
+      return None
+  
+  def preflight(self):
+    super(_VectorElement, self).preflight()
+    
+    codeBlock = self.primaryCodeBlock
+    if codeBlock:
+      loopingDimensionNames = set([dim.name for dim in self.field.dimensions])
+      for dependency in codeBlock.dependencies:
+        loopingDimensionNames.update([dim.name for dim in dependency.field.dimensions])
+    
+      codeBlock.field = FieldElement.sortedFieldWithDimensionNames(loopingDimensionNames)
+    
+      if codeBlock.dependenciesEntity and codeBlock.dependenciesEntity.xmlElement.hasAttribute('basis'):
+        dependenciesXMLElement = codeBlock.dependenciesEntity.xmlElement
+        codeBlock.basis = \
+          codeBlock.field.basisFromString(
+            dependenciesXMLElement.getAttribute('basis'),
+            xmlElement = dependenciesXMLElement
+          )
+      if codeBlock.basis is None:
+        codeBlock.basis = codeBlock.field.defaultCoordinateBasis
+    
+      self.initialBasis = self.field.basisForBasis(codeBlock.basis)
+      self.basesNeeded.add(self.initialBasis)
+    
+      # Our components are constructed by an integral if the looping field doesn't have the same
+      # dimensions as the field to which the computed vector belongs.
+      if not codeBlock.field.isEquivalentToField(self.field):
+        self.integratingComponents = True
 
 
   

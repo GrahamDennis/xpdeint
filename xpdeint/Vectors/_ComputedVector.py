@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from xpdeint.Vectors.VectorElement import VectorElement
-from xpdeint.Geometry.FieldElement import FieldElement
 
 from xpdeint.Function import Function
 from xpdeint.Utilities import lazy_property
@@ -37,68 +36,19 @@ class _ComputedVector (VectorElement):
     VectorElement.__init__(self, *args, **KWs)
     
     # Set default variables
-    self._integratingComponents = True
-    
+    self._integratingComponents = False
     evaluateFunctionName = ''.join(['_', self.id, '_evaluate'])
     evaluateFunction = Function(name = evaluateFunctionName,
                                args = [],
                                implementation = self.evaluateFunctionContents)
     self.functions['evaluate'] = evaluateFunction
   
-  @lazy_property
-  def noiseField(self):
-    return self.codeBlocks['evaluation'].field
-  
   @property
   def dependencies(self):
     return self.codeBlocks['evaluation'].dependencies
   
-  def _getIntegratingComponents(self):
-    return self._integratingComponents
-  
-  def _setIntegratingComponents(self, value):
-    self._integratingComponents = value
-    # The computed vector only needs initialisation to zero if we are integrating.
-    self.needsInitialisation = value
-  
-  integratingComponents = property(_getIntegratingComponents, _setIntegratingComponents)
-  del _getIntegratingComponents, _setIntegratingComponents
-  
-  def bindNamedVectors(self):
-    super(VectorElement, self).bindNamedVectors()
-    
-    evaluationCodeBlock = self.codeBlocks['evaluation']
-    # This code to determine the evaluation looping field used to be in bindNamedVectors because
-    # _Stochastic needed access to 'noiseField' during its preflight. However, the way that the
-    # Stochastic feature works at the moment is silly, and is causing design problems. The better
-    # design is to use noise vectors but until that is implemented, the Stochastic feature will
-    # be dealt with specially.
-    
-    loopingDimensionNames = set([dim.name for dim in self.field.dimensions])
-    for dependency in evaluationCodeBlock.dependencies:
-      loopingDimensionNames.update([dim.name for dim in dependency.field.dimensions])
-    
-    evaluationCodeBlock.field = FieldElement.sortedFieldWithDimensionNames(loopingDimensionNames)
-    
-  def preflight(self):
-    super(_ComputedVector, self).preflight()
-    
-    evaluationCodeBlock = self.codeBlocks['evaluation']
-    if evaluationCodeBlock.dependenciesEntity and evaluationCodeBlock.dependenciesEntity.xmlElement.hasAttribute('basis'):
-      dependenciesXMLElement = evaluationCodeBlock.dependenciesEntity.xmlElement
-      evaluationCodeBlock.basis = \
-        evaluationCodeBlock.field.basisFromString(
-          dependenciesXMLElement.getAttribute('basis'),
-          xmlElement = dependenciesXMLElement
-        )
-    if not evaluationCodeBlock.basis:
-      evaluationCodeBlock.basis = evaluationCodeBlock.field.defaultCoordinateBasis
-    
-    self.initialBasis = self.field.basisForBasis(evaluationCodeBlock.basis)
-    self.basesNeeded.add(self.initialBasis)
-    
-    # Our components are constructed by an integral if the looping field doesn't have the same
-    # dimensions as the field to which the computed vector belongs.
-    self.integratingComponents = not evaluationCodeBlock.field.isEquivalentToField(self.field)
+  @property
+  def primaryCodeBlock(self):
+    return self.codeBlocks['evaluation']
   
 
