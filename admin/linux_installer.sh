@@ -402,6 +402,7 @@ if [ `which mpicc | wc -l` -eq 0 ]; then
         load_openmpi;
         COMPLETION_MESSAGE="\nYou must add the line 'load_openmpi' to the end of your login script (probably ~/.bashrc) to use MPI.\n"
     elif [ `which modulecmd | wc -l` -eq 1 ]; then
+        source /etc/profile
         module load mpi;
         COMPLETION_MESSAGE="\nYou must add the line 'module load mpi' to the end of your login script (probably ~/.bashrc) to use MPI.\n"
     fi
@@ -422,7 +423,7 @@ if [ $DEVELOPER_INSTALL -eq 1 ]; then
 else
   # Fetch a known good version of the XMDS2 source code from sourceforge
   cd $XMDS2_install_directory
-  svn checkout -r 2691 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
+  svn checkout -r 2702 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
 fi
 
 # Compile the Cheetah templates into Python
