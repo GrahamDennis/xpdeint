@@ -4,7 +4,7 @@
 Installation
 ************
 
-**XMDS2** can be installed on any unix-like system including linux, Tru64, and Mac OS X.  It requires a C++ compiler, python, and several installed packages.  Many of these packages are optional, but a good idea to obtain full functionality.  
+**XMDS2** can be installed on any unix-like system including Linux, Tru64, and Mac OS X.  It requires a C++ compiler, python, and several installed packages.  Many of these packages are optional, but a good idea to obtain full functionality.  
 
 Installers
 ==========
@@ -42,12 +42,12 @@ If you have one of the supported operating systems listed above, but you find th
 Linux installer instructions
 ============================
 
-The installer can be downloaded from: http://xmds.svn.sourceforge.net/viewvc/xmds/trunk/xpdeint/admin/linux_installer.sh
+The linux installer has currently only been tested with Ubuntu, Debian, Fedora, and Red Hat. Download the installer here: http://xmds.svn.sourceforge.net/viewvc/xmds/trunk/xpdeint/admin/linux_installer.sh
 
 Once you have downloaded it, make the installer executable and run it by typing the following into a terminal::
 
   chmod u+x linux_installer.sh
-  bash ./linux_installer.sh
+  ./linux_installer.sh
 
 Alternatively, if you wish to download and run the installer in a single step, you can use the following command::
 
@@ -117,7 +117,7 @@ This guide adds extra notes for users wishing to install XMDS2 using the SVN rep
    * Linux: It should be pre-installed. If not, install using your favourite package manager.
    * Windows: One way to install Python and related packages is via the `Enthought Python Distribution <http://www.enthought.com/products/epd.php>`_. 
    
-    We require python 2.4 or greater. (2.5 recommended).
+    We require python 2.4 or greater. (2.5 recommended). XMDS2 does not support Python 3.
    
 
 #. Install setuptools.
@@ -156,29 +156,28 @@ This guide adds extra notes for users wishing to install XMDS2 using the SVN rep
             
             #. Finally, type ``sudo make install`` to install it into the appropriate directory.
         
-    #. **MPI** is an API for doing parallel processing 
-         on multi-processor/multi-core computers, or clusters of computers.
-         Many supercomputing systems come with MPI libraries pre installed.
-         The `Open MPI <http://www.open-mpi.org/>`_ project has free distributions of this library for other machines.
-		 
-		 If you intend to take advantage of XMDS2's multi-processing features, you must install MPI, and configure FFTW3 to use it.
-
-    #. **FFTW** is the library XMDS2 uses for Fourier transforms, 
-         which is the transform most people will be using. 
-         If you need
-         support for MPI distributed simulations, you must configure FFTW to use MPI.  FFTW is available for
-         free at the `FFTW website <http://www.fftw.org/>`_.
-
-         Then configure/compile as described in the HDF5 sidebar above.  
+    #. **FFTW** is the library XMDS2 uses for Fourier transforms. 
+         This is the transform most people will use in their simulations. If you need
+         support for MPI distributed simulations, you must configure FFTW to use MPI.
+  
+         FFTW is available for free at the `FFTW website <http://www.fftw.org/>`_.
+         To configure and compile it, follow the steps described in the HDF5 sidebar above.  
          You may wish to add the ``--enable-mpi --disable-fortran`` options to the ``configure`` command.
+
+    #. **MPI** is an API for doing parallel processing.
+         XMDS2 can use MPI to parallelise simulations on multi-processor/multi-core computers, or clusters of computers.
+         Many supercomputing systems come with MPI libraries pre-installed.
+         The `Open MPI <http://www.open-mpi.org/>`_ project has free distributions of this library available.
+		 
+	 If you intend to take advantage of XMDS2's multi-processing features, you must install MPI, and configure FFTW3 to use it.
+
+
 
 #. There are a range of optional installs.  We recommend that you install them all if possible:
 
-    #. A Matrix library like `ATLAS <http://math-atlas.sourceforge.net/>`_, 
-         or Intel's `MKL <http://software.intel.com/en-us/intel-mkl/>`_ allows efficient implementation of transform spaces other than Fourier space.
+    #. A Matrix library like `ATLAS <http://math-atlas.sourceforge.net/>`_, Intel's `MKL <http://software.intel.com/en-us/intel-mkl/>`_ or the `GNU Scientific library (GSL) <http://www.gnu.org/software/gsl/>`_ 
+         These libraries allow efficient implementation of transform spaces other than Fourier space.
          Mac OS X comes with its own (fast) matrix library.
-         
-         The `GNU Scientific library (GSL) <http://www.gnu.org/software/gsl/>`_ is another free matrix library.
     
     #. **numpy** is a tool that XMDS2 uses for automated testing.
          It can be installed with ``sudo easy_install numpy``. 
@@ -188,10 +187,10 @@ This guide adds extra notes for users wishing to install XMDS2 using the SVN rep
     #. **lxml** is used to validate the syntax of scripts passed to XMDS2. 
          If you have root access, this can be installed with the command ``sudo easy_install lxml``
 
-            You will need to have 'libxml2' and 'libxslt' installed (via your choice of package manager) to install lxml.  
-            Sufficient versions are preinstalled on Mac OS X 10.6.
+         You will need to have 'libxml2' and 'libxslt' installed (via your choice of package manager) to install lxml.  
+         Sufficient versions are preinstalled on Mac OS X 10.6.
 
-        If you don't have root access or want to install into your home directory, use:
+         If you don't have root access or want to install into your home directory, use:
             ``easy_install --prefix=~ lxml``
 
     #. **h5py** is needed for checking the results of XMDS2 tests that generate HDF5 output.
@@ -201,7 +200,7 @@ This guide adds extra notes for users wishing to install XMDS2 using the SVN rep
            (Mac OS X Snow Leopard comes with version 1.2.1). 
            After downloading the source, execute ``python ./setup.py build`` in the source directory, and then ``python ./setup.py install`` to install it.  
 
-#. Install XMDS2 into your python path by running (in the xmds2/ directory):
+#. Install XMDS2 into your python path by running (in the XMDS_2.1/ directory):
     ``sudo ./setup.py develop``
 
     If you want to install it into your home directory, type ``./setup.py develop --prefix=~``
@@ -220,11 +219,11 @@ This guide adds extra notes for users wishing to install XMDS2 using the SVN rep
         To build the user documentation, you first need to install sphinx, either via your package manager or:
         ``sudo easy_install Sphinx``
 
-        Then, to build the documentation, in the xmds2/admin/userdoc-source/ directory run: ``make html``
+        Then, to build the documentation, in the XMDS_2.1/admin/userdoc-source/ directory run: ``make html``
 
         If this results in an error, you may need to run ``sudo ./setup.py develop``
 
-        The generated html documentation will then be found at xmds2/documentation/index.html
+        The generated html documentation will then be found at XMDS_2.1/documentation/index.html
 
 **Congratulations!** You should now have a fully operational copy of xmds2 and xsil2graphics2.  You can test your copy using examples from the "xmds2/examples" directory, and follow the worked examples in the :ref:`QuickStartTutorial` and :ref:`WorkedExamples`.
 
