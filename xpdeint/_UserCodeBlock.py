@@ -247,6 +247,7 @@ class _UserLoopCodeBlock(_UserCodeBlock):
           nonlocalAccessString += ') * _%(vectorID)s_ncomponents]' % locals()
           
           defineString += nonlocalAccessString + '\n'
+          undefineString = "#undef %(nonlocalAccessVariableName)s\n" % locals()
           
           featureDict = {
             'vector': vector,
@@ -256,6 +257,7 @@ class _UserLoopCodeBlock(_UserCodeBlock):
             'nonlocalAccessVariableName': nonlocalAccessVariableName,
             'nonlocalAccessString': nonlocalAccessString,
             'defineString': defineString,
+            'undefineString': undefineString
           }
           
           featureOrdering = ['Diagnostics']
@@ -263,6 +265,7 @@ class _UserLoopCodeBlock(_UserCodeBlock):
           self.insertCodeForFeatures('nonlocalAccess', featureOrdering, featureDict)
           
           self.prefixCodeString += featureDict['defineString']
+          self.postfixCodeString += featureDict['undefineString']
           nonlocalVariablesCreated.add(nonlocalAccessVariableName)
         
         arguments = []
