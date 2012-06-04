@@ -140,7 +140,7 @@ dalpha12_dt  = ((-gama0 - gamac-i*(sw*eta*(z-sample_length/2) +(omc*omc)/delta))
   
   <output format="hdf5" filename="mpi_highdimcrossprop.xsil">
     <group>
-      <sampling basis="x(16) y(16) z(128)" initial_sample="yes">
+      <sampling basis="z(128) x(16) y(16)" initial_sample="yes">
         <moments>bprobereal bprobeimag</moments>
         <dependencies>cross1</dependencies>
         <![CDATA[

@@ -57,6 +57,21 @@ class _DistributedMPIDriver (SimulationDriver, MPI):
         result.extend([rep.localLattice, rep.localOffset])
     return result
   
+  def basisWithTransverseDimensionsMovedAfterMPIDimensions(self, basis):
+    geometry = self.getVar('geometry')
+    dimRepNameMap = dict()
+    for dim in geometry.dimensions:
+      for dimRep in dim.representations:
+        dimRepNameMap[dimRep.canonicalName] = dim
+        dimRepNameMap[dimRep.name] = dim
+    basis = list(basis)
+    for dimRepName in basis[:]:
+      if dimRepNameMap[dimRepName].transverse and dimRepNameMap[dimRepName].name not in self.distributedDimensionNames:
+        # Move it to the end.
+        basis.remove(dimRepName)
+        basis.append(dimRepName)
+    return tuple(basis)
+  
   def preflight(self):
     super(_DistributedMPIDriver, self).preflight()
     
@@ -68,6 +83,7 @@ class _DistributedMPIDriver (SimulationDriver, MPI):
         raise ParserException(outputFeature.xmlElement, "The '%s' output format cannot be used with the 'distributed-mpi' driver." % outputFormat.name)
   
   def canonicalBasisForBasis(self, basis, **KWs):
+    basis = self.basisWithTransverseDimensionsMovedAfterMPIDimensions(basis)
     if self._distributedTransform.hasattr('canonicalBasisForBasis'):
       return self._distributedTransform.canonicalBasisForBasis(basis, **KWs)
     return super(_DistributedMPIDriver, self).canonicalBasisForBasis(basis, **KWs)
