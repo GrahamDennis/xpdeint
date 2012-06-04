@@ -270,10 +270,6 @@ if [ ! -d $XMDS2_install_directory ]; then
   mkdir $XMDS2_install_directory
 fi
 
-# Create wisdom directory to stop XMDS warning that it can't find it
-# each time a script is run
-mkdir -p ~/.xmds/wisdom
-
 echo
 echo "Installing required packages..."
 echo
