@@ -50,14 +50,14 @@ struct _transform_step
 };
 
 // Structure to hold the basis change information
-struct _basis_transform
+struct _basis_transform_t
 {
   vector<_transform_step> _transform_steps;
   real _multiplier;
   
-  _basis_transform(real _multiplier_in = 1.0) : _multiplier(_multiplier_in) {}
+  _basis_transform_t(real _multiplier_in = 1.0) : _multiplier(_multiplier_in) {}
   
-  _basis_transform(const _basis_transform& _b) : _transform_steps(_b._transform_steps), _multiplier(_b._multiplier) {}
+  _basis_transform_t(const _basis_transform_t& _b) : _transform_steps(_b._transform_steps), _multiplier(_b._multiplier) {}
   
   void append(transform_function _func, bool _forward, bool _out_of_place, ptrdiff_t _prefix_lattice, ptrdiff_t _postfix_lattice)
   {
@@ -65,8 +65,8 @@ struct _basis_transform
   }
 };
 
-// Map type for holding (old_basis, new_basis) -> _basis_transform mappings
-typedef map<_basis_pair, _basis_transform, _basis_pair_less_than> _basis_map;
+// Map type for holding (old_basis, new_basis) -> _basis_transform_t mappings
+typedef map<_basis_pair, _basis_transform_t, _basis_pair_less_than> _basis_map;
 
   @for vector in self.vectorTransformMap
 _basis_map _${vector.id}_basis_map;
@@ -113,7 +113,7 @@ if (_${vector.id}_basis_map.count(_basis_pair(_${vector.id}_basis, new_basis)) =
     _basis_identifiers[_${vector.id}_basis], _basis_identifiers[new_basis]
   );
 }
-_basis_transform &_t = _${vector.id}_basis_map[_basis_pair(_${vector.id}_basis, new_basis)];
+_basis_transform_t &_t = _${vector.id}_basis_map[_basis_pair(_${vector.id}_basis, new_basis)];
 if (_t._transform_steps.size() == 0) {
   _LOG(_ERROR_LOG_LEVEL, "Error: It looks like we tried to create plans for this transform, but failed.\n"
                          "       The transform was for the vector '${vector.id}' from basis %s to basis %s.\n",
@@ -161,7 +161,7 @@ for (long _idx = 0; _idx < _prefix_lattice * _postfix_lattice; _idx++) {
 @def mainBegin($dict)
   @#
 
-_basis_transform *_basis_transform = NULL;
+_basis_transform_t *_basis_transform = NULL;
 ptrdiff_t _auxiliary_array_size = 0;
 ptrdiff_t _max_vector_size = 0;
 real* _max_vector_array = NULL;
