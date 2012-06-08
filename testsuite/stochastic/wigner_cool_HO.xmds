@@ -101,8 +101,7 @@
   </sequence>
   <output format="binary">
   
-    <group>
-      <sampling initial_sample="yes">
+      <sampling_group initial_sample="yes">
         <moments>P X E EE P_err X_err E_err EE_err</moments>
         <dependencies>observables</dependencies>
         <![CDATA[
@@ -119,8 +118,7 @@
           EE_err = sqrt(avg_eEEEE - avg_EE*avg_EE)/sqrt(_lattice_j);
           
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
     
   </output>
 </simulation>

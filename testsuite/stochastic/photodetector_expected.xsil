@@ -40,15 +40,13 @@
     </integrate>
   </sequence>
   <output format="hdf5" filename="photodetector.xsil">
-    <group>
-      <sampling initial_sample="yes">
+      <sampling_group initial_sample="yes">
         <moments>Ndet</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           Ndet = N;
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 
 <info>

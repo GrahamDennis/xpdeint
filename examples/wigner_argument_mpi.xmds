@@ -92,14 +92,12 @@
   </sequence>
   
   <output>
-    <group>
-      <sampling basis="x y" initial_sample="yes">
+      <sampling_group basis="x y" initial_sample="yes">
         <moments>WR WI</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           _SAMPLE_COMPLEX(W);
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>

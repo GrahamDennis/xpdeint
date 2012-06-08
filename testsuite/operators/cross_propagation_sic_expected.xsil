@@ -98,8 +98,7 @@
   </sequence>
   
   <output format="binary">
-    <group>
-      <sampling initial_sample="no">
+      <sampling_group initial_sample="no">
         <dimension name="t" />
         <moments>error_u error_v</moments>
         <dependencies>cross</dependencies>
@@ -107,8 +106,7 @@
           error_u = mod(u - sin(t));
           error_v = mod(v - pcomplex(1.0, t));
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 
 <info>

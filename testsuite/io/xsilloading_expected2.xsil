@@ -47,15 +47,13 @@
   </sequence>
   
   <output format="binary">
-    <group>
-      <sampling basis="x(50) y(0)" initial_sample="yes">
+      <sampling_group basis="x(50) y(0)" initial_sample="yes">
         <moments>amp</moments>
         <dependencies>oned twod</dependencies>
         <![CDATA[
           amp = cos(u.Re())*sin(u.Im())/2.0 - v.Re()*v.Re()*x*y + sin(y)*v.Im(); // Some crazy function to combine the quantities
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 
 <info>

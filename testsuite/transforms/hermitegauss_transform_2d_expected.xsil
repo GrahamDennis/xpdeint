@@ -79,8 +79,7 @@
     </integrate>
   </sequence>
   <output format="binary">
-    <group>
-      <sampling initial_sample="yes">
+      <sampling_group initial_sample="yes">
         <dimension name="x" fourier_space="no" />
         <dimension name="y" fourier_space="no" />
         <moments>dens</moments>
@@ -89,10 +88,8 @@
           dens = mod2(psi);
         
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling initial_sample="no">
+      </sampling_group>
+      <sampling_group initial_sample="no">
         <dimension name="x" fourier_space="yes" />
         <dimension name="y" fourier_space="yes" />
         <moments>dens</moments>
@@ -101,10 +98,8 @@
           dens = mod2(psi);
         
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling initial_sample="yes">
+      </sampling_group>
+      <sampling_group initial_sample="yes">
         <dimension name="x" lattice="0" />
         <dimension name="y" lattice="0" />
         <moments>mean_x mean_sigmay</moments>
@@ -113,8 +108,7 @@
           mean_x = mod2(psi)*x/N;
           mean_sigmay = sqrt(integral_y2/N);
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 
 <info>

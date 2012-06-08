@@ -988,7 +988,7 @@ The length of the integration is defined by the ``interval`` attribute, which mu
 
 .. _SamplesElement:
 
-The optional ``<samples>`` element is used to track the evolution of one or more vectors or variables during an integration.  This element must contain a non-negative integer for each :ref:`<group><GroupElement>` element defined in the simulation's :ref:`<output><OutputElement>` element.  The list of integers then defines the number of times that the moments defined in those groups will be sampled.  For a fixed step algorithm, each non-zero number of samples must be a factor of the total number of steps. 
+The optional ``<samples>`` element is used to track the evolution of one or more vectors or variables during an integration.  This element must contain a non-negative integer for each :ref:`<sampling_group><SamplingGroupElement>` element defined in the simulation's :ref:`<output><OutputElement>` element.  The list of integers then defines the number of times that the moments defined in those groups will be sampled.  For a fixed step algorithm, each non-zero number of samples must be a factor of the total number of steps. 
     
 The vectors to be integrated and the form of the differential equations are defined in the :ref:`<operators><OperatorsElement>` element (or elements).  Filters to be applied each step can be defined with optional :ref:`<filters><FiltersElement>` elements.  
     
@@ -1208,59 +1208,56 @@ Example syntax::
 Output element
 ==============
 
-The ``<output>`` element describes the output of the program.  It is often inefficient to output the complete state of all vectors at all times during a large simulation, so the purpose of this function is to define subsets of the information required for output.  Each different format of information is described in a different ``<group>`` element inside the output element.  The ``<output>`` element may contain any number of ``<group>`` elements.  The format of the output data can be specified by the optional ``format`` attribute, which may take values of "ascii", "binary", and "hdf5" (the default).  The filename can be specified with the optional ``filename`` element, which otherwise defaults to the simulation name with the '.xsil' suffix.
+The ``<output>`` element describes the output of the program.  It is often inefficient to output the complete state of all vectors at all times during a large simulation, so the purpose of this function is to define subsets of the information required for output.  Each different format of information is described in a different ``<sampling_group>`` element inside the output element.  The ``<output>`` element may contain any number of ``<sampling_group>`` elements.  The format of the output data can be specified by the optional ``format`` attribute, which may take values of "ascii", "binary", and "hdf5" (the default).  The filename can be specified with the optional ``filename`` element, which otherwise defaults to the simulation name with the '.xsil' suffix.
 
-The ``<samples>`` inside ``<integrate>`` elements defines a string of integers, with exactly one for each ``<group>`` element.  During that integration, the variables described in each ``<group>`` element will be sampled and stored that number of times.  
+The ``<samples>`` inside ``<integrate>`` elements defines a string of integers, with exactly one for each ``<sampling_group>`` element.  During that integration, the variables described in each ``<sampling_group>`` element will be sampled and stored that number of times.  
 
 
-.. _GroupElement:
+.. _SamplingGroupElement:
 
-Group (Sampling) Element
-------------------------
+Sampling Group Element
+----------------------
 
-A ``<group>`` element defines a set of variables that we wish to output, typically they are functions of some subset of vectors.  It must contain a ``<sampling>`` element, which contains all of the following elements.  The names of the desired variables are listed in a ``<moments>`` element, just like the ``<components>`` element of a vector.  They are defined with a ':ref:`CDATA<XMDSCSyntax>`' block, accessing any components of vectors and computed vectors that are defined in a :ref:`<dependencies><Dependencies>` element, also just like a vector.  :ref:`Computed vectors<ComputedVectorElement>` and :ref:`<operator><OperatorElement>` elements can be defined and used in the definition, just like in an :ref:`<integrate><IntegrateElement>` element.
+A ``<sampling_group>`` element defines a set of variables that we wish to output, typically they are functions of some subset of vectors.  The names of the desired variables are listed in a ``<moments>`` element, just like the ``<components>`` element of a vector.  They are defined with a ':ref:`CDATA<XMDSCSyntax>`' block, accessing any components of vectors and computed vectors that are defined in a :ref:`<dependencies><Dependencies>` element, also just like a vector.  :ref:`Computed vectors<ComputedVectorElement>` and :ref:`<operator><OperatorElement>` elements can be defined and used in the definition, just like in an :ref:`<integrate><IntegrateElement>` element.
     
-The basis of the output is specified by the ``basis`` attribute in the ``<sampling>`` element.  This overrides any basis specification in the ``<dependencies>`` element.  Because we often wish to calculate these vectors on a finer grid than we wish to output, it is possible to specify that the output on a subset of the points defined for any transverse dimension.  This is done by adding a number in parentheses after that dimension in the basis string, e.g. ``basis="x y(32) kz(64)"``.  If the number is zero, then that dimension is integrated out.  If that number is one or more, then that dimension will be sampled on a subset of points in that space.
+The basis of the output is specified by the ``basis`` attribute.  This overrides any basis specification in the ``<dependencies>`` element.  Because we often wish to calculate these vectors on a finer grid than we wish to output, it is possible to specify that the output on a subset of the points defined for any transverse dimension.  This is done by adding a number in parentheses after that dimension in the basis string, e.g. ``basis="x y(32) kz(64)"``.  If the number is zero, then that dimension is integrated out.  If that number is one or more, then that dimension will be sampled on a subset of points in that space.
     
 The ``initial_sample`` attribute, which must be "yes" or "no", determines whether the moment group will be sampled before any integration occurs.
 
 Example syntax::
 
     <output format="hdf5" filename="SimOutput.xsil">
-      <group>
-          <sampling basis="x y" initial_sample="yes">
-            <computed_vector name="filter3" dimensions="" type="complex">
-              <components>sparemomentagain</components>
-              <evaluation>
-                <dependencies basis="kx ky">integrated_u main</dependencies>
-                <![CDATA[
-                  sparemomentagain = mod2(u);
-                ]]>
-              </evaluation>
-            </computed_vector>
-            <operator kind="ex" constant="no">
-              <operator_names>L</operator_names>
-              <![CDATA[
-                L = -T*kx*kx/mu;
-              ]]>
-            </operator>
-            <moments>amp ke</moments>
-            <dependencies>main filter1</dependencies>
+      <sampling_group basis="x y" initial_sample="yes">
+        <computed_vector name="filter3" dimensions="" type="complex">
+          <components>sparemomentagain</components>
+          <evaluation>
+            <dependencies basis="kx ky">integrated_u main</dependencies>
             <![CDATA[
-              amp = mod2(u + moment);
-              ke = mod2(L[u]);
+              sparemomentagain = mod2(u);
             ]]>
-          </sampling>
- 
-      <group>
-        <sampling basis="kx(0) ky(64)" initial_sample="yes">
-          <moments>Dens_P </moments>
-          <dependencies>fields </dependencies>
+          </evaluation>
+        </computed_vector>
+        <operator kind="ex" constant="no">
+          <operator_names>L</operator_names>
           <![CDATA[
-            Dens_P = mod2(psi);
+            L = -T*kx*kx/mu;
           ]]>
-        </sampling>
-     </group>
+        </operator>
+        <moments>amp ke</moments>
+        <dependencies>main filter1</dependencies>
+        <![CDATA[
+          amp = mod2(u + moment);
+          ke = mod2(L[u]);
+        ]]>
+      </sampling_group>
+
+      <sampling_group basis="kx(0) ky(64)" initial_sample="yes">
+        <moments>Dens_P </moments>
+        <dependencies>fields </dependencies>
+        <![CDATA[
+          Dens_P = mod2(psi);
+        ]]>
+      </sampling_group>
     </output>
 
 
@@ -1269,4 +1266,19 @@ Example syntax::
 XMDS-specific C syntax
 ======================
 
-There are some handy shortcuts included, and we should list them all.
+Sampling complex numbers can be written more efficiently using:
+
+.. code-block:: xpdeint
+
+      <![CDATA[
+        _SAMPLE_COMPLEX(W);
+      ]]>
+
+which is short for
+
+.. code-block:: xpdeint
+
+      <![CDATA[
+        WR = W.Re();
+        WI = W.Im();
+      ]]>

@@ -48,15 +48,13 @@
   </sequence>
   
   <output format="binary">
-    <group>
-      <sampling initial_sample="yes">
+      <sampling_group initial_sample="yes">
         <moments>xOut</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           xOut = x;
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
   
 

@@ -71,24 +71,20 @@
     </integrate>
   </sequence>
   <output>
-    <group>
-      <sampling basis="x(50)" initial_sample="yes">
+      <sampling_group basis="x(50)" initial_sample="yes">
         <moments>amp</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           amp = u;
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling basis="kx(50)" initial_sample="no">
+      </sampling_group>
+      <sampling_group basis="kx(50)" initial_sample="no">
         <moments>amp</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           amp = u;
         
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>

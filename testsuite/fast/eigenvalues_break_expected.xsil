@@ -134,24 +134,20 @@
     </breakpoint>
   </sequence>
   <output format="hdf5">
-    <group>
-      <sampling initial_sample="yes">
+      <sampling_group initial_sample="yes">
         <moments>phi1R phi1I phi0R phi0I</moments>
         <dependencies>wavefunction</dependencies>
         <![CDATA[
           _SAMPLE_COMPLEX(phi1); _SAMPLE_COMPLEX(phi0);
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling initial_sample="yes" basis="kz p q">
+      </sampling_group>
+      <sampling_group initial_sample="yes" basis="kz p q">
         <moments>matrixR matrixI</moments>
         <dependencies>matrixterms</dependencies>
         <![CDATA[
           _SAMPLE_COMPLEX(matrix);
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 
 <info>

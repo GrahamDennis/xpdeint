@@ -114,8 +114,7 @@
   </sequence>
   
   <output format="binary">
-    <group>
-      <sampling basis="t" initial_sample="no">
+      <sampling_group basis="t" initial_sample="no">
         <moments>error_u error_v error_w error_x</moments>
         <dependencies>cross</dependencies>
         <![CDATA[
@@ -124,7 +123,6 @@
           error_w = abs(w - polar(1.0, -t));
           error_x = abs(x - polar(1.0, -t));
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>

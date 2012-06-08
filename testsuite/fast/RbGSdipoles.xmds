@@ -188,7 +188,7 @@
           ]]>
         </filter>
       </filters>
-      <operators noises="">
+      <operators>
         <operator kind="ip" constant="yes">
           <operator_names>T</operator_names>
           <![CDATA[
@@ -231,8 +231,7 @@
   </sequence>
   
   <output format="binary">
-    <group>
-      <sampling basis="x(16) y(16) z" initial_sample="no">
+      <sampling_group basis="x(16) y(16) z" initial_sample="no">
         <moments>phi1re dens0 densm1 phi1im dens1</moments>
         <dependencies>wavefunction</dependencies>
         <![CDATA[
@@ -242,23 +241,19 @@
           dens0 = mod2(phi0);
           phi1im = Im(phi1);
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
 
 
-    
-    <group>
-      <sampling basis="kx(16) ky(16) kz" initial_sample="no">
+
+      <sampling_group basis="kx(16) ky(16) kz" initial_sample="no">
         <moments>dens1</moments>
         <dependencies>wavefunction</dependencies>
         <![CDATA[
           dens1 = mod2(phi1);
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
  
-    <group>
-      <sampling basis="x(0) y(0) z(0)" initial_sample="yes">
+      <sampling_group basis="x(0) y(0) z(0)" initial_sample="yes">
         <moments>N1 N0 Nm1</moments>
         <dependencies>wavefunction</dependencies>
         <![CDATA[
@@ -266,10 +261,8 @@
           N0 = mod2(phi0);
           Nm1 = mod2(phim1);
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling basis="x(0) y(0) z(0)" initial_sample="no">
+      </sampling_group>
+      <sampling_group basis="x(0) y(0) z(0)" initial_sample="no">
         <moments>E1OnHbarRe E1OnHbarIm</moments>
         <operator kind="ex" constant="no">
           <operator_names>T2</operator_names>
@@ -282,8 +275,7 @@
           E1OnHbarRe =  Re(conj(phi1)*(T2[phi1] + (-VtrapOnHbar)*phi1 -c0OnHbar*S0*phi1 -c2OnHbar*(Sz*phi1 + Sminus*phi0) +gamma1B*phi1 -cdOnHbar*(phi1*Dz + phi0*Dminus)));
           E1OnHbarIm =  Im(conj(phi1)*(T2[phi1] + (-VtrapOnHbar)*phi1 -c0OnHbar*S0*phi1 -c2OnHbar*(Sz*phi1 + Sminus*phi0) +gamma1B*phi1 -cdOnHbar*(phi1*Dz + phi0*Dminus)));
         ]]>
-      </sampling>
-    </group>    
+      </sampling_group>
   </output>
 
 </simulation>

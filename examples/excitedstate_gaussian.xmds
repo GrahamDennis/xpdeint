@@ -117,23 +117,19 @@
   </sequence>
   
   <output>
-    <group>
-      <sampling basis="y" initial_sample="no">
+      <sampling_group basis="y" initial_sample="no">
         <moments>dens</moments>
         <dependencies>wavefunction</dependencies>
         <![CDATA[
           dens = mod2(phi1);
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling initial_sample="no">
+      </sampling_group>
+      <sampling_group initial_sample="no">
         <moments>N</moments>
         <dependencies>normalisation</dependencies>
         <![CDATA[
           N = Ncalc;
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>

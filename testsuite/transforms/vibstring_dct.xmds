@@ -75,24 +75,20 @@
     </integrate>
   </sequence>
   <output format="binary" filename="vibstring_dct.xsil">
-    <group>
-      <sampling basis="x" initial_sample="yes">
+      <sampling_group basis="x" initial_sample="yes">
         <moments>amp</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           amp = u;
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling basis="kx" initial_sample="no">
+      </sampling_group>
+      <sampling_group basis="kx" initial_sample="no">
         <moments>amp</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           amp = u;
         
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>

@@ -64,16 +64,14 @@
     </breakpoint>
   </sequence>
   <output format="binary">
-    <!-- <group>
-      <sampling initial_sample="no">
+    <!-- <sampling_group initial_sample="no">
         <dimension name="x" lattice="100" fourier_space="no" />
         <moments>amp</moments>
         <dependencies>oned</dependencies>
         <![CDATA[
           amp = u;
         ]]>
-      </sampling>
-    </group> -->
+      </sampling_group>  -->
   </output>
 
 <info>

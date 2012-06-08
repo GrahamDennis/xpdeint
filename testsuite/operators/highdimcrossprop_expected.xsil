@@ -137,18 +137,15 @@ dalpha12_dt  = ((-gama0 - gamac-i*(sw*eta*(z-sample_length/2) +(omc*omc)/delta))
   </sequence>
   
   <output format="hdf5" filename="highdimcrossprop.xsil">
-    <group>
-      <sampling basis="x(16) y(16) z(128)" initial_sample="yes">
+      <sampling_group basis="x(16) y(16) z(128)" initial_sample="yes">
         <moments>bprobereal bprobeimag</moments>
         <dependencies>cross1</dependencies>
         <![CDATA[
 bprobereal = E.Re();
 bprobeimag = E.Im();
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling basis="kx(16) ky(16) kz(128)" initial_sample="yes">
+      </sampling_group>
+      <sampling_group basis="kx(16) ky(16) kz(128)" initial_sample="yes">
         <moments>bproberealK bprobeimagK bintensityK</moments>
         <dependencies>cross1</dependencies>
         <![CDATA[
@@ -156,88 +153,71 @@ bprobeimag = E.Im();
           bprobeimagK = E.Im();
           bintensityK = mod2(E);
         ]]>
-      </sampling>
-     </group>
-    <group>
-      <sampling basis="x(16) y(16) z(256)" initial_sample="yes">
+      </sampling_group>
+       <sampling_group basis="x(16) y(16) z(256)" initial_sample="yes">
         <moments>balpreal12 balpimag12</moments>
         <dependencies>main</dependencies>
         <![CDATA[
 balpreal12 = (alpha12).Re();
 balpimag12 = (alpha12).Im();
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling basis="kx(2) ky(2) kz(256)" initial_sample="yes">
+      </sampling_group>
+      <sampling_group basis="kx(2) ky(2) kz(256)" initial_sample="yes">
         <moments>balpreal12K balpimag12K</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           balpreal12K = (alpha12).Re();
           balpimag12K = (alpha12).Im();
         ]]>
-      </sampling>
-     </group>
-     <group>
-      <sampling basis="x(0) y(0) z(512)" initial_sample="yes">
+      </sampling_group>
+        <sampling_group basis="x(0) y(0) z(512)" initial_sample="yes">
         <moments>bprobereal bprobeimag</moments>
         <dependencies>cross1</dependencies>
         <![CDATA[
 bprobereal = E.Re();
 bprobeimag = E.Im();
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling basis="x(0) y(16) z(0)" initial_sample="yes">
+      </sampling_group>
+      <sampling_group basis="x(0) y(16) z(0)" initial_sample="yes">
         <moments>bprobereal bprobeimag</moments>
         <dependencies>cross1</dependencies>
         <![CDATA[
 bprobereal = E.Re();
 bprobeimag = E.Im();
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling basis="x(16) y(0) z(0)" initial_sample="yes">
+      </sampling_group>
+      <sampling_group basis="x(16) y(0) z(0)" initial_sample="yes">
         <moments>bprobereal bprobeimag</moments>
         <dependencies>cross1</dependencies>
         <![CDATA[
 bprobereal = E.Re();
 bprobeimag = E.Im();
         ]]>
-      </sampling>
-    </group>
-     <group>
-      <sampling basis="x(0) y(0) z(512)" initial_sample="no">
+      </sampling_group>
+       <sampling_group basis="x(0) y(0) z(512)" initial_sample="no">
         <moments>balpreal12 balpimag12</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           balpreal12 = Re(alpha12);
           balpimag12 = Im(alpha12);
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling basis="x(16) y(0) z(0)" initial_sample="no">
+      </sampling_group>
+      <sampling_group basis="x(16) y(0) z(0)" initial_sample="no">
         <moments>balpreal12 balpimag12</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           balpreal12 = Re(alpha12);
           balpimag12 = Im(alpha12);
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling basis="x(0) y(16) z(0)" initial_sample="no">
+      </sampling_group>
+      <sampling_group basis="x(0) y(16) z(0)" initial_sample="no">
         <moments>balpreal12 balpimag12</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           balpreal12 = Re(alpha12);
           balpimag12 = Im(alpha12);
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 
 <info>

@@ -139,18 +139,16 @@ The possible attributes and attribute values for each element are not shown; see
       <:ref:`/sequence <SequenceElement>`>
   
       <:ref:`output <OutputElement>`>
-        <:ref:`group <GroupElement>`>
-          <:ref:`sampling <GroupElement>`>
-            <:ref:`dependencies <Dependencies>`> <:ref:`/dependencies <Dependencies>`>
-            <:ref:`moments <GroupElement>`> <:ref:`/moments <GroupElement>`>
-            <:ref:`operator <OperatorElement>`> ... <:ref:`/operator <OperatorElement>`>       
-            <![:ref:`CDATA <XMDSCSyntax>` [
-            ]]>
-          <:ref:`/sampling <GroupElement>`>
-        <:ref:`/group <GroupElement>`>
+        <:ref:`sampling_group <SamplingGroupElement>`>
+          <:ref:`dependencies <Dependencies>`> <:ref:`/dependencies <Dependencies>`>
+          <:ref:`moments <SamplingGroupElement>`> <:ref:`/moments <SamplingGroupElement>`>
+          <:ref:`operator <OperatorElement>`> ... <:ref:`/operator <OperatorElement>`>       
+          <![:ref:`CDATA <XMDSCSyntax>` [
+          ]]>
+        <:ref:`/sampling_group <SamplingGroupElement>`>
 
-        <:ref:`group <GroupElement>`> ... <:ref:`/group <GroupElement>`>
-        <:ref:`group <GroupElement>`> ... <:ref:`/group <GroupElement>`>
+        <:ref:`sampling_group <SamplingGroupElement>`> ... <:ref:`/sampling_group <SamplingGroupElement>`>
+        <:ref:`sampling_group <SamplingGroupElement>`> ... <:ref:`/sampling_group <SamplingGroupElement>`>
         ...
 
       <:ref:`/output <OutputElement>`>

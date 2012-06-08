@@ -50,8 +50,7 @@
   </sequence>
   
   <output format="binary">
-    <group>
-      <sampling initial_sample="yes">
+      <sampling_group initial_sample="yes">
         <dimension name="x" lattice="50" fourier_space="no" />
         <dimension name="y" lattice="0" fourier_space="no" />
         <moments>amp</moments>
@@ -59,8 +58,7 @@
         <![CDATA[
           amp = cos(u.re)*sin(u.im) - v.re*v.re + v.im; // Some crazy function to combine the quantities
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 
 <info>

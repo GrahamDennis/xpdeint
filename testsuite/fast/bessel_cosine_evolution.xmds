@@ -91,14 +91,12 @@
     </integrate>
   </sequence>
   <output format="hdf5">
-    <group>
-      <sampling basis="r z" initial_sample="no">
+      <sampling_group basis="r z" initial_sample="no">
         <moments>dens</moments>
         <dependencies>wavefunction</dependencies>
         <![CDATA[
           dens = mod2(phi);
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>

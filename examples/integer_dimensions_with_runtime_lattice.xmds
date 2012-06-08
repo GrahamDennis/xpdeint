@@ -51,14 +51,12 @@
   </sequence>
   
   <output format="hdf5">
-    <group>
-      <sampling basis="j" initial_sample="yes">
+      <sampling_group basis="j" initial_sample="yes">
         <moments>xR</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           xR = x.Re();
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>

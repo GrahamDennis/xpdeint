@@ -80,14 +80,12 @@
     </integrate>
   </sequence>
   <output>
-    <group>
-      <sampling basis="x(0) y" initial_sample="yes">
+      <sampling_group basis="x(0) y" initial_sample="yes">
         <moments>dens</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           dens = mod2(phi);
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>

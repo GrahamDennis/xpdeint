@@ -64,18 +64,15 @@
     </integrate>
   </sequence>
   <output format="binary">
-    <group>
-      <sampling initial_sample="yes">
+      <sampling_group initial_sample="yes">
         <dimension name="x" fourier_space="no" />
         <moments>amp</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           amp = u;
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling initial_sample="no">
+      </sampling_group>
+      <sampling_group initial_sample="no">
         <dimension name="x" fourier_space="yes" />
         <moments>amp</moments>
         <dependencies>main</dependencies>
@@ -83,8 +80,7 @@
           amp = u.re;
         
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 
 <info>

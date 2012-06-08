@@ -116,59 +116,47 @@
   </sequence>
   
   <output format="binary">
-    <group>
-      <sampling basis="r theta" initial_sample="yes">
+      <sampling_group basis="r theta" initial_sample="yes">
         <moments>WER</moments>
         <dependencies>WignerEven</dependencies>
         <![CDATA[
           WER = WE;
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling basis="s theta" initial_sample="yes">
+      </sampling_group>
+      <sampling_group basis="s theta" initial_sample="yes">
         <moments>WOR</moments>
         <dependencies>WignerOdd</dependencies>
         <![CDATA[
           WOR = WO;
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling basis="m r" initial_sample="yes">
+      </sampling_group>
+      <sampling_group basis="m r" initial_sample="yes">
         <moments>hER hEI</moments>
         <dependencies>evens</dependencies>
         <![CDATA[
           _SAMPLE_COMPLEX(hE);
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling basis="m s" initial_sample="yes">
+      </sampling_group>
+      <sampling_group basis="m s" initial_sample="yes">
         <moments>hOR hOI</moments>
         <dependencies>odds</dependencies>
         <![CDATA[
           _SAMPLE_COMPLEX(hO);
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling basis="m kr" initial_sample="yes">
+      </sampling_group>
+      <sampling_group basis="m kr" initial_sample="yes">
         <moments>hER hEI</moments>
         <dependencies>evens</dependencies>
         <![CDATA[
           _SAMPLE_COMPLEX(hE);
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling basis="m ks" initial_sample="yes">
+      </sampling_group>
+      <sampling_group basis="m ks" initial_sample="yes">
         <moments>hOR hOI</moments>
         <dependencies>odds</dependencies>
         <![CDATA[
           _SAMPLE_COMPLEX(hO);
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>

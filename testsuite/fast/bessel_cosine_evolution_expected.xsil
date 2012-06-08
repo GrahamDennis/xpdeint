@@ -91,8 +91,7 @@
     </integrate>
   </sequence>
   <output format="hdf5">
-    <group>
-      <sampling initial_sample="no">
+      <sampling_group initial_sample="no">
         <dimension name="r" />
         <dimension name="z" />
         <moments>dens</moments>
@@ -100,8 +99,7 @@
         <![CDATA[
           dens = mod2(phi);
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 
 <info>

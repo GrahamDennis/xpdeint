@@ -73,15 +73,13 @@
     </integrate>
   </sequence>
   <output format="binary">
-    <group>
-      <sampling basis="kx" initial_sample="yes">
+      <sampling_group basis="kx" initial_sample="yes">
         <moments>amp amp_reversed</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           amp = mod2(u);
           amp_reversed = mod2(u(kx => -kx));
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>

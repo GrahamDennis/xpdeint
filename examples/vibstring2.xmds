@@ -94,24 +94,20 @@
   </sequence>
   
   <output>
-    <group>
-      <sampling basis="x y(1)" initial_sample="yes">
+      <sampling_group basis="x y(1)" initial_sample="yes">
         <moments>amp</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           amp = Re(u);
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling initial_sample="no">
+      </sampling_group>
+      <sampling_group initial_sample="no">
         <moments>momR momentR</moments>
         <dependencies>integrated_u filter1</dependencies>
         <![CDATA[
           momR = mom.Re();
           momentR = moment.Re();
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>

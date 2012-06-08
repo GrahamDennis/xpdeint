@@ -50,15 +50,13 @@
   </sequence>
   
   <output format="binary">
-    <group>
-      <sampling initial_sample="yes">
+      <sampling_group initial_sample="yes">
         <moments>zR zI</moments>
         <dependencies>main</dependencies>
         <![CDATA[
             _SAMPLE_COMPLEX(z);
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 
 <info>

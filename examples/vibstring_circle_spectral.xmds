@@ -96,26 +96,21 @@
     </integrate>
   </sequence>
   <output>
-    <group>
-      <sampling basis="x y" initial_sample="yes">
+      <sampling_group basis="x y" initial_sample="yes">
         <moments>amp</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           amp = u.Re();
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling basis="kx ky" initial_sample="yes">
+      </sampling_group>
+      <sampling_group basis="kx ky" initial_sample="yes">
         <moments>amp</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           amp = u.Re();
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling basis="x(0) y(0)" initial_sample="yes">
+      </sampling_group>
+      <sampling_group basis="x(0) y(0)" initial_sample="yes">
         <moments>energy</moments>
         <dependencies>main</dependencies>
         <operator kind="ex" constant="no">
@@ -128,7 +123,6 @@
         <![CDATA[
           energy = mod2(uDot) + T_mu*mod2(Lx[u]) + T_mu*mod2(Ly[u]);
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>

@@ -108,23 +108,19 @@
   </sequence>
 
   <output filename="groundstate.xsil">
-    <group>
-      <sampling basis="y" initial_sample="yes">
+      <sampling_group basis="y" initial_sample="yes">
         <moments>norm_dens</moments>
         <dependencies>wavefunction normalisation</dependencies>
         <![CDATA[
           norm_dens = mod2(phi);
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling initial_sample="yes">
+      </sampling_group>
+      <sampling_group initial_sample="yes">
         <moments>norm</moments>
         <dependencies>normalisation</dependencies>
         <![CDATA[
           norm = Ncalc;
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>

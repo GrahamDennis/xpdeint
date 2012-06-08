@@ -103,15 +103,13 @@
   </sequence>
   
   <output>
-    <group>
-      <sampling basis="x y" initial_sample="yes">
+      <sampling_group basis="x y" initial_sample="yes">
         <moments>WR WI</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           WR = W.Re();
           WI = W.Im();
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>

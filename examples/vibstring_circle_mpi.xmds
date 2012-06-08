@@ -90,23 +90,19 @@
     </integrate>
   </sequence>
   <output>
-    <group>
-      <sampling basis="x y" initial_sample="yes">
+      <sampling_group basis="x y" initial_sample="yes">
         <moments>amp</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           amp = Re(u);
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling basis="kx ky" initial_sample="yes">
+      </sampling_group>
+      <sampling_group basis="kx ky" initial_sample="yes">
         <moments>amp</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           amp = mod2(u);
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>

@@ -70,15 +70,13 @@
   </sequence>
   
   <output>
-    <group>
-      <sampling basis="kx" initial_sample="yes">
+      <sampling_group basis="kx" initial_sample="yes">
         <moments>kdensphi kdenspsi</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           kdensphi = mod2(phi);
           kdenspsi = mod2(psi);
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>

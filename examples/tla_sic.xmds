@@ -81,24 +81,20 @@
   </sequence>
   
   <output>
-    <group>
-      <sampling basis="t(1000)" initial_sample="yes">
+      <sampling_group basis="t(1000)" initial_sample="yes">
         <moments>pow_dens</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           pow_dens = E*E;
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling basis="t(1000)" initial_sample="no">
+      </sampling_group>
+      <sampling_group basis="t(1000)" initial_sample="no">
         <moments>P_out N_out</moments>
         <dependencies>cross</dependencies>
         <![CDATA[
           P_out = P;
           N_out = N;
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>

@@ -147,17 +147,14 @@
   </sequence>
 
   <output filename="groundstate.xsil">
-    <group>
-      <sampling basis="y" initial_sample="no">
+      <sampling_group basis="y" initial_sample="no">
         <moments>norm_dens</moments>
         <dependencies>wavefunction normalisation</dependencies>
         <![CDATA[
           norm_dens = mod2(phi)/Ncalc;
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling basis="" initial_sample="no">
+      </sampling_group>
+      <sampling_group basis="" initial_sample="no">
         <moments>ER E_over_NR NR muR</moments>
         <dependencies>energy normalisation</dependencies>
         <![CDATA[
@@ -166,7 +163,6 @@
         NR = Ncalc;
         muR = mu;
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>

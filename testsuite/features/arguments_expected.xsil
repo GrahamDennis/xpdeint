@@ -83,8 +83,7 @@
     </integrate>
   </sequence>
   <output format="binary">
-    <group>
-      <sampling initial_sample="yes">
+      <sampling_group initial_sample="yes">
         <!-- Any dimension not mentioned is assumed to be in real space and its middle element will be sampled -->
         <!-- Note that dimensions can be in any order. Not that I can think of a reason why you would want to do that -->
         <dimension name="x" lattice="0" fourier_space="x" />
@@ -94,8 +93,7 @@
         <![CDATA[
           dens = mod2(phi);
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 
 <info>

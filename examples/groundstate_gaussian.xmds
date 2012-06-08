@@ -90,28 +90,23 @@
   </sequence>
 
   <output>
-    <group>
-      <sampling basis="y" initial_sample="no">
+      <sampling_group basis="y" initial_sample="no">
         <moments>dens</moments>
         <dependencies>wavefunction</dependencies>
         <![CDATA[
           dens = mod2(phi);
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
 
-    <group>
-      <sampling initial_sample="no">
+      <sampling_group initial_sample="no">
         <moments>N</moments>
         <dependencies>normalisation</dependencies>
         <![CDATA[
           N = Ncalc;
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
 
-    <group>
-      <sampling basis="y yp" initial_sample="no">
+      <sampling_group basis="y yp" initial_sample="no">
         <moments>g1R g1I g2</moments>
         <dependencies>wavefunction</dependencies>
         <![CDATA[
@@ -119,7 +114,6 @@
           _SAMPLE_COMPLEX(g1);
           g2 = mod2(phi(y => y)) * mod2(phi(y => yp));
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>

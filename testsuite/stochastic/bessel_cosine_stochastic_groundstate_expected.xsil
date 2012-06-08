@@ -123,15 +123,13 @@
     </integrate>
   </sequence>
   <output format="hdf5">
-    <group>
-      <sampling basis="r z" initial_sample="no">
+      <sampling_group basis="r z" initial_sample="no">
         <moments>norm_dens</moments>
         <dependencies>wavefunction normalisation</dependencies>
         <![CDATA[
           norm_dens = mod2(phi)/Ncalc;
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 
 <info>

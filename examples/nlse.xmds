@@ -71,35 +71,29 @@
   </sequence>
 
   <output>
-    <group>
-      <sampling basis="tau" initial_sample="yes">
+      <sampling_group basis="tau" initial_sample="yes">
         <moments>density</moments>
         <dependencies>wavefunction</dependencies>
         <![CDATA[
           density = mod2(phi);
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
 
-    <group>
-      <sampling basis="tau(0)" initial_sample="yes">
+      <sampling_group basis="tau(0)" initial_sample="yes">
         <moments>normalisation</moments>
         <dependencies>wavefunction</dependencies>
         <![CDATA[
           normalisation = mod2(phi);
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
 
-    <group>
-      <sampling basis="ktau(32)" initial_sample="yes">
+      <sampling_group basis="ktau(32)" initial_sample="yes">
         <moments>densityK</moments>
         <dependencies>wavefunction</dependencies>
         <![CDATA[
           densityK = mod2(phi);
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
 
   </output>
 </simulation>

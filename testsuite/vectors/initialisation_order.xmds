@@ -138,25 +138,21 @@
     </integrate>
   </sequence>
   <output format="hdf5">
-    <group>
-      <sampling basis="z" initial_sample="yes">
+      <sampling_group basis="z" initial_sample="yes">
         <moments>dens1 dens0</moments>
         <dependencies>wavefunction</dependencies>
         <![CDATA[
           dens1 = mod2(phi1);
           dens0 = mod2(phi0);
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling basis="kz" initial_sample="yes">
+      </sampling_group>
+      <sampling_group basis="kz" initial_sample="yes">
         <moments>dens1 dens0</moments>
         <dependencies>wavefunction</dependencies>
         <![CDATA[
           dens1 = mod2(phi1);
           dens0 = mod2(phi0);
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>

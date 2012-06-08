@@ -52,14 +52,12 @@
   </sequence>
   
   <output>
-    <group>
-      <sampling basis="x(512)" initial_sample="yes">
+      <sampling_group basis="x(512)" initial_sample="yes">
         <moments>density</moments>
         <dependencies>wavefunction</dependencies>
         <![CDATA[
           density = mod2(psi);
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>

@@ -66,8 +66,7 @@
     </integrate>
   </sequence>
   <output format="binary">
-    <group>
-      <sampling initial_sample="yes">
+      <sampling_group initial_sample="yes">
         <!-- Any dimension not mentioned is assumed to be in real space and its middle element will be sampled -->
         <!-- Note that this is different default behaviour to the filter operator. To integrate, put in a dimension -->
         <!-- with zero lattice points. -->
@@ -78,10 +77,8 @@
         <![CDATA[
           amp = u;
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling initial_sample="no">
+      </sampling_group>
+      <sampling_group initial_sample="no">
         <dimension name="x" lattice="50" fourier_space="yes" />
         <moments>amp</moments>
         <dependencies>main</dependencies>
@@ -89,8 +86,7 @@
           amp = u.re;
         
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 
 <info>

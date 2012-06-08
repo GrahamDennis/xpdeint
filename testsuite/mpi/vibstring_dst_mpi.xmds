@@ -70,23 +70,19 @@
     </integrate>
   </sequence>
   <output format="binary">
-    <group>
-      <sampling basis="x(32) y(32)" initial_sample="yes">
+      <sampling_group basis="x(32) y(32)" initial_sample="yes">
         <moments>amp</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           amp = u;
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling basis="kx(32) ky(32)" initial_sample="yes">
+      </sampling_group>
+      <sampling_group basis="kx(32) ky(32)" initial_sample="yes">
         <moments>amp</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           amp = mod2(u);
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>

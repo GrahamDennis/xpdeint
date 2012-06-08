@@ -78,8 +78,7 @@
   
   <!-- This part defines what data will be saved in the output file -->
   <output format="binary">
-    <group>
-      <sampling basis="sigma" initial_sample="yes">
+      <sampling_group basis="sigma" initial_sample="yes">
         <moments>xR yR zR</moments>
         <dependencies>position</dependencies>
         <![CDATA[
@@ -87,8 +86,7 @@
           yR = y;
           zR = z;
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 
 <info>

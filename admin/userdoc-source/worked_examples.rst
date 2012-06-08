@@ -109,35 +109,29 @@ where :math:`\phi` is a complex-valued field, and :math:`\Gamma(\tau)` is a :mat
       </sequence>
 
       <output>
-        <group>
-          <sampling basis="tau" initial_sample="yes">
-            <moments>density</moments>
-            <dependencies>wavefunction</dependencies>
-            <![CDATA[
-              density = mod2(phi);
-            ]]>
-          </sampling>
-        </group>
-
-        <group>
-          <sampling basis="tau(0)" initial_sample="yes">
-            <moments>normalisation</moments>
-            <dependencies>wavefunction</dependencies>
-            <![CDATA[
-              normalisation = mod2(phi);
-            ]]>
-          </sampling>
-        </group>
-
-        <group>
-          <sampling basis="ktau(32)" initial_sample="yes">
-            <moments>densityK</moments>
-            <dependencies>wavefunction</dependencies>
-            <![CDATA[
-              densityK = mod2(phi);
-            ]]>
-          </sampling>
-        </group>
+        <sampling_group basis="tau" initial_sample="yes">
+          <moments>density</moments>
+          <dependencies>wavefunction</dependencies>
+          <![CDATA[
+            density = mod2(phi);
+          ]]>
+        </sampling_group>
+        
+        <sampling_group basis="tau(0)" initial_sample="yes">
+          <moments>normalisation</moments>
+          <dependencies>wavefunction</dependencies>
+          <![CDATA[
+            normalisation = mod2(phi);
+          ]]>
+        </sampling_group>
+        
+        <sampling_group basis="ktau(32)" initial_sample="yes">
+          <moments>densityK</moments>
+          <dependencies>wavefunction</dependencies>
+          <![CDATA[
+            densityK = mod2(phi);
+          ]]>
+        </sampling_group>
 
       </output>
     </simulation>
@@ -192,19 +186,17 @@ Operators can be explicit (``kind="ex"``) or in the interaction picture (``kind=
 
 The output of a partial differential equation offers more possibilities than an ordinary differential equation, and we examine some in this example.
 
-For vectors with transverse dimensions, we can sample functions of the vectors on the full lattice or a subset of the points.  In the ``<sampling>`` element, we must add a string called "basis" that determines the space in which each transverse dimension is to be sampled, optionally followed by the number of points to be sampled in parentheses.  If the number of points is not specified, it will default to a complete sampling of all points in that dimension.  If a non-zero number of points is specified, it must be a factor of the lattice size for that dimension.  
+For vectors with transverse dimensions, we can sample functions of the vectors on the full lattice or a subset of the points.  In the ``<sampling_group>`` element, we must add a string called "basis" that determines the space in which each transverse dimension is to be sampled, optionally followed by the number of points to be sampled in parentheses.  If the number of points is not specified, it will default to a complete sampling of all points in that dimension.  If a non-zero number of points is specified, it must be a factor of the lattice size for that dimension.  
 
 .. code-block:: xpdeint
 
-      <group>
-        <sampling basis="tau" initial_sample="yes">
-          <moments>density</moments>
-          <dependencies>wavefunction</dependencies>
-          <![CDATA[
-            density = mod2(phi);
-          ]]>
-        </sampling>
-      </group>
+      <sampling_group basis="tau" initial_sample="yes">
+        <moments>density</moments>
+        <dependencies>wavefunction</dependencies>
+        <![CDATA[
+          density = mod2(phi);
+        ]]>
+      </sampling_group>
 
 The first output group samples the mod square of the vector "phi" over the full lattice of 128 points.
 
@@ -212,15 +204,13 @@ If the lattice parameter is set to zero points, then the corresponding dimension
 
 .. code-block:: xpdeint
 
-        <group>
-          <sampling basis="tau(0)" initial_sample="yes">
-            <moments>normalisation</moments>
-            <dependencies>wavefunction</dependencies>
-            <![CDATA[
-              normalisation = mod2(phi);
-            ]]>
-          </sampling>
-        </group>
+       <sampling_group basis="tau(0)" initial_sample="yes">
+         <moments>normalisation</moments>
+         <dependencies>wavefunction</dependencies>
+         <![CDATA[
+           normalisation = mod2(phi);
+         ]]>
+       </sampling_group>
 
 This second output group samples the normalisation of the wavefunction :math:`\int d\tau |\phi(\tau)|^2` over the domain of :math:`\tau`.  This output requires only a single real number per sample, so in the integrate element we have chosen to sample it many more times than the vectors themselves.
 
@@ -228,15 +218,13 @@ Finally, functions of the vectors can be sampled with their dimensions in Fourie
 
 .. code-block:: xpdeint
 
-         <group>
-              <sampling basis="ktau(32)" initial_sample="yes">
-                <moments>densityK</moments>
-                <dependencies>wavefunction</dependencies>
-                <![CDATA[
-                  densityK = mod2(phi);
-                ]]>
-              </sampling>
-        </group>
+        <sampling_group basis="ktau(32)" initial_sample="yes">
+          <moments>densityK</moments>
+          <dependencies>wavefunction</dependencies>
+          <![CDATA[
+            densityK = mod2(phi);
+          ]]>
+        </sampling_group>
 
 The final output group above samples the mod square of the Fourier-space wavefunction phi on a sample of 32 points.
 
@@ -305,16 +293,14 @@ Most algorithms employed by XMDS require the equations to be input in the Strato
       </sequence>
 
       <output>
-        <group>
-          <sampling initial_sample="yes">
-            <moments>zR zI</moments>
-            <dependencies>main</dependencies>
-            <![CDATA[
-              zR = z.Re();
-              zI = z.Im();
-            ]]>
-          </sampling>
-        </group>
+        <sampling_group initial_sample="yes">
+          <moments>zR zI</moments>
+          <dependencies>main</dependencies>
+          <![CDATA[
+            zR = z.Re();
+            zI = z.Im();
+          ]]>
+        </sampling_group>
       </output>
     </simulation>
 
@@ -453,15 +439,13 @@ where the noise terms :math:`\eta_j(x,t)` are Wiener differentials and the equat
       </sequence>
   
       <output>
-        <group>
-          <sampling basis="kx" initial_sample="yes">
-            <moments>pow_dens</moments>
-            <dependencies>main</dependencies>
-            <![CDATA[
-              pow_dens = mod2(phi);
-            ]]>
-          </sampling>
-        </group>
+        <sampling_group basis="kx" initial_sample="yes">
+          <moments>pow_dens</moments>
+          <dependencies>main</dependencies>
+          <![CDATA[
+            pow_dens = mod2(phi);
+          ]]>
+        </sampling_group>
       </output>
     </simulation>
 
@@ -596,15 +580,13 @@ where :math:`x_j` are complex-valued variables defined on a ring, such that :mat
       </sequence>
 
       <output>
-        <group>
-          <sampling basis="j" initial_sample="yes">
-            <moments>xR</moments>
-            <dependencies>main</dependencies>
-            <![CDATA[
-              xR = x.Re();
-            ]]>
-          </sampling>
-        </group>
+        <sampling_group basis="j" initial_sample="yes">
+          <moments>xR</moments>
+          <dependencies>main</dependencies>
+          <![CDATA[
+            xR = x.Re();
+          ]]>
+        </sampling_group>
       </output>
     </simulation>
 
@@ -739,15 +721,13 @@ with the added restriction that the derivative is forced to zero outside a certa
       </sequence>
 
       <output>
-        <group>
-          <sampling basis="x y" initial_sample="yes">
-            <moments>WR WI</moments>
-            <dependencies>main</dependencies>
-            <![CDATA[
-              _SAMPLE_COMPLEX(W);
-            ]]>
-          </sampling>
-        </group>
+        <sampling_group basis="x y" initial_sample="yes">
+          <moments>WR WI</moments>
+          <dependencies>main</dependencies>
+          <![CDATA[
+            _SAMPLE_COMPLEX(W);
+          ]]>
+        </sampling_group>
       </output>
     </simulation>
 
@@ -982,24 +962,21 @@ The code for this simulation can be found in ``examples/groundstate_workedexampl
       </sequence>
 
       <output>
-        <group>
-          <sampling basis="y" initial_sample="yes">
-            <moments>norm_dens</moments>
-            <dependencies>wavefunction normalisation</dependencies>
-            <![CDATA[
-              norm_dens = mod2(phi);
-            ]]>
-          </sampling>
-        </group>
-        <group>
-          <sampling initial_sample="yes">
-            <moments>norm</moments>
-            <dependencies>normalisation</dependencies>
-            <![CDATA[
-              norm = Ncalc;
-            ]]>
-          </sampling>
-        </group>
+        <sampling_group basis="y" initial_sample="yes">
+          <moments>norm_dens</moments>
+          <dependencies>wavefunction normalisation</dependencies>
+          <![CDATA[
+            norm_dens = mod2(phi);
+          ]]>
+        </sampling_group>
+        
+        <sampling_group initial_sample="yes">
+          <moments>norm</moments>
+          <dependencies>normalisation</dependencies>
+          <![CDATA[
+            norm = Ncalc;
+          ]]>
+        </sampling_group>
       </output>
     </simulation>
 
@@ -1063,7 +1040,7 @@ The next usage of a ``<filter>`` element in this program is inside the ``<integr
 
 Filters placed in an integration block are applied each integration step.  The "where" flag is used to determine whether the filter should be applied directly before or directly after each integration step.  The default value for the where flag is ``where="step start"``, but in this case we chose "step end" to make sure that the final output was normalised after the last integration step.
 
-At the end of the sequence element we introduce the ``<breakpoint>`` element.  This serves two purposes.  The first is a simple matter of convenience.  Often when we manage our input and output from a simulation, we are interested solely in storing the exact state of our integration vectors.  A breakpoint element does exactly that, storing the components of any vectors contained within, taking all the normal options of the ``<output>`` element but not requiring any ``<group>`` elements as that information is assumed.
+At the end of the sequence element we introduce the ``<breakpoint>`` element.  This serves two purposes.  The first is a simple matter of convenience.  Often when we manage our input and output from a simulation, we are interested solely in storing the exact state of our integration vectors.  A breakpoint element does exactly that, storing the components of any vectors contained within, taking all the normal options of the ``<output>`` element but not requiring any ``<sampling_group>`` elements as that information is assumed.
 
 .. code-block:: xpdeint
 
@@ -1202,24 +1179,20 @@ where :math:`H_n(u)` are the physicist's version of the Hermite polynomials.  Ra
       </sequence>
   
       <output>
-        <group>
-          <sampling basis="x" initial_sample="yes">
-            <moments>dens</moments>
-            <dependencies>wavefunction</dependencies>
-            <![CDATA[
-              dens = mod2(phi);
-            ]]>
-          </sampling>
-        </group>
-        <group>
-          <sampling basis="kx" initial_sample="yes">
-            <moments>dens</moments>
-            <dependencies>wavefunction</dependencies>
-            <![CDATA[
-              dens = mod2(phi);
-            ]]>
-          </sampling>
-        </group>
+        <sampling_group basis="x" initial_sample="yes">
+          <moments>dens</moments>
+          <dependencies>wavefunction</dependencies>
+          <![CDATA[
+            dens = mod2(phi);
+          ]]>
+        </sampling_group>
+        <sampling_group basis="kx" initial_sample="yes">
+          <moments>dens</moments>
+          <dependencies>wavefunction</dependencies>
+          <![CDATA[
+            dens = mod2(phi);
+          ]]>
+        </sampling_group>
       </output>
     </simulation>
 
@@ -1338,25 +1311,20 @@ where the last term is more commonly written as a matrix multiplication.  Writin
           </sequence>
 
           <output>
-            <group>
-              <sampling basis="x y j" initial_sample="yes">
-                <moments>density</moments>
-                <dependencies>wavefunction</dependencies>
-                <![CDATA[
-                  density = mod2(phi);
-                ]]>
-              </sampling>
-            </group>
-            <group>
-              <sampling basis="x(0) y(0) j" initial_sample="yes">
-                <moments>normalisation</moments>
-                <dependencies>wavefunction</dependencies>
-                <![CDATA[
-                  normalisation = mod2(phi);
-                ]]>
-              </sampling>
-            </group>
-
+            <sampling_group basis="x y j" initial_sample="yes">
+              <moments>density</moments>
+              <dependencies>wavefunction</dependencies>
+              <![CDATA[
+                density = mod2(phi);
+              ]]>
+            </sampling_group>
+            <sampling_group basis="x(0) y(0) j" initial_sample="yes">
+              <moments>normalisation</moments>
+              <dependencies>wavefunction</dependencies>
+              <![CDATA[
+                normalisation = mod2(phi);
+              ]]>
+            </sampling_group>
           </output>
         </simulation>
 

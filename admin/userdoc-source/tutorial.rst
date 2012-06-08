@@ -80,17 +80,15 @@ Below is a script that solves this problem (it's also saved as examples/lorenz.x
       
       <!-- This part defines what data will be saved in the output file -->
       <output format="hdf5" filename="lorenz.xsil">
-        <group>
-          <sampling initial_sample="yes">
-            <moments>xR yR zR</moments>
-            <dependencies>position</dependencies>
-            <![CDATA[
-              xR = x;
-              yR = y;
-              zR = z;
-            ]]>
-          </sampling>
-        </group>
+        <sampling_group initial_sample="yes">
+          <moments>xR yR zR</moments>
+          <dependencies>position</dependencies>
+          <![CDATA[
+            xR = x;
+            yR = y;
+            zR = z;
+          ]]>
+        </sampling_group>
       </output>
     </simulation>
 
@@ -213,7 +211,7 @@ Next, we have the ``<vector>`` element.
         </initialisation>
       </vector>
 
-We can define multiple vectors, but here we only need the variables that we wish to integrate.  We named this vector "position", as it defines the position in phase space.  These variables are real-valued (as opposed to, say complex numbers), so we define ``type="real"``.  The ``<components>`` element defines the names of the elements of this vector, which we have called 'x', 'y' and 'z'.  Finally, we provide the initial values of the variables in a CDATA block within the ``<initialisation>`` element.
+We can define multiple vectors, but here we only need the variables that we wish to integrate.  We named this vector "position", as it defines the position in phase space.  These variables are real-valued (as opposed to, say, complex numbers), so we define ``type="real"``.  The ``<components>`` element defines the names of the elements of this vector, which we have called 'x', 'y' and 'z'.  Finally, we provide the initial values of the variables in a CDATA block within the ``<initialisation>`` element.
 
 Now we come to the heart of the simulation, where we define the evolution of our vector.  This evolution is held in the ``<sequence>`` element, which contains an ordered sequence of actions upon any defined vectors.  Vectors can be altered with a ``<filter>`` element, or integrated in the propagation dimension with an ``<integrate>`` element.
 
@@ -242,21 +240,19 @@ The ``<samples>`` element says that the values of the output groups will be samp
 .. code-block:: xpdeint
     
   <output format="hdf5" filename="lorenz.xsil">
-    <group>
-      <sampling initial_sample="yes">
-        <moments>xR yR zR</moments>
-        <dependencies>position</dependencies>
-        <![CDATA[
-          xR = x;
-          yR = y;
-          zR = z;
-        ]]>
-      </sampling>
-    </group>
+    <sampling_group initial_sample="yes">
+      <moments>xR yR zR</moments>
+      <dependencies>position</dependencies>
+      <![CDATA[
+        xR = x;
+        yR = y;
+        zR = z;
+      ]]>
+    </sampling_group>
   </output>
 
 The two top-level arguments in the ``<output>`` element are "format" and "filename".  Here we define the output filename, although it would have defaulted to this value.  We also choose the format to be HDF5, which is why the simulation resulted in the binary file "lorenz.h5" as well as "lorenz.xsil".  If we had instead said ``format="ascii"``, then all of the output data would have been written in text form in "lorenz.xsil".
 
-The ``<output>`` element can contain any non-zero number of ``<group>`` elements, which specify the entire output of the program.  They allow for subsampling, integration of some or all of the transverse dimensions, and/or conversion of some dimensions into Fourier space, but these will be described in more detail in the following examples.  Here, we have a ``<sampling>`` element that specifies that the initial state should be sampled.  We have a ``<dependencies>`` element that specifies which vectors are needed for this output.  We specify the list of output variables with a ``<moments>`` element, and then define them in CDATA block.  In this case, we are simply defining the three variables that define our phase space.
+The ``<output>`` element can contain any non-zero number of ``<sampling_group>`` elements, which specify the entire output of the program.  They allow for subsampling, integration of some or all of the transverse dimensions, and/or conversion of some dimensions into Fourier space, but these will be described in more detail in the following examples.  We have a ``<dependencies>`` element that specifies which vectors are needed for this output.  We specify the list of output variables with a ``<moments>`` element, and then define them in CDATA block.  In this case, we are simply defining the three variables that define our phase space.
 
 And that's it.  This is quite a large framework to integrate three coupled ordinary differential equations, but the advantage of using XMDS2 is that vastly more complicated simulations can be performed without increasing the length or complexity of the XMDS2 script significantly.  The :ref:`WorkedExamples` section will provide more complicated examples with stochastic equations and partial differential equations.  If you are moved to solve your own problem using XMDS2, then perhaps the most efficient method will be to take one of the worked examples and adapt it to your needs.  All of the examples in the documentation can be found in the "/examples" folder included with the installation.

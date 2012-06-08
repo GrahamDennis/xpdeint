@@ -51,14 +51,12 @@
     </integrate>
   </sequence>
   <output format="binary">
-    <group>
-      <sampling basis="j k(1)" initial_sample="yes">
+      <sampling_group basis="j k(1)" initial_sample="yes">
         <moments>xR</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           xR = x.Re();
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>

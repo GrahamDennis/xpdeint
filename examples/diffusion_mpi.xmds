@@ -53,23 +53,19 @@
   </sequence>
   
   <output>
-    <group>
-      <sampling basis="y x(0)" initial_sample="yes">
+      <sampling_group basis="y x(0)" initial_sample="yes">
         <moments>dens</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           dens = mod2(phi);
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling basis="y x" initial_sample="yes">
+      </sampling_group>
+      <sampling_group basis="y x" initial_sample="yes">
         <moments>dens</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           dens = mod2(phi);
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>

@@ -116,8 +116,7 @@
   </sequence>
   
   <output filename="double_precision_noise_tests.xsil" format="hdf5">
-    <group>
-      <sampling basis="x" initial_sample="yes">
+      <sampling_group basis="x" initial_sample="yes">
         <moments>Phi1 Phi2 Phi3</moments>
         <dependencies>main</dependencies>
         <![CDATA[
@@ -125,7 +124,6 @@
           Phi2 = phi2;
           Phi3 = phi3;
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>

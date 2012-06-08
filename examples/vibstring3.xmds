@@ -112,8 +112,7 @@
   </sequence>
   
   <output>
-    <group>
-      <sampling basis="x y" initial_sample="yes">
+      <sampling_group basis="x y" initial_sample="yes">
         <computed_vector name="filter3" dimensions="" type="complex">
           <components>sparemomentagain</components>
           <!-- If the moments are of type 'real', then all dimensions that aren't integrated
@@ -137,17 +136,14 @@
           amp = mod2(u + moment);
           ke = mod2(L[u]);
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling initial_sample="no">
+      </sampling_group>
+      <sampling_group initial_sample="no">
         <moments>momR momentR</moments>
         <dependencies>integrated_u filter1</dependencies>
         <![CDATA[
           momR = mom.Re();
           momentR = moment.Re();
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>

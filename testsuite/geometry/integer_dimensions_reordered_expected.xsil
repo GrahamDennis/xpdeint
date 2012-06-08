@@ -54,16 +54,14 @@
     </integrate>
   </sequence>
   <output format="binary">
-    <group>
-      <sampling initial_sample="yes">
+      <sampling_group initial_sample="yes">
         <dimension name="j" />
         <moments>xR</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           xR = x;
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 
 <info>

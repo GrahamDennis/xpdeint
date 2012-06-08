@@ -79,36 +79,30 @@
     </integrate>
   </sequence>
   <output format="binary">
-    <group>
-      <sampling basis="x y" initial_sample="yes">
+      <sampling_group basis="x y" initial_sample="yes">
         <moments>dens</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           dens = mod2(psi);
         
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling basis="nx ny" initial_sample="no">
+      </sampling_group>
+      <sampling_group basis="nx ny" initial_sample="no">
         <moments>dens</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           dens = mod2(psi);
         
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling basis="x(0) y(0)" initial_sample="yes">
+      </sampling_group>
+      <sampling_group basis="x(0) y(0)" initial_sample="yes">
         <moments>mean_x mean_sigmay</moments>
         <dependencies>main normalisation</dependencies>
         <![CDATA[
           mean_x = mod2(psi)*x/N;
           mean_sigmay = sqrt(integral_y2/N);
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 
 <info>

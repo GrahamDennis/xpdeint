@@ -124,8 +124,7 @@
   </sequence>
   
   <output>
-    <group>
-      <sampling basis="y" initial_sample="no">
+      <sampling_group basis="y" initial_sample="no">
         <moments>norm_dens</moments>
         <dependencies>wavefunction normalisation</dependencies>
         <operator kind="functions">
@@ -139,7 +138,6 @@
         <![CDATA[
           norm_dens = mod2(phi)/Ncalc;
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>

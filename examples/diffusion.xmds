@@ -52,15 +52,13 @@
   </sequence>
   
   <output>
-    <group>
-      <sampling basis="x(4) y(8)" initial_sample="yes">
+      <sampling_group basis="x(4) y(8)" initial_sample="yes">
         <moments>dens empty</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           dens = mod2(phi);
           empty = x+100*y;
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>

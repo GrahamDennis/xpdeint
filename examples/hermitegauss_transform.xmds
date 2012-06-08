@@ -53,34 +53,28 @@
     </integrate>
   </sequence>
   <output>
-    <group>
-      <sampling basis="x" initial_sample="no">
+      <sampling_group basis="x" initial_sample="no">
         <moments>dens</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           dens = mod2(psi);
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling basis="nx" initial_sample="no">
-        <moments>dens</moments>
-        <dependencies>main</dependencies>
-        <![CDATA[
-          dens = mod2(psi);
-        
-        ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling basis="kx" initial_sample="no">
+      </sampling_group>
+      <sampling_group basis="nx" initial_sample="no">
         <moments>dens</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           dens = mod2(psi);
         
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
+      <sampling_group basis="kx" initial_sample="no">
+        <moments>dens</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          dens = mod2(psi);
+        
+        ]]>
+      </sampling_group>
   </output>
 </simulation>

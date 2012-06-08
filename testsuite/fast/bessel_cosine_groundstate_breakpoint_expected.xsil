@@ -128,8 +128,7 @@
     </breakpoint>
   </sequence>
   <output format="binary">
-    <group>
-      <sampling initial_sample="no">
+      <sampling_group initial_sample="no">
         <dimension name="r" />
         <dimension name="z" />
         <moments>norm_dens</moments>
@@ -137,8 +136,7 @@
         <![CDATA[
           norm_dens = mod2(phi)/Ncalc;
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 
 <info>

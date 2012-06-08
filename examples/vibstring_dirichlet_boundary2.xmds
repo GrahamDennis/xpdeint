@@ -86,14 +86,12 @@
   </sequence>
   
   <output>
-    <group>
-      <sampling basis="x" initial_sample="yes">
+      <sampling_group basis="x" initial_sample="yes">
         <moments>amp</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           amp = u.Re();
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>

@@ -84,25 +84,20 @@
   </sequence>
 
   <output>
-    <group>
-      <sampling basis="x y j" initial_sample="yes">
+    <sampling_group basis="x y j" initial_sample="yes">
         <moments>density</moments>
         <dependencies>wavefunction</dependencies>
         <![CDATA[
           density = mod2(phi);
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling basis="x(0) y(0) j" initial_sample="yes">
+    </sampling_group>
+    <sampling_group basis="x(0) y(0) j" initial_sample="yes">
         <moments>normalisation</moments>
         <dependencies>wavefunction</dependencies>
         <![CDATA[
           normalisation = mod2(phi);
         ]]>
-      </sampling>
-    </group>
-
+    </sampling_group>
   </output>
 </simulation>
 

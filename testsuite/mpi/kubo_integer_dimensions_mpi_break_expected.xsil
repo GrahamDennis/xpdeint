@@ -57,18 +57,15 @@
   </sequence>
   
   <output format="binary">
-    <group>
-      <sampling basis="j(0)" initial_sample="yes">
+      <sampling_group basis="j(0)" initial_sample="yes">
         <moments>zR zI</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           zR = z.Re()/_lattice_j;
           zI = z.Im()/_lattice_j;
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling basis="j" initial_sample="yes">
+      </sampling_group>
+      <sampling_group basis="j" initial_sample="yes">
         <moments>zR zI</moments>
         <dependencies>main</dependencies>
         <![CDATA[
@@ -76,8 +73,7 @@
           zR = z.Re();
           zI = z.Im();
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 
 <info>

@@ -78,14 +78,12 @@
   </sequence>
   
   <output format="binary">
-    <group>
-      <sampling basis="j(0) kx" initial_sample="yes">
+      <sampling_group basis="j(0) kx" initial_sample="yes">
         <moments>pow_dens</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           pow_dens = mod2(phi);
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>

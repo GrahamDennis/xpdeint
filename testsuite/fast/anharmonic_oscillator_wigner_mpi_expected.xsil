@@ -118,8 +118,7 @@
   </sequence>
   
   <output format="binary">
-    <group>
-      <sampling initial_sample="yes">
+      <sampling_group initial_sample="yes">
         <!-- Any dimension not mentioned is assumed to be in real space and its middle element will be sampled -->
         <!-- Note that this is different default behaviour to the filter operator. To integrate, put in a dimension -->
         <!-- with zero lattice points. -->
@@ -131,10 +130,8 @@
         <![CDATA[
           WER = WE;
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling initial_sample="yes">
+      </sampling_group>
+      <sampling_group initial_sample="yes">
         <dimension name="s" fourier_space="no" />
         <dimension name="theta" />
         <moments>WOR</moments>
@@ -142,10 +139,8 @@
         <![CDATA[
           WOR = WO;
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling initial_sample="yes">
+      </sampling_group>
+      <sampling_group initial_sample="yes">
         <dimension name="m"/>
         <dimension name="r" />
         <moments>hER hEI</moments>
@@ -153,10 +148,8 @@
         <![CDATA[
           _SAMPLE_COMPLEX(hE);
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling initial_sample="yes">
+      </sampling_group>
+      <sampling_group initial_sample="yes">
         <dimension name="m"/>
         <dimension name="s" />
         <moments>hOR hOI</moments>
@@ -164,10 +157,8 @@
         <![CDATA[
           _SAMPLE_COMPLEX(hO);
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling initial_sample="yes">
+      </sampling_group>
+      <sampling_group initial_sample="yes">
         <dimension name="m"/>
         <dimension name="r" fourier_space="yes" />
         <moments>hER hEI</moments>
@@ -175,10 +166,8 @@
         <![CDATA[
           _SAMPLE_COMPLEX(hE);
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling initial_sample="yes">
+      </sampling_group>
+      <sampling_group initial_sample="yes">
         <dimension name="m"/>
         <dimension name="s" fourier_space="yes" />
         <moments>hOR hOI</moments>
@@ -186,8 +175,7 @@
         <![CDATA[
           _SAMPLE_COMPLEX(hO);
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 
 <info>

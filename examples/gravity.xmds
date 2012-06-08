@@ -80,8 +80,7 @@
   </sequence>
   
   <output>
-    <group>
-      <sampling basis="j" initial_sample="yes">
+      <sampling_group basis="j" initial_sample="yes">
         <moments>xR yR vxR vyR</moments>
         <dependencies>motion</dependencies>
         <![CDATA[
@@ -90,10 +89,8 @@
           vxR = vx;
           vyR = vy;
         ]]>
-      </sampling>
-    </group>
-    <group>
-      <sampling basis="j(0)" initial_sample="yes">
+      </sampling_group>
+      <sampling_group basis="j(0)" initial_sample="yes">
         <moments>energy px py</moments>
         <dependencies>mass motion</dependencies>
         <![CDATA[
@@ -105,7 +102,6 @@
           px = m*vx;
           py = m*vy;
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>

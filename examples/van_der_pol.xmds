@@ -49,15 +49,13 @@
     </integrate>
   </sequence>
   <output>
-    <group>
-      <sampling initial_sample="yes">
+      <sampling_group initial_sample="yes">
         <moments>yR yDotR</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           yR = y;
           yDotR = yDot;
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>

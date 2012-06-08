@@ -61,14 +61,12 @@
   </sequence>
   
   <output>
-    <group>
-      <sampling basis="kx" initial_sample="yes">
+      <sampling_group basis="kx" initial_sample="yes">
         <moments>pow_dens</moments>
         <dependencies>main</dependencies>
         <![CDATA[
           pow_dens = mod2(phi);
         ]]>
-      </sampling>
-    </group>
+      </sampling_group>
   </output>
 </simulation>
