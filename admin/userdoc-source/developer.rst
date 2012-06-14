@@ -6,7 +6,7 @@ Developers need to know more than users.  For example, they need to know about t
 .. _TestScripts:
 
 Test scripts
-============
+------------
 
 Every time you add a new feature and/or fix a new and exciting bug, it is a great idea to make sure that the new feature works and/or the bug stays fixed.  Fortunately, it is pleasantly easy to add a test case to the testing suite.
 
@@ -37,37 +37,37 @@ Every time you add a new feature and/or fix a new and exciting bug, it is a grea
 .. _TestingElement:
 
 Testing element
----------------
+~~~~~~~~~~~~~~~
 
 
 
 .. _CommandLineElement:
 
 command_line element
---------------------
+~~~~~~~~~~~~~~~~~~~~
 
 
 .. _InputXSILFileElement:
 
 input_xsil_file element
------------------------
+~~~~~~~~~~~~~~~~~~~~~~~
 
 
 .. _XSILFileElement:
 
 xsil_file element
------------------
+~~~~~~~~~~~~~~~~~
 
 
 .. _MomentGroupElement:
 
 moment_group element
---------------------
+~~~~~~~~~~~~~~~~~~~~
 
 
 
 Steps to update ``XMDS`` script validator (XML schema)
-======================================================
+------------------------------------------------------
 
 1. Modify ``xpdeint/support/xpdeint.rnc``. This is a RelaxNG compact file, which specifies the XML schema which is only used for issuing warnings to users about missing or extraneous XML tags / attributes.
 2. Run ``make`` in ``xpdeint/support/`` to update ``xpdeint/support/xpdeint.rng``. This is the file which is actually used, which is in RelaxNG format, but RelaxNG compact is easier to read and edit.
@@ -75,10 +75,10 @@ Steps to update ``XMDS`` script validator (XML schema)
 
 
 Directory layout
-================
+----------------
 
 XMDS2's code and templates
---------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 All ``.tmpl`` files are Cheetah template files.  These are used to generate C++ code.  These templates are compiled as part of the XMDS2 build process to ``.py`` files of the same name.  Do not edit the generated ``.py`` files, always edit the ``.tmpl`` files and regenerate the corresponding ``.py`` files with ``make``.
 
@@ -110,7 +110,7 @@ All ``.tmpl`` files are Cheetah template files.  These are used to generate C++ 
 
 
 Support files
--------------
+~~~~~~~~~~~~~
 
 * ``admin/``: Documentation source, Linux installer and release scripts.
 	* ``developer-doc-source/``: source for epydoc python class documentation (generated from python code).
