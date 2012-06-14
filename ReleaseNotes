@@ -1,7 +1,56 @@
-Changes since xmds 2.0:
+**** XMDS 2.1 "Happy Mollusc" ****
 
-* chunked_output feature.  (r2426-r2429)
-* Noise vectors can now be used in non-uniform dimensions (e.g. dimensions using the Bessel transform for cylindrical symmetry) (r2433)
-* geometry_matching_mode="loose" for HDF5 (r2441-r2442)
+XMDS 2.1 is a significant upgrade with many improvements and bug fixes since 2.0. We also now have installers for Linux and Mac OS X, so you no longer have to build XMDS from source! See http://www.xmds.org/installation.html for details about the installers.
 
+The documentation has been expanded significantly with a better tutorial, more worked examples, and description of all XMDS 2 script elements.  Take a look at the new documentation at http://www.xmds.org
+
+Existing users should note that this release introduces a more concise syntax for moment groups.  You can now use:
+
+    <sampling_group initial_sample="yes" basis="x y z">
+        ...
+    </sampling_group>
+
+Instead of:
+
+    <group>
+        <sampling initial_sample="yes" basis="x y z">
+            ...
+        </sampling>
+    </group>
+
+Another syntax change is that the initial basis of a vector should be specified with `initial_basis` instead of `initial_space`.
+
+In both cases, although the old syntax is not described in the documentation, it is still supported, so existing scripts will work without any changes.
+
+Other changes in XMDS 2.1 include:
+
+* The `lattice` attribute for dimensions can now be specified at run-time.  Previously only the minimum and maximum values of the domain could be specified at run-time.  See http://www.xmds.org/reference_elements.html#validation for details.
+* `noise_vector`s can now be used in non-uniform dimensions (e.g. dimensions using the Bessel transform for cylindrical symmetry).
+* "loose" `geometry_matching_mode` for HDF5 vector initialisation.  This enables extending the simulation grid from one simulation to the next, or coarsening or refining a grid when importing.
+* `vector`s can now be initialised by integrating over dimensions of other vectors.  `computed_vector`s always supported this, now `vector`s do too.
+* Update to latest version of waf, which is used for compiling simulations and detecting FFTW, HDF5, etc. This should lead to fewer waf-related problems.
 * Bug fixes.
+
+**** XMDS 2.0 "Shiny!" ****
+
+XMDS 2.0 is a major upgrade which has been rewritten from the ground up to make it easier for us to apply new features. And there are many. XMDS 2.0 is faster and far more versatile than previous versions, allowing the efficient integration of almost any initial value problem on regular domains.
+
+The feature list includes:
+
+* Quantities of different dimensionalities. So you can have a 1D potential and a 3D wavefunction.
+* Integrate more than one vector (in more than one geometry), so you can now simultaneously integrate a PDE and a coupled ODE (or coupled PDEs of different dimensions).
+* Non-Fourier transformations including the Bessel basis, Spherical Bessel basis and the Hermite-Gauss (harmonic oscillator) basis.
+* The ability to have more than one kind of noise (gaussian, poissonian, etc) in a simulation.
+* Integer-valued dimensions with non-local access. You can have an array of variables and access different elements of that array.
+* Significantly better error reporting. When errors are found when compiling the script they will almost always be reported with the corresponding line of your script, instead of the generated source.
+* `IP`/`EX` operators are separate from the integration algorithm, so you can have both `IP` and `EX` operators in a single integrate block. Also, `EX` operators can act on arbitrary code, not just vector components. (e.g. `L[phi*phi]`).
+* Cross propagation in the increasing direction of a given dimension or in the decreasing dimension. And you can have more than one cross-propagator in a given integrator (going in different directions or dimensions).
+* Faster Gaussian noises.
+* The ability to calculate spatial correlation functions.
+* OpenMP support.
+* MPI support.
+* Output moment groups use less memory when there isn't a `post_processing` element.
+* Generated source is indented correctly.
+* An `xmds1`-like script file format.
+* `xmds1`-like generated source.
+* All of the integrators from `xmds1` (`SI`, `RK4`, `ARK45`, `RK9`, `ARK89`).
