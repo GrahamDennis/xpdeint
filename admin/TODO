@@ -1,10 +1,5 @@
 * Add the ability to distribute stochastic simulations using MPI with the scheduling method
 
-* Documentation needs to be written (both user and developer). The developer documentation
-  needs to be converted from current straight comments to use docstrings.
-
-* Example library
-
 * In adaptive integrators, the ability to set an absolute cutoff (per vector component) in addition to a relative cutoff
   for step-error calculations.
 
@@ -55,10 +50,3 @@ Testcases needed:
 * xsil2graphics2 needs finishing.
 
 * Trigger support (Ask Michael Hush)
-
-* Make it possible to output variables in moment groups without having to write stupid code like:
-  xR = x;
-  yR = y;
-  It's redundant.  If 'x' is an output variable, and 'x' is a component of a dependency, then it's obvious!
-
-* What about complex variables?  There it's not as clear.  Perhaps we should only do this for reals.
