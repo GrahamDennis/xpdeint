@@ -647,7 +647,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
             if ((%(latticeString)s) != ((%(maximumString)s) - (%(minimumString)s) + 1))
               _LOG(_ERROR_LOG_LEVEL, "ERROR: The lattice value of '%(latticeString)s'=%%li doesn't match with the domain "
                                      "'%(minimumString)s'=%%li to '%(maximumString)s'=%%li (%%li lattice points).\\n",
-                                     %(latticeString)s, %(minimumString)s, %(maximumString)s, ((%(maximumString)s) - (%(minimumString)s)+1));
+                                     long(%(latticeString)s), long(%(minimumString)s), long(%(maximumString)s), long((%(maximumString)s) - (%(minimumString)s)+1));
             """ % locals())
         else:
           # Only for 'long' dimensions
