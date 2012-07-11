@@ -802,7 +802,7 @@ Example syntax::
                     Ncalc = mod2(phi);
                 ]]>
             </evaluation>
-        </vector>
+        </computed_vector>
     </simulation>
 
 
