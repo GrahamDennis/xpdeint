@@ -83,8 +83,7 @@ const real _hermite_gauss_weights_${dimName}[] = {${wrapArray($hermiteGaussWeigh
         @if not fieldDimRep or not isinstance(fieldDimRep, NonUniformDimensionRepresentation) or geometryDimRep.arrayName == fieldDimRep.arrayName
           @continue
         @end if
-        @assert (geometryDimRep.lattice % fieldDimRep.lattice) == 0
-        @if geometryDimRep.lattice == fieldDimRep.lattice
+        @if geometryDimRep.runtimeLattice == fieldDimRep.runtimeLattice
 memcpy(${fieldDimRep.arrayName}, ${geometryDimRep.arrayName}, sizeof(real)*${geometryDimRep.globalLattice});
 memcpy(${fieldDimRep.stepSizeArrayName}, ${geometryDimRep.stepSizeArrayName}, sizeof(real) * ${geometryDimRep.globalLattice});
         @else
