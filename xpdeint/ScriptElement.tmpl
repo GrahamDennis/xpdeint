@@ -399,6 +399,23 @@ ${postDimensionLoopClosingCode[dimRep.name], extraIndent=indentLevel}@slurp
 #undef $componentName
     @end for
   @end for
+  @# loop over geometry dimensions undefining dimension step variable names for those that
+  @# aren't in this field, but are in any of the $vectors fields, unless we have an index override for it.
+  @for $dimension in $geometry.dimensions
+    @if $field.hasDimension($dimension)
+      @continue
+    @end if
+    @#
+    @if len([v for v in vectors if v.field.hasDimension(dimension)]) == 0
+      @continue
+    @end if
+    @#
+    @set $dimRep = dimension.inBasis(basis)
+    @if indexOverrides.has_key(dimRep.name)
+      @continue
+    @end if
+#undef d${dimRep.name}
+  @end for
   @#
 ${insertCodeForFeaturesInReverseOrder('loopOverFieldInBasisWithVectorsAndInnerContentEnd', featureOrdering, featuresDict)}@slurp
   @#

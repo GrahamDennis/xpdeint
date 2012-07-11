@@ -64,6 +64,6 @@ _normbesseljzeros_${parent.name}[$index] * ${name}_max@slurp
 @def createCoordinateVariableForSinglePointSample
   @#
 ${type} ${name} = ${arrayName}[0];
-#define d${name} ${stepSizeArrayName}[0]
+#define d${name} (${stepSizeArrayName}[0] * (${volumePrefactor}))
   @#
 @end def
