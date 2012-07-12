@@ -110,7 +110,7 @@ def configure(conf):
         KWs['_skip'] = True
         del KWs['uselib_store']
         options = [
-            {'stlib': lib,   'msg': "%s (static library)" % KWs['msg'], 'errmsg' = "no (will try dynamic library instead)"},
+            {'stlib': lib,   'msg': "%s (static library)" % KWs['msg'], 'errmsg': "no (will try dynamic library instead)"},
             {'lib'  : lib,   'msg': "%s (dynamic library)" % KWs['msg']},
         ]
         if not conf.env['STDLIB_MARKER']:
