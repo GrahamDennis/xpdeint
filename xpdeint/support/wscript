@@ -120,6 +120,8 @@ def configure(conf):
             # And if we can't compile statically, there's no point trying later on.
                 {'lib': lib}
             ]
+        if not 'errmsg' in KWs:
+            KWs['errmsg'] = "no (no problem)"
             
         return try_options(uselib_store, options, KWs)
     
@@ -446,7 +448,8 @@ def configure(conf):
             header_name='fftw3.h',
             function_name='fftw_execute',
             uselib_store='fftw3',
-            msg = "Checking for FFTW3"
+            msg = "Checking for FFTW3",
+            errmsg = "Couldn't find FFTW3.  Please install."
         )
         
         check_cxx(
