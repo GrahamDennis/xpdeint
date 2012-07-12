@@ -42,11 +42,10 @@ echo
 echo "In both cases an SVN repository will be created locally, and you can update"
 echo "to the latest version of the code at any time by running the command"
 echo "  make update"
-echo "in the XMDS 2.1 directory."
+echo "in the xmds-2.1/ directory."
 echo
 echo
 
-DEB_INSTALL=0
 RPM_INSTALL=0
 if [ `which apt-get | wc -l` -ne 0 ]; then
   echo; echo "apt-get found; assuming Debian packaging scheme"; echo
@@ -66,7 +65,7 @@ else
   exit
 fi
 
-XMDS2_install_directory=$HOME"/XMDS_2.1"
+XMDS2_install_directory=$HOME"/xmds-2.1"
 NUM_CPUS=`cat /proc/cpuinfo | grep processor | wc -l`
 DEVELOPER_INSTALL=0
 XMDS_CONFIGURE_STRING=""
@@ -478,7 +477,7 @@ echo
 echo "Release notes and instructions can be found in" $XMDS2_install_directory
 echo
 echo "You can always update to the latest version of XMDS at any time by running \"make update\" "
-echo "in the top level XMDS_2.1 directory."
+echo "in the top level xmds-2.1/ directory."
 echo
 echo "NOTES ON YOUR PARTICULAR INSTALL:"
 echo
