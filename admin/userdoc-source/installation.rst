@@ -92,9 +92,21 @@ This package includes binaries for `OpenMPI <http://www.open-mpi.org>`_, `FFTW <
 Manual installation from source
 ===============================
 
-This installation guide will take you through a typical full install step by step, although many of the packages are likely already available on any given system.
+This installation guide will take you through a typical full install step by step. A large part of this procedure is obtaining and installing other libraries that XMDS2 requires, before installing XMDS2 itself. 
 
-This guide adds extra notes for users wishing to install XMDS2 using the SVN repository.  This requires a few extra steps, but allows you to edit your copy, and/or update your copy very efficiently (with all the usual advantages and disadvantages of using unreleased material).
+While the instructions below detail these packages individually, if you have administrative privileges (or can request packages from your administrator) and if you are using an Ubuntu, Debian, Fedora or Red Hat linux distribution, you can install all required and optional dependencies (but not XMDS2 itself) via
+
+Ubuntu / Debian::
+
+  sudo apt-get install build-essential subversion libopenmpi-dev openmpi-bin python-dev python-setuptools python-cheetah python-numpy python-pyparsing python-lxml python-mpmath libhdf5-serial-dev libgsl0-dev python-sphinx python-h5py libatlas-base-dev
+
+Fedora / Red Hat::
+
+  sudo yum install gcc gcc-c++ make automake subversion openmpi-devel python-devel python-setuptools python-cheetah numpy gsl-devel python-sphinx libxml2-devel libxslt-devel atlas-devel hdf5-devel pyparsing pyparsing python-lxml python-mpmath h5py
+
+You will still have to download and build FFTW 3.3 from source (see below) since prebuilt packages with MPI and AVX support are not currently available in the repositories.
+
+Also note that this guide adds extra notes for users wishing to install XMDS2 using the SVN repository.  This requires a few extra steps, but allows you to edit your copy, and/or update your copy very efficiently (with all the usual advantages and disadvantages of using unreleased material).
 
 0. You will need a copy of XMDS2.  
     The current release can be found at `Sourceforge <http://sourceforge.net/projects/xmds/>`_, and downloaded as a single file.
@@ -115,9 +127,8 @@ This guide adds extra notes for users wishing to install XMDS2 using the SVN rep
 
    * Mac OS X: It is pre-installed on Mac OS X 10.5 or later.
    * Linux: It should be pre-installed. If not, install using your favourite package manager.
-   * Windows: One way to install Python and related packages is via the `Enthought Python Distribution <http://www.enthought.com/products/epd.php>`_. 
    
-    We require python 2.4 or greater. (2.5 recommended). XMDS2 does not support Python 3.
+    We require python 2.4 or greater. XMDS2 does not support Python 3.
    
 
 #. Install setuptools.
@@ -200,7 +211,7 @@ This guide adds extra notes for users wishing to install XMDS2 using the SVN rep
            (Mac OS X Snow Leopard comes with version 1.2.1). 
            After downloading the source, execute ``python ./setup.py build`` in the source directory, and then ``python ./setup.py install`` to install it.  
 
-#. Install XMDS2 into your python path by running (in the XMDS_2.1/ directory):
+#. Install XMDS2 into your python path by running (in the xmds-2.1/ directory):
     ``sudo ./setup.py develop``
 
     If you want to install it into your home directory, type ``./setup.py develop --prefix=~``
@@ -209,23 +220,23 @@ This guide adds extra notes for users wishing to install XMDS2 using the SVN rep
 
     * Developer only instructions: 
         The Cheetah templates (\*.tmpl) must be compiled into python.
-        To do this, run ``make`` in the xmds2/ directory.
+        To do this, run ``make`` in the xmds-2.1/ directory.
 
     * Developer-only instructions: 
-        If you have 'numpy' installed, test XMDS2 by typing ``./run_tests.py`` in the xmds2/ directory.
+        If you have 'numpy' installed, test XMDS2 by typing ``./run_tests.py`` in the xmds-2.1/ directory.
         The package 'numpy' is one of the optional packages, with installation instructions below.
        
     * Developer-only instructions: 
         To build the user documentation, you first need to install sphinx, either via your package manager or:
         ``sudo easy_install Sphinx``
 
-        Then, to build the documentation, in the XMDS_2.1/admin/userdoc-source/ directory run: ``make html``
+        Then, to build the documentation, in the xmds-2.1/admin/userdoc-source/ directory run: ``make html``
 
         If this results in an error, you may need to run ``sudo ./setup.py develop``
 
-        The generated html documentation will then be found at XMDS_2.1/documentation/index.html
+        The generated html documentation will then be found at xmds-2.1/documentation/index.html
 
-**Congratulations!** You should now have a fully operational copy of xmds2 and xsil2graphics2.  You can test your copy using examples from the "xmds2/examples" directory, and follow the worked examples in the :ref:`QuickStartTutorial` and :ref:`WorkedExamples`.
+**Congratulations!** You should now have a fully operational copy of xmds2 and xsil2graphics2.  You can test your copy using examples from the "xmds-2.1/examples" directory, and follow the worked examples in the :ref:`QuickStartTutorial` and :ref:`WorkedExamples`.
 
 
 
