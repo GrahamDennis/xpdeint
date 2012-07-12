@@ -278,8 +278,8 @@ if [ $DEB_INSTALL -eq 1 ]; then
   sudo apt-get -y install build-essential subversion libopenmpi-dev openmpi-bin python-dev python-setuptools python-cheetah python-numpy python-pyparsing python-lxml python-mpmath libhdf5-serial-dev libgsl0-dev python-sphinx python-h5py wget
 
   # Find the optimum ATLAS version (i.e. CBLAS implementation) and install it
-  # Older versions of Ubuntu offered pre-optimized packages for various architectures,
-  # but newer versions don't, as most of the optimizations are now done at build time.
+  # Older versions of Ubuntu/Debian offered pre-optimized packages for various architectures,
+  # but newer versions don't, and only offer a single generic package.
   if [ `cat /proc/cpuinfo | grep sse3 |wc -l` -gt 0 ]; then
     if [ `cat /proc/cpuinfo | grep "Core(TM) i7" | wc -l` -ne 0 ] && [ `apt-cache --names-only search libatlas-corei7sse3-dev | wc -l` -ne 0 ]; then
       sudo apt-get -y install libatlas-corei7sse3-dev
@@ -296,6 +296,9 @@ elif [ $RPM_INSTALL -eq 1 ]; then
   # Begin RPM packages install
   sudo yum -y install gcc gcc-c++ make automake subversion openmpi-devel python-devel python-setuptools python-cheetah numpy gsl-devel python-sphinx wget libxml2-devel libxslt-devel
   
+  # Find the optimum ATLAS version (i.e. CBLAS implementation) and install it
+  # Older versions of Fedora offered pre-optimized packages for various architectures,
+  # but newer versions don't, and only offer a single generic package.
   SUCCESS=0
   if [ $SUCCESS -eq 0 ] && [ `cat /proc/cpuinfo | grep sse3 |wc -l` -gt 0 ]; then
     sudo yum -y install atlas-sse3-devel
