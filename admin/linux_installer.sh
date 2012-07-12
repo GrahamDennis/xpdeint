@@ -395,11 +395,12 @@ if [ `which mpicc | wc -l` -eq 0 ]; then
     if [ -r /etc/profile.d/openmpi.sh ]; then
         source /etc/profile.d/openmpi.sh;
         load_openmpi;
-        COMPLETION_MESSAGE="\nYou must add the line 'load_openmpi' to the end of your login script (probably ~/.bashrc) to use MPI.\n"
+        COMPLETION_MESSAGE="\nYou must add the line 'load_openmpi' to the end of your login \nscript (probably ~/.bashrc) to use MPI.\n If you wish to load a \ndifferent MPI implementation, you can use 'module avail' to see \nwhat implementations are available as alternatives."
     elif [ `which modulecmd | wc -l` -eq 1 ]; then
+        # This is the case for Fedora
         source /etc/profile
         module load mpi;
-        COMPLETION_MESSAGE="\nYou must add the line 'module load mpi' to the end of your login script (probably ~/.bashrc) to use MPI.\n"
+        COMPLETION_MESSAGE="\nYou must add the line 'module load mpi' to the end of your \nlogin script (probably ~/.bashrc) to use MPI.\nIf you have multiple versions of MPI installed on your system \nand wish to use one that's not the default implementation, you \ncan use 'module avail' to see what is available and 'module load' \nthat version instead.\n"
     fi
 fi
 
