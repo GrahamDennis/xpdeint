@@ -113,12 +113,14 @@ def configure(conf):
             {'stlib': lib,   'msg': "%s (static library)" % KWs['msg']},
             {'lib'  : lib,   'msg': "%s (dynamic library)" % KWs['msg']},
         ]
-        if not conf.env['STLIB_MARKER']:
+        if not conf.env['FINAL_LINK_VAR']:
             options = [
-            # On systems link Mac OS X, it seems we can't force the linker to prefer static libraries over dynamic ones
+            # On systems like Mac OS X, it seems we can't force the linker to prefer static libraries over dynamic ones
             # Except of course by including them by listing the full path.
+            # And if we can't compile statically, there's no point trying later on.
                 {'lib': lib}
             ]
+            
         return try_options(uselib_store, options, KWs)
     
     
@@ -144,7 +146,7 @@ def configure(conf):
             conf.env['FINAL_LINK_VAR'] = conf.env['STLIB_MARKER']
             result = conf.check_cxx(
                 msg = "Checking whether we can compile statically",
-                errmsg = "no",
+                errmsg = "no (no problem)",
                 mandatory = False,
             )
             if not result:
