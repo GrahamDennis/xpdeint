@@ -1,0 +1,112 @@
+<simulation xmds-version="2">
+  <name> nonlinear_SE </name>
+  
+  <features>
+    <benchmark />
+    <auto_vectorise />
+    <globals>
+      <![CDATA[
+        real N = 10.0; // number of atoms
+        real g = 1.0;  // nonlinear coupling
+      ]]>
+    </globals>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="x" lattice="512"
+                 domain="(-7, 7)" />
+    </transverse_dimensions>
+  </geometry>
+
+  <vector name="potential" type="real">
+    <components> V </components>
+    <initialisation>
+      <![CDATA[
+        V = 0.5*x*x;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <!-- Although the density is real, we need to Fourier transform it, so it must be complex -->
+  <computed_vector name="density" type="complex">
+  	<components>dens</components>
+	<evaluation>
+		<dependencies>wavefunction</dependencies>
+		<![CDATA[
+			dens = mod2(psi);
+		]]>
+	</evaluation>
+  </computed_vector>
+  
+  <computed_vector name="electrostatic" type="complex">
+  	<components> V_E </components>
+	<evaluation>
+		<!-- 
+		We compute the electrostatic self-potential in fourier space where the convolution
+		is simply a local multiplication.  We've taken the analytical fourier transform of 1/r in 3D
+		here, but we've needed to truncate the upper limit of the integral to keep it finite.
+		This is simply because if the system is assumed to be periodic, then it will be everywhere in space,
+		not just the place we think of it.  Truncating the integral corresponds to not considering the
+		electrostatic potential due to the other copies (which we obviously don't want to include).
+		
+		If the BEC is kept to the inner half of the domain, the correct truncation of the integral will be
+		half the width of the domain (the minimum separation between copies).
+		-->
+		<dependencies basis="kx">density</dependencies>
+		<![CDATA[
+				  // The analytic term is (1/(kx*kx) * (1 - cos(kx * R))) where R is the upper limit on the
+				  // Fourier transform.  This has zero limit near kx = 0 analytically, but the computer
+				  // won't know that when it tries to divide by zero.
+				  V_E = +1e-1 * dens * 2 / (kx * kx) * (1.0 - cos(kx * 0.5* (_max_x - _min_x)));
+		if (kx == 0.0)
+			V_E = 0.0;
+		]]>
+	</evaluation>
+  </computed_vector>
+  
+  <vector name="wavefunction" type="complex">
+    <components> psi </components>
+    <initialisation>
+      <![CDATA[
+        psi = sqrt(N) * pow(M_PI, -0.25) * exp(-x*x/2);
+      ]]>
+    </initialisation>
+  </vector>
+
+  <sequence>
+    <integrate algorithm="ARK45" interval="6.28" 
+                                 tolerance="1e-5">
+      <samples> 50 </samples>
+      <operators>
+
+        <operator kind="ip" constant="yes">
+          <operator_names> T </operator_names>
+          <![CDATA[
+            T = -i * 0.5 * kx * kx;
+          ]]>
+        </operator>
+
+        <integration_vectors>
+          wavefunction
+        </integration_vectors> 
+        <dependencies> potential electrostatic </dependencies>
+        <![CDATA[
+          dpsi_dt = T[psi] - i * (V + V_E + g * mod2(psi)) * psi;
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+
+  <output format="hdf5">
+    <sampling_group initial_sample="yes" basis="x">
+      <dependencies> wavefunction </dependencies>
+      <moments> psireal psiimag </moments>
+      <![CDATA[
+        psireal = Re(psi);
+        psiimag = Im(psi);
+      ]]>
+    </sampling_group>
+  </output>
+</simulation>

@@ -1,0 +1,81 @@
+<simulation xmds-version="2">
+  <name> nonlinear_SE </name>
+  
+  <features>
+    <benchmark />
+    <auto_vectorise />
+    <globals>
+      <![CDATA[
+        real N = 10.0; // number of atoms
+        real g = 1.0;  // nonlinear coupling
+      ]]>
+    </globals>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="x" lattice="256"
+                 domain="(-7, 7)" />
+	  <dimension name="y" lattice="256"
+		  	 	 domain="(-7, 7)" />	
+	  <dimension name="z" lattice="256"
+		  	 	 domain="(-7, 7)" />	
+    </transverse_dimensions>
+  </geometry>
+
+  <driver name="distributed-mpi" />
+
+  <vector name="potential" type="real">
+    <components> V </components>
+    <initialisation>
+      <![CDATA[
+        V = 0.5*(x*x + y*y + z*z);
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <vector name="wavefunction" type="complex">
+    <components> psi </components>
+    <initialisation>
+      <![CDATA[
+        psi = sqrt(N) * pow(M_PI, -0.25) * exp(-(x*x + y*y + z*z)/2);
+      ]]>
+    </initialisation>
+  </vector>
+
+  <sequence>
+    <integrate algorithm="ARK45" interval="6.28" 
+                                 tolerance="1e-5">
+      <samples> 0 </samples>
+      <operators>
+
+        <operator kind="ip" constant="yes">
+          <operator_names> T </operator_names>
+          <![CDATA[
+            T = -i * 0.5 * (kx * kx + ky * ky + kz*kz);
+          ]]>
+        </operator>
+
+        <integration_vectors>
+          wavefunction
+        </integration_vectors> 
+        <dependencies> potential </dependencies>
+        <![CDATA[
+          dpsi_dt = T[psi] - i * (V + g * mod2(psi)) * psi;
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+
+  <output format="hdf5">
+    <sampling_group initial_sample="yes" basis="x y z">
+      <dependencies> wavefunction </dependencies>
+      <moments> psireal psiimag </moments>
+      <![CDATA[
+        psireal = Re(psi);
+        psiimag = Im(psi);
+      ]]>
+    </sampling_group>
+  </output>
+</simulation>
