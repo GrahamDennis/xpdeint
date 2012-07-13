@@ -101,6 +101,7 @@ ${globalLattice}/2@slurp
 @def createCoordinateVariableForSinglePointSample
   @#
 ${type} ${name} = ${arrayName}[${globalLattice}/2];
+#define d${name} (${stepSize} * (${volumePrefactor}))
   @#
 @end def
 

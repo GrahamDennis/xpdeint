@@ -102,6 +102,7 @@ lround(${name}/${stepSize}) + ${globalLattice}/2@slurp
 @def createCoordinateVariableForSinglePointSample
   @#
 ${type} ${name} = 0.0;
+#define d${name} (${stepSize} * (${volumePrefactor}))
   @#
 @end def
 
