@@ -62,6 +62,8 @@ def configure(conf):
     env.uselib_dependencies = {}
     
     def _check_cxx(**KWs):
+        # Don't execute when cross-compiling
+        KWs['execute'] = not conf.env['is_cross_compile']
         KWs['mandatory'] = False
         
         if 'cxxflags' in KWs:
@@ -152,6 +154,14 @@ def configure(conf):
             )
             if not result:
                 del conf.env['FINAL_LINK_VAR']
+        
+        conf.env['is_cross_compile'] = not conf.check_cxx(
+            msg = "Checking whether we are cross-compiling",
+            okmsg = "no",
+            errmsg = "maybe, assuming we are",
+            execute = True,
+            mandatory = False,
+        )
         
         if conf.env['CXX_NAME'] == 'gcc':
             machine_optimisations = [
