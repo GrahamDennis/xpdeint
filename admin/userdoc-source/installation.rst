@@ -235,6 +235,14 @@ Also note that this guide adds extra notes for users wishing to install XMDS2 us
         If this results in an error, you may need to run ``sudo ./setup.py develop``
 
         The generated html documentation will then be found at xmds-2.1/documentation/index.html
+		
+#. Configure XMDS2 by typing ``xmds2 --reconfigure``.  If XMDS2 is unable to find a library, you can tell XMDS2 where these libraries are located by adding ``include`` and ``lib`` search paths using the ``--include-path`` and ``--lib-path`` options.  For example, if FFTW3 is installed in ``/apps/fftw3`` with headers in ``/apps/fftw3/include/`` and the libraries in ``/apps/fftw3/lib``, (re)configure XMDS2 by typing:
+
+	* ``xmds2 --reconfigure --include-path /apps/fftw3/include --lib-path /apps/fftw3/lib``.
+	
+	If you need to use additional compiler or link flags for XMDS2 to use certain libraries, set the ``CXXFLAGS`` or ``LINKFLAGS`` environment variables before calling ``xmds2 --reconfigure``.  For example, to pass the compiler flag ``-pedantic`` and the link flag ``-lm``, use:
+	
+	* ``CXXFLAGS="-pedantic" LINKFLAGS="-lm" xmds2 --reconfigure``.
 
 **Congratulations!** You should now have a fully operational copy of xmds2 and xsil2graphics2.  You can test your copy using examples from the "xmds-2.1/examples" directory, and follow the worked examples in the :ref:`QuickStartTutorial` and :ref:`WorkedExamples`.
 

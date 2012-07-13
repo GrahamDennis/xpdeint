@@ -87,7 +87,7 @@ def run_config(includePaths = None, libPaths = None):
     env.append_unique('LIBPATH', libPaths)
     env.append_unique('RPATH', libPaths)
     
-    for key in ['CXX']:
+    for key in ['CXX', 'CXXFLAGS', 'LINKFLAGS']:
         if key in os.environ:
             env[key] = os.environ[key]
     
