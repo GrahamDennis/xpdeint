@@ -143,6 +143,14 @@ def configure(conf):
             """,
             errmsg = "Please specify a C++ compiler."
         )
+
+        conf.env['is_cross_compile'] = not conf.check_cxx(
+            msg = "Checking whether we are cross-compiling",
+            okmsg = "no",
+            errmsg = "maybe, assuming we are",
+            execute = True,
+            mandatory = False,
+        )
         
         # If we have a static library marker, try to link the simulation statically for performance.
         if conf.env['STLIB_MARKER']:
@@ -151,17 +159,11 @@ def configure(conf):
                 msg = "Checking whether we can link to only static libraries",
                 errmsg = "no (will use dynamic libraries)",
                 mandatory = False,
+                execute = not conf.env['is_cross_compile']
             )
             if not result:
                 del conf.env['FINAL_LINK_VAR']
         
-        conf.env['is_cross_compile'] = not conf.check_cxx(
-            msg = "Checking whether we are cross-compiling",
-            okmsg = "no",
-            errmsg = "maybe, assuming we are",
-            execute = True,
-            mandatory = False,
-        )
         
         if conf.env['CXX_NAME'] == 'gcc':
             machine_optimisations = [
