@@ -15,6 +15,16 @@ It also has commands to configure XMDS2 and recheck the installation.  If your p
 
     $ xmds2 --configure --include-path /path/to/include --lib-path /path/to/lib 
 
+Alternatively, you can set the ``CXXFLAGS`` or ``LINKFLAGS`` environment variables before calling ``xmds2 --reconfigure``.  For example, to pass the compiler flag ``-pedantic`` and the link flag ``-lm`` using the bash shell, use:
+
+.. code-block:: bash
+
+    $ export CXXFLAGS="-pedantic"
+    $ export LINKFLAGS="-lm" 
+    $ xmds2 --reconfigure``
+    
+This method can also be used to change the default compilers for standard and parallel processing, using the CXX and MPICXX flags respectively.
+
 Running XMDS2 with the '--configure' option also searches for packages that have been installed since you last installed or configured XMDS2.  If you wish to run 'xmds2 --configure' with the same extra options as last time, simply use the command:
 
 .. code-block:: bash
