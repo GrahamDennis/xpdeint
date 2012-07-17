@@ -77,7 +77,7 @@ parse_command_line_arguments() {
   for i in $@; do
     if [ $i = "--help" ] || [ $i = "-h" ]; then
       echo
-      echo "This is the XMDS 2..1 installer."
+      echo "This is the XMDS "$XMDS_VERSION" installer."
       echo
       echo "Usage: ./install [options]"
       echo
