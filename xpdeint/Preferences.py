@@ -2,7 +2,7 @@
 # encoding: utf-8
 import os
 
-versionString = '2.1 "Happy Mollusc"'
+versionString = '2.1.1 "Happy Mollusc"'
 
 if 'XMDS_USER_DATA' in os.environ:
     xpdeintUserDataPath = os.environ['XMDS_USER_DATA']

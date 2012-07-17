@@ -11,7 +11,10 @@
 # directory will be owned by root, which can cause permissioning and deletion
 # problems. Only the copying of the binaries to locations outside the user's
 # directories should be run as sudo, which is taken care of within this script.
- 
+
+XMDS_VERSION="2.1.1"
+KNOWN_GOOD_XMDS_REVISION="2734"
+
 if [ "$(whoami)" = "root" ]; then
   echo
   echo "It seems you are running this installer as root or with the \"sudo\" "
@@ -32,7 +35,7 @@ echo
 echo
 echo "*** XMDS2 installer v0.4 ***"
 echo
-echo "A standard install downloads the XMDS 2.1 version of the code. This"
+echo "A standard install downloads the XMDS $XMDS_VERSION version of the code. This"
 echo "is the default."
 echo
 echo "A developer install will download the latest cutting-edge version of"
@@ -42,7 +45,7 @@ echo
 echo "In both cases an SVN repository will be created locally, and you can update"
 echo "to the latest version of the code at any time by running the command"
 echo "  make update"
-echo "in the xmds-2.1/ directory."
+echo "in the xmds-$XMDS_VERSION/ directory."
 echo
 echo
 
@@ -65,7 +68,7 @@ else
   exit
 fi
 
-XMDS2_install_directory=$HOME"/xmds-2.1"
+XMDS2_install_directory=$HOME"/xmds-$XMDS_VERSION"
 NUM_CPUS=`cat /proc/cpuinfo | grep processor | wc -l`
 DEVELOPER_INSTALL=0
 XMDS_CONFIGURE_STRING=""
@@ -74,7 +77,7 @@ parse_command_line_arguments() {
   for i in $@; do
     if [ $i = "--help" ] || [ $i = "-h" ]; then
       echo
-      echo "This is the XMDS 2.1 installer."
+      echo "This is the XMDS 2..1 installer."
       echo
       echo "Usage: ./install [options]"
       echo
@@ -422,7 +425,7 @@ if [ $DEVELOPER_INSTALL -eq 1 ]; then
 else
   # Fetch a known good version of the XMDS2 source code from sourceforge
   cd $XMDS2_install_directory
-  svn checkout -r 2714 https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
+  svn checkout -r $KNOWN_GOOD_XMDS_REVISION https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
 fi
 
 # Compile the Cheetah templates into Python
@@ -473,7 +476,7 @@ fi
 
 
 echo
-echo "If no errors are displayed above, XMDS 2.1 is installed!"
+echo "If no errors are displayed above, XMDS $XMDS_VERSION is installed!"
 echo
 echo "To see the HTML documentation, point your browser at" $XMDS2_install_directory"/documentation/index.html"
 echo "or go to www.xmds.org"
@@ -481,7 +484,7 @@ echo
 echo "Release notes and instructions can be found in" $XMDS2_install_directory
 echo
 echo "You can always update to the latest version of XMDS at any time by running \"make update\" "
-echo "in the top level xmds-2.1/ directory."
+echo "in the top level xmds-$XMDS_VERSION/ directory."
 echo
 echo "NOTES ON YOUR PARTICULAR INSTALL:"
 echo

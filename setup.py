@@ -17,7 +17,7 @@ for root, dirs, files in os.walk('xpdeint'):
         packages.append(root.replace(os.sep, '.'))
 
 setup(name="xmds2",
-      version="2.1",
+      version="2.1.1",
       description="Stochastic ODE/PDE integrator",
       url="http://xmds.sourceforge.net",
       license="BSD",
