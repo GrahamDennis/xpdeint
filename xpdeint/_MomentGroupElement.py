@@ -128,8 +128,6 @@ class _MomentGroupElement (ScriptElement):
     geometry = self.getVar('geometry')
     singlePointSamplingDims = [dim.name for dim in geometry.dimensions \
         if any(dimRep.canonicalName in self.singlePointSamplingBasis for dimRep in dim.representations)]
-    print 'singlePointSamplingDims', singlePointSamplingDims, 'basis', self.singlePointSamplingBasis
-    print [dim.name for dim in self.codeBlocks['sampling'].field.dimensions]
     
     loopingDimensionNames = set([dim.name for dim in self.samplingField.dimensions]).union(singlePointSamplingDims)
     for dependency in self.codeBlocks['sampling'].dependencies:
