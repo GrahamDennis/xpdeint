@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="nlse_sampling.xsil" expected="nlse_sampling_expected.xsil" absolute_tolerance="1e-6" relative_tolerance="1e-5" />
+  </testing>
+
+  <name>nlse_sampling</name>
+
+  <author>Joe Hope</author>
+  <description>
+    The nonlinear Schrodinger equation in one dimension, 
+    which is a simple partial differential equation.  
+    We introduce several new features in this script.
+  </description>
+
+  <features>
+      <benchmark />
+      <bing />
+      <fftw plan="patient" />
+      <openmp />
+      <auto_vectorise />
+      <globals>
+          <![CDATA[
+          const double energy = 4;
+          const double vel = 0.3;
+          const double hwhm = 1.0;
+          ]]>
+       </globals>
+     </features>
+
+  <geometry>
+      <propagation_dimension> xi </propagation_dimension>
+      <transverse_dimensions>
+        <dimension name="tau" lattice="128"  domain="(-6, 6)" />
+      </transverse_dimensions>
+   </geometry>
+
+  <vector name="wavefunction" type="complex" dimensions="tau">
+    <components> phi </components>
+    <initialisation>
+      <![CDATA[
+      const double w0 = hwhm*sqrt(2/log(2));
+      const double amp = sqrt(energy/w0/sqrt(M_PI/2));
+      phi = amp*exp(-tau*tau/w0/w0)*exp(i*vel*tau);
+      ]]>
+    </initialisation>
+  </vector>
+
+  <vector name="dampingVector" type="real">
+    <components> Gamma </components>
+    <initialisation>
+      <![CDATA[
+      Gamma=1.0*(1-exp(-pow(tau*tau/4.0/4.0,10)));
+      ]]>
+    </initialisation>
+  </vector>
+
+  <sequence>
+    <integrate algorithm="ARK45" interval="20.0" tolerance="1e-7">
+      <samples>10 100 10</samples>
+      <operators>
+        <integration_vectors>wavefunction</integration_vectors>
+        <operator kind="ex" constant="yes">
+          <operator_names>Ltt</operator_names>
+          <![CDATA[
+            Ltt = -i*ktau*ktau*0.5;
+          ]]>
+        </operator>
+        <![CDATA[
+        dphi_dxi = Ltt[phi] - phi*Gamma + i*mod2(phi)*phi;
+        ]]>
+        <dependencies>dampingVector</dependencies>
+      </operators>
+    </integrate>
+  </sequence>
+
+  <output>
+      <sampling_group basis="tau" initial_sample="yes">
+        <moments>density</moments>
+        <dependencies>wavefunction</dependencies>
+        <![CDATA[
+          density = mod2(phi);
+        ]]>
+      </sampling_group>
+
+      <sampling_group basis="tau(0)" initial_sample="yes">
+        <moments>normalisation</moments>
+        <dependencies>wavefunction</dependencies>
+        <![CDATA[
+          normalisation = mod2(phi);
+        ]]>
+      </sampling_group>
+
+      <sampling_group basis="ktau(1)" initial_sample="yes">
+        <moments>densityK</moments>
+        <dependencies>wavefunction</dependencies>
+        <![CDATA[
+          densityK = mod2(phi);
+        ]]>
+      </sampling_group>
+
+  </output>
+</simulation>
+

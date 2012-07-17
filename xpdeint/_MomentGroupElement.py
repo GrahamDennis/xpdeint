@@ -125,7 +125,13 @@ class _MomentGroupElement (ScriptElement):
           vector.field._basisForBasisCache.clear()
           vector.initialBasis = tuple(b for b in vector.initialBasis if not b is propDimRep.canonicalName)
     
-    loopingDimensionNames = set([dim.name for dim in self.samplingField.dimensions]).union(self.singlePointSamplingBasis)
+    geometry = self.getVar('geometry')
+    singlePointSamplingDims = [dim.name for dim in geometry.dimensions \
+        if any(dimRep.canonicalName in self.singlePointSamplingBasis for dimRep in dim.representations)]
+    print 'singlePointSamplingDims', singlePointSamplingDims, 'basis', self.singlePointSamplingBasis
+    print [dim.name for dim in self.codeBlocks['sampling'].field.dimensions]
+    
+    loopingDimensionNames = set([dim.name for dim in self.samplingField.dimensions]).union(singlePointSamplingDims)
     for dependency in self.codeBlocks['sampling'].dependencies:
       missingLoopingDimensionNames = set(dim.name for dim in dependency.field.dimensions).difference(loopingDimensionNames)
       if missingLoopingDimensionNames:
