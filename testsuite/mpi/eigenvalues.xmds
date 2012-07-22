@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <command_line>mpirun -n 2 ./eigenvalues</command_line>
+    <xsil_file name="eigenvalues_break.xsil" expected="../fast/eigenvalues_break_expected.xsil" absolute_tolerance="1e-6" relative_tolerance="1e-5" />
+    <xsil_file name="eigenvalues.xsil" expected="../fast/eigenvalues_expected.xsil" absolute_tolerance="1e-6" relative_tolerance="1e-5" />
+  </testing>
+  
+  <name>eigenvalues</name>
+  <author>Graham Dennis</author>
+  <description>
+    1D TW model of the uniform Peaks system.
+  </description>
+  
+  <features>
+    <auto_vectorise />
+    <benchmark />
+    <fftw plan="exhaustive" />
+    <globals>
+      <![CDATA[
+      /* physical constants  */
+       const double omegaz = 2*M_PI*55.0;
+       const double omegarho = 2*M_PI*1020.0;
+       const double hbar = 1.05457148e-34;
+       const double M = 4.0026032*1.66053886e-27;
+       const double scatteringLength = 7.51e-9;
+       const double Uint3 = 4.0*M_PI*hbar*hbar*scatteringLength/M;
+       const double Nparticles = 2.0e6;
+       const double mu = pow(15*Nparticles*Uint3*omegarho*omegarho*omegaz/(8.0*M_PI)*pow(M/2,3.0/2.0),2.0/5.0);
+       const double Uint = Uint3*5.0*omegarho*omegarho*M/(4.0*M_PI*mu);
+       const double Uint_hbar = Uint/hbar;
+       const complex miUint_hbar = -i*Uint_hbar;
+       const double otherScatteringLength = 5.56e-9;
+       const double kappa = otherScatteringLength/scatteringLength;
+       double Delta;
+       const double hbar_M = hbar/M;
+       const double Omega = 2.0*M_PI*3e3;
+       
+       double mu0 = hbar*1.7786e3*2.0*M_PI;
+       double nu = 6.649299328e3;//4.4046e4; // Hertz
+       
+      ]]>
+    </globals>
+    <validation kind="run-time" />
+  </features>
+  
+  <driver name="distributed-mpi" />
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="kz" lattice="32"  domain="(0, 3e6)" transform="none"/>
+      <!-- <dimension name="kz" lattice="1024"  domain="(1.3220e6, 1.3221e6)" /> -->
+      <dimension name="p" domain="(1, 4)" type="integer" aliases="q" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="wavefunction" dimensions="" type="complex">
+    <components>
+      phi1 phi0
+    </components>
+    <initialisation>
+      <![CDATA[
+        phi1 = sqrt(mu/Uint);
+        phi0 = 0.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <vector name="matrixterms" dimensions="kz p q" initial_basis="kz" type="complex">
+    <components>matrix</components>
+    <initialisation>
+      <![CDATA[
+        if (p == q) {
+          matrix = 1.0;
+        } else {
+          matrix = 0.0;
+        }
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <computed_vector name="hamiltonian_matrix" dimensions="kz p q" type="complex">
+    <components>h_matrix</components>
+    <evaluation>
+      <dependencies>wavefunction</dependencies>
+      <![CDATA[
+        const double kineticEnergy = 0.5*hbar*hbar*kz*kz/M;
+        if (p == 1 && q == 1) h_matrix = Uint*mod2(phi1)+kineticEnergy-mu0;
+        if (p == 1 && q == 2) h_matrix = Uint*phi1*phi1;
+        if (p == 1 && q == 3) h_matrix = Uint*phi1*conj(phi0)+hbar*Omega;
+        if (p == 1 && q == 4) h_matrix = Uint*phi1*phi0;
+        
+        if (p == 2 && q == 1) h_matrix = -Uint*conj(phi1*phi1);
+        if (p == 2 && q == 2) h_matrix = -Uint*mod2(phi1)-kineticEnergy+mu0;
+        if (p == 2 && q == 3) h_matrix = -Uint*conj(phi1 * phi0);
+        if (p == 2 && q == 4) h_matrix = -Uint*conj(phi1)*phi0 - hbar*Omega;
+        
+        if (p == 3 && q == 1) h_matrix = Uint*conj(phi1)*phi0 + hbar*Omega;
+        if (p == 3 && q == 2) h_matrix = Uint*phi0*phi1;
+        if (p == 3 && q == 3) h_matrix = Uint*(2.0*kappa-1.0)*mod2(phi0)-mu0+kineticEnergy;
+        if (p == 3 && q == 4) h_matrix = Uint*kappa*phi0*phi0;
+        
+        if (p == 4 && q == 1) h_matrix = -Uint*conj(phi0*phi1);
+        if (p == 4 && q == 2) h_matrix = -Uint*phi1*conj(phi0)-hbar*Omega;
+        if (p == 4 && q == 3) h_matrix = -Uint*kappa*conj(phi0*phi0);
+        if (p == 4 && q == 4) h_matrix = -Uint*(2.0*kappa-1.0)*mod2(phi0)-kineticEnergy+mu0;
+        
+        h_matrix *= -i/hbar;
+      ]]>
+    </evaluation>
+  </computed_vector>
+  
+  <sequence>
+    <integrate algorithm="ARK89" interval="1.0/nu" tolerance="1e-8">
+      <samples>20 20</samples>
+      <operators dimensions="">
+        <integration_vectors>wavefunction</integration_vectors>
+        <![CDATA[
+          dphi1_dt = - i/hbar*( - mu0)*phi1 -i*Omega*phi0;
+          dphi0_dt = - i/hbar*( - Uint*(1.0-kappa)*mod2(phi0) - mu0)*phi0 -i*Omega*phi1;
+        ]]>
+      </operators>
+      <operators dimensions="kz p q">
+        <integration_vectors>matrixterms</integration_vectors>
+        <dependencies>wavefunction hamiltonian_matrix</dependencies>
+        <![CDATA[
+          dmatrix_dt = 0.0;
+          for (long pp = 1; pp <= 4; pp++) {
+            dmatrix_dt += h_matrix(q=> pp)*matrix(p=> pp);
+          }
+        ]]>
+      </operators>
+    </integrate>
+    <breakpoint filename="eigenvalues_break.xsil" format="hdf5">
+      <dependencies>matrixterms</dependencies>
+    </breakpoint>
+  </sequence>
+  <output format="hdf5">
+      <sampling_group initial_sample="yes">
+        <moments>phi1R phi1I phi0R phi0I</moments>
+        <dependencies>wavefunction</dependencies>
+        <![CDATA[
+          _SAMPLE_COMPLEX(phi1); _SAMPLE_COMPLEX(phi0);
+        ]]>
+      </sampling_group>
+      <sampling_group initial_sample="yes" basis="kz p q">
+        <moments>matrixR matrixI</moments>
+        <dependencies>matrixterms</dependencies>
+        <![CDATA[
+          _SAMPLE_COMPLEX(matrix);
+        ]]>
+      </sampling_group>
+  </output>
+</simulation>

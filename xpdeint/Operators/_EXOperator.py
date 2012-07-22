@@ -98,9 +98,6 @@ class _EXOperator(Operator):
       # Set the replacement string for the L[x] operator
       replacementString = "_%(operatorName)s_%(targetComponentName)s" % locals()
         
-      # Add the appropriate component to the result vector if it's not already there
-      if not replacementString in self.resultVector.components:
-        self.resultVector.components.append(replacementString)
       
       sharedCodeBlock.codeString = sharedCodeBlock.codeString[:codeSlice.start] + replacementString + sharedCodeBlock.codeString[codeSlice.stop:]
     
@@ -110,6 +107,14 @@ class _EXOperator(Operator):
       unusedOperatorNamesString = ', '.join(unusedOperatorNames)
       parserWarning(self.xmlElement,
                     "The following EX operator names were declared but not used: %(unusedOperatorNamesString)s" % locals())
+    
+    # Iterate over the operator components adding the appropriate bits to the resultVector, but do it in
+    # the order of the components in the targetVectors to make it easier to optimise out an FFT.
+    for operatorName, operatorDict in self.operatorComponents.iteritems():
+      for targetVector, targetVectorUsedComponents in operatorDict.iteritems():
+        for targetComponent in targetVector.components:
+          if targetComponent in targetVectorUsedComponents:
+            self.resultVector.components.append("_%(operatorName)s_%(targetComponent)s" % locals())
     
     if self.resultVector.nComponents == 0:
       self.resultVector.remove()

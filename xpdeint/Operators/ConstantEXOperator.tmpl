@@ -37,6 +37,16 @@ ${codeString}@slurp
   @#
 @end def
 
+@def evaluateOperatorFunctionContentsWithoutCodeBlock($function)
+  @#
+${optimisedOperatorCopyBegin}@slurp
+  @#
+  @super(function)
+  @#
+${optimisedOperatorCopyEnd}@slurp
+  @#
+@end def
+
 @def evaluateOperatorLoop($setOfVectorsToLoopOver)
   @#
 ${loopOverVectorsInBasisWithInnerContent(setOfVectorsToLoopOver, $operatorBasis, $insideEvaluateOperatorLoops)}@slurp

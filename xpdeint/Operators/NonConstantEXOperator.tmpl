@@ -47,3 +47,13 @@ _${operatorComponentName}_${targetVectorComponent} = $operatorComponentName * $t
   @end for
   @#
 @end def
+
+@def callEvaluateLoop
+  @#
+${optimisedOperatorCopyBegin}@slurp
+  @#
+  @super
+  @#
+${optimisedOperatorCopyEnd}@slurp
+  @#
+@end def

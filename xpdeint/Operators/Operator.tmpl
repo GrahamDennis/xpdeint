@@ -127,3 +127,38 @@ _${resultVector.id}_basis = $basisIndexForBasis($operatorBasis);
   @end if
   @#
 @end def
+
+@def optimisedOperatorCopyBegin
+  @# This optimisation only works in a restricted set of circumstances.  It's common enough, but not as general
+  @# as it could be.  Basically, you need a single operator name (e.g. L, not Lx and Ly) which is applied to all
+  @# components of a vector.
+  @if len($targetVectors) != 1 or not $resultVector or len($operatorNames) != 1
+    @return
+  @end if
+  @set targetVector = $anyObject($targetVectors)
+  @if $targetVector.nComponents != $resultVector.nComponents
+    @return
+  @end if
+  @# For this operator, we don't modify the target vector, so if we just transform it, we'll have to transform it back again
+  @# Here, we copy the target vector into the result vector because it's the same size. This way we can avoid the second transform
+memcpy(_active_${resultVector.id}, _active_${targetVector.id}, ${targetVector.allocSize} * sizeof(${targetVector.type}));
+${targetVector.type} *__backup_ptr = _active_${targetVector.id};
+ptrdiff_t __backup_basis = _${targetVector.id}_basis;
+_active_${targetVector.id} = _active_${resultVector.id};
+
+  @#
+@end def
+
+@def optimisedOperatorCopyEnd
+  @if len($targetVectors) != 1 or not $resultVector or len($operatorNames) != 1
+    @return
+  @end if
+  @set targetVector = $anyObject($targetVectors)
+  @if $targetVector.nComponents != $resultVector.nComponents
+    @return
+  @end if
+_active_${targetVector.id} = __backup_ptr;
+_${targetVector.id}_basis = __backup_basis;
+  @#
+@end def
+
