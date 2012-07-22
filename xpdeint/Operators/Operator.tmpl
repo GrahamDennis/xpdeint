@@ -44,11 +44,18 @@ _${parent.id}_calculate_${name}_field();
 
 @def calculateOperatorFieldFunctionContents($function)
   @#
+${codeBlocks['operatorDefinition'].loop(self.insideCalculateOperatorFieldLoops)}@slurp
+  @#
+@end def
+
+@def insideCalculateOperatorFieldLoopsBegin
+  @#
   @for $operatorComponentName in $operatorComponents.iterkeys()
+    @if $operatorVector and operatorComponentName in $operatorVector.components
+      @continue
+    @end if
 ${operatorVector.type} $operatorComponentName;
   @end for
-  @#
-${codeBlocks['operatorDefinition'].loop(self.insideCalculateOperatorFieldLoops)}@slurp
   @#
 @end def
 
@@ -66,6 +73,21 @@ ${evaluateOperatorFunctionContentsWithoutCodeBlock(function)}@slurp
 
 @def evaluateOperatorFunctionContentsWithCodeBlock($function)
   @#
+${callEvaluateLoop}@slurp
+  @#
+  @if $resultVector and $resultVector.needsTransforms
+
+_${resultVector.id}_basis = $basisIndexForBasis($operatorBasis);
+  @end if
+  @#
+@end def
+
+@def callEvaluateLoop
+${codeBlocks['operatorDefinition'].loop(self.insideEvaluateOperatorLoops)}@slurp
+@end def
+
+@def insideEvaluateOperatorLoopsBegin
+  @#
   @if not $operatorVector
     @# If we don't have an operator vector, then we need to create
     @# the component variables so that the user can set them inside
@@ -81,17 +103,6 @@ ${typeName} ${operatorComponentName};
 
   @end if
   @#
-${callEvaluateLoop}@slurp
-  @#
-  @if $resultVector and $resultVector.needsTransforms
-
-_${resultVector.id}_basis = $basisIndexForBasis($operatorBasis);
-  @end if
-  @#
-@end def
-
-@def callEvaluateLoop
-${codeBlocks['operatorDefinition'].loop(self.insideEvaluateOperatorLoops)}@slurp
 @end def
 
 @def evaluateOperatorFunctionContentsWithoutCodeBlock($function)

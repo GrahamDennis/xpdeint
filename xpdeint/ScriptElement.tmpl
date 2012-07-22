@@ -201,7 +201,7 @@ long _${vector.id}_index_pointer = 0;
 #define $componentName _active_${vector.id}[_${vector.id}_index_pointer + $componentNumber]
     @end for
   @end for
-  @set $dict = {'vectors': $vectors}
+  @set $dict = {'vectors': $vectors, 'loopCode': innerContent}
 ${insertCodeForFeatures('loopOverVectorsWithInnerContentBegin', $featureOrdering, $dict)}@slurp
 for (long _i0 = 0; _i0 < ${field.sizeInBasis(basis)}; _i0++) {
   ${insertCodeForFeaturesInReverseOrder('loopOverVectorsWithInnerContentEnd', $featureOrdering, $dict), autoIndent=True}@slurp
@@ -285,6 +285,8 @@ Optional arguments:
                          'vectors': vectors,
                          'indexOverrides': indexOverrides,
                          'vectorOverrides': vectorOverrides,
+                         'preDimensionLoopOpeningCode': preDimensionLoopOpeningCode,
+                         'postDimensionLoopClosingCode': postDimensionLoopClosingCode,
                        }
 ${insertCodeForFeatures('loopOverFieldInBasisWithVectorsAndInnerContentBegin', featureOrdering, featuresDict)}@slurp
   @#
@@ -351,8 +353,18 @@ ${preDimensionLoopOpeningCode[$dimRep.name], extraIndent=$indentLevel}@slurp
     @if not indexOverrides.has_key(dimRep.name)
       @# If there isn't an indexOverride for this dimension, then open a loop
       @set $lastLoopDimRep = dimRep
+      @#
+      @set $loopOpeningFeatureOrdering = ['OpenMP']
+      @silent featuresDict.update({
+        'vectorsNotRequiringExplicitIndexPointers': vectorsNotRequiringExplicitIndexPointers,
+        'dimRep': dimRep,
+        'loopCode': innerLoopCode
+      })
+${insertCodeForFeatures('loopOverFieldInBasisWithVectorsAndInnerContentLoopOpenBegin', loopOpeningFeatureOrdering, featuresDict), extraIndent=indentLevel}@slurp
+      @#
 ${dimRep.openLoop(loopingOrder=loopingOrder), extraIndent=indentLevel}@slurp
       @set $indentLevel = $indentLevel + 2
+${insertCodeForFeaturesInReverseOrder('loopOverFieldInBasisWithVectorsAndInnerContentLoopOpenEnd', loopOpeningFeatureOrdering, featuresDict), extraIndent=indentLevel}@slurp
     @else
       @# We have an indexOverride for this dimension. 
 ${prologueForOverriddenDimRepInFieldInBasisWithVectors($dimRep, $field, $basis, $vectors, $indexOverrides), extraIndent=$indentLevel}@slurp

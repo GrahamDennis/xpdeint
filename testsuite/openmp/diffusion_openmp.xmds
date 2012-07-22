@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simulation xmds-version="2">
   <testing>
-    <command_line>mpirun -n 2 ./diffusion_mpi_chunked</command_line>
-    <xsil_file name="diffusion_mpi_chunked.xsil" expected="diffusion_mpi_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="diffusion_openmp.xsil" expected="../mpi/diffusion_mpi_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
   </testing>
   
-  <name>diffusion_mpi_chunked</name>
+  <name>diffusion_openmp</name>
   <author>Graham Dennis</author>
   <description>
     Simple one-dimensional diffusion with a pointless second dimension thrown in for fun
@@ -13,8 +12,9 @@
   
   <features>
     <benchmark />
-    <chunked_output size="10KB" />
-    <fftw plan="measure" />
+    <bing />
+    <fftw plan="measure" threads="4" />
+    <openmp />
   </features>
   
   <geometry>
@@ -24,9 +24,7 @@
       <dimension name="x" lattice="256"  domain="(-10.0, 10.0)" />
     </transverse_dimensions>
   </geometry>
-  
-  <driver name="distributed-mpi" />
-  
+    
   <vector name="main" initial_basis="x y" type="complex">
     <components>
       phi

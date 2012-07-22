@@ -66,6 +66,8 @@ const real _propagationStepFraction = ${integrator.ipPropagationStepFractions[0]
 
 @def insideCalculateOperatorFieldLoops($codeString)
   @#
+${insideCalculateOperatorFieldLoopsBegin}@slurp
+  @#
   @# We expect the integrator to have defined '_step'
   @#
 // ************** Operator code *****************
@@ -97,6 +99,8 @@ if (_exponent > 0) {
 @end def
 
 @def insideEvaluateOperatorLoops($operationString)
+  @#
+${insideEvaluateOperatorLoopsBegin}@slurp
   @#
   @for operatorComponentNumber, (operatorComponentName, operatorComponentVectors) in enumerate($operatorComponents.iteritems())
     @for targetVectorComponents in operatorComponentVectors.itervalues()

@@ -71,6 +71,7 @@ ${writeOutFunctionImplementationEnd(dict)}@slurp
   @if $precision == 'single'
     @set $precisionPrefix = ''
   @end if
+// UNVECTORISABLE
 fprintf($fp, "@slurp
   @# Loop over the variables that we're writing out
   @for $variableNumber in range($variableCount)

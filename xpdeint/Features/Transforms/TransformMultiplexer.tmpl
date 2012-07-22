@@ -141,19 +141,31 @@ memcpy(_data_out, _data_in, _prefix_lattice * _postfix_lattice * sizeof(real));
 
 @def ipMultiplyTransformFunction(transformID, transformDict, function)
   @#
+  @set featureOrdering = ['OpenMP']
+  @set featureDict = {
+    'templateString': ''
+  }
 #pragma ivdep
-for (long _idx = 0; _idx < _prefix_lattice * _postfix_lattice; _idx++) {
-  _data_in[_idx] *= _multiplier;
+${insertCodeForFeatures('loopOverVectorsWithInnerContentTemplateBegin', featureOrdering, featureDict)}@slurp
+for (long _i0 = 0; _i0 < _prefix_lattice * _postfix_lattice; _i0++) {
+  _data_in[_i0] *= _multiplier;
 }
+${insertCodeForFeaturesInReverseOrder('loopOverVectorsWithInnerContentTemplateEnd', featureOrdering, featureDict)}@slurp
   @#
 @end def
 
 @def oopMultiplyTransformFunction(transformID, transformDict, function)
   @#
+  @set featureOrdering = ['OpenMP']
+  @set featureDict = {
+    'templateString': ''
+  }
 #pragma ivdep
-for (long _idx = 0; _idx < _prefix_lattice * _postfix_lattice; _idx++) {
-  _data_out[_idx] = _data_in[_idx] * _multiplier;
+${insertCodeForFeatures('loopOverVectorsWithInnerContentTemplateBegin', featureOrdering, featureDict)}@slurp
+for (long _i0 = 0; _i0 < _prefix_lattice * _postfix_lattice; _i0++) {
+  _data_out[_i0] = _data_in[_i0] * _multiplier;
 }
+${insertCodeForFeaturesInReverseOrder('loopOverVectorsWithInnerContentTemplateEnd', featureOrdering, featureDict)}@slurp
   @#
 @end def
 

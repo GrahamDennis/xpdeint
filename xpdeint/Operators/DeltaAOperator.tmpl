@@ -56,6 +56,8 @@ d${componentName}_d${propagationDimension} = 0.0;
 
 @def insideEvaluateOperatorLoops($codeString)
   @#
+${insideEvaluateOperatorLoopsBegin}@slurp
+  @#
   @# The Operator class will have defined for us all of the dVariableName_dPropagationDimension variables.
   @# Note that we assume that all of the integration vectors have an operotor component defined for them.
 #define d${propagationDimension} _step

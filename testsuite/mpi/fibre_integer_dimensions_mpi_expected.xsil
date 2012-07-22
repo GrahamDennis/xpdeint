@@ -15,7 +15,7 @@
   <geometry>
     <propagation_dimension> t </propagation_dimension>
     <transverse_dimensions>
-      <dimension name="j" lattice="4"   domain="(1, 4)" />
+      <dimension name="j" lattice="4"   domain="(1, 4)" type="integer"/>
       <dimension name="x" lattice="64"  domain="(-5, 5)" />
     </transverse_dimensions>
   </geometry>
@@ -25,26 +25,26 @@
   <features>
     <auto_vectorise />
     <error_check />
-    <stochastic>
-      <noise kind="gaussian-solirte" prefix="n" num="2" seed="293485"/>
-      <!-- If there is no seed attribute then seeds will be chosen randomly at run-time -->
-    </stochastic>
     <globals>
       <![CDATA[
       const real ggamma = 1.0;
-      const real beta = sqrt(2.0*M_PI*ggamma/10.0);
+      const real beta = sqrt(4.0*M_PI*ggamma/10.0);
       ]]>
     </globals>
   </features>
   
   <vector name="main" initial_basis="j x" type="complex">
     <components>phi</components>
-    <initialisation no_noises="true">
+    <initialisation>
       <![CDATA[
         phi = 0.0;
       ]]>
     </initialisation>
   </vector>
+  
+  <noise_vector name="noise" kind="wiener" method="solirte" type="complex" seed="293485">
+    <components>n_1</components>
+  </noise_vector>
   
   <sequence>
     <integrate algorithm="RK4" interval="2.5" steps="200000">
@@ -57,8 +57,9 @@
           ]]>
         </operator>
         <integration_vectors>main</integration_vectors>
+        <dependencies>noise</dependencies>
         <![CDATA[
-          dphi_dt = L[phi] - ggamma*phi + beta*complex(n_1, n_2);
+          dphi_dt = L[phi] - ggamma*phi + beta*n_1;
         ]]>
       </operators>
     </integrate>

@@ -26,8 +26,137 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 @def loopOverVectorsWithInnerContentTemplateBegin($dict)
   @#
+  @if 'UNVECTORISABLE' in dict['templateString']
+    @return
+  @end if
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
+  @#
+@end def
+
+@def loopOverVectorsWithInnerContentBegin($dict)
+  @#
+  @if 'UNVECTORISABLE' in dict['loopCode']
+    @return
+  @end if
+  @#
+  @set $vectors = dict['vectors']
+  @set $index_pointers = [c'_${vector.id}_index_pointer' for vector in vectors]
+  @#
+bool __initialised = false;
+#ifdef _OPENMP
+  @set suffix = ''
+  @if index_pointers
+    @set suffix = c', private(${", ".join(index_pointers)})'
+  @end if
+#pragma omp parallel for firstprivate(__initialised)${suffix}
+#endif
+  @#
+@end def
+
+@def loopOverVectorsWithInnerContentEnd($dict)
+  @#
+  @if 'UNVECTORISABLE' in dict['loopCode']
+    @return
+  @end if
+  @#
+  @set $vectors = dict['vectors']
+  @#
+if (!__initialised) {
+  @for vector in vectors
+  _${vector.id}_index_pointer = _i0 * _${vector.id}_ncomponents;
+  @end for
+  __initialised = true;
+}
+@end def
+
+@def loopOverFieldInBasisWithVectorsAndInnerContentLoopOpenBegin($dict)
+  @#
+  @# What about the copyDeltaA code? Is that parallel-safe?
+  @# If we have already parallelised a dimension, don't do any more
+  @# and if we can't parallelise, don't.
+  @if 'UNVECTORISABLE' in dict['loopCode'] or 'openMPParallelDimRep' in dict
+    @return
+  @end if
+  @#
+  @set vectorOverrides = dict['vectorOverrides']
+  @set field = dict['field']
+  @set basis = dict['basis']
+  @set dimRep = dict['dimRep']
+  @set dimensionsBeingIntegratedOver = set()
+  @if vectorOverrides
+    @silent dimensionsBeingIntegratedOver.update(field.dimensions)
+    @for dim in dimensionsBeingIntegratedOver.copy()
+      @for vector in vectorOverrides
+        @if vector.field.hasDimension(dim)
+          @silent dimensionsBeingIntegratedOver.discard(dim)
+          @break
+        @end if
+      @end for
+    @end for
+  @end if
+  @#
+  @# If this dim rep is being integrated over, we can't parallelise this dimension, so return
+  @for dim in dimensionsBeingIntegratedOver
+    @if dim.inBasis(basis) == dimRep
+      @return
+    @end if
+  @end for
+  @#
+  @for fieldDimRep in reversed(field.inBasis(basis))
+    @# If there's pre or post dimension loop opening code, we can't trust that we can parallelise this.
+    @if fieldDimRep.name in dict['preDimensionLoopOpeningCode'] or fieldDimRep.name in dict['postDimensionLoopClosingCode']
+      @return
+    @end if
+    @#
+    @if fieldDimRep == dimRep
+      @break
+    @end if
+  @end for
+  @#
+  @silent dict['openMPParallelDimRep'] = dict['dimRep']
+  @#
+  @set $vectorsNotRequiringExplicitIndexPointers = dict['vectorsNotRequiringExplicitIndexPointers']
+  @set $private_variables = [c'_${vector.id}_index_pointer' for vector in vectorsNotRequiringExplicitIndexPointers]
+  @for vector in dict['vectorOverrides']
+    @silent private_variables.extend(vector.components)
+  @end for
+  @#
+  @set suffix = ''
+  @if private_variables
+    @set suffix = c', private(${", ".join(private_variables)})'
+  @end if
+bool __initialised = false;
+#ifdef _OPENMP
+#pragma omp parallel for firstprivate(__initialised)${suffix}
+#endif
+  @#
+@end def
+
+@def loopOverFieldInBasisWithVectorsAndInnerContentLoopOpenEnd($dict)
+  @#
+  @# Only complete initialisation for the parallel loop if this is that loop
+  @if dict.get('openMPParallelDimRep') is not dict['dimRep']
+    @return
+  @end if
+  @#
+  @set $vectorsNotRequiringExplicitIndexPointers = dict['vectorsNotRequiringExplicitIndexPointers']
+  @set $dimRep = dict['dimRep']
+  @set $field = dict['field']
+  @set $basis = dict['basis']
+  @#
+if (!__initialised) {
+  @for vector in vectorsNotRequiringExplicitIndexPointers
+  _${vector.id}_index_pointer = ${dimRep.loopIndex} * ${vector.field.localPointsInDimensionsAfterDimRepInBasis(dimRep, basis)} * _${vector.id}_ncomponents;
+    @for prefixDimRep in field.inBasis(basis)
+      @if prefixDimRep is dimRep
+        @break
+      @end if
+  _${vector.id}_index_pointer += ${prefixDimRep.loopIndex} * ${vector.field.localPointsInDimensionsAfterDimRepInBasis(prefixDimRep, basis)} * _${vector.id}_ncomponents;
+    @end for
+  @end for
+  __initialised = true;
+}
   @#
 @end def

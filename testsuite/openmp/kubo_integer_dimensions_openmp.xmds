@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="kubo_integer_dimensions_openmp.xsil" expected="kubo_integer_dimensions_openmp_expected.xsil" absolute_tolerance="5e-2" relative_tolerance="1e-1" />
+    <xsil_file name="kubo_integer_dimensions_openmp_break.xsil" expected="kubo_integer_dimensions_openmp_break_expected.xsil" absolute_tolerance="5e-2" relative_tolerance="1e-1" />
+  </testing>
+  
+  <name>kubo_integer_dimensions_openmp</name>
+  <author>Graham Dennis</author>
+  <description>
+    Example Kubo oscillator simulation
+  </description>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="j" type="integer" lattice="1024" domain="(1, 1024)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <features>
+      <openmp />
+  </features>
+  
+  <vector name="main" type="complex">
+    <components>
+      z
+    </components>
+    <initialisation>
+      <![CDATA[
+        z = 1.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <noise_vector name="noise" kind="wiener" type="real" seed="157 9348 234">
+    <components>n_1</components>
+  </noise_vector>
+  
+  <sequence>
+    <integrate algorithm="RK9" interval="10" steps="1000" tolerance="1e-8">
+      <samples>500 10</samples>
+      <operators>
+        <integration_vectors>main</integration_vectors>
+        <dependencies>noise</dependencies>
+        <![CDATA[
+          dz_dt(j => j) = i*z*n_1;
+        ]]>
+      </operators>
+    </integrate>
+    <breakpoint filename="kubo_integer_dimensions_openmp_break.xsil">
+      <dependencies>main</dependencies>
+    </breakpoint>
+  </sequence>
+  
+  <output format="binary">
+      <sampling_group basis="j(0)" initial_sample="yes">
+        <moments>zR zI</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          zR = z.Re()/_lattice_j;
+          zI = z.Im()/_lattice_j;
+        ]]>
+      </sampling_group>
+      <sampling_group basis="j" initial_sample="yes">
+        <moments>zR zI</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+            _SAMPLE_COMPLEX(z);
+          zR = z.Re();
+          zI = z.Im();
+        ]]>
+      </sampling_group>
+  </output>
+</simulation>

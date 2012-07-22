@@ -26,6 +26,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @def description: Left/Right Delta A propagation operator for field $field.name
 
 @def callEvaluateLoop
+  @#
+  @for crossIntegrationVector in $crossIntegrationVectors
+    @for componentName in crossIntegrationVector.components
+${crossIntegrationVector.type} _old_d${componentName}_d${crossPropagationDimension};
+    @end for
+  @end for
+  @#
   @set $loopingOrder = {
                         '+': SICDeltaAOperator.LoopingOrder.StrictlyAscendingOrder,
                         '-': SICDeltaAOperator.LoopingOrder.StrictlyDescendingOrder
@@ -35,9 +42,18 @@ ${codeBlocks['operatorDefinition'].loop(self.insideEvaluateOperatorLoops, loopin
 
 @def insideEvaluateOperatorLoops($codeString)
   @#
+${insideEvaluateOperatorLoopsBegin}@slurp
+  @#
   @# The Operator class will have defined for us all of the dVariableName_dPropagationDimension variables.
   @# Note that we assume that all of the integration vectors have an operotor component defined for them.
   
+// UNVECTORISABLE
+  @for crossIntegrationVector in $crossIntegrationVectors
+    @for componentName in crossIntegrationVector.components
+d${componentName}_d${crossPropagationDimension} = _old_d${componentName}_d${crossPropagationDimension};
+    @end for
+  @end for
+
   @set $crossDimRep = $loopingField.dimensionWithName($crossPropagationDimension).inBasis($operatorBasis)
   @if $crossPropagationDirection == '+'
 if (${crossDimRep.loopIndex} == 0) {
@@ -102,6 +118,12 @@ _old_${crossIntegrationVector.id}[${componentNumber}] += d${componentName}_d${cr
 @end for
 
 @# This is where one (full step) cross-IP step would go
+
+  @for crossIntegrationVector in $crossIntegrationVectors
+    @for componentName in crossIntegrationVector.components
+_old_d${componentName}_d${crossPropagationDimension} = d${componentName}_d${crossPropagationDimension};
+    @end for
+  @end for
 
   @#
 @end def

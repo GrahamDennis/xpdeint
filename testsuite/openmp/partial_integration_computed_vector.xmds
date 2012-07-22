@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="partial_integration_computed_vector.xsil" expected="../fast/bessel_cosine_groundstate_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="partial_integration_computed_vector_breakpoint.xsil" expected="../fast/bessel_cosine_groundstate_breakpoint_expected.xsil" absolute_tolerance="1e0" relative_tolerance="1e-5" />
+  </testing>
+  
+  <name>partial_integration_computed_vector</name>
+  <author>Graham Dennis</author>
+  <description>
+    Calculate the 3D ground state of a Rubidium BEC in a harmonic magnetic trap assuming
+    cylindrical symmetry about the z axis and reflection symmetry about z=0.
+    This permits us to use the cylindrical bessel functions to expand the solution transverse
+    to z and a cosine series to expand the solution along z.
+    
+    This testcase tests using both Fourier transforms and Matrix transforms in a single simulation.
+  </description>
+  
+  <features>
+    <auto_vectorise />
+    <benchmark />
+    <bing />
+    <fftw threads="4" />
+    <openmp />
+    <globals>
+      <![CDATA[
+        const real omegaz = 2*M_PI*20;
+        const real omegarho = 2*M_PI*200;
+        const real hbar = 1.05457148e-34;
+        const real M = 1.409539200000000e-25;
+        const real g = 9.8;
+        const real scatteringLength = 5.57e-9;
+        const real Uint = 4.0*M_PI*hbar*hbar*scatteringLength/M;
+        const real Nparticles = 5.0e5;
+
+        /* offset constants */
+        const real EnergyOffset = pow(15.0*Nparticles*Uint*omegaz*omegarho*omegarho/(8*M_PI), 2.0/5.0)
+                                    * pow(M/2.0, 3.0/5.0);
+
+      ]]>
+    </globals>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="z" lattice="32"  domain="(0.0, 1.0e-4)" transform="dct" volume_prefactor="2.0" />
+      <dimension name="r" lattice="32"  domain="(0.0, 1.0e-5)" transform="bessel" volume_prefactor="2.0*M_PI"/>
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="potential" type="complex">
+    <components>
+      V1
+    </components>
+    <initialisation>
+      <![CDATA[
+        real Vtrap = 0.5*M*(omegarho*omegarho*r*r + omegaz*omegaz*z*z);
+      
+        V1  = -i/hbar*(Vtrap - EnergyOffset);
+      
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <vector name="wavefunction" type="complex">
+    <components>
+      phi
+    </components>
+    <initialisation>
+      <![CDATA[
+      
+        if ((abs(r) < 0.9e-5) && abs(z) < 0.9e-4) {
+          phi = 1.0; //sqrt(Nparticles/2.0e-5);
+          // This will be automatically normalised later
+        } else {
+          phi = 0.0;
+        }
+      
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <computed_vector name="partial_r" dimensions="r" type="real">
+      <components>Nr</components>
+      <evaluation>
+          <dependencies>wavefunction</dependencies>
+          <![CDATA[
+                  Nr = mod2(phi);
+          ]]>
+      </evaluation>
+  </computed_vector>
+
+  <computed_vector name="partial_z" dimensions="z" type="real">
+      <components>Nz</components>
+      <evaluation>
+          <dependencies>wavefunction</dependencies>
+          <![CDATA[
+                  Nz = mod2(phi);
+          ]]>
+      </evaluation>
+  </computed_vector>
+  
+  <computed_vector name="norm_r" dimensions="" type="real">
+      <components>NcalcR</components>
+      <evaluation>
+          <dependencies>partial_r</dependencies>
+          <![CDATA[
+                      NcalcR = Nr;
+          ]]>
+      </evaluation>
+  </computed_vector>
+  
+  <computed_vector name="norm_z" dimensions="" type="real">
+      <components>NcalcZ</components>
+      <evaluation>
+          <dependencies>partial_z</dependencies>
+          <![CDATA[
+                      NcalcZ = Nz;
+        ]]>
+      </evaluation>
+  </computed_vector>
+  
+  <computed_vector name="normalisation" dimensions="" type="real">
+    <components>
+      Ncalc
+    </components>
+    <evaluation>
+      <dependencies>wavefunction</dependencies>
+      <![CDATA[
+        // Calculate the current normalisation of the wave function.
+        Ncalc = mod2(phi);
+      ]]>
+    </evaluation>
+  </computed_vector>
+  
+  <sequence>
+    <integrate algorithm="RK4" interval="1e-4" steps="1000">
+      <samples>100</samples>
+      <filters>
+        <filter>
+          <dependencies>wavefunction normalisation norm_r norm_z</dependencies>
+          <![CDATA[
+            // Correct normalisation of the wavefunction
+                  real mean_number = (Ncalc + NcalcR + NcalcZ)/3.0;
+            phi *= sqrt(Nparticles/mean_number);
+          ]]>
+        </filter>
+      </filters>
+      <operators>
+        <operator kind="ip" constant="yes">
+          <operator_names>T</operator_names>
+          <![CDATA[
+            T = -0.5*hbar/M*(kr*kr + kz*kz);
+          ]]>
+        </operator>
+        <integration_vectors>wavefunction</integration_vectors>
+        <dependencies>potential</dependencies>
+        <![CDATA[
+          dphi_dt = T[phi] - (i*V1 + Uint/hbar*mod2(phi))*phi;
+        ]]>
+      </operators>
+    </integrate>
+    <breakpoint filename="partial_integration_computed_vector_breakpoint.xsil" format="hdf5">
+      <dependencies>wavefunction</dependencies>
+    </breakpoint>
+  </sequence>
+  <output format="binary">
+      <sampling_group basis="r z" initial_sample="no">
+        <moments>norm_dens</moments>
+        <dependencies>wavefunction normalisation norm_r norm_z</dependencies>
+        <![CDATA[
+                    real mean_number = (Ncalc + NcalcR + NcalcZ)/3.0;
+          norm_dens = mod2(phi)/mean_number;
+        ]]>
+      </sampling_group>
+  </output>
+</simulation>

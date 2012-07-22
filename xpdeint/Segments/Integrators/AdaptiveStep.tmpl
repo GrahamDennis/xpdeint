@@ -232,7 +232,7 @@ if (_xmds_isnonfinite(_temp_error)) {
   _temp_error = 0.0;
 }
 
-if (_error < _temp_error)
+if (_error < _temp_error) // UNVECTORISABLE
   _error = _temp_error;
   @#
 ${insertCodeForFeatures('updateMaximumError', ['Diagnostics'], {'vector': vector})}@slurp

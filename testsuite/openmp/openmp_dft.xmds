@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="openmp_dft_xspace1.xsil" expected="../mpi/mpi_dft_xspace_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="openmp_dft_kspace.xsil" expected="../mpi/mpi_dft_kspace_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="openmp_dft_kspace2.xsil" expected="../mpi/mpi_dft_kspace2_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+    <xsil_file name="openmp_dft_xspace2.xsil" expected="../mpi/mpi_dft_xspace_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+  </testing>
+  
+  
+  <name>openmp_dft</name>
+  <author>Graham Dennis</author>
+  <description>
+    Test of the fourier transforms using MPI.
+  </description>
+  
+  <features>
+    <benchmark />
+    <bing />
+    <fftw plan="patient" threads="4" />
+    <openmp />
+    <globals>
+      <![CDATA[
+      const real T = 10.0;
+      const real mass = 1e-3;
+      const real length = 1.0;
+      const real mu = mass/length;
+      
+      const real width = 0.1;
+      const real absorb = 80.0;
+      ]]>
+    </globals>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="x" lattice="32"  domain="(-1, 1)" />
+      <dimension name="y" lattice="32"  domain="(-1, 1)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="main" initial_basis="x y" type="complex">
+    <components>
+      u
+    </components>
+    <initialisation>
+      <![CDATA[
+        u = exp(-100.0*((x-0.5)*(x-0.5) + y*y));
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <breakpoint filename="openmp_dft_xspace1.xsil">
+      <dependencies>main</dependencies>
+    </breakpoint>
+    <breakpoint filename="openmp_dft_kspace.xsil">
+      <dependencies basis="ky kx">main</dependencies>
+    </breakpoint>
+    <breakpoint filename="openmp_dft_kspace2.xsil">
+      <dependencies basis="ky x">main</dependencies>
+    </breakpoint>
+    <breakpoint filename="openmp_dft_xspace2.xsil">
+      <dependencies basis="y x">main</dependencies>
+    </breakpoint>
+  </sequence>
+  <output format="binary">
+  </output>
+</simulation>

@@ -29,6 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 @def insideCalculateOperatorFieldLoops($codeString)
   @#
+${insideCalculateOperatorFieldLoopsBegin}@slurp
+  @#
 // ************** Operator code *****************
 ${codeString}@slurp
 // **********************************************
@@ -42,6 +44,8 @@ ${loopOverVectorsInBasisWithInnerContent(setOfVectorsToLoopOver, $operatorBasis,
 @end def
 
 @def insideEvaluateOperatorLoops
+  @#
+${insideEvaluateOperatorLoopsBegin}@slurp
   @#
   @for operatorComponentNumber, (operatorComponentName, operatorComponentVectors) in enumerate($operatorComponents.iteritems())
     @for targetVectorComponents in operatorComponentVectors.itervalues()
