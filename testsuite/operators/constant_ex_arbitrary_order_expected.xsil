@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="constant_ex_arbitrary_order.xsil" expected="constant_ex_arbitrary_order_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+  </testing>
+  
+  <name>constant_ex_arbitrary_order</name>
+  <author>Graham Dennis</author>
+  <description>
+    Simple one-dimensional diffusion using the EX operator
+  </description>
+  
+  <features>
+    <benchmark />
+    <bing />
+    <fftw plan="estimate" />
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="y" lattice="128" domain="(-1.0, 1.0)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="main" initial_basis="y" type="complex">
+    <components>
+      phi1 phi2
+    </components>
+    <initialisation>
+      <![CDATA[
+        phi1 = exp(-y*y);
+        phi2 = exp(-5.0*y*y);
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="RK4" interval="10.0" steps="24000" tolerance="1e-5">
+      <samples>24</samples>
+      <operators>
+        <operator kind="ex" constant="yes">
+          <operator_names>L</operator_names>
+          <![CDATA[
+            L = -0.02*ky*ky;
+          ]]>
+        </operator>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+          dphi1_dt = L[phi1];
+          dphi2_dt = L[phi2];
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  
+  <output format="binary">
+      <sampling_group basis="y" initial_sample="yes">
+        <moments>dens1 dens2</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          dens1 = mod2(phi1);
+          dens2 = mod2(phi2);
+        ]]>
+      </sampling_group>
+  </output>
+
+<info>
+Script compiled with XMDS2 version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+See http://www.xmds.org for more information.
+</info>
+
+<XSIL Name="moment_group_1">
+  <Param Name="n_independent">2</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>4</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t y dens1 dens2 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>25</Dim>
+    <Dim>128</Dim>
+    <Dim>4</Dim>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint64" precision="double" Type="Remote" Encoding="LittleEndian"/>
+constant_ex_arbitrary_order_expected_mg0.dat
+    </Stream>
+  </Array>
+</XSIL>
+</simulation>
