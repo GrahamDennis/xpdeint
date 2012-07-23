@@ -13,7 +13,7 @@
 # directories should be run as sudo, which is taken care of within this script.
 
 XMDS_VERSION="2.1.1"
-KNOWN_GOOD_XMDS_REVISION="2741"
+KNOWN_GOOD_XMDS_REVISION="2746"
 
 if [ "$(whoami)" = "root" ]; then
   echo
@@ -141,11 +141,11 @@ install_FFTW() {
 
   echo "  Configuring FFTW with single precision option..."
 
-  ./configure --disable-fortran --enable-mpi --enable-single --enable-sse2 --enable-avx --prefix=$FFTW_install_directory > installer.log
+  ./configure --disable-fortran --enable-mpi --enable-single --enable-sse2 --enable-openmp --enable-avx --prefix=$FFTW_install_directory > installer.log
   if [ $? -ne 0 ]; then
     # Nonzero error code returned, so something went wrong
     echo "    Configuration failed. Retrying without assuming your compiler supports AVX..."
-    ./configure --disable-fortran --enable-mpi --enable-single --enable-sse2 --prefix=$FFTW_install_directory > installer.log
+    ./configure --disable-fortran --enable-mpi --enable-single --enable-sse2 --enable-openmp --prefix=$FFTW_install_directory > installer.log
     if [ $? -ne 0 ]; then
       # Still no success, so bail out
       echo "Configuration failed due to some unknown reason. Aborting install."
@@ -171,9 +171,9 @@ install_FFTW() {
   # Note: if precision is not specified, FFTW will compile double-precision libs by default
   echo "  Configuring FFTW with double precision option..."
   if [ $NO_COMPILER_SUPPORT_FOR_AVX -eq 1 ]; then
-    ./configure --disable-fortran --enable-mpi --enable-sse2 --prefix=$FFTW_install_directory > /dev/null
+    ./configure --disable-fortran --enable-mpi --enable-sse2 --enable-openmp --prefix=$FFTW_install_directory > /dev/null
   else
-    ./configure --disable-fortran --enable-mpi --enable-sse2 --enable-avx --prefix=$FFTW_install_directory > /dev/null
+    ./configure --disable-fortran --enable-mpi --enable-sse2 --enable-avx --enable-openmp --prefix=$FFTW_install_directory > /dev/null
   fi
 
   echo "  Compiling FFTW with double precision option..."
