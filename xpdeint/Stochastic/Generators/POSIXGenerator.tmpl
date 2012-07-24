@@ -31,6 +31,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *@
 @def globals
   @#
+  @super
+  @#
 unsigned short ${generatorName}[3];
   @#
 @end def
@@ -51,23 +53,12 @@ for (long _i0 = 0; _i0 < _vector_size; _i0++) {
 *@
 @def initialiseSeeds
   @#
-  @set $featureOrdering = ['Driver']
-  @silent seedOffset = $insertCodeForFeatures('seedOffset', $featureOrdering)
+  @super
   @#
-  @if len($seedArray)
-    @for $i in range(3)
-      @if $i < len($seedArray)
-${generatorName}[$i] = ${seedArray[$i]}${seedOffset};
-      @else
-${generatorName}[$i] = 0${seedOffset};
-      @end if
-    @end for
+bzero(${generatorName}, sizeof(${generatorName}));
+for (unsigned long _i0=0; _i0<${seedCount}; _i0++)
+  ${generatorName}[_i0] = (unsigned short)${generatorName}_local_seeds[_i0];
+
 erand48(${generatorName});
-  @else
-    @set self.generatedSeeds = [random.randrange(0, pow(2, 16)) for i in range(3)]
-    @for $i in range(3)
-${generatorName}[$i] = ${generatedSeeds[$i]}${seedOffset};
-    @end for
-  @end if
   @#
 @end def

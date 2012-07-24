@@ -22,6 +22,42 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @extends xpdeint.ScriptElement
 @from xpdeint.PrintfSafeFilter import PrintfSafeFilter
 
+@def seedCount
+  @return len($seedArray) or 3
+@end def
+
+@def globals
+  @#
+uint32_t ${generatorName}_seeds[${seedCount}]@slurp
+  @if len($seedArray)
+ = {${', '.join(str(seed) for seed in $seedArray)}}@slurp
+  @end if
+;
+  @#
+@end def
+
+@def initialiseSeeds
+  @#
+  @set $featureOrdering = ['Driver']
+  @silent seedOffset = $insertCodeForFeatures('seedOffset', $featureOrdering)
+  @#
+  @if not $seedArray
+    @set $seedGenerationDict = {'extraIndent': 0}
+${insertCodeForFeatures('runtimeSeedGenerationBegin', $featureOrdering, $seedGenerationDict)}@slurp
+    @silent extraIndent = seedGenerationDict['extraIndent']
+${runtimeGenerateSeeds, extraIndent = extraIndent}@slurp
+${insertCodeForFeaturesInReverseOrder('runtimeSeedGenerationEnd', $featureOrdering, $seedGenerationDict)}@slurp
+  @end if
+uint32_t ${generatorName}_local_seeds[${seedCount}] = { ${', '.join([c'${generatorName}_seeds[$i]${seedOffset}' for i in xrange($seedCount)])} };
+  @#
+@end def
+
+@def runtimeGenerateSeeds
+srandomdev();
+for (unsigned long _i0=0; _i0 < ${seedCount}; _i0++)
+  ${generatorName}_seeds[_i0] = (uint32_t)random();
+@end def
+
 @def xsilOutputInfo($dict)
 @*doc:
 Write to the XSIL file lines naming the seeds that we generated if no seed was provided
@@ -31,18 +67,10 @@ the same results.
   @#
   @set $fp = dict['fp']
   @#
-  @if not self.hasattr('generatedSeeds')
+  @if len($seedArray)
     @return
   @end if
   @#
-  @filter $PrintfSafeFilter
 fprintf($fp, "\nNo seeds were provided for noise vector '${parent.parent.name}'. The seeds generated were:\n");
-fprintf($fp, "    @slurp
-    @set $separator = ''
-    @for seed in $generatedSeeds
-${separator}${seed}@slurp
-      @set $separator = ', '
-    @end for
-\n");
-  @end filter
+fprintf($fp, "    ${', '.join(['%u' for _ in xrange($seedCount)])}\n", ${', '.join([c'${generatorName}_seeds[$i]' for i in xrange($seedCount)])});
 @end def

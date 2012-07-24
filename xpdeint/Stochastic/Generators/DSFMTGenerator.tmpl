@@ -205,19 +205,10 @@ dsfmt_genrand_open_open(${generatorName})@slurp
 
 @def initialiseSeeds
   @#
-  @set $featureOrdering = ['Driver']
-  @silent seedOffset = $insertCodeForFeatures('seedOffset', $featureOrdering)
+  @super
   @#
-  @if not len($seedArray)
-    @set self.generatedSeeds = [random.randrange(0, pow(2, 31)) for i in xrange(3)]
-    @set seedArray = self.generatedSeeds
-  @end if
-  @#
-  @set $seedString = ', '.join([str(seed)+seedOffset for seed in $seedArray])
-  @#
-uint32_t ${generatorName}_seeds[${len($seedArray)}] = { $seedString };
 ${generatorName} = (dsfmt_t *)xmds_malloc(sizeof(dsfmt_t));
-dsfmt_init_by_array(${generatorName}, ${generatorName}_seeds, ${len($seedArray)});
+dsfmt_init_by_array(${generatorName}, ${generatorName}_local_seeds, ${seedCount});
   @#
 @end def
 
