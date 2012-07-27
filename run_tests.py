@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import xpdeint.Python24Support
 
 import os
+import re
 import sys
 import getopt
 import shutil
@@ -81,7 +82,7 @@ def scriptTestingFunction(root, scriptName, testDir, absPath, self):
   # The skip functionality for the unittest class is only available
   # in python 2.7 and later, so check for that too.
   if returnCode != 0 and sys.version_info[:2] >= (2, 7):
-    if "The missing feature(s) were: xmds" in message:
+    if re.search(r'^The missing \w+ feature\(s\) were: .*xmds.*', message, re.MULTILINE):
       self.skipTest("Skipping test as XMDS1 is required and not installed")
 
   self.assert_(returnCode == 0, ("Failed to compile." % locals()) + message)

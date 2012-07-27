@@ -150,11 +150,11 @@ def run_build(source_name, target_name, variant = 'default', buildKWs = {}, verb
     # Expand the dependencies of any uselib variables
     Context.g_module.expand_dependencies_of_list(uselib, uselib[:], ctx.env)
     
-    missing_uselib = set(buildKWs['uselib']).difference(available_uselib)
+    missing_uselib = set([uselib for uselib in buildKWs['uselib'] if uselib]).difference(available_uselib)
     if missing_uselib:
         print "This script requires libraries or features that xmds2 could not find."
         print "Make sure these requirements are installed and then run 'xmds2 --reconfigure'."
-        print "The missing feature(s) were: %s." % ', '.join(missing_uselib)
+        print "The missing %i feature(s) were: %s." % (len(missing_uselib), ', '.join(missing_uselib))
         return -1
     
     ctx.out_dir = cwd
