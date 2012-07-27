@@ -370,7 +370,7 @@ def configure(conf):
             header_name="hdf5.h",
             function_name="H5check_version",
             uselib_store="hdf5",
-            uselib="zlib" if "zlib" in conf.env['uselib'] else "",
+            uselib="zlib" if "zlib" in conf.env['uselib'] else [],
             msg = "Checking for HDF5",
         )
         
