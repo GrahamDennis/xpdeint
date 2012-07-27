@@ -331,6 +331,31 @@ def configure(conf):
             msg = "Checking for compiler debug flags"
         )
         
+        # Check for srandomdev, used for runtime initialisation of random number generators
+        check_cxx(
+            header_name='stdlib.h',
+            function_name='srandomdev',
+            defines = 'HAVE_SRANDOMDEV',
+            uselib_store = 'randomisation_seeding',
+            msg = "Checking for srandomdev"
+        )
+        
+        # Check for the availability of /dev/urandom
+        check_cxx(
+            defines = 'HAVE_DEV_URANDOM',
+            uselib_store = 'randomisation_seeding',
+            fragment= '''
+                extern "C" {
+                #include <stdio.h>
+                	int main() {
+                        FILE *fp = fopen("/dev/urandom", "r");
+                        return fp == NULL;
+                    }
+                }
+            ''',
+            msg = "Checking for /dev/urandom",
+        )
+        
         # Check for zlib, used by hdf5
         check_cxx(
             lib='z',
