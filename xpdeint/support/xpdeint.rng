@@ -122,6 +122,9 @@
             </choice>
           </element>
           <element name="openmp">
+            <optional>
+              <attribute name="threads"/>
+            </optional>
             <choice>
               <ref name="Bool"/>
               <empty/>

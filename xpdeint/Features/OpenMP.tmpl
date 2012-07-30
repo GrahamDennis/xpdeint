@@ -21,8 +21,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *@
 @extends xpdeint.Features._Feature
 
+@from xpdeint.CallOnceGuards import callOnceGuard
+
 @def description: OpenMP
 @attr featureName = 'OpenMP'
+@attr uselib = ['openmp']
+
+@@callOnceGuard
+@def includes
+  @#
+  @super
+  @#
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+  @#
+@end def
+
+@def mainBegin($dict)
+  @#
+  @if $threadCount
+#ifdef _OPENMP
+omp_set_num_threads($threadCount);
+#endif
+  @end if
+  @#
+@end def
 
 @def loopOverVectorsWithInnerContentTemplateBegin($dict)
   @#

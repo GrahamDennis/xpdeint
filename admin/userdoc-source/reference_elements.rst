@@ -276,7 +276,9 @@ Example syntax::
 OpenMP
 ------
 
-The ``<openmp />`` feature instructs compatible compilers to parallelise key loops using the `OpenMP API <http://www.openmp.org>`_ standard. 
+The ``<openmp />`` feature instructs compatible compilers to parallelise key loops using the `OpenMP API <http://www.openmp.org>`_ standard.  By default the simulation will use all available CPUs.  The number of threads used can be restricted by specifying the number of threads in the script with ``<openmp threads="2"/>``, or by setting the ``OMP_NUM_THREADS`` environment variable at run-time like so::
+
+	OMP_NUM_THREADS=2 ./simulation_name
 
 
 .. _Precision:

@@ -53,7 +53,7 @@ Features = element features {
         | element diagnostics     { Bool | empty }
         | element error_check     { Bool | empty }
         | element halt_non_finite { Bool | empty }
-        | element openmp          { Bool | empty }
+        | element openmp          { attribute threads {text}?, (Bool | empty) }
         | Arguments
         | element globals { text }
         | element validation { 

@@ -83,7 +83,7 @@ ${mg.allocate}@slurp
   @*
     And now insert the code for the features that apply in the main function
   *@
-  @set $featureOrdering = ['Bing', 'Validation', 'Driver', 'Stochastic', 'TransformMultiplexer', 'Benchmark', 'Output']
+  @set $featureOrdering = ['Bing', 'Validation', 'Driver', 'OpenMP', 'Stochastic', 'TransformMultiplexer', 'Benchmark', 'Output']
 ${insertCodeForFeatures('mainBegin', $featureOrdering)}@slurp
 
 @# This needs to be extracted into a function so that it can be indented further if necessary

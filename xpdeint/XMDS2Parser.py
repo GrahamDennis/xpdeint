@@ -252,6 +252,24 @@ class XMDS2Parser(ScriptParser):
     parseSimpleFeature('halt_non_finite', Features.HaltNonFinite.HaltNonFinite)
     parseSimpleFeature('diagnostics', Features.Diagnostics.Diagnostics)
     
+    openmpElement = featuresParentElement.getChildElementByTagName('openmp', optional=True)
+    if openmpElement:
+      threadCount = None
+      if openmpElement.hasAttribute('threads'):
+        try:
+          threadCountString = openmpElement.getAttribute('threads')
+          threadCount = int(threadCountString)
+        except ValueError, err:
+          raise ParserException(openmpElement, "Cannot understand '%(threadCountString)s' as an "
+                                               "integer number of threads." % locals())
+        
+        if threadCount <= 0:
+          raise ParserException(openmpElement, "The number of threads must be greater than 0.")
+      openmpFeature = Features.OpenMP.OpenMP(parent = self.simulation,
+                                             xmlElement = openmpElement,
+                                             **self.argumentsToTemplateConstructors)
+      openmpFeature.threadCount = threadCount
+    
     precisionElement = featuresParentElement.getChildElementByTagName('precision', optional=True)
     if precisionElement:
       content = precisionElement.innerText().strip().lower()
@@ -411,11 +429,13 @@ class XMDS2Parser(ScriptParser):
       if planType:
         fftAttributeDictionary['planType'] = planType
       
-      if threadCount > 1:
+      
+      if 'OpenMP' in self.globalNameSpace['features'] or threadCount > 1:
         if fourierTransformClass == Transforms.FourierTransformFFTW3.FourierTransformFFTW3:
           fourierTransformClass = Transforms.FourierTransformFFTW3Threads.FourierTransformFFTW3Threads
           if 'OpenMP' in self.globalNameSpace['features']:
-              fourierTransformClass.fftwSuffix = 'omp'
+            fourierTransformClass.fftwSuffix = 'omp'
+            threadCount = 'omp_get_max_threads()'
         elif fourierTransformClass == Transforms._NoTransform._NoTransform:
           raise ParserException(fftwElement, "Can't use threads with no fourier transforms.")
         else:
