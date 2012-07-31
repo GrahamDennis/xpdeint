@@ -28,11 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 @def globals
   @#
-uint32_t ${generatorName}_seeds[${seedCount}]@slurp
-  @if len($seedArray)
- = {${', '.join(str(seed) for seed in $seedArray)}}@slurp
-  @end if
-;
+uint32_t ${generatorName}_seeds[${seedCount}];
   @#
 @end def
 
@@ -47,7 +43,12 @@ ${insertCodeForFeatures('runtimeSeedGenerationBegin', $featureOrdering, $seedGen
     @silent extraIndent = seedGenerationDict['extraIndent']
 ${runtimeGenerateSeeds, extraIndent = extraIndent}@slurp
 ${insertCodeForFeaturesInReverseOrder('runtimeSeedGenerationEnd', $featureOrdering, $seedGenerationDict)}@slurp
+  @else
+    @for seedIdx, seed in enumerate($seedArray)
+${generatorName}_seeds[$seedIdx] = $seed;
+    @end for
   @end if
+
 uint32_t ${generatorName}_local_seeds[${seedCount}] = { ${', '.join([c'${generatorName}_seeds[$i]${seedOffset}' for i in xrange($seedCount)])} };
   @#
 @end def
@@ -61,8 +62,8 @@ char __state[__state_size];
 unsigned __seed;
 FILE *__urandom_fp = fopen("/dev/urandom", "r");
 if (__urandom_fp == NULL) {
-	_LOG(_ERROR_LOG_LEVEL, "Unable to seed random number generator from /dev/urandom.  Is it accessible?\n");
-	// Implicit quit
+  _LOG(_ERROR_LOG_LEVEL, "Unable to seed random number generator from /dev/urandom.  Is it accessible?\n");
+  // Implicit quit
 }
 fread(&__seed, sizeof(__seed), 1, __urandom_fp);
 fread(__state, sizeof(__state), 1, __urandom_fp);
