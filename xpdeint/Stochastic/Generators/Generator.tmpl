@@ -65,8 +65,17 @@ if (__urandom_fp == NULL) {
   _LOG(_ERROR_LOG_LEVEL, "Unable to seed random number generator from /dev/urandom.  Is it accessible?\n");
   // Implicit quit
 }
-fread(&__seed, sizeof(__seed), 1, __urandom_fp);
-fread(__state, sizeof(__state), 1, __urandom_fp);
+size_t __bytes_read = 0;
+__bytes_read = fread(&__seed, sizeof(__seed), 1, __urandom_fp);
+if (__bytes_read != sizeof(__seed)) {
+  _LOG(_ERROR_LOG_LEVEL, "Unable to read from /dev/urandom while seeding the random number generator.\n");
+  // Implicit quit
+}
+__bytes_read = fread(__state, sizeof(__state), 1, __urandom_fp);
+if (__bytes_read != sizeof(__state)) {
+  _LOG(_ERROR_LOG_LEVEL, "Unable to read from /dev/urandom while seeding the random number generator.\n");
+  // Implicit quit
+}
 fclose(__urandom_fp);
 initstate(__seed, __state, __state_size);
 #else
