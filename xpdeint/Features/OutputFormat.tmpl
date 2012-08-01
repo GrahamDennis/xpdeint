@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @attr $outputFormatClasses = {}
 @attr $outputFormat = False
 @attr $mpiSafe = False
+@attr $outputFilesTruncated = set()
 
 @@callOnceGuard
 @def functionPrototypes
@@ -114,7 +115,7 @@ void _write_xsil_footer(FILE* fp)
   @#
 @end def
 
-@def writeOutSetup($filename)
+@def writeOutSetup($filename, $caller)
 char *_xsilFilename = (char*)malloc(256);
 snprintf(_xsilFilename, 256, "%s.xsil", $filename);
 
@@ -122,7 +123,10 @@ FILE* _outfile = _open_xsil_file(_xsilFilename);
 
 if (_outfile) {
   _write_xsil_header(_outfile);
+  @if not caller in $outputFilesTruncated
   ${truncateOutputFiles(filename), autoIndent=True}@slurp
+    @silent $outputFilesTruncated.add(caller)
+  @end if
 }
 @end def
 
@@ -134,7 +138,6 @@ _xsilFilename = NULL;
 _outfile = NULL;
 @end def
 
-@@callOncePerInstanceGuard
 @def truncateOutputFiles($baseFilename)
 @end def
 

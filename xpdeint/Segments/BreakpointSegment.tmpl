@@ -75,7 +75,7 @@ snprintf(_baseFilename, 255, "%s%s", "$baseFilename", gsArgsAndValues.c_str());
   @end if
 
   @set featureOrdering = ['Output']
-${outputFormat.writeOutSetup('_baseFilename')}@slurp
+${outputFormat.writeOutSetup('_baseFilename', self)}@slurp
 
   @set $dependentVariables = [{'vector': vector, 'arrayName': c'_active_${vector.id}', 'components': vector.components} for vector in $dependencies]
   @set $writeOutDict = {'field': $field,

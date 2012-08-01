@@ -56,7 +56,6 @@ ${writeOutFunctionImplementationEnd(dict)}@slurp
   @#
 @end def
 
-@@callOncePerInstanceGuard
 @def truncateOutputFiles($baseFilename)
 char _dataFilename[200];
 snprintf(_dataFilename, 200, "%s.h5", ${baseFilename});

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="hermitegauss_transform_2d_chunked_breakpoints_hdf5.xsil" expected="../transforms/hermitegauss_transform_2d_expected.xsil" absolute_tolerance="1e-8" relative_tolerance="1e-5" />
+    <xsil_file name="hermitegauss_transform_2d_chunked_breakpoint1_hdf5.xsil" expected="hermitegauss_transform_2d_chunked_breakpoint1_expected.xsil" absolute_tolerance="1e-8" relative_tolerance="1e-5" />
+    <xsil_file name="hermitegauss_transform_2d_chunked_breakpoint2_hdf5.xsil" expected="hermitegauss_transform_2d_chunked_breakpoint2_expected.xsil" absolute_tolerance="1e-8" relative_tolerance="1e-5" />
+    <xsil_file name="hermitegauss_transform_2d_chunked_breakpoint3_hdf5.xsil" expected="hermitegauss_transform_2d_chunked_breakpoint3_expected.xsil" absolute_tolerance="1e-8" relative_tolerance="1e-5" />
+    <xsil_file name="hermitegauss_transform_2d_chunked_breakpoint4_hdf5.xsil" expected="hermitegauss_transform_2d_chunked_breakpoint4_expected.xsil" absolute_tolerance="1e-8" relative_tolerance="1e-5" />
+  </testing>
+
+  <name>hermitegauss_transform_2d_chunked_breakpoints_hdf5</name>
+  <author>Graham Dennis</author>
+  <description>
+    Solve the Schroedinger equation in 2D using the hermite-Gauss basis.
+  </description>
+  
+  <features>
+    <chunked_output size="10KB" />
+    <validation kind="run-time" />
+    <globals>
+      <![CDATA[
+        const real M = 9.1e-31; // Mass of an electron
+        const real hbar = 1.05e-34;
+        const real omega = 2*M_PI*1e3;
+        const real offset = 1.0 * sqrt(hbar/(M*omega));
+        
+      ]]>
+    </globals>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="x" lattice="20" length_scale="sqrt(hbar/(M*omega))" transform="hermite-gauss" />
+      <dimension name="y" lattice="20" length_scale="sqrt(hbar/(M*omega))" transform="hermite-gauss" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="main" initial_basis="x y" type="complex">
+    <components>
+      psi
+    </components>
+    <initialisation>
+      <![CDATA[
+        // initial state is the groundstate in the x axis, but shifted by offset
+      psi = pow(M*omega/(hbar*M_PI), 0.25) * exp(-0.5*(M*omega/hbar)*(x - offset)*(x - offset));
+        // and an expanded gaussian in the y axis
+      psi *= pow(M*omega/(hbar*M_PI), 0.25) * exp(-0.25*(M*omega/hbar)*y*y);
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <computed_vector name="normalisation" dimensions="" type="real">
+    <components>N integral_y2</components>
+    <evaluation>
+      <dependencies>main</dependencies>
+      <![CDATA[
+        N = mod2(psi);
+        integral_y2 = mod2(psi)*y*y;
+      ]]>
+    </evaluation>
+  </computed_vector>
+  
+  <sequence>
+    <integrate algorithm="ARK45" tolerance="1e-6" interval="1e-3" steps="400">
+      <samples>10 1 100</samples>
+      <operators>
+        <operator kind="ip" constant="yes" basis="nx ny">
+          <operator_names>L</operator_names>
+          <![CDATA[
+            L = -i*(nx + ny + 1.0)*omega;
+          ]]>
+        </operator>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+          dpsi_dt = L[psi];
+        ]]>
+      </operators>
+    </integrate>
+	<breakpoint filename="hermitegauss_transform_2d_chunked_breakpoint1_hdf5.xsil">
+		<dependencies>main</dependencies>
+	</breakpoint>
+	<breakpoint filename="hermitegauss_transform_2d_chunked_breakpoint2_hdf5.xsil">
+		<dependencies basis="nx ny">main</dependencies>
+	</breakpoint>
+	<breakpoint filename="hermitegauss_transform_2d_chunked_breakpoint3_hdf5.xsil">
+		<dependencies basis="kx ky">main</dependencies>
+	</breakpoint>
+	<breakpoint filename="hermitegauss_transform_2d_chunked_breakpoint4_hdf5.xsil">
+		<dependencies basis="x_4f y_4f">main</dependencies>
+	</breakpoint>
+  </sequence>
+  <output format="hdf5">
+      <sampling_group basis="x y" initial_sample="yes">
+        <moments>dens</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          dens = mod2(psi);
+        
+        ]]>
+      </sampling_group>
+      <sampling_group basis="nx ny" initial_sample="no">
+        <moments>dens</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          dens = mod2(psi);
+        
+        ]]>
+      </sampling_group>
+      <sampling_group basis="x(0) y(0)" initial_sample="yes">
+        <moments>mean_x mean_sigmay</moments>
+        <dependencies>main normalisation</dependencies>
+        <![CDATA[
+          mean_x = mod2(psi)*x/N;
+          mean_sigmay = sqrt(integral_y2/N);
+        ]]>
+      </sampling_group>
+  </output>
+</simulation>

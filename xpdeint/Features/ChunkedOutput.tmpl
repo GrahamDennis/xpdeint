@@ -48,7 +48,7 @@ ${insertCodeForFeatures('findMax', ['Driver'], {'variable': '&' + propDimRep.loc
   @end for
   @# Initialise output files
   @set outputFeature = $features['Output']
-${outputFeature.outputFormat.writeOutSetup(c'"${outputFeature.filename}"')}@slurp
+${outputFeature.outputFormat.writeOutSetup(c'("${outputFeature.filename}" + gsArgsAndValues).c_str()', outputFeature)}@slurp
 ${outputFeature.outputFormat.writeOutTearDown}@slurp
   @#
 @end def
