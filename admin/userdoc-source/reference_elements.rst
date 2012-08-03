@@ -138,7 +138,7 @@ When ``XMDS2`` is run on this script the executable ``arguments_test`` is create
 
   ./arguments_test --size=1.3 --number=2 --pulse_shape=lorentzian
 
-It is also possible to include an optional ``CDATA`` block inside the ``<arguments>`` block. This code will run after the arguments have been initialised with the values passed from the command line. This code block could be used, for example, to sanity check the parameters passed in, or for assigning values to global variables based on those parameters. For example, one could have the following ::
+It is also possible to include an optional ``CDATA`` block inside the ``<arguments>`` block. This code will run after the arguments have been initialised with the values passed from the command line. This code block could be used, for example, to sanity check the parameters passed in, or for assigning values to global variables based on those parameters.  Any references to variables defined in an ``<argument>`` element should be made here rather than in the :ref:`Globals<globals>` element, or else the variables will only have their default values.  For example, one could have the following ::
 
     <features>
       <globals>
@@ -153,7 +153,6 @@ It is also possible to include an optional ``CDATA`` block inside the ``<argumen
         ]]>
       </arguments>
     </features>
-
 
 .. _ArgumentElement:
 
@@ -382,7 +381,7 @@ Each transverse dimension must specify how many points or modes it requires, and
 
 Any dimension can have a number of aliases.  These act exactly like copies of that dimension, but must be included explicitly in the definition of subsequent vectors (i.e. they are not included in the default list of dimensions for a new vector).  The list of aliases for a dimension are included in an ``aliases`` attribute.  They are useful for non-local reference of variables.  See ``groundstate_gaussian.xmds`` and ``2DMultistateSE.xmds`` as examples.
 
-Integrals over a dimension can be multiplied by a common prefactor, which is specified using the ``volume_prefactor`` attribute.  For example, this allows the automatic inclusion of a factor of two due to a reflection symmetry by adding the attribute ``volume_prefactor="2"``.
+Integrals over a dimension can be multiplied by a common prefactor, which is specified using the ``volume_prefactor`` attribute.  For example, this allows the automatic inclusion of a factor of two due to a reflection symmetry by adding the attribute ``volume_prefactor="2"``.  In very specific cases, you may wish to refer to volume elements explicitly.  This will lead to grid-dependent behaviour, which is sometimes required in certain stochastic field simulations, for example.  In this case, the volume element for each variable is described by a ``d`` prefix (e.g. ``lambda`` would be referred to as ``dlambda``).  These volume elements contain any implicit prefactors (for example, the radial coordinate for dimensions defined using :ref:`Bessel transforms<BesselTransform>`), including the ``volume_prefactor`` element.
 
 .. _Transforms:
 
@@ -511,6 +510,8 @@ Example syntax::
         </geometry>
     </simulation>
 
+
+.. _BesselTransform:
 
 The "bessel" transform
 ----------------------
@@ -1034,7 +1035,7 @@ An :ref:`<integrate><IntegrateElement>` element must contain one or more ``<oper
 
 Within each ``<operators>`` element, the vectors that are to be integrated are listed by name in the ``<integration_vectors>`` element, and the differential equations are written in a 'CDATA' block.   The derivative of each component of the integration vectors must be defined along the propagation dimension.  For example, if the integration vectors have components 'phi' and 'beta', and the propagation dimension is labelled 'tau', then the 'CDATA' block must define the variables 'dphi_dtau' and 'dbeta_dtau'.  These derivatives can be any function of the available variables, including any components from other vectors, computed vectors or noise vectors that are listed in the optional :ref:`<dependencies><Dependencies>` element.  These dependent vectors must be defined on a subset of the dimensions of the integration vectors.  
     
-When noise vectors are referenced, equations with both Wiener should be written as though the equations are in differential form, as described in the worked examples :ref:`Kubo` and :ref:`Fibre`.  Jump-based Poisson noises will also be written in an equivalent form, as modelled by the example 'photodetector.xmds`.
+When noise vectors are referenced, equations with Wiener noises should be written as though the equations are in differential form, as described in the worked examples :ref:`Kubo` and :ref:`Fibre`.  Jump-based Poisson noises will also be written in an equivalent form, as modelled by the example 'photodetector.xmds`.
     
 By default, the name of each component references the local value of the vector, but :ref:`nonlocal variables<ReferencingNonlocal>` can be accessed using the standard syntax.  However, typically the most common (and most efficient) method of referencing nonlocal variables is to reference variables that are local in the :ref:`transformed space<Transforms>` for a given transverse dimension.  This is done using ``<operator>`` elements.
     
