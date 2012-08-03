@@ -40,6 +40,7 @@ from xpdeint.xsil2graphics2.MathematicaFiveImport import MathematicaFiveImport
 from xpdeint.xsil2graphics2.GnuplotImport import GnuplotImport
 from xpdeint.xsil2graphics2.MatlabImport import MatlabImport
 from xpdeint.xsil2graphics2.ScilabImport import ScilabImport
+from xpdeint.xsil2graphics2.OctaveImport import OctaveImport
 
 
 # The help message printed when --help is used as an argument
@@ -54,7 +55,8 @@ Options and arguments for xpdeint:
 Options:  (Only Mathematica has been implemented)
   infile(s):        required, the input xsil file or files
   -h/--help:        optional, display this information
-  -m/--matlab:      optional, produce matlab/octave output (default)
+  -m/--matlab:      optional, produce matlab output (default)
+  -8/--octave:      optional, produce octave output
   -s/--scilab:      optional, produce scilab output
   -a/--mathmFive:   optional, produce mathematica 5.x output
   -e/--mathematica: optional, produce mathematica output
@@ -95,7 +97,7 @@ def main(argv=None):
     argv = sys.argv
   try:
     try:
-      opts, args = getopt.gnu_getopt(argv[1:], "hmsaegrpo:", ["help", "matlab", "scilab", "mathmFive", "mathematica", "gnuplot", "R", "plot", "outfile=", "debug"])
+      opts, args = getopt.gnu_getopt(argv[1:], "hms8aegrpo:", ["help", "matlab", "scilab", "octave", "mathmFive", "mathematica", "gnuplot", "R", "plot", "outfile=", "debug"])
     except getopt.error, msg:
       raise Usage(msg)
     
@@ -107,6 +109,7 @@ def main(argv=None):
     optionList = [
       ("-m", "--matlab", MatlabImport),
       ("-s", "--scilab", ScilabImport),
+      ("-8", "--octave", OctaveImport),
       ("-a", "--mathmFive", MathematicaFiveImport),
       ("-e", "--mathematica", MathematicaImport),
       ("-g", "--gnuplot", GnuplotImport),

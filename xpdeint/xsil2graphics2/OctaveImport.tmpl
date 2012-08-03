@@ -1,0 +1,30 @@
+@*
+OctaveImport.tmpl
+
+Created by Lincoln Turner on 2011-02-01.
+Copyright (c) 2011 Monash University. All rights reserved.
+*@
+
+@def description: Creates text to import data from XSIL files into GNU Octave.
+@attr $name = 'Octave'
+
+@attr $defaultExtension = 'm'
+
+@def loadXSILFile($xsilFile)
+  @for objectNum, xsilObject in enumerate(xsilFile.xsilObjects):
+    @if xsilObject.data.format == 'hdf5':
+      @set $filename = xsilObject.data.filename
+load ${filename}
+      @for var in xsilObject.independentVariables:
+        @set $outName = c'${var.name}_${objectNum+1}'
+${var.name} = _${objectNum+1}.${var.name};
+      @end for
+      @for var in xsilObject.dependentVariables:
+${var.name} = _${objectNum+1}.${var.name};
+      @end for
+    @else
+      @raise Exception("No support for Octave output for XSIL format '%s'." % xsilObject.data.format)
+    @end if
+  @end for
+@end def
+
