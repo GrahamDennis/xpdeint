@@ -160,7 +160,7 @@ See http://www.xmds.org for more information.
   <Array Name="variables" Type="Text">
     <Dim>5</Dim>
     <Stream><Metalink Format="Text" Delimiter=" \n"/>
-kz q p matrixR matrixI 
+kz p q matrixR matrixI 
     </Stream>
   </Array>
   <Array Name="data" Type="double">

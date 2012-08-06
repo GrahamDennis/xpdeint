@@ -677,16 +677,16 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
             lattice = "((%(maximumString)s) - (%(minimumString)s) + 1)" % locals()
         
         
-        aliasNames = set()
+        aliasNames = []
         if dimensionElement.hasAttribute('aliases'):
-          aliasNames.update(Utilities.symbolsInString(dimensionElement.getAttribute('aliases'), xmlElement = dimensionElement))
+          aliasNames.extend(Utilities.symbolsInString(dimensionElement.getAttribute('aliases'), xmlElement = dimensionElement))
           for aliasName in aliasNames:
             if aliasName in self.globalNameSpace['symbolNames']:
               raise ParserException(dimensionElement, "Cannot use '%(aliasName)s' as an alias name for dimension '%(dimensionName)s\n"
                                                       "This name is already in use." % locals())
             self.globalNameSpace['symbolNames'].add(aliasName)
         
-        aliasNames.add(dimensionName)
+        aliasNames.insert(0, dimensionName)
         
         if dimensionElement.hasAttribute('spectral_lattice'):
           spectralLattice = dimensionElement.getAttribute('spectral_lattice').strip()
@@ -702,12 +702,14 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
         if dimensionElement.hasAttribute('volume_prefactor'):
             volumePrefactor = dimensionElement.getAttribute('volume_prefactor').strip()
         
+        aliasNameSet = set(aliasNames)
+        
         for aliasName in aliasNames:
           dim = transform.newDimension(name = aliasName, lattice = lattice,
                                        spectralLattice = spectralLattice, type = dimensionType,
                                        minimum = minimumString, maximum = maximumString,
                                        parent = geometryTemplate, transformName = transformName,
-                                       aliases = aliasNames, volumePrefactor = volumePrefactor,
+                                       aliases = aliasNameSet, volumePrefactor = volumePrefactor,
                                        xmlElement = dimensionElement)
           geometryTemplate.dimensions.append(dim)
       

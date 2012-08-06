@@ -177,7 +177,7 @@ eigenvalues_expected.h5
   <Array Name="variables" Type="Text">
     <Dim>6</Dim>
     <Stream><Metalink Format="Text" Delimiter=" \n"/>
-t kz q p matrixR matrixI 
+t kz p q matrixR matrixI 
     </Stream>
   </Array>
   <Array Name="data" Type="double">
