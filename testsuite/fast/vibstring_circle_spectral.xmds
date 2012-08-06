@@ -18,7 +18,6 @@
     <chunked_output size="10KB" />
     <bing />
     <fftw plan="patient" />
-    <openmp />
     <globals>
       <![CDATA[
       const real T = 10.0;

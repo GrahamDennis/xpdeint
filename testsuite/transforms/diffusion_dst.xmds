@@ -16,7 +16,6 @@
     <error_check />
     <bing />
     <fftw plan="exhaustive" />
-    <openmp />
   </features>
   
   <geometry>

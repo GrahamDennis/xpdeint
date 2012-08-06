@@ -17,7 +17,6 @@
     <error_check />
     <bing />
     <fftw plan="exhaustive" />
-    <openmp />
     <validation kind="run-time"/>
     <arguments>
       <argument name="latticesize" type="integer" default_value="70"/>

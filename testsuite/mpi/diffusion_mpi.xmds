@@ -15,7 +15,6 @@
     <benchmark />
     <bing />
     <fftw plan="measure" />
-    <openmp />
   </features>
   
   <geometry>

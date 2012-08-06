@@ -15,7 +15,6 @@
     <error_check />
     <bing />
     <fftw plan="estimate" />
-    <openmp />
     <globals>
       <![CDATA[
       const real T = 10.0;
