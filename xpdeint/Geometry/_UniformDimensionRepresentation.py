@@ -57,13 +57,16 @@ class _UniformDimensionRepresentation(DimensionRepresentation):
   def nonlocalAccessIndexFromStringForFieldInBasis(self, accessString, field, basis):
     result = super(_UniformDimensionRepresentation, self).nonlocalAccessIndexFromStringForFieldInBasis(accessString, field, basis)
     if result: return result
-    # We only support non-local access for integer-valued dimensions
-    if not self.type == 'long':
-      return
+    # We only support non-local access for integer-valued dimensions, or access to the minimum value
     minimum = self.minimum
     if self.hasLocalOffset:
       localOffsetString = ' - ' + self.localOffset
     else: localOffsetString = ''
+    
+    if not self.type == 'long':
+      if not self._stepSize and accessString == self._minimum:
+        return '0%(localOffsetString)s' % locals()
+      return
     return '(%(accessString)s) - %(minimum)s%(localOffsetString)s' % locals()
   
 
