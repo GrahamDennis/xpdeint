@@ -403,6 +403,21 @@ def configure(conf):
             msg = "Checking for libxmds"
         )
         
+        # Check for system-specific features
+        check_cxx(
+            framework="CoreFoundation",
+            uselib_store="system",
+            msg = "Checking for Apple CoreFoundation framework",
+        )
+        check_cxx(
+            framework="IOKit",
+            uselib_store="system",
+            uselib="system",
+            msg = "Checking for Apple IOKit framework",
+        )
+        
+        
+        
         check_cxx(
             lib=["iomp", "vml"],
             header_name='mkl_vsl.h',

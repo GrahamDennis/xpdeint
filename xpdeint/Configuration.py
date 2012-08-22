@@ -157,6 +157,8 @@ def run_build(source_name, target_name, variant = 'default', buildKWs = {}, verb
         print "The missing %i feature(s) were: %s." % (len(missing_uselib), ', '.join(missing_uselib))
         return -1
     
+    buildKWs['uselib'].append('system')
+    
     ctx.out_dir = cwd
     def build(ctx):
         ctx.program(

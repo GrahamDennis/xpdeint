@@ -65,6 +65,29 @@ int main(int argc, char **argv)
 
 @def mainRoutineInnerContent
   @#
+#ifdef __APPLE__
+  #if __MAC_OS_X_VERSION_MIN_REQUIRED >= __MAC_10_7
+{
+  IOPMAssertionID _powerAssertionID = 0;
+  IOReturn __io_result = IOPMAssertionCreateWithDescription(
+    kIOPMAssertionTypePreventUserIdleSystemSleep,
+    CFSTR("XMDS simulation '${simulationName}' preventing user idle sleep"), // Assertion name
+    NULL, // Assertion details
+    NULL, // Human-readable reason
+    NULL, // Localization bundle path
+    (CFTimeInterval)0, // never timeout
+    kIOPMAssertionTimeoutActionRelease,
+    &_powerAssertionID
+    );
+  if (__io_result != kIOReturnSuccess) {
+    _LOG(_WARNING_LOG_LEVEL, "Failed to disable user idle sleep\n");
+  }
+  // Note, this power assertion is automatically released when the process quits.
+}
+  #endif
+#endif
+
+  
   @set $preAllocationFeatureOrdering = ['Arguments', 'Driver', 'ChunkedOutput']
 ${insertCodeForFeatures('preAllocation', $preAllocationFeatureOrdering)}@slurp
   
