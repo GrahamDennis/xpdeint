@@ -89,17 +89,24 @@
   </computed_vector>
   
   <sequence>
-    <filter>
-        <dependencies>normalisation</dependencies>
+    <filter name="fname">
       <![CDATA[
-        printf("Hello world from a filter segment!\n");
+        printf("Hello world from the first filter segment!\n");
+      ]]>
+    </filter>
+
+    <filter>
+      <![CDATA[
+        printf("Hello world from a second filter segment that calls the first!\n");
+        fname();
+        internalFilter();
       ]]>
     </filter>
 
     <integrate algorithm="ARK89" interval="1e-4" steps="10000" tolerance="1e-8">
       <samples>20</samples>
       <filters>
-        <filter>
+        <filter name="internalFilter">
           <dependencies>wavefunction normalisation</dependencies>
           <![CDATA[
             // Correct normalisation of the wavefunction

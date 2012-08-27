@@ -1505,7 +1505,6 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
         raise ParserException(filtersElement, "Unknown placement of filters in the 'where' tag of '%(whereString)s'.\n"
                                               "Valid options are: 'step start' (default) or 'step end'." % locals())
     
-  
   def parseFilterElements(self, filtersElement, parent, optional = False):
     filterElements = filtersElement.getChildElementsByTagName('filter', optional = optional)
     
@@ -1520,9 +1519,22 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     
     return operatorContainer
   
-  def parseFilterOperator(self, filterElement, operatorContainer):
-    filterTemplate = FilterOperatorTemplate(parent = operatorContainer,
-                                            xmlElement = filterElement,
+  def parseFilterOperator(self, filterElement, parentTemplate):
+    filterName = filterElement.getAttribute('name')
+    
+    if filterName:
+        ## Check that the name isn't already taken
+        if filterName in self.globalNameSpace['symbolNames']:
+          print("We got to here....")
+          raise ParserException(filterElement, "Filter name '%(filterName)s' conflicts with previously "
+                                                       "defined symbol of the same name." % locals())
+          print("And borked")
+    
+        ## Make sure no-one else takes the name
+        self.globalNameSpace['symbolNames'].add(filterName)
+    
+    filterTemplate = FilterOperatorTemplate(parent = parentTemplate,
+                                            xmlElement = filterElement, name = filterName,
                                             **self.argumentsToTemplateConstructors)
     
     codeBlock = _UserLoopCodeBlock(field = None, xmlElement = filterElement,

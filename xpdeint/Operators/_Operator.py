@@ -45,6 +45,7 @@ class _Operator (ScriptElement):
   vectorsMustBeInSubsetsOfIntegrationField = True
   
   def __init__(self, *args, **KWs):
+    localKWs = self.extractLocalKWs(['name'], KWs)
     ScriptElement.__init__(self, *args, **KWs)
     
     # Set default variables
@@ -54,9 +55,17 @@ class _Operator (ScriptElement):
     self.resultVector = None
     self.operatorNumber = -1
     
+    #need to set the name when instanced (somehow), and then add if statement to evaluateOperatorFunctionName below
+    self._name = None
+    if localKWs:
+        self._name = localKWs['name']
+    
     parent = self.parent
     parent.addOperator(self)
-    evaluateOperatorFunctionName = ''.join(['_', parent.id, '_evaluate_', self.name])
+    if self._name:
+        evaluateOperatorFunctionName = self._name
+    else:
+        evaluateOperatorFunctionName = ''.join(['_', parent.id, '_evaluate_', self.name])
     evaluateOperatorFunction = Function(name = evaluateOperatorFunctionName,
                                         args = self.evaluateOperatorFunctionArguments,
                                         implementation = self.evaluateOperatorFunctionContents,

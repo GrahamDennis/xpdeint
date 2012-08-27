@@ -488,6 +488,9 @@
     <element name="filter">
       <interleave>
         <optional>
+          <attribute name="name"/>
+        </optional>
+        <optional>
           <ref name="Dependencies"/>
         </optional>
         <text/>
