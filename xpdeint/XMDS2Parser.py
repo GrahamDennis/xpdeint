@@ -1525,10 +1525,8 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     if filterName:
         ## Check that the name isn't already taken
         if filterName in self.globalNameSpace['symbolNames']:
-          print("We got to here....")
           raise ParserException(filterElement, "Filter name '%(filterName)s' conflicts with previously "
                                                        "defined symbol of the same name." % locals())
-          print("And borked")
     
         ## Make sure no-one else takes the name
         self.globalNameSpace['symbolNames'].add(filterName)

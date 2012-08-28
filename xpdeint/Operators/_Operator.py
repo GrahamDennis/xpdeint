@@ -55,7 +55,7 @@ class _Operator (ScriptElement):
     self.resultVector = None
     self.operatorNumber = -1
     
-    #need to set the name when instanced (somehow), and then add if statement to evaluateOperatorFunctionName below
+    # the name is only used for filter operators, which default to a normal segment object if not named in the XML
     self._name = None
     if localKWs:
         self._name = localKWs['name']
