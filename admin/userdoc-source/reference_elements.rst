@@ -204,7 +204,7 @@ Example syntax::
     </cflags>
 
 
-.. _ChunkedOutput
+.. _ChunkedOutput:
 
 Chunked Output
 --------------
@@ -840,9 +840,9 @@ Noise Vector Element
 
 Noise vectors are used like computed vectors, but when they are evaluated they generate arrays of random numbers of various kinds.  They do not depend on other vectors, and are not initialised by code.  They are defined by a ``<noise_vector>`` element, which has a ``name`` attribute, and optional ``dimensions``, ``initial_basis`` and ``type`` attributes, which work identically as for normal vectors.  
 
-The choice of pseudo-random number generator (RNG) can be specified with the ``method`` attribute, which has options "posix" (the default), "mkl", "solirte" and "dsfmt".  It is only possible to use any particular method if that library is available.
+The choice of pseudo-random number generator (RNG) can be specified with the ``method`` attribute, which has options "posix" (the default), "mkl", "solirte" and "dsfmt".  It is only possible to use any particular method if that library is available.  Although "posix" is the default, it is also the slowest, and produces the lowest quality random numbers (although this is typically not a problem).  "mkl" refers to the Intel Math Kernel Library, and is only available if installed.  "solirte" and "dsfmt" are fast, hardware-accelerated random number sources that should work on most systems. "mkl", "solirte" and "dsfmt" have comparable performance.
 
-The random number generators can be provided with a seed using the ``seed`` attribute, which should typically consist of a list of three integers.  All RNGs require positive integers as seeds.  It is possible to use the :ref:`<validation kind="run-time"/><Validation>` feature to use passed variables as seeds.  It is advantageous to used fixed seeds rather than timer-based seeds, as the :ref:`<error_check><ErrorCheck>` element can test for strong convergence if the same seeds are used for both integrations.  If the ``seed`` attribute is not specified, then fixed seeds will be generated as the code is generated.
+The random number generators can be provided with a seed using the ``seed`` attribute, which should typically consist of a list of three integers.  All RNGs require positive integers as seeds.  It is possible to use the :ref:`<validation kind="run-time"/><Validation>` feature to use passed variables as seeds.  It is advantageous to use fixed seeds rather than timer-based seeds, as the :ref:`<error_check><ErrorCheck>` element can test for strong convergence if the same seeds are used for both integrations.  If the ``seed`` attribute is not specified, then seeds will be generated at the time the simulation is run.  Different executions of the same simulation will therefore give different results.  However, results can be reproduced by examining the ``.xsil`` file produced by the simulation which contains the generated seeds.  If these seeds are used for the ``seed`` attribute, the same results can be reproduced.  Unless you need to reproduce particular results, it is unnecessary to specify the ``seed`` attribute.
 
 The different types of noise vectors are defined by a mandatory ``kind`` attribute, which must take the value of 'gauss', 'gaussian', 'wiener', 'poissonian','jump' or 'uniform'.  
 
