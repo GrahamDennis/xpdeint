@@ -4,10 +4,11 @@ Configuration, installation and runtime options
 ===============================================
 
 Running the 'xmds2' program with the option '--help', gives several options that can change its behaviour at runtime.  These include:
-  * '-o', which overrides the name of the output file to be generated
-  * '-n', which generates the C code for the simulation, but does not try to compile it
-  * '-v', which gives verbose output about compilation flags.
-  * '-g', which compiles the simulation in debug mode (compilation errors refer to lines in the source, not the .xmds file). This option implies '-v'. This option is mostly useful when debugging XMDS code generation.
+  * '-o' or '--output', which overrides the name of the output file to be generated
+  * '-n' or '--no-compile', which generates the C code for the simulation, but does not try to compile it
+  * '-v' or '--verbose', which gives verbose output about compilation flags.
+  * '-g' or '--debug', which compiles the simulation in debug mode (compilation errors refer to lines in the source, not the .xmds file). This option implies '-v'. This option is mostly useful when debugging XMDS code generation.
+  * '--waf-verbose', which makes ``waf`` be very verbose when configuring XMDS or compiling simulations.  This option is intended for developer use only to aid in diagnosing problems with ``waf``.
 
 It also has commands to configure XMDS2 and recheck the installation.  If your program requires extra paths to compile, you can configure XMDS2 to include those paths by default.  Simply use the command
 
