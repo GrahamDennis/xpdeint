@@ -691,6 +691,15 @@ When initialising the vector within the XMDS script, the appropriate code is pla
 
 While the default XMDS behaviour is to reference all variables locally, any vector can be referenced non-locally.  The notation for referencing the value of a vector 'phi' with a dimension 'j' at a value of 'j=jk' is ``phi(j => jk)``.  Multiple non-local dimensions are addressed by adding the references in a list, e.g. ``phi(j => jk, x => y)``.  See ``2DMultistateSE.xmds`` for an example.
 
+Dimensions can only be accessed non-locally if one of the following conditions is true:
+
+* The dimension is an ``integer`` dimension,
+* The dimension is accessed with an :ref:`alias <DimensionAliases>` of that dimension. For example, ``phi(x => y)`` if the dimension ``x`` has ``y`` as an alias, or vice-versa.
+* The dimension is a Fourier transform dimension (``dft``), used in the spectral basis (i.e. ``kx`` for an ``x`` dimension) and it is accessed with the negative of that dimension.  For example ``phi(kx => -kx)``.
+* The dimension is uniformly spaced (i.e. corresponds to the spatial basis of a dimension with a transform of ``dft``, ``dct``, ``dst`` or ``none``), and it is accessed with the lower limit of that dimension.  For example, ``phi(x => -1.2)`` for a dimension with a domain of ``(-1.2, 1.2)``.  Note that the dimension must be accessed with the exact characters used in the definition of the domain.  For the previous example ``phi(x => -1.20)`` does not satisfy this condition.
+
+Note that a dimension cannot be accessed non-locally in ``distributed-mpi`` simulations if the simulation is distributed across that dimension.
+
 .. _FilenameElement:
 
 If you wish to initialise from a file, then you can choose to initialise from an hdf5 file using ``kind="hdf5"`` in the ``<initialisation>`` element, and then supply the name of the input file with the ``filename`` element.  This is a standard data format which can be generated from XMDS, or from another program.  An example for generating a file in another program for input into XMDS is detailed in the Advanced topic: :ref:`Importing`.

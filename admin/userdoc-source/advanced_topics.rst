@@ -227,3 +227,48 @@ Sometimes when the convolution theorem is used one of the forward Fourier transf
 
 Dimension aliases
 -----------------
+
+Dimension aliases specify that two or more dimensions have exactly the same ``lattice``, ``domain`` and ``transform``.  This can be useful in situations where the problem enforces this, for example when computing correlation functions or representing square matrices.  
+
+Dimension aliases are not just a short-hand for defining an additional dimension, they also permit dimensions to be accessed :ref:`non-locally <ReferencingNonlocal>`, which is essential when computing spatial correlation functions.
+
+Here is how to compute a spatial correlation function :math:`g^{(1)}(x, x') = \psi^*(x) \psi(x')` of the quantity ``psi``:
+
+.. code-block:: xpdeint
+
+  <simulation xmds-version="2">
+    
+    <!-- name, features block -->
+        
+    <geometry>
+      <propagation_dimension> t </propagation_dimension>
+      <transverse_dimensions>
+        <dimension name="x" lattice="1024" domain="(-1.0, 1.0)" aliases="xp" />
+      </transverse_dimensions>
+    </geometry>
+    
+    <vector name="wavefunction" type="complex" >
+      <components> psi </components>
+      <initialisation>
+        <!-- initialisation code -->
+      </initialisation>
+    </vector>
+    
+    <computed_vector name="correlation" dimensions="x xp" type="complex" >
+      <components> g1 </components>
+      <evaluation>
+        <dependencies> wavefunction </dependencies>
+        <![CDATA[
+          g1 = conj(psi(x => x)) * psi(x => xp);
+        ]]>
+      </evaluation>
+    </computed_vector>
+    
+    <!-- integration and sampling code -->
+    
+  </simulation>
+
+In this simulation note that the vector ``wavefunction`` defaults to only having the dimension "x" even though "xp" is also a dimension (implicitly declared through the ``aliases`` attribute).  ``vector``'s without an explicit ``dimensions`` attribute will only have the dimensions that are explicitly listed in the ``transverse_dimensions`` block, i.e. this will not include aliases.
+
+See the example ``groundstate_gaussian.xmds`` for a complete example.
+      
