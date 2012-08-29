@@ -96,6 +96,7 @@ Features elements are where simulation-wide options are specified. The ``<featur
     * :ref:`benchmark <Benchmark>`
     * :ref:`bing <Bing>`
     * :ref:`cflags <CFlags>`
+    * :ref:`chunked_output <ChunkedOutput>`
     * :ref:`diagnostics <Diagnostics>`
     * :ref:`error_check <ErrorCheck>`
     * :ref:`halt_non_finite <HaltNonFinite>`
@@ -203,6 +204,26 @@ Example syntax::
     </cflags>
 
 
+.. _ChunkedOutput
+
+Chunked Output
+--------------
+
+By default, XMDS2 keeps the contents of all output moment groups in memory until the end of the simulation when they are written to the output file.  This can be a problem if your simulation creates a very large amount of output.  ``<chunked_output />`` causes the simulation to save the output data in chunks as the simulation progresses.  For some simulations this can significantly reduce the amount of memory required.  The amount of data in a chunk can be specified with the ``size`` attribute where the suffixes "KB" (kilobytes), "MB" (megabytes), "GB" (gigabytes) and "TB" (terabytes) are understood.  Note that ``size`` specifies the chunk size per output sampling group, per MPI process.  So a chunk size of 4MB for a distributed-MPI simulation using 20 processes will cause each process to save up 4MB of data, and data to be written to the output file 80MB at a time.
+
+Limitations (XMDS will give you an error if you violate any of these):
+
+* This feature cannot be used with the ASCII output file format due to limitations in the file format.
+* This feature cannot be used with the ``multi-path`` drivers because all sampling data is required to compute the mean and standard error statistics.
+* Neither is this feature compatible with the ``error_check`` feature as that relies on all sampling data being available to compute the error.
+
+Example syntax::
+
+    <simulation xmds-version="2">
+        <features>
+            <chunked_output size="5MB" />
+        </features>
+    </simulation>
 
 .. _Diagnostics:
 

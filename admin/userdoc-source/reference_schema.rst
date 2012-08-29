@@ -30,6 +30,7 @@ The possible attributes and attribute values for each element are not shown; see
         <:ref:`benchmark <Benchmark>` />
         <:ref:`bing <Bing>` />
         <:ref:`cflags <CFlags>`> <:ref:`/cflags <CFlags>`>
+        <:ref:`chunked_output <ChunkedOutput>` />
         <:ref:`diagnostics <Diagnostics>` />
         <:ref:`error_check <ErrorCheck>` />
         <:ref:`halt_non_finite <HaltNonFinite>` />

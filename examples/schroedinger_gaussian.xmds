@@ -11,6 +11,7 @@
     <benchmark />
     <bing />
     <fftw plan="patient" />
+    <chunked_output size="1Mb" />
   </features>
   
   <geometry>
