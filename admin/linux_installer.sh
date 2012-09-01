@@ -100,8 +100,6 @@ install_FFTW() {
 
   # FFTW 3.3 wasn't in the repos, so install manually from source
   current_directory=`pwd`
-
-  FFTW_install_directory=$XMDS2_install_directory"/fftw-3.3.1"
   
   cd $XMDS2_install_directory
 
