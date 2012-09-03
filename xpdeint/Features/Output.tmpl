@@ -117,9 +117,9 @@ if (_break_next) {
   }
 }
 
-if ( (${propagationDimension} - _${propagationDimension}_ini + _step)*(1.0 + _EPSILON) > _${propagationDimension}_break_next) {
+if ( (_${propagationDimension}_local + _step)*(1.0 + _EPSILON) > _${propagationDimension}_break_next) {
   _break_next = true;
   _LOG(_SAMPLE_LOG_LEVEL, "Current timestep: %e\n", _old_step);
-  _step = _${propagationDimension}_break_next - ${propagationDimension} + _${propagationDimension}_ini;
+  _step = _${propagationDimension}_break_next - _${propagationDimension}_local;
 }
 @end def

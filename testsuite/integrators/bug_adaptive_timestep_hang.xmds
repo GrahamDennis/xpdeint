@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="bug_adaptive_timestep_hang.xsil" expected="bug_adaptive_timestep_hang_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5">
+      <moment_group number="1" absolute_tolerance="1e-4" relative_tolerance="1e-6" />
+      <moment_group number="2" absolute_tolerance="1e-4" relative_tolerance="1e-6" />
+      <moment_group number="3" absolute_tolerance="1e-4" relative_tolerance="1e-6" />
+    </xsil_file>
+  </testing>
+
+  <name>bug_adaptive_timestep_hang</name>
+
+  <author>Mattias Johnsson</author>
+  <description>
+    GPE simulation of an Rb85 BEC in a harmonic trap. In the ground state
+    (F=2, mf=2) we have U=0. We then flip a portion into the F=3 state.
+    Here the scattering length is ~400a0. No one knows that the inter-state
+    scattering length is. Wait a while, then flip it back.
+    What happens? 
+
+    We make use of cylindrical trapping frequencies, so assume omega_x=omega_y = omega_r.
+    That is, system is invariant under rotation around z. To do this we
+    use Hankel transforms instead of Fourier transforms, and describe the
+    (x,y) coords in (r, theta) = (r). That is, use a Bessel basis rather than a
+    Catesian one.
+
+    This means our 2D sim is fully accurate and there's no dimensional reductional
+    crap to deal with, i.e. we we don't have to scale the nonlinearities.
+
+    Note that the equations are done in a rotating frame to remove the Uab/2/dV
+    vacuum correction, i.e. I'm using the tilde variables in
+    a = atilde exp(i t/hbar Uab/2/dV )
+    so keep this in mind when looking at expectation value terms that don't consist
+    of equal numbers of daggered and non-daggered operators. See p1596 for details.
+  </description>
+
+  <features>
+      <benchmark />
+      <bing />
+      <fftw plan="patient" />
+      <auto_vectorise />
+      <globals>
+          <![CDATA[
+          const double hbar = 1.054e-34;
+          const double amu = 1.660539e-27;
+          const double mass = 84.912 * amu;              // Rb 85
+          //const double mass = 86.909 * amu;            // Rb 87
+
+          const double Omega = 2.0 * M_PI * 1.25e5;                      // Coupling Rabi frequency, move 1/2 population in 1us
+          //const double Omega = 3.06278e5;                      // Coupling Rabi frequency, move 1/11 population in 1us
+          //const double Omega = 3.2175e5;                      // Coupling Rabi frequency, move 1/10 population in 1us
+          
+          const double omega_r = 2.0 * M_PI * 50.0;
+          const double omega_z = 2.0 * M_PI * 30.0;
+          const double sr = sqrt(hbar/mass/omega_r);
+          const double sz = sqrt(hbar/mass/omega_z);
+
+          const double N0 = 5e4; 
+
+          const double a0 = 5.2918e-11;                   // Bohr radius
+          const double a3d_initial = 400.0 * a0;
+          const double a3d_00 = 400.0 * a0;
+          const double a3d_10 = 0.0 * a0;
+          const double a3d_11 = 400.0 * a0;
+
+          const double U3d_initial = 4.0*M_PI*hbar*hbar*a3d_initial/mass;
+          const double U3d_00 = 4.0*M_PI*hbar*hbar*a3d_00/mass;
+          const double U3d_10 = 4.0*M_PI*hbar*hbar*a3d_10/mass;
+          const double U3d_11 = 4.0*M_PI*hbar*hbar*a3d_11/mass;
+ 
+          const double BSPhase = 0.2;
+
+          const double mu3d_initial = pow(15.0 * pow(mass,1.5) * omega_r*omega_r*omega_z*N0*U3d_initial/16.0/sqrt(2.0)/M_PI, 0.4);
+
+          ]]>
+       </globals>
+     </features>
+
+<!--  <driver name="mpi-multi-path" paths="1000" /> -->
+
+  <geometry>
+      <propagation_dimension> t </propagation_dimension>
+      <transverse_dimensions>
+        <!-- For TF ground state -->
+        <dimension name="r" lattice="32"  domain="(0, 16e-6)" transform="bessel" volume_prefactor="2*M_PI" />
+        <dimension name="z" lattice="64"  domain="(-24e-6, 24e-6)" />
+
+      </transverse_dimensions>
+   </geometry>
+
+  <noise_vector name="initnoise" kind="gaussian" method="dsfmt" type="complex">
+    <components>n_1 n_2</components>
+  </noise_vector>
+
+  <vector name="wavefunction" type="complex" dimensions="r z">
+    <components> psi0 psi1 </components>
+
+<!-- Initialisation by function -->
+    <initialisation>
+      <dependencies>initnoise</dependencies>
+      <![CDATA[
+        // ground state HO
+        //psi0 = sqrt(N0) * 1/sqrt(sr*sr*sz) * pow(M_PI,-0.75) * exp(-0.5*(r*r/sr/sr + z*z/sz/sz)) + n_1/sqrt(2.0);
+        // Ground state Thomas-Fermi
+        if (mu3d_initial-0.5*mass*(omega_r*omega_r*r*r + omega_z*omega_z*z*z) >=0 ) {
+          psi0 = sqrt(2)*sqrt(mu3d_initial-0.5*mass*(omega_r*omega_r*r*r + omega_z*omega_z*z*z))/sqrt(U3d_initial) + n_1/sqrt(2.0);
+        } else {
+           psi0 = n_1/sqrt(2.0);
+        }      
+        psi1 = n_2 /sqrt(2.0);
+
+        //printf("mu=%e; U3d_initial=%e;   ",mu3d_initial,U3d_initial);
+      ]]>
+    </initialisation>
+
+  </vector>
+
+  <vector name="potential" type="real" dimensions="r z">
+    <components> V </components>
+    <initialisation>
+      <![CDATA[
+        V = 0.5 * mass * (omega_r*omega_r*r*r + omega_z*omega_z*z*z);
+      ]]>
+    </initialisation>
+  </vector>
+
+  <computed_vector name="particle_number" dimensions="" type="real">
+    <!-- The point of this computed vector is that we need access to the 
+         quantity number^2. A standard moment group will give us number by
+         integrating the density field, but it can't then square the result.
+         To get around this we calcuate the number in a CV, and then square
+         that result in the samping_group output. 
+  
+         Also note that the stochatic averaging happens *after* this is done.
+         We stochatically average (number squared).
+     -->
+    <components>
+      computed_number0 computed_number1
+    </components>
+    <evaluation>
+      <dependencies>wavefunction</dependencies>
+      <![CDATA[
+        computed_number0 = mod2(psi0) - 0.5/dr/dz ;
+        computed_number1 = mod2(psi1) - 0.5/dr/dz ;
+      ]]>
+    </evaluation>
+  </computed_vector>
+
+  <sequence>
+
+    <!--  first beam splitter -->
+    <integrate algorithm="ARK45" interval="1e-6" tolerance="1e-7">
+      <samples> 10 10 10 </samples>
+      <operators>
+        <integration_vectors>wavefunction</integration_vectors>
+        <dependencies>potential</dependencies>
+        <operator kind="ip" type="imaginary" >
+          <operator_names>Ltt</operator_names>
+          <![CDATA[
+            Ltt = -i*0.5*hbar*(kr*kr + kz*kz)/mass;
+          ]]>
+        </operator>
+        <![CDATA[
+
+          dpsi0_dt = Ltt[psi0] - i/hbar * (V) * psi0 - i*Omega*psi1;
+          dpsi1_dt = Ltt[psi1] - i/hbar * (V) * psi1 - i*Omega*psi0;
+          
+        ]]>
+      </operators>
+    </integrate>
+
+    <!-- First hold time -->
+    <integrate algorithm="ARK45" interval="4e-4" tolerance="1e-7">
+      <samples>  10 10 10 </samples>
+      <operators>
+        <integration_vectors>wavefunction</integration_vectors>
+        <dependencies>potential</dependencies>
+        <operator kind="ip" constant="yes" type="imaginary" >
+          <operator_names>Ltt</operator_names>
+          <![CDATA[
+            Ltt = -i*0.5*hbar*(kr*kr + kz*kz)/mass;
+          ]]>
+        </operator>
+        <![CDATA[
+
+          dpsi0_dt = Ltt[psi0] - i/hbar * (V + U3d_00*(mod2(psi0)-1.0/dr/dz) + U3d_10*(mod2(psi1)-0.5/dr/dz)) * psi0;
+          dpsi1_dt = Ltt[psi1] - i/hbar * (V + U3d_11*(mod2(psi1)-1.0/dr/dz) + U3d_10*(mod2(psi0)-0.5/dr/dz)) * psi1;
+
+        ]]>
+      </operators>
+    </integrate>
+
+    <!-- And now the final beam splitter integration -->
+    <integrate algorithm="ARK45" interval="2e-6" tolerance="1e-7">
+      <samples> 10 10 50 </samples>
+      <operators>
+        <integration_vectors>wavefunction</integration_vectors>
+        <dependencies>potential</dependencies>
+        <operator kind="ip" constant="yes" type="imaginary" >
+          <operator_names>Ltt</operator_names>
+          <![CDATA[
+            Ltt = -i*0.5*hbar*(kr*kr + kz*kz)/mass;
+          ]]>
+        </operator>
+        <![CDATA[
+
+          dpsi0_dt = Ltt[psi0] - i/hbar * (V ) * psi0 - i*exp(i*BSPhase)*Omega*psi1;
+          dpsi1_dt = Ltt[psi1] - i/hbar * (V ) * psi1 - i*exp(-i*BSPhase)*Omega*psi0;
+
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+
+  <output>
+      <sampling_group basis="r(0) z(0)" initial_sample="yes">
+        <moments>psi0real psi0imag psi1real psi1imag density0 density1 </moments>
+        <dependencies>wavefunction</dependencies>
+        <![CDATA[
+          psi0real = psi0.Re();
+          psi0imag = psi0.Im();
+          psi1real = psi1.Re();
+          psi1imag = psi1.Im();
+          density0 = mod2(psi0) - 0.5/dz/dr;
+          density1 = mod2(psi1) - 0.5/dz/dr;
+        ]]>
+      </sampling_group>
+
+      <sampling_group basis="kr(0) kz(0)" initial_sample="yes">
+        <moments> density0k density1k </moments>
+        <dependencies>wavefunction</dependencies>
+        <![CDATA[
+          density0k = mod2(psi0)- 0.5/dkz/dkr;
+          density1k = mod2(psi1)- 0.5/dkz/dkr;
+        ]]>
+      </sampling_group>
+
+      <sampling_group basis="r(1) z(1)" initial_sample="yes">
+        <moments> number0 number1 number0squared number1squared </moments>
+        <dependencies>wavefunction particle_number </dependencies>
+        <![CDATA[
+          number0 = computed_number0;
+          number1 = computed_number1;
+          number0squared = computed_number0 * computed_number0 - _lattice_r*_lattice_z/4.0;
+          number1squared = computed_number1 * computed_number1 - _lattice_r*_lattice_z/4.0;
+        ]]>
+      </sampling_group>
+
+
+  </output>
+</simulation>
+

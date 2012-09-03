@@ -205,7 +205,7 @@ if (_noise_list.empty()) {
     @end if
   @end for
   
-  if (_break_next && abs(${propagationDimension} - _${propagationDimension}_ini + _step - _${propagationDimension}_break_next) > _step*_EPSILON)
+  if ( _break_next && !((_${propagationDimension}_local + _step)*(1.0 + _EPSILON) >= _${propagationDimension}_break_next))
     _break_next = false;
 } 
 

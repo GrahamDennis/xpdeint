@@ -300,13 +300,13 @@ long _next_sample_counter[$momentGroupCount];
 for (long _i0 = 0; _i0 < $momentGroupCount; _i0++)
   _next_sample_counter[_i0] = 1;
 
-const real _${propagationDimension}_ini = ${propagationDimension};
+real _${propagationDimension}_local = 0.0;
 
 real _${propagationDimension}_break_next = _${name}_setup_sampling(_next_sample_flag, _next_sample_counter);
 
-if ( $propagationDimension - _${propagationDimension}_ini + _step >= _${propagationDimension}_break_next) {
+if ( (_${propagationDimension}_local + _step)*(1.0 + _EPSILON) >= _${propagationDimension}_break_next) {
   _break_next = true;
-  _step = _${propagationDimension}_break_next - ${propagationDimension} + _${propagationDimension}_ini;
+  _step = _${propagationDimension}_break_next - _${propagationDimension}_local;
 }
 
 ${allocate}@slurp
@@ -340,6 +340,7 @@ do {
   @set $featureOrderingForToleranceChecking = ['Diagnostics', 'Stochastic']
     if (_error < _tolerance) {
       ${insertCodeForFeatures('adaptiveStepSucceeded', $featureOrderingForToleranceChecking), autoIndent=True}@slurp
+      _${propagationDimension}_local += _step;
       if (_step > _max_step)
         _max_step = _step;
       if (!_break_next && _step < _min_step)
