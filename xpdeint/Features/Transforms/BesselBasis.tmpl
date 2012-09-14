@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 @def transformMatricesForDimRepsAtIndices($forwardDimRep, $backwardDimRep, $forwardIndex, $backwardIndex)
   @#
-  @set $order = forwardDimRep._order + forwardDimRep.orderOffset
+  @set $order = forwardDimRep._order
 const real besselFactor = ${forwardDimRep.besselJFunctionCall($order, c'_normbesseljzeros_${forwardDimRep.parent.name}[${forwardIndex}] * _normbesseljzeros_${forwardDimRep.parent.name}[${backwardIndex}] * _besseljnorm_${forwardDimRep.parent.name}')};
   @#
   @super(forwardDimRep, backwardDimRep, forwardIndex, backwardIndex)

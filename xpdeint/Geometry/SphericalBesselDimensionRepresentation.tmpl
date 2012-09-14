@@ -35,6 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @end def
 
 @def besselJFunctionCall($order, $argument)
+sqrt(1.0/M_PI_2) * @slurp
   @if $order in [0, 1, 2]
 gsl_sf_bessel_j${order}($argument)@slurp
   @else
@@ -44,6 +45,6 @@ gsl_sf_bessel_jl($order, $argument)@slurp
 
 @def stepWeightAtIndex($index)
   @#
-sqrt(M_PI/2.0) * 2.0 / (besselFactor * besselFactor * _besseljnorm_${parent.name} * _besseljnorm_${parent.name} * _besseljnorm_${parent.name}) * ${name}_max * ${name}_max * ${name}_max@slurp
+2.0 / (besselFactor * besselFactor * _besseljnorm_${parent.name} * _besseljnorm_${parent.name} * _besseljnorm_${parent.name}) * ${name}_max * ${name}_max * ${name}_max@slurp
   @#
 @end def

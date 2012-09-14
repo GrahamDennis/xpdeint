@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="spherical_ball.xsil" expected="spherical_ball_expected.xsil" absolute_tolerance="1e-5" relative_tolerance="1e-5" />
+    <xsil_file name="spherical_ball_coordinate_space1.xsil" expected="spherical_ball_coordinate_space1_expected.xsil" absolute_tolerance="1e-5" relative_tolerance="1e-5" />
+    <xsil_file name="spherical_ball_spectral_space.xsil" expected="spherical_ball_spectral_space_expected.xsil" absolute_tolerance="1e-4" relative_tolerance="1e-4" />
+    <xsil_file name="spherical_ball_coordinate_space2.xsil" expected="spherical_ball_coordinate_space_expected.xsil" absolute_tolerance="1e-3" relative_tolerance="1e-3" />
+  </testing>
+  
+  <name>spherical_ball</name>
+
+  <author>Mattias Johnsson</author>
+  <description>
+    Calculate the volume of unit ball using spherical bessel transform
+  </description>
+
+  <geometry>
+      <propagation_dimension> t </propagation_dimension>
+      <transverse_dimensions>
+        <dimension name="r" lattice="256"  domain="(0, 1.5)" transform="spherical-bessel" volume_prefactor="4.0*M_PI"/>
+      </transverse_dimensions>
+   </geometry>
+
+  <vector name="densityvector" type="real" dimensions="r">
+    <components> rho </components>
+    <initialisation>
+      <![CDATA[
+        if (r<=1.0)
+          rho = 1.0;
+        else
+          rho = 0.0;
+      ]]>
+    </initialisation>
+  </vector>
+
+  <sequence>
+    <breakpoint filename="spherical_ball_coordinate_space1.xsil">
+      <dependencies>densityvector</dependencies>
+    </breakpoint>
+    <breakpoint filename="spherical_ball_spectral_space.xsil">
+      <dependencies basis="kr">densityvector</dependencies>
+    </breakpoint>
+    <breakpoint filename="spherical_ball_coordinate_space2.xsil">
+      <dependencies>densityvector</dependencies>
+    </breakpoint>
+  </sequence>
+
+  <output>
+    <sampling_group basis="r(0)" initial_sample="yes">
+      <moments> volume </moments>
+      <dependencies>densityvector</dependencies>
+      <![CDATA[
+        volume = rho / (M_PI*4.0/3.0) ;// This should be close to 1.
+      ]]>
+    </sampling_group>
+  </output>
+
+<info>
+Script compiled with XMDS2 version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+See http://www.xmds.org for more information.
+</info>
+
+<XSIL Name="moment_group_1">
+  <Param Name="n_independent">0</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>1</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+volume 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>1</Dim>
+    <Stream><Metalink Format="HDF5" Type="Remote" Group="/1"/>
+spherical_ball_expected.h5
+    </Stream>
+  </Array>
+</XSIL>
+</simulation>
