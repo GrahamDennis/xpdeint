@@ -143,12 +143,6 @@ def besselJZeros(m, a, b):
   assert all([0.6*mpmath.pi < (b - a) < 1.4*mpmath.pi for a, b in zip(results[:-1], results[1:])]), "Separation of Bessel zeros was incorrect."
   return results
 
-def besselJWeightsFromZeros(m, roots):
-  require_mpmath()
-  prefactor = mpmath.mpf('2')  / (roots[-1]**2)
-  return [prefactor / (mpmath.besselj(m+1, root))**2 for root in roots[:-1]]
-
-
 class _MMT (_Transform):
   transformName = 'MMT'
   
@@ -162,6 +156,7 @@ class _MMT (_Transform):
     dataCache = self.getVar('dataCache')
     
     self.besselJZeroCache = dataCache.setdefault('besselJZeros', {})
+    self.hermiteCache = dataCache.setdefault('hermiteGauss', {})
   
   @property
   def children(self):
@@ -321,6 +316,7 @@ class _MMT (_Transform):
     return results
   
   def besselJZeros(self, m, k):
+    print self.besselJZeroCache
     if not m in self.besselJZeroCache:
       self.besselJZeroCache[m] = besselJZeros(m, 1, k)
     else:
@@ -334,17 +330,16 @@ class _MMT (_Transform):
     norm = zeros[-1]
     return [zero/norm for zero in zeros[:-1]]
   
-  def besselJWeights(self, m, k):
-    return besselJWeightsFromZeros(m, self.besselJZeros(m, k+1))
+  def hermiteZeros(self, n):
+    zerosCache = self.hermiteCache.setdefault('zeros',{})
+    if not n in zerosCache:
+      zerosCache[n] = hermiteZeros(n)
+    return zerosCache[n]
   
-  def hermiteZeros(self, n, _cache = {}):
-    if not n in _cache:
-      _cache[n] = hermiteZeros(n)
-    return _cache[n]
-  
-  def hermiteGaussWeights(self, n, _cache = {}):
-    if not n in _cache:
-      _cache[n] = hermiteGaussWeightsFromZeros(n, self.hermiteZeros(n))
-    return _cache[n]
+  def hermiteGaussWeights(self, n):
+    weightsCache = self.hermiteCache.setdefault('weights',{})
+    if not n in weightsCache:
+      weightsCache[n] = hermiteGaussWeightsFromZeros(n, self.hermiteZeros(n))
+    return weightsCache[n]
   
 
