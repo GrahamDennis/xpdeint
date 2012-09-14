@@ -2,7 +2,7 @@
 <simulation xmds-version="2">
   <testing>
     <xsil_file name="bug_adaptive_timestep_hang.xsil" expected="bug_adaptive_timestep_hang_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5">
-      <moment_group number="1" absolute_tolerance="1e-4" relative_tolerance="1e-6" />
+      <moment_group number="1" absolute_tolerance="1e-4" relative_tolerance="1e-3" />
       <moment_group number="2" absolute_tolerance="1e-4" relative_tolerance="1e-6" />
       <moment_group number="3" absolute_tolerance="1e-4" relative_tolerance="1e-6" />
     </xsil_file>
@@ -88,7 +88,7 @@
       </transverse_dimensions>
    </geometry>
 
-  <noise_vector name="initnoise" kind="gaussian" method="dsfmt" type="complex">
+  <noise_vector name="initnoise" kind="gaussian" method="dsfmt" type="complex" seed="667813208 116090193 819982544">
     <components>n_1 n_2</components>
   </noise_vector>
 
