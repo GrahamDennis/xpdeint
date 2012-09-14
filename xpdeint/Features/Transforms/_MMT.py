@@ -316,7 +316,6 @@ class _MMT (_Transform):
     return results
   
   def besselJZeros(self, m, k):
-    print self.besselJZeroCache
     if not m in self.besselJZeroCache:
       self.besselJZeroCache[m] = besselJZeros(m, 1, k)
     else:

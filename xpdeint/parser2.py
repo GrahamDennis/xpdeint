@@ -297,7 +297,6 @@ def main(argv=None):
   if dataCache.get('version', 0) != DATA_CACHE_VERSION:
     dataCache.clear()
     dataCache['version'] = DATA_CACHE_VERSION
-  dataCache.clear()
   
   # We need the anyObject function in a few templates, so
   # we add it to the globalNameSpace, so that the function can
