@@ -17,7 +17,7 @@
   <geometry>
       <propagation_dimension> t </propagation_dimension>
       <transverse_dimensions>
-        <dimension name="r" lattice="256"  domain="(0, 1.5)" transform="bessel" volume_prefactor="4.0*M_PI"/>
+        <dimension name="r" lattice="256"  domain="(0, 1.5)" transform="bessel" volume_prefactor="2.0*M_PI"/>
       </transverse_dimensions>
    </geometry>
 
