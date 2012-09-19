@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="nonlocal_index_access.xsil" expected="nonlocal_index_access_expected.xsil" absolute_tolerance="1e-6" relative_tolerance="1e-5" />
+  </testing>
+  
+  <name>nonlocal_index_access</name>
+  <author>Graham Dennis</author>
+  <description>
+    Script to test accessing a dimension at a point via an index (advanced feature).
+    Based off of vibstring.xmds
+  </description>
+  
+  <features>
+    <benchmark />
+    <bing />
+    <fftw plan="patient" />
+    <globals>
+      <![CDATA[
+      const real T = 10.0;
+      const real mass = 1e-3;
+      const real length = 1.0;
+      const real mu = mass/length;
+      const real T_mu = T/mu;
+      
+      const real xmax = _max_x;
+      const real width = 0.1;
+      const real absorb = 80.0;
+      ]]>
+    </globals>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="x" lattice="256"  domain="(-1, 1)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="main" initial_basis="x" type="complex">
+    <components>
+      u uDot
+    </components>
+    <initialisation>
+      <![CDATA[
+        u = exp(-100.0*(x)*(x))*exp(i*200*x);
+        uDot = u*i*200*sqrt(T_mu);
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="ARK45" tolerance="1e-5" interval="2e-3" steps="1000">
+      <samples>5</samples>
+      <operators>
+        <operator kind="ex" constant="no">
+          <operator_names>L</operator_names>
+          <![CDATA[
+            L = -T_mu*kx*kx;
+          ]]>
+        </operator>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+          du_dt = uDot;
+          duDot_dt = L[u];
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  <output format="hdf5">
+      <sampling_group basis="x" initial_sample="yes">
+        <moments>amp amp_middle</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          amp = mod2(u);
+          amp_middle = mod2(u(x_index => _lattice_x/2));
+        ]]>
+      </sampling_group>
+  </output>
+</simulation>

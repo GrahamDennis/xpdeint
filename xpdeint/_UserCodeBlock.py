@@ -195,6 +195,7 @@ class _UserLoopCodeBlock(_UserCodeBlock):
     for componentName, vector, nonlocalAccessDict, codeSlice in reversed(CodeParser.nonlocalDimensionAccessForVectors(vectorsToFix, self)):
       availableDimReps = vector.field.inBasis(self.basis)
       validDimensionNames = [dimRep.name for dimRep in availableDimReps]
+      validDimensionNames.extend([dimRep.name + "_index" for dimRep in availableDimReps])
       
       # If the dict is empty, then it probably means something else
       if not nonlocalAccessDict:
@@ -212,6 +213,7 @@ class _UserLoopCodeBlock(_UserCodeBlock):
           raise CodeParserException(self, nonlocalAccessDict[dimName][1], "Component '%s' doesn't have dimension '%s'." % (componentName, dimName))
       
       dimRepsNeeded = [dimRep for dimRep in availableDimReps if dimRep.name in nonlocalAccessDict and nonlocalAccessDict[dimRep.name][0] != dimRep.name]
+      dimRepsNeeded.extend([dimRep for dimRep in availableDimReps if dimRep.name + "_index" in nonlocalAccessDict])
       
       if not dimRepsNeeded:
         replacementString = componentName
@@ -270,13 +272,20 @@ class _UserLoopCodeBlock(_UserCodeBlock):
         
         arguments = []
         for dimRep in dimRepsNeeded:
-          accessString = nonlocalAccessDict[dimRep.name][0]
-          argumentValue = dimRep.nonlocalAccessIndexFromStringForFieldInBasis(accessString, self.field, self.basis)
+          accessViaIndex = not dimRep.name in nonlocalAccessDict
+          dimRepVariableName = dimRep.name if not accessViaIndex else dimRep.name + "_index"
+          accessString = nonlocalAccessDict[dimRepVariableName][0]
           dimRepName = dimRep.name
-          if not argumentValue:
-            raise CodeParserException(self, nonlocalAccessDict[dimRep.name][1],
-                                 "Cannot access the '%(dimRepName)s' dimension nonlocally with the string '%(accessString)s'. Check the documentation." % locals())
-          arguments.append('/* %(dimRepName)s => %(accessString)s */ (%(argumentValue)s)' % locals())
+          
+          if not accessViaIndex:
+            argumentValue = dimRep.nonlocalAccessIndexFromStringForFieldInBasis(accessString, self.field, self.basis)
+            if not argumentValue:
+              raise CodeParserException(self, nonlocalAccessDict[dimRep.name][1],
+                                   "Cannot access the '%(dimRepName)s' dimension nonlocally with the string '%(accessString)s'. Check the documentation." % locals())
+          else:
+            argumentValue = accessString
+          
+          arguments.append('/* %(dimRepVariableName)s => %(accessString)s */ (%(argumentValue)s)' % locals())
         argumentsString = ', '.join(arguments)
         replacementString = '%(nonlocalAccessVariableName)s(%(argumentsString)s)' % locals()
       

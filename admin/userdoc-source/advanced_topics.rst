@@ -9,6 +9,8 @@ This section has further details on some important topics.
 
 :ref:`Convolutions` (extra information on the Fourier transforms used in XMDS2, and applications to defining convolutions)
 
+:ref:`DimensionAliases` (dimensions which are declared to be identical, useful for correlation functions)
+
 .. _Importing:
 
 Importing data
