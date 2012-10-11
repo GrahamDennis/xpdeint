@@ -8,8 +8,17 @@
   exact simulation. Constants that should be included are: the final value of the propagation dimension,
    any passed-in arguments, the number of paths (if appropriate), and anything else appropriate.
   - This can be added in the HDF5 output file.
+  - Add the simulation text to the HDF5 file.  I'd like to make the xsil file redundant.
 
-* Add support for moment post-processing. This is only necessary for multi-path simulations where a temporal fourier transform needs to be averaged.
+* Add support for moment post-processing (before stochastic averaging). This is only necessary for multi-path simulations where a temporal fourier transform needs to be averaged.
+
+* Add support for moment post-processing (after stochastic averaging).  This is useful for calculating, for example, Wigner standard deviations.  This means you don't need to do this in MATLAB.
+
+* Determine an appropriate transform and quasi-gauss quadrature for a polar coordinate representation.  I'm imagining a generalisation from our current 'bessel' transforms to allow a (r, \theta) -> (kr, m) transform.  Determining a good numerical method would probably be a moderate numerical-math project with implementation in MATLAB.  Implementation of the resulting work in XMDS would be a very advanced project due to the changes required in the TransformMultiplexer code.
+
+* Investigate performance of XMDS-type simulations for graphics cards using CUDA / OpenCL.  This would require experience with graphics card programming as there are lots of details about how you implement these algorithms which significantly affect performance.
+
+* Optimise MPI / OpenMP performance of XMDS simulations including determination of performance scaling limitations.  For example, on a given system, with 2 CPUs are we CPU-constrained or memory-bandwidth constrained?  What about 4 CPUs? 8? Is there anything we can do to resolve these constraints?  Another example: parts of integration algorithms are actually independent and could in principle be executed concurrently (different steps that are independent, not just the same step but on different parts of the data array).  I fiddled with this briefly, but didn't see a performance improvement.  This was possibly due to being memory-bandwidth constrained, but I don't know.
 
 * Rewrite bindNamedVectors/preflight system. It's a mess. bindNamedVectors/preflight should probably be renamed to something like 'localPreflight'/'nonlocalPreflight'.
 
