@@ -19,6 +19,11 @@ The documentation on this website is currently incomplete, but it still covers a
 You should also feel free to email questions to the XMDS users' mailing list at xmds-users@lists.sourceforge.net, where the developers and other users can assist you. You can join the mailing list by going to http://sourceforge.net/projects/xmds/ and clicking on "mailing lists." Also, if you look through the mailing list archives, your particular problem may already have been discussed.
 
 
+How should I cite XMDS2?
+~~~~~~~~~~~~~~~~~~~~~~~~
+If you publish work that has involved XMDS2, please cite it as: Comput. Phys. Commun. 184, 201-208 (2013).
+
+
 I think I found a bug! Where should I report it?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

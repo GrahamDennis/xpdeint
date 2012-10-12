@@ -5,7 +5,10 @@
 Welcome to the documentation for XMDS2!
 =======================================
 
-Contents:
+This website provides the documentation for XMDS2, a software package that allows the fast and easy solution of sets of ordinary, partial and stochastic differential equations, using a variety of efficient numerical algorithms.
+
+If you publish work that has involved XMDS2, please cite it as Comput. Phys. Commun. 184, 201-208 (2013).
+
 
 .. toctree::
    :maxdepth: 2

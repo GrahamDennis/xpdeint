@@ -11,4 +11,8 @@ If this is your first time with XMDS, then an ideal place to start is the :ref:`
 
 If you are upgrading from **XMDS version 1.x**, then after following the installation instructions (:ref:`Installation`), you might want to have a quick read of the note for upgraders (:ref:`UpgradeFromXMDS1`).  The syntax of the XML scripts has changed, but hopefully you will find the new scripts very intuitive.
 
-Detailed advice on input/output issues, and ways to code more complicated simulations can be found in :ref:`AdvancedTopics`.  
+Detailed advice on input/output issues, and ways to code more complicated simulations can be found in :ref:`AdvancedTopics`.
+
+XMDS2 should be cited as: Comput. Phys. Commun. 184, 201-208 (2013).
+
+
