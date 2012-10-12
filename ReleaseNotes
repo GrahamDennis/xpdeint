@@ -1,3 +1,22 @@
+**** XMDS 2.1.2 "Happy Mollusc" ****
+
+We have published a paper in Computer Physics Communications.  If you use XMDS2 in your research, we would appreciate it if you cited us in your publications:
+
+G.R. Dennis, J.J. Hope, and M.T. Johnsson, Computer Physics Communications 184, 201–208 (2013)
+
+The XMDS 2.1.2 update has many improvements:
+
+* Named filters.  You can now specify a name for a filter block and call it like a function if you need to execute it conditionally.  See the documentation for the `<filter>` block for more information.
+* New `chunked_output` feature.  XMDS can now output simulation results as it goes, reducing the memory requirement for simulations that generate significant amounts of output.  See the documentation for more details.
+* Improved OpenMP support
+* The EX operator is now faster in the common case (but you should still prefer IP when possible)
+* If seeds are not provided for a `noise_vector`, they are now generated at simulation run-time, so different executions will give different results.  The generated noises can still be found in the output .xsil files enabling results to be reproduced if desired.
+* Advanced feature: Dimensions can be accessed non-locally with the index of the lattice point.  This removes the need in hacks to manually access XMDS's underlying C arrays.  This is an advanced feature and requires a little knowledge of XMDS's internal grid representation.  See the advanced topics documentation for further details.
+* Fixed adaptive integrator order when noises were used in vector initialisation
+* Fix the Spherical Bessel basis.  There were errors in the definition of this basis which made it previously unreliable.
+* Other bug fixes
+
+
 **** XMDS 2.1 "Happy Mollusc" ****
 
 XMDS 2.1 is a significant upgrade with many improvements and bug fixes since 2.0. We also now have installers for Linux and Mac OS X, so you no longer have to build XMDS from source! See http://www.xmds.org/installation.html for details about the installers.
