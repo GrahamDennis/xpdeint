@@ -13,6 +13,5 @@ If you are upgrading from **XMDS version 1.x**, then after following the install
 
 Detailed advice on input/output issues, and ways to code more complicated simulations can be found in :ref:`AdvancedTopics`.
 
-XMDS2 should be cited as: Comput. Phys. Commun. 184, 201-208 (2013).
-
+XMDS2 should be cited as `Comput. Phys. Commun. 184, 201-208 (2013) <http://dx.doi.org/10.1016/j.cpc.2012.08.016>`_.
 
