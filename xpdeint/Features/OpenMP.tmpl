@@ -72,7 +72,7 @@ bool __initialised = false;
 #ifdef _OPENMP
   @set suffix = ''
   @if index_pointers
-    @set suffix = c', private(${", ".join(index_pointers)})'
+    @set suffix = c' private(${", ".join(index_pointers)})'
   @end if
 #pragma omp parallel for firstprivate(__initialised)${suffix}
 #endif
@@ -149,7 +149,7 @@ if (!__initialised) {
   @#
   @set suffix = ''
   @if private_variables
-    @set suffix = c', private(${", ".join(private_variables)})'
+    @set suffix = c' private(${", ".join(private_variables)})'
   @end if
 bool __initialised = false;
 #ifdef _OPENMP
