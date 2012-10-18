@@ -66,7 +66,7 @@ int main(int argc, char **argv)
 @def mainRoutineInnerContent
   @#
 #ifdef __APPLE__
-  #if __MAC_OS_X_VERSION_MIN_REQUIRED >= __MAC_10_7
+  #if __MAC_OS_X_VERSION_MIN_REQUIRED >= __MAC_10_8
 {
   IOPMAssertionID _powerAssertionID = 0;
   IOReturn __io_result = IOPMAssertionCreateWithDescription(
