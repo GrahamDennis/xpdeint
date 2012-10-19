@@ -79,7 +79,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #ifdef __APPLE__
   #include <Availability.h>
-  #if __MAC_OS_X_VERSION_MIN_REQUIRED >= __MAC_10_8
+  #if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1080
     #define OS_OBJECT_USE_OBJC 0 // Don't make dispatch and xpc objects Objective-C objects.
     #include <IOKit/pwr_mgt/IOPMLib.h> // To disable user idle sleep on Mountain Lion
   #endif
