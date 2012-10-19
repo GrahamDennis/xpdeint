@@ -13,7 +13,7 @@
       <benchmark />
       <bing />
       <fftw plan="patient" />
-      <openmp />
+
       <auto_vectorise />
       <globals>
           <![CDATA[

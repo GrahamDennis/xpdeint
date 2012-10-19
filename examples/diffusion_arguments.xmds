@@ -13,7 +13,6 @@
     <benchmark />
     <bing />
     <fftw plan="exhaustive" />
-    <openmp />
     <validation kind="run-time"/>
     <globals>
       <![CDATA[

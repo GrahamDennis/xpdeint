@@ -22,7 +22,7 @@
     <bing />
     <error_check />
     <fftw plan="patient" />
-    <openmp />
+
     <globals>
       <![CDATA[
       const real T = 10.0;

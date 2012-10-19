@@ -11,7 +11,7 @@
     <error_check />
     <bing />
     <!-- <fftw /> -->
-    <openmp />
+
   </features>
   
   <geometry>

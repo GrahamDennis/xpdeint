@@ -29,7 +29,7 @@
     </arguments>
     <bing />
     <fftw plan="patient" />
-    <openmp />
+
   </features>
 
   <driver name="distributed-mpi" />

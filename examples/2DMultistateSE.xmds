@@ -11,7 +11,6 @@
       <benchmark />
       <bing />
       <fftw plan="patient" />
-      <openmp />
       <auto_vectorise />
      </features>
 

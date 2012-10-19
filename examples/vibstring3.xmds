@@ -11,7 +11,7 @@
     <error_check />
     <bing />
     <fftw />
-    <openmp />
+
     <globals>
       <![CDATA[
       const real T = 10.0;

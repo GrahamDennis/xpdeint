@@ -14,7 +14,7 @@
     <!-- <error_check /> -->
     <bing />
     <fftw plan="patient" />
-    <openmp />
+
     <globals>
       <![CDATA[
       /* physical constants */

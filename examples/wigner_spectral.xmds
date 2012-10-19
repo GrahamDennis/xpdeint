@@ -18,7 +18,7 @@
     <!-- <error_check /> -->
     <bing />
     <fftw plan="patient" />
-    <openmp />
+
     <validation kind="run-time" />
     <globals>
       <![CDATA[
