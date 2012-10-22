@@ -13,7 +13,7 @@
 # directories should be run as sudo, which is taken care of within this script.
 
 XMDS_VERSION="2.1.2"
-KNOWN_GOOD_XMDS_REVISION="2792"
+KNOWN_GOOD_XMDS_REVISION="2793"
 
 if [ "$(whoami)" = "root" ]; then
   echo
@@ -96,7 +96,7 @@ parse_command_line_arguments() {
   done
 }
 
-install_FFTW() {
+install_FFTW_from_source() {
 
   # FFTW 3.3 wasn't in the repos, so install manually from source
   current_directory=`pwd`
@@ -410,7 +410,16 @@ fi
 
 
 # Install FFTW3.3 from package manager if available, otherwise build from source
-install_FFTW
+echo
+echo "Checking if MPI-enabled FFTW available in repository..."
+if [ `apt-cache --names-only search libfftw3-mpi-dev | wc -l` -ne 0 ]; then
+  echo "Yes, it is available"
+  echo "Installing FFTW via package manager"
+  sudo apt-get -y install libfftw3-dev libfftw3-mpi-dev 
+else 
+  echo "MPI-enabled FFTW not available in repository. Downloading, compiling and installing from source"
+  install_FFTW_from_source
+fi
 
 # Fetch the XMDS2 source files
 echo
