@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <arguments>--pathCount 20</arguments>
+    <xsil_file name="runtime_paths.xsil" expected="runtime_paths_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+  </testing>
+  
+  <name>runtime_paths</name>
+  <author>Graham Dennis</author>
+  <description>
+    Pointless simulation checking that the number of paths can be specified at runtime
+  </description>
+  
+  <features>
+    <benchmark />
+    <fftw plan="exhaustive" />
+    <validation kind="run-time"/>
+    <globals>
+      <![CDATA[
+      integer pathIndex = 0;
+      ]]>
+    </globals>
+    <arguments>
+      <argument name="pathCount" type="integer" default_value="10"/>
+    </arguments>
+  </features>
+  
+  <driver name="multi-path" paths="pathCount" />
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+  </geometry>
+  
+  <vector name="main" type="real">
+    <components>
+      phi
+    </components>
+    <initialisation>
+      <![CDATA[
+        phi = pathIndex++;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+  </sequence>
+  
+  <output format="hdf5">
+      <sampling_group initial_sample="yes">
+        <moments>phiR</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          phiR = phi;
+        ]]>
+      </sampling_group>
+  </output>
+
+<info>
+Script compiled with XMDS2 version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+See http://www.xmds.org for more information.
+
+Variables that can be specified on the command line:
+  Command line argument pathCount = 20
+</info>
+
+<XSIL Name="moment_group_1">
+  <Param Name="n_independent">0</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>2</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+mean_phiR stderr_phiR 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>2</Dim>
+    <Stream><Metalink Format="HDF5" Type="Remote" Group="/1"/>
+runtime_paths_expected.h5
+    </Stream>
+  </Array>
+</XSIL>
+</simulation>

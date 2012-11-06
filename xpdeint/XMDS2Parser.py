@@ -144,9 +144,9 @@ class XMDS2Parser(ScriptParser):
     
     simulationElementTemplate = SimulationElementTemplate(parent = self.simulation, **self.argumentsToTemplateConstructors)
     
-    self.parseDriverElement(simulationElement)
-    
     self.parseFeatures(simulationElement)
+    
+    self.parseDriverElement(simulationElement)
     
     self.parseGeometryElement(simulationElement)
     
@@ -183,7 +183,15 @@ class XMDS2Parser(ScriptParser):
       
       class UnknownDriverException(Exception):
         pass
-      
+
+      # Check to see if run-time validation has been selected
+      runTimeValidationSelected = False
+      validationFeature = None
+      if 'Validation' in self.globalNameSpace['features']:
+        validationFeature = self.globalNameSpace['features']['Validation']
+        if validationFeature.runValidationChecks == True:
+          runTimeValidationSelected = True
+        
       try:
         if 'multi-path' in driverName:
           if driverName == 'multi-path':
@@ -195,7 +203,22 @@ class XMDS2Parser(ScriptParser):
           
           if not driverElement.hasAttribute('paths'):
             raise ParserException(driverElement, "Missing 'paths' attribute for multi-path driver.")
-          pathCount = RegularExpressionStrings.integerInString(driverElement.getAttribute('paths'))
+
+          pathCountString = driverElement.getAttribute('paths')
+          try:
+            pathCount = RegularExpressionStrings.integerInString(pathCountString)
+          except ValueError, err:
+            # If we didn't parse it, then we might be using the run-time validation feature
+            if runTimeValidationSelected:
+              validationFeature.validationChecks.append("""
+              if (%(pathCountString)s <= 0)
+                _LOG(_ERROR_LOG_LEVEL, "ERROR: The number of paths '%(pathCountString)s' must be greater than zero.\\n"
+                                       "pathCount = %%li\\n", (long)%(pathCountString)s);
+              """ % locals())
+              pathCount = pathCountString
+            else:
+              raise ParserException(driverElement, "Could not understand path count '%(pathCountString)s' as an integer. "
+                                                   """Use feature <validation kind="run-time"/> to allow arbitrary code.""")
           driverAttributeDictionary['pathCount'] = pathCount
         elif driverName == 'none':
           pass
