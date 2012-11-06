@@ -65,6 +65,7 @@ def configure(conf):
         # Don't execute when cross-compiling
         KWs['execute'] = not conf.env['is_cross_compile']
         KWs['mandatory'] = False
+        KWs['ENVIRONMENT_NAME'] = conf.env['ENVIRONMENT_NAME']
         
         if 'cxxflags' in KWs:
           cxxflags = optionAsList(KWs['cxxflags'])
@@ -120,7 +121,7 @@ def configure(conf):
             {'stlib': lib,   'msg': "%s (static library)" % KWs['msg'], 'errmsg': "no (will try dynamic library instead)"},
             {'lib'  : lib,   'msg': "%s (dynamic library)" % KWs['msg']},
         ]
-        if not conf.env['STDLIB_MARKER']:
+        if not conf.env['STLIB_MARKER']:
             options = [
             # On systems like Mac OS X, it seems we can't force the linker to prefer static libraries over dynamic ones
             # Except of course by including them by listing the full path.
@@ -561,12 +562,14 @@ def configure(conf):
     print
     print "Configuring for single-process scripts..."
     conf.setenv('default', env)
+    conf.env['ENVIRONMENT_NAME'] = 'default'
     configure_compiler()
     
     # Stuff for MPI variant
     print
     print "Configuring for MPI scripts..."
     conf.setenv('mpi', env)
+    conf.env['ENVIRONMENT_NAME'] = 'mpi'
     if conf.find_program('mpic++', var='MPICXX'):
         
         conf.env['CXX'] = conf.env['MPICXX']
