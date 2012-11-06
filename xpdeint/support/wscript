@@ -95,6 +95,11 @@ def configure(conf):
     def try_options(uselib_store, kwOptions, common = None):
         common = common or {}
         for kws in kwOptions:
+            predicate = kws.get('predicate', True)
+            if callable(predicate):
+              predicate = predicate()
+            if not predicate: continue
+            
             allKWs = common.copy()
             allKWs.update(kws)
             if check_cxx(uselib_store=uselib_store, **allKWs):
@@ -405,17 +410,18 @@ def configure(conf):
         )
         
         # Check for system-specific features
-        check_cxx(
-            framework="CoreFoundation",
-            uselib_store="system",
-            msg = "Checking for Apple CoreFoundation framework",
-        )
-        check_cxx(
-            framework="IOKit",
-            uselib_store="system",
-            uselib="system",
-            msg = "Checking for Apple IOKit framework",
-        )
+        if sys.platform == 'darwin':
+            check_cxx(
+                framework="CoreFoundation",
+                uselib_store="system",
+                msg = "Checking for Apple CoreFoundation framework",
+            )
+            check_cxx(
+                framework="IOKit",
+                uselib_store="system",
+                uselib="system",
+                msg = "Checking for Apple IOKit framework",
+            )
         
         
         
@@ -458,6 +464,7 @@ def configure(conf):
                 'defines': 'CBLAS_VECLIB',
                 'framework_name': 'vecLib',
                 'msg': "Checking for Apple's vecLib framework",
+                'predicate': sys.platform == 'darwin'
             },
             {# ATLAS CBLAS
                 'defines': 'CBLAS_ATLAS',
