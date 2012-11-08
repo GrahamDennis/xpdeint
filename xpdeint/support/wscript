@@ -461,10 +461,10 @@ def configure(conf):
                 'header_name': 'mkl.h',
                 'msg': "Checking for Intel's Math Kernel Library",
             },
-            {# Apple vecLib
+            {# Apple Accelerate
                 'defines': 'CBLAS_VECLIB',
-                'framework_name': 'vecLib',
-                'msg': "Checking for Apple's vecLib framework",
+                'framework_name': 'Accelerate',
+                'msg': "Checking for Apple's Accelerate framework",
                 'predicate': sys.platform == 'darwin'
             },
             {# ATLAS CBLAS

@@ -90,6 +90,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include <algorithm>
 
+#define complex Complex
+#define real Re
+#define imag Im
+
 @for $child in $children
   @# Prevent writing zero-length defines
   @set $result = $child.implementationsForFunctionName('includes')
@@ -99,9 +103,6 @@ ${result}@slurp
   @end if
 @end for
 
-#define complex Complex
-#define real Re
-#define imag Im
 #include <complex>
 #undef complex
 #undef real
