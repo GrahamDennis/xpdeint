@@ -133,16 +133,23 @@ def nonlocalDimensionAccessForComponents(components, codeBlock):
     tuple for each such occurrence. The companion of `nonlocalDimensionAccessForVectors` and
     to be used when `components` are components of vectors.
     """
+    
+    # Optimise for the common case: if the code doesn't contain the string "=>", then we know it doesn't have any nonlocal access
+    if "=>" not in codeBlock.codeString:
+        return []
+    
     dictionaryElement = identifier + Suppress('=>') + sliceFor(Group(baseExpr))
     nonlocalAccessDictParser = Dict(
         ZeroOrMore(Group(dictionaryElement + Suppress(','))) + Group(dictionaryElement)
     )
-    parser = MatchFirst(Keyword(componentName) for componentName in components).setResultsName('name') \
+    parser = identifier.setResultsName('name') \
                 + nestedExpr('(', ')', nonlocalAccessDictParser, ignoreExpr).setResultsName('access')
     parser.ignore(cppStyleComment.copy())
     parser.ignore(quotedString.copy())
     results = []
+    
     for tokens, start, end in parser.scanString(codeBlock.codeString):
+        if tokens.name not in components: continue
         accessDict = {}
         tokenDict = tokens.access[0].asDict()
         for key, value in tokenDict.items():

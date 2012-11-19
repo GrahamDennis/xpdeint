@@ -1,0 +1,680 @@
+<?xml version="1.0"?>
+<simulation xmds-version="2">
+        <testing>
+                <arguments> --Lcell=5e-4</arguments>
+                <xsil_file name="realistic_Rb_and_fields.xsil" expected="realistic_Rb_and_fields_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5">
+                        <moment_group number="0" absolute_tolerance="1e-7" relative_tolerance="1e-6" />
+                </xsil_file>
+        </testing>
+
+        <name>realistic_Rb_and_fields</name>
+
+        <author>Eugeniy Mikhailov</author>
+        <description>
+                License GPL.
+
+                Solving simplified Rb atom model
+                with fields propagation along spatial axis Z
+                with Doppler broadening.
+
+
+                We assume four-wave mixing condition when w3-w4=w2-w1 i.e. fields E3 and E4 drive the same
+                resonance as fields E2 and E1.
+
+
+                *              --------------- | F=1, 2P_3/2 >
+                *                \        \    
+                *                 \ E3_r   \    -------- | F=2, 2P_+1/2 >
+                *                  \   E4_r \   /    \
+                *                   \        \ / E2_l \ 
+                *                    \        /        \ E1_l
+                *   | F=2, 2S_1/2 > --------------      \
+                *                               \        \
+                *                                \        \
+                *                               ------------- | F=1, 2S_1/2 >
+                *            
+
+
+                We are solving 
+                        dE/dz+(1/c)*dE/dt=i*eta*rho_ij,  where j level is higher than i.
+                        Note that E is actually a Rabi frequency of electromagnetic field not the EM field
+                in xmds terms it looks like
+                        dE_dz = i*eta*rhoij - 1/c*L[E], here we moved t dependence to Fourier space
+
+                VERY IMPORTANT: all Rabi frequency should be given in [1/s], if you want to
+                normalize it to something else look drho/dt equation.
+                No need to renormalizes eta as long as its express through
+                the upper level decay rate in the same units as Rabi frequency.
+        </description>
+
+        <features>
+                <globals>
+                        <![CDATA[
+                                // Some numerical constants
+                                const double pi = M_PI; 
+
+                                // atom related constants
+                                //read from Mathematica generated Constants.txt
+//---------------- Constants.txt starts ------------------
+const double ha0 = 2.1471788680034824e10;
+const double ha1 = 2.558764384495815e9;
+const double g1 = 3.612847284945266e7;
+const double ha2 = 5.323020344462938e8;
+const double hb2 = 7.85178251911697e7;
+const double g2 = 3.8117309832741246e7;
+const double lambda1 = 7.949788511562656e-7;
+const double lambda2 = 7.802412096860509e-7;
+const double eta1 = 5.450949336831401e-6;
+const double eta2 = 5.5397657647874e-6;
+const double rt6 = 2.449489742783178;
+const double rt3 = 1.7320508075688772;
+const double rt2 = 1.4142135623730951;
+//---------------- Constants.txt ends   ------------------
+
+                                const double c=3.e8;
+                                const double k_boltzmann= 1.3806505e-23; // Boltzmann knostant in [J/K]
+                                const double lambda=794.7e-9; //wavelength in m
+                                // Fields k-vector
+                                const double Kvec = 2*M_PI/lambda;  
+                                // Simplified k-vectors
+                                const double Kvec1 = Kvec, Kvec2=Kvec, Kvec3=Kvec;
+
+                                //  ---------  Atom and cell properties -------------------------
+                                // range of Maxwell distribution atomic velocities
+                                const double mass = (86.909180527 * 1.660538921e-27); // atom mass in [kg] 
+                                // above mass expression is written as (expression is isotopic_mass * atomic_mass_unit)
+
+                                // Average sqrt(v^2) in Maxwell distribution for one dimension
+                                // Maxwell related parameters will be calculated in <arguments> section
+                                double v_thermal_averaged=0;
+                                // Maxwell distribution velocities range to take in account in [m/s]
+                                double V_maxwell_min = 0, V_maxwell_max = 0;
+
+                                // repopulation rate (atoms flying in/out the laser beam)  in [1/s]
+                                const double gt=0.01 *(2*M_PI*1e6);
+
+                                // inner use variables 
+                                double probability_v; // will be used as p(v) in Maxwell distribution
+
+                        ]]>
+                </globals>
+                <validation kind="run-time"/> <!--allows to put ranges as variables-->
+                <benchmark />
+    <arguments>
+                        <!-- Rabi frequency divided by 2 in [1/s] -->
+                        <!--
+                                Had to be very verbal with fields names, since otherwise short options name
+                                algorithm runs out of choices
+                        -->
+      <argument name="Ep1o_field" type="real" default_value="2*1.5*(2*M_PI*1e6)" />
+      <argument name="Em1o_field" type="real" default_value="2*1.5*(2*M_PI*1e6)" />
+      <argument name="Ep2o_field" type="real" default_value="0.05*(2*M_PI*1e6)" />
+      <argument name="Em2o_field" type="real" default_value="0.05*(2*M_PI*1e6)" />
+      <argument name="Ep3o_field" type="real" default_value="2*3.0*(2*M_PI*1e6)" />
+      <argument name="Em3o_field" type="real" default_value="2*3.0*(2*M_PI*1e6)" />
+      <argument name="Ep4o_field" type="real" default_value=".01*(2*M_PI*1e6)" />
+      <argument name="Em4o_field" type="real" default_value=".01*(2*M_PI*1e6)" />
+                        <!-- Fields detuning in [1/s] -->
+      <argument name="delta1"  type="real" default_value="0.0" />
+      <argument name="delta2"  type="real" default_value="0.0" />
+      <argument name="delta3"  type="real" default_value="0.0" />
+                        <!--Pulse duration/width [s] -->
+                        <argument name="Pwidth"  type="real" default_value="0.1e-6" />
+                        <!--  Atom and cell properties -->
+                        <!--Cell length [m] -->
+                        <argument name="Lcell"  type="real" default_value="1.5e-2" />
+                        <!--Density of atoms [1/m^3] -->
+                        <argument name="Ndens"  type="real" default_value="1e15" />
+                        <!-- Projections of magnetic field in Larmor frequency units [1/s] -->
+                        <argument name="WLx"  type="real" default_value="0" />
+                        <argument name="WLy"  type="real" default_value="0" />
+                        <argument name="WLz"  type="real" default_value="0" />
+                        <!--Atoms temperature [K] -->
+                        <!--TODO: looks like Temperature > 10 K knocks solver, 
+                                         I am guessing detunings are too large and thus it became a stiff equation-->
+                        <!--! make sure it is not equal to zero!-->
+                        <argument name="Temperature"  type="real" default_value="5" />
+                        <!-- This will be executed after arguments/parameters are parsed -->
+                        <!-- Read the code Luke: took me a while of reading the xmds2 sources to find it -->
+                        <![CDATA[
+                                // Average sqrt(v^2) in Maxwell distribution for one dimension
+                                if (Temperature == 0)
+                                        _LOG(_ERROR_LOG_LEVEL, "ERROR: Temperature should be >0 to provide range for Maxwell velocity distribution\n");
+                                v_thermal_averaged=sqrt(k_boltzmann*Temperature/mass); 
+                                // Maxwell distribution velocities range to take in account in [m/s]
+                                // there is almost zero probability for higher velocity p(4*v_av) = 3.3e-04 * p(0)
+                                V_maxwell_min = -4*v_thermal_averaged; V_maxwell_max = -V_maxwell_min; 
+                        ]]>
+    </arguments>
+                <bing />
+                <diagnostics /> 
+                <fftw plan="estimate" threads="1" />
+                <!--<fftw plan="patient" threads="1" />-->
+                <!-- I don't see any speed up on 6 core CPU even if use threads="6" -->
+                <!--<openmp />-->
+                <auto_vectorise />
+                <halt_non_finite />
+        </features>
+
+        <!-- 'z', 't', and 'v'  to have dimensions [m], [s], and [m/s]   -->
+        <geometry>
+                <propagation_dimension> z </propagation_dimension>
+                <transverse_dimensions>
+                        <!-- IMPORTANT: looks like having a lot of points in time helps with convergence.
+                                         I suspect that time spacing should be small enough to catch
+                                         all pulse harmonics and more importantly 1/dt should be larger than
+                                         the largest detuning (including Doppler shifts).
+                                         Unfortunately calculation time is proportional to lattice size
+                                         so we cannot just blindly increase it.
+                                         Some rules of thumb:  
+                                                * lattice="1000"   domain="(-1e-6, 1e-6)" 
+                                                        was good enough detunings up to 155 MHz (980 rad/s) notice that 1/dt=500 MHz
+                                                * lattice="10000"   domain="(-1e-6, 1e-6)" 
+                                                        works for Doppler averaging in up to 400K for Rb when lasers are zero detuned
+                         -->
+                        <dimension name="t"   lattice="10000"   domain="(-1e-6, 1e-6)" />
+                        <dimension name="v"   lattice="2"   domain="(V_maxwell_min, V_maxwell_max)" />
+                </transverse_dimensions>
+        </geometry>
+
+        <!-- Rabi frequency --> 
+        <vector name="E_field" type="complex" initial_space="t">
+                 <!--plus/minus circular polarization components-->
+                <components>Ep1 Em1 Ep2 Em2 Ep3 Em3 Ep4 Em4</components>
+                <initialisation>
+                        <![CDATA[
+                        // Initial (at starting 'z' position) electromagnetic field does not depend on detuning
+                        // as well as time
+                        Ep1=Ep1o_field;
+                        Em1=Em1o_field;
+                        Ep2=Ep2o_field*exp(-pow( ((t-0.0)/Pwidth),2) );
+                        Em2=Em2o_field*exp(-pow( ((t-0.0)/Pwidth),2) );
+                        Ep3=Ep3o_field;
+                        Em3=Em3o_field;
+                        Ep4=Ep4o_field;
+                        Em4=Em4o_field;
+                        ]]>
+                </initialisation>
+        </vector>
+
+        <!--Maxwell distribution probability p(v)-->
+        <computed_vector name="Maxwell_distribution_probabilities" dimensions="v" type="real">
+                <components>probability_v</components>
+                <evaluation>
+                        <![CDATA[
+                        // TODO: move to the global space/function. This reevaluated many times since it called from dependency requests but it never changes during  the script lifetime since 'v' is fixed.
+                        probability_v=1.0/(v_thermal_averaged*sqrt(2*M_PI)) * exp( - mod2(v/v_thermal_averaged)/2.0 ); 
+                        ]]>
+                </evaluation>
+        </computed_vector>
+
+        <!--Maxwell distribution norm sum(p(v))
+                         Needed since we sum over the grid instead of true integral,
+                         we also have finite cut off velocities-->
+        <computed_vector name="Maxwell_distribution_probabilities_norm" dimensions="" type="real">
+                <components>probability_v_norm</components>
+                <evaluation>
+                        <dependencies basis="v">Maxwell_distribution_probabilities</dependencies>
+                        <![CDATA[
+                        // TODO: move to the global space/function. This reevaluated many times since it called from dependency requests but it never changes during  the script lifetime since 'v' is fixed.
+                        probability_v_norm=probability_v;
+                        ]]>
+                </evaluation>
+        </computed_vector>
+
+
+        <!-- Averaged across Maxwell distribution fields amplitudes -->
+        <computed_vector name="E_field_avgd" dimensions="t" type="complex">
+                <components>Ep1a Em1a Ep2a Em2a Ep3a Em3a Ep4a Em4a</components>
+                <evaluation>
+                        <dependencies basis="v">E_field Maxwell_distribution_probabilities Maxwell_distribution_probabilities_norm</dependencies>
+                        <![CDATA[
+                        double prob_v_normalized=probability_v/probability_v_norm;
+                        Ep1a=Ep1*prob_v_normalized;
+                        Em1a=Em1*prob_v_normalized;
+                        Ep2a=Ep2*prob_v_normalized;
+                        Em2a=Em2*prob_v_normalized;
+                        Ep3a=Ep3*prob_v_normalized;
+                        Em3a=Em3*prob_v_normalized;
+                        Ep4a=Ep4*prob_v_normalized;
+                        Em4a=Em4*prob_v_normalized;
+                        ]]>
+                </evaluation>
+        </computed_vector>
+
+        <vector name="density_matrix" type="complex" initial_space="t">
+                <components>
+                        <!-- read from Mathematica generated RbChosenRho.txt -->
+<!-- ############### RbChosenRho.txt starts ################ -->
+r0101 r0109 r0110 r0111 r0112 r0113 r0114 r0115 r0116 r0201 r0202 r0209 r0210 r0211 r0212 r0213 r0214 r0215 r0216 r0301 r0302 r0303 r0309 r0310 r0311 r0312 r0313 r0314 r0315 r0316 r0401 r0402 r0403 r0404 r0409 r0410 r0411 r0412 r0413 r0414 r0415 r0416 r0501 r0502 r0503 r0504 r0505 r0509 r0510 r0511 r0512 r0513 r0514 r0515 r0516 r0601 r0602 r0603 r0604 r0605 r0606 r0609 r0610 r0611 r0612 r0613 r0614 r0615 r0616 r0701 r0702 r0703 r0704 r0705 r0706 r0707 r0709 r0710 r0711 r0712 r0713 r0714 r0715 r0716 r0801 r0802 r0803 r0804 r0805 r0806 r0807 r0808 r0809 r0810 r0811 r0812 r0813 r0814 r0815 r0816 r0909 r0912 r0913 r0914 r0915 r0916 r1009 r1010 r1012 r1013 r1014 r1015 r1016 r1109 r1110 r1111 r1112 r1113 r1114 r1115 r1116 r1212 r1312 r1313 r1412 r1413 r1414 r1512 r1513 r1514 r1515 r1612 r1613 r1614 r1615 r1616 
+<!-- ############### RbChosenRho.txt ends  ################# -->
+                </components>
+                <initialisation>
+                        <!--This sets boundary condition at all times and left border of z (i.e. z=0)-->
+                        <![CDATA[
+                        // Note: 
+                        // convergence is really slow if all populations concentrated at the bottom level |1>
+                        // this is because if r11=1, everything else is 0 and then every small increment 
+                        // seems to be huge and adaptive solver makes smaller and smaller steps.
+                        // As quick and dirty fix I reshuffle initial population  
+                        // so some of the population sits at the  second ground level |2>
+                        // TODO: Fix above. Make the equation of motion for r11 
+                        //       and express other level, let's say r44
+                        //       through population normalization
+
+                        //read from Mathematica generated RbInits.txt
+//---------------- RbInits.txt starts ------------------
+r0101 = 0.125;
+r0109 = 0;
+r0110 = 0;
+r0111 = 0;
+r0112 = 0;
+r0113 = 0;
+r0114 = 0;
+r0115 = 0;
+r0116 = 0;
+r0201 = 0;
+r0202 = 0.125;
+r0209 = 0;
+r0210 = 0;
+r0211 = 0;
+r0212 = 0;
+r0213 = 0;
+r0214 = 0;
+r0215 = 0;
+r0216 = 0;
+r0301 = 0;
+r0302 = 0;
+r0303 = 0.125;
+r0309 = 0;
+r0310 = 0;
+r0311 = 0;
+r0312 = 0;
+r0313 = 0;
+r0314 = 0;
+r0315 = 0;
+r0316 = 0;
+r0401 = 0;
+r0402 = 0;
+r0403 = 0;
+r0404 = 0.125;
+r0409 = 0;
+r0410 = 0;
+r0411 = 0;
+r0412 = 0;
+r0413 = 0;
+r0414 = 0;
+r0415 = 0;
+r0416 = 0;
+r0501 = 0;
+r0502 = 0;
+r0503 = 0;
+r0504 = 0;
+r0505 = 0.125;
+r0509 = 0;
+r0510 = 0;
+r0511 = 0;
+r0512 = 0;
+r0513 = 0;
+r0514 = 0;
+r0515 = 0;
+r0516 = 0;
+r0601 = 0;
+r0602 = 0;
+r0603 = 0;
+r0604 = 0;
+r0605 = 0;
+r0606 = 0.125;
+r0609 = 0;
+r0610 = 0;
+r0611 = 0;
+r0612 = 0;
+r0613 = 0;
+r0614 = 0;
+r0615 = 0;
+r0616 = 0;
+r0701 = 0;
+r0702 = 0;
+r0703 = 0;
+r0704 = 0;
+r0705 = 0;
+r0706 = 0;
+r0707 = 0.125;
+r0709 = 0;
+r0710 = 0;
+r0711 = 0;
+r0712 = 0;
+r0713 = 0;
+r0714 = 0;
+r0715 = 0;
+r0716 = 0;
+r0801 = 0;
+r0802 = 0;
+r0803 = 0;
+r0804 = 0;
+r0805 = 0;
+r0806 = 0;
+r0807 = 0;
+r0808 = 0.125;
+r0809 = 0;
+r0810 = 0;
+r0811 = 0;
+r0812 = 0;
+r0813 = 0;
+r0814 = 0;
+r0815 = 0;
+r0816 = 0;
+r0909 = 0;
+r0912 = 0;
+r0913 = 0;
+r0914 = 0;
+r0915 = 0;
+r0916 = 0;
+r1009 = 0;
+r1010 = 0;
+r1012 = 0;
+r1013 = 0;
+r1014 = 0;
+r1015 = 0;
+r1016 = 0;
+r1109 = 0;
+r1110 = 0;
+r1111 = 0;
+r1112 = 0;
+r1113 = 0;
+r1114 = 0;
+r1115 = 0;
+r1116 = 0;
+r1212 = 0;
+r1312 = 0;
+r1313 = 0;
+r1412 = 0;
+r1413 = 0;
+r1414 = 0;
+r1512 = 0;
+r1513 = 0;
+r1514 = 0;
+r1515 = 0;
+r1612 = 0;
+r1613 = 0;
+r1614 = 0;
+r1615 = 0;
+r1616 = 0;
+//---------------- RbInits.txt ends  ------------------
+                        ]]>
+                </initialisation>
+        </vector>
+
+        <sequence>
+                <!--For this set of conditions ARK45 is faster than ARK89-->
+                <!--ARK45 is good for small detuning when all frequency like term are close to zero-->
+                <integrate algorithm="ARK45" tolerance="1e-5" interval="Lcell"> 
+                <!--<integrate algorithm="SI" steps="200" interval="Lcell"> -->
+                <!--RK4 is good for large detunings when frequency like term are big, it does not try to be too smart about adaptive step which ARK seems to make too small-->
+                <!--When ARK45 works it about 3 times faster than RK4 with 1000 steps-->
+                <!--<integrate algorithm="RK4" steps="100" interval="1.5e-2">-->
+                <!--SIC algorithm seems to be much slower and needs fine 'z'  step tuning and much finer time grid-->
+                <!--For example I had to quadruple the time grid from 1000 to 4000 when increased z distance from 0.02 to 0.04-->
+
+                <!--<integrate algorithm="SIC" interval="4e-2" steps="200">-->
+
+                        <samples>1</samples>
+                        <!--<samples>100 100</samples>-->
+                        <!--Use the next line for debuging to see velocity dependence. Uncomment/switch on output groups 3,4-->
+                        <!--<samples>100 100 100 100</samples>--> 
+                        <operators>
+        <operator kind="cross_propagation" algorithm="SI" propagation_dimension="t">
+                                        <integration_vectors>density_matrix</integration_vectors>
+          <dependencies>E_field_avgd</dependencies>
+          <boundary_condition kind="left">
+                                                <!--This set boundary condition at all 'z'  and left border of 't' (i.e. min(t))-->
+                                                <!--
+            <![CDATA[
+                                                        r11 = 0; r22 = 1; r33 = 0; r44 = 0;
+                                                        r12 = 0; r13 = 0; r14 = 0;
+                                                        r23 = 0; r24 = 0;
+                                                        r34 = 0;
+                                                        printf("z= %g, t= %g\n", z, t);
+            ]]>
+                                                -->
+          </boundary_condition>
+                                        <![CDATA[
+                                                // Equations of motions according to Simon's mathematica code
+                                                //read from Mathematica generated RbEquations.txt
+//---------------- RbEquations.txt starts ------------------
+dr0101_dt = gt/8. - gt*r0101 + (g1*r0909)/2. + (g2*r1212)/3. + (g2*r1313)/6. - i*((conj(Em1a)*conj(r0109))/4. - (conj(Em4a)*conj(r0113))/(4.*rt6) - (Em1a*r0109)/4. + (Em4a*r0113)/(4.*rt6) + r0201*(WLx/2. - (i*WLy)/2.) - conj(r0201)*(WLx/2. + (i*WLy)/2.));
+dr0109_dt = (-(gt*r0109) - (gt + g1)*r0109)/2. - i*(-(conj(Ep1a)*conj(r0301))/(4.*rt6) + (conj(Ep2a)*conj(r0701))/(4.*rt6) - (conj(Em4a)*conj(r0913))/(4.*rt6) - (conj(Em1a)*r0101)/4. + (conj(Em1a)*r0909)/4. + r0209*(WLx/2. - (i*WLy)/2.) - r0110*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) - r0109*(-delta1 - v*Kvec1 - WLz/6.) + r0109*WLz);
+dr0110_dt = (-(gt*r0110) - (gt + g1)*r0110)/2. - i*(-(conj(Em1a)*conj(r0201))/(4.*rt2) - (conj(Ep1a)*conj(r0401))/(4.*rt2) - (conj(Em2a)*conj(r0601))/(4.*rt6) + (conj(Ep2a)*conj(r0801))/(4.*rt6) + (conj(Em1a)*conj(r1009))/4. - (conj(Em4a)*conj(r1013))/(4.*rt6) + (delta1 + v*Kvec1)*r0110 + r0210*(WLx/2. - (i*WLy)/2.) - r0111*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) - r0109*(-WLx/(6.*rt2) + (i*WLy)/(6.*rt2)) + r0110*WLz);
+dr0111_dt = (-(gt*r0111) - (gt + g1)*r0111)/2. - i*(-(conj(Em1a)*conj(r0301))/(4.*rt6) - (conj(Ep1a)*conj(r0501))/4. - (conj(Em2a)*conj(r0701))/(4.*rt6) + (conj(Em1a)*conj(r1109))/4. - (conj(Em4a)*conj(r1113))/(4.*rt6) + r0211*(WLx/2. - (i*WLy)/2.) - r0110*(-WLx/(6.*rt2) + (i*WLy)/(6.*rt2)) - r0111*(-delta1 - v*Kvec1 + WLz/6.) + r0111*WLz);
+dr0112_dt = (-(gt*r0112) - (gt + g2)*r0112)/2. - i*(-(conj(Ep4a)*conj(r0201))/(4.*rt6) - (conj(Ep3a)*conj(r0601))/(4.*rt2) + (conj(Em1a)*r0912)/4. - (conj(Em4a)*r1312)/(4.*rt6) + r0212*(WLx/2. - (i*WLy)/2.) - r0113*((2*WLx)/3. + (2*i*WLy)/3.) + r0112*WLz - r0112*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 + (4*WLz)/3.));
+dr0113_dt = (-(gt*r0113) - (gt + g2)*r0113)/2. - i*(-(conj(Ep4a)*conj(r0301))/8. - (conj(Ep3a)*conj(r0701))/8. + (conj(Em4a)*r0101)/(4.*rt6) + (conj(Em1a)*r0913)/4. - (conj(Em4a)*r1313)/(4.*rt6) - r0112*((2*WLx)/3. - (2*i*WLy)/3.) + r0213*(WLx/2. - (i*WLy)/2.) - r0114*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) - r0113*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 + (2*WLz)/3.) + r0113*WLz);
+dr0114_dt = (-(gt*r0114) - (gt + g2)*r0114)/2. - i*((conj(Em4a)*conj(r0201))/8. - (conj(Ep4a)*conj(r0401))/8. - (conj(Em3a)*conj(r0601))/(8.*rt3) - (conj(Ep3a)*conj(r0801))/(8.*rt3) - (conj(Em4a)*conj(r1413))/(4.*rt6) - (-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3)*r0114 + (conj(Em1a)*r0914)/4. + r0214*(WLx/2. - (i*WLy)/2.) - r0113*(sqrt(0.6666666666666666)*WLx - sqrt(0.6666666666666666)*i*WLy) - r0115*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) + r0114*WLz);
+dr0115_dt = (-(gt*r0115) - (gt + g2)*r0115)/2. - i*((conj(Em4a)*conj(r0301))/8. - (conj(Ep4a)*conj(r0501))/(4.*rt6) - (conj(Em3a)*conj(r0701))/8. - (conj(Em4a)*conj(r1513))/(4.*rt6) + (conj(Em1a)*r0915)/4. + r0215*(WLx/2. - (i*WLy)/2.) - r0116*((2*WLx)/3. + (2*i*WLy)/3.) - r0114*(sqrt(0.6666666666666666)*WLx - sqrt(0.6666666666666666)*i*WLy) - r0115*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 - (2*WLz)/3.) + r0115*WLz);
+dr0116_dt = (-(gt*r0116) - (gt + g2)*r0116)/2. - i*((conj(Em4a)*conj(r0401))/(4.*rt6) - (conj(Em3a)*conj(r0801))/(4.*rt2) - (conj(Em4a)*conj(r1613))/(4.*rt6) + (conj(Em1a)*r0916)/4. - r0115*((2*WLx)/3. - (2*i*WLy)/3.) + r0216*(WLx/2. - (i*WLy)/2.) - r0116*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 - (4*WLz)/3.) + r0116*WLz);
+dr0201_dt = -(gt*r0201) + (g1*r1009)/(2.*rt2) + (g2*r1312)/6. + (g2*r1413)/(2.*rt6) - i*((conj(Em1a)*conj(r0110))/(4.*rt2) + (conj(Ep4a)*conj(r0112))/(4.*rt6) - (conj(Em4a)*conj(r0114))/8. - (Em1a*r0209)/4. + (Em4a*r0213)/(4.*rt6) + r0101*(WLx/2. + (i*WLy)/2.) - r0202*(WLx/2. + (i*WLy)/2.) + r0301*((sqrt(1.5)*WLx)/2. - (sqrt(1.5)*i*WLy)/2.) - (r0201*WLz)/2.);
+dr0202_dt = gt/8. - gt*r0202 + (g1*r0909)/4. + (g1*r1010)/4. + (g2*r1212)/6. + (g2*r1313)/12. + (g2*r1414)/4. - i*((conj(Em1a)*conj(r0210))/(4.*rt2) + (conj(Ep4a)*conj(r0212))/(4.*rt6) - (conj(Em4a)*conj(r0214))/8. - (Em1a*r0210)/(4.*rt2) - (Ep4a*r0212)/(4.*rt6) + (Em4a*r0214)/8. - r0201*(WLx/2. - (i*WLy)/2.) + conj(r0201)*(WLx/2. + (i*WLy)/2.) + r0302*((sqrt(1.5)*WLx)/2. - (sqrt(1.5)*i*WLy)/2.) - conj(r0302)*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.));
+dr0209_dt = (-(gt*r0209) - (gt + g1)*r0209)/2. - i*(-(conj(Ep1a)*conj(r0302))/(4.*rt6) + (conj(Ep2a)*conj(r0702))/(4.*rt6) + (conj(Ep4a)*conj(r0912))/(4.*rt6) - (conj(Em4a)*conj(r0914))/8. - (conj(Em1a)*r0201)/4. + (conj(Em1a)*r1009)/(4.*rt2) + r0109*(WLx/2. + (i*WLy)/2.) + r0309*((sqrt(1.5)*WLx)/2. - (sqrt(1.5)*i*WLy)/2.) - r0210*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) - r0209*(-delta1 - v*Kvec1 - WLz/6.) + (r0209*WLz)/2.);
+dr0210_dt = (-(gt*r0210) - (gt + g1)*r0210)/2. - i*(-(conj(Ep1a)*conj(r0402))/(4.*rt2) - (conj(Em2a)*conj(r0602))/(4.*rt6) + (conj(Ep2a)*conj(r0802))/(4.*rt6) + (conj(Ep4a)*conj(r1012))/(4.*rt6) - (conj(Em4a)*conj(r1014))/8. - (conj(Em1a)*r0202)/(4.*rt2) + (delta1 + v*Kvec1)*r0210 + (conj(Em1a)*r1010)/(4.*rt2) + r0110*(WLx/2. + (i*WLy)/2.) + r0310*((sqrt(1.5)*WLx)/2. - (sqrt(1.5)*i*WLy)/2.) - r0211*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) - r0209*(-WLx/(6.*rt2) + (i*WLy)/(6.*rt2)) + (r0210*WLz)/2.);
+dr0211_dt = (-(gt*r0211) - (gt + g1)*r0211)/2. - i*(-(conj(Em1a)*conj(r0302))/(4.*rt6) - (conj(Ep1a)*conj(r0502))/4. - (conj(Em2a)*conj(r0702))/(4.*rt6) + (conj(Em1a)*conj(r1110))/(4.*rt2) + (conj(Ep4a)*conj(r1112))/(4.*rt6) - (conj(Em4a)*conj(r1114))/8. + r0111*(WLx/2. + (i*WLy)/2.) + r0311*((sqrt(1.5)*WLx)/2. - (sqrt(1.5)*i*WLy)/2.) - r0210*(-WLx/(6.*rt2) + (i*WLy)/(6.*rt2)) - r0211*(-delta1 - v*Kvec1 + WLz/6.) + (r0211*WLz)/2.);
+dr0212_dt = (-(gt*r0212) - (gt + g2)*r0212)/2. - i*(-(conj(Ep3a)*conj(r0602))/(4.*rt2) - (conj(Ep4a)*r0202)/(4.*rt6) + (conj(Em1a)*r1012)/(4.*rt2) + (conj(Ep4a)*r1212)/(4.*rt6) - (conj(Em4a)*r1412)/8. + r0112*(WLx/2. + (i*WLy)/2.) - r0213*((2*WLx)/3. + (2*i*WLy)/3.) + r0312*((sqrt(1.5)*WLx)/2. - (sqrt(1.5)*i*WLy)/2.) + (r0212*WLz)/2. - r0212*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 + (4*WLz)/3.));
+dr0213_dt = (-(gt*r0213) - (gt + g2)*r0213)/2. - i*(-(conj(Ep4a)*conj(r0302))/8. - (conj(Ep3a)*conj(r0702))/8. + (conj(Ep4a)*conj(r1312))/(4.*rt6) + (conj(Em4a)*r0201)/(4.*rt6) + (conj(Em1a)*r1013)/(4.*rt2) - (conj(Em4a)*r1413)/8. - r0212*((2*WLx)/3. - (2*i*WLy)/3.) + r0113*(WLx/2. + (i*WLy)/2.) - r0214*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) + r0313*((sqrt(1.5)*WLx)/2. - (sqrt(1.5)*i*WLy)/2.) - r0213*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 + (2*WLz)/3.) + (r0213*WLz)/2.);
+dr0214_dt = (-(gt*r0214) - (gt + g2)*r0214)/2. - i*(-(conj(Ep4a)*conj(r0402))/8. - (conj(Em3a)*conj(r0602))/(8.*rt3) - (conj(Ep3a)*conj(r0802))/(8.*rt3) + (conj(Ep4a)*conj(r1412))/(4.*rt6) + (conj(Em4a)*r0202)/8. - (-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3)*r0214 + (conj(Em1a)*r1014)/(4.*rt2) - (conj(Em4a)*r1414)/8. + r0114*(WLx/2. + (i*WLy)/2.) - r0213*(sqrt(0.6666666666666666)*WLx - sqrt(0.6666666666666666)*i*WLy) - r0215*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) + r0314*((sqrt(1.5)*WLx)/2. - (sqrt(1.5)*i*WLy)/2.) + (r0214*WLz)/2.);
+dr0215_dt = (-(gt*r0215) - (gt + g2)*r0215)/2. - i*((conj(Em4a)*conj(r0302))/8. - (conj(Ep4a)*conj(r0502))/(4.*rt6) - (conj(Em3a)*conj(r0702))/8. + (conj(Ep4a)*conj(r1512))/(4.*rt6) - (conj(Em4a)*conj(r1514))/8. + (conj(Em1a)*r1015)/(4.*rt2) + r0115*(WLx/2. + (i*WLy)/2.) - r0216*((2*WLx)/3. + (2*i*WLy)/3.) - r0214*(sqrt(0.6666666666666666)*WLx - sqrt(0.6666666666666666)*i*WLy) + r0315*((sqrt(1.5)*WLx)/2. - (sqrt(1.5)*i*WLy)/2.) - r0215*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 - (2*WLz)/3.) + (r0215*WLz)/2.);
+dr0216_dt = (-(gt*r0216) - (gt + g2)*r0216)/2. - i*((conj(Em4a)*conj(r0402))/(4.*rt6) - (conj(Em3a)*conj(r0802))/(4.*rt2) + (conj(Ep4a)*conj(r1612))/(4.*rt6) - (conj(Em4a)*conj(r1614))/8. + (conj(Em1a)*r1016)/(4.*rt2) - r0215*((2*WLx)/3. - (2*i*WLy)/3.) + r0116*(WLx/2. + (i*WLy)/2.) + r0316*((sqrt(1.5)*WLx)/2. - (sqrt(1.5)*i*WLy)/2.) - r0216*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 - (4*WLz)/3.) + (r0216*WLz)/2.);
+dr0301_dt = -(gt*r0301) + (g1*r1109)/(2.*rt6) + (g2*r1513)/(2.*rt6) - i*((conj(Ep1a)*conj(r0109))/(4.*rt6) + (conj(Em1a)*conj(r0111))/(4.*rt6) + (conj(Ep4a)*conj(r0113))/8. - (conj(Em4a)*conj(r0115))/8. - (Em1a*r0309)/4. + (Em4a*r0313)/(4.*rt6) - r0302*(WLx/2. + (i*WLy)/2.) + r0401*((sqrt(1.5)*WLx)/2. - (sqrt(1.5)*i*WLy)/2.) + r0201*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.) - r0301*WLz);
+dr0302_dt = -(gt*r0302) + (g1*r1009)/(2.*rt3) + (g1*r1110)/(4.*rt3) + (g2*r1312)/(2.*rt6) + (g2*r1514)/4. - i*((conj(Ep1a)*conj(r0209))/(4.*rt6) + (conj(Em1a)*conj(r0211))/(4.*rt6) + (conj(Ep4a)*conj(r0213))/8. - (conj(Em4a)*conj(r0215))/8. - (Em1a*r0310)/(4.*rt2) - (Ep4a*r0312)/(4.*rt6) + (Em4a*r0314)/8. - r0301*(WLx/2. - (i*WLy)/2.) + r0402*((sqrt(1.5)*WLx)/2. - (sqrt(1.5)*i*WLy)/2.) + r0202*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.) - r0303*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.) - (r0302*WLz)/2.);
+dr0303_dt = gt/8. - gt*r0303 + (g1*r0909)/12. + (g1*r1010)/3. + (g1*r1111)/12. + (g2*r1313)/4. + (g2*r1515)/4. - i*((conj(Ep1a)*conj(r0309))/(4.*rt6) + (conj(Em1a)*conj(r0311))/(4.*rt6) + (conj(Ep4a)*conj(r0313))/8. - (conj(Em4a)*conj(r0315))/8. - (Ep1a*r0309)/(4.*rt6) - (Em1a*r0311)/(4.*rt6) - (Ep4a*r0313)/8. + (Em4a*r0315)/8. - r0302*((sqrt(1.5)*WLx)/2. - (sqrt(1.5)*i*WLy)/2.) + r0403*((sqrt(1.5)*WLx)/2. - (sqrt(1.5)*i*WLy)/2.) + conj(r0302)*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.) - conj(r0403)*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.));
+dr0309_dt = (-(gt*r0309) - (gt + g1)*r0309)/2. - i*((conj(Ep2a)*conj(r0703))/(4.*rt6) + (conj(Ep4a)*conj(r0913))/8. - (conj(Em4a)*conj(r0915))/8. - (conj(Em1a)*r0301)/4. - (conj(Ep1a)*r0303)/(4.*rt6) + (conj(Ep1a)*r0909)/(4.*rt6) + (conj(Em1a)*r1109)/(4.*rt6) + r0409*((sqrt(1.5)*WLx)/2. - (sqrt(1.5)*i*WLy)/2.) + r0209*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.) - r0310*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) - r0309*(-delta1 - v*Kvec1 - WLz/6.));
+dr0310_dt = (-(gt*r0310) - (gt + g1)*r0310)/2. - i*(-(conj(Ep1a)*conj(r0403))/(4.*rt2) - (conj(Em2a)*conj(r0603))/(4.*rt6) + (conj(Ep2a)*conj(r0803))/(4.*rt6) + (conj(Ep1a)*conj(r1009))/(4.*rt6) + (conj(Ep4a)*conj(r1013))/8. - (conj(Em4a)*conj(r1015))/8. - (conj(Em1a)*r0302)/(4.*rt2) + (delta1 + v*Kvec1)*r0310 + (conj(Em1a)*r1110)/(4.*rt6) + r0410*((sqrt(1.5)*WLx)/2. - (sqrt(1.5)*i*WLy)/2.) + r0210*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.) - r0311*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) - r0309*(-WLx/(6.*rt2) + (i*WLy)/(6.*rt2)));
+dr0311_dt = (-(gt*r0311) - (gt + g1)*r0311)/2. - i*(-(conj(Ep1a)*conj(r0503))/4. - (conj(Em2a)*conj(r0703))/(4.*rt6) + (conj(Ep1a)*conj(r1109))/(4.*rt6) + (conj(Ep4a)*conj(r1113))/8. - (conj(Em4a)*conj(r1115))/8. - (conj(Em1a)*r0303)/(4.*rt6) + (conj(Em1a)*r1111)/(4.*rt6) + r0411*((sqrt(1.5)*WLx)/2. - (sqrt(1.5)*i*WLy)/2.) + r0211*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.) - r0310*(-WLx/(6.*rt2) + (i*WLy)/(6.*rt2)) - r0311*(-delta1 - v*Kvec1 + WLz/6.));
+dr0312_dt = (-(gt*r0312) - (gt + g2)*r0312)/2. - i*(-(conj(Ep3a)*conj(r0603))/(4.*rt2) - (conj(Ep4a)*r0302)/(4.*rt6) + (conj(Ep1a)*r0912)/(4.*rt6) + (conj(Em1a)*r1112)/(4.*rt6) + (conj(Ep4a)*r1312)/8. - (conj(Em4a)*r1512)/8. - r0313*((2*WLx)/3. + (2*i*WLy)/3.) + r0412*((sqrt(1.5)*WLx)/2. - (sqrt(1.5)*i*WLy)/2.) + r0212*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.) - r0312*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 + (4*WLz)/3.));
+dr0313_dt = (-(gt*r0313) - (gt + g2)*r0313)/2. - i*(-(conj(Ep3a)*conj(r0703))/8. + (conj(Em4a)*r0301)/(4.*rt6) - (conj(Ep4a)*r0303)/8. + (conj(Ep1a)*r0913)/(4.*rt6) + (conj(Em1a)*r1113)/(4.*rt6) + (conj(Ep4a)*r1313)/8. - (conj(Em4a)*r1513)/8. - r0312*((2*WLx)/3. - (2*i*WLy)/3.) - r0314*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) + r0413*((sqrt(1.5)*WLx)/2. - (sqrt(1.5)*i*WLy)/2.) + r0213*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.) - r0313*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 + (2*WLz)/3.));
+dr0314_dt = (-(gt*r0314) - (gt + g2)*r0314)/2. - i*(-(conj(Ep4a)*conj(r0403))/8. - (conj(Em3a)*conj(r0603))/(8.*rt3) - (conj(Ep3a)*conj(r0803))/(8.*rt3) + (conj(Ep4a)*conj(r1413))/8. + (conj(Em4a)*r0302)/8. - (-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3)*r0314 + (conj(Ep1a)*r0914)/(4.*rt6) + (conj(Em1a)*r1114)/(4.*rt6) - (conj(Em4a)*r1514)/8. - r0313*(sqrt(0.6666666666666666)*WLx - sqrt(0.6666666666666666)*i*WLy) - r0315*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) + r0414*((sqrt(1.5)*WLx)/2. - (sqrt(1.5)*i*WLy)/2.) + r0214*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.));
+dr0315_dt = (-(gt*r0315) - (gt + g2)*r0315)/2. - i*(-(conj(Ep4a)*conj(r0503))/(4.*rt6) - (conj(Em3a)*conj(r0703))/8. + (conj(Ep4a)*conj(r1513))/8. + (conj(Em4a)*r0303)/8. + (conj(Ep1a)*r0915)/(4.*rt6) + (conj(Em1a)*r1115)/(4.*rt6) - (conj(Em4a)*r1515)/8. - r0316*((2*WLx)/3. + (2*i*WLy)/3.) - r0314*(sqrt(0.6666666666666666)*WLx - sqrt(0.6666666666666666)*i*WLy) + r0415*((sqrt(1.5)*WLx)/2. - (sqrt(1.5)*i*WLy)/2.) + r0215*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.) - r0315*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 - (2*WLz)/3.));
+dr0316_dt = (-(gt*r0316) - (gt + g2)*r0316)/2. - i*((conj(Em4a)*conj(r0403))/(4.*rt6) - (conj(Em3a)*conj(r0803))/(4.*rt2) + (conj(Ep4a)*conj(r1613))/8. - (conj(Em4a)*conj(r1615))/8. + (conj(Ep1a)*r0916)/(4.*rt6) + (conj(Em1a)*r1116)/(4.*rt6) - r0315*((2*WLx)/3. - (2*i*WLy)/3.) + r0416*((sqrt(1.5)*WLx)/2. - (sqrt(1.5)*i*WLy)/2.) + r0216*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.) - r0316*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 - (4*WLz)/3.));
+dr0401_dt = -(gt*r0401) - (g2*r1512)/6. + (g2*r1613)/6. - i*((conj(Ep1a)*conj(r0110))/(4.*rt2) + (conj(Ep4a)*conj(r0114))/8. - (conj(Em4a)*conj(r0116))/(4.*rt6) - (Em1a*r0409)/4. + (Em4a*r0413)/(4.*rt6) + r0501*(WLx/2. - (i*WLy)/2.) - r0402*(WLx/2. + (i*WLy)/2.) + r0301*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.) - (3*r0401*WLz)/2.);
+dr0402_dt = -(gt*r0402) + (g1*r1109)/4. + (g2*r1412)/(2.*rt6) - (g2*r1513)/12. + (g2*r1614)/(2.*rt6) - i*((conj(Ep1a)*conj(r0210))/(4.*rt2) + (conj(Ep4a)*conj(r0214))/8. - (conj(Em4a)*conj(r0216))/(4.*rt6) - (Em1a*r0410)/(4.*rt2) - (Ep4a*r0412)/(4.*rt6) + (Em4a*r0414)/8. - r0401*(WLx/2. - (i*WLy)/2.) + r0502*(WLx/2. - (i*WLy)/2.) + r0302*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.) - r0403*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.) - r0402*WLz);
+dr0403_dt = -(gt*r0403) + (g1*r1009)/(4.*rt3) + (g1*r1110)/(2.*rt3) + (g2*r1413)/4. + (g2*r1615)/(2.*rt6) - i*((conj(Ep1a)*conj(r0310))/(4.*rt2) + (conj(Ep4a)*conj(r0314))/8. - (conj(Em4a)*conj(r0316))/(4.*rt6) - (Ep1a*r0409)/(4.*rt6) - (Em1a*r0411)/(4.*rt6) - (Ep4a*r0413)/8. + (Em4a*r0415)/8. + r0503*(WLx/2. - (i*WLy)/2.) - r0402*((sqrt(1.5)*WLx)/2. - (sqrt(1.5)*i*WLy)/2.) + r0303*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.) - r0404*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.) - (r0403*WLz)/2.);
+dr0404_dt = gt/8. - gt*r0404 + (g1*r1010)/4. + (g1*r1111)/4. + (g2*r1414)/4. + (g2*r1515)/12. + (g2*r1616)/6. - i*((conj(Ep1a)*conj(r0410))/(4.*rt2) + (conj(Ep4a)*conj(r0414))/8. - (conj(Em4a)*conj(r0416))/(4.*rt6) - (Ep1a*r0410)/(4.*rt2) - (Ep4a*r0414)/8. + (Em4a*r0416)/(4.*rt6) + r0504*(WLx/2. - (i*WLy)/2.) - conj(r0504)*(WLx/2. + (i*WLy)/2.) - r0403*((sqrt(1.5)*WLx)/2. - (sqrt(1.5)*i*WLy)/2.) + conj(r0403)*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.));
+dr0409_dt = (-(gt*r0409) - (gt + g1)*r0409)/2. - i*((conj(Ep2a)*conj(r0704))/(4.*rt6) + (conj(Ep4a)*conj(r0914))/8. - (conj(Em4a)*conj(r0916))/(4.*rt6) - (conj(Em1a)*r0401)/4. - (conj(Ep1a)*r0403)/(4.*rt6) + (conj(Ep1a)*r1009)/(4.*rt2) + r0509*(WLx/2. - (i*WLy)/2.) + r0309*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.) - r0410*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) - r0409*(-delta1 - v*Kvec1 - WLz/6.) - (r0409*WLz)/2.);
+dr0410_dt = (-(gt*r0410) - (gt + g1)*r0410)/2. - i*(-(conj(Em2a)*conj(r0604))/(4.*rt6) + (conj(Ep2a)*conj(r0804))/(4.*rt6) + (conj(Ep4a)*conj(r1014))/8. - (conj(Em4a)*conj(r1016))/(4.*rt6) - (conj(Em1a)*r0402)/(4.*rt2) - (conj(Ep1a)*r0404)/(4.*rt2) + (delta1 + v*Kvec1)*r0410 + (conj(Ep1a)*r1010)/(4.*rt2) + r0510*(WLx/2. - (i*WLy)/2.) + r0310*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.) - r0411*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) - r0409*(-WLx/(6.*rt2) + (i*WLy)/(6.*rt2)) - (r0410*WLz)/2.);
+dr0411_dt = (-(gt*r0411) - (gt + g1)*r0411)/2. - i*(-(conj(Ep1a)*conj(r0504))/4. - (conj(Em2a)*conj(r0704))/(4.*rt6) + (conj(Ep1a)*conj(r1110))/(4.*rt2) + (conj(Ep4a)*conj(r1114))/8. - (conj(Em4a)*conj(r1116))/(4.*rt6) - (conj(Em1a)*r0403)/(4.*rt6) + r0511*(WLx/2. - (i*WLy)/2.) + r0311*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.) - r0410*(-WLx/(6.*rt2) + (i*WLy)/(6.*rt2)) - r0411*(-delta1 - v*Kvec1 + WLz/6.) - (r0411*WLz)/2.);
+dr0412_dt = (-(gt*r0412) - (gt + g2)*r0412)/2. - i*(-(conj(Ep3a)*conj(r0604))/(4.*rt2) - (conj(Ep4a)*r0402)/(4.*rt6) + (conj(Ep1a)*r1012)/(4.*rt2) + (conj(Ep4a)*r1412)/8. - (conj(Em4a)*r1612)/(4.*rt6) + r0512*(WLx/2. - (i*WLy)/2.) - r0413*((2*WLx)/3. + (2*i*WLy)/3.) + r0312*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.) - (r0412*WLz)/2. - r0412*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 + (4*WLz)/3.));
+dr0413_dt = (-(gt*r0413) - (gt + g2)*r0413)/2. - i*(-(conj(Ep3a)*conj(r0704))/8. + (conj(Em4a)*r0401)/(4.*rt6) - (conj(Ep4a)*r0403)/8. + (conj(Ep1a)*r1013)/(4.*rt2) + (conj(Ep4a)*r1413)/8. - (conj(Em4a)*r1613)/(4.*rt6) - r0412*((2*WLx)/3. - (2*i*WLy)/3.) + r0513*(WLx/2. - (i*WLy)/2.) - r0414*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) + r0313*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.) - r0413*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 + (2*WLz)/3.) - (r0413*WLz)/2.);
+dr0414_dt = (-(gt*r0414) - (gt + g2)*r0414)/2. - i*(-(conj(Em3a)*conj(r0604))/(8.*rt3) - (conj(Ep3a)*conj(r0804))/(8.*rt3) + (conj(Em4a)*r0402)/8. - (conj(Ep4a)*r0404)/8. - (-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3)*r0414 + (conj(Ep1a)*r1014)/(4.*rt2) + (conj(Ep4a)*r1414)/8. - (conj(Em4a)*r1614)/(4.*rt6) + r0514*(WLx/2. - (i*WLy)/2.) - r0413*(sqrt(0.6666666666666666)*WLx - sqrt(0.6666666666666666)*i*WLy) - r0415*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) + r0314*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.) - (r0414*WLz)/2.);
+dr0415_dt = (-(gt*r0415) - (gt + g2)*r0415)/2. - i*(-(conj(Ep4a)*conj(r0504))/(4.*rt6) - (conj(Em3a)*conj(r0704))/8. + (conj(Ep4a)*conj(r1514))/8. + (conj(Em4a)*r0403)/8. + (conj(Ep1a)*r1015)/(4.*rt2) - (conj(Em4a)*r1615)/(4.*rt6) + r0515*(WLx/2. - (i*WLy)/2.) - r0416*((2*WLx)/3. + (2*i*WLy)/3.) - r0414*(sqrt(0.6666666666666666)*WLx - sqrt(0.6666666666666666)*i*WLy) + r0315*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.) - r0415*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 - (2*WLz)/3.) - (r0415*WLz)/2.);
+dr0416_dt = (-(gt*r0416) - (gt + g2)*r0416)/2. - i*(-(conj(Em3a)*conj(r0804))/(4.*rt2) + (conj(Ep4a)*conj(r1614))/8. + (conj(Em4a)*r0404)/(4.*rt6) + (conj(Ep1a)*r1016)/(4.*rt2) - (conj(Em4a)*r1616)/(4.*rt6) - r0415*((2*WLx)/3. - (2*i*WLy)/3.) + r0516*(WLx/2. - (i*WLy)/2.) + r0316*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.) - r0416*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 - (4*WLz)/3.) - (r0416*WLz)/2.);
+dr0501_dt = -(gt*r0501) - (g2*r1612)/3. - i*((conj(Ep1a)*conj(r0111))/4. + (conj(Ep4a)*conj(r0115))/(4.*rt6) - (Em1a*r0509)/4. + (Em4a*r0513)/(4.*rt6) + r0401*(WLx/2. + (i*WLy)/2.) - r0502*(WLx/2. + (i*WLy)/2.) - 2*r0501*WLz);
+dr0502_dt = -(gt*r0502) + (g2*r1512)/6. - (g2*r1613)/6. - i*((conj(Ep1a)*conj(r0211))/4. + (conj(Ep4a)*conj(r0215))/(4.*rt6) - (Em1a*r0510)/(4.*rt2) - (Ep4a*r0512)/(4.*rt6) + (Em4a*r0514)/8. - r0501*(WLx/2. - (i*WLy)/2.) + r0402*(WLx/2. + (i*WLy)/2.) - r0503*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.) - (3*r0502*WLz)/2.);
+dr0503_dt = -(gt*r0503) + (g1*r1109)/(2.*rt6) + (g2*r1513)/(2.*rt6) - i*((conj(Ep1a)*conj(r0311))/4. + (conj(Ep4a)*conj(r0315))/(4.*rt6) - (Ep1a*r0509)/(4.*rt6) - (Em1a*r0511)/(4.*rt6) - (Ep4a*r0513)/8. + (Em4a*r0515)/8. + r0403*(WLx/2. + (i*WLy)/2.) - r0502*((sqrt(1.5)*WLx)/2. - (sqrt(1.5)*i*WLy)/2.) - r0504*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.) - r0503*WLz);
+dr0504_dt = -(gt*r0504) + (g1*r1110)/(2.*rt2) + (g2*r1514)/(2.*rt6) + (g2*r1615)/6. - i*((conj(Ep1a)*conj(r0411))/4. + (conj(Ep4a)*conj(r0415))/(4.*rt6) - (Ep1a*r0510)/(4.*rt2) - (Ep4a*r0514)/8. + (Em4a*r0516)/(4.*rt6) + r0404*(WLx/2. + (i*WLy)/2.) - r0505*(WLx/2. + (i*WLy)/2.) - r0503*((sqrt(1.5)*WLx)/2. - (sqrt(1.5)*i*WLy)/2.) - (r0504*WLz)/2.);
+dr0505_dt = gt/8. - gt*r0505 + (g1*r1111)/2. + (g2*r1515)/6. + (g2*r1616)/3. - i*((conj(Ep1a)*conj(r0511))/4. + (conj(Ep4a)*conj(r0515))/(4.*rt6) - (Ep1a*r0511)/4. - (Ep4a*r0515)/(4.*rt6) - r0504*(WLx/2. - (i*WLy)/2.) + conj(r0504)*(WLx/2. + (i*WLy)/2.));
+dr0509_dt = (-(gt*r0509) - (gt + g1)*r0509)/2. - i*((conj(Ep2a)*conj(r0705))/(4.*rt6) + (conj(Ep4a)*conj(r0915))/(4.*rt6) - (conj(Em1a)*r0501)/4. - (conj(Ep1a)*r0503)/(4.*rt6) + (conj(Ep1a)*r1109)/4. + r0409*(WLx/2. + (i*WLy)/2.) - r0510*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) - r0509*(-delta1 - v*Kvec1 - WLz/6.) - r0509*WLz);
+dr0510_dt = (-(gt*r0510) - (gt + g1)*r0510)/2. - i*(-(conj(Em2a)*conj(r0605))/(4.*rt6) + (conj(Ep2a)*conj(r0805))/(4.*rt6) + (conj(Ep4a)*conj(r1015))/(4.*rt6) - (conj(Em1a)*r0502)/(4.*rt2) - (conj(Ep1a)*r0504)/(4.*rt2) + (delta1 + v*Kvec1)*r0510 + (conj(Ep1a)*r1110)/4. + r0410*(WLx/2. + (i*WLy)/2.) - r0511*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) - r0509*(-WLx/(6.*rt2) + (i*WLy)/(6.*rt2)) - r0510*WLz);
+dr0511_dt = (-(gt*r0511) - (gt + g1)*r0511)/2. - i*(-(conj(Em2a)*conj(r0705))/(4.*rt6) + (conj(Ep4a)*conj(r1115))/(4.*rt6) - (conj(Em1a)*r0503)/(4.*rt6) - (conj(Ep1a)*r0505)/4. + (conj(Ep1a)*r1111)/4. + r0411*(WLx/2. + (i*WLy)/2.) - r0510*(-WLx/(6.*rt2) + (i*WLy)/(6.*rt2)) - r0511*(-delta1 - v*Kvec1 + WLz/6.) - r0511*WLz);
+dr0512_dt = (-(gt*r0512) - (gt + g2)*r0512)/2. - i*(-(conj(Ep3a)*conj(r0605))/(4.*rt2) - (conj(Ep4a)*r0502)/(4.*rt6) + (conj(Ep1a)*r1112)/4. + (conj(Ep4a)*r1512)/(4.*rt6) + r0412*(WLx/2. + (i*WLy)/2.) - r0513*((2*WLx)/3. + (2*i*WLy)/3.) - r0512*WLz - r0512*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 + (4*WLz)/3.));
+dr0513_dt = (-(gt*r0513) - (gt + g2)*r0513)/2. - i*(-(conj(Ep3a)*conj(r0705))/8. + (conj(Em4a)*r0501)/(4.*rt6) - (conj(Ep4a)*r0503)/8. + (conj(Ep1a)*r1113)/4. + (conj(Ep4a)*r1513)/(4.*rt6) - r0512*((2*WLx)/3. - (2*i*WLy)/3.) + r0413*(WLx/2. + (i*WLy)/2.) - r0514*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) - r0513*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 + (2*WLz)/3.) - r0513*WLz);
+dr0514_dt = (-(gt*r0514) - (gt + g2)*r0514)/2. - i*(-(conj(Em3a)*conj(r0605))/(8.*rt3) - (conj(Ep3a)*conj(r0805))/(8.*rt3) + (conj(Em4a)*r0502)/8. - (conj(Ep4a)*r0504)/8. - (-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3)*r0514 + (conj(Ep1a)*r1114)/4. + (conj(Ep4a)*r1514)/(4.*rt6) + r0414*(WLx/2. + (i*WLy)/2.) - r0513*(sqrt(0.6666666666666666)*WLx - sqrt(0.6666666666666666)*i*WLy) - r0515*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) - r0514*WLz);
+dr0515_dt = (-(gt*r0515) - (gt + g2)*r0515)/2. - i*(-(conj(Em3a)*conj(r0705))/8. + (conj(Em4a)*r0503)/8. - (conj(Ep4a)*r0505)/(4.*rt6) + (conj(Ep1a)*r1115)/4. + (conj(Ep4a)*r1515)/(4.*rt6) + r0415*(WLx/2. + (i*WLy)/2.) - r0516*((2*WLx)/3. + (2*i*WLy)/3.) - r0514*(sqrt(0.6666666666666666)*WLx - sqrt(0.6666666666666666)*i*WLy) - r0515*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 - (2*WLz)/3.) - r0515*WLz);
+dr0516_dt = (-(gt*r0516) - (gt + g2)*r0516)/2. - i*(-(conj(Em3a)*conj(r0805))/(4.*rt2) + (conj(Ep4a)*conj(r1615))/(4.*rt6) + (conj(Em4a)*r0504)/(4.*rt6) + (conj(Ep1a)*r1116)/4. - r0515*((2*WLx)/3. - (2*i*WLy)/3.) + r0416*(WLx/2. + (i*WLy)/2.) - r0516*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 - (4*WLz)/3.) - r0516*WLz);
+dr0601_dt = -(gt*r0601) - i*((conj(Em2a)*conj(r0110))/(4.*rt6) + (conj(Ep3a)*conj(r0112))/(4.*rt2) + (conj(Em3a)*conj(r0114))/(8.*rt3) - (Em1a*r0609)/4. + (Em4a*r0613)/(4.*rt6) - r0602*(WLx/2. + (i*WLy)/2.) + r0701*(-WLx/(2.*rt2) + (i*WLy)/(2.*rt2)) + r0601*(-delta1 + delta2 - v*Kvec1 + v*Kvec2 - WLz/2.) - r0601*WLz);
+dr0602_dt = -(gt*r0602) - i*((conj(Em2a)*conj(r0210))/(4.*rt6) + (conj(Ep3a)*conj(r0212))/(4.*rt2) + (conj(Em3a)*conj(r0214))/(8.*rt3) - (Em1a*r0610)/(4.*rt2) - (Ep4a*r0612)/(4.*rt6) + (Em4a*r0614)/8. - r0601*(WLx/2. - (i*WLy)/2.) - r0603*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.) + r0702*(-WLx/(2.*rt2) + (i*WLy)/(2.*rt2)) + r0602*(-delta1 + delta2 - v*Kvec1 + v*Kvec2 - WLz/2.) - (r0602*WLz)/2.);
+dr0603_dt = -(gt*r0603) - i*((conj(Em2a)*conj(r0310))/(4.*rt6) + (conj(Ep3a)*conj(r0312))/(4.*rt2) + (conj(Em3a)*conj(r0314))/(8.*rt3) - (Ep1a*r0609)/(4.*rt6) - (Em1a*r0611)/(4.*rt6) - (Ep4a*r0613)/8. + (Em4a*r0615)/8. - r0602*((sqrt(1.5)*WLx)/2. - (sqrt(1.5)*i*WLy)/2.) - r0604*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.) + r0703*(-WLx/(2.*rt2) + (i*WLy)/(2.*rt2)) + r0603*(-delta1 + delta2 - v*Kvec1 + v*Kvec2 - WLz/2.));
+dr0604_dt = -(gt*r0604) - i*((conj(Em2a)*conj(r0410))/(4.*rt6) + (conj(Ep3a)*conj(r0412))/(4.*rt2) + (conj(Em3a)*conj(r0414))/(8.*rt3) - (Ep1a*r0610)/(4.*rt2) - (Ep4a*r0614)/8. + (Em4a*r0616)/(4.*rt6) - r0605*(WLx/2. + (i*WLy)/2.) - r0603*((sqrt(1.5)*WLx)/2. - (sqrt(1.5)*i*WLy)/2.) + r0704*(-WLx/(2.*rt2) + (i*WLy)/(2.*rt2)) + r0604*(-delta1 + delta2 - v*Kvec1 + v*Kvec2 - WLz/2.) + (r0604*WLz)/2.);
+dr0605_dt = -(gt*r0605) - i*((conj(Em2a)*conj(r0510))/(4.*rt6) + (conj(Ep3a)*conj(r0512))/(4.*rt2) + (conj(Em3a)*conj(r0514))/(8.*rt3) - (Ep1a*r0611)/4. - (Ep4a*r0615)/(4.*rt6) - r0604*(WLx/2. - (i*WLy)/2.) + r0705*(-WLx/(2.*rt2) + (i*WLy)/(2.*rt2)) + r0605*(-delta1 + delta2 - v*Kvec1 + v*Kvec2 - WLz/2.) + r0605*WLz);
+dr0606_dt = gt/8. - gt*r0606 + (g1*r0909)/12. + (g1*r1010)/12. + (g2*r1212)/2. + (g2*r1313)/4. + (g2*r1414)/12. - i*((conj(Em2a)*conj(r0610))/(4.*rt6) + (conj(Ep3a)*conj(r0612))/(4.*rt2) + (conj(Em3a)*conj(r0614))/(8.*rt3) - (Em2a*r0610)/(4.*rt6) - (Ep3a*r0612)/(4.*rt2) - (Em3a*r0614)/(8.*rt3) - conj(r0706)*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) + r0706*(-WLx/(2.*rt2) + (i*WLy)/(2.*rt2)));
+dr0609_dt = (-(gt*r0609) - (gt + g1)*r0609)/2. - i*((conj(Ep2a)*conj(r0706))/(4.*rt6) + (conj(Ep3a)*conj(r0912))/(4.*rt2) + (conj(Em3a)*conj(r0914))/(8.*rt3) - (conj(Em1a)*r0601)/4. - (conj(Ep1a)*r0603)/(4.*rt6) + (conj(Em2a)*r1009)/(4.*rt6) - r0610*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) + r0709*(-WLx/(2.*rt2) + (i*WLy)/(2.*rt2)) + r0609*(-delta1 + delta2 - v*Kvec1 + v*Kvec2 - WLz/2.) - r0609*(-delta1 - v*Kvec1 - WLz/6.));
+dr0610_dt = (-(gt*r0610) - (gt + g1)*r0610)/2. - i*((conj(Ep2a)*conj(r0806))/(4.*rt6) + (conj(Ep3a)*conj(r1012))/(4.*rt2) + (conj(Em3a)*conj(r1014))/(8.*rt3) - (conj(Em1a)*r0602)/(4.*rt2) - (conj(Ep1a)*r0604)/(4.*rt2) - (conj(Em2a)*r0606)/(4.*rt6) + (delta1 + v*Kvec1)*r0610 + (conj(Em2a)*r1010)/(4.*rt6) - r0611*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) - r0609*(-WLx/(6.*rt2) + (i*WLy)/(6.*rt2)) + r0710*(-WLx/(2.*rt2) + (i*WLy)/(2.*rt2)) + r0610*(-delta1 + delta2 - v*Kvec1 + v*Kvec2 - WLz/2.));
+dr0611_dt = (-(gt*r0611) - (gt + g1)*r0611)/2. - i*(-(conj(Em2a)*conj(r0706))/(4.*rt6) + (conj(Em2a)*conj(r1110))/(4.*rt6) + (conj(Ep3a)*conj(r1112))/(4.*rt2) + (conj(Em3a)*conj(r1114))/(8.*rt3) - (conj(Em1a)*r0603)/(4.*rt6) - (conj(Ep1a)*r0605)/4. - r0610*(-WLx/(6.*rt2) + (i*WLy)/(6.*rt2)) + r0711*(-WLx/(2.*rt2) + (i*WLy)/(2.*rt2)) + r0611*(-delta1 + delta2 - v*Kvec1 + v*Kvec2 - WLz/2.) - r0611*(-delta1 - v*Kvec1 + WLz/6.));
+dr0612_dt = (-(gt*r0612) - (gt + g2)*r0612)/2. - i*(-(conj(Ep4a)*r0602)/(4.*rt6) - (conj(Ep3a)*r0606)/(4.*rt2) + (conj(Em2a)*r1012)/(4.*rt6) + (conj(Ep3a)*r1212)/(4.*rt2) + (conj(Em3a)*r1412)/(8.*rt3) - r0613*((2*WLx)/3. + (2*i*WLy)/3.) + r0712*(-WLx/(2.*rt2) + (i*WLy)/(2.*rt2)) + r0612*(-delta1 + delta2 - v*Kvec1 + v*Kvec2 - WLz/2.) - r0612*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 + (4*WLz)/3.));
+dr0613_dt = (-(gt*r0613) - (gt + g2)*r0613)/2. - i*(-(conj(Ep3a)*conj(r0706))/8. + (conj(Ep3a)*conj(r1312))/(4.*rt2) + (conj(Em4a)*r0601)/(4.*rt6) - (conj(Ep4a)*r0603)/8. + (conj(Em2a)*r1013)/(4.*rt6) + (conj(Em3a)*r1413)/(8.*rt3) - r0612*((2*WLx)/3. - (2*i*WLy)/3.) - r0614*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) + r0713*(-WLx/(2.*rt2) + (i*WLy)/(2.*rt2)) + r0613*(-delta1 + delta2 - v*Kvec1 + v*Kvec2 - WLz/2.) - r0613*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 + (2*WLz)/3.));
+dr0614_dt = (-(gt*r0614) - (gt + g2)*r0614)/2. - i*(-(conj(Ep3a)*conj(r0806))/(8.*rt3) + (conj(Ep3a)*conj(r1412))/(4.*rt2) + (conj(Em4a)*r0602)/8. - (conj(Ep4a)*r0604)/8. - (conj(Em3a)*r0606)/(8.*rt3) - (-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3)*r0614 + (conj(Em2a)*r1014)/(4.*rt6) + (conj(Em3a)*r1414)/(8.*rt3) - r0613*(sqrt(0.6666666666666666)*WLx - sqrt(0.6666666666666666)*i*WLy) - r0615*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) + r0714*(-WLx/(2.*rt2) + (i*WLy)/(2.*rt2)) + r0614*(-delta1 + delta2 - v*Kvec1 + v*Kvec2 - WLz/2.));
+dr0615_dt = (-(gt*r0615) - (gt + g2)*r0615)/2. - i*(-(conj(Em3a)*conj(r0706))/8. + (conj(Ep3a)*conj(r1512))/(4.*rt2) + (conj(Em3a)*conj(r1514))/(8.*rt3) + (conj(Em4a)*r0603)/8. - (conj(Ep4a)*r0605)/(4.*rt6) + (conj(Em2a)*r1015)/(4.*rt6) - r0616*((2*WLx)/3. + (2*i*WLy)/3.) - r0614*(sqrt(0.6666666666666666)*WLx - sqrt(0.6666666666666666)*i*WLy) + r0715*(-WLx/(2.*rt2) + (i*WLy)/(2.*rt2)) - r0615*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 - (2*WLz)/3.) + r0615*(-delta1 + delta2 - v*Kvec1 + v*Kvec2 - WLz/2.));
+dr0616_dt = (-(gt*r0616) - (gt + g2)*r0616)/2. - i*(-(conj(Em3a)*conj(r0806))/(4.*rt2) + (conj(Ep3a)*conj(r1612))/(4.*rt2) + (conj(Em3a)*conj(r1614))/(8.*rt3) + (conj(Em4a)*r0604)/(4.*rt6) + (conj(Em2a)*r1016)/(4.*rt6) - r0615*((2*WLx)/3. - (2*i*WLy)/3.) + r0716*(-WLx/(2.*rt2) + (i*WLy)/(2.*rt2)) - r0616*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 - (4*WLz)/3.) + r0616*(-delta1 + delta2 - v*Kvec1 + v*Kvec2 - WLz/2.));
+dr0701_dt = -(gt*r0701) - i*(-(conj(Ep2a)*conj(r0109))/(4.*rt6) + (conj(Em2a)*conj(r0111))/(4.*rt6) + (conj(Ep3a)*conj(r0113))/8. + (conj(Em3a)*conj(r0115))/8. + (-delta1 + delta2 - v*Kvec1 + v*Kvec2)*r0701 - (Em1a*r0709)/4. + (Em4a*r0713)/(4.*rt6) - r0702*(WLx/2. + (i*WLy)/2.) + r0601*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) + r0801*(-WLx/(2.*rt2) + (i*WLy)/(2.*rt2)) - r0701*WLz);
+dr0702_dt = -(gt*r0702) - i*(-(conj(Ep2a)*conj(r0209))/(4.*rt6) + (conj(Em2a)*conj(r0211))/(4.*rt6) + (conj(Ep3a)*conj(r0213))/8. + (conj(Em3a)*conj(r0215))/8. + (-delta1 + delta2 - v*Kvec1 + v*Kvec2)*r0702 - (Em1a*r0710)/(4.*rt2) - (Ep4a*r0712)/(4.*rt6) + (Em4a*r0714)/8. - r0701*(WLx/2. - (i*WLy)/2.) - r0703*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.) + r0602*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) + r0802*(-WLx/(2.*rt2) + (i*WLy)/(2.*rt2)) - (r0702*WLz)/2.);
+dr0703_dt = -(gt*r0703) - i*(-(conj(Ep2a)*conj(r0309))/(4.*rt6) + (conj(Em2a)*conj(r0311))/(4.*rt6) + (conj(Ep3a)*conj(r0313))/8. + (conj(Em3a)*conj(r0315))/8. + (-delta1 + delta2 - v*Kvec1 + v*Kvec2)*r0703 - (Ep1a*r0709)/(4.*rt6) - (Em1a*r0711)/(4.*rt6) - (Ep4a*r0713)/8. + (Em4a*r0715)/8. - r0702*((sqrt(1.5)*WLx)/2. - (sqrt(1.5)*i*WLy)/2.) - r0704*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.) + r0603*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) + r0803*(-WLx/(2.*rt2) + (i*WLy)/(2.*rt2)));
+dr0704_dt = -(gt*r0704) - i*(-(conj(Ep2a)*conj(r0409))/(4.*rt6) + (conj(Em2a)*conj(r0411))/(4.*rt6) + (conj(Ep3a)*conj(r0413))/8. + (conj(Em3a)*conj(r0415))/8. + (-delta1 + delta2 - v*Kvec1 + v*Kvec2)*r0704 - (Ep1a*r0710)/(4.*rt2) - (Ep4a*r0714)/8. + (Em4a*r0716)/(4.*rt6) - r0705*(WLx/2. + (i*WLy)/2.) - r0703*((sqrt(1.5)*WLx)/2. - (sqrt(1.5)*i*WLy)/2.) + r0604*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) + r0804*(-WLx/(2.*rt2) + (i*WLy)/(2.*rt2)) + (r0704*WLz)/2.);
+dr0705_dt = -(gt*r0705) - i*(-(conj(Ep2a)*conj(r0509))/(4.*rt6) + (conj(Em2a)*conj(r0511))/(4.*rt6) + (conj(Ep3a)*conj(r0513))/8. + (conj(Em3a)*conj(r0515))/8. + (-delta1 + delta2 - v*Kvec1 + v*Kvec2)*r0705 - (Ep1a*r0711)/4. - (Ep4a*r0715)/(4.*rt6) - r0704*(WLx/2. - (i*WLy)/2.) + r0605*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) + r0805*(-WLx/(2.*rt2) + (i*WLy)/(2.*rt2)) + r0705*WLz);
+dr0706_dt = -(gt*r0706) + (g1*r1110)/12. + (g2*r1312)/(2.*rt2) + (g2*r1413)/(2.*rt3) + (g2*r1514)/(4.*rt3) - i*(-(conj(Ep2a)*conj(r0609))/(4.*rt6) + (conj(Em2a)*conj(r0611))/(4.*rt6) + (conj(Ep3a)*conj(r0613))/8. + (conj(Em3a)*conj(r0615))/8. + (-delta1 + delta2 - v*Kvec1 + v*Kvec2)*r0706 - (Em2a*r0710)/(4.*rt6) - (Ep3a*r0712)/(4.*rt2) - (Em3a*r0714)/(8.*rt3) + r0606*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) - r0707*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) + r0806*(-WLx/(2.*rt2) + (i*WLy)/(2.*rt2)) - r0706*(-delta1 + delta2 - v*Kvec1 + v*Kvec2 - WLz/2.));
+dr0707_dt = gt/8. - gt*r0707 + (g1*r0909)/12. + (g1*r1111)/12. + (g2*r1313)/4. + (g2*r1414)/3. + (g2*r1515)/4. - i*(-(conj(Ep2a)*conj(r0709))/(4.*rt6) + (conj(Em2a)*conj(r0711))/(4.*rt6) + (conj(Ep3a)*conj(r0713))/8. + (conj(Em3a)*conj(r0715))/8. + (Ep2a*r0709)/(4.*rt6) - (Em2a*r0711)/(4.*rt6) - (Ep3a*r0713)/8. - (Em3a*r0715)/8. + conj(r0706)*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) - conj(r0807)*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) - r0706*(-WLx/(2.*rt2) + (i*WLy)/(2.*rt2)) + r0807*(-WLx/(2.*rt2) + (i*WLy)/(2.*rt2)));
+dr0709_dt = (-(gt*r0709) - (gt + g1)*r0709)/2. - i*((conj(Ep3a)*conj(r0913))/8. + (conj(Em3a)*conj(r0915))/8. - (conj(Em1a)*r0701)/4. - (conj(Ep1a)*r0703)/(4.*rt6) + (conj(Ep2a)*r0707)/(4.*rt6) + (-delta1 + delta2 - v*Kvec1 + v*Kvec2)*r0709 - (conj(Ep2a)*r0909)/(4.*rt6) + (conj(Em2a)*r1109)/(4.*rt6) + r0609*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) - r0710*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) + r0809*(-WLx/(2.*rt2) + (i*WLy)/(2.*rt2)) - r0709*(-delta1 - v*Kvec1 - WLz/6.));
+dr0710_dt = (-(gt*r0710) - (gt + g1)*r0710)/2. - i*((conj(Ep2a)*conj(r0807))/(4.*rt6) - (conj(Ep2a)*conj(r1009))/(4.*rt6) + (conj(Ep3a)*conj(r1013))/8. + (conj(Em3a)*conj(r1015))/8. - (conj(Em1a)*r0702)/(4.*rt2) - (conj(Ep1a)*r0704)/(4.*rt2) - (conj(Em2a)*r0706)/(4.*rt6) + (delta1 + v*Kvec1)*r0710 + (-delta1 + delta2 - v*Kvec1 + v*Kvec2)*r0710 + (conj(Em2a)*r1110)/(4.*rt6) + r0610*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) - r0711*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) - r0709*(-WLx/(6.*rt2) + (i*WLy)/(6.*rt2)) + r0810*(-WLx/(2.*rt2) + (i*WLy)/(2.*rt2)));
+dr0711_dt = (-(gt*r0711) - (gt + g1)*r0711)/2. - i*(-(conj(Ep2a)*conj(r1109))/(4.*rt6) + (conj(Ep3a)*conj(r1113))/8. + (conj(Em3a)*conj(r1115))/8. - (conj(Em1a)*r0703)/(4.*rt6) - (conj(Ep1a)*r0705)/4. - (conj(Em2a)*r0707)/(4.*rt6) + (-delta1 + delta2 - v*Kvec1 + v*Kvec2)*r0711 + (conj(Em2a)*r1111)/(4.*rt6) + r0611*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) - r0710*(-WLx/(6.*rt2) + (i*WLy)/(6.*rt2)) + r0811*(-WLx/(2.*rt2) + (i*WLy)/(2.*rt2)) - r0711*(-delta1 - v*Kvec1 + WLz/6.));
+dr0712_dt = (-(gt*r0712) - (gt + g2)*r0712)/2. - i*(-(conj(Ep4a)*r0702)/(4.*rt6) - (conj(Ep3a)*r0706)/(4.*rt2) + (-delta1 + delta2 - v*Kvec1 + v*Kvec2)*r0712 - (conj(Ep2a)*r0912)/(4.*rt6) + (conj(Em2a)*r1112)/(4.*rt6) + (conj(Ep3a)*r1312)/8. + (conj(Em3a)*r1512)/8. - r0713*((2*WLx)/3. + (2*i*WLy)/3.) + r0612*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) + r0812*(-WLx/(2.*rt2) + (i*WLy)/(2.*rt2)) - r0712*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 + (4*WLz)/3.));
+dr0713_dt = (-(gt*r0713) - (gt + g2)*r0713)/2. - i*((conj(Em4a)*r0701)/(4.*rt6) - (conj(Ep4a)*r0703)/8. - (conj(Ep3a)*r0707)/8. + (-delta1 + delta2 - v*Kvec1 + v*Kvec2)*r0713 - (conj(Ep2a)*r0913)/(4.*rt6) + (conj(Em2a)*r1113)/(4.*rt6) + (conj(Ep3a)*r1313)/8. + (conj(Em3a)*r1513)/8. - r0712*((2*WLx)/3. - (2*i*WLy)/3.) - r0714*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) + r0613*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) + r0813*(-WLx/(2.*rt2) + (i*WLy)/(2.*rt2)) - r0713*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 + (2*WLz)/3.));
+dr0714_dt = (-(gt*r0714) - (gt + g2)*r0714)/2. - i*(-(conj(Ep3a)*conj(r0807))/(8.*rt3) + (conj(Ep3a)*conj(r1413))/8. + (conj(Em4a)*r0702)/8. - (conj(Ep4a)*r0704)/8. - (conj(Em3a)*r0706)/(8.*rt3) + (-delta1 + delta2 - v*Kvec1 + v*Kvec2)*r0714 - (-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3)*r0714 - (conj(Ep2a)*r0914)/(4.*rt6) + (conj(Em2a)*r1114)/(4.*rt6) + (conj(Em3a)*r1514)/8. - r0713*(sqrt(0.6666666666666666)*WLx - sqrt(0.6666666666666666)*i*WLy) - r0715*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) + r0614*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) + r0814*(-WLx/(2.*rt2) + (i*WLy)/(2.*rt2)));
+dr0715_dt = (-(gt*r0715) - (gt + g2)*r0715)/2. - i*((conj(Ep3a)*conj(r1513))/8. + (conj(Em4a)*r0703)/8. - (conj(Ep4a)*r0705)/(4.*rt6) - (conj(Em3a)*r0707)/8. + (-delta1 + delta2 - v*Kvec1 + v*Kvec2)*r0715 - (conj(Ep2a)*r0915)/(4.*rt6) + (conj(Em2a)*r1115)/(4.*rt6) + (conj(Em3a)*r1515)/8. - r0716*((2*WLx)/3. + (2*i*WLy)/3.) - r0714*(sqrt(0.6666666666666666)*WLx - sqrt(0.6666666666666666)*i*WLy) + r0615*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) + r0815*(-WLx/(2.*rt2) + (i*WLy)/(2.*rt2)) - r0715*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 - (2*WLz)/3.));
+dr0716_dt = (-(gt*r0716) - (gt + g2)*r0716)/2. - i*(-(conj(Em3a)*conj(r0807))/(4.*rt2) + (conj(Ep3a)*conj(r1613))/8. + (conj(Em3a)*conj(r1615))/8. + (conj(Em4a)*r0704)/(4.*rt6) + (-delta1 + delta2 - v*Kvec1 + v*Kvec2)*r0716 - (conj(Ep2a)*r0916)/(4.*rt6) + (conj(Em2a)*r1116)/(4.*rt6) - r0715*((2*WLx)/3. - (2*i*WLy)/3.) + r0616*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) + r0816*(-WLx/(2.*rt2) + (i*WLy)/(2.*rt2)) - r0716*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 - (4*WLz)/3.));
+dr0801_dt = -(gt*r0801) - i*(-(conj(Ep2a)*conj(r0110))/(4.*rt6) + (conj(Ep3a)*conj(r0114))/(8.*rt3) + (conj(Em3a)*conj(r0116))/(4.*rt2) - (Em1a*r0809)/4. + (Em4a*r0813)/(4.*rt6) - r0802*(WLx/2. + (i*WLy)/2.) + r0701*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) + r0801*(-delta1 + delta2 - v*Kvec1 + v*Kvec2 + WLz/2.) - r0801*WLz);
+dr0802_dt = -(gt*r0802) - i*(-(conj(Ep2a)*conj(r0210))/(4.*rt6) + (conj(Ep3a)*conj(r0214))/(8.*rt3) + (conj(Em3a)*conj(r0216))/(4.*rt2) - (Em1a*r0810)/(4.*rt2) - (Ep4a*r0812)/(4.*rt6) + (Em4a*r0814)/8. - r0801*(WLx/2. - (i*WLy)/2.) - r0803*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.) + r0702*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) + r0802*(-delta1 + delta2 - v*Kvec1 + v*Kvec2 + WLz/2.) - (r0802*WLz)/2.);
+dr0803_dt = -(gt*r0803) - i*(-(conj(Ep2a)*conj(r0310))/(4.*rt6) + (conj(Ep3a)*conj(r0314))/(8.*rt3) + (conj(Em3a)*conj(r0316))/(4.*rt2) - (Ep1a*r0809)/(4.*rt6) - (Em1a*r0811)/(4.*rt6) - (Ep4a*r0813)/8. + (Em4a*r0815)/8. - r0802*((sqrt(1.5)*WLx)/2. - (sqrt(1.5)*i*WLy)/2.) - r0804*((sqrt(1.5)*WLx)/2. + (sqrt(1.5)*i*WLy)/2.) + r0703*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) + r0803*(-delta1 + delta2 - v*Kvec1 + v*Kvec2 + WLz/2.));
+dr0804_dt = -(gt*r0804) - i*(-(conj(Ep2a)*conj(r0410))/(4.*rt6) + (conj(Ep3a)*conj(r0414))/(8.*rt3) + (conj(Em3a)*conj(r0416))/(4.*rt2) - (Ep1a*r0810)/(4.*rt2) - (Ep4a*r0814)/8. + (Em4a*r0816)/(4.*rt6) - r0805*(WLx/2. + (i*WLy)/2.) - r0803*((sqrt(1.5)*WLx)/2. - (sqrt(1.5)*i*WLy)/2.) + r0704*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) + r0804*(-delta1 + delta2 - v*Kvec1 + v*Kvec2 + WLz/2.) + (r0804*WLz)/2.);
+dr0805_dt = -(gt*r0805) - i*(-(conj(Ep2a)*conj(r0510))/(4.*rt6) + (conj(Ep3a)*conj(r0514))/(8.*rt3) + (conj(Em3a)*conj(r0516))/(4.*rt2) - (Ep1a*r0811)/4. - (Ep4a*r0815)/(4.*rt6) - r0804*(WLx/2. - (i*WLy)/2.) + r0705*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) + r0805*(-delta1 + delta2 - v*Kvec1 + v*Kvec2 + WLz/2.) + r0805*WLz);
+dr0806_dt = -(gt*r0806) - (g1*r1109)/12. + (g2*r1412)/(2.*rt6) + (g2*r1513)/4. + (g2*r1614)/(2.*rt6) - i*(-(conj(Ep2a)*conj(r0610))/(4.*rt6) + (conj(Ep3a)*conj(r0614))/(8.*rt3) + (conj(Em3a)*conj(r0616))/(4.*rt2) - (Em2a*r0810)/(4.*rt6) - (Ep3a*r0812)/(4.*rt2) - (Em3a*r0814)/(8.*rt3) + r0706*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) - r0807*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) - r0806*(-delta1 + delta2 - v*Kvec1 + v*Kvec2 - WLz/2.) + r0806*(-delta1 + delta2 - v*Kvec1 + v*Kvec2 + WLz/2.));
+dr0807_dt = -(gt*r0807) + (g1*r1009)/12. + (g2*r1413)/(4.*rt3) + (g2*r1514)/(2.*rt3) + (g2*r1615)/(2.*rt2) - i*(-(conj(Ep2a)*conj(r0710))/(4.*rt6) + (conj(Ep3a)*conj(r0714))/(8.*rt3) + (conj(Em3a)*conj(r0716))/(4.*rt2) - (-delta1 + delta2 - v*Kvec1 + v*Kvec2)*r0807 + (Ep2a*r0809)/(4.*rt6) - (Em2a*r0811)/(4.*rt6) - (Ep3a*r0813)/8. - (Em3a*r0815)/8. + r0707*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) - r0808*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) - r0806*(-WLx/(2.*rt2) + (i*WLy)/(2.*rt2)) + r0807*(-delta1 + delta2 - v*Kvec1 + v*Kvec2 + WLz/2.));
+dr0808_dt = gt/8. - gt*r0808 + (g1*r1010)/12. + (g1*r1111)/12. + (g2*r1414)/12. + (g2*r1515)/4. + (g2*r1616)/2. - i*(-(conj(Ep2a)*conj(r0810))/(4.*rt6) + (conj(Ep3a)*conj(r0814))/(8.*rt3) + (conj(Em3a)*conj(r0816))/(4.*rt2) + (Ep2a*r0810)/(4.*rt6) - (Ep3a*r0814)/(8.*rt3) - (Em3a*r0816)/(4.*rt2) + conj(r0807)*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) - r0807*(-WLx/(2.*rt2) + (i*WLy)/(2.*rt2)));
+dr0809_dt = (-(gt*r0809) - (gt + g1)*r0809)/2. - i*((conj(Ep3a)*conj(r0914))/(8.*rt3) + (conj(Em3a)*conj(r0916))/(4.*rt2) - (conj(Em1a)*r0801)/4. - (conj(Ep1a)*r0803)/(4.*rt6) + (conj(Ep2a)*r0807)/(4.*rt6) - (conj(Ep2a)*r1009)/(4.*rt6) + r0709*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) - r0810*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) - r0809*(-delta1 - v*Kvec1 - WLz/6.) + r0809*(-delta1 + delta2 - v*Kvec1 + v*Kvec2 + WLz/2.));
+dr0810_dt = (-(gt*r0810) - (gt + g1)*r0810)/2. - i*((conj(Ep3a)*conj(r1014))/(8.*rt3) + (conj(Em3a)*conj(r1016))/(4.*rt2) - (conj(Em1a)*r0802)/(4.*rt2) - (conj(Ep1a)*r0804)/(4.*rt2) - (conj(Em2a)*r0806)/(4.*rt6) + (conj(Ep2a)*r0808)/(4.*rt6) + (delta1 + v*Kvec1)*r0810 - (conj(Ep2a)*r1010)/(4.*rt6) + r0710*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) - r0811*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) - r0809*(-WLx/(6.*rt2) + (i*WLy)/(6.*rt2)) + r0810*(-delta1 + delta2 - v*Kvec1 + v*Kvec2 + WLz/2.));
+dr0811_dt = (-(gt*r0811) - (gt + g1)*r0811)/2. - i*(-(conj(Ep2a)*conj(r1110))/(4.*rt6) + (conj(Ep3a)*conj(r1114))/(8.*rt3) + (conj(Em3a)*conj(r1116))/(4.*rt2) - (conj(Em1a)*r0803)/(4.*rt6) - (conj(Ep1a)*r0805)/4. - (conj(Em2a)*r0807)/(4.*rt6) + r0711*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) - r0810*(-WLx/(6.*rt2) + (i*WLy)/(6.*rt2)) - r0811*(-delta1 - v*Kvec1 + WLz/6.) + r0811*(-delta1 + delta2 - v*Kvec1 + v*Kvec2 + WLz/2.));
+dr0812_dt = (-(gt*r0812) - (gt + g2)*r0812)/2. - i*(-(conj(Ep4a)*r0802)/(4.*rt6) - (conj(Ep3a)*r0806)/(4.*rt2) - (conj(Ep2a)*r1012)/(4.*rt6) + (conj(Ep3a)*r1412)/(8.*rt3) + (conj(Em3a)*r1612)/(4.*rt2) - r0813*((2*WLx)/3. + (2*i*WLy)/3.) + r0712*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) + r0812*(-delta1 + delta2 - v*Kvec1 + v*Kvec2 + WLz/2.) - r0812*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 + (4*WLz)/3.));
+dr0813_dt = (-(gt*r0813) - (gt + g2)*r0813)/2. - i*((conj(Em4a)*r0801)/(4.*rt6) - (conj(Ep4a)*r0803)/8. - (conj(Ep3a)*r0807)/8. - (conj(Ep2a)*r1013)/(4.*rt6) + (conj(Ep3a)*r1413)/(8.*rt3) + (conj(Em3a)*r1613)/(4.*rt2) - r0812*((2*WLx)/3. - (2*i*WLy)/3.) - r0814*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) + r0713*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) + r0813*(-delta1 + delta2 - v*Kvec1 + v*Kvec2 + WLz/2.) - r0813*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 + (2*WLz)/3.));
+dr0814_dt = (-(gt*r0814) - (gt + g2)*r0814)/2. - i*((conj(Em4a)*r0802)/8. - (conj(Ep4a)*r0804)/8. - (conj(Em3a)*r0806)/(8.*rt3) - (conj(Ep3a)*r0808)/(8.*rt3) - (-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3)*r0814 - (conj(Ep2a)*r1014)/(4.*rt6) + (conj(Ep3a)*r1414)/(8.*rt3) + (conj(Em3a)*r1614)/(4.*rt2) - r0813*(sqrt(0.6666666666666666)*WLx - sqrt(0.6666666666666666)*i*WLy) - r0815*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) + r0714*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) + r0814*(-delta1 + delta2 - v*Kvec1 + v*Kvec2 + WLz/2.));
+dr0815_dt = (-(gt*r0815) - (gt + g2)*r0815)/2. - i*((conj(Ep3a)*conj(r1514))/(8.*rt3) + (conj(Em4a)*r0803)/8. - (conj(Ep4a)*r0805)/(4.*rt6) - (conj(Em3a)*r0807)/8. - (conj(Ep2a)*r1015)/(4.*rt6) + (conj(Em3a)*r1615)/(4.*rt2) - r0816*((2*WLx)/3. + (2*i*WLy)/3.) - r0814*(sqrt(0.6666666666666666)*WLx - sqrt(0.6666666666666666)*i*WLy) + r0715*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) - r0815*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 - (2*WLz)/3.) + r0815*(-delta1 + delta2 - v*Kvec1 + v*Kvec2 + WLz/2.));
+dr0816_dt = (-(gt*r0816) - (gt + g2)*r0816)/2. - i*((conj(Ep3a)*conj(r1614))/(8.*rt3) + (conj(Em4a)*r0804)/(4.*rt6) - (conj(Em3a)*r0808)/(4.*rt2) - (conj(Ep2a)*r1016)/(4.*rt6) + (conj(Em3a)*r1616)/(4.*rt2) - r0815*((2*WLx)/3. - (2*i*WLy)/3.) + r0716*(-WLx/(2.*rt2) - (i*WLy)/(2.*rt2)) - r0816*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 - (4*WLz)/3.) + r0816*(-delta1 + delta2 - v*Kvec1 + v*Kvec2 + WLz/2.));
+dr0909_dt = -((gt + g1)*r0909) - i*(-(conj(Em1a)*conj(r0109))/4. - (conj(Ep1a)*conj(r0309))/(4.*rt6) + (conj(Ep2a)*conj(r0709))/(4.*rt6) + (Em1a*r0109)/4. + (Ep1a*r0309)/(4.*rt6) - (Ep2a*r0709)/(4.*rt6) - conj(r1009)*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) + r1009*(-WLx/(6.*rt2) + (i*WLy)/(6.*rt2)));
+dr0912_dt = (-((gt + g1)*r0912) - (gt + g2)*r0912)/2. - i*(-(conj(Ep4a)*conj(r0209))/(4.*rt6) - (conj(Ep3a)*conj(r0609))/(4.*rt2) + (Em1a*r0112)/4. + (Ep1a*r0312)/(4.*rt6) - (Ep2a*r0712)/(4.*rt6) - r0913*((2*WLx)/3. + (2*i*WLy)/3.) + r1012*(-WLx/(6.*rt2) + (i*WLy)/(6.*rt2)) + r0912*(-delta1 - v*Kvec1 - WLz/6.) - r0912*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 + (4*WLz)/3.));
+dr0913_dt = (-((gt + g1)*r0913) - (gt + g2)*r0913)/2. - i*((conj(Em4a)*conj(r0109))/(4.*rt6) - (conj(Ep4a)*conj(r0309))/8. - (conj(Ep3a)*conj(r0709))/8. + (Em1a*r0113)/4. + (Ep1a*r0313)/(4.*rt6) - (Ep2a*r0713)/(4.*rt6) - r0912*((2*WLx)/3. - (2*i*WLy)/3.) - r0914*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) + r1013*(-WLx/(6.*rt2) + (i*WLy)/(6.*rt2)) + r0913*(-delta1 - v*Kvec1 - WLz/6.) - r0913*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 + (2*WLz)/3.));
+dr0914_dt = (-((gt + g1)*r0914) - (gt + g2)*r0914)/2. - i*((conj(Em4a)*conj(r0209))/8. - (conj(Ep4a)*conj(r0409))/8. - (conj(Em3a)*conj(r0609))/(8.*rt3) - (conj(Ep3a)*conj(r0809))/(8.*rt3) + (Em1a*r0114)/4. + (Ep1a*r0314)/(4.*rt6) - (Ep2a*r0714)/(4.*rt6) - (-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3)*r0914 - r0913*(sqrt(0.6666666666666666)*WLx - sqrt(0.6666666666666666)*i*WLy) - r0915*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) + r1014*(-WLx/(6.*rt2) + (i*WLy)/(6.*rt2)) + r0914*(-delta1 - v*Kvec1 - WLz/6.));
+dr0915_dt = (-((gt + g1)*r0915) - (gt + g2)*r0915)/2. - i*((conj(Em4a)*conj(r0309))/8. - (conj(Ep4a)*conj(r0509))/(4.*rt6) - (conj(Em3a)*conj(r0709))/8. + (Em1a*r0115)/4. + (Ep1a*r0315)/(4.*rt6) - (Ep2a*r0715)/(4.*rt6) - r0916*((2*WLx)/3. + (2*i*WLy)/3.) - r0914*(sqrt(0.6666666666666666)*WLx - sqrt(0.6666666666666666)*i*WLy) + r1015*(-WLx/(6.*rt2) + (i*WLy)/(6.*rt2)) - r0915*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 - (2*WLz)/3.) + r0915*(-delta1 - v*Kvec1 - WLz/6.));
+dr0916_dt = (-((gt + g1)*r0916) - (gt + g2)*r0916)/2. - i*((conj(Em4a)*conj(r0409))/(4.*rt6) - (conj(Em3a)*conj(r0809))/(4.*rt2) + (Em1a*r0116)/4. + (Ep1a*r0316)/(4.*rt6) - (Ep2a*r0716)/(4.*rt6) - r0915*((2*WLx)/3. - (2*i*WLy)/3.) + r1016*(-WLx/(6.*rt2) + (i*WLy)/(6.*rt2)) - r0916*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 - (4*WLz)/3.) + r0916*(-delta1 - v*Kvec1 - WLz/6.));
+dr1009_dt = -((gt + g1)*r1009) - i*(-(conj(Em1a)*conj(r0110))/4. - (conj(Ep1a)*conj(r0310))/(4.*rt6) + (conj(Ep2a)*conj(r0710))/(4.*rt6) + (Em1a*r0209)/(4.*rt2) + (Ep1a*r0409)/(4.*rt2) + (Em2a*r0609)/(4.*rt6) - (Ep2a*r0809)/(4.*rt6) - (delta1 + v*Kvec1)*r1009 + r0909*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) - r1010*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) + r1109*(-WLx/(6.*rt2) + (i*WLy)/(6.*rt2)) - r1009*(-delta1 - v*Kvec1 - WLz/6.));
+dr1010_dt = -((gt + g1)*r1010) - i*(-(conj(Em1a)*conj(r0210))/(4.*rt2) - (conj(Ep1a)*conj(r0410))/(4.*rt2) - (conj(Em2a)*conj(r0610))/(4.*rt6) + (conj(Ep2a)*conj(r0810))/(4.*rt6) + (Em1a*r0210)/(4.*rt2) + (Ep1a*r0410)/(4.*rt2) + (Em2a*r0610)/(4.*rt6) - (Ep2a*r0810)/(4.*rt6) + conj(r1009)*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) - conj(r1110)*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) - r1009*(-WLx/(6.*rt2) + (i*WLy)/(6.*rt2)) + r1110*(-WLx/(6.*rt2) + (i*WLy)/(6.*rt2)));
+dr1012_dt = (-((gt + g1)*r1012) - (gt + g2)*r1012)/2. - i*(-(conj(Ep4a)*conj(r0210))/(4.*rt6) - (conj(Ep3a)*conj(r0610))/(4.*rt2) + (Em1a*r0212)/(4.*rt2) + (Ep1a*r0412)/(4.*rt2) + (Em2a*r0612)/(4.*rt6) - (Ep2a*r0812)/(4.*rt6) - (delta1 + v*Kvec1)*r1012 - r1013*((2*WLx)/3. + (2*i*WLy)/3.) + r0912*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) + r1112*(-WLx/(6.*rt2) + (i*WLy)/(6.*rt2)) - r1012*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 + (4*WLz)/3.));
+dr1013_dt = (-((gt + g1)*r1013) - (gt + g2)*r1013)/2. - i*((conj(Em4a)*conj(r0110))/(4.*rt6) - (conj(Ep4a)*conj(r0310))/8. - (conj(Ep3a)*conj(r0710))/8. + (Em1a*r0213)/(4.*rt2) + (Ep1a*r0413)/(4.*rt2) + (Em2a*r0613)/(4.*rt6) - (Ep2a*r0813)/(4.*rt6) - (delta1 + v*Kvec1)*r1013 - r1012*((2*WLx)/3. - (2*i*WLy)/3.) - r1014*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) + r0913*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) + r1113*(-WLx/(6.*rt2) + (i*WLy)/(6.*rt2)) - r1013*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 + (2*WLz)/3.));
+dr1014_dt = (-((gt + g1)*r1014) - (gt + g2)*r1014)/2. - i*((conj(Em4a)*conj(r0210))/8. - (conj(Ep4a)*conj(r0410))/8. - (conj(Em3a)*conj(r0610))/(8.*rt3) - (conj(Ep3a)*conj(r0810))/(8.*rt3) + (Em1a*r0214)/(4.*rt2) + (Ep1a*r0414)/(4.*rt2) + (Em2a*r0614)/(4.*rt6) - (Ep2a*r0814)/(4.*rt6) - (delta1 + v*Kvec1)*r1014 - (-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3)*r1014 - r1013*(sqrt(0.6666666666666666)*WLx - sqrt(0.6666666666666666)*i*WLy) - r1015*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) + r0914*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) + r1114*(-WLx/(6.*rt2) + (i*WLy)/(6.*rt2)));
+dr1015_dt = (-((gt + g1)*r1015) - (gt + g2)*r1015)/2. - i*((conj(Em4a)*conj(r0310))/8. - (conj(Ep4a)*conj(r0510))/(4.*rt6) - (conj(Em3a)*conj(r0710))/8. + (Em1a*r0215)/(4.*rt2) + (Ep1a*r0415)/(4.*rt2) + (Em2a*r0615)/(4.*rt6) - (Ep2a*r0815)/(4.*rt6) - (delta1 + v*Kvec1)*r1015 - r1016*((2*WLx)/3. + (2*i*WLy)/3.) - r1014*(sqrt(0.6666666666666666)*WLx - sqrt(0.6666666666666666)*i*WLy) + r0915*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) + r1115*(-WLx/(6.*rt2) + (i*WLy)/(6.*rt2)) - r1015*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 - (2*WLz)/3.));
+dr1016_dt = (-((gt + g1)*r1016) - (gt + g2)*r1016)/2. - i*((conj(Em4a)*conj(r0410))/(4.*rt6) - (conj(Em3a)*conj(r0810))/(4.*rt2) + (Em1a*r0216)/(4.*rt2) + (Ep1a*r0416)/(4.*rt2) + (Em2a*r0616)/(4.*rt6) - (Ep2a*r0816)/(4.*rt6) - (delta1 + v*Kvec1)*r1016 - r1015*((2*WLx)/3. - (2*i*WLy)/3.) + r0916*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) + r1116*(-WLx/(6.*rt2) + (i*WLy)/(6.*rt2)) - r1016*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 - (4*WLz)/3.));
+dr1109_dt = -((gt + g1)*r1109) - i*(-(conj(Em1a)*conj(r0111))/4. - (conj(Ep1a)*conj(r0311))/(4.*rt6) + (conj(Ep2a)*conj(r0711))/(4.*rt6) + (Em1a*r0309)/(4.*rt6) + (Ep1a*r0509)/4. + (Em2a*r0709)/(4.*rt6) + r1009*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) - r1110*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) - r1109*(-delta1 - v*Kvec1 - WLz/6.) + r1109*(-delta1 - v*Kvec1 + WLz/6.));
+dr1110_dt = -((gt + g1)*r1110) - i*(-(conj(Em1a)*conj(r0211))/(4.*rt2) - (conj(Ep1a)*conj(r0411))/(4.*rt2) - (conj(Em2a)*conj(r0611))/(4.*rt6) + (conj(Ep2a)*conj(r0811))/(4.*rt6) + (Em1a*r0310)/(4.*rt6) + (Ep1a*r0510)/4. + (Em2a*r0710)/(4.*rt6) + (delta1 + v*Kvec1)*r1110 + r1010*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) - r1111*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) - r1109*(-WLx/(6.*rt2) + (i*WLy)/(6.*rt2)) + r1110*(-delta1 - v*Kvec1 + WLz/6.));
+dr1111_dt = -((gt + g1)*r1111) - i*(-(conj(Em1a)*conj(r0311))/(4.*rt6) - (conj(Ep1a)*conj(r0511))/4. - (conj(Em2a)*conj(r0711))/(4.*rt6) + (Em1a*r0311)/(4.*rt6) + (Ep1a*r0511)/4. + (Em2a*r0711)/(4.*rt6) + conj(r1110)*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) - r1110*(-WLx/(6.*rt2) + (i*WLy)/(6.*rt2)));
+dr1112_dt = (-((gt + g1)*r1112) - (gt + g2)*r1112)/2. - i*(-(conj(Ep4a)*conj(r0211))/(4.*rt6) - (conj(Ep3a)*conj(r0611))/(4.*rt2) + (Em1a*r0312)/(4.*rt6) + (Ep1a*r0512)/4. + (Em2a*r0712)/(4.*rt6) - r1113*((2*WLx)/3. + (2*i*WLy)/3.) + r1012*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) + r1112*(-delta1 - v*Kvec1 + WLz/6.) - r1112*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 + (4*WLz)/3.));
+dr1113_dt = (-((gt + g1)*r1113) - (gt + g2)*r1113)/2. - i*((conj(Em4a)*conj(r0111))/(4.*rt6) - (conj(Ep4a)*conj(r0311))/8. - (conj(Ep3a)*conj(r0711))/8. + (Em1a*r0313)/(4.*rt6) + (Ep1a*r0513)/4. + (Em2a*r0713)/(4.*rt6) - r1112*((2*WLx)/3. - (2*i*WLy)/3.) - r1114*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) + r1013*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) + r1113*(-delta1 - v*Kvec1 + WLz/6.) - r1113*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 + (2*WLz)/3.));
+dr1114_dt = (-((gt + g1)*r1114) - (gt + g2)*r1114)/2. - i*((conj(Em4a)*conj(r0211))/8. - (conj(Ep4a)*conj(r0411))/8. - (conj(Em3a)*conj(r0611))/(8.*rt3) - (conj(Ep3a)*conj(r0811))/(8.*rt3) + (Em1a*r0314)/(4.*rt6) + (Ep1a*r0514)/4. + (Em2a*r0714)/(4.*rt6) - (-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3)*r1114 - r1113*(sqrt(0.6666666666666666)*WLx - sqrt(0.6666666666666666)*i*WLy) - r1115*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) + r1014*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) + r1114*(-delta1 - v*Kvec1 + WLz/6.));
+dr1115_dt = (-((gt + g1)*r1115) - (gt + g2)*r1115)/2. - i*((conj(Em4a)*conj(r0311))/8. - (conj(Ep4a)*conj(r0511))/(4.*rt6) - (conj(Em3a)*conj(r0711))/8. + (Em1a*r0315)/(4.*rt6) + (Ep1a*r0515)/4. + (Em2a*r0715)/(4.*rt6) - r1116*((2*WLx)/3. + (2*i*WLy)/3.) - r1114*(sqrt(0.6666666666666666)*WLx - sqrt(0.6666666666666666)*i*WLy) + r1015*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) - r1115*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 - (2*WLz)/3.) + r1115*(-delta1 - v*Kvec1 + WLz/6.));
+dr1116_dt = (-((gt + g1)*r1116) - (gt + g2)*r1116)/2. - i*((conj(Em4a)*conj(r0411))/(4.*rt6) - (conj(Em3a)*conj(r0811))/(4.*rt2) + (Em1a*r0316)/(4.*rt6) + (Ep1a*r0516)/4. + (Em2a*r0716)/(4.*rt6) - r1115*((2*WLx)/3. - (2*i*WLy)/3.) + r1016*(-WLx/(6.*rt2) - (i*WLy)/(6.*rt2)) - r1116*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 - (4*WLz)/3.) + r1116*(-delta1 - v*Kvec1 + WLz/6.));
+dr1212_dt = -((gt + g2)*r1212) - i*(-(conj(Ep4a)*conj(r0212))/(4.*rt6) - (conj(Ep3a)*conj(r0612))/(4.*rt2) + (Ep4a*r0212)/(4.*rt6) + (Ep3a*r0612)/(4.*rt2) + r1312*((2*WLx)/3. - (2*i*WLy)/3.) - conj(r1312)*((2*WLx)/3. + (2*i*WLy)/3.));
+dr1312_dt = -((gt + g2)*r1312) - i*(-(conj(Ep4a)*conj(r0213))/(4.*rt6) - (conj(Ep3a)*conj(r0613))/(4.*rt2) - (Em4a*r0112)/(4.*rt6) + (Ep4a*r0312)/8. + (Ep3a*r0712)/8. + r1212*((2*WLx)/3. + (2*i*WLy)/3.) - r1313*((2*WLx)/3. + (2*i*WLy)/3.) + r1412*(sqrt(0.6666666666666666)*WLx - sqrt(0.6666666666666666)*i*WLy) + r1312*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 + (2*WLz)/3.) - r1312*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 + (4*WLz)/3.));
+dr1313_dt = -((gt + g2)*r1313) - i*((conj(Em4a)*conj(r0113))/(4.*rt6) - (conj(Ep4a)*conj(r0313))/8. - (conj(Ep3a)*conj(r0713))/8. - (Em4a*r0113)/(4.*rt6) + (Ep4a*r0313)/8. + (Ep3a*r0713)/8. - r1312*((2*WLx)/3. - (2*i*WLy)/3.) + conj(r1312)*((2*WLx)/3. + (2*i*WLy)/3.) + r1413*(sqrt(0.6666666666666666)*WLx - sqrt(0.6666666666666666)*i*WLy) - conj(r1413)*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy));
+dr1412_dt = -((gt + g2)*r1412) - i*(-(conj(Ep4a)*conj(r0214))/(4.*rt6) - (conj(Ep3a)*conj(r0614))/(4.*rt2) - (Em4a*r0212)/8. + (Ep4a*r0412)/8. + (Em3a*r0612)/(8.*rt3) + (Ep3a*r0812)/(8.*rt3) + (-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3)*r1412 - r1413*((2*WLx)/3. + (2*i*WLy)/3.) + r1512*(sqrt(0.6666666666666666)*WLx - sqrt(0.6666666666666666)*i*WLy) + r1312*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) - r1412*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 + (4*WLz)/3.));
+dr1413_dt = -((gt + g2)*r1413) - i*((conj(Em4a)*conj(r0114))/(4.*rt6) - (conj(Ep4a)*conj(r0314))/8. - (conj(Ep3a)*conj(r0714))/8. - (Em4a*r0213)/8. + (Ep4a*r0413)/8. + (Em3a*r0613)/(8.*rt3) + (Ep3a*r0813)/(8.*rt3) + (-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3)*r1413 - r1412*((2*WLx)/3. - (2*i*WLy)/3.) + r1513*(sqrt(0.6666666666666666)*WLx - sqrt(0.6666666666666666)*i*WLy) + r1313*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) - r1414*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) - r1413*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 + (2*WLz)/3.));
+dr1414_dt = -((gt + g2)*r1414) - i*((conj(Em4a)*conj(r0214))/8. - (conj(Ep4a)*conj(r0414))/8. - (conj(Em3a)*conj(r0614))/(8.*rt3) - (conj(Ep3a)*conj(r0814))/(8.*rt3) - (Em4a*r0214)/8. + (Ep4a*r0414)/8. + (Em3a*r0614)/(8.*rt3) + (Ep3a*r0814)/(8.*rt3) - r1413*(sqrt(0.6666666666666666)*WLx - sqrt(0.6666666666666666)*i*WLy) + r1514*(sqrt(0.6666666666666666)*WLx - sqrt(0.6666666666666666)*i*WLy) + conj(r1413)*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) - conj(r1514)*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy));
+dr1512_dt = -((gt + g2)*r1512) - i*(-(conj(Ep4a)*conj(r0215))/(4.*rt6) - (conj(Ep3a)*conj(r0615))/(4.*rt2) - (Em4a*r0312)/8. + (Ep4a*r0512)/(4.*rt6) + (Em3a*r0712)/8. + r1612*((2*WLx)/3. - (2*i*WLy)/3.) - r1513*((2*WLx)/3. + (2*i*WLy)/3.) + r1412*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) + r1512*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 - (2*WLz)/3.) - r1512*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 + (4*WLz)/3.));
+dr1513_dt = -((gt + g2)*r1513) - i*((conj(Em4a)*conj(r0115))/(4.*rt6) - (conj(Ep4a)*conj(r0315))/8. - (conj(Ep3a)*conj(r0715))/8. - (Em4a*r0313)/8. + (Ep4a*r0513)/(4.*rt6) + (Em3a*r0713)/8. - r1512*((2*WLx)/3. - (2*i*WLy)/3.) + r1613*((2*WLx)/3. - (2*i*WLy)/3.) + r1413*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) - r1514*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) + r1513*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 - (2*WLz)/3.) - r1513*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 + (2*WLz)/3.));
+dr1514_dt = -((gt + g2)*r1514) - i*((conj(Em4a)*conj(r0215))/8. - (conj(Ep4a)*conj(r0415))/8. - (conj(Em3a)*conj(r0615))/(8.*rt3) - (conj(Ep3a)*conj(r0815))/(8.*rt3) - (Em4a*r0314)/8. + (Ep4a*r0514)/(4.*rt6) + (Em3a*r0714)/8. - (-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3)*r1514 + r1614*((2*WLx)/3. - (2*i*WLy)/3.) - r1513*(sqrt(0.6666666666666666)*WLx - sqrt(0.6666666666666666)*i*WLy) + r1414*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) - r1515*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) + r1514*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 - (2*WLz)/3.));
+dr1515_dt = -((gt + g2)*r1515) - i*((conj(Em4a)*conj(r0315))/8. - (conj(Ep4a)*conj(r0515))/(4.*rt6) - (conj(Em3a)*conj(r0715))/8. - (Em4a*r0315)/8. + (Ep4a*r0515)/(4.*rt6) + (Em3a*r0715)/8. + r1615*((2*WLx)/3. - (2*i*WLy)/3.) - conj(r1615)*((2*WLx)/3. + (2*i*WLy)/3.) - r1514*(sqrt(0.6666666666666666)*WLx - sqrt(0.6666666666666666)*i*WLy) + conj(r1514)*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy));
+dr1612_dt = -((gt + g2)*r1612) - i*(-(conj(Ep4a)*conj(r0216))/(4.*rt6) - (conj(Ep3a)*conj(r0616))/(4.*rt2) - (Em4a*r0412)/(4.*rt6) + (Em3a*r0812)/(4.*rt2) + r1512*((2*WLx)/3. + (2*i*WLy)/3.) - r1613*((2*WLx)/3. + (2*i*WLy)/3.) + r1612*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 - (4*WLz)/3.) - r1612*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 + (4*WLz)/3.));
+dr1613_dt = -((gt + g2)*r1613) - i*((conj(Em4a)*conj(r0116))/(4.*rt6) - (conj(Ep4a)*conj(r0316))/8. - (conj(Ep3a)*conj(r0716))/8. - (Em4a*r0413)/(4.*rt6) + (Em3a*r0813)/(4.*rt2) - r1612*((2*WLx)/3. - (2*i*WLy)/3.) + r1513*((2*WLx)/3. + (2*i*WLy)/3.) - r1614*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) + r1613*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 - (4*WLz)/3.) - r1613*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 + (2*WLz)/3.));
+dr1614_dt = -((gt + g2)*r1614) - i*((conj(Em4a)*conj(r0216))/8. - (conj(Ep4a)*conj(r0416))/8. - (conj(Em3a)*conj(r0616))/(8.*rt3) - (conj(Ep3a)*conj(r0816))/(8.*rt3) - (Em4a*r0414)/(4.*rt6) + (Em3a*r0814)/(4.*rt2) - (-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3)*r1614 + r1514*((2*WLx)/3. + (2*i*WLy)/3.) - r1613*(sqrt(0.6666666666666666)*WLx - sqrt(0.6666666666666666)*i*WLy) - r1615*(sqrt(0.6666666666666666)*WLx + sqrt(0.6666666666666666)*i*WLy) + r1614*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 - (4*WLz)/3.));
+dr1615_dt = -((gt + g2)*r1615) - i*((conj(Em4a)*conj(r0316))/8. - (conj(Ep4a)*conj(r0516))/(4.*rt6) - (conj(Em3a)*conj(r0716))/8. - (Em4a*r0415)/(4.*rt6) + (Em3a*r0815)/(4.*rt2) + r1515*((2*WLx)/3. + (2*i*WLy)/3.) - r1616*((2*WLx)/3. + (2*i*WLy)/3.) - r1614*(sqrt(0.6666666666666666)*WLx - sqrt(0.6666666666666666)*i*WLy) + r1615*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 - (4*WLz)/3.) - r1615*(-delta1 + delta2 - delta3 - v*Kvec1 + v*Kvec2 - v*Kvec3 - (2*WLz)/3.));
+dr1616_dt = -((gt + g2)*r1616) - i*((conj(Em4a)*conj(r0416))/(4.*rt6) - (conj(Em3a)*conj(r0816))/(4.*rt2) - (Em4a*r0416)/(4.*rt6) + (Em3a*r0816)/(4.*rt2) - r1615*((2*WLx)/3. - (2*i*WLy)/3.) + conj(r1615)*((2*WLx)/3. + (2*i*WLy)/3.));
+//---------------- RbEquations.txt ends  ------------------
+                                        ]]>
+        </operator>
+                                <!--
+                                                         According to xmds2 docs operator kind="ip" should be faster
+                                                         but our codes runs about 5% to 10% slower with it.
+                                                         Maybe because we very close to the stiff condition so I use "ex" kind
+                                                         <operator kind="ip" constant="yes">
+                                         -->
+                                <operator kind="ex" constant="yes" type="imaginary">
+                                        <operator_names>Lt</operator_names>
+                                        <![CDATA[
+                                        Lt = -i/c*kt;
+                                        ]]>
+                                </operator>
+        <integration_vectors>E_field</integration_vectors>
+                                <dependencies>density_matrix</dependencies>
+                                <![CDATA[
+                                //read from Mathematica generated RbPropEquations.txt
+//---------------- RbPropEquations.txt starts ------------------
+dEp1_dz = -((i*Ndens*(rt2*conj(r0309) + rt6*(conj(r0410) + rt2*conj(r0511)))*eta1)/(rt2*rt6)) - Lt[Ep1];
+dEm1_dz = -((i*Ndens*(rt2*rt6*conj(r0109) + rt6*conj(r0210) + rt2*conj(r0311))*eta1)/(rt2*rt6)) - Lt[Em1];
+dEp2_dz = (i*Ndens*(conj(r0709) + conj(r0810))*eta1)/rt6 - Lt[Ep2];
+dEm2_dz = -((i*Ndens*(conj(r0610) + conj(r0711))*eta1)/rt6) - Lt[Em2];
+dEp3_dz = -((i*Ndens*(rt2*rt3*conj(r0612) + rt3*conj(r0713) + conj(r0814))*eta2)/rt3) - Lt[Ep3];
+dEm3_dz = -((i*Ndens*(conj(r0614) + rt3*(conj(r0715) + rt2*conj(r0816)))*eta2)/rt3) - Lt[Em3];
+dEp4_dz = -((i*Ndens*(rt2*conj(r0212) + rt3*conj(r0313) + rt3*conj(r0414) + rt2*conj(r0515))*eta2)/rt3) - Lt[Ep4];
+dEm4_dz = (i*Ndens*(rt2*conj(r0113) + rt3*conj(r0214) + rt3*conj(r0315) + rt2*conj(r0416))*eta2)/rt3 - Lt[Em4];
+//---------------- RbPropEquations.txt ends  ------------------
+                                ]]>
+                        </operators>
+                </integrate>
+        </sequence>
+
+
+
+        <!-- The output to generate -->
+        <output format="binary" filename="realistic_Rb_and_fields.xsil">
+                <group>
+      <sampling basis="t(1000) " initial_sample="yes">
+                                <dependencies>E_field_avgd</dependencies>
+                                <moments>Ip1_out Im1_out Ip2_out Im2_out Ip3_out Im3_out Ip4_out Im4_out</moments>
+                                <![CDATA[
+                                Ip1_out = mod2(Ep1a);
+                                Im1_out = mod2(Em1a);
+                                Ip2_out = mod2(Ep2a);
+                                Im2_out = mod2(Em2a);
+                                Ip3_out = mod2(Ep3a);
+                                Im3_out = mod2(Em3a);
+                                Ip4_out = mod2(Ep4a);
+                                Im4_out = mod2(Em4a);
+                                ]]>
+                        </sampling>
+                </group>
+        </output>
+
+
+<info>
+Script compiled with XMDS2 version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+See http://www.xmds.org for more information.
+
+Variables that can be specified on the command line:
+  Command line argument Ep1o_field = 1.884956e+07
+  Command line argument Em1o_field = 1.884956e+07
+  Command line argument Ep2o_field = 3.141593e+05
+  Command line argument Em2o_field = 3.141593e+05
+  Command line argument Ep3o_field = 3.769911e+07
+  Command line argument Em3o_field = 3.769911e+07
+  Command line argument Ep4o_field = 6.283185e+04
+  Command line argument Em4o_field = 6.283185e+04
+  Command line argument delta1 = 0.000000e+00
+  Command line argument delta2 = 0.000000e+00
+  Command line argument delta3 = 0.000000e+00
+  Command line argument Pwidth = 1.000000e-07
+  Command line argument Lcell = 5.000000e-04
+  Command line argument Ndens = 1.000000e+15
+  Command line argument WLx = 0.000000e+00
+  Command line argument WLy = 0.000000e+00
+  Command line argument WLz = 0.000000e+00
+  Command line argument Temperature = 5.000000e+00
+</info>
+
+<XSIL Name="moment_group_1">
+  <Param Name="n_independent">2</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>10</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+z t Ip1_out Im1_out Ip2_out Im2_out Ip3_out Im3_out Ip4_out Im4_out 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>2</Dim>
+    <Dim>1000</Dim>
+    <Dim>10</Dim>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint64" precision="double" Type="Remote" Encoding="LittleEndian"/>
+realistic_Rb_and_fields_expected_mg0.dat
+    </Stream>
+  </Array>
+</XSIL>
+</simulation>
