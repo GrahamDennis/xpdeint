@@ -136,7 +136,7 @@ _${resultVector.id}_basis = $basisIndexForBasis($operatorBasis);
     @return
   @end if
   @set targetVector = $anyObject($targetVectors)
-  @if $targetVector.nComponents != $resultVector.nComponents
+  @if $targetVector.nComponents != $resultVector.nComponents or not targetVector.needsTransforms
     @return
   @end if
   @# For this operator, we don't modify the target vector, so if we just transform it, we'll have to transform it back again
@@ -154,7 +154,7 @@ _active_${targetVector.id} = _active_${resultVector.id};
     @return
   @end if
   @set targetVector = $anyObject($targetVectors)
-  @if $targetVector.nComponents != $resultVector.nComponents
+  @if $targetVector.nComponents != $resultVector.nComponents or not targetVector.needsTransforms
     @return
   @end if
 _active_${targetVector.id} = __backup_ptr;
