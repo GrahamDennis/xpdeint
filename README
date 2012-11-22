@@ -1,13 +1,9 @@
-Welcome to XMDS2 (codename: xpdeint).
+Welcome to XMDS2 (codename: xpdeint), a software package that allows the fast and easy solution of sets of ordinary, partial and stochastic differential equations, using a variety of efficient numerical algorithms.
+
 If you have any questions, please email xmds-user@lists.sourceforge.net
 
-The best place to start is with the documentation directory. 
+The best place to begin your journey is with the documentation on our website: http://www.xmds.org 
  
 It will explain the program and the installation instructions. 
- 
-Point your browser to 
 
-  documentation/index.html
-
-and begin your journey.
-
+Swim free, little fishy!
