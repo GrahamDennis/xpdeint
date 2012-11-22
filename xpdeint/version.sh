@@ -5,7 +5,12 @@ REVISION="\"HEAD\""
 if [ -d "../.svn" ]; then
   REVISION=\""r`svn info . | sed -n 's/Revision: //p'`"\"
 elif [ -d "../.git" ]; then
-  REVISION=\""r`git svn info . | sed -n 's/Revision: //p'`"\"
+  REVISION=\""r`git log -1 | sed -n 's/.*xpdeint@\([0-9]*\).*/\1/p'`"\"
+  # If we don't have a revision, then we must have git commits after the last SVN revision.
+  # So mark the revision number as the last SVN revision with '+git' appended.
+  if [ "$REVISION" == "\"r\"" ]; then
+    REVISION=\""r`git log | grep git-svn-id | head -1 | sed -n 's/.*xpdeint@\([0-9]*\).*/\1/p'`+git"\"
+  fi
 elif [ -f "Version.py" ]; then
   # File exists, let's not change the version
   exit
