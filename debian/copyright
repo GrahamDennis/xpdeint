@@ -1,0 +1,31 @@
+This work was packaged for Debian by:
+
+    Eugeniy Mikhailov <evgmik@gmail.com> on Tue, 17 May 2011 11:48:44 -0400
+
+It was downloaded from:
+
+    http://www.xmds.org/
+
+Upstream Author(s):
+
+    Graham Dennis <graham.dennis@anu.edu.au>,
+    Andy Ferris,
+    Joe Hope,
+    Michael Hush,
+    Mattias Johnsson,
+    Gabriel McManus
+
+Copyright:
+
+    Copyright (C) 2000-2012 Graham Dennis, Andy Ferris, Joe Hope, Michael Hush, Mattias Johnsson, Gabriel McManus
+
+License:
+
+    GNU General Public License
+
+The Debian packaging is:
+
+    Copyright (C) 2011-2012 Eugeniy Mikhailov <evgmik@gmail.com>
+
+and is licensed under the GPL version 3,
+see "/usr/share/common-licenses/GPL-3".

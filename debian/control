@@ -1,0 +1,45 @@
+Source: xmds2
+Section: python
+Priority: optional
+Maintainer: Eugeniy Mikhailov <evgmik@gmail.com>
+Build-Depends: debhelper (>= 7.0.50~),
+	       cdbs (>= 0.4.43),
+               python-h5py,
+               python-setuptools,
+               python-pyparsing,
+               python-markdown,
+               python-mpmath,
+	       python-numpy,
+	       python-lxml,
+               python-cheetah
+Standards-Version: 3.8.4
+XB-Python-Version: ${python:Versions}
+Homepage: http://xmds.sourceforge.net/
+
+Package: xmds2
+Architecture: any
+Depends: ${python:Depends}, 
+         ${shlibs:Depends}, 
+         ${misc:Depends}, 
+         fftw3-dev, 
+	 libhdf5-serial-dev,
+	 libatlas-base-dev,
+         libmpich2-dev, 
+	 mpich2, 
+	 python-h5py,
+	 python-setuptools,
+	 python-pyparsing,
+	 python-markdown,
+	 python-mpmath,
+	 python-numpy,
+	 python-lxml,
+	 python-cheetah, 
+         python-pyparsing, 
+         g++
+Description: eXtensible Multi-Dimensional Simulator
+ XMDS is a code generator that integrates equations, from Ordinary
+ Differential Equations (ODEs) up to stochastic Partial Differential
+ Equations (PDEs). You write them down in human readable form in an
+ XML file, and it goes away and writes and compiles a C++ program that
+ integrates those equations as fast as it can possibly be done in your
+ architecture.

@@ -1,0 +1,28 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+# this blocks attempts to download python build dependencies
+# if the relevant package is incidentally forgotten in Build-Depends 
+export http_proxy = http://127.0.0.1:9/ 
+
+#DH_VERBOSE=1
+
+%:
+	dh $@ --with python2
+
+override_dh_auto_install:
+	python setup.py install --root=debian/xmds2 --install-layout=deb 
+
+override_dh_auto_test:
+
+override_dh_auto_clean:
+	dh_clean
+	cd xpdeint; waf/waf-light configure
+	make clean
+	rm -rf xmds2.egg-info/
+	rm -f xpdeint/.lock-waf_linux2_build
+	rm -f xpdeint/.wafpickle-98
+	rm -f xpdeint/Version.py
+	rm -rf xpdeint/c4che/
+	rm -f xpdeint/config.log
+
