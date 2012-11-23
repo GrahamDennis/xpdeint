@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <arguments>--E1 2 --E2 2 --E1m 2 --E2p 2 --E2m 2 --E2p 2</arguments>
+    <xsil_file name="arguments_with_similar_names.xsil" expected="arguments_with_similar_names_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+  </testing>
+  
+  <name>arguments_with_similar_names</name>
+  <author>Eugeniy Mikhailov</author>
+  <description>
+    Simple one-dimensional completely useless simulation to check the similar arguments
+    names clashing.
+  </description>
+  
+  <features>
+    <benchmark />
+    <validation kind="run-time"/>
+    <globals>
+      <![CDATA[
+      real omega;
+      ]]>
+    </globals>
+    <arguments>
+      <argument name="E1" type="real" default_value="1.0"/>
+      <argument name="E2" type="real" default_value="2.0"/>
+      <argument name="E1m" type="real" default_value="5.0"/>
+      <argument name="E1p" type="real" default_value="3.0"/>
+      <argument name="E2m" type="real" default_value="6.0"/>
+      <argument name="E2p" type="real" default_value="4.0"/>
+      <![CDATA[
+      omega =  E1*E2*E1m*E1p*E2m*E2p;
+      ]]>
+    </arguments>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+  </geometry>
+  
+  <vector name="position" type="real">
+    <components>
+      x
+    </components>
+    <initialisation>
+      <![CDATA[
+        x=1;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="RK4" interval="1" steps="24">
+      <samples>24</samples>
+      <operators>
+        <integration_vectors>position</integration_vectors>
+        <![CDATA[
+          dx_dt = -omega*x;
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  <output format="binary">
+      <sampling_group  initial_sample="yes">
+        <moments>dens</moments>
+        <dependencies>position</dependencies>
+        <![CDATA[
+          dens = x;
+        ]]>
+      </sampling_group>
+  </output>
+
+<info>
+Script compiled with XMDS2 version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+See http://www.xmds.org for more information.
+
+Variables that can be specified on the command line:
+  Command line argument E1 = 2.000000e+00
+  Command line argument E2 = 2.000000e+00
+  Command line argument E1m = 2.000000e+00
+  Command line argument E1p = 3.000000e+00
+  Command line argument E2m = 2.000000e+00
+  Command line argument E2p = 2.000000e+00
+</info>
+
+<XSIL Name="moment_group_1">
+  <Param Name="n_independent">1</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>2</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t dens 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>25</Dim>
+    <Dim>2</Dim>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint64" precision="double" Type="Remote" Encoding="LittleEndian"/>
+arguments_with_similar_names_expected_mg0.dat
+    </Stream>
+  </Array>
+</XSIL>
+</simulation>

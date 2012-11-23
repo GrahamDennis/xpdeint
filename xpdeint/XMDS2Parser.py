@@ -385,7 +385,8 @@ class XMDS2Parser(ScriptParser):
         
         # Determine the short name (i.e. single character) of the full option name
         shortName = ""
-        for character in name:
+        additionalAllowedCharacters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+        for character in name+additionalAllowedCharacters:
           if character not in shortOptionNames:
             shortName = character
             shortOptionNames.add(character)
