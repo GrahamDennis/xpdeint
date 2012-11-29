@@ -82,9 +82,12 @@ void _write_xsil_header(FILE* fp)
 {
   if (!fp)
     return;
+  @# The input script may contain entity references to other documents.  The content of the XSIL is the full, expanded simulation
+  @# so that a simulation can be re-run even if the external references have changed.
+  @set $expandedInputScript = $xmlDocument.toxml()
   @# Find the end tag in a case-insensitive way
-  @set $indexForEndTag = $inputScript.lower().rfind('</simulation>')
-  @set $xsilOutputHeader = $inputScript[0:$indexForEndTag]
+  @set $indexForEndTag = $expandedInputScript.lower().rfind('</simulation>')
+  @set $xsilOutputHeader = $expandedInputScript[0:$indexForEndTag]
   @filter $PrintfSafeFilter
     @for $line in $xsilOutputHeader.splitlines()
   fprintf(fp, "${line}\n");

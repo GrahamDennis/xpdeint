@@ -207,6 +207,12 @@ def setLineNumberForCDATASection(node):
   node.setUserData('lineNumber', node.ownerDocument.getUserData('_cdata_section_line_number_start'), None)
   return node
 
+def external_entity_ref_handler(self, context, base, systemId, publicId):
+  childParser = self._parser.ExternalEntityParserCreate(context)
+  fragment = self.document.createDocumentFragment()
+  childParser.Parse(open(systemId,'r').read(), 1)
+  
+  return 1
 
 def install_minidom_extras():
   """
@@ -228,6 +234,10 @@ def install_minidom_extras():
   minidom.Element.cdataContents = cdataContents
   minidom.Element.lineNumberForCDATASection = lineNumberForCDATASection
   minidom.Element.userUnderstandableXPath = userUnderstandableXPath
+  
+
+  expatbuilder.ExpatBuilder.external_entity_ref_handler = external_entity_ref_handler
+  
   
   # Add our setLineAndColumnHandlers function to the end of the 'reset' function of ExpatBuilder
   # This will ensure that our line and column number handlers are installed when any ExpatBuilder

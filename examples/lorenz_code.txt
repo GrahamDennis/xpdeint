@@ -1,0 +1,5 @@
+<![CDATA[
+        dx_dt = sigma*(y-x);
+        dy_dt = r*x - y - x*z;
+        dz_dt = x*y - b*z;
+]]>

@@ -238,9 +238,11 @@ def main(argv=None):
     xmlDocument = minidom.parseString(globalNameSpace['inputScript'])
   except xml.parsers.expat.ExpatError, err:
     print >> sys.stderr, "XML Parser error:", err
+    if debug: raise
     return -1
   except Exception, err:
     print >> sys.stderr, "Exception raised during parsing xmds script:", err
+    if debug: raise
     return -1
   
   # Attempt to import lxml and run the script through
