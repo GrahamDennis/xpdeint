@@ -1,0 +1,73 @@
+.TH XMDS2 "1" "December 2012" "xmds2 xmds2:" "User Commands"
+.\" ********************************************************************
+.SH NAME
+xmds2 \- the eXtensible Multi-Dimensional Simulator v2
+.\" ********************************************************************
+.SH SYNOPSIS
+.BR xmds2  " [options] "  \fIfileToBeParsed
+.\" ********************************************************************
+.SH DESCRIPTION
+The program \fBxmds2\fR is a code generator that integrates equations. 
+You write them down in human readable form in an XML 
+file, and it goes away and writes and compiles a C++
+program that integrates those equations as fast as 
+it can possibly be done in your architecture. 
+.PP
+For information as to how to write a script for xmds, and how
+to solve problems in physics, mathematics and even finance
+and economics, read the associated documentation available
+from the xmds web site: http://www.xmds.org.
+.\" ********************************************************************
+.SH OPTIONS
+.TP
+.BR \-h ", " \-\-help
+Print help message
+.TP
+.BI \-o\  file \fR,\ \fB\-\-output\-file= file
+This overrides the name of the output file to be generated
+.TP
+.BR \-v ", " \-\- verbose
+Verbose mode
+.TP
+.BR \-g ", " \-\-debug
+Debug mode. Compiler error messages report errors in the .cc
+file, not the .xmds file. Implies \fB\-\-verbose\fR. Mostly useful when debuging xmds
+code generation.
+.TP
+.BR \-n ", " \-\-no\-compile
+Only generate a source file, don't compile
+.TP
+.B \-\-configure
+Run configuration checks for compiling simulations
+.TP
+.B \-\-reconfigure
+Run configuration using the same options as used with the last
+time \fB\-\-configure\fR was run with the additional arguments specified
+.TP
+\fB\-\-include\-path \fI/path/to/include
+Add the path /path/to/include to the list of paths searched for include headers
+This option is only meaningful when used with \fB\-\-(re)configure
+.TP
+\fB\-\-lib\-path \fI/path/to/lib
+Add the path /path/to/lib to the list of paths searched for libraries
+This option is only meaningful when used with \fB\-\-(re)configure
+.\" ********************************************************************
+.SH "FILES"
+.TP
+.I ${HOME}/.xmds/
+Directory for storing settings and fftw wisdom files.
+.\" ********************************************************************
+.SH "SEE ALSO"
+\fBxsil2graphics2\fR\|(1)
+.P
+For further help, please see http://www.xmds.org
+.\" ********************************************************************
+.SH AUTHORS
+.PP
+Graham Dennis <graham.dennis@anu.edu.au>,
+Joe Hope,
+Mattias Johnsson,
+Andy Ferris,
+Michael Hush,
+Gabriel McManus,
+and others.

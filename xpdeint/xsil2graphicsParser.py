@@ -27,7 +27,7 @@ import getopt
 
 from xpdeint.XSILFile import XSILFile
 
-# Hack for Leopard so it doesn't import the web rendering
+# Hack for Mac OS X so it doesn't import the web rendering
 # framework WebKit when Cheetah tries to import the Python
 # web application framework WebKit
 if sys.platform == 'darwin':
@@ -47,22 +47,16 @@ from xpdeint.xsil2graphics2.OctaveImport import OctaveImport
 help_message = '''
 usage: xsil2graphics2 [options] filenames [...]
 
-Options and arguments for xpdeint:
+Options and arguments for xsil2graphics2:
 -h          : Print this message (also --help)
 -o filename : This overrides the name of the output file to be generated (also --output)
 -d          : Debug mode (also --debug)
 
-Options:  (Only Mathematica has been implemented)
+Options:
   infile(s):        required, the input xsil file or files
   -h/--help:        optional, display this information
-  -m/--matlab:      optional, produce matlab output (default)
-  -8/--octave:      optional, produce octave output
-  -s/--scilab:      optional, produce scilab output
-  -a/--mathmFive:   optional, produce mathematica 5.x output
+  -m/--matlab:      optional, produce matlab output (default) (only supports HDF5 data files)
   -e/--mathematica: optional, produce mathematica output
-  -g/--gnuplot:     optional, produce gnuplot output
-  -r/--R:           optional, produce R output
-  -p/--plot:        optional, generate plotting output (matlab/octave)
   -o/--outfile:     optional, alternate output file name (one input file only)
   --debug:          Debug mode
   
