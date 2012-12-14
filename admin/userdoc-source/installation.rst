@@ -19,7 +19,7 @@ The easiest way to get started is with an installer.  If we don't have an instal
 
     * - Linux (Ubuntu/Debian/Fedora/RedHat)
 
-      - `Download Linux Installer <http://xmds.svn.sourceforge.net/viewvc/xmds/trunk/xpdeint/admin/linux_installer.sh>`_
+      - `Download Linux Installer <http://svn.code.sf.net/p/xmds/code/trunk/xpdeint/admin/linux_installer.sh>`_
 
       - :ref:`Learn more <linux_installation>`
 
@@ -42,7 +42,7 @@ If you have one of the supported operating systems listed above, but you find th
 Linux installer instructions
 ============================
 
-The linux installer has currently only been tested with Ubuntu, Debian, Fedora, and Red Hat. Download the installer here: http://xmds.svn.sourceforge.net/viewvc/xmds/trunk/xpdeint/admin/linux_installer.sh
+The linux installer has currently only been tested with Ubuntu, Debian, Fedora, and Red Hat. Download the installer here: http://svn.code.sf.net/p/xmds/code/trunk/xpdeint/admin/linux_installer.sh
 
 Once you have downloaded it, make the installer executable and run it by typing the following into a terminal::
 
@@ -51,7 +51,7 @@ Once you have downloaded it, make the installer executable and run it by typing 
 
 Alternatively, if you wish to download and run the installer in a single step, you can use the following command::
 
-  /bin/bash -c "$(wget -qO - http://xmds.svn.sf.net/viewvc/xmds/trunk/xpdeint/admin/linux_installer.sh)"
+  /bin/bash -c "$(wget -qO - http://svn.code.sf.net/p/xmds/code/trunk/xpdeint/admin/linux_installer.sh)"
 
 The linux installer installs all XMDS2 dependencies from your native package manager where possible (``apt-get`` for Ubuntu/Debian, ``yum`` for Fedora/Red Hat) but will download and compile the source code for libraries not available through the package manager. This means you'll need to be connected to the internet when running the installer. The installer should not be run with administrative privileges; it will ask you to enter your admin password at the appropriate point. 
 
