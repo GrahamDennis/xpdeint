@@ -13,7 +13,7 @@
 # directories should be run as sudo, which is taken care of within this script.
 
 XMDS_VERSION="2.1.2"
-KNOWN_GOOD_XMDS_REVISION="2793"
+KNOWN_GOOD_XMDS_REVISION="2808"
 
 if [ "$(whoami)" = "root" ]; then
   echo
@@ -432,7 +432,7 @@ if [ $DEVELOPER_INSTALL -eq 1 ]; then
 else
   # Fetch a known good version of the XMDS2 source code from sourceforge
   cd $XMDS2_install_directory
-  svn checkout -r $KNOWN_GOOD_XMDS_REVISION https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
+  svn checkout -r $KNOWN_GOOD_XMDS_REVISION http://svn.code.sf.net/p/xmds/code/trunk/xpdeint .
 fi
 
 # Compile the Cheetah templates into Python
