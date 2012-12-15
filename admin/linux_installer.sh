@@ -428,7 +428,7 @@ echo
 if [ $DEVELOPER_INSTALL -eq 1 ]; then
   # Fetch the latest XMDS2 source code from sourceforge
   cd $XMDS2_install_directory
-  svn checkout https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint .
+  svn checkout http://svn.code.sf.net/p/xmds/code/trunk/xpdeint .
 else
   # Fetch a known good version of the XMDS2 source code from sourceforge
   cd $XMDS2_install_directory

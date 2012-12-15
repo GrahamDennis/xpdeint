@@ -17,7 +17,7 @@ Release Instructions:
 
 1. Make sure everything works with a clean install.  
     (Check out a clean copy and do tests) 
-    "svn checkout https://xmds.svn.sourceforge.net/svnroot/xmds/trunk/xpdeint xmds2"
+    "svn checkout https://svn.code.sf.net/p/xmds/code/trunk/xpdeint xmds2"
 
 2. Change the "last known good" choices in the linux and mac installers, and check them.
 
