@@ -7,8 +7,8 @@
 #ifndef xpdeint_h
 #define xpdeint_h
 
-#ifndef xmds_malloc
-  #define xmds_malloc(n) _aligned_malloc(n, 16)
+#ifndef _xmds_malloc
+  #define _xmds_malloc(n) _aligned_malloc(n, 16)
 #endif
 
 #ifndef xmds_free

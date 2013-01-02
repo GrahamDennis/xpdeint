@@ -126,6 +126,8 @@ using namespace std;
   #pragma warning ( disable : 177 )
 #endif
 
+inline void *xmds_malloc(size_t size);
+
 // ********************************************************
 // DEFINES
 // ********************************************************
@@ -182,6 +184,15 @@ $features.Driver.mainRoutine@slurp
 // ********************************************************
 // FUNCTION IMPLEMENTATIONS
 // ********************************************************
+
+inline void *xmds_malloc(size_t size)
+{
+  void *retPointer = _xmds_malloc(size);
+  if ( !retPointer )
+    _LOG(_ERROR_LOG_LEVEL, "ERROR: Couldn't allocate %zu bytes of memory!", size);
+  return retPointer;
+}
+
 @# only loop over the elements that implement the prototypes function
 @for $child in $children
   @# Prevent writing zero-length function implementations

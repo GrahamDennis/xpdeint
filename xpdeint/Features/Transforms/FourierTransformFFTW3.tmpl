@@ -33,12 +33,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   #define FFTW_DLL
 #endif
 
-#define xmds_malloc ${fftwPrefix}_malloc
-#define xmds_free ${fftwPrefix}_free
-
 #include <fftw3.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+
+#define _xmds_malloc ${fftwPrefix}_malloc
+#define xmds_free ${fftwPrefix}_free
 @end def
 
 @def globals

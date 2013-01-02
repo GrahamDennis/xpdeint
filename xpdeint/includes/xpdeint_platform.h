@@ -332,12 +332,8 @@
 #elif (CFG_PLATFORM == CFG_PLATFORM_LINUX)
   inline void *_aligned_malloc(size_t size, size_t alignment)
   {
-    void *RetVal;
-    int error;
-    if ((error = posix_memalign(&RetVal, alignment, size))) {
-        fprintf(stderr, "Couldn't allocate %zu bytes of %zu-byte aligned memory! Error: %i\nBarfing!\n", size, alignment, error);
-        exit(-1);
-    }
+    void *RetVal = NULL;
+    posix_memalign(&RetVal, alignment, size);
     return RetVal;
   }
 
