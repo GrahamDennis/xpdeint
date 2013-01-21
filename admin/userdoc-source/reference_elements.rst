@@ -1173,11 +1173,12 @@ using a simple iteration to find the values of the vector at the midpoint of the
 
     x_j(t+\Delta t) = x_j(t) + f_j\left(\mathbf{x}(t),t\right) \;\Delta t.
 
-The Euler algorithm is the only safe algorithm for direct integration of :ref:`jump-based Poisson processes<jumpNoise>`.  Efficient numerical solution of those types of equations is best done via a process of triggered filters, which will be described in the :ref:`AdvancedTopics` section.
+The Euler algorithm is the only safe algorithm for direct integration of :ref:`jump-based Poisson processes<jumpNoise>`.  Efficient numerical solution of those types of equations is best done via a process of triggered filters, which will be described in the :ref:`AdvancedTopics` section.  Integrating using the Euler algorithm computes the Ito integral, as opposed to the Stratonovich integral, which all the other algorithms compute.
     
 When SI integration is used in conjunction with SI cross-propagation, a slight variant of the SI algorithm can be employed where the integration in both directions is contained within the iteration process.  This is activated by using ``algorithm="SIC"`` rather than ``algorithm="SI"``.
 
-The SI algorithm is correct to second order in the step-size for deterministic equations, and first order in the step-size for Stratonovich stochastic equations with Wiener noises.  This makes it the highest order stochastic algorithm in XMDS, although there are many sets of equations that integrate more efficiently with lower order algorithms.
+The SI algorithm is correct to second order in the step-size for deterministic equations, and first order in the step-size for Stratonovich stochastic equations with Wiener noises.  This makes it the highest order stochastic algorithm in XMDS, although there are many sets of equations that integrate more efficiently with lower order algorithms.  When called with the ``iterations="1"`` option (the Euler algorithm), it is correct to first order in the step-size for deterministic equations, and one-half order in the step-size for Ito stochastic equations with Wiener noises.
+
 
 .. _RK4:
 
