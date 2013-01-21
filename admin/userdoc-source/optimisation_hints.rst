@@ -27,7 +27,67 @@ When using the IP operator, check if your operator is purely real or purely imag
 
 Consider writing the evolution in spectral basis
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The basis that makes most sense will be the one which is the 'hardest' to integrate.
+Evolution equations do not need to be written in the position basis.  If your equations are diagonal in the spectral basis, then it makes more sense to compute the time derivative terms in that basis.  For example, if you have the system
+
+.. math::
+    \frac{d\psi_1(x)}{dt} &= i \frac{\hbar}{2M} \frac{d^2\psi_1(x)}{dx^2} - i \Omega \psi_2(x)\\
+    \frac{d\psi_2(x)}{dt} &= i \frac{\hbar}{2M} \frac{d^2\psi_2(x)}{dx^2} - i \Omega \psi_1(x)
+
+then this is diagonal in the Fourier basis where it takes the form
+
+.. math::
+    \frac{d\psi_1(k_x)}{dt} &= -i \frac{\hbar k_x^2}{2M} \psi_1(k_x) - i \Omega \psi_2(k_x)\\
+    \frac{d\psi_2(k_x)}{dt} &= -i \frac{\hbar k_x^2}{2M} \psi_2(k_x) - i \Omega \psi_1(k_x)
+
+
+The first term in each evolution equation can be solved exactly with an IP operator, and the second term is diagonal in Fourier space.  This can be written in XMDS as:
+
+.. code-block:: xpdeint
+
+    <operators>
+      <integration_vectors basis="kx">wavefunction</integration_vectors>
+      <operator kind="ip" type="imaginary" >
+        <operator_names>Lxx</operator_names>
+        <![CDATA[
+          Lxx = -i*0.5*hbar_M*(kx*kx);
+        ]]>
+      </operator>
+      <![CDATA[
+
+        dpsi0_dt = Lxx[psi0] - i*Omega*psi1;
+        dpsi1_dt = Lxx[psi1] - i*Omega*psi0;
+          
+      ]]>
+    </operators>
+
+Although the ``dpsi0_dt`` code reads the same in position and Fourier space, it is the ``basis=kx`` attribute on ``<integration_vectors>`` that causes the evolution code to be executed in Fourier space.  
+
+A final optimisation is to cause the integration code itself to operate in Fourier space.  By default, all time stepping (i.e. :math:`f(t + \Delta t) = f(t) + f'(t) \Delta t` for forward-Euler integration) occurs in the position space.  As the derivative terms can be computed in Fourier space, it is faster to also to the time stepping in Fourier space too.  This then means that no Fourier transforms will be needed at all during this integrate block (except as needed by sampling).  To cause time-stepping to happen in Fourier space, we add the ``home_space="k"`` attribute to the surrounding ``<integrate>`` block.  By default, ``home_space`` has the value ``"x"`` which means position space, even if you don't have an ``x`` dimension.
+
+The fully optimised code then reads:
+
+.. code-block:: xpdeint
+
+    <integrate algorithm="ARK45" interval="1" tolerance="1e-6" home_space="k">
+      <samples> 10 </samples>
+      <operators>
+        <integration_vectors basis="kx">wavefunction</integration_vectors>
+        <operator kind="ip" type="imaginary" >
+          <operator_names>Lxx</operator_names>
+          <![CDATA[
+            Lxx = -i*0.5*hbar_M*(kx*kx);
+          ]]>
+        </operator>
+        <![CDATA[
+
+          dpsi0_dt = Lxx[psi0] - i*Omega*psi1;
+          dpsi1_dt = Lxx[psi1] - i*Omega*psi0;
+          
+        ]]>
+      </operators>
+    </integrate>
+
+This code will not use any Fourier transforms during an ordinary time-stepping, and will be much faster than if the code were written without the ``home_space`` and ``basis`` attributes.
 
 Don't recalculate things you don't have to
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
