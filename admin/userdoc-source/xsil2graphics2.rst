@@ -1,7 +1,7 @@
 .. _xsil2graphics2:
 
-``xsil2graphics2``
-===================
+xsil2graphics2
+===============
 
 **xsil2graphics2** is a way of converting ".xsil" files to formats that other programs can read.  The syntax is described in the :ref:`QuickStartTutorial`, and by using the ``xsil2graphics2 --help`` option.  It currently can covert any output format for use by Mathematica.
 
