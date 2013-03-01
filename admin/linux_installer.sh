@@ -13,7 +13,7 @@
 # directories should be run as sudo, which is taken care of within this script.
 
 XMDS_VERSION="2.1.2"
-KNOWN_GOOD_XMDS_REVISION="2808"
+KNOWN_GOOD_XMDS_REVISION="2819"
 
 if [ "$(whoami)" = "root" ]; then
   echo
@@ -411,15 +411,26 @@ fi
 
 # Install FFTW3.3 from package manager if available, otherwise build from source
 echo
-echo "Checking if MPI-enabled FFTW available in repository..."
-if [ `apt-cache --names-only search libfftw3-mpi-dev | wc -l` -ne 0 ]; then
-  echo "Yes, it is available"
-  echo "Installing FFTW via package manager"
-  sudo apt-get -y install libfftw3-dev libfftw3-mpi-dev 
-else 
-  echo "MPI-enabled FFTW not available in repository. Downloading, compiling and installing from source"
+if [ $DEB_INSTALL -eq 1 ]; then
+  echo "Checking if MPI-enabled FFTW available in repository..."
+  if [ `apt-cache --names-only search libfftw3-mpi-dev | wc -l` -ne 0 ]; then
+    echo "Yes, it is available"
+    echo "Installing FFTW via package manager"
+    sudo apt-get -y install libfftw3-dev libfftw3-mpi-dev 
+  else 
+    echo "MPI-enabled FFTW not available in repository. Downloading, compiling and installing from source"
+    install_FFTW_from_source
+  fi
+elif [ $RPM_INSTALL -eq 1 ]; then
+  # Note Fedora 18 has fftw-3.3.3-4, fftw-devel-3.3.3-4, fftw-libs-3.3.3-4, 
+  # fftw-libs-double-3.3.3-4, fftw-libs-single-3.3.3-4, fftw-libs-quad-3.3.3-4.
+  # The fftw-devel-3.3.3-4 metapackage pulls in all the other libs: single, double, 
+  # quad and long double, plus OpenMP libs, as well as FFTW headers.
+  # As of Fedora 18, these libs are built with threads and OpenMP support, 
+  # but *NOT* MPI support, so we still have to build from source. 
   install_FFTW_from_source
 fi
+
 
 # Fetch the XMDS2 source files
 echo
