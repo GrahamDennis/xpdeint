@@ -13,7 +13,7 @@
 # directories should be run as sudo, which is taken care of within this script.
 
 XMDS_VERSION="2.1.2"
-KNOWN_GOOD_XMDS_REVISION="2819"
+KNOWN_GOOD_XMDS_REVISION="2820"
 
 if [ "$(whoami)" = "root" ]; then
   echo
@@ -71,6 +71,25 @@ fi
 XMDS2_install_directory=$HOME"/xmds-$XMDS_VERSION"
 NUM_CPUS=`cat /proc/cpuinfo | grep processor | wc -l`
 DEVELOPER_INSTALL=0
+
+# COMMITTER_INSTALL denotes whether the person installing is
+# allowed to make commits to the sourceforge svn repository.
+# If this is set to "1" via a command line argument, 
+# an https checkout of the repo is made, and if the
+# correct credentials are not stored on the user's machine
+# (e.g. from previously committing to that repo), the installer
+# prompts for the sourceforge username and password. This
+# ensures the person can then commit to repo.
+#
+# If COMMITTER_INSTALL is set to "0", an http checkout is made
+# (*NOT* an https checkout). This is the default. It means no
+# credentials are demanded during the install phase, but that
+# person cannot immediately make commits to the xmds repo.
+# In order to get committer rights in future, the local repo
+# must be switched from http to https via
+# svn switch --relocate http://svn.code.sf.net/p/xmds/code https://svn.code.sf.net/p/xmds/code
+COMMITTER_INSTALL=0
+
 XMDS_CONFIGURE_STRING=""
 
 parse_command_line_arguments() {
@@ -83,13 +102,20 @@ parse_command_line_arguments() {
       echo
       echo "Options and arguments:"
       echo "--help          : this help text"
-      echo "--develop       : perform a developer install, downloading the absolute lastest version of the code"
       echo
-      echo "If no options are given, a standard install will be performed."
+      echo "--develop       : perform a developer install, downloading the absolute" 
+      echo "                  latest version of the code"
+      echo
+      echo "--commit-access : set up the local repo to allow commits to the XMDS SVN repo. A" 
+      echo "                  developer account on the XMDS sourceforge project is required"
+      echo
+      echo "If no options are given, a standard install without commit access will be performed."
       echo
       exit
     elif [ $i = "--develop" ]; then
       DEVELOPER_INSTALL=1
+    elif [ $i = "--commit-access" ]; then
+      COMMITTER_INSTALL=1
     else
       echo "Unknown option:" $i
     fi
@@ -375,6 +401,10 @@ fi
 
 ld_search_string=`ld --verbose | grep SEARCH`
 
+echo
+echo "Searching for correct BLAS implementation on your machine. This may take some time..."
+echo
+
 # Find the CBLAS library, and make sure it's not the GSL one
 CBLASLIB=`sudo find /usr/lib* -name *libcblas.so | grep -v -i gsl | head --lines=1`
 CBLASLIBDIR=`dirname $CBLASLIB`
@@ -436,14 +466,21 @@ fi
 echo
 echo "Contacting sourceforge to checkout XMDS2 source code. Please wait..."
 echo
+
+if [ $COMMITTER_INSTALL -eq 1 ]; then
+  SVN_REPOSITORY="https://svn.code.sf.net/p/xmds/code/trunk/xpdeint"
+else
+  SVN_REPOSITORY="http://svn.code.sf.net/p/xmds/code/trunk/xpdeint"
+fi
+
 if [ $DEVELOPER_INSTALL -eq 1 ]; then
   # Fetch the latest XMDS2 source code from sourceforge
   cd $XMDS2_install_directory
-  svn checkout http://svn.code.sf.net/p/xmds/code/trunk/xpdeint .
+  svn checkout $SVN_REPOSITORY .
 else
   # Fetch a known good version of the XMDS2 source code from sourceforge
   cd $XMDS2_install_directory
-  svn checkout -r $KNOWN_GOOD_XMDS_REVISION http://svn.code.sf.net/p/xmds/code/trunk/xpdeint .
+  svn checkout -r $KNOWN_GOOD_XMDS_REVISION $SVN_REPOSITORY .
 fi
 
 # Compile the Cheetah templates into Python
