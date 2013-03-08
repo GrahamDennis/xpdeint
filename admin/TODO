@@ -59,3 +59,10 @@ Testcases needed:
 * xsil2graphics2 needs finishing.
 
 * Trigger support (Ask Michael Hush)
+
+* Adaptive-order integrators (Gear method)
+
+* Make it easier to perform parameter scans (this is probably better done in an external tool, though), and more generally, graph-based processing (each node is a simulation that may have one or more inputs / outputs, etc).  This is probably insufficiently defined.
+
+* Add native support for matrix-vector multiplication and matrix-matrix multiplication (and use BLAS to make it fast). (What notation should be used for this?)
+
