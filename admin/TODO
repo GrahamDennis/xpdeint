@@ -58,7 +58,9 @@ Testcases needed:
 
 * xsil2graphics2 needs finishing.
 
-* Trigger support (Ask Michael Hush)
+* Trigger support (Ask Michael Hush).  Done "correctly", this would involve adding zero-crossing detection to the adaptive and/or fixed-step integrators.  This could be used for:
+   - Triggered-sampling: useful for Poincare plots or other situations where implicit sampling is desired
+   - Very fast Poisson noises that also scales well for large numbers of Poisson noises: useful for chemical reaction network modelling where each reaction has a rate constant and there are many (thousands?) of possible reactions.
 
 * Adaptive-order integrators (Gear method)
 
