@@ -432,9 +432,9 @@ def main(argv=None):
     'uselib': list(globalNameSpace['simulationUselib']),
   }
   
-  userCFlags = None
   if 'CFlags' in globalNameSpace['features']:
-    userCFlags = str(globalNameSpace['features']['CFlags'].cflags())
+    buildKWs['cxxflags'] = [globalNameSpace['features']['CFlags'].cflags()]
+    buildKWs['linkflags'] = [globalNameSpace['features']['CFlags'].cflags()]
   
   variant = globalNameSpace['simulationBuildVariant']
   if not variant:
@@ -450,8 +450,7 @@ def main(argv=None):
         sourceFilename[:-3], # strip of trailing '.cc'
         variant = anyObject(variant),
         buildKWs = buildKWs,
-        verbose = verbose,
-        userCFlags = userCFlags
+        verbose = verbose
       )
       
       if result == 0:

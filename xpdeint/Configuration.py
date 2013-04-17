@@ -122,7 +122,7 @@ def run_reconfig(includePaths = None, libPaths = None):
     
     return run_config(includePaths = includePaths, libPaths = libPaths)
 
-def run_build(source_name, target_name, variant = 'default', buildKWs = {}, verbose = False, userCFlags = None):
+def run_build(source_name, target_name, variant = 'default', buildKWs = {}, verbose = False):
     initialise_waf()
     
     source_name = str(source_name)
@@ -176,7 +176,8 @@ def run_build(source_name, target_name, variant = 'default', buildKWs = {}, verb
         
         old_exec_command = ctx.exec_command
         def new_exec_command(cmd, **kw):
-            if not isinstance(cmd, basestring):
+            
+            if not isinstance(cmd, str):
                 cmd_str = ' '.join([_ if ' ' not in _ else '"'+_+'"' for _ in cmd])
             else:
                 cmd_str = cmd
@@ -186,17 +187,6 @@ def run_build(source_name, target_name, variant = 'default', buildKWs = {}, verb
         ctx.exec_command = new_exec_command
     
     ctx.store = lambda: None
-    
-    if userCFlags:
-        def wrap(ctx):
-            old_exec_command = ctx.exec_command
-            def new_exec_command(cmd, **kw):
-                assert isinstance(cmd, basestring)
-                cmd = cmd + " " + userCFlags
-                return old_exec_command(cmd, **kw)
-            ctx.exec_command = new_exec_command
-        wrap(ctx)
-    
     
     try:
         ctx.execute()
@@ -212,8 +202,6 @@ def run_build(source_name, target_name, variant = 'default', buildKWs = {}, verb
             last_cmd = err.tasks[0].last_cmd
             if type(last_cmd) is list:
                 last_cmd = ' '.join(last_cmd)
-            if userCFlags:
-                last_cmd = last_cmd + ' ' + userCFlags
                 
             print "Failed command:"
             print last_cmd

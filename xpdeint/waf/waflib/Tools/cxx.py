@@ -22,7 +22,6 @@ class cxx(Task.Task):
 	vars    = ['CXXDEPS'] # unused variable to depend on, just in case
 	ext_in  = ['.h'] # set the build order easily by using ext_out=['.h']
 	scan    = c_preproc.scan
-	shell   = True
 
 class cxxprogram(link_task):
 	"Link object files into a c++ program"
@@ -31,7 +30,6 @@ class cxxprogram(link_task):
 	ext_out = ['.bin']
 	inst_to = '${BINDIR}'
 	chmod   = Utils.O755
-	shell   = True
 
 class cxxshlib(cxxprogram):
 	"Link object files into a c++ shared library"
