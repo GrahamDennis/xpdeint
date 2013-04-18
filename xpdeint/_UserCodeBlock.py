@@ -67,7 +67,7 @@ class _UserCodeBlock(ScriptElement):
         0,
         '#line %i "%s"\n' % (self.scriptLineNumber, self.getVar('scriptName'))
       )
-      result.append('#line _XPDEINT_CORRECT_MISSING_LINE_NUMBER_\n')
+      result.append('\n#line _XPDEINT_CORRECT_MISSING_LINE_NUMBER_\n')
     self.codeString = ''.join(result)
   
   def preflight(self):
