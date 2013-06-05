@@ -36,6 +36,8 @@ ${format(float(listOrElement),'f')}@slurp
 @end def
 
 @def loadXSILFile($xsilFile)
+ @#
+SetDirectory[NotebookDirectory[]];
  @set declaredVars=[]
  @for objectNum, xsilObject in enumerate(xsilFile.xsilObjects):
    @if xsilObject.data.format == 'ascii':
@@ -58,7 +60,6 @@ $varName = $printMathematicaListOrElement($varD["array"]);
      @set machineFormat = {'BigEndian': '1', 'LittleEndian': '-1'}.get(xsilObject.data.encoding, '$ByteOrdering')
      @set uLongFormat = {'uint32': 'UnsignedInteger32', 'uint64': 'UnsignedInteger64'}.get(xsilObject.data.uLong, 'UnsignedInteger32')
      @set outputPrecision = {'single': 'Real32', 'double': 'Real64'}.get(xsilObject.data.precision, 'Real64')
-SetDirectory[NotebookDirectory[]];
 fpDat = OpenRead["$xsilObject.data.filename",BinaryFormat -> True];
      @for var in xsilObject.independentVariables:
         @set varName = var["name"].replace('_','') + str(objectNum + 1)
@@ -85,9 +86,7 @@ $varName = Flatten[Table[BinaryReadList[fpDat, {"$outputPrecision"}, $(xsilObjec
         @end if
      @end for
 Close[fpDat];
-ResetDirectory[];
    @elif xsilObject.data.format == 'hdf5'
-SetDirectory[NotebookDirectory[]];
      @set $variables = xsilObject.independentVariables[:]
      @silent variables.extend(xsilObject.dependentVariables)
      @set $filename = xsilObject.data.filename
@@ -97,11 +96,11 @@ SetDirectory[NotebookDirectory[]];
        @silent declaredVars.append(varName)
 ${varName} = Import["${filename}", {"Datasets", "${groupName}/${var.name}"}];
      @end for
-ResetDirectory[];
    @else
      @raise Exception("No support for Mathematica output for XSIL format '%s'." % xsilObject.data.format)
    @end if
  @end for
+ResetDirectory[];
 
 declaredVariables={${', '.join([c'"$dV"' for dV in declaredVars])}}
 @end def
