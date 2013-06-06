@@ -90,10 +90,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include <algorithm>
 
-#define complex Complex
-#define real Re
-#define imag Im
-
 @for $child in $children
   @# Prevent writing zero-length defines
   @set $result = $child.implementationsForFunctionName('includes')
@@ -103,19 +99,24 @@ ${result}@slurp
   @end if
 @end for
 
+#define real Re
+#define imag Im
+
 #include <complex>
-#undef complex
+
 #undef real
 #undef imag
 
 @set $realType = {'single': 'float', 'double': 'double'}[$precision]
 typedef long integer;
 typedef ${realType} real;
-typedef std::Complex<real> complex;
-
-const complex i(0.0, 1.0);
+typedef std::complex<real> XMDSComplexType;
 
 #include <xpdeint.h>
+
+#define complex XMDSComplexType
+
+const complex i(0.0, 1.0);
 
 using namespace std;
 

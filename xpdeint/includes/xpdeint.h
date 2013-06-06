@@ -15,29 +15,30 @@
   #define xmds_free   _aligned_free
 #endif
 
-inline complex::value_type mod(const complex& _t) { return std::abs(_t); }
-inline complex::value_type mod2(const complex& _t) { return std::norm(_t); }
-inline complex cis(const real& _t) { return std::polar((real)1.0, _t); }
+inline XMDSComplexType::value_type mod(const XMDSComplexType& _t) { return std::abs(_t); }
+inline XMDSComplexType::value_type mod2(const XMDSComplexType& _t) { return std::norm(_t); }
+inline XMDSComplexType cis(const real& _t) { return std::polar((real)1.0, _t); }
 
 namespace std {
-  inline Complex<float> operator*(const Complex<float>& a, const double b) { return a*float(b); }
-  inline Complex<float> operator*(const double b, const Complex<float>& a) { return a*float(b); }
-  inline Complex<float> operator/(const Complex<float>& a, const double b) { return a/float(b); }
-  inline Complex<float> operator/(const double b, const Complex<float>& a) { return float(b)/a; }
-  inline Complex<float> operator+(const Complex<float>& a, const double b) { return a + float(b); }
-  inline Complex<float> operator+(const double b, const Complex<float>& a) { return a + float(b); }
-  inline Complex<float> operator-(const Complex<float>& a, const double b) { return a - float(b); }
-  inline Complex<float> operator-(const double b, const Complex<float>& a) { return float(b) - a; }
-
-  inline complex operator*(const complex& a, const int b) { return a*complex::value_type(b); }
-  inline complex operator*(const int b, const complex& a) { return a*complex::value_type(b); }
-  inline complex operator/(const complex& a, const int b) { return a/complex::value_type(b); }
-  inline complex operator/(const int b, const complex& a) { return complex::value_type(b)/a; }
-  inline complex operator+(const complex& a, const int b) { return a + complex::value_type(b); }
-  inline complex operator+(const int b, const complex& a) { return a + complex::value_type(b); }
-  inline complex operator-(const complex& a, const int b) { return a - complex::value_type(b); }
-  inline complex operator-(const int b, const complex& a) { return complex::value_type(b) - a; }
+  inline complex<float> operator*(const complex<float>& a, const double b) { return a*float(b); }
+  inline complex<float> operator*(const double b, const complex<float>& a) { return a*float(b); }
+  inline complex<float> operator/(const complex<float>& a, const double b) { return a/float(b); }
+  inline complex<float> operator/(const double b, const complex<float>& a) { return float(b)/a; }
+  inline complex<float> operator+(const complex<float>& a, const double b) { return a + float(b); }
+  inline complex<float> operator+(const double b, const complex<float>& a) { return a + float(b); }
+  inline complex<float> operator-(const complex<float>& a, const double b) { return a - float(b); }
+  inline complex<float> operator-(const double b, const complex<float>& a) { return float(b) - a; }
 };
+
+inline XMDSComplexType operator*(const XMDSComplexType& a, const int b) { return a*XMDSComplexType::value_type(b); }
+inline XMDSComplexType operator*(const int b, const XMDSComplexType& a) { return a*XMDSComplexType::value_type(b); }
+inline XMDSComplexType operator/(const XMDSComplexType& a, const int b) { return a/XMDSComplexType::value_type(b); }
+inline XMDSComplexType operator/(const int b, const XMDSComplexType& a) { return XMDSComplexType::value_type(b)/a; }
+inline XMDSComplexType operator+(const XMDSComplexType& a, const int b) { return a + XMDSComplexType::value_type(b); }
+inline XMDSComplexType operator+(const int b, const XMDSComplexType& a) { return a + XMDSComplexType::value_type(b); }
+inline XMDSComplexType operator-(const XMDSComplexType& a, const int b) { return a - XMDSComplexType::value_type(b); }
+inline XMDSComplexType operator-(const int b, const XMDSComplexType& a) { return XMDSComplexType::value_type(b) - a; }
+
 
 extern bool initialiseFieldFromXSILFile(const char *filename,
    const char *mgName, unsigned long dimension, char **dimNames,
