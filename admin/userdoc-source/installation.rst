@@ -212,7 +212,7 @@ Also note that this guide adds extra notes for users wishing to install XMDS2 us
            (Mac OS X Snow Leopard comes with version 1.2.1). 
            After downloading the source, execute ``python ./setup.py build`` in the source directory, and then ``python ./setup.py install`` to install it.  
 
-#. Install XMDS2 into your python path by running (in the xmds-2.1.2/ directory):
+#. Install XMDS2 into your python path by running (in the xmds-2.1.3/ directory):
     ``sudo ./setup.py develop``
 
     If you want to install it into your home directory, type ``./setup.py develop --prefix=~``
@@ -221,21 +221,21 @@ Also note that this guide adds extra notes for users wishing to install XMDS2 us
 
     * Developer only instructions: 
         The Cheetah templates (\*.tmpl) must be compiled into python.
-        To do this, run ``make`` in the xmds-2.1.2/ directory.
+        To do this, run ``make`` in the xmds-2.1.3/ directory.
 
     * Developer-only instructions: 
-        If you have 'numpy' installed, test XMDS2 by typing ``./run_tests.py`` in the xmds-2.1.2/ directory.
+        If you have 'numpy' installed, test XMDS2 by typing ``./run_tests.py`` in the xmds-2.1.3/ directory.
         The package 'numpy' is one of the optional packages, with installation instructions below.
        
     * Developer-only instructions: 
         To build the user documentation, you first need to install sphinx, either via your package manager or:
         ``sudo easy_install Sphinx``
 
-        Then, to build the documentation, in the xmds-2.1.2/admin/userdoc-source/ directory run: ``make html``
+        Then, to build the documentation, in the xmds-2.1.3/admin/userdoc-source/ directory run: ``make html``
 
         If this results in an error, you may need to run ``sudo ./setup.py develop``
 
-        The generated html documentation will then be found at xmds-2.1.2/documentation/index.html
+        The generated html documentation will then be found at xmds-2.1.3/documentation/index.html
 		
 #. Configure XMDS2 by typing ``xmds2 --reconfigure``.  If XMDS2 is unable to find a library, you can tell XMDS2 where these libraries are located by adding ``include`` and ``lib`` search paths using the ``--include-path`` and ``--lib-path`` options.  For example, if FFTW3 is installed in ``/apps/fftw3`` with headers in ``/apps/fftw3/include/`` and the libraries in ``/apps/fftw3/lib``, (re)configure XMDS2 by typing:
 
@@ -245,7 +245,7 @@ Also note that this guide adds extra notes for users wishing to install XMDS2 us
 	
 	* ``CXXFLAGS="-pedantic" LINKFLAGS="-lm" xmds2 --reconfigure``.
 
-**Congratulations!** You should now have a fully operational copy of xmds2 and xsil2graphics2.  You can test your copy using examples from the "xmds-2.1.2/examples" directory, and follow the worked examples in the :ref:`QuickStartTutorial` and :ref:`WorkedExamples`.
+**Congratulations!** You should now have a fully operational copy of xmds2 and xsil2graphics2.  You can test your copy using examples from the "xmds-2.1.3/examples" directory, and follow the worked examples in the :ref:`QuickStartTutorial` and :ref:`WorkedExamples`.
 
 
 

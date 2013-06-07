@@ -12,8 +12,8 @@
 # problems. Only the copying of the binaries to locations outside the user's
 # directories should be run as sudo, which is taken care of within this script.
 
-XMDS_VERSION="2.1.2"
-KNOWN_GOOD_XMDS_REVISION="2820"
+XMDS_VERSION="2.1.3"
+KNOWN_GOOD_XMDS_REVISION="2831"
 
 if [ "$(whoami)" = "root" ]; then
   echo
