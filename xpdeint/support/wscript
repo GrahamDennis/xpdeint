@@ -570,7 +570,7 @@ def configure(conf):
     print "Configuring for MPI scripts..."
     conf.setenv('mpi', env)
     conf.env['ENVIRONMENT_NAME'] = 'mpi'
-    if conf.find_program('mpic++', var='MPICXX'):
+    if conf.find_program('mpic++', var='MPICXX', mandatory = False):
         
         conf.env['CXX'] = conf.env['MPICXX']
         conf.env['LINK_CXX'] = conf.env['MPICXX']
@@ -599,5 +599,6 @@ def configure(conf):
         del conf.env["DEFINES"]
     else:
         print "MPI not found. No scripts using MPI can be compiled on this system."
+        conf.setenv('default', env)
         del conf.all_envs['mpi']
     
