@@ -333,7 +333,11 @@
   inline void *_aligned_malloc(size_t size, size_t alignment)
   {
     void *RetVal = NULL;
-    posix_memalign(&RetVal, alignment, size);
+    
+    // Need to collect the result of the posix_memalign call otherwise
+    // we get a "warn_unused_result" warning. We don't actually need to
+    // check the result, since on failure (i != 0) RetVal will be null.
+    int i = posix_memalign(&RetVal, alignment, size);
     return RetVal;
   }
 
