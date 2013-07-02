@@ -1709,7 +1709,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       operatorTemplateClass = FunctionsOperatorTemplate
     else:
       raise ParserException(operatorElement, "Unknown operator kind '%(kindString)s'\n"
-                                             "Valid options are: 'ip', 'ex', 'filter' or 'cross-propagation'." % locals())
+                                             "Valid options are: 'ip', 'ex', 'functions' or 'cross-propagation'." % locals())
     
     operatorTemplate = operatorTemplateClass(parent = operatorContainer,
                                              xmlElement = operatorElement,
