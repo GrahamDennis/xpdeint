@@ -177,12 +177,12 @@ The standard Fourier transform is
 
 .. math::
 
-	\mathcal{F}\left[f(x)\right](k) = \frac{1}{2\pi}\int_{x_\text{min}}^{x_\text{max}} f(x) e^{-i x k} dx
+	\mathcal{F}\left[f(x)\right](k) = \frac{1}{\sqrt{2\pi}}\int_{x_\text{min}}^{x_\text{max}} f(x) e^{-i x k} dx
 
 The XMDS2 Fourier transform is
 
 .. math::
-	\tilde{\mathcal{F}}\left[f(x)\right](k) &= \frac{1}{2\pi}\int_{x_\text{min}}^{x_\text{max}} f(x) e^{-i (x+ x_\text{min}) k} dx \\
+	\tilde{\mathcal{F}}\left[f(x)\right](k) &= \frac{1}{\sqrt{2\pi}}\int_{x_\text{min}}^{x_\text{max}} f(x) e^{-i (x+ x_\text{min}) k} dx \\
 	&= e^{-i x_\text{min} k} \mathcal{F}\left[f(x)\right](k)
 
 When the number of forward Fourier transforms and backwards Fourier transforms are unequal a phase factor is required. Some examples of using Fourier transforms in XMDS2 are shown below.
