@@ -50,6 +50,7 @@ echo
 echo
 
 RPM_INSTALL=0
+DEB_INSTALL=0
 if [ `which apt-get | wc -l` -ne 0 ]; then
   echo; echo "apt-get found; assuming Debian packaging scheme"; echo
   DEB_INSTALL=1
