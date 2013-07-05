@@ -1,11 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<simulation xmds-version="2">
+<?xml version="1.0" ?><simulation xmds-version="2">
   <testing>
-    <xsil_file name="hermitegauss_transform_2d_chunked_breakpoints.xsil" expected="../transforms/hermitegauss_transform_2d_expected.xsil" absolute_tolerance="1e-8" relative_tolerance="1e-5" />
-    <xsil_file name="hermitegauss_transform_2d_chunked_breakpoint1.xsil" expected="hermitegauss_transform_2d_chunked_breakpoint1_expected.xsil" absolute_tolerance="1e-8" relative_tolerance="1e-5" />
-    <xsil_file name="hermitegauss_transform_2d_chunked_breakpoint2.xsil" expected="hermitegauss_transform_2d_chunked_breakpoint2_expected.xsil" absolute_tolerance="1e-8" relative_tolerance="1e-5" />
-    <xsil_file name="hermitegauss_transform_2d_chunked_breakpoint3.xsil" expected="hermitegauss_transform_2d_chunked_breakpoint3_expected.xsil" absolute_tolerance="1e-8" relative_tolerance="1e-5" />
-    <xsil_file name="hermitegauss_transform_2d_chunked_breakpoint4.xsil" expected="hermitegauss_transform_2d_chunked_breakpoint4_expected.xsil" absolute_tolerance="1e-8" relative_tolerance="1e-5" />
+    <xsil_file absolute_tolerance="1e-8" expected="../transforms/hermitegauss_transform_2d_expected.xsil" name="hermitegauss_transform_2d_chunked_breakpoints.xsil" relative_tolerance="1e-5"/>
+    <xsil_file absolute_tolerance="1e-8" expected="hermitegauss_transform_2d_chunked_breakpoint1_expected.xsil" name="hermitegauss_transform_2d_chunked_breakpoint1.xsil" relative_tolerance="1e-5"/>
+    <xsil_file absolute_tolerance="1e-8" expected="hermitegauss_transform_2d_chunked_breakpoint2_expected.xsil" name="hermitegauss_transform_2d_chunked_breakpoint2.xsil" relative_tolerance="1e-5"/>
+    <xsil_file absolute_tolerance="1e-8" expected="hermitegauss_transform_2d_chunked_breakpoint3_expected.xsil" name="hermitegauss_transform_2d_chunked_breakpoint3.xsil" relative_tolerance="1e-5"/>
+    <xsil_file absolute_tolerance="1e-8" expected="hermitegauss_transform_2d_chunked_breakpoint4_expected.xsil" name="hermitegauss_transform_2d_chunked_breakpoint4.xsil" relative_tolerance="1e-5"/>
   </testing>
 
   <name>hermitegauss_transform_2d_chunked_breakpoints</name>
@@ -15,8 +14,8 @@
   </description>
   
   <features>
-    <chunked_output size="10KB" />
-    <validation kind="run-time" />
+    <chunked_output size="10KB"/>
+    <validation kind="run-time"/>
     <globals>
       <![CDATA[
         const real M = 9.1e-31; // Mass of an electron
@@ -31,12 +30,12 @@
   <geometry>
     <propagation_dimension> t </propagation_dimension>
     <transverse_dimensions>
-      <dimension name="x" lattice="20" length_scale="sqrt(hbar/(M*omega))" transform="hermite-gauss" />
-      <dimension name="y" lattice="20" length_scale="sqrt(hbar/(M*omega))" transform="hermite-gauss" />
+      <dimension lattice="20" length_scale="sqrt(hbar/(M*omega))" name="x" transform="hermite-gauss"/>
+      <dimension lattice="20" length_scale="sqrt(hbar/(M*omega))" name="y" transform="hermite-gauss"/>
     </transverse_dimensions>
   </geometry>
   
-  <vector name="main" initial_basis="x y" type="complex">
+  <vector initial_basis="x y" name="main" type="complex">
     <components>
       psi
     </components>
@@ -50,7 +49,7 @@
     </initialisation>
   </vector>
   
-  <computed_vector name="normalisation" dimensions="" type="real">
+  <computed_vector dimensions="" name="normalisation" type="real">
     <components>N integral_y2</components>
     <evaluation>
       <dependencies>main</dependencies>
@@ -62,10 +61,10 @@
   </computed_vector>
   
   <sequence>
-    <integrate algorithm="ARK45" tolerance="1e-6" interval="1e-3" steps="400">
+    <integrate algorithm="ARK45" interval="1e-3" steps="400" tolerance="1e-6">
       <samples>10 1 100</samples>
       <operators>
-        <operator kind="ip" constant="yes" basis="nx ny">
+        <operator basis="nx ny" constant="yes" kind="ip">
           <operator_names>L</operator_names>
           <![CDATA[
             L = -i*(nx + ny + 1.0)*omega;
