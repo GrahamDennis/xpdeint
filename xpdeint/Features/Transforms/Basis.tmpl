@@ -20,8 +20,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 *@
 @extends xpdeint.ScriptElement
+@import operator
 
 @attr $matrixType = 'real'
+@attr $supportsInPlaceOperation = False
+
+@def costEstimate(basisReps)
+  @set costMultiplier = 4 if $matrixType == 'complex' else 1
+  @return reduce(operator.mul, [rep.latticeEstimate for rep in basisReps]) * costMultiplier
+@end def
 
 @def transformMatricesForDimReps($forwardDimRep, $backwardDimRep)
 _mmt_matrix_forward  = ($matrixType *)xmds_malloc(sizeof($matrixType) * ${forwardDimRep.globalLattice} * ${backwardDimRep.globalLattice});

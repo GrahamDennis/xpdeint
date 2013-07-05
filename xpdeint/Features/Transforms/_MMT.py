@@ -27,6 +27,7 @@ from xpdeint.Features.Transforms._Transform import _Transform
 from xpdeint.Features.Transforms.BesselBasis import BesselBasis
 from xpdeint.Features.Transforms.HermiteGaussEPBasis import HermiteGaussEPBasis
 from xpdeint.Features.Transforms.HermiteGaussFourierEPBasis import HermiteGaussFourierEPBasis
+from xpdeint.Features.Transforms.HermiteGaussTwiddleBasis import HermiteGaussTwiddleBasis
 
 from xpdeint.Geometry.DimensionRepresentation import DimensionRepresentation
 from xpdeint.Geometry.UniformDimensionRepresentation import UniformDimensionRepresentation
@@ -241,6 +242,8 @@ class _MMT (_Transform):
     elif transformName == 'hermite-gauss':
       # Hermite-gauss basis (harmonic oscillator)
       coordinate2SpectralBasisChange = HermiteGaussEPBasis(parent = self, **self.argumentsToTemplateConstructors)
+      spectralBasisTwiddleChange = HermiteGaussTwiddleBasis(parent = self, **self.argumentsToTemplateConstructors)
+      # This is how we used to do 'nx' -> 'kx' transforms
       fourier2SpectralBasisChange = HermiteGaussFourierEPBasis(parent = self, **self.argumentsToTemplateConstructors)
       
       self.basisMap[dim.name] = dict(
@@ -249,6 +252,11 @@ class _MMT (_Transform):
         transformations = dict([
           ((name, 'n' + name), coordinate2SpectralBasisChange),
           ((name + '_4f', 'n' + name), coordinate2SpectralBasisChange),
+          (('k' + name, 'n' + name + '_twiddle'), coordinate2SpectralBasisChange),
+          (('n' + name, 'n' + name + '_twiddle'), spectralBasisTwiddleChange),
+          # This is how the 'nx' -> 'kx' transforms used to be done, but it's slower.
+          # This transform should never be chosen because the cost estimates should prevent it, but we keep it here
+          # anyway for reference.
           (('k' + name, 'n' + name), fourier2SpectralBasisChange)
         ])
       )
@@ -285,6 +293,15 @@ class _MMT (_Transform):
       )
       dim.addRepresentation(kspace)
       
+      twiddleSpace = UniformDimensionRepresentation(
+          name = 'n' + name + '_twiddle', type = 'long', runtimeLattice = spectralLattice,
+          _minimum = '0', _maximum = spectralLattice, _stepSize = '1',
+          parent = dim, tag = self.auxiliarySpaceTag,
+          reductionMethod = UniformDimensionRepresentation.ReductionMethod.fixedStep,
+          **self.argumentsToTemplateConstructors
+      )
+      dim.addRepresentation(twiddleSpace)
+      
       fourFieldCoordinateSpace = HermiteGaussDimensionRepresentation(
         name = name + '_4f', type = type, runtimeLattice = lattice, _maximum = maximum,
         stepSizeArray = True, parent = dim, tag = self.auxiliarySpaceTag, fieldCount = 4.0,
@@ -305,13 +322,17 @@ class _MMT (_Transform):
       dimReps = geometry.dimensionWithName(dimName).representations
       for transformPair, basis in basisDict['transformations'].items():
         basisReps = [[rep for rep in dimReps if rep.name == repName][0] for repName in transformPair]
-        results.append(dict(
-          transformations = [transformPair],
-          cost = reduce(operator.mul, [rep.latticeEstimate for rep in basisReps]),
-          outOfPlace = True,
-          transformFunction = basis.transformFunction,
-          transformType = basis.matrixType,
-        ))
+        def addTransform(outOfPlace):
+          results.append(dict(
+            transformations = [transformPair],
+            cost = basis.costEstimate(basisReps),
+            outOfPlace = outOfPlace,
+            transformFunction = basis.transformFunction,
+            transformType = basis.matrixType,
+          ))
+        addTransform(True)
+        if basis.supportsInPlaceOperation:
+            addTransform(False)
     
     return results
   

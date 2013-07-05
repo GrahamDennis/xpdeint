@@ -1,0 +1,79 @@
+@*
+HermiteGaussTwiddleBasis.tmpl
+
+Hermite-Gauss Fourier basis using the definite parity of the basis functions to remove
+half the work.
+
+Created by Graham Dennis on 2009-08-12.
+
+Copyright (c) 2009-2012, Graham Dennis
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+*@
+@extends xpdeint.Features.Transforms.Basis
+
+@def description: Hermite-Gauss Twiddle basis (Multiplies eigenvalues by i)
+
+@attr $supportsInPlaceOperation = True
+@attr $matrixType = 'complex'
+
+@def costEstimate(basisReps)
+  @return min([rep.latticeEstimate for rep in basisReps])
+@end def
+
+
+@def transformFunction(transformID, transformDict, function)
+  @#
+  @set $transformPair = transformDict['transformPair']
+  @set $forwardDimRep = transformPair[0][0]
+  @set $backwardDimRep = transformPair[1][0]
+  @set isOutOfPlace =  transformDict.get('outOfPlace', True)
+static const complex _forward_multipliers[4] = {1, -i, -1, i};
+static const complex _backward_multipliers[4] = {1, i, -1, -i};
+complex* const __restrict__ source_data = reinterpret_cast<complex* const>(_data_in);
+@if isOutOfPlace
+complex* const __restrict__ dest_data = reinterpret_cast<complex* const>(_data_out);
+@end if
+
+const complex* const __restrict__ _multipliers = _forward ? _forward_multipliers : _backward_multipliers;
+
+@set featureOrdering = ['OpenMP']
+@set featureDict = {
+  'templateString': ''
+}
+for (long _i0 = 0; _i0 < _prefix_lattice; _i0++) {
+  for (long _i1 = 0; _i1 < ${forwardDimRep.globalLattice}; _i1++) {
+    long multiplier_index = (_i1 & 3);
+    @if not isOutOfPlace
+    if (multiplier_index == 0) continue;
+    @end if
+    
+    const complex multiplier = _multipliers[multiplier_index];
+    
+    #pragma ivdep
+${insertCodeForFeatures('loopOverVectorsWithInnerContentTemplateBegin', featureOrdering, featureDict)}@slurp
+    for (long _i2 = 0; _i2 < _postfix_lattice; _i2++) {
+      ptrdiff_t _index = (_i0 * ${forwardDimRep.globalLattice} + _i1) * _postfix_lattice + _i2;
+      @if isOutOfPlace
+      dest_data[_index] = multiplier * source_data[_index];
+      @else
+      source_data[_index] *= multiplier;
+      @end if
+    }
+  }
+}
+${insertCodeForFeaturesInReverseOrder('loopOverVectorsWithInnerContentTemplateEnd', featureOrdering, featureDict)}@slurp
+  @#
+@end def
