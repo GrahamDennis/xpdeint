@@ -4,7 +4,7 @@ MatlabImport.tmpl
 Created by Joe Hope on 2009-01-07.
 Modified by Gregory Bogomiagkov and Liam Madge on 2013-07-18.
 
-Copyright (c) 2009-2012, Joe Hope and Graham Dennis
+Copyright (c) 2009-2013, Joe Hope and Graham Dennis
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,89 +21,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 *@
 
+@extends xpdeint.xsil2graphics2.MatlabOctaveImport
 @def description: Creates text to import data from XSIL files into Matlab.
 @attr $name = 'Matlab'
 
-@attr $defaultExtension = 'm'
-
-@def printMatlabListOrElement(listOrElement, currentDepth)
-  @# This is a function to turn an array into a Matlab list.  Called recursively, and assumes the elements are floats or lists.
-  @if isinstance(listOrElement,float):
-${format(float(listOrElement),'f')}@slurp
-  @else:
-cat($currentDepth, ${', '.join([$printMatlabListOrElement(element, currentDepth - 1) for element in listOrElement])})@slurp
-  @end if
-@end def
-
-@def printMatlabListOrReadBinary(currentDepth,independentVariables, machineFormat, outputPrecision)
-  @set var = $independentVariables[$currentDepth]
-  @if currentDepth == len(independentVariables) - 1:
-fread(fpDat, $var["length"], '$outputPrecision', 0, '$machineFormat')@slurp
-  @else:
-cat($($len(independentVariables) - $currentDepth), ${', '.join([$printMatlabListOrReadBinary(currentDepth + 1, independentVariables, machineFormat, outputPrecision) for x in range(0, var["length"])])})@slurp
-  @end if
-@end def
-
-@def loadXSILFile($xsilFile)
- @set declaredVars=[]
- @for objectNum, xsilObject in enumerate(xsilFile.xsilObjects):
-   @if xsilObject.data.format == 'ascii':
-     @set nIndepVar = len(xsilObject.independentVariables)
-     @for var in xsilObject.independentVariables:
-       @set varName = var["name"].replace('_','') + str(objectNum + 1)
-       @silent declaredVars.append(varName)
-clear $varName
-$varName = [${', '.join([format(float(e),'f') for e in var["array"]])}];
-     @end for
-     @for varD in xsilObject.dependentVariables:
-       @set varName = varD["name"].replace('_','') + str(objectNum + 1)
-       @silent declaredVars.append(varName)
-clear $varName
-       @if nIndepVar == 1:
-$varName = [${', '.join([format(float(e),'f') for e in varD["array"]])}];
-       @else if nIndepVar == 2:
-$varName = [${';'.join([(','.join([format(float(val),'f') for val in subArray])) for subArray in varD["array"]])}];
-       @else
-$varName = $printMatlabListOrElement($varD["array"], $nIndepVar);
-       @end if
-     @end for
-   @elif xsilObject.data.format == 'hdf5':
-     @set $filename = xsilObject.data.filename
-     @set $groupName = xsilObject.data.groupName
-     @for var in xsilObject.independentVariables:
-       @set $outName = c'${var.name}_${objectNum+1}'
+@def handleHDF5XSILObject(objectNum, xsilObject)
+  @set $filename = xsilObject.data.filename
+  @set $groupName = xsilObject.data.groupName
+  @for var in xsilObject.independentVariables:
+    @set $outName = c'${var.name}_${objectNum+1}'
 ${outName} = hdf5read('${filename}', '${groupName}/${var.name}');
-     @end for
-     @for var in xsilObject.dependentVariables:
-       @set $outName = c'${var.name}_${objectNum+1}'
+  @end for
+  @for var in xsilObject.dependentVariables:
+  @set $outName = c'${var.name}_${objectNum+1}'
 ${outName} = hdf5read('${filename}', '${groupName}/${var.name}');
 ${outName} = permute(${outName}, ndims(${outName}):-1:1);
-     @end for
-   @elif xsilObject.data.format == 'binary':
-     @set nIndepVar = len(xsilObject.independentVariables)
-     @set machineFormat = {'BigEndian': 'b', 'LittleEndian': 'l'}.get(xsilObject.data.encoding, '$ByteOrdering')
-     @set uLongFormat = {'uint32': 'uint32', 'uint64': 'uint64'}.get(xsilObject.data.uLong, 'UnsignedInteger32')
-     @set outputPrecision = {'single': 'single', 'double': 'double'}.get(xsilObject.data.precision, 'Real64')
-fpDat = fopen('$xsilObject.data.filename');
-     @for var in xsilObject.independentVariables:
-        @set varName = var["name"].replace('_','') + str(objectNum + 1)
-        @silent declaredVars.append(varName)
-$(varName)Len = fread(fpDat, 1, '$uLongFormat', 0, '$machineFormat');
-$(varName) = fread(fpDat, $(varName)Len, '$outputPrecision', 0, '$machineFormat');
-     @end for
-     @for varD in xsilObject.dependentVariables:
-        @set varName = varD["name"].replace('_','') + str(objectNum + 1)
-        @silent declaredVars.append(varName)
-$(varName)Len = fread(fpDat, 1, '$uLongFormat', 0, '$machineFormat');
-        @if nIndepVar<=1:
-$varName = fread(fpDat, $(varName)Len, '$outputPrecision', 0, '$machineFormat');
-        @else:
-$varName = $(printMatlabListOrReadBinary(0,$xsilObject.independentVariables, $machineFormat, $outputPrecision));
-        @end if
-     @end for
-fclose(fpDat);
-   @else
-     @raise Exception("No support for Matlab output for XSIL format '%s'." % xsilObject.data.format)
-   @end if
   @end for
 @end def
