@@ -4,6 +4,7 @@
 xsil2graphicsParser.py
 
 Created by Joe Hope on 2009-01-06.
+Modified by Thomas Antioch on 2013-07-18.
 
 Copyright (c) 2009-2012, Joe Hope
 
@@ -37,10 +38,10 @@ if sys.platform == 'darwin':
 from xpdeint.xsil2graphics2.MathematicaImport import MathematicaImport
 from xpdeint.xsil2graphics2.RImport import RImport
 from xpdeint.xsil2graphics2.MathematicaFiveImport import MathematicaFiveImport
-from xpdeint.xsil2graphics2.GnuplotImport import GnuplotImport
 from xpdeint.xsil2graphics2.MatlabImport import MatlabImport
 from xpdeint.xsil2graphics2.ScilabImport import ScilabImport
 from xpdeint.xsil2graphics2.OctaveImport import OctaveImport
+from xpdeint.xsil2graphics2.PyLabImport import PyLabImport
 
 
 # The help message printed when --help is used as an argument
@@ -55,9 +56,16 @@ Options and arguments for xsil2graphics2:
 Options:
   infile(s):        required, the input xsil file or files
   -h/--help:        optional, display this information
-  -m/--matlab:      optional, produce matlab output (default) (only supports HDF5 data files)
+  -m/--matlab:      optional, produce matlab output (default)
   -e/--mathematica: optional, produce mathematica output
+  -8/--octave:      optional, produce octave output
+  -s/--scilab:      optional, produce scilab output
+  -a/--mathmFive:   optional, produce mathematica 5.x output
+  -r/--R:           optional, produce R output
+  -l/--pylab:       optional, produce PyLab/matplotlib script (HDF5 requires h5py, binary not supported)
+  -p/--plot:        optional, generate plotting output (matlab/octave)
   -o/--outfile:     optional, alternate output file name (one input file only)
+  --debug:          Debug mode
   --debug:          Debug mode
   
 
@@ -91,7 +99,7 @@ def main(argv=None):
     argv = sys.argv
   try:
     try:
-      opts, args = getopt.gnu_getopt(argv[1:], "hms8aegrpo:", ["help", "matlab", "scilab", "octave", "mathmFive", "mathematica", "gnuplot", "R", "plot", "outfile=", "debug"])
+      opts, args = getopt.gnu_getopt(argv[1:], "hms8aerlpo:", ["help", "matlab", "scilab", "octave", "mathmFive", "mathematica", "R", "pylab", "plot", "outfile=", "debug"])
     except getopt.error, msg:
       raise Usage(msg)
     
@@ -106,8 +114,8 @@ def main(argv=None):
       ("-8", "--octave", OctaveImport),
       ("-a", "--mathmFive", MathematicaFiveImport),
       ("-e", "--mathematica", MathematicaImport),
-      ("-g", "--gnuplot", GnuplotImport),
       ("-r", "--R", RImport),
+      ("-l", "--pylab", PyLabImport),
     ]
     
     # option processing

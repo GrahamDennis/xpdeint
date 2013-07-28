@@ -1,0 +1,88 @@
+@*
+PyLabImport.tmpl
+
+Created by Thomas Antioch on 2013-05-31.
+Modified by Thomas Antioch on 2013-07-18.
+
+Copyright (c) 2009-2013, Joe Hope and Graham Dennis
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+*@
+
+@def description: Creates text to import data from XSIL files into PyLab.
+@attr $name = 'PyLab'
+
+@attr $defaultExtension = 'py'
+
+
+@def printListOrElement(listOrElement)
+  @# This is a function to turn an array into a Mathematica list.  Called recursively, and assumes the elements are floats or lists.
+  @if isinstance(listOrElement,float):
+${format(float(listOrElement),'f')}@slurp
+  @else:
+[${', '.join([$printListOrElement(element) for element in listOrElement])}]@slurp
+  @end if
+@end def
+
+@def printPyLabReadBinary(currentDepth,independentVariables, machineFormat, outputPrecision)
+  @set var = $independentVariables[$currentDepth]
+  @if currentDepth == 0:
+np.fromfile(infile,dtype='$machineFormat$outputPrecision',count=$var["length"])@slurp
+  @else:
+np.array(${','.join($printPyLabReadBinary(currentDepth-1,independentVariables,machineFormat,outputPrecision) for x in range(0, var["length"]))},dtype='$machineFormat$outputPrecision',count=$var["length"])@slurp
+  @end if
+@end def
+
+@def loadXSILFile($xsilFile)
+#!/usr/bin/env python
+from pylab import *
+
+ @for objectNum, xsilObject in enumerate(xsilFile.xsilObjects):
+   @if xsilObject.data.format == 'ascii':
+     @set $variables = xsilObject.independentVariables[:]
+     @silent variables.extend(xsilObject.dependentVariables)
+     @for var in xsilObject.independentVariables:
+       @set varName = var["name"].replace('_','') + str(objectNum + 1)
+$varName = np.array([${', '.join([format(float(e),'f') for e in var["array"]])}])
+     @end for
+     @for varD in xsilObject.dependentVariables:
+         @set varName = varD["name"].replace('_','') + str(objectNum + 1)
+$varName = np.array($printListOrElement($varD["array"]));      
+     @end for     
+   @elif xsilObject.data.format == 'binary':
+#Sorry, binary for PyLab is not supported.
+   @elif xsilObject.data.format == 'hdf5':
+import h5py
+     @set $variables = xsilObject.independentVariables[:]
+     @silent variables.extend(xsilObject.dependentVariables)
+     @set $groupName = xsilObject.data.groupName
+     @set $filename = xsilObject.data.filename
+infile = h5py.File("${filename}", "r")
+group = infile.get("${groupName}")
+     @for var in variables:
+       @set varName = var["name"].replace('_', '') + str(objectNum + 1)
+${varName} = group.get("${var["name"]}")
+     @end for   
+   @else
+     @raise Exception("No support for Mathematica output for XSIL format '%s'." % xsilObject.data.format)
+   @end if
+ @end for
+
+#Write your plotting commands here.
+
+  @if xsilObject.data.format != "ascii":
+infile.close()
+  @end if
+@end def
