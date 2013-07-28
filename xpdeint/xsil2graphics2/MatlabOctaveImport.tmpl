@@ -44,6 +44,10 @@ cat($($len(independentVariables) - $currentDepth), ${', '.join([$printMatlabList
   @end if
 @end def
 
+@def permuteDimensionsOfMATLABVariable(varName)
+${varName} = permute(${varName}, ndims(${varName}):-1:1);
+@end def
+
 @def generateVariableName(xsilVariable, xsilObjectNumber)
   @return c'${xsilVariable.name}_${xsilObjectNumber+1}'
 @end def
@@ -79,6 +83,7 @@ $varName = [${';'.join([(','.join([format(float(val), $stringFormat) for val in 
     @else
 $varName = $printMatlabListOrElement($varD["array"], $nIndepVar);
     @end if
+${permuteDimensionsOfMATLABVariable(varName)}@slurp
   @end for
 @end def
 
@@ -101,6 +106,7 @@ $varName = fread(fpDat, $(varName)Len, '$outputPrecision', 0, '$machineFormat');
     @else:
 $varName = $(printMatlabListOrReadBinary(0,$xsilObject.independentVariables, $machineFormat, $outputPrecision));
     @end if
+${permuteDimensionsOfMATLABVariable(varName)}@slurp
   @end for
 fclose(fpDat);
 @end def

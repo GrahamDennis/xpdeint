@@ -35,6 +35,6 @@ ${outName} = hdf5read('${filename}', '${groupName}/${var.name}');
   @for var in xsilObject.dependentVariables:
     @set outName = $generateVariableName(var, objectNum)
 ${outName} = hdf5read('${filename}', '${groupName}/${var.name}');
-${outName} = permute(${outName}, ndims(${outName}):-1:1);
+${permuteDimensionsOfMATLABVariable(outName)}@slurp
   @end for
 @end def

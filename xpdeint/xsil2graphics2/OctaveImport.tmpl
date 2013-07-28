@@ -18,6 +18,7 @@ load ${filename}
   @for var in variables:
     @set varName = $generateVariableName(var, objectNum)
 ${varName} = _${objectNum+1}.${var.name};
+${permuteDimensionsOfMATLABVariable(varName)}@slurp
   @end for
 @end def
 
