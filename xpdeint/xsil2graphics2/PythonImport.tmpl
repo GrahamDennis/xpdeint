@@ -1,0 +1,56 @@
+@*
+PythonImport.tmpl
+
+Created by Thomas Antioch on 2013-05-31.
+Modified by Thomas Antioch on 2013-07-18.
+Modified by Graham Dennis on 2013-07-28.
+
+Copyright (c) 2009-2013, Joe Hope and Graham Dennis
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+*@
+
+@def description: Creates text to import data from XSIL files into PyLab.
+@attr $name = 'Python'
+
+@attr $defaultExtension = 'py'
+
+
+@def loadXSILFile($xsilFile)
+#!/usr/bin/env python
+from xpdeint.XSILFile import XSILFile
+
+xsilFile = XSILFile("$xsilFile.filename")
+
+def firstElementOrNone(enumerable):
+  for element in enumerable:
+    return element
+  return None
+
+  @for objectNum, xsilObject in enumerate(xsilFile.xsilObjects)
+    @for var in xsilObject.independentVariables
+      @set varName = c'${var.name}_${objectNum+1}'
+$varName = firstElementOrNone(_["array"] for _ in xsilFile.xsilObjects[$objectNum].independentVariables if _["name"] == "${var.name}")
+    @end for
+    @for var in xsilObject.dependentVariables
+      @set varName = c'${var.name}_${objectNum+1}'
+$varName = firstElementOrNone(_["array"] for _ in xsilFile.xsilObjects[$objectNum].dependentVariables if _["name"] == "${var.name}")
+    @end for
+  @end for
+
+# Write your plotting commands here.
+# You may want to import pylab (from pylab import *) or matplotlib (from matplotlib import *)
+
+@end def
