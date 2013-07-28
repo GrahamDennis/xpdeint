@@ -35,12 +35,12 @@ cat($currentDepth, ${', '.join([$printMatlabListOrElement(element, currentDepth 
   @end if
 @end def
 
-@def printMatlabListOrReadBinary(currentDepth,independentVariables, machineFormat, outputPrecision)
+@def printMatlabListOrReadBinary(currentDepth,independentVariables, outputPrecision)
   @set var = $independentVariables[$currentDepth]
   @if currentDepth == len(independentVariables) - 1:
-fread(fpDat, $var["length"], '$outputPrecision', 0, '$machineFormat')@slurp
+fread(fpDat, $var["length"], '$outputPrecision')@slurp
   @else:
-cat($($len(independentVariables) - $currentDepth), ${', '.join([$printMatlabListOrReadBinary(currentDepth + 1, independentVariables, machineFormat, outputPrecision) for x in range(0, var["length"])])})@slurp
+cat($($len(independentVariables) - $currentDepth), ${', '.join([$printMatlabListOrReadBinary(currentDepth + 1, independentVariables, outputPrecision) for x in range(0, var["length"])])})@slurp
   @end if
 @end def
 
@@ -90,24 +90,28 @@ ${permuteDimensionsOfMATLABVariable(varName)}@slurp
 @def handleBinaryXSILObject(objectNum, xsilObject)
   @set variablesToClear = ['fpDat']
   @set nIndepVar = len(xsilObject.independentVariables)
-  @set machineFormat = {'BigEndian': 'b', 'LittleEndian': 'l'}.get(xsilObject.data.encoding, '$ByteOrdering')
-  @set uLongFormat = {'uint32': 'uint32', 'uint64': 'uint64'}.get(xsilObject.data.uLong, 'UnsignedInteger32')
-  @set outputPrecision = {'single': 'single', 'double': 'double'}.get(xsilObject.data.precision, 'Real64')
-fpDat = fopen('$xsilObject.data.filename');
+  @set machineFormat = {'BigEndian': 'ieee-be', 'LittleEndian': 'ieee-le'}.get(xsilObject.data.encoding, 'native')
+  @set uLongFormat = {'uint32': 'uint32', 'uint64': 'uint64'}.get(xsilObject.data.uLong, 'uint64')
+  @set outputPrecision = {'single': 'single', 'double': 'double'}.get(xsilObject.data.precision, 'double')
+fpDat = fopen('$xsilObject.data.filename','r', '$machineFormat');
+if (fpDat < 0)
+  disp('Cannot open binary data file: ${xsilObject.data.filename}');
+  return;
+end
   @for var in xsilObject.independentVariables:
     @set varName = $generateVariableName(var, objectNum)
-$(varName)Len = fread(fpDat, 1, '$uLongFormat', 0, '$machineFormat');
-$(varName) = fread(fpDat, $(varName)Len, '$outputPrecision', 0, '$machineFormat');
     @silent variablesToClear.append(c'${varName}Len')
+$(varName)Len = fread(fpDat, 1, '$uLongFormat');
+$(varName) = fread(fpDat, $(varName)Len, '$outputPrecision');
   @end for
   @for varD in xsilObject.dependentVariables:
     @set varName = $generateVariableName(varD, objectNum)
     @silent variablesToClear.append(c'${varName}Len')
 $(varName)Len = fread(fpDat, 1, '$uLongFormat', 0, '$machineFormat');
     @if nIndepVar<=1:
-$varName = fread(fpDat, $(varName)Len, '$outputPrecision', 0, '$machineFormat');
+$varName = fread(fpDat, $(varName)Len, '$outputPrecision');
     @else:
-$varName = $(printMatlabListOrReadBinary(0,$xsilObject.independentVariables, $machineFormat, $outputPrecision));
+$varName = $(printMatlabListOrReadBinary(0,$xsilObject.independentVariables, $outputPrecision));
     @end if
 ${permuteDimensionsOfMATLABVariable(varName)}@slurp
   @end for
