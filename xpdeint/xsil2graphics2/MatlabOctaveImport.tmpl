@@ -88,6 +88,7 @@ ${permuteDimensionsOfMATLABVariable(varName)}@slurp
 @end def
 
 @def handleBinaryXSILObject(objectNum, xsilObject)
+  @set variablesToClear = ['fpDat']
   @set nIndepVar = len(xsilObject.independentVariables)
   @set machineFormat = {'BigEndian': 'b', 'LittleEndian': 'l'}.get(xsilObject.data.encoding, '$ByteOrdering')
   @set uLongFormat = {'uint32': 'uint32', 'uint64': 'uint64'}.get(xsilObject.data.uLong, 'UnsignedInteger32')
@@ -97,9 +98,11 @@ fpDat = fopen('$xsilObject.data.filename');
     @set varName = $generateVariableName(var, objectNum)
 $(varName)Len = fread(fpDat, 1, '$uLongFormat', 0, '$machineFormat');
 $(varName) = fread(fpDat, $(varName)Len, '$outputPrecision', 0, '$machineFormat');
+    @silent variablesToClear.append(c'${varName}Len')
   @end for
   @for varD in xsilObject.dependentVariables:
     @set varName = $generateVariableName(varD, objectNum)
+    @silent variablesToClear.append(c'${varName}Len')
 $(varName)Len = fread(fpDat, 1, '$uLongFormat', 0, '$machineFormat');
     @if nIndepVar<=1:
 $varName = fread(fpDat, $(varName)Len, '$outputPrecision', 0, '$machineFormat');
@@ -109,6 +112,7 @@ $varName = $(printMatlabListOrReadBinary(0,$xsilObject.independentVariables, $ma
 ${permuteDimensionsOfMATLABVariable(varName)}@slurp
   @end for
 fclose(fpDat);
+clear ${' '.join(variablesToClear)}
 @end def
 
 @def handleHDF5XSILObject(objectNum, xsilObject)
