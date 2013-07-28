@@ -44,6 +44,10 @@ cat($($len(independentVariables) - $currentDepth), ${', '.join([$printMatlabList
   @end if
 @end def
 
+@def generateVariableName(xsilVariable, xsilObjectNumber)
+  @return c'${xsilVariable.name}_${xsilObjectNumber+1}'
+@end def
+
 @def loadXSILFile($xsilFile)
   @for objectNum, xsilObject in enumerate(xsilFile.xsilObjects):
     @if xsilObject.data.format == 'ascii':
@@ -61,12 +65,12 @@ ${handleHDF5XSILObject(objectNum, xsilObject)}@slurp
 @def handleASCIIXSILObject(objectNum, xsilObject)
   @set nIndepVar = len(xsilObject.independentVariables)
   @for var in xsilObject.independentVariables:
-    @set varName = var["name"] + "_" + str(objectNum + 1)
+    @set varName = $generateVariableName(var, objectNum)
 clear $varName
 $varName = [${', '.join([format(float(e),$stringFormat) for e in var["array"]])}];
   @end for
   @for varD in xsilObject.dependentVariables:
-    @set varName = varD["name"] + "_" + str(objectNum + 1)
+    @set varName = $generateVariableName(var, objectNum)
 clear $varName
     @if nIndepVar == 1:
 $varName = [${', '.join([format(float(e), $stringFormat) for e in varD["array"]])}];
@@ -85,12 +89,12 @@ $varName = $printMatlabListOrElement($varD["array"], $nIndepVar);
   @set outputPrecision = {'single': 'single', 'double': 'double'}.get(xsilObject.data.precision, 'Real64')
 fpDat = fopen('$xsilObject.data.filename');
   @for var in xsilObject.independentVariables:
-    @set varName = var["name"] + "_" + str(objectNum + 1)
+    @set varName = $generateVariableName(var, objectNum)
 $(varName)Len = fread(fpDat, 1, '$uLongFormat', 0, '$machineFormat');
 $(varName) = fread(fpDat, $(varName)Len, '$outputPrecision', 0, '$machineFormat');
   @end for
   @for varD in xsilObject.dependentVariables:
-    @set varName = varD["name"] + "_" + str(objectNum + 1)
+    @set varName = $generateVariableName(varD, objectNum)
 $(varName)Len = fread(fpDat, 1, '$uLongFormat', 0, '$machineFormat');
     @if nIndepVar<=1:
 $varName = fread(fpDat, $(varName)Len, '$outputPrecision', 0, '$machineFormat');
