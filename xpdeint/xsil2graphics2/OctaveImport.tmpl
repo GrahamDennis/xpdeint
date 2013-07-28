@@ -15,10 +15,14 @@ Copyright (c) 2013 Graham Dennis.
   @set $filename = xsilObject.data.filename
   @set $variables = xsilObject.independentVariables[:]
 load ${filename}
-  @for var in variables:
-    @set varName = $generateVariableName(var, objectNum)
-${varName} = _${objectNum+1}.${var.name};
-${permuteDimensionsOfMATLABVariable(varName)}@slurp
+  @for var in xsilObject.independentVariables:
+    @set outName = $generateVariableName(var, objectNum)
+${outName} = _${objectNum+1}.${var.name};
+  @end for
+  @for var in xsilObject.dependentVariables:
+    @set outName = $generateVariableName(var, objectNum)
+${outName} = _${objectNum+1}.${var.name};
+${permuteDimensionsOfMATLABVariable(outName)}@slurp
   @end for
 @end def
 
