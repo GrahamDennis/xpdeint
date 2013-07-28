@@ -24,11 +24,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @def description: Creates text to import data from XSIL files into Matlab or Octave (where they are identical).
 
 @attr $defaultExtension = 'm'
+@attr $stringFormat = '.12e'
 
 @def printMatlabListOrElement(listOrElement, currentDepth)
   @# This is a function to turn an array into a Matlab list.  Called recursively, and assumes the elements are floats or lists.
   @if isinstance(listOrElement,float):
-${format(float(listOrElement),'f')}@slurp
+${format(float(listOrElement),$stringFormat)}@slurp
   @else:
 cat($currentDepth, ${', '.join([$printMatlabListOrElement(element, currentDepth - 1) for element in listOrElement])})@slurp
   @end if
@@ -62,15 +63,15 @@ ${handleHDF5XSILObject(objectNum, xsilObject)}@slurp
   @for var in xsilObject.independentVariables:
     @set varName = var["name"].replace('_','') + str(objectNum + 1)
 clear $varName
-$varName = [${', '.join([format(float(e),'f') for e in var["array"]])}];
+$varName = [${', '.join([format(float(e),$stringFormat) for e in var["array"]])}];
   @end for
   @for varD in xsilObject.dependentVariables:
     @set varName = varD["name"].replace('_','') + str(objectNum + 1)
 clear $varName
     @if nIndepVar == 1:
-$varName = [${', '.join([format(float(e),'f') for e in varD["array"]])}];
+$varName = [${', '.join([format(float(e), $stringFormat) for e in varD["array"]])}];
     @else if nIndepVar == 2:
-$varName = [${';'.join([(','.join([format(float(val),'f') for val in subArray])) for subArray in varD["array"]])}];
+$varName = [${';'.join([(','.join([format(float(val), $stringFormat) for val in subArray])) for subArray in varD["array"]])}];
     @else
 $varName = $printMatlabListOrElement($varD["array"], $nIndepVar);
     @end if
