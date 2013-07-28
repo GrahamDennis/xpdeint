@@ -27,6 +27,7 @@ import sys
 import getopt
 
 from xpdeint.XSILFile import XSILFile
+from xpdeint.IndentFilter import IndentFilter
 
 # Hack for Mac OS X so it doesn't import the web rendering
 # framework WebKit when Cheetah tries to import the Python
@@ -38,9 +39,8 @@ if sys.platform == 'darwin':
 from xpdeint.xsil2graphics2.MathematicaImport import MathematicaImport
 from xpdeint.xsil2graphics2.RImport import RImport
 from xpdeint.xsil2graphics2.MathematicaFiveImport import MathematicaFiveImport
-from xpdeint.xsil2graphics2.MatlabImport import MatlabImport
+from xpdeint.xsil2graphics2.MatlabOctaveImport import MatlabOctaveImport
 from xpdeint.xsil2graphics2.ScilabImport import ScilabImport
-from xpdeint.xsil2graphics2.OctaveImport import OctaveImport
 from xpdeint.xsil2graphics2.PyLabImport import PyLabImport
 
 
@@ -56,9 +56,9 @@ Options and arguments for xsil2graphics2:
 Options:
   infile(s):        required, the input xsil file or files
   -h/--help:        optional, display this information
-  -m/--matlab:      optional, produce matlab output (default)
+  -m/--matlab:      optional, produce matlab output (default, also supports Octave)
   -e/--mathematica: optional, produce mathematica output
-  -8/--octave:      optional, produce octave output
+  -8/--octave:      optional, produce octave output (identical to MATLAB output)
   -l/--pylab:       optional, produce PyLab/matplotlib script (HDF5 requires h5py, binary not supported)
   -o/--outfile:     optional, alternate output file name (one input file only)
   --debug:          Debug mode
@@ -101,12 +101,12 @@ def main(argv=None):
     plotFlag = False
     userSpecifiedFilename = None
     defaultExtension = None
-    outputTemplateClass = MatlabImport
+    outputTemplateClass = MatlabOctaveImport
     
     optionList = [
-      ("-m", "--matlab", MatlabImport),
+      ("-m", "--matlab", MatlabOctaveImport),
       ("-s", "--scilab", ScilabImport),
-      ("-8", "--octave", OctaveImport),
+      ("-8", "--octave", MatlabOctaveImport),
       ("-a", "--mathmFive", MathematicaFiveImport),
       ("-e", "--mathematica", MathematicaImport),
       ("-r", "--R", RImport),
@@ -138,7 +138,7 @@ def main(argv=None):
     print >> sys.stderr, "\t for help use --help"
     return 2
     
-  outputTemplate = outputTemplateClass()
+  outputTemplate = outputTemplateClass(filter=IndentFilter)
   print "Generating output for %s." % outputTemplate.name
   
   

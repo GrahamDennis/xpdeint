@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 @attr $defaultExtension = 'm'
 @attr $stringFormat = '.12e'
+@attr $name = 'MATLAB/Octave'
 
 @def printMatlabListOrElement(listOrElement, currentDepth)
   @# This is a function to turn an array into a Matlab list.  Called recursively, and assumes the elements are floats or lists.
@@ -115,5 +116,41 @@ clear ${' '.join(variablesToClear)}
 @end def
 
 @def handleHDF5XSILObject(objectNum, xsilObject)
-  @raise Exception("HDF5 Import must be implemented by a subclass")
+if (exist('OCTAVE_VERSION', 'builtin')) % Octave
+  ${handleHDF5XSILObjectForOctave(objectNum, xsilObject), autoIndent=True}@slurp
+else % MATLAB
+  ${handleHDF5XSILObjectForMATLAB(objectNum, xsilObject), autoIndent=True}@slurp
+end
 @end def
+
+
+@def handleHDF5XSILObjectForMATLAB(objectNum, xsilObject)
+  @set $filename = xsilObject.data.filename
+  @set $groupName = xsilObject.data.groupName
+  @for var in xsilObject.independentVariables:
+    @set outName = $generateVariableName(var, objectNum)
+${outName} = hdf5read('${filename}', '${groupName}/${var.name}');
+  @end for
+  @for var in xsilObject.dependentVariables:
+    @set outName = $generateVariableName(var, objectNum)
+${outName} = hdf5read('${filename}', '${groupName}/${var.name}');
+${permuteDimensionsOfMATLABVariable(outName)}@slurp
+  @end for
+@end def
+
+@def handleHDF5XSILObjectForOctave(objectNum, xsilObject)
+  @set $filename = xsilObject.data.filename
+  @set $variables = xsilObject.independentVariables[:]
+load ${filename}
+  @for var in xsilObject.independentVariables:
+    @set outName = $generateVariableName(var, objectNum)
+${outName} = _${objectNum+1}.${var.name};
+  @end for
+  @for var in xsilObject.dependentVariables:
+    @set outName = $generateVariableName(var, objectNum)
+${outName} = _${objectNum+1}.${var.name};
+${permuteDimensionsOfMATLABVariable(outName)}@slurp
+  @end for
+clear _${objectNum+1};
+@end def
+
