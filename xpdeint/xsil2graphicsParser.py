@@ -59,13 +59,8 @@ Options:
   -m/--matlab:      optional, produce matlab output (default)
   -e/--mathematica: optional, produce mathematica output
   -8/--octave:      optional, produce octave output
-  -s/--scilab:      optional, produce scilab output
-  -a/--mathmFive:   optional, produce mathematica 5.x output
-  -r/--R:           optional, produce R output
   -l/--pylab:       optional, produce PyLab/matplotlib script (HDF5 requires h5py, binary not supported)
-  -p/--plot:        optional, generate plotting output (matlab/octave)
   -o/--outfile:     optional, alternate output file name (one input file only)
-  --debug:          Debug mode
   --debug:          Debug mode
   
 
