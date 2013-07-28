@@ -37,10 +37,7 @@ if sys.platform == 'darwin':
   sys.modules['WebKit'] = module('WebKit')
 
 from xpdeint.xsil2graphics2.MathematicaImport import MathematicaImport
-from xpdeint.xsil2graphics2.RImport import RImport
-from xpdeint.xsil2graphics2.MathematicaFiveImport import MathematicaFiveImport
 from xpdeint.xsil2graphics2.MatlabOctaveImport import MatlabOctaveImport
-from xpdeint.xsil2graphics2.ScilabImport import ScilabImport
 from xpdeint.xsil2graphics2.PyLabImport import PyLabImport
 
 
@@ -59,7 +56,7 @@ Options:
   -m/--matlab:      optional, produce matlab output (default, also supports Octave)
   -e/--mathematica: optional, produce mathematica output
   -8/--octave:      optional, produce octave output (identical to MATLAB output)
-  -l/--pylab:       optional, produce PyLab/matplotlib script (HDF5 requires h5py, binary not supported)
+  -p/--pylab:       optional, produce PyLab/matplotlib script (HDF5 requires h5py, binary not supported)
   -o/--outfile:     optional, alternate output file name (one input file only)
   --debug:          Debug mode
   
@@ -94,23 +91,19 @@ def main(argv=None):
     argv = sys.argv
   try:
     try:
-      opts, args = getopt.gnu_getopt(argv[1:], "hms8aerlpo:", ["help", "matlab", "scilab", "octave", "mathmFive", "mathematica", "R", "pylab", "plot", "outfile=", "debug"])
+      opts, args = getopt.gnu_getopt(argv[1:], "hm8epo:", ["help", "matlab", "octave", "mathematica", "pylab", "outfile=", "debug"])
     except getopt.error, msg:
       raise Usage(msg)
     
-    plotFlag = False
     userSpecifiedFilename = None
     defaultExtension = None
     outputTemplateClass = MatlabOctaveImport
     
     optionList = [
       ("-m", "--matlab", MatlabOctaveImport),
-      ("-s", "--scilab", ScilabImport),
       ("-8", "--octave", MatlabOctaveImport),
-      ("-a", "--mathmFive", MathematicaFiveImport),
       ("-e", "--mathematica", MathematicaImport),
-      ("-r", "--R", RImport),
-      ("-l", "--pylab", PyLabImport),
+      ("-p", "--pylab", PyLabImport),
     ]
     
     # option processing
@@ -119,8 +112,6 @@ def main(argv=None):
         raise Usage(help_message)
       if option in ("-o", "--outfile"):
         userSpecifiedFilename = value
-      if option in ("-p", "--plot"):
-        plotFlag = True
       if option == '--debug':
         debug = True
       for shortOpt, longOpt, importClass in optionList:
