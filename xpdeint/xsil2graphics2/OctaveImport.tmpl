@@ -16,7 +16,7 @@ Copyright (c) 2013 Graham Dennis.
   @set $variables = xsilObject.independentVariables[:]
 load ${filename}
   @for var in variables:
-    @set varName = var["name"].replace('_', '') + str(objectNum + 1)
+    @set varName = var["name"] + "_" + str(objectNum + 1)
 ${varName} = _${objectNum+1}.${var.name};
   @end for
 @end def
