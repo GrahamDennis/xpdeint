@@ -144,11 +144,13 @@ ${permuteDimensionsOfMATLABVariable(outName)}@slurp
 load ${filename}
   @for var in xsilObject.independentVariables:
     @set outName = $generateVariableName(var, objectNum)
-${outName} = _${objectNum+1}.${var.name};
+    @# We have to do an eval here because variables with leading underscores are not valid in MATLAB
+    @# (although accepted by Octave), and the MATLAB parser dies if there are expressions with leading underscores.
+${outName} = eval('_${objectNum+1}.${var.name}');
   @end for
   @for var in xsilObject.dependentVariables:
     @set outName = $generateVariableName(var, objectNum)
-${outName} = _${objectNum+1}.${var.name};
+${outName} = eval('_${objectNum+1}.${var.name}');
 ${permuteDimensionsOfMATLABVariable(outName)}@slurp
   @end for
 clear _${objectNum+1};
