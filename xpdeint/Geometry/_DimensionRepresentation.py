@@ -194,9 +194,10 @@ class _DimensionRepresentation(ScriptElement):
     matchingAliasReps = [rep for rep in aliasRepresentations if rep.name == accessString]
     if not matchingAliasReps: return
     matchingAliasRep = matchingAliasReps[0]
-    # We cannot access a dim rep nonlocally with an alias that is distributed.
-    if matchingAliasRep.hasLocalOffset: return
-    return matchingAliasRep.loopIndex
+    # We are the dimRep for the vector being accessed nonlocally.  
+    # We need to return the index not in us, but in the corresponding dimRep in field (which is the looping field)
+    fieldDimRep = field.dimensionWithName(self.parent.name).inBasis(basis)
+    return fieldDimRep.localIndexFromIndexForDimensionRep(matchingAliasRep)
     
   
 

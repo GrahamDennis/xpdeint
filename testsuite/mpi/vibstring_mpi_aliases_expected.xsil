@@ -1,0 +1,153 @@
+<?xml version="1.0" ?><simulation xmds-version="2">
+  <testing>
+    <command_line>mpirun -n 4 ./vibstring_mpi_aliases</command_line>
+    <xsil_file absolute_tolerance="1e-7" expected="vibstring_mpi_aliases_expected.xsil" name="vibstring_mpi_aliases.xsil" relative_tolerance="1e-5"/>
+    <xsil_file absolute_tolerance="1e-7" expected="nonlocal_access_test_expected.xsil" name="nonlocal_access_test.xsil" relative_tolerance="1e-5"/>
+  </testing>
+  
+  <name>vibstring_mpi_aliases</name>
+  <author>Graham Dennis</author>
+  <description>
+    Vibrating string
+  </description>
+  
+  <features>
+    <benchmark/>
+    <error_check/>
+    <bing/>
+    <fftw plan="estimate"/>
+
+    <globals>
+      <![CDATA[
+      const real T = 10.0;
+      const real mass = 1e-3;
+      const real length = 1.0;
+      const real mu = mass/length;
+      ]]>
+    </globals>
+    <diagnostics/>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension aliases="y" domain="(0, 1)" lattice="100" name="x"/>
+    </transverse_dimensions>
+  </geometry>
+  
+  <driver name="distributed-mpi"/>
+  
+  <vector initial_basis="x" name="main" type="complex">
+    <components>
+      u uDot
+    </components>
+    <initialisation>
+      <![CDATA[
+        u = exp(-100.0*(x-0.5)*(x-0.5));
+        uDot = 0.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <computed_vector dimensions="x y" name="nonlocal_access_test" type="complex">
+    <components>g</components>
+    <evaluation>
+      <dependencies>main</dependencies>
+      <![CDATA[
+      g = u(x => x) * conj(u(x => y));
+      ]]>
+    </evaluation>
+  </computed_vector>
+  
+  <sequence>
+    <integrate algorithm="RK4" interval="2e-3" steps="100">
+      <samples>50 50</samples>
+      <computed_vector dimensions="" name="moment_creator" type="real">
+        <components>moment</components>
+        <evaluation>
+          <dependencies basis="kx"> main </dependencies>
+          <![CDATA[
+            moment = mod2(u);
+          ]]>
+        </evaluation>
+      </computed_vector>
+      <operators>
+        <operator constant="yes" kind="ex">
+          <operator_names>L</operator_names>
+          <![CDATA[
+            L = -T*kx*kx/mu;
+          ]]>
+        </operator>
+        <integration_vectors>main</integration_vectors>
+        <dependencies>moment_creator</dependencies>
+        <![CDATA[
+          du_dt = uDot;
+          duDot_dt = L[u];
+          moment;
+        ]]>
+      </operators>
+    </integrate>
+    <breakpoint filename="nonlocal_access_test.xsil">
+      <dependencies>nonlocal_access_test</dependencies>
+    </breakpoint>
+  </sequence>
+  
+  <output>
+    <sampling_group basis="x" initial_sample="yes">
+      <moments>amp</moments>
+      <dependencies>main</dependencies>
+      <![CDATA[
+        amp = u.Re();
+      ]]>
+    </sampling_group>
+    <sampling_group basis="kx(50)" initial_sample="no">
+      <moments>amp</moments>
+      <dependencies>main</dependencies>
+      <![CDATA[
+        amp = u.Re();
+        
+      ]]>
+    </sampling_group>
+  </output>
+
+<info>
+Script compiled with XMDS2 version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+See http://www.xmds.org for more information.
+</info>
+
+<XSIL Name="moment_group_1">
+  <Param Name="n_independent">2</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>4</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t x amp error_amp 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>51</Dim>
+    <Dim>100</Dim>
+    <Dim>4</Dim>
+    <Stream><Metalink Format="HDF5" Type="Remote" Group="/1"/>
+vibstring_mpi_aliases_expected.h5
+    </Stream>
+  </Array>
+</XSIL>
+
+<XSIL Name="moment_group_2">
+  <Param Name="n_independent">2</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>4</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t kx amp error_amp 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>50</Dim>
+    <Dim>50</Dim>
+    <Dim>4</Dim>
+    <Stream><Metalink Format="HDF5" Type="Remote" Group="/2"/>
+vibstring_mpi_aliases_expected.h5
+    </Stream>
+  </Array>
+</XSIL>
+</simulation>

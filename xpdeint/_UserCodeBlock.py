@@ -105,7 +105,7 @@ class _UserLoopCodeBlock(_UserCodeBlock):
     loopKWs.update(KWs)
     
     result = self.transformVectorsToBasis(self.dependencies, self.basis)
-    if result: result += '\n'
+    if result: result = "// Transforming vectors to basis (%s)\n%s\n" % (', '.join(self.basis), result)
     loopingVectors = set(self.dependencies)
     if self.targetVector: loopingVectors.add(self.targetVector)
     result += self.loopOverFieldInBasisWithVectorsAndInnerContent(self.field, self.basis, loopingVectors, loopCode, **loopKWs)
