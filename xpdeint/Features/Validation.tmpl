@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *@
 @extends xpdeint.Features._Validation
 
+@import textwrap
+
 @def description: Runtime variable validation
 @attr featureName = 'Validation'
 
@@ -31,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   @end if
 // Run-time validation checks
   @for $validationCheck in $validationChecks
-${validationCheck}@slurp
+${textwrap.dedent(validationCheck)}@slurp
 
   @end for
   @#

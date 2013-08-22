@@ -24,8 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from xpdeint.Features._Feature import _Feature
 
-import textwrap
-
 class _Validation (_Feature):
   def __init__(self, *args, **KWs):
     localKWs = self.extractLocalKWs(['runValidationChecks'], KWs)
@@ -34,9 +32,4 @@ class _Validation (_Feature):
     
     self.validationChecks = []
     self.runValidationChecks = localKWs.get('runValidationChecks', True)
-  
-  def preflight(self):
-    super(_Validation, self).preflight()
-    
-    self.validationChecks = [textwrap.dedent(check) for check in self.validationChecks]
   

@@ -59,14 +59,28 @@ class _UniformDimensionRepresentation(DimensionRepresentation):
     if result: return result
     # We only support non-local access for integer-valued dimensions, or access to the minimum value
     minimum = self.minimum
-    if self.hasLocalOffset:
-      localOffsetString = ' - ' + self.localOffset
-    else: localOffsetString = ''
+    # We shouldn't be called if we are distributed, but let's check just to be safe.
+    if self.hasLocalOffset: return
     
     if not self.type == 'long':
       if not self._stepSize and accessString == self._minimum:
-        return '0%(localOffsetString)s' % locals()
+        return '0'
+      elif accessString == ('-' + self.name):
+        canAccessNegativeVariable = False
+        if self._minimum == ('-' + self._maximum):
+          canAccessNegativeVariable = True
+        elif 'Validation' in self.getVar('features'):
+          canAccessNegativeVariable = True
+          validationFeature = self.getVar('features')['Validation']
+          validationFeature.validationChecks.append("""
+          if (fabs(%(maximum)s + %(minimum)s) > 0.1 * %(stepSize)s)
+            _LOG(_ERROR_LOG_LEVEL, "ERROR: Nonlocal access of dimension '%(dimRepName)s' using '-%(dimRepName)s' is only valid for dimensions symmetric about zero.\\n");\n""" % {'maximum': self.maximum, 'minimum': self.minimum, 'dimRepName': self.name, 'stepSize': self.stepSize})
+        
+        if canAccessNegativeVariable:
+          lattice = self.globalLattice
+          loopIndex = self.loopIndex
+          return '(%(lattice)s - %(loopIndex)s) %% %(lattice)s' % locals()
       return
-    return '(%(accessString)s) - %(minimum)s%(localOffsetString)s' % locals()
+    return '(%(accessString)s) - %(minimum)s' % locals()
   
 
