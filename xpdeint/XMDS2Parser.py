@@ -542,6 +542,8 @@ class XMDS2Parser(ScriptParser):
     if transverseDimensionsElement:
       dimensionElements = transverseDimensionsElement.getChildElementsByTagName('dimension', optional=True)
       
+      aliasDimensions = []
+      
       for dimensionElement in dimensionElements:
         def parseAttribute(attrName):
           if not dimensionElement.hasAttribute(attrName) or len(dimensionElement.getAttribute(attrName)) == 0:
@@ -735,8 +737,13 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
                                        parent = geometryTemplate, transformName = transformName,
                                        aliases = aliasNameSet, volumePrefactor = volumePrefactor,
                                        xmlElement = dimensionElement)
-          geometryTemplate.dimensions.append(dim)
+          if aliasName == dimensionName:
+            geometryTemplate.dimensions.append(dim)
+          else:
+            aliasDimensions.append(dim)
       
+      # Alias dimensions come after normal dimensions so that we don't end up with a distributed-mpi set up over the first dimension and its alias
+      geometryTemplate.dimensions.extend(aliasDimensions)
     
     driver = self.globalNameSpace['features']['Driver']
     if isinstance(driver, DistributedMPIDriverTemplate):
