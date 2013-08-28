@@ -1079,7 +1079,7 @@ An :ref:`<integrate><IntegrateElement>` element must contain one or more ``<oper
 
 Within each ``<operators>`` element, the vectors that are to be integrated are listed by name in the ``<integration_vectors>`` element, and the differential equations are written in a 'CDATA' block.   The derivative of each component of the integration vectors must be defined along the propagation dimension.  For example, if the integration vectors have components 'phi' and 'beta', and the propagation dimension is labelled 'tau', then the 'CDATA' block must define the variables 'dphi_dtau' and 'dbeta_dtau'.  These derivatives can be any function of the available variables, including any components from other vectors, computed vectors or noise vectors that are listed in the optional :ref:`<dependencies><Dependencies>` element.  These dependent vectors must be defined on a subset of the dimensions of the integration vectors.  
     
-When noise vectors are referenced, equations with Wiener noises should be written as though the equations are in differential form, as described in the worked examples :ref:`Kubo` and :ref:`Fibre`.  Jump-based Poisson noises will also be written in an equivalent form, as modelled by the example 'photodetector.xmds`.
+When noise vectors are referenced, equations with Wiener noises should be written as though the equations are in differential form, as described in the worked examples :ref:`Kubo` and :ref:`Fibre`.  Jump-based Poisson noises will also be written in an equivalent form, as modelled by the example ``photodetector.xmds``.
     
 By default, the name of each component references the local value of the vector, but :ref:`nonlocal variables<ReferencingNonlocal>` can be accessed using the standard syntax.  However, typically the most common (and most efficient) method of referencing nonlocal variables is to reference variables that are local in the :ref:`transformed space<Transforms>` for a given transverse dimension.  This is done using ``<operator>`` elements.
     
@@ -1330,3 +1330,10 @@ which is short for
         WR = W.Re();
         WI = W.Im();
       ]]>
+
+Various properties of dimensions are available.  For example, for a dimension called ``x``:
+
+* The number of points is accessible with the variable ``_lattice_x``,
+* The minimum range of that dimension is ``_min_x``,
+* The maximum range of that dimension is ``_max_x``,
+* The step size of a dimension is ``dx``, and if it is constant, also available using ``_dx``, but note that the latter does not include the effect of any ``volumePrefix`` you may have set!
