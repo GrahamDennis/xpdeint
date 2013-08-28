@@ -21,9 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *@
 @extends xpdeint.ScriptElement
 @from xpdeint.PrintfSafeFilter import PrintfSafeFilter
+@from xpdeint.CallOnceGuards import callOnceGuard
 
 @def seedCount
-  @return len($seedArray) or 3
+  @return len($seedArray) or 10
 @end def
 
 @def globals
@@ -32,12 +33,13 @@ uint32_t ${generatorName}_seeds[${seedCount}];
   @#
 @end def
 
-@def initialiseSeeds
+@def initialiseGlobalSeeds
   @#
   @set $featureOrdering = ['Driver']
-  @silent seedOffset = $insertCodeForFeatures('seedOffset', $featureOrdering)
   @#
   @if not $seedArray
+${seedSystemRandomNumberGenerator}@slurp
+    @#
     @set $seedGenerationDict = {'extraIndent': 0}
 ${insertCodeForFeatures('runtimeSeedGenerationBegin', $featureOrdering, $seedGenerationDict)}@slurp
     @silent extraIndent = seedGenerationDict['extraIndent']
@@ -48,12 +50,12 @@ ${insertCodeForFeaturesInReverseOrder('runtimeSeedGenerationEnd', $featureOrderi
 ${generatorName}_seeds[$seedIdx] = $seed;
     @end for
   @end if
-
-uint32_t ${generatorName}_local_seeds[${seedCount}] = { ${', '.join([c'${generatorName}_seeds[$i]${seedOffset}' for i in xrange($seedCount)])} };
   @#
 @end def
 
-@def runtimeGenerateSeeds
+@# We only need to seed the system random number generator once, even if there are multiple Generator objects.
+@@callOnceGuard
+@def seedSystemRandomNumberGenerator
 #if HAVE_SRANDOMDEV
 srandomdev();
 #elif HAVE_DEV_URANDOM
@@ -83,6 +85,18 @@ srandomdev();
 #else
 #error Do not have a run-time random number source! Please supply seeds manually.
 #endif
+@end def
+
+@def initialiseLocalSeeds
+  @#
+  @set $featureOrdering = ['Driver']
+  @silent seedOffset = $insertCodeForFeatures('seedOffset', $featureOrdering)
+  @#
+uint32_t ${generatorName}_local_seeds[${seedCount}] = { ${', '.join([c'${generatorName}_seeds[$i]${seedOffset}' for i in xrange($seedCount)])} };
+  @#
+@end def
+
+@def runtimeGenerateSeeds
 for (unsigned long _i0=0; _i0 < ${seedCount}; _i0++)
   ${generatorName}_seeds[_i0] = (uint32_t)random();
 @end def

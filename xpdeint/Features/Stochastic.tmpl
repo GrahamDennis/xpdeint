@@ -75,13 +75,18 @@ for (long ${dimRep.loopIndex} = 0; ${dimRep.loopIndex} < ${dimRep.globalLattice}
   ${dimRep.stepSizeArrayName}_invsqrt[${dimRep.loopIndex}] = (real)1.0/sqrt(${dimRep.stepSizeArrayName}[${dimRep.loopIndex}] * (${dimRep.volumePrefactor}));
 }
   @end for
+
+  @for noiseVector in $noiseVectors
+${noiseVector.initialiseGlobalSeeds}@slurp
+
+  @end for
   @#
 @end def
 
 @def topLevelSequenceBegin($dict)
   @#
   @for noiseVector in $noiseVectors
-${noiseVector.initialiseSeeds}@slurp
+${noiseVector.initialiseLocalSeeds}@slurp
 
   @end for
   @#

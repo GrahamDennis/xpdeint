@@ -88,5 +88,8 @@ class _NoiseVector (VectorElement):
   def nonUniformDimReps(self):
     return [rep for rep in self.field.inBasis(self.initialBasis) if isinstance(rep, NonUniformDimensionRepresentation)]
   
-  def initialiseSeeds(self):
-    return self.randomVariable.generator.initialiseSeeds()
+  def initialiseGlobalSeeds(self):
+    return self.randomVariable.generator.initialiseGlobalSeeds()
+  
+  def initialiseLocalSeeds(self):
+    return self.randomVariable.generator.initialiseLocalSeeds()
