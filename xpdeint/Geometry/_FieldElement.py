@@ -174,7 +174,7 @@ class _FieldElement (ScriptElement):
     # If an incomplete basis is known for this field, it may be desirable to complete the basis using information from a default.
     basis = basis or ()
     geometry = self.getVar('geometry')
-    dimRepNameToDimMap = dict((dr.name, dim) for dim in self.dimensions for dr in geometry.dimensionWithName(dim.name).representations)
+    dimRepNameToDimMap = dict((dr.canonicalName, dim) for dim in self.dimensions for dr in geometry.dimensionWithName(dim.name).representations)
     missingDimensions = set(self.dimensions)
     for dimRepName in basis:
       missingDimensions.discard(dimRepNameToDimMap[dimRepName])
