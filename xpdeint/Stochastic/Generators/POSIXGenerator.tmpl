@@ -56,7 +56,7 @@ for (long _i0 = 0; _i0 < _vector_size; _i0++) {
   @super
   @#
 bzero(${generatorName}, sizeof(${generatorName}));
-for (unsigned long _i0=0; _i0<${seedCount}; _i0++)
+for (unsigned long _i0=0; _i0<MIN(3, ${seedCount}); _i0++)
   ${generatorName}[_i0] = (unsigned short)${generatorName}_local_seeds[_i0];
 
 erand48(${generatorName});
