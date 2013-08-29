@@ -155,9 +155,9 @@ class _FieldElement (ScriptElement):
       dimRepNames = set([dr.canonicalName for dim in self.dimensions for dr in geometry.dimensionWithName(dim.name).representations])
       if not len(dimRepNames.intersection(basis)) == len(self.dimensions):
         raise ParserException(
-          self.xmlElement,
-          "Internal error: The basis provided (%s) contained insufficient information to generate the appropriate basis for a vector in this field (%s). A specification is required for all dimensions (%s)." %
-          (', '.join(basis), self.name, ', '.join(dim.name for dim in self.dimensions))
+          None,
+          "Internal error: The basis provided (%s) contained insufficient information to generate the appropriate basis for a vector in this field (%s). A specification is required for all dimensions (%s). \n\nPlease report this error to %s." %
+          (', '.join(basis), self.name, ', '.join(dim.name for dim in self.dimensions), self.getVar('bugReportAddress'))
         )
       newBasis = tuple(b for b in basis if b in dimRepNames)
       maxDistributedIdx = max([idx for idx, dimRepName in enumerate(newBasis) if dimRepName.startswith('distributed ')] + [-1])
@@ -169,6 +169,22 @@ class _FieldElement (ScriptElement):
       newBasis = self._driver.canonicalBasisForBasis(newBasis[:maxDistributedIdx+1] + tuple([x[1] for x in orderedDimRepNames]))
       self._basisForBasisCache[basis] = newBasis
     return self._basisForBasisCache[basis]
+  
+  def completedBasisForBasis(self, basis, defaultBasis):
+    # If an incomplete basis is known for this field, it may be desirable to complete the basis using information from a default.
+    basis = basis or ()
+    geometry = self.getVar('geometry')
+    dimRepNameToDimMap = dict((dr.name, dim) for dim in self.dimensions for dr in geometry.dimensionWithName(dim.name).representations)
+    missingDimensions = set(self.dimensions)
+    for dimRepName in basis:
+      missingDimensions.discard(dimRepNameToDimMap[dimRepName])
+    # We now have the missing dimensions, now to find the corresponding dimRepName from the field's defaultCoordinateBasis
+    for dimRepName in defaultBasis:
+      dimension = dimRepNameToDimMap[dimRepName]
+      if dimension in missingDimensions:
+        missingDimensions.discard(dimension)
+        basis += (dimRepName,)
+    return basis
   
   def inBasis(self, basis):
     """

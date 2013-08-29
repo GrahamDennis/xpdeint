@@ -186,9 +186,11 @@ class _VectorElement (ScriptElement):
             dependenciesXMLElement.getAttribute('basis'),
             xmlElement = dependenciesXMLElement
           )
-      if codeBlock.basis is None:
-        codeBlock.basis = codeBlock.field.defaultCoordinateBasis
-    
+      
+      # Because we have modified the codeBlock's field, we may also need to modify its basis.
+      # We will take any missing elements from the new field's defaultCoordinateBasis
+      codeBlock.basis = codeBlock.field.completedBasisForBasis(codeBlock.basis, codeBlock.field.defaultCoordinateBasis)
+      
       self.initialBasis = self.field.basisForBasis(codeBlock.basis)
       self.basesNeeded.add(self.initialBasis)
     
