@@ -36,6 +36,7 @@ class _SplitUniformDimensionRepresentation(DimensionRepresentation):
     if loopingOrder == self.LoopingOrder.MemoryOrder:
       return self.openLoopMemoryOrder()
     elif loopingOrder == self.LoopingOrder.StrictlyAscendingOrder:
+      assert not self.hasLocalOffset
       return self.openLoopAscending()
     else:
       raise NotImplemented
