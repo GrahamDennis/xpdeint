@@ -440,12 +440,12 @@ The "dft" transform is performed using the the normal discrete Fourier transform
 
 .. math::
 
-    \mathcal{F}\left[f(x)\right](k) = \frac{1}{2\pi}\int_{x_\text{min}}^{x_\text{max}} f(x) e^{-i k x} dx
+    \mathcal{F}\left[f(x)\right](k) = \frac{1}{\sqrt{2\pi}}\int_{x_\text{min}}^{x_\text{max}} f(x) e^{-i k x} dx
 
 The discrete Fourier transform has no information about the domain of the lattice, so the XMDS2 transform is equivalent to
 
 .. math::
-    \tilde{\mathcal{F}}\left[f(x)\right](k) &= \frac{1}{2\pi}\int_{x_\text{min}}^{x_\text{max}} f(x) e^{-i k (x+ x_\text{min})} dx \\
+    \tilde{\mathcal{F}}\left[f(x)\right](k) &= \frac{1}{\sqrt{2\pi}}\int_{x_\text{min}}^{x_\text{max}} f(x) e^{-i k (x+ x_\text{min})} dx \\
     &= e^{-i x_\text{min} k} \mathcal{F}\left[f(x)\right](k)
 
 The standard usage in an XMDS simulation involves moving to Fourier space, applying a transformation, and then moving back.  For this purpose, the two transformations are entirely equivalent as the extra phase factor cancels.  However, when fields are explicitly defined in Fourier space, care must be taken to include this phase factor explicitly.  See section :ref:`Convolutions` in the Advanced Topics section.
