@@ -141,7 +141,7 @@ def main(argv=None):
   from Version import subversionRevisionString
   
   print "xmds2 version %(versionString)s (%(subversionRevisionString)s)" % locals()
-  print "Copyright 2000-2012 Graham Dennis, Joseph Hope, Mattias Johnsson"
+  print "Copyright 2000-2013 Graham Dennis, Joseph Hope, Mattias Johnsson"
   print "                    and the xmds team"
   
   if not os.path.isdir(xpdeintUserDataPath):
