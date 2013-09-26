@@ -1,3 +1,23 @@
+**** XMDS 2.1.4 "Well if this isn't nice, I don't know what is" ****
+
+The XMDS 2.1.4 update contains many new improvements and bugfixes:
+
+* `xsil2graphics2` now supports all output formats for MATLAB, Octave and Python.  The scripts generated for MATLAB/Octave are compatible with both.
+* Fix a bug when nonlocally referencing a dimension alias with subsampling in `sampling_group` blocks or in some situations when MPI is used.  This bug caused incorrect elements of the vector to be accessed.
+* Correct the Fourier basis for dimensions using Hermite-Gauss transforms.  Previously 'kx' was effectively behaving as '-kx'.
+* Improve the performance of 'nx' <--> 'kx' Hermite-Gauss transforms.
+* Stochastic error checking with runtime noise generation now works correctly.  Previously different random numbers were generated for the full-step paths and the half-step paths.
+* Documentation updates.
+
+**** XMDS 2.1.3 "Happy Mollusc" ****
+
+The XMDS 2.1.3 update is a bugfix release that includes the following improvements:
+
+* XMDS will work when MPI isn't installed (but only for single-process simulations).
+* Support for GCC 4.8
+* The number of paths used by the multi-path driver can now be specified at run-time (using `<validation kind="run-time">`)
+* Other bug fixes
+
 **** XMDS 2.1.2 "Happy Mollusc" ****
 
 We have published a paper in Computer Physics Communications.  If you use XMDS2 in your research, we would appreciate it if you cited us in your publications:
