@@ -81,9 +81,9 @@ In both cases, although the old syntax is not described in the documentation, it
 Other changes in XMDS 2.1 include:
 
 * The *lattice* attribute for dimensions can now be specified at run-time.  Previously only the minimum and maximum values of the domain could be specified at run-time.  See :ref:`here<Validation>` for details.
-* *noise_vector*s can now be used in non-uniform dimensions (e.g. dimensions using the Bessel transform for cylindrical symmetry).
+* *noise_vectors* can now be used in non-uniform dimensions (e.g. dimensions using the Bessel transform for cylindrical symmetry).
 * "loose" *geometry_matching_mode* for HDF5 vector initialisation.  This enables extending the simulation grid from one simulation to the next, or coarsening or refining a grid when importing.
-* *vector*s can now be initialised by integrating over dimensions of other vectors.  *computed_vector*s always supported this, now *vector*s do too.
+* *vectors* can now be initialised by integrating over dimensions of other vectors.  *computed_vectors* always supported this, now *vectors* do too.
 * Update to latest version of waf, which is used for compiling simulations and detecting FFTW, HDF5, etc. This should lead to fewer waf-related problems.
 * Bug fixes.
 
