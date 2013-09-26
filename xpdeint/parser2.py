@@ -229,9 +229,11 @@ def main(argv=None):
   
   wscript_path = resource_filename(__name__, 'support/wscript')
   wscript_userdata_path = os.path.join(xpdeintUserDataPath, 'wscript')
+  waf_build_cache_path = os.path.join(xpdeintUserDataPath, 'waf_configure/c4che/_cache.py')
   
   if not os.path.isfile(wscript_userdata_path) or \
-    fileContentsHash(wscript_userdata_path) != fileContentsHash(wscript_path):
+    fileContentsHash(wscript_userdata_path) != fileContentsHash(wscript_path) or \
+    not os.path.exists(waf_build_cache_path):
     print "Reconfiguring xmds2 (updated config script)..."
     
     Configuration.run_reconfig()
