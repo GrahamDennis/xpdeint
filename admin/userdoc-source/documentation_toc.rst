@@ -30,3 +30,4 @@ Welcome to the documentation for XMDS2!
 
    licensing
    
+   news

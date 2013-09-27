@@ -166,7 +166,7 @@ htmlhelp_basename = 'xpdeintdoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, document class [howto/manual]).
 latex_documents = [
-  ('index', 'xmds2.tex', u'XMDS2 Documentation',
+  ('documentation_toc', 'xmds2.tex', u'XMDS2 Documentation',
    u'Graham Dennis, Joe Hope and Mattias Johnsson', 'manual'),
 ]
 
