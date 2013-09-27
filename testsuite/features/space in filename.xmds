@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <arguments>--time_factor 2.0 --size 25.0</arguments>
+    <xsil_file name="space in filename.xsil" expected="arguments_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+  </testing>
+  
+  <name>space in filename</name>
+  <author>Graham Dennis</author>
+  <description>
+    This is a modified version of arguments to check that we can have simulations with spaces in the name.
+    
+    Simple one-dimensional diffusion with a pointless second dimension thrown in for fun.
+    Uses arguments and argument preprocessing. Essentially the simulation "looks" the
+    same for any given "size", as the interval/etc is scaled to fit the interesting region.
+    The user may use width_scale, time_scale and ratio to zoom out and in...
+  </description>
+  
+  <features>
+    <benchmark />
+    <fftw plan="exhaustive" />
+    <validation kind="run-time"/>
+    <globals>
+      <![CDATA[
+      real minx;
+      real maxx;
+      real miny;
+      real maxy;
+      real width;
+      real time_interval;
+      ]]>
+    </globals>
+    <arguments>
+      <argument name="size" type="real" default_value="20.0"/>
+      <argument name="ratio" type="real" default_value="0.1"/>
+      <argument name="width_factor" type="real" default_value="1.0"/>
+      <argument name="time_factor" type="real" default_value="1.0"/>
+      <![CDATA[
+      minx = -0.5*size;
+      maxx = 0.5*size;
+      miny = -0.5*size*ratio;
+      maxy = 0.5*size*ratio;
+      width = 0.5*sqrt(0.5)*size*ratio*width_factor; // half the simulation size
+      // The time intersting stuff happens scales as width^2
+      time_interval = 20.0 * width*width * time_factor;
+      ]]>
+    </arguments>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="x" lattice="32"  domain="(minx, maxx)" />
+      <dimension name="y" lattice="128" domain="(miny, maxy)" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="main" initial_basis="x y" type="complex">
+    <components>
+      phi
+    </components>
+    <initialisation>
+      <![CDATA[
+        phi = exp(-y*y/(2*width*width));
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <!-- This is an interesting simulation because using IP operators means there is NO error due to the algorithm (though there may be numerical error) -->
+    <integrate algorithm="RK4" interval="time_interval" steps="24">
+      <samples>24</samples>
+      <operators>
+        <operator kind="ip" constant="yes" basis="x ky">
+          <operator_names>L</operator_names>
+          <![CDATA[
+            L = -0.02*ky*ky;
+          ]]>
+        </operator>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+          dphi_dt = L[phi];
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  <output format="binary">
+      <sampling_group basis="x(0) y" initial_sample="yes">
+        <moments>dens</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          dens = mod2(phi);
+        ]]>
+      </sampling_group>
+  </output>
+</simulation>

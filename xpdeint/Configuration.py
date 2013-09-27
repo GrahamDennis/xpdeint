@@ -162,7 +162,7 @@ def run_build(source_name, target_name, variant = 'default', buildKWs = {}, verb
     ctx.out_dir = cwd
     def build(ctx):
         ctx.program(
-            source = source_name,
+            source = [source_name],
             target = target_name,
             **buildKWs
         )

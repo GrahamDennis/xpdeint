@@ -43,7 +43,10 @@ def f(tsk):
 	gen = tsk.generator
 	bld = gen.bld
 	wd = getattr(tsk, 'cwd', None)
-	p = env.get_flat
+	def p(key):
+		s = env[key]
+		if isinstance(s, str): return '"' + s + '"'
+		return ' '.join('"' + x + '"' for x in s)
 	tsk.last_cmd = cmd = \'\'\' %s \'\'\' % s
 	return tsk.exec_command(cmd, cwd=wd, env=env.env or None)
 '''
@@ -390,7 +393,7 @@ class TaskBase(evil):
 			lst = []
 			for y in it:
 				lst.extend(tmp)
-				lst.append(y)
+				lst.append('"' + y + '"')
 			return lst
 
 class Task(TaskBase):
@@ -1018,11 +1021,11 @@ def compile_fun_shell(line):
 	app = parm.append
 	for (var, meth) in extr:
 		if var == 'SRC':
-			if meth: app('tsk.inputs%s' % meth)
-			else: app('" ".join([a.path_from(bld.bldnode) for a in tsk.inputs])')
+			if meth: app('"\\"" + tsk.inputs%s + "\\""' % meth)
+			else: app('" ".join(["\\"" + a.path_from(bld.bldnode) + "\\"" for a in tsk.inputs])')
 		elif var == 'TGT':
-			if meth: app('tsk.outputs%s' % meth)
-			else: app('" ".join([a.path_from(bld.bldnode) for a in tsk.outputs])')
+			if meth: app('"\\"" + tsk.outputs%s + "\\""' % meth)
+			else: app('" ".join(["\\"" + a.path_from(bld.bldnode) + "\\"" for a in tsk.outputs])')
 		elif meth:
 			if meth.startswith(':'):
 				m = meth[1:]

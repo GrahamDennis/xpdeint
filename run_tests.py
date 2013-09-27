@@ -67,7 +67,7 @@ def scriptTestingFunction(root, scriptName, testDir, absPath, self):
   if not os.path.exists(testDir):
     os.makedirs(testDir)
   
-  proc = subprocess.Popen('xmds2 --no-version ' + absPath,
+  proc = subprocess.Popen('xmds2 --no-version ' + '"' + absPath + '"',
                           shell=True,
                           stdout=subprocess.PIPE,
                           stderr=subprocess.PIPE,
@@ -135,10 +135,10 @@ def scriptTestingFunction(root, scriptName, testDir, absPath, self):
   # Allow command-line arguments to be specified for the simulation
   commandLineElement = testingElement.getChildElementByTagName('command_line', optional=True)
   argumentsElement = testingElement.getChildElementByTagName('arguments', optional=True)
-  commandLineString = './' + simulationName
+  commandLineString = '"./' + simulationName + '"'
   if commandLineElement:
     # The command line element overrides the prefix
-    commandLineString = commandLineElement.innerText().strip()
+    commandLineString = '"' + commandLineElement.innerText().strip() + '"'
   if argumentsElement:
     commandLineString += ' ' + argumentsElement.innerText().strip()
   
