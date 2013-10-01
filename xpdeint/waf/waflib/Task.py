@@ -43,10 +43,12 @@ def f(tsk):
 	gen = tsk.generator
 	bld = gen.bld
 	wd = getattr(tsk, 'cwd', None)
+	def _fixSpace(s):
+		return s if ' ' not in s else '"' + s + '"'
 	def p(key):
 		s = env[key]
-		if isinstance(s, str): return '"' + s + '"'
-		return ' '.join('"' + x + '"' for x in s)
+		if isinstance(s, str): return _fixSpace(s)
+		return ' '.join(_fixSpace(x) for x in s)
 	tsk.last_cmd = cmd = \'\'\' %s \'\'\' % s
 	return tsk.exec_command(cmd, cwd=wd, env=env.env or None)
 '''
@@ -60,11 +62,15 @@ def f(tsk):
 	def to_list(xx):
 		if isinstance(xx, str): return [xx]
 		return xx
+	def _fixSpace(s):
+		return s if ' ' not in s else '"' + s + '"'
 	tsk.last_cmd = lst = []
 	%s
 	lst = [x for x in lst if x]
 	return tsk.exec_command(lst, cwd=wd, env=env.env or None)
 '''
+
+def _fixSpace(s): return s if ' ' not in s else '"' + s + '"'
 
 def cache_outputs(cls):
 	"""
@@ -386,14 +392,14 @@ class TaskBase(evil):
 		else:
 			it = var2
 		if isinstance(tmp, str):
-			return [tmp % '"' + x + '"' for x in it]
+			return [tmp % _fixSpace(x) for x in it]
 		else:
 			if Logs.verbose and not tmp and it:
 				Logs.warn('Missing env variable %r for task %r (generator %r)' % (var1, self, self.generator))
 			lst = []
 			for y in it:
 				lst.extend(tmp)
-				lst.append('"' + y + '"')
+				lst.append(y if ' ' not in y else '"' + y + '"')
 			return lst
 
 class Task(TaskBase):
@@ -1021,11 +1027,11 @@ def compile_fun_shell(line):
 	app = parm.append
 	for (var, meth) in extr:
 		if var == 'SRC':
-			if meth: app('"\\"" + tsk.inputs%s + "\\""' % meth)
-			else: app('" ".join(["\\"" + a.path_from(bld.bldnode) + "\\"" for a in tsk.inputs])')
+			if meth: app('_fixSpace(tsk.inputs%s)' % meth)
+			else: app('" ".join([_fixSpace(a.path_from(bld.bldnode)) for a in tsk.inputs])')
 		elif var == 'TGT':
-			if meth: app('"\\"" + tsk.outputs%s + "\\""' % meth)
-			else: app('" ".join(["\\"" + a.path_from(bld.bldnode) + "\\"" for a in tsk.outputs])')
+			if meth: app('_fixSpace(tsk.outputs%s)' % meth)
+			else: app('" ".join([_fixSpace(a.path_from(bld.bldnode)) for a in tsk.outputs])')
 		elif meth:
 			if meth.startswith(':'):
 				m = meth[1:]
