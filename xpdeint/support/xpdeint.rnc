@@ -215,6 +215,7 @@ IPEXOperatorContents =
     , attribute constant { Bool }?
     , attribute basis { text }?
     , attribute type { text }?
+    , attribute dimensions { text }?
     , ( element operator_names { text }
     & Dependencies?
     & text )

@@ -21,7 +21,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 *@
-@extends xpdeint.Operators._IPOperator
+@extends xpdeint.Operators.IPOperator
 
 @attr $calculateOperatorFieldFunctionArguments = []
 
@@ -63,29 +63,6 @@ _${operatorVector.id}[_${operatorVector.id}_index_pointer + ${offsetIndex}] = ${
 unsigned long _exponentIndex = (abs(_exponent) - 1) * $len($operatorComponents);
 
   @end if
-if (_exponent > 0) {
-  ${loopOverVectorsInBasisWithInnerContent($setOfVectorsToLoopOver, $operatorBasis, $insideEvaluateOperatorLoops('*')), autoIndent=True}@slurp
-} else {
-  ${loopOverVectorsInBasisWithInnerContent($setOfVectorsToLoopOver, $operatorBasis, $insideEvaluateOperatorLoops('/')), autoIndent=True}@slurp
-}
-  @#
-@end def
-
-@def insideEvaluateOperatorLoops($operationString)
-  @#
-${insideEvaluateOperatorLoopsBegin}@slurp
-  @#
-  @for operatorComponentNumber, (operatorComponentName, operatorComponentVectors) in enumerate($operatorComponents.iteritems())
-    @for targetVectorComponents in operatorComponentVectors.itervalues()
-      @for targetVectorComponent in targetVectorComponents
-// ${operatorComponentName}[$targetVectorComponent]
-$targetVectorComponent ${operationString}= _${operatorVector.id}[_${operatorVector.id}_index_pointer + $operatorComponentNumber@slurp
-        @if len($integrator.ipPropagationStepFractions) > 1
- + _exponentIndex@slurp
-        @end if
-];
-      @end for
-    @end for
-  @end for
+${applyIPOperator(setOfVectorsToLoopOver)}@slurp
   @#
 @end def

@@ -50,10 +50,24 @@
       <samples> 0 </samples>
       <operators>
 
-        <operator kind="ip" constant="yes">
-          <operator_names> T </operator_names>
+        <operator kind="ip" constant="yes" dimensions="x">
+          <operator_names> Tx </operator_names>
           <![CDATA[
-            T = -i * 0.5 * (kx * kx + ky * ky + kz*kz);
+            Tx = -i * 0.5 * (kx * kx);
+          ]]>
+        </operator>
+
+        <operator kind="ip" constant="yes" dimensions="y">
+          <operator_names> Ty </operator_names>
+          <![CDATA[
+            Ty = -i * 0.5 * (ky * ky);
+          ]]>
+        </operator>
+
+        <operator kind="ip" constant="yes" dimensions="z">
+          <operator_names> Tz </operator_names>
+          <![CDATA[
+            Tz = -i * 0.5 * (kz*kz);
           ]]>
         </operator>
 
@@ -62,7 +76,7 @@
         </integration_vectors> 
         <dependencies> potential </dependencies>
         <![CDATA[
-          dpsi_dt = T[psi] - i * (V + g * mod2(psi)) * psi;
+          dpsi_dt = Tx[psi] + Ty[psi] + Tz[psi] - i * (V + g * mod2(psi)) * psi;
         ]]>
       </operators>
     </integrate>

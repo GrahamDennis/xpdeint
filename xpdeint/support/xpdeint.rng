@@ -441,6 +441,9 @@
     <optional>
       <attribute name="type"/>
     </optional>
+    <optional>
+      <attribute name="dimensions"/>
+    </optional>
     <interleave>
       <element name="operator_names">
         <text/>

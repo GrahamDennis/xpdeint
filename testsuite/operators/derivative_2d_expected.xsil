@@ -1,0 +1,88 @@
+<?xml version="1.0" ?><simulation xmds-version="2">
+  <testing>
+    <xsil_file absolute_tolerance="1e-7" expected="derivative_2d_expected.xsil" name="constant_complex_ip_2d.xsil" relative_tolerance="1e-5"/>
+  </testing>
+  
+  <name>constant_complex_ip_2d</name>
+  <author>Graham Dennis</author>
+  <description>
+    Simple two-dimensional diffusion using the IP operator (of complex type)
+  </description>
+  
+  <features>
+    <benchmark/>
+    <bing/>
+    <fftw plan="estimate"/>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension domain="(-1.0, 1.0)" lattice="32" name="y"/>
+      <dimension domain="(-1.0, 1.0)" lattice="32" name="x"/>
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector initial_basis="x y" name="main" type="complex">
+    <components>
+      phi
+    </components>
+    <initialisation>
+      <![CDATA[
+        phi = exp(-y*y - 0.5*x*x);
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="RK4" interval="10.0" steps="2400" tolerance="1e-5">
+      <samples>24</samples>
+      <operators>
+        <operator constant="yes" kind="ip" type="complex">
+          <operator_names>L</operator_names>
+          <![CDATA[
+            L = -0.02*(ky*ky + kx*kx);
+          ]]>
+        </operator>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+          dphi_dt = L[phi];
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  
+  <output format="binary">
+      <sampling_group basis="y x" initial_sample="yes">
+        <moments>dens</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          dens = mod2(phi);
+        ]]>
+      </sampling_group>
+  </output>
+
+<info>
+Script compiled with XMDS2 version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+See http://www.xmds.org for more information.
+</info>
+
+<XSIL Name="moment_group_1">
+  <Param Name="n_independent">3</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>4</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t y x dens 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>25</Dim>
+    <Dim>32</Dim>
+    <Dim>32</Dim>
+    <Dim>4</Dim>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint64" precision="double" Type="Remote" Encoding="LittleEndian"/>
+derivative_2d_expected_mg0.dat
+    </Stream>
+  </Array>
+</XSIL>
+</simulation>

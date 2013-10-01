@@ -1722,7 +1722,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
                                              xmlElement = operatorElement,
                                              **self.argumentsToTemplateConstructors)
     
-    operatorDefinitionCodeBlock = _UserLoopCodeBlock(field = operatorContainer.field, xmlElement = operatorElement,
+    operatorDefinitionCodeBlock = _UserLoopCodeBlock(field = operatorTemplate.field, xmlElement = operatorElement,
                                                      parent = operatorTemplate, **self.argumentsToTemplateConstructors)
     operatorDefinitionCodeBlock.dependenciesEntity = self.parseDependencies(operatorElement, optional=True)
     
@@ -1736,11 +1736,28 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
   def parseIPOperatorElement(self, operatorTemplate, operatorElement):
     operatorDefinitionCodeBlock = operatorTemplate.primaryCodeBlock
     
+    if operatorElement.hasAttribute('dimensions'):
+      dimensionsString = operatorElement.getAttribute('dimensions').strip()
+      dimensionNames = Utilities.symbolsInString(dimensionsString, xmlElement = operatorElement)
+      if not dimensionNames:
+        raise ParserException(operatorElement, "Cannot understand '%(dimensionsString)s' as a "
+                                            "list of dimensions" % locals())
+      
+      for dimensionName in dimensionNames:
+        if not operatorTemplate.field.hasDimensionName(dimensionName):
+          raise ParserException(operatorElement, "Cannot list dimension '%(dimensionName)s' as a dimension as the integration vectors don't have this dimension." % locals())
+      field = FieldElementTemplate.sortedFieldWithDimensionNames(dimensionNames, xmlElement = operatorElement)
+      operatorTemplate.field = field
+      operatorTemplate.primaryCodeBlock.field = field
+      
+    
+    basis = None
     if operatorElement.hasAttribute('basis'):
-      operatorDefinitionCodeBlock.basis = \
-        operatorTemplate.field.basisFromString(operatorElement.getAttribute('basis'), xmlElement = operatorElement)
+      basis = operatorTemplate.field.basisFromString(operatorElement.getAttribute('basis'), xmlElement = operatorElement)
     else:
-      operatorDefinitionCodeBlock.basis = operatorTemplate.field.defaultSpectralBasis
+      basis = operatorTemplate.field.defaultSpectralBasis
+    
+    operatorDefinitionCodeBlock.basis = basis = operatorTemplate.parent.field.completedBasisForBasis(basis, operatorTemplate.parent.field.defaultSpectralBasis)
     
     operatorNamesElement = operatorElement.getChildElementByTagName('operator_names')
     operatorNames = Utilities.symbolsInString(operatorNamesElement.innerText(), xmlElement = operatorNamesElement)
