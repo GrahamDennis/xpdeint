@@ -150,7 +150,7 @@ def scriptTestingFunction(root, scriptName, testDir, absPath, self):
   (stdout, stderr) = simulationProc.communicate()
   returnCode = simulationProc.wait()
   
-  self.assert_(returnCode == 0, "Failed to execute compiled simulation correctly." % locals())
+  self.assert_(returnCode == 0, "Failed to execute compiled simulation correctly. Got returnCode %(returnCode)i;\nstdout = %(stdout)s;\nstderr = %(stderr)s\n" % locals())
   
   # The next thing to check is that the generated data agrees with the expected data to within the set error margins.
   xsilFileElements = testingElement.getChildElementsByTagName('xsil_file', optional=True)
