@@ -138,7 +138,7 @@ def scriptTestingFunction(root, scriptName, testDir, absPath, self):
   commandLineString = '"./' + simulationName + '"'
   if commandLineElement:
     # The command line element overrides the prefix
-    commandLineString = '"' + commandLineElement.innerText().strip() + '"'
+    commandLineString = commandLineElement.innerText().strip()
   if argumentsElement:
     commandLineString += ' ' + argumentsElement.innerText().strip()
   
