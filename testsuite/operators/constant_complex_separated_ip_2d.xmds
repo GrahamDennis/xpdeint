@@ -39,13 +39,13 @@
     <integrate algorithm="RK4" interval="10.0" steps="2400" tolerance="1e-5">
       <samples>24</samples>
       <operators>
-        <operator kind="ip" constant="yes" type="complex">
+        <operator kind="ip" constant="yes" type="complex" dimensions="x">
           <operator_names>Lx</operator_names>
           <![CDATA[
           Lx = -0.02*(kx*kx);
           ]]>
         </operator>
-        <operator kind="ip" constant="yes" type="complex">
+        <operator kind="ip" constant="yes" type="complex" dimensions="y">
           <operator_names>Ly</operator_names>
           <![CDATA[
           Ly = -0.02*(ky*ky);
