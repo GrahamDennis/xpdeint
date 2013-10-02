@@ -177,14 +177,14 @@ class _FieldElement (ScriptElement):
     dimRepNameToDimMap = dict((dr.canonicalName, dim) for dim in self.dimensions for dr in geometry.dimensionWithName(dim.name).representations)
     missingDimensions = set(self.dimensions)
     for dimRepName in basis:
-      missingDimensions.discard(dimRepNameToDimMap[dimRepName])
+      missingDimensions.discard(dimRepNameToDimMap.get(dimRepName))
     # We now have the missing dimensions, now to find the corresponding dimRepName from the field's defaultCoordinateBasis
     for dimRepName in defaultBasis:
       dimension = dimRepNameToDimMap[dimRepName]
       if dimension in missingDimensions:
         missingDimensions.discard(dimension)
         basis += (dimRepName,)
-    return basis
+    return self.basisForBasis(basis)
   
   def inBasis(self, basis):
     """

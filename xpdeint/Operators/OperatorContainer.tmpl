@@ -1,0 +1,129 @@
+@*
+OperatorContainer.tmpl
+
+Operator Container
+
+Created by Graham Dennis on 2013-10-02.
+
+Copyright (c) 2013, Graham Dennis
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+*@
+@extends xpdeint.Operators._OperatorContainer
+@from xpdeint.ParserException import ParserException
+
+@def evaluateIPOperators(arguments = None, parentFunction = None, **KWs)
+  @if len($ipOperators) == 0
+    @return ''
+  @end if
+  @#
+  @set targetVectors = set()
+  @set setOfVectorsToLoopOver = set()
+  @set basisSet = set()
+  @set dimensionNames = set()
+  @set haveMultipleIPOperatorFractions = len($parent.ipPropagationStepFractions) > 1
+  @#
+  @for ipOperator in $ipOperators
+    @silent targetVectors.update(ipOperator.targetVectors)
+    @silent setOfVectorsToLoopOver.update(ipOperator.targetVectors)
+    @silent setOfVectorsToLoopOver.add(ipOperator.operatorVector)
+    @if ipOperator.resultVector
+      @silent setOfVectorsToLoopOver.add(ipOperator.resultVector)
+    @end if
+    @#
+    @for dim in ipOperator.field.dimensions
+      @if dim.name in dimensionNames and not dim.inBasis(ipOperator.operatorBasis).name in basisSet
+        @raise ParserException(ipOperator.xmlElement, "The basis of this IP operator (%s) conflicts with that of a previous IP operator.  "
+                                                      "For example, it isn't possible to have one IP operator acting in the 'x' basis and another in the 'kx' basis."
+                                                            % ', '.join(ipOperator.operatorBasis))
+      @end if
+      @#
+      @silent dimensionNames.add(dim.name)
+      @silent basisSet.add(dim.inBasis(ipOperator.operatorBasis).name)
+    @end for
+    @#
+    @if $haveMultipleIPOperatorFractions
+unsigned long _${ipOperator.id}_exponentIndex = ${ipOperator.exponentIndex};
+    @end if
+  @end for
+
+  @#
+  @silent basis = $field.completedBasisForBasis(tuple(basisSet), $field.defaultSpectralBasis)
+  @#
+${transformVectorsToBasis(targetVectors, basis)}@slurp
+  @#
+
+${applyIPOperator(setOfVectorsToLoopOver, basis)}@slurp
+
+  @for ipOperator in $ipOperators
+    @if ipOperator.resultVector and ipOperator.resultVector.needsTransforms
+_${ipOperator.resultVector.id}_basis = $basisIndexForBasis($ipOperator.operatorBasis);
+    @end if
+  @end for
+
+@end def
+
+
+@def applyIPOperator($setOfVectorsToLoopOver, $operatorBasis)
+  @#
+if (_exponent > 0) {
+  ${doIPLoop(setOfVectorsToLoopOver, operatorBasis, '*'), autoIndent=True}@slurp
+} else {
+  ${doIPLoop(setOfVectorsToLoopOver, operatorBasis, '/'), autoIndent=True}@slurp
+}
+  @#
+@end def
+
+@def doIPLoop($setOfVectorsToLoopOver, $operatorBasis, $operation)
+  @#
+  @set loopingField = $field
+  @if all(v.field.isEquivalentToField(loopingField) for v in setOfVectorsToLoopOver)
+${loopOverVectorsInBasisWithInnerContent($setOfVectorsToLoopOver, $operatorBasis, $insideEvaluateOperatorLoops($operation))}@slurp
+  @else
+${loopOverFieldInBasisWithVectorsAndInnerContent($loopingField, $operatorBasis, $setOfVectorsToLoopOver, $insideEvaluateOperatorLoops($operation))}@slurp
+  @end if
+  @#
+@end def
+
+@def insideEvaluateOperatorLoops($operationString)
+  @#
+  @set operationsDict = dict()
+  @set haveMultipleIPOperatorFractions = len($parent.ipPropagationStepFractions) > 1
+  @#
+  @for ipOperator in $ipOperators
+    @for operatorComponentNumber, (operatorComponentName, operatorComponentVectors) in enumerate($ipOperator.operatorComponents.iteritems())
+      @for targetVectorComponents in operatorComponentVectors.itervalues()
+        @for targetVectorComponent in targetVectorComponents
+          @capture operation
+/* ${operatorComponentName}[$targetVectorComponent] */ _${ipOperator.operatorVector.id}[_${ipOperator.operatorVector.id}_index_pointer + $operatorComponentNumber@slurp
+            @if $haveMultipleIPOperatorFractions
+ + _${ipOperator.id}_exponentIndex@slurp
+            @end if
+]@slurp
+          @end capture
+          @#
+          @silent operationsDict.setdefault(targetVectorComponent, [])
+          @silent operationsDict[targetVectorComponent].append(operation)
+        @end for
+      @end for
+    @end for
+  @end for
+  @#
+  @for targetVectorComponent, operations in operationsDict.iteritems()
+    @silent joinString = '\n' + ' '*len(targetVectorComponent) + ' *  '
+${targetVectorComponent} ${operationString}= ${joinString.join(operations)};
+  @end for
+  @#
+@end def

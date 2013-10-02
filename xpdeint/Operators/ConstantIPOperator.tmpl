@@ -55,12 +55,16 @@ _${operatorVector.id}[_${operatorVector.id}_index_pointer + ${offsetIndex}] = ${
   @#
 @end def
 
+@def exponentIndex
+(abs(_exponent) - 1) * ${len($operatorComponents)}@slurp
+@end def
+
 @def evaluateOperatorLoop($setOfVectorsToLoopOver)
   @#
   @# We expect the integrator to have defined _exponent
   @#
   @if len($integrator.ipPropagationStepFractions) > 1
-unsigned long _exponentIndex = (abs(_exponent) - 1) * $len($operatorComponents);
+unsigned long _exponentIndex = ${exponentIndex};
 
   @end if
 ${applyIPOperator(setOfVectorsToLoopOver)}@slurp

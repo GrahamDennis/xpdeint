@@ -29,9 +29,9 @@ from xpdeint.ParserException import ParserException
 
 from xpdeint.Utilities import lazy_property, valueForKeyPath
 
-class OperatorContainer(ScriptElement):
+class _OperatorContainer(ScriptElement):
   """
-  The `OperatorContainer` is, as the name suggests, a container for operators.
+  The `_OperatorContainer` is, as the name suggests, a container for operators.
   The idea is that there are many places where you want to be able to have a set
   of operators and you want to be execute all of them without worrying too much
   about what operators they are. 
@@ -119,7 +119,7 @@ class OperatorContainer(ScriptElement):
   
   @property
   def children(self):
-    children = super(OperatorContainer, self).children
+    children = super(_OperatorContainer, self).children
     children.extend(self.operators)
     return children
   
@@ -174,7 +174,7 @@ class OperatorContainer(ScriptElement):
     return '\n'.join(['// ' + op.description() + '\n' + op.functions[functionName].call(arguments, parentFunction = parentFunction, **KWs) + '\n' for op in operators])
   
   def preflight(self):
-    super(OperatorContainer, self).preflight()
+    super(_OperatorContainer, self).preflight()
     
     if self.field and self.deltaAOperator:
       assert self.field == self.deltaAOperator.field
