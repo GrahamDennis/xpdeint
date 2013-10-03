@@ -76,6 +76,7 @@ class _OperatorContainer(ScriptElement):
     # Set default state
     self.ipOperators = []
     self.preDeltaAOperators = []
+    self.ipOperatorBasis = None
     self.deltaAOperator = None
     self.postDeltaAOperators = []
     self.field = localKWs.get('field', None)
@@ -179,4 +180,25 @@ class _OperatorContainer(ScriptElement):
     if self.field and self.deltaAOperator:
       assert self.field == self.deltaAOperator.field
     
+    if self.ipOperators:
+      ipOperatorBasisSet = set()
+      ipOperatorDimensionNames = set()
+      for ipOperator in self.ipOperators:
+        assert not ipOperator.resultVector
+        operatorBasis = ipOperator.field.basisForBasis(ipOperator.operatorBasis)
+        for dim in ipOperator.field.dimensions:
+          if dim.name in ipOperatorDimensionNames and not dim.inBasis(operatorBasis).name in ipOperatorBasisSet:
+            raise ParserException(ipOperator.xmlElement,
+            "The basis for this IP operator (%s) conflicts with that of a previous IP operator.  "
+            "For example, it isn't possible to have one IP operator acting in the 'x' basis and another in the 'kx' basis."
+            % ', '.join(operatorBasis))
+        
+          ipOperatorDimensionNames.add(dim.name)
+          ipOperatorBasisSet.add(dim.inBasis(operatorBasis).name)
+      self.ipOperatorBasis = self.field.completedBasisForBasis(tuple(ipOperatorBasisSet), self.field.defaultSpectralBasis)
+      vectorsRequiredForIPOperation = set()
+      for ipOperator in self.ipOperators:
+        vectorsRequiredForIPOperation.update(ipOperator.targetVectors)
+        vectorsRequiredForIPOperation.add(ipOperator.operatorVector)
+      self.registerVectorsRequiredInBasis(vectorsRequiredForIPOperation, self.ipOperatorBasis)
 

@@ -1,0 +1,106 @@
+<simulation xmds-version="2">
+  <testing>
+    <command_line>mpirun -n 4 ./cpc_example4</command_line>
+    <xsil_file name="cpc_example4.xsil" expected="cpc_example4_expected.xsil" absolute_tolerance="1e-5" relative_tolerance="1e-5" />
+  </testing>
+
+  <name> cpc_example4 </name>
+  
+  <features>
+    <benchmark />
+    <auto_vectorise />
+    <globals>
+      <![CDATA[
+        real N = 10.0; // number of atoms
+        real g = 1.0;  // nonlinear coupling
+      ]]>
+    </globals>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="x" lattice="256"
+                 domain="(-7, 7)" />
+	  <dimension name="y" lattice="256"
+		  	 	 domain="(-7, 7)" />	
+       	  <dimension name="j" lattice="3" type="integer"
+       		  	 	 domain="(-1, 1)" />	
+    </transverse_dimensions>
+  </geometry>
+
+  <driver name="distributed-mpi" />
+
+  <vector name="potential" type="real">
+    <components> V </components>
+    <initialisation>
+      <![CDATA[
+        V = 0.5*(x*x + y*y);
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <vector name="wavefunction" type="complex">
+    <components> psi </components>
+    <initialisation>
+      <![CDATA[
+        psi = sqrt(N) * pow(M_PI, -0.25) * exp(-(x*x + y*y)/2);
+      ]]>
+    </initialisation>
+  </vector>
+
+  <sequence>
+    <integrate algorithm="ARK45" interval="0.628" 
+                                 tolerance="1e-5">
+      <samples> 5 </samples>
+      <operators>
+
+        <operator kind="ip" constant="yes" dimensions="x">
+          <operator_names> Tx </operator_names>
+          <![CDATA[
+            Tx = -i * 0.5 * (kx * kx);
+          ]]>
+        </operator>
+
+        <operator kind="ip" constant="yes" dimensions="y">
+          <operator_names> Ty </operator_names>
+          <![CDATA[
+            Ty = -i * 0.5 * (ky * ky);
+          ]]>
+        </operator>
+        <operator kind="ip" constant="yes" dimensions="">
+          <operator_names> T </operator_names>
+          <![CDATA[
+            T = -0.2;
+          ]]>
+        </operator>
+
+        <operator kind="ip" constant="yes" dimensions="j">
+          <operator_names> Tj </operator_names>
+          <![CDATA[
+            Tj = -0.2*j;
+          ]]>
+        </operator>
+
+        <integration_vectors>
+          wavefunction
+        </integration_vectors> 
+        <dependencies> potential </dependencies>
+        <![CDATA[
+          dpsi_dt = Tx[psi] + Ty[psi] + T[psi] + Tj[psi] - i * (V + g * mod2(psi)) * psi;
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+
+  <output format="hdf5">
+    <sampling_group initial_sample="yes" basis="x(16) y(16) j">
+      <dependencies> wavefunction </dependencies>
+      <moments> psireal psiimag </moments>
+      <![CDATA[
+        psireal = Re(psi);
+        psiimag = Im(psi);
+      ]]>
+    </sampling_group>
+  </output>
+</simulation>

@@ -29,50 +29,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     @return ''
   @end if
   @#
+  @set basis = $ipOperatorBasis
   @set targetVectors = set()
   @set setOfVectorsToLoopOver = set()
-  @set basisSet = set()
-  @set dimensionNames = set()
   @set haveMultipleIPOperatorFractions = len($parent.ipPropagationStepFractions) > 1
   @#
   @for ipOperator in $ipOperators
     @silent targetVectors.update(ipOperator.targetVectors)
     @silent setOfVectorsToLoopOver.update(ipOperator.targetVectors)
     @silent setOfVectorsToLoopOver.add(ipOperator.operatorVector)
-    @if ipOperator.resultVector
-      @silent setOfVectorsToLoopOver.add(ipOperator.resultVector)
-    @end if
-    @#
-    @for dim in ipOperator.field.dimensions
-      @if dim.name in dimensionNames and not dim.inBasis(ipOperator.operatorBasis).name in basisSet
-        @raise ParserException(ipOperator.xmlElement, "The basis of this IP operator (%s) conflicts with that of a previous IP operator.  "
-                                                      "For example, it isn't possible to have one IP operator acting in the 'x' basis and another in the 'kx' basis."
-                                                            % ', '.join(ipOperator.operatorBasis))
-      @end if
-      @#
-      @silent dimensionNames.add(dim.name)
-      @silent basisSet.add(dim.inBasis(ipOperator.operatorBasis).name)
-    @end for
     @#
     @if $haveMultipleIPOperatorFractions
 unsigned long _${ipOperator.id}_exponentIndex = ${ipOperator.exponentIndex};
     @end if
   @end for
 
-  @#
-  @silent basis = $field.completedBasisForBasis(tuple(basisSet), $field.defaultSpectralBasis)
-  @#
 ${transformVectorsToBasis(targetVectors, basis)}@slurp
   @#
 
 ${applyIPOperator(setOfVectorsToLoopOver, basis)}@slurp
 
-  @for ipOperator in $ipOperators
-    @if ipOperator.resultVector and ipOperator.resultVector.needsTransforms
-_${ipOperator.resultVector.id}_basis = $basisIndexForBasis($ipOperator.operatorBasis);
-    @end if
-  @end for
-
+  @#
 @end def
 
 

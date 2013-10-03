@@ -184,7 +184,9 @@ class _FieldElement (ScriptElement):
       if dimension in missingDimensions:
         missingDimensions.discard(dimension)
         basis += (dimRepName,)
-    return self.basisForBasis(basis)
+    orderedBasis = tuple(dim.inBasis(basis).name for dim in self.dimensions)
+    canonicalBasis = self._driver.canonicalBasisForBasis(orderedBasis)
+    return self.basisForBasis(canonicalBasis)
   
   def inBasis(self, basis):
     """

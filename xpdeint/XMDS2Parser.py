@@ -1739,9 +1739,6 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     if operatorElement.hasAttribute('dimensions'):
       dimensionsString = operatorElement.getAttribute('dimensions').strip()
       dimensionNames = Utilities.symbolsInString(dimensionsString, xmlElement = operatorElement)
-      if not dimensionNames:
-        raise ParserException(operatorElement, "Cannot understand '%(dimensionsString)s' as a "
-                                            "list of dimensions" % locals())
       
       for dimensionName in dimensionNames:
         if not operatorTemplate.field.hasDimensionName(dimensionName):
