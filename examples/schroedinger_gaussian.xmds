@@ -61,7 +61,7 @@
     <integrate algorithm="RK9" interval="10.0" steps="10000" tolerance="1e-8">
       <samples>500 500</samples>
       <operators>
-        <operator kind="ip" constant="no" type="imaginary">
+        <operator kind="ip" type="imaginary">
           <operator_names>T</operator_names>
           <![CDATA[
             T = -0.5*i*ky*ky;

@@ -71,7 +71,7 @@
             printf(".");
           ]]>
         </operator>
-        <operator kind="ex" constant="yes">
+        <operator kind="ex">
           <operator_names>L</operator_names>
           <![CDATA[
             L = -T*kx*kx/mu;

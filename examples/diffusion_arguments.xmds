@@ -65,7 +65,7 @@
     <integrate algorithm="RK4" interval="time_interval" steps="24">
       <samples>24</samples>
       <operators>
-        <operator kind="ip" constant="yes" basis="x ky">
+        <operator kind="ip" basis="x ky">
           <operator_names>L</operator_names>
           <![CDATA[
             L = -0.02*ky*ky;

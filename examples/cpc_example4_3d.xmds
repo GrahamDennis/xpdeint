@@ -50,21 +50,21 @@
       <samples> 0 </samples>
       <operators>
 
-        <operator kind="ip" constant="yes" dimensions="x">
+        <operator kind="ip" dimensions="x">
           <operator_names> Tx </operator_names>
           <![CDATA[
             Tx = -i * 0.5 * (kx * kx);
           ]]>
         </operator>
 
-        <operator kind="ip" constant="yes" dimensions="y">
+        <operator kind="ip" dimensions="y">
           <operator_names> Ty </operator_names>
           <![CDATA[
             Ty = -i * 0.5 * (ky * ky);
           ]]>
         </operator>
 
-        <operator kind="ip" constant="yes" dimensions="z">
+        <operator kind="ip" dimensions="z">
           <operator_names> Tz </operator_names>
           <![CDATA[
             Tz = -i * 0.5 * (kz*kz);

@@ -1686,12 +1686,20 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       integratorTemplate = operatorContainer.parent
       
       if isinstance(integratorTemplate, Integrators.FixedStep.FixedStep) and not constantString:
-        raise ParserException(operatorElement, "Missing 'constant' attribute.")
+        # Assume that the IP operator is constant
+        operatorTemplateClass = ConstantIPOperatorTemplate
       elif isinstance(integratorTemplate, Integrators.AdaptiveStep.AdaptiveStep):
         operatorTemplateClass = NonConstantIPOperatorTemplate
       elif constantString == 'yes':
         operatorTemplateClass = ConstantIPOperatorTemplate
       elif constantString == 'no':
+        # We are fixed-step, but non-constant.  Warn the user as this will either be non-optimal, or lower-order than
+        # what they expect
+        parserWarning(operatorElement, "Using 'constant=no' with an IP operator in a fixed-step integrator is not recommended.  "
+                                       "If your IP operator depends on the propagation dimension, use 'constant=yes' as this is faster.  "
+                                       "If your IP operator does depend on the propagation dimension, be aware that this will almost certainly reduce the order "
+                                       "of the integrator, and this is also true if you use an adaptive-step integrator.")
+        
         operatorTemplateClass = NonConstantIPOperatorTemplate
       else:
         raise ParserException(operatorElement, "The 'constant' attribute must be either 'yes' or 'no'.")
@@ -1699,7 +1707,8 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       parserMethod = self.parseIPOperatorElement
     elif kindString == 'ex':
       if not constantString:
-        raise ParserException(operatorElement, "Missing 'constant' attribute.")
+        # default to constant="no" because it uses less memory, and so is typically slightly faster.
+        constantString = "no"
       
       parserMethod = self.parseEXOperatorElement
       if constantString == 'yes':

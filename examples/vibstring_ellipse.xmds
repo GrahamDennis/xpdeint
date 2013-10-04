@@ -67,7 +67,7 @@
     <integrate algorithm="ARK89" tolerance="1e-8" interval="2e-2" steps="1000">
       <samples>50</samples>
       <operators>
-        <operator kind="ex" constant="yes" basis="x y">
+        <operator kind="ex" basis="x y">
           <operator_names>L</operator_names>
           <![CDATA[
           real r_norm = sqrt(x*x/ellipse_a/ellipse_a + y*y/ellipse_b/ellipse_b);

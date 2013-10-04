@@ -45,7 +45,7 @@
     <integrate algorithm="ARK45" tolerance="1e-6" interval="4e-3" steps="400">
       <samples>100 100</samples>
       <operators>
-        <operator kind="ex" constant="yes" basis="kx" type="real">
+        <operator kind="ex" basis="kx" type="real">
           <operator_names>L</operator_names>
           <![CDATA[
             L = -T*kx*kx/mu;

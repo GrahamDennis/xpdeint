@@ -74,14 +74,14 @@
             ]]>
           </boundary_condition>
           
-          <operator kind="ip" constant="yes">
+          <operator kind="ip">
             <operator_names>L</operator_names>
             <![CDATA[
               L = i;
             ]]>
           </operator>
           
-          <operator kind="ex" constant="yes">
+          <operator kind="ex">
             <operator_names>M</operator_names>
             <![CDATA[
               M = i;

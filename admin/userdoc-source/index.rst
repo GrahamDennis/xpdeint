@@ -14,4 +14,4 @@ Getting Started
 
 To get a flavour of what XMDS2 can do, take a look at our :ref:`Quickstart Tutorial<QuickstartTutorial>`, then take a look at our comprehensive  :ref:`documentation<Documentation>`.  Automated installers are available for Linux and Mac OS X, refer to our :ref:`installation instructions<Installation>` for details.
 
-.. include:: news.rst 
+.. include:: news_content.rst 

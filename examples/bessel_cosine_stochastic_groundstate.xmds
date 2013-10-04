@@ -106,7 +106,7 @@
         </filter>
       </filters>
       <operators>
-        <operator kind="ip" constant="yes">
+        <operator kind="ip">
           <operator_names>T</operator_names>
           <![CDATA[
             T = -0.5*hbar/M*(kr*kr + kz*kz);

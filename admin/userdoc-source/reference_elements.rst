@@ -1054,7 +1054,7 @@ Example syntax::
         </filter>
       </filters>
       <operators>
-        <operator kind="ip" constant="yes">
+        <operator kind="ip">
           <operator_names>T</operator_names>
           <![CDATA[
             T = -0.5*hbar/M*ky*ky;
@@ -1097,9 +1097,11 @@ Example syntax::
     
 .. _OperatorNamesElement:
 
-The second kind of operator element defines a list of operators in an ``<operator_names>`` element.  The basis of these operators defaults to the transform space unless a different basis is specified using the ``basis`` attribute.  These operators must then be defined in a 'CDATA' block, using any :ref:`dependencies<Dependencies>` as normal.  If the operators constant across the integration, then the attribute ``constant="yes"`` should be set, otherwise the ``constant="no"`` attribute ensures that the operator is recalculated each step.  The operators defined in these elements can then be used in the 'CDATA' block that defines the equations of motion.  The application of operator 'L' to vector 'psi' is denoted ``L[psi]``.  Operators can be applied to functions of vectors using the same notation, such as ``L[psi*psi]``.  Aside from the example above, many examples can be found in the examples folder, and the :ref:`WorkedExamples` section of the documentation.
+The second kind of operator element defines a list of operators in an ``<operator_names>`` element.  The basis of these operators defaults to the transform space unless a different basis is specified using the ``basis`` attribute.  These operators must then be defined in a 'CDATA' block, using any :ref:`dependencies<Dependencies>` as normal.  The operators defined in these elements can then be used in the 'CDATA' block that defines the equations of motion.  The application of operator 'L' to vector 'psi' is denoted ``L[psi]``.  Operators can be applied to functions of vectors using the same notation, such as ``L[psi*psi]``.  Aside from the example above, many examples can be found in the examples folder, and the :ref:`WorkedExamples` section of the documentation.
 
 Operators of this second kind have the ``kind="IP"`` or ``kind="EX"`` attribute, standing for 'interaction picture' and 'explicit' operators respectively.  Explicit operators can be used in all situations, and simply construct and calculate a new vector of the form in the square brackets.  IP operators use less memory and can improve speed by allowing larger timesteps, but have two important restrictions.  **Use of IP operators without understanding these restrictions can lead to incorrect code**.  The first restriction is that IP operators can only be applied to named components of one of the integration vectors, and not functions of those components.  The second restriction is that the equations of motion must be written such that the term with the operator is not multiplied by any quantity or used inside a function.  (For those interested, the reason for this is that the IP algorithm applies the operator separately to the rest of the evolution, and therefore the actual text of the ``L[psi]`` term is replaced by the numeral zero.)  If you must break either of those rules, then you need to use the EX algorithm.
+
+If the IP or EX operator is constant across the integration, then the attribute ``constant="yes"`` may be set to ensure that it is precalculated at the start of integration, otherwise the ``constant="no"`` attribute ensures that the operator is recalculated at each step.  The ``constant`` attribute is optional and a sensible default is chosen if the attribute is omitted.  Note that for EX operators the default is ``constant="no"`` because the EX operator is typically cheap to calculate and not precomputing it reduces memory bandwidth requirements, usually leading to faster simulations.  If your simulation has a computationally expensive EX operator, it may benefit from adding the ``constant="yes"`` attribute.
 
 Example syntax::
 
@@ -1285,7 +1287,7 @@ Example syntax::
             ]]>
           </evaluation>
         </computed_vector>
-        <operator kind="ex" constant="no">
+        <operator kind="ex">
           <operator_names>L</operator_names>
           <![CDATA[
             L = -T*kx*kx/mu;

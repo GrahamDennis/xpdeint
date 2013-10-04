@@ -84,7 +84,7 @@
     <integrate algorithm="ARK89" tolerance="1e-7" interval="2.0*M_PI" steps="100000" home_space="k">
       <samples>200</samples>
       <operators>
-        <operator kind="ex" constant="no" basis="x y">
+        <operator kind="ex" basis="x y">
           <operator_names>Lx Ly LxR LyR</operator_names>
           <![CDATA[
             real r2 = x*x + y*y;

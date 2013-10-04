@@ -56,7 +56,7 @@
       <samples>10 100 10</samples>
       <operators>
         <integration_vectors>wavefunction</integration_vectors>
-        <operator kind="ex" constant="yes">
+        <operator kind="ex">
           <operator_names>Ltt</operator_names>
           <![CDATA[
             Ltt = -i*ktau*ktau*0.5;

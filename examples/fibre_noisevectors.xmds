@@ -53,7 +53,7 @@
     <integrate algorithm="SI" iterations="3" interval="0.25" steps="200000">
       <samples>50</samples>
       <operators>
-        <operator kind="ip" constant="yes">
+        <operator kind="ip">
           <operator_names>L</operator_names>
           <![CDATA[
             L = -i*kx*kx;

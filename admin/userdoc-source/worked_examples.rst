@@ -94,7 +94,7 @@ where :math:`\phi` is a complex-valued field, and :math:`\Gamma(\tau)` is a :mat
           <samples>10 100 10</samples>
           <operators>
             <integration_vectors>wavefunction</integration_vectors>
-            <operator kind="ex" constant="yes">
+            <operator kind="ex">
               <operator_names>Ltt</operator_names>
               <![CDATA[
                 Ltt = -i*ktau*ktau*0.5;
@@ -165,7 +165,7 @@ The ``<integrate>`` element for a partial differential equation has some new fea
           <samples>10 100 10</samples>
           <operators>
             <integration_vectors>wavefunction</integration_vectors>
-            <operator kind="ex" constant="yes">
+            <operator kind="ex">
               <operator_names>Ltt</operator_names>
               <![CDATA[
                 Ltt = -i*ktau*ktau*0.5;
@@ -423,7 +423,7 @@ where the noise terms :math:`\eta_j(x,t)` are Wiener differentials and the equat
         <integrate algorithm="SI" iterations="3" interval="2.5" steps="200000">
           <samples>50</samples>
           <operators>
-            <operator kind="ex" constant="yes">
+            <operator kind="ex">
               <operator_names>L</operator_names>
               <![CDATA[
                 L = -i*kx*kx;
@@ -696,7 +696,7 @@ with the added restriction that the derivative is forced to zero outside a certa
         <integrate algorithm="ARK89" tolerance="1e-7" interval="7.0e-4" steps="100000">
           <samples>50</samples>
           <operators>
-            <operator kind="ex" constant="yes">
+            <operator kind="ex">
               <operator_names>Lx Ly Lxxx Lxxy Lxyy Lyyy</operator_names>
               <![CDATA[
                 Lx = i*kx;
@@ -941,7 +941,7 @@ The code for this simulation can be found in ``examples/groundstate_workedexampl
             </filter>
           </filters>
           <operators>
-            <operator kind="ip" constant="yes">
+            <operator kind="ip">
               <operator_names>T</operator_names>
               <![CDATA[
                 T = -0.5*ky*ky;
@@ -1153,7 +1153,7 @@ where :math:`H_n(u)` are the physicist's version of the Hermite polynomials.  Ra
             </filter>
           </filters>
           <operators>
-            <operator kind="ip" constant="yes" type="real">
+            <operator kind="ip" type="real">
               <operator_names>L</operator_names>
               <![CDATA[
                 L = EnergyOffset/hbar - (nx + 0.5)*omegarho;
@@ -1296,7 +1296,7 @@ where the last term is more commonly written as a matrix multiplication.  Writin
               <samples>20 100</samples>
               <operators>
                 <integration_vectors>wavefunction</integration_vectors>
-                <operator kind="ex" constant="yes">
+                <operator kind="ex">
                   <operator_names>Ltt</operator_names>
                   <![CDATA[
                     Ltt = -i*(kx*kx+ky*ky)*0.5;

@@ -44,7 +44,7 @@
       <samples> 0 </samples>
       <operators>
 
-        <operator kind="ex" constant="yes">
+        <operator kind="ex">
           <operator_names> T </operator_names>
           <![CDATA[
             T = -i * 0.5 * kx * kx;

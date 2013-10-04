@@ -39,7 +39,7 @@
     <integrate algorithm="RK4" tolerance="1e-6" interval="10." steps="100">
       <samples>100 100 100</samples>
       <operators>
-        <operator kind="ip" constant="yes" basis="nx">
+        <operator kind="ip" basis="nx">
           <operator_names>L</operator_names>
           <![CDATA[
             L = -i*(nx + 0.5);

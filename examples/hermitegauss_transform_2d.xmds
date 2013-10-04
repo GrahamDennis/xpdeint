@@ -57,7 +57,7 @@
     <integrate algorithm="ARK45" tolerance="1e-6" interval="1e-3" steps="400">
       <samples>10 1 100</samples>
       <operators>
-        <operator kind="ip" constant="yes" basis="nx ny">
+        <operator kind="ip" basis="nx ny">
           <operator_names>L</operator_names>
           <![CDATA[
             L = -i*(nx + ny + 1.0)*omega;

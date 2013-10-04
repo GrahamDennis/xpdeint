@@ -37,7 +37,7 @@
     <integrate algorithm="ARK45" interval="20.0" steps="2400" tolerance="1e-5">
       <samples>48</samples>
       <operators>
-        <operator kind="ip" constant="yes" basis="ky">
+        <operator kind="ip" basis="ky">
           <operator_names>L</operator_names>
           <![CDATA[
             L = -0.02*ky*ky;

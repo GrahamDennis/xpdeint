@@ -74,7 +74,7 @@
     <integrate algorithm="ARK89" tolerance="1e-7" interval="2e-2" steps="1000">
       <samples>50</samples>
       <operators>
-        <operator kind="ex" constant="no">
+        <operator kind="ex">
           <operator_names>L</operator_names>
           <![CDATA[
             L = -T_mu*(kx*kx + ky*ky);

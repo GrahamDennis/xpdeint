@@ -77,7 +77,7 @@
     <integrate algorithm="ARK89" tolerance="1e-7" interval="7.0" steps="100000">
       <samples>200</samples>
       <operators>
-        <operator kind="ex" constant="yes">
+        <operator kind="ex">
           <operator_names>Lx Ly Lxxx Lxxy Lxyy Lyyy</operator_names>
           <![CDATA[
             Lx = i*kx;

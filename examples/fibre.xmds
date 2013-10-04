@@ -45,7 +45,7 @@
     <integrate algorithm="SI" iterations="3" interval="2.5" steps="200000">
       <samples>50</samples>
       <operators>
-        <operator kind="ex" constant="yes">
+        <operator kind="ex">
           <operator_names>L</operator_names>
           <![CDATA[
             L = -i*kx*kx;
