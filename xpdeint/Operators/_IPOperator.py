@@ -147,8 +147,9 @@ class _IPOperator(Operator):
       parserWarning(self.xmlElement,
                     "The following operator names weren't used: %(unusedOperatorNamesString)s" % locals())
     
+    del self.functions['evaluate']
     vectors = set(self.targetVectors)
-    self.registerVectorsRequiredInBasis(vectors, self.operatorBasis)
+    self.registerVectorsRequiredInBasis(vectors, self.parent.ipOperatorBasis)
     
   
 

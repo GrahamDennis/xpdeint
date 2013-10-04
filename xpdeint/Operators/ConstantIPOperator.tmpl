@@ -21,7 +21,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 *@
-@extends xpdeint.Operators.IPOperator
+@extends xpdeint.Operators._IPOperator
 
 @attr $calculateOperatorFieldFunctionArguments = []
 
@@ -59,14 +59,3 @@ _${operatorVector.id}[_${operatorVector.id}_index_pointer + ${offsetIndex}] = ${
 (abs(_exponent) - 1) * ${len($operatorComponents)}@slurp
 @end def
 
-@def evaluateOperatorLoop($setOfVectorsToLoopOver)
-  @#
-  @# We expect the integrator to have defined _exponent
-  @#
-  @if len($integrator.ipPropagationStepFractions) > 1
-unsigned long _exponentIndex = ${exponentIndex};
-
-  @end if
-${applyIPOperator(setOfVectorsToLoopOver)}@slurp
-  @#
-@end def

@@ -1754,7 +1754,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     else:
       basis = operatorTemplate.field.defaultSpectralBasis
     
-    operatorDefinitionCodeBlock.basis = basis = operatorTemplate.parent.field.completedBasisForBasis(basis, operatorTemplate.parent.field.defaultSpectralBasis)
+    operatorDefinitionCodeBlock.basis = basis
     
     operatorNamesElement = operatorElement.getChildElementByTagName('operator_names')
     operatorNames = Utilities.symbolsInString(operatorNamesElement.innerText(), xmlElement = operatorNamesElement)
@@ -1766,7 +1766,6 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       if operatorName in self.globalNameSpace['symbolNames']:
         raise ParserException(operatorNamesElement,
                 "Operator name '%(operatorName)s' conflicts with previously-defined symbol." % locals())
-      # self.globalNameSpace['symbolNames'].add(operatorName)
       
     operatorTemplate.operatorNames = operatorNames
     
