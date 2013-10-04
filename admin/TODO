@@ -56,15 +56,14 @@ Testcases needed:
 * More testcases doing stupid things with loading and dumping of various formats of data, including loading in MPI
   simulations, writing of ascii/binary/HDF5 data and loading of binary/HDF5 data.
 
-* xsil2graphics2 needs finishing.
-
 * Trigger support (Ask Michael Hush).  Done "correctly", this would involve adding zero-crossing detection to the adaptive and/or fixed-step integrators.  This could be used for:
    - Triggered-sampling: useful for Poincare plots or other situations where implicit sampling is desired
    - Very fast Poisson noises that also scales well for large numbers of Poisson noises: useful for chemical reaction network modelling where each reaction has a rate constant and there are many (thousands?) of possible reactions.
 
-* Adaptive-order integrators (Gear method)
+* Adaptive-order integrators (Richardson extrapolation method)
 
 * Make it easier to perform parameter scans (this is probably better done in an external tool, though), and more generally, graph-based processing (each node is a simulation that may have one or more inputs / outputs, etc).  This is probably insufficiently defined.
 
 * Add native support for matrix-vector multiplication and matrix-matrix multiplication (and use BLAS to make it fast). (What notation should be used for this?)
 
+* Make it possible to have matrix-valued IP operators.  This would only support integer-valued dimensions, but would be useful for Rabi coupling.
