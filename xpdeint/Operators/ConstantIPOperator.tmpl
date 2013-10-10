@@ -48,6 +48,7 @@ ${insideCalculateOperatorFieldLoopsBegin}@slurp
 // ************** Operator code *****************
 ${codeString}@slurp
 // **********************************************
+#undef ${propagationDimension}
   @# Loop over the propagation step fractions
   @for $fractionIndex, $propagationStepFraction in enumerate($integrator.ipPropagationStepFractions)
     
