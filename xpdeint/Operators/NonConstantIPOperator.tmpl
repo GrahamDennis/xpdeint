@@ -25,25 +25,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 @from xpdeint.CallOnceGuards import callOncePerInstanceGuard
 
-@attr $calculateOperatorFieldFunctionArguments = [('real', '_step'), ('int', '_exponent'), ('int', '_arrayIndex')]
+@attr $calculateOperatorFieldFunctionArguments = [('real', '_step'), ('int', '_exponent')]
 
 @def globals
   @#
   @super
   @#
-  @if len($integrator.ipPropagationStepFractions) > 1
-int _${id}_exponent_offset_map[${len($integrator.ipPropagationStepFractions)}];
-  @end if
-real _${id}_last_timestep_size_map[${integrator.nonconstantIPFields}];
+real _${id}_last_timestep_size_map[${len($integrator.ipPropagationStepFractions)}];
   @#
 @end def
 
 @@callOncePerInstanceGuard
 @def initialise
   @#
-  @if len($integrator.ipPropagationStepFractions) > 1
-memset(_${id}_exponent_offset_map, 0, sizeof(_${id}_exponent_offset_map));
-  @end if
 memset(_${id}_last_timestep_size_map, 0, sizeof(_${id}_last_timestep_size_map));
   @#
 @end def
@@ -56,10 +50,11 @@ static const real _propagationStepFractions[] = {
   $propagationStepFraction,
   @end for
 };
-const real _propagationStepFraction = _propagationStepFractions[abs(_exponent) - 1];
-_${id}_exponent_offset_map[abs(_exponent) - 1] = _arrayIndex;
+const long _arrayIndex = _exponent - 1;
+const real _propagationStepFraction = _propagationStepFractions[_arrayIndex];
   @else
 const real _propagationStepFraction = ${integrator.ipPropagationStepFractions[0]};
+const long _arrayIndex = 0;
   @end if
 
 // If the timestep hasn't changed from the last time, then we're done.
@@ -100,6 +95,6 @@ _${operatorVector.id}[_${operatorVector.id}_index_pointer + _arrayIndex * $len($
 
 @def exponentIndex
   @#
-_${id}_exponent_offset_map[abs(_exponent) - 1] * $len($operatorComponents)@slurp
+(abs(_exponent) - 1) * ${len($operatorComponents)}@slurp
   @#
 @end def

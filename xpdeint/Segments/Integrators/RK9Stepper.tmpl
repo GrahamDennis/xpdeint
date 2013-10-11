@@ -27,7 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     '0.477941176470588', '0.771575563871365', '0.456396464100663', '0.356643356643357',
     '0.517482517482518', '0.931818181818182', '0.749391727493917', '0.332632840343994',
     '0.144927536231884', '0.102040816326531' ]
-@attr $nonconstantIPFields = 1
 @attr $extraIntegrationArrayNames = \
   [ 'akafield', 'akbfield', 'akcfield', 'akdfield', 'akefield',
     'akffield', 'akgfield', 'akhfield', 'akifield', 'akjfield' ]
@@ -193,7 +192,7 @@ ${copyVectors($integrationVectors, '_akafield')}@slurp
 _active_${vector.id} = _${vector.id};
   @end for
 
-${callFunction('nonconstantIPFields', arguments, _exponent = 1, _arrayIndex = 0, parentFunction=function)}
+${callFunction('nonconstantIPFields', arguments, _exponent = 1, parentFunction=function)}
 
 // a_i = D(a_2*dt)[y1]
 ${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction=function)}
@@ -222,7 +221,7 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 _active_${vector.id} = _akbfield_${vector.id};
   @end for
 
-${callFunction('nonconstantIPFields', arguments, _exponent = 2, _arrayIndex = 0, parentFunction=function)}
+${callFunction('nonconstantIPFields', arguments, _exponent = 2, parentFunction=function)}
 
 // a_i = D(a_2*dt)[y1]
 ${callFunction('ipEvolve', arguments, _exponent = -2, parentFunction=function)}
@@ -246,7 +245,7 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 _active_${vector.id} = _akcfield_${vector.id};
   @end for
 
-${callFunction('nonconstantIPFields', arguments, _exponent = 3, _arrayIndex = 0, parentFunction=function)}
+${callFunction('nonconstantIPFields', arguments, _exponent = 3, parentFunction=function)}
 
 // a_i = D(a_2*dt)[y1]
 ${callFunction('ipEvolve', arguments, _exponent = -3, parentFunction=function)}
@@ -271,7 +270,7 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 _active_${vector.id} = _akdfield_${vector.id};
   @end for
 
-${callFunction('nonconstantIPFields', arguments, _exponent = 4, _arrayIndex = 0, parentFunction=function)}
+${callFunction('nonconstantIPFields', arguments, _exponent = 4, parentFunction=function)}
 
 // a_i = D(a_2*dt)[y1]
 ${callFunction('ipEvolve', arguments, _exponent = -4, parentFunction=function)}
@@ -297,7 +296,7 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 _active_${vector.id} = _akefield_${vector.id};
   @end for
 
-${callFunction('nonconstantIPFields', arguments, _exponent = 5, _arrayIndex = 0, parentFunction=function)}
+${callFunction('nonconstantIPFields', arguments, _exponent = 5, parentFunction=function)}
 
 // a_i = D(a_2*dt)[y1]
 ${callFunction('ipEvolve', arguments, _exponent = -5, parentFunction=function)}
@@ -322,7 +321,7 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 _active_${vector.id} = _akifield_${vector.id};
   @end for
 
-${callFunction('nonconstantIPFields', arguments, _exponent = 6, _arrayIndex = 0, parentFunction=function)}
+${callFunction('nonconstantIPFields', arguments, _exponent = 6, parentFunction=function)}
 
 // a_i = D(a_2*dt)[y1]
 ${callFunction('ipEvolve', arguments, _exponent = -6, parentFunction=function)}
@@ -348,7 +347,7 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 _active_${vector.id} = _akjfield_${vector.id};
   @end for
 
-${callFunction('nonconstantIPFields', arguments, _exponent = 7, _arrayIndex = 0, parentFunction=function)}
+${callFunction('nonconstantIPFields', arguments, _exponent = 7, parentFunction=function)}
 
 // a_i = D(a_2*dt)[y1]
 ${callFunction('ipEvolve', arguments, _exponent = -7, parentFunction=function)}
@@ -373,7 +372,7 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 _active_${vector.id} = _akbfield_${vector.id};
   @end for
 
-${callFunction('nonconstantIPFields', arguments, _exponent = 8, _arrayIndex = 0, parentFunction=function)}
+${callFunction('nonconstantIPFields', arguments, _exponent = 8, parentFunction=function)}
 
 // a_i = D(a_2*dt)[y1]
 ${callFunction('ipEvolve', arguments, _exponent = -8, parentFunction=function)}
@@ -399,7 +398,7 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 _active_${vector.id} = _akcfield_${vector.id};
   @end for
 
-${callFunction('nonconstantIPFields', arguments, _exponent = 9, _arrayIndex = 0, parentFunction=function)}
+${callFunction('nonconstantIPFields', arguments, _exponent = 9, parentFunction=function)}
 
 // a_i = D(a_2*dt)[y1]
 ${callFunction('ipEvolve', arguments, _exponent = -9, parentFunction=function)}
@@ -425,7 +424,7 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 _active_${vector.id} = _akdfield_${vector.id};
   @end for
 
-${callFunction('nonconstantIPFields', arguments, _exponent = 10, _arrayIndex = 0, parentFunction=function)}
+${callFunction('nonconstantIPFields', arguments, _exponent = 10, parentFunction=function)}
 
 // a_i = D(a_2*dt)[y1]
 ${callFunction('ipEvolve', arguments, _exponent = -10, parentFunction=function)}
@@ -452,7 +451,7 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 _active_${vector.id} = _akefield_${vector.id};
   @end for
 
-${callFunction('nonconstantIPFields', arguments, _exponent = 11, _arrayIndex = 0, parentFunction=function)}
+${callFunction('nonconstantIPFields', arguments, _exponent = 11, parentFunction=function)}
 
 // a_i = D(a_2*dt)[y1]
 ${callFunction('ipEvolve', arguments, _exponent = -11, parentFunction=function)}
@@ -479,7 +478,7 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 _active_${vector.id} = _akffield_${vector.id};
   @end for
 
-${callFunction('nonconstantIPFields', arguments, _exponent = 12, _arrayIndex = 0, parentFunction=function)}
+${callFunction('nonconstantIPFields', arguments, _exponent = 12, parentFunction=function)}
 
 // a_i = D(a_2*dt)[y1]
 ${callFunction('ipEvolve', arguments, _exponent = -12, parentFunction=function)}
@@ -507,7 +506,7 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 _active_${vector.id} = _akgfield_${vector.id};
   @end for
 
-${callFunction('nonconstantIPFields', arguments, _exponent = 13, _arrayIndex = 0, parentFunction=function)}
+${callFunction('nonconstantIPFields', arguments, _exponent = 13, parentFunction=function)}
 
 // a_i = D(a_2*dt)[y1]
 ${callFunction('ipEvolve', arguments, _exponent = -13, parentFunction=function)}
@@ -535,7 +534,7 @@ ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
 _active_${vector.id} = _akhfield_${vector.id};
   @end for
 
-${callFunction('nonconstantIPFields', arguments, _exponent = 14, _arrayIndex = 0, parentFunction=function)}
+${callFunction('nonconstantIPFields', arguments, _exponent = 14, parentFunction=function)}
 
 // a_i = D(a_2*dt)[y1]
 ${callFunction('ipEvolve', arguments, _exponent = -14, parentFunction=function)}

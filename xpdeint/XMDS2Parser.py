@@ -1805,10 +1805,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     operatorContainer = operatorTemplate.parent
     integratorTemplate = operatorContainer.parent
     
-    if not isinstance(operatorTemplate, NonConstantIPOperatorTemplate):
-      operatorVectorTemplate.nComponents = len(integratorTemplate.ipPropagationStepFractions) * len(operatorNames)
-    else:
-      operatorVectorTemplate.nComponents = integratorTemplate.nonconstantIPFields * len(operatorNames)
+    operatorVectorTemplate.nComponents = len(integratorTemplate.ipPropagationStepFractions) * len(operatorNames)
     operatorTemplate.operatorVector = operatorVectorTemplate
     
     return operatorTemplate

@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 @def name: SI
 @attr $ipPropagationStepFractions = ['0.5']
-@attr $nonconstantIPFields = 1
 @attr $extraIntegrationArrayNames = ['oldCopy']
 @attr $isCrossCapable = True
 @attr $iterations = 3
@@ -34,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @def singleIntegrationStep($function)
   @#
   @set $arguments = {'_step': '_step', $propagationDimension: $propagationDimension}
-${callFunction('nonconstantIPFields', arguments, _exponent = 1, _arrayIndex = 0, parentFunction=function)}
+${callFunction('nonconstantIPFields', arguments, _exponent = 1, parentFunction=function)}
 
 ${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction=function)}
 

@@ -67,7 +67,7 @@ class _Integrator (_Segment):
                                           returnType = 'inline void')
     
     self.functions['nonconstantIPFields'] = Function(name = functionNamePrefix + '_calculate_nonconstant_ip_fields',
-                                                     args = [('real', '_step'), ('int', '_exponent'), ('int', '_arrayIndex')],
+                                                     args = [('real', '_step'), ('int', '_exponent')],
                                                      implementation = self.nonconstantIPFieldsFunctionBody,
                                                      returnType = 'inline void')
     
@@ -105,10 +105,6 @@ class _Integrator (_Segment):
   @lazy_property
   def ipPropagationStepFractions(self):
     return self.stepper.ipPropagationStepFractions
-  
-  @lazy_property
-  def nonconstantIPFields(self):
-    return self.stepper.nonconstantIPFields
   
   @lazy_property
   def stepCount(self):

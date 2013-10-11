@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 @def name: RK45
 @attr $ipPropagationStepFractions = ['1.0', '4.0/5.0', '7.0/10.0', '2.0/5.0', '1.0/8.0']
-@attr $nonconstantIPFields = 2
 @attr $extraIntegrationArrayNames = ['akfield', 'aifield', 'ajfield', 'alfield', 'checkfield']
 
 @attr $errorFieldName = 'checkfield'
@@ -136,7 +135,7 @@ ${transformVectorsToBasis($integrationVectors, $homeBasis)}@slurp
 // a_k = y1
 ${copyVectors($integrationVectors, '_akfield')}@slurp
 
-${callFunction('nonconstantIPFields', arguments, _exponent = 1, _arrayIndex = 0, parentFunction=function)}
+${callFunction('nonconstantIPFields', arguments, _exponent = 1, parentFunction=function)}
 
 // a_i = D(a_2*dt)[y1]
 ${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction=function)}
@@ -170,7 +169,7 @@ _akfield_${vector.id}[$index] = _aifield_${vector.id}[$index] + _b[2][1]*_akfiel
 
 ${propagationDimension} += _a[2] * _step;
 
-${callFunction('nonconstantIPFields', arguments, _exponent = 2, _arrayIndex = 1, parentFunction=function)}
+${callFunction('nonconstantIPFields', arguments, _exponent = 2, parentFunction=function)}
 
 ${callFunction('ipEvolve', arguments, _exponent = -2, parentFunction=function)}
 
@@ -192,7 +191,7 @@ ${propagationDimension} += _a[3] * _step;
 _active_${vector.id} = _ajfield_${vector.id};
   @end for
 
-${callFunction('nonconstantIPFields', arguments, _exponent = 3, _arrayIndex = 1, parentFunction=function)}
+${callFunction('nonconstantIPFields', arguments, _exponent = 3, parentFunction=function)}
 
 // a_j = D((a_3 - a_2)*dt)[a_j]
 ${callFunction('ipEvolve', arguments, _exponent = -3, parentFunction=function)}
@@ -219,7 +218,7 @@ ${propagationDimension} += _a[4] * _step;
 _active_${vector.id} = _alfield_${vector.id};
   @end for
 
-${callFunction('nonconstantIPFields', arguments, _exponent = 4, _arrayIndex = 1, parentFunction=function)}
+${callFunction('nonconstantIPFields', arguments, _exponent = 4, parentFunction=function)}
 
 // a_l = D((a_4 - a_2)*dt)[a_l]
 ${callFunction('ipEvolve', arguments, _exponent = -4, parentFunction=function)}
@@ -256,7 +255,7 @@ _alfield_${vector.id}[$index] = _g[1]*_aifield_${vector.id}[$index] + _g[2]*_akf
 
 ${propagationDimension} += _a[6] * _step;
 
-${callFunction('nonconstantIPFields', arguments, _exponent = 5, _arrayIndex = 1, parentFunction=function)}
+${callFunction('nonconstantIPFields', arguments, _exponent = 5, parentFunction=function)}
 
 // a_l = D((a_6 - a_2)*dt)[a_l]
 ${callFunction('ipEvolve', arguments, _exponent = -5, parentFunction=function)}

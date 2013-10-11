@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 @def name: RK4
 @attr $ipPropagationStepFractions = ['0.5']
-@attr $nonconstantIPFields = 1
 @attr $extraIntegrationArrayNames = ['akfield', 'aifield']
 @attr $isCrossCapable = True
 
@@ -42,7 +41,7 @@ ${transformVectorsToBasis($integrationVectors, $homeBasis)}@slurp
 // a_k = a
 ${copyVectors($integrationVectors, '_akfield')}@slurp
 
-${callFunction('nonconstantIPFields', arguments, _exponent = 1, _arrayIndex = 0, parentFunction = function)}
+${callFunction('nonconstantIPFields', arguments, _exponent = 1, parentFunction = function)}
 
 // a = D[a]
 ${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction = function)}
