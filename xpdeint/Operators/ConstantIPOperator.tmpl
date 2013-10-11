@@ -41,10 +41,10 @@ ${insideCalculateOperatorFieldLoopsBegin}@slurp
   @# We expect the integrator to have defined '_step'
   @#
 // The purpose of the following define is to give a (somewhat helpful) compile-time error
-// if the user has attempted to use the propagation dimension variable in a constant IP operator
-// The user probably shouldn't be doing this, but if they must, they should use a non-constant IP
+// if the user has attempted to use the propagation dimension variable in a constant IP operator/
+// The user probably shouldn't be doing this, but if they must, they should use a non-constant EX
 // operator instead
-#define ${propagationDimension} Dont_use_propagation_dimension_${propagationDimension}_in_constant_IP_operator___Add_the_constant_equals_no_attribute_to_your_operator
+#define ${propagationDimension} Dont_use_propagation_dimension_${propagationDimension}_in_constant_IP_operator___Use_non_constant_EX_operator_instead
 // ************** Operator code *****************
 ${codeString}@slurp
 // **********************************************

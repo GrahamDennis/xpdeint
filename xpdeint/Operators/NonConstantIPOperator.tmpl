@@ -34,6 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   @if len($integrator.ipPropagationStepFractions) > 1
 int _${id}_exponent_offset_map[${len($integrator.ipPropagationStepFractions)}];
   @end if
+real _${id}_last_timestep_size_map[${integrator.nonconstantIPFields}];
   @#
 @end def
 
@@ -43,6 +44,7 @@ int _${id}_exponent_offset_map[${len($integrator.ipPropagationStepFractions)}];
   @if len($integrator.ipPropagationStepFractions) > 1
 memset(_${id}_exponent_offset_map, 0, sizeof(_${id}_exponent_offset_map));
   @end if
+memset(_${id}_last_timestep_size_map, 0, sizeof(_${id}_last_timestep_size_map));
   @#
 @end def
 
@@ -60,7 +62,15 @@ _${id}_exponent_offset_map[abs(_exponent) - 1] = _arrayIndex;
 const real _propagationStepFraction = ${integrator.ipPropagationStepFractions[0]};
   @end if
 
+// If the timestep hasn't changed from the last time, then we're done.
+if (_propagationStepFraction * _step == _${id}_last_timestep_size_map[_arrayIndex])
+  return;
+
+  @#
   @super(function)
+  @#
+
+_${id}_last_timestep_size_map[_arrayIndex] = _propagationStepFraction * _step;
   @#
 @end def
 
@@ -70,9 +80,15 @@ ${insideCalculateOperatorFieldLoopsBegin}@slurp
   @#
   @# We expect the integrator to have defined '_step'
   @#
+// The purpose of the following define is to give a (somewhat helpful) compile-time error
+// if the user has attempted to use the propagation dimension variable in a constant IP operator/
+// The user probably shouldn't be doing this, but if they must, they should use a non-constant EX
+// operator instead
+#define ${propagationDimension} Dont_use_propagation_dimension_${propagationDimension}_in_constant_IP_operator___Use_non_constant_EX_operator_instead
 // ************** Operator code *****************
 ${codeString}@slurp
 // **********************************************
+#undef ${propagationDimension}
 
   @# Loop over each operator component
   @for $operatorComponentNumber, $operatorComponent in enumerate($operatorComponents.iterkeys())
