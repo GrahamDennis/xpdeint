@@ -1685,10 +1685,10 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     if kindString == 'ip':
       integratorTemplate = operatorContainer.parent
       
-      if isinstance(integratorTemplate, Integrators.FixedStep.FixedStep) and not constantString:
+      if integratorTemplate.supportsConstantIPOperators and not constantString:
         # Assume that the IP operator is constant
         operatorTemplateClass = ConstantIPOperatorTemplate
-      elif isinstance(integratorTemplate, Integrators.AdaptiveStep.AdaptiveStep):
+      elif not integratorTemplate.supportsConstantIPOperators:
         operatorTemplateClass = NonConstantIPOperatorTemplate
       elif constantString == 'yes':
         operatorTemplateClass = ConstantIPOperatorTemplate

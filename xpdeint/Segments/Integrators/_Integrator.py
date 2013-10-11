@@ -35,6 +35,7 @@ from itertools import chain
 class _Integrator (_Segment):
   
   canBeInitialisedEarly = True
+  supportsConstantIPOperators = True
   
   def __init__(self, stepperClass, *args, **KWs):
     _Segment.__init__(self, *args, **KWs)
