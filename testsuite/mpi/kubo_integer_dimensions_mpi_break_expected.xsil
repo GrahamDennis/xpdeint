@@ -1,9 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<simulation xmds-version="2">
+<?xml version="1.0" ?><simulation xmds-version="2">
   <testing>
     <command_line>mpirun -n 2 ./kubo_integer_dimensions_mpi</command_line>
-    <xsil_file name="kubo_integer_dimensions_mpi.xsil" expected="kubo_integer_dimensions_mpi_expected.xsil" absolute_tolerance="5e-2" relative_tolerance="1e-1" />
-    <xsil_file name="kubo_integer_dimensions_mpi_break.xsil" expected="kubo_integer_dimensions_mpi_break_expected.xsil" absolute_tolerance="5e-2" relative_tolerance="1e-1" />
+    <xsil_file absolute_tolerance="5e-2" expected="kubo_integer_dimensions_mpi_expected.xsil" name="kubo_integer_dimensions_mpi.xsil" relative_tolerance="1e-1"/>
+    <xsil_file absolute_tolerance="5e-2" expected="kubo_integer_dimensions_mpi_break_expected.xsil" name="kubo_integer_dimensions_mpi_break.xsil" relative_tolerance="1e-1"/>
   </testing>
   
   <name>kubo_integer_dimensions_mpi</name>
@@ -15,37 +14,33 @@
   <geometry>
     <propagation_dimension> t </propagation_dimension>
     <transverse_dimensions>
-      <dimension name="j" type="integer" lattice="1024" domain="(1, 1024)" />
+      <dimension domain="(1, 1024)" lattice="1024" name="j" type="integer"/>
     </transverse_dimensions>
   </geometry>
   
-  <driver name="distributed-mpi" />
-  
-  <features>
-    <benchmark />
-    <bing />
-    <stochastic>
-      <noise kind="gaussian" prefix="n" num="1" seed="157 9348 234"/>
-      <!-- If there is no seed attribute then seeds will be chosen randomly at run-time -->
-    </stochastic>
-  </features>
+  <driver name="distributed-mpi"/>
   
   <vector name="main" type="complex">
     <components>
       z
     </components>
-    <initialisation noises="">
+    <initialisation>
       <![CDATA[
         z = 1.0;
       ]]>
     </initialisation>
   </vector>
   
+  <noise_vector kind="wiener" name="noise" seed="157 9348 234" type="real">
+    <components>n_1</components>
+  </noise_vector>
+  
   <sequence>
     <integrate algorithm="RK9" interval="10" steps="1000" tolerance="1e-8">
       <samples>500 10</samples>
-      <operators noises="n">
+      <operators>
         <integration_vectors>main</integration_vectors>
+        <dependencies>noise</dependencies>
         <![CDATA[
           dz_dt(j => j) = i*z*n_1;
         ]]>

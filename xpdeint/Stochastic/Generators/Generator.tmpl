@@ -92,7 +92,9 @@ srandomdev();
   @set $featureOrdering = ['Driver']
   @silent seedOffset = $insertCodeForFeatures('seedOffset', $featureOrdering)
   @#
-uint32_t ${generatorName}_local_seeds[${seedCount}] = { ${', '.join([c'${generatorName}_seeds[$i]${seedOffset}' for i in xrange($seedCount)])} };
+uint32_t ${generatorName}_local_seeds[${seedCount}] = {
+  ${',\n  '.join([c'${generatorName}_seeds[$i]+(0${seedOffset})*${i+1}' for i in xrange($seedCount)])}
+};
   @#
 @end def
 
