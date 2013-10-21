@@ -154,7 +154,7 @@ _active_${vector.id} = _akfield_${vector.id};
 // a_k = G[a_k, t]
 ${callFunction('deltaA', arguments, parentFunction=function)}
 
-// a_i = D(a_2*dt)[a_k]
+// a_k = D(a_2*dt)[a_k]
 ${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction=function)}
 ${transformVectorsToBasis($integrationVectors, $homeBasis)}@slurp
 
