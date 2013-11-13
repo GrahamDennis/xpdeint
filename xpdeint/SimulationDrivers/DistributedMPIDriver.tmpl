@@ -316,8 +316,8 @@ MPI_Bcast(_active_${noiseVector.id}, ${noiseVector.sizeInBasisInReals(noiseVecto
 
 @def runtimeSeedGenerationBegin($dict)
   @#
-if (_rank == 0) {
-  // Only generate random seeds on the first rank, then distribute to all.
+// if (_rank == 0) {
+// Only generate random seeds on the first rank, then distribute to all.
   @set dict['extraIndent'] += 2
   @#
 @end def
@@ -326,9 +326,9 @@ if (_rank == 0) {
   @#
   @set generator = dict['caller']
   @set dict['extraIndent'] -= 2
-}
+// }
 // Broadcast seeds to other nodes
-MPI_Bcast(${generator.generatorName}_seeds, ${generator.seedCount}, MPI_UINT32_T, 0, MPI_COMM_WORLD);
+// MPI_Bcast(${generator.generatorName}_seeds, ${generator.seedCount}, MPI_UINT32_T, 0, MPI_COMM_WORLD);
 
   @#
 @end def
