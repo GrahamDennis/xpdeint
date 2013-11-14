@@ -38,7 +38,7 @@
 			const real Pi = 3.141592654;   
 
       /*experimental variables*/
-			const real ratio = 1.0/40.0;
+			const real fraction = 1.0/40.0;
 			const real omegap = 2*3.141592654*3000;
 			const real N0 = 1.0e5;                  //Note this change
 			const real B = 73.0e-7;        
@@ -82,8 +82,8 @@
     </components>
     <initialisation>
       <![CDATA[
-   			//VtrapOnHbar = 0.5* massRb * omegap*omegap*(x*x + y*y + z*z*ratio*ratio);
-   			VtrapOnHbar = x*x+y*y+z*z*ratio*ratio < 2.0*2.0e-12 ? 0.5 * massRb * omegap * omegap *  (x*x+y*y+z*z*ratio*ratio)/hbar-muOnHbar : 0.5 * massRb * omegap * omegap *  2.0*2.0e-12/hbar-muOnHbar;
+   			//VtrapOnHbar = 0.5* massRb * omegap*omegap*(x*x + y*y + z*z*fraction*fraction);
+   			VtrapOnHbar = x*x+y*y+z*z*fraction*fraction < 2.0*2.0e-12 ? 0.5 * massRb * omegap * omegap *  (x*x+y*y+z*z*fraction*fraction)/hbar-muOnHbar : 0.5 * massRb * omegap * omegap *  2.0*2.0e-12/hbar-muOnHbar;
       ]]>
     </initialisation>
   </vector>

@@ -109,9 +109,9 @@ class CRandPool
         }
 
         template<class ElementType> inline CDataBuffer_ConstView<ElementType, N * 16> GetConstView(void)
-        { return FPool.GetConstView<ElementType>(); }
+        { return FPool.template GetConstView<ElementType>(); }
         template<class ElementType> inline CDataBuffer_VarView<ElementType, N * 16> GetVarView(void)
-        { return FPool.GetVarView<ElementType>(); }
+        { return FPool.template GetVarView<ElementType>(); }
 
         void *GetDataPointer(void) { return &FPool; }
 
@@ -132,9 +132,9 @@ class CRandPool
         int GetRefCount(void) { return FBlock->GetRefCount(); }
 
         template<class ElementType> inline CDataBuffer_ConstView<ElementType, N * 16> GetConstView(void)
-        { return FBlock->GetConstView<ElementType>(); }
+        { return FBlock->template GetConstView<ElementType>(); }
         template<class ElementType> inline CDataBuffer_VarView<ElementType, N * 16> GetVarView(void)
-        { return FBlock->GetVarView<ElementType>(); }
+        { return FBlock->template GetVarView<ElementType>(); }
 
         void *GetDataPointer(void) { return FBlock->GetDataPointer(); }
 

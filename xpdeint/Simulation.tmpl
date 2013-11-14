@@ -46,6 +46,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define _ALL_LOG_LEVELS        _SAMPLE_LOG_LEVEL|_SEGMENT_LOG_LEVEL|_PATH_LOG_LEVEL|_SIMULATION_LOG_LEVEL|_WARNING_LOG_LEVEL|_ERROR_LOG_LEVEL|_NO_ERROR_TERMINATE_LOG_LEVEL
 #define _LOG_LEVELS_BEING_LOGGED (${features['Driver'].logLevelsBeingLogged})
 
+#define real Re
+#define imag Im
+
+#include <complex>
+
+#undef real
+#undef imag
+
+
 #include <stdio.h>
 
 @set $featureOrdering = ['Driver']
@@ -98,14 +107,6 @@ ${result}@slurp
 
   @end if
 @end for
-
-#define real Re
-#define imag Im
-
-#include <complex>
-
-#undef real
-#undef imag
 
 @set $realType = {'single': 'float', 'double': 'double'}[$precision]
 typedef long integer;

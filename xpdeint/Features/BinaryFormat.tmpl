@@ -218,14 +218,8 @@ if (fwrite(&${variable.arrayName}[_${variable.vector.id}_index_pointer + _compon
   _LOG(_ERROR_LOG_LEVEL, "Error writing output data.\n");
 }
   @else
-if (_component & 1) {
-  if (fwrite(&${variable.arrayName}[_${variable.vector.id}_index_pointer + _component/2].Im(), sizeof(real), 1, fpBinary) != 1) {
-    _LOG(_ERROR_LOG_LEVEL, "Error writing output data.\n");
-  }
-} else {
-  if (fwrite(&${variable.arrayName}[_${variable.vector.id}_index_pointer + _component/2].Re(), sizeof(real), 1, fpBinary) != 1) {
-    _LOG(_ERROR_LOG_LEVEL, "Error writing output data.\n");
-  }
+if (fwrite(&(reinterpret_cast<real*>(${variable.arrayName})[2*_${variable.vector.id}_index_pointer + _component]), sizeof(real), 1, fpBinary) != 1) {
+  _LOG(_ERROR_LOG_LEVEL, "Error writing output data.\n");
 }
   @end if
   @#

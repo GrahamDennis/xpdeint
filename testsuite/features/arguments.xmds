@@ -30,15 +30,15 @@
     </globals>
     <arguments>
       <argument name="size" type="real" default_value="20.0"/>
-      <argument name="ratio" type="real" default_value="0.1"/>
+      <argument name="fraction" type="real" default_value="0.1"/>
       <argument name="width_factor" type="real" default_value="1.0"/>
       <argument name="time_factor" type="real" default_value="1.0"/>
       <![CDATA[
       minx = -0.5*size;
       maxx = 0.5*size;
-      miny = -0.5*size*ratio;
-      maxy = 0.5*size*ratio;
-      width = 0.5*sqrt(0.5)*size*ratio*width_factor; // half the simulation size
+      miny = -0.5*size*fraction;
+      maxy = 0.5*size*fraction;
+      width = 0.5*sqrt(0.5)*size*fraction*width_factor; // half the simulation size
       // The time intersting stuff happens scales as width^2
       time_interval = 20.0 * width*width * time_factor;
       ]]>

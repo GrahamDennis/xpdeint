@@ -394,9 +394,9 @@ if (_inputfield${dimRep.loopIndex} < 0 || _inputfield${dimRep.loopIndex} >= _inp
     @set dimRepTypeFormat = {'real': 'e', 'long': 'li'}[dimRep.type]
     _LOG(_ERROR_LOG_LEVEL, "The input field coordinate in the '$dimName' dimension does not match up with the field coordinate.\n"
                            "${dimRep.loopIndex}: %li, ${dimName}: %${dimRepTypeFormat}, _inputfield${dimRep.loopIndex}: %li, "
-                           "_inputfield_${dimName}: %e, d${dimName}: %${dimRepTypeFormat}, diff/Delta: %e\n",
+                           "_inputfield_${dimName}: %e, d${dimName}: %e, diff/Delta: %e\n",
                            ${dimRep.loopIndex}, ${dimName}, _inputfield${dimRep.loopIndex},
-                           _inputfield_${dimName}, d${dimName}, abs(_inputfield_${dimName} - ${dimName})/_dimDelta[$dimensionNumber]);
+                           _inputfield_${dimName}, (real)d${dimName}, abs(_inputfield_${dimName} - ${dimName})/_dimDelta[$dimensionNumber]);
 }
 
 _inputfield_index_pointer += _inputfield${dimRep.loopIndex}${''.join([c' * _inputLattice[$i]' for i in range(dimensionNumber + 1, len($vector.field.dimensions))])};
@@ -424,10 +424,7 @@ if (_isPrecisionDouble) {
   @if $vector.type == 'real'
 _active_${vector.id}[_${vector.id}_index_pointer + _component] = (real)_value;
   @else
-if (_component & 1)
-  _active_${vector.id}[_${vector.id}_index_pointer + _component/2].Im() = (real)_value;
-else
-  _active_${vector.id}[_${vector.id}_index_pointer + _component/2].Re() = (real)_value;
+reinterpret_cast<real*>(_active_${vector.id})[2*_${vector.id}_index_pointer + _component] = (real)_value;
   @end if
   
 _ENDLOOP:;
