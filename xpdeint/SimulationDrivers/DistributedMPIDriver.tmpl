@@ -316,8 +316,11 @@ MPI_Bcast(_active_${noiseVector.id}, ${noiseVector.sizeInBasisInReals(noiseVecto
 
 @def runtimeSeedGenerationBegin($dict)
   @#
-// if (_rank == 0) {
+  @set generator = dict['caller']
+  @#
 // Only generate random seeds on the first rank, then distribute to all.
+unsigned long _local_${generator.generatorName}_seeds[${generator.seedCount}];
+if (_rank == 0) {
   @set dict['extraIndent'] += 2
   @#
 @end def
@@ -326,9 +329,14 @@ MPI_Bcast(_active_${noiseVector.id}, ${noiseVector.sizeInBasisInReals(noiseVecto
   @#
   @set generator = dict['caller']
   @set dict['extraIndent'] -= 2
-// }
+  for (int _i0 = 0; _i0 < ${generator.seedCount}; _i0++)
+      _local_${generator.generatorName}_seeds[_i0] = (unsigned long)${generator.generatorName}_seeds[_i0];
+}
 // Broadcast seeds to other nodes
-// MPI_Bcast(${generator.generatorName}_seeds, ${generator.seedCount}, MPI_UINT32_T, 0, MPI_COMM_WORLD);
+MPI_Bcast(_local_${generator.generatorName}_seeds, ${generator.seedCount}, MPI_UNSIGNED_LONG, 0, MPI_COMM_WORLD);
+// Copy to the correct array
+for (int _i0 = 0; _i0 < ${generator.seedCount}; _i0++)
+    ${generator.generatorName}_seeds[_i0] = (uint32_t)_local_${generator.generatorName}_seeds[_i0];
 
   @#
 @end def
