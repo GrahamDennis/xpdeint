@@ -38,7 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   @#
   @for $argument in $argumentList
     @if $argument.type == "string"
-$argument.type $argument.name = "$argument.defaultValue";
+std::string $argument.name = "$argument.defaultValue";
     @else
 $argument.type $argument.name = $argument.defaultValue; 
     @end if
@@ -122,10 +122,10 @@ $argument.shortName:@slurp
     
     case '$argument.shortName':
     @if $appendArgsToOutputFilename
-      mInputArgsAndValues.insert ( pair<string, string> (string("$argument.name"), string(optarg)));
+      mInputArgsAndValues.insert ( std::pair<string, string> (std::string("$argument.name"), std::string(optarg)));
     @end if
     @if $argument.type == 'string'
-      $argument.name = string(optarg);
+      $argument.name = std::string(optarg);
     @elif $argument.type in ('integer', 'int', 'long'):
       $argument.name = strtol(optarg, NULL, 10);
     @elif $argument.type in 'real'
@@ -145,13 +145,13 @@ $argument.shortName:@slurp
 // possible command line arguments are in the map, even if they weren't passed. 
 
     @for $argument in $argumentList
-mInputArgsAndValues.insert ( pair<string, string> (string("$argument.name"), string("$argument.defaultValue")));
+mInputArgsAndValues.insert ( std::pair<std::string, std::string> (std::string("$argument.name"), std::string("$argument.defaultValue")));
     @end for
 
 // Since the command line arguments and their values are to be appended to the
 // output filenames, construct the append string here
-for (map<string, string>::iterator iter=mInputArgsAndValues.begin() ; iter != mInputArgsAndValues.end(); iter++ ) {
-  gsArgsAndValues += string(".") + (*iter).first + string("_") + (*iter).second;
+for (std::map<std::string, std::string>::iterator iter=mInputArgsAndValues.begin() ; iter != mInputArgsAndValues.end(); iter++ ) {
+  gsArgsAndValues += std::string(".") + (*iter).first + std::string("_") + (*iter).second;
 }
   @end if
 

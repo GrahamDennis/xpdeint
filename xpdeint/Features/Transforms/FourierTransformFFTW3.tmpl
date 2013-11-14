@@ -48,7 +48,7 @@ Return the string defining the globals needed by FFTW3.
 *@
   @#
 const real _inverse_sqrt_2pi = 1.0 / sqrt(2.0 * M_PI); 
-string _fftwWisdomPath;
+std::string _fftwWisdomPath;
   @#
 @end def
 
@@ -175,10 +175,10 @@ ${loadWisdom}@slurp
   gethostname(_hostName, 256);
   _hostName[255] = '\0'; // just in case
   
-  string _pathToWisdom = getenv("HOME");
+  std::string _pathToWisdom = getenv("HOME");
   _pathToWisdom += "/.xmds/wisdom/";
   
-  string _wisdomFileName = _hostName;
+  std::string _wisdomFileName = _hostName;
   _wisdomFileName += ".wisdom";
   _wisdomFileName += "${wisdomExtension}";
   
@@ -188,7 +188,7 @@ ${loadWisdom}@slurp
   if (_fp) {
     fclose(_fp);
   } else {
-    int _result = mkdir((string(getenv("HOME")) + "/.xmds").c_str(), S_IRWXU);
+    int _result = mkdir((std::string(getenv("HOME")) + "/.xmds").c_str(), S_IRWXU);
     if (mkdir(_pathToWisdom.c_str(), S_IRWXU)) {
       // We failed to create the ~/.xmds/wisdom directory
       _LOG(_WARNING_LOG_LEVEL, "Warning: Cannot find enlightenment, the path to wisdom ~/.xmds/wisdom doesn't seem to exist and we couldn't create it.\n"

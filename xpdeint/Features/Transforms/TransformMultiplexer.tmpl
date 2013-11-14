@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 @def globals
   @#
-typedef pair<ptrdiff_t, ptrdiff_t> _basis_pair;
+typedef std::pair<ptrdiff_t, ptrdiff_t> _basis_pair;
 typedef void (*transform_function)(bool, real, real* const __restrict__, real* const __restrict__, ptrdiff_t, ptrdiff_t);
 
 // Less than operator needed by the C++ map class
@@ -52,7 +52,7 @@ struct _transform_step
 // Structure to hold the basis change information
 struct _basis_transform_t
 {
-  vector<_transform_step> _transform_steps;
+  std::vector<_transform_step> _transform_steps;
   real _multiplier;
   
   _basis_transform_t(real _multiplier_in = 1.0) : _multiplier(_multiplier_in) {}
@@ -66,7 +66,7 @@ struct _basis_transform_t
 };
 
 // Map type for holding (old_basis, new_basis) -> _basis_transform_t mappings
-typedef map<_basis_pair, _basis_transform_t, _basis_pair_less_than> _basis_map;
+typedef std::map<_basis_pair, _basis_transform_t, _basis_pair_less_than> _basis_map;
 
   @for vector in self.vectorTransformMap
 _basis_map _${vector.id}_basis_map;
@@ -121,7 +121,7 @@ if (_t._transform_steps.size() == 0) {
 }
 real *_source_data = reinterpret_cast<real*>(_active_${vector.id});
 real *_dest_data = _auxiliary_array;
-for (vector<_transform_step>::iterator _it = _t._transform_steps.begin(); _it != _t._transform_steps.end(); ++_it) {
+for (std::vector<_transform_step>::iterator _it = _t._transform_steps.begin(); _it != _t._transform_steps.end(); ++_it) {
   _it->_func(_it->_forward, _t._multiplier, _source_data, _dest_data, _it->_prefix_lattice, _it->_postfix_lattice);
   if (_it->_out_of_place) {
     real *_temp = _source_data;
