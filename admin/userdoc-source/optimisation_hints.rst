@@ -18,10 +18,46 @@ Reduce code complexity
 ----------------------
 Avoid transcendental functions like :math:`\sin(x)` or :math:`\exp(x)` in inner loops. Not all operations are made equal, use multiplication over division.
 
-Use the Interaction Picture (IP) operator
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Just do it. Only use the EX operator when you have to. If you must use the EX operator, consider making it ``constant="no"``. It uses less memory.
-When you use the IP operator, make sure you know what it's doing.  Do not pre- or post-multiply that term in your equations.
+.. _OptimisingIPOperators:
+
+Optimising with the Interaction Picture (IP) operator
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+You should use the IP operator when you can. Only use the EX operator when you have to. If you must use the EX operator, consider making it ``constant="no"``. It uses less memory.
+When you use the IP operator, make sure you know what it's doing.  Do not pre- or post-multiply that term in your equations, XMDS will do a fairly thorough check to see you aren't using the IP operator improperly, but it is possible to confuse XMDS's check.
+
+If your simulation uses two or more dimensions, check to see if your IP operator is separable, i.e. can be written in the form :math:`f(kx) + g(ky)` (this is frequently possible in atom-optics simulations). If your IP operator is separable, create separate IP operators for each dimension.  This provides a significant speedup (~30%) for simulations using an adaptive integrator.  For example, instead of using the IP operator:
+
+.. code-block:: xpdeint
+
+  <operator kind="ip">
+    <operator_names>T</operator_names>
+    <![CDATA[
+      T = -i*0.5*hbar/M*(kx*kx + ky*ky);
+    ]]>
+  </operator>
+  <![CDATA[
+    dpsi_dt = T[psi] + /* other terms */
+  ]]>
+
+replace it with the pair of IP operators:
+
+.. code-block:: xpdeint
+
+  <operator kind="ip" dimensions="x">
+    <operator_names>Tx</operator_names>
+    <![CDATA[
+      Tx = -i*0.5*hbar/M*kx*kx;
+    ]]>
+  </operator>
+  <operator kind="ip" dimensions="y">
+    <operator_names>Ty</operator_names>
+    <![CDATA[
+      Ty = -i*0.5*hbar/M*ky*ky;
+    ]]>
+  </operator>
+  <![CDATA[
+    dpsi_dt = Tx[psi] + Ty[psi] + /* other terms */
+  ]]>
 
 When using the IP operator, check if your operator is purely real or purely imaginary.  If real, (e.g. ``L = -0.5*kx * kx;``), then add the attribute ``type="real"`` to the ``<operator kind="ip">`` tag.  If purely imaginary, use ``type="imaginary"``.  This optimisation saves performing the part of the complex exponential that is unnecessary.
 

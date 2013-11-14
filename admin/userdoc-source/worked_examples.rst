@@ -1296,14 +1296,20 @@ where the last term is more commonly written as a matrix multiplication.  Writin
               <samples>20 100</samples>
               <operators>
                 <integration_vectors>wavefunction</integration_vectors>
-                <operator kind="ex">
-                  <operator_names>Ltt</operator_names>
+                <operator kind="ip" dimensions="x">
+                  <operator_names>Lx</operator_names>
                   <![CDATA[
-                    Ltt = -i*(kx*kx+ky*ky)*0.5;
+                    Lx = -i*kx*kx*0.5;
+                  ]]>
+                </operator>
+                <operator kind="ip" dimensions="y">
+                  <operator_names>Ly</operator_names>
+                  <![CDATA[
+                    Ly = -i*ky*ky*0.5;
                   ]]>
                 </operator>
                 <![CDATA[
-                dphi_dt = Ltt[phi] -i*U*VPhi;
+                dphi_dt = Lx[phi] + Ly[phi] -i*U*VPhi;
                 ]]>
                 <dependencies>spatialInteraction coupling</dependencies>
               </operators>
@@ -1353,6 +1359,19 @@ This means that we can use the index "k", which will have exactly the same prope
 
 Since the output dimensions of the computed vector do not include a "k" index, this index is integrated.  The volume element for this summation is the spacing between neighbouring values of "j", and since this spacing is one, this integration is just a sum over k, as required.
 
+This example also demonstrates an optimisation for the IP operators by separating the :math:`x` and :math:`y` parts of the operator (see :ref:`OptimisingIPOperators`).  This gives an approximately 30% speed improvement over the more straightforward implementation:
+
+.. code-block:: xpdeint
+
+  <operator kind="ip">
+    <operator_names>L</operator_names>
+    <![CDATA[
+      L = -i*(kx*kx + ky*ky)*0.5;
+    ]]>
+  </operator>
+  <![CDATA[
+    dphi_dt = L[phi] - i*U*VPhi;
+  ]]>
 
 By this point, we have introduced most of the important features in XMDS2.  More details on other transform options and rarely used features can be found in the :ref:`advancedTopics` section.
 
