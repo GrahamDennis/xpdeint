@@ -230,9 +230,7 @@ def configure(conf):
                 msg = "Checking for cautious math flags"
             )
             
-            # Needed to silence some warnings on Mac OS X related to FFTW and AVX
             if sys.platform == 'darwin':
-                env.append_unique('LINKFLAGS', ['-Wl,-no_compact_unwind'])
                 env.append_unique('CXXFLAGS', ['-mmacosx-version-min=%s' % '.'.join(platform.mac_ver()[0].split('.')[:2])])
             
             check_cxx(
