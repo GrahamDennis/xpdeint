@@ -18,7 +18,7 @@
   <driver name="adaptive-mpi-multi-path" paths="10000" />
   
   <vector name="main">
-    <components type="complex">
+    <components>
       z
     </components>
     <initialisation>
