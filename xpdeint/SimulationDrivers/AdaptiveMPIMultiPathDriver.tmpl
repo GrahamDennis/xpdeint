@@ -123,21 +123,21 @@ void _reduce()
 void _master() 
 {  
   int outstanding = 0;        /*number of slaves that are still processing tasks*/
-  int schedule[_size];        /*Batch size scheduled for each slave [reset every iteration]*/
-  double timing[_size];       /*Timing function to determine computation to communication ratio*/
-  int partitions[_size];      /*Batch size scheduled for each slave [resetted after completion]*/
+  int *schedule = new int[_size];        /*Batch size scheduled for each slave [reset every iteration]*/
+  double *timing = new double[_size];       /*Timing function to determine computation to communication ratio*/
+  int *partitions = new int[_size];      /*Batch size scheduled for each slave [resetted after completion]*/
 
   int i, j;                   /*indexes*/
 
-  MPI_Status stats[_size];    /*MPI Structures*/
-  MPI_Request reqs[_size];
-  int indices[_size];
+  MPI_Status *stats = new MPI_Status[_size];    /*MPI Structures*/
+  MPI_Request *reqs = new MPI_Request[_size];
+  int *indices = new int[_size];
   int ndone;
-  double bufs[_size];         /*MPI Input buffer*/
+  double *bufs = new double[_size];         /*MPI Input buffer*/
   
-  int slave_stat[_size];
-  double throughput[_size];
-  double commave[_size];
+  int *slave_stat = new int[_size];
+  double *throughput = new double[_size];
+  double *commave = new double[_size];
 
   double schedtime=0.0;      /*time spent deciding and dispatching schedules*/
   double commtime=0.0;       /*index for communication latency*/
@@ -180,7 +180,7 @@ void _master()
     _LOG(_ERROR_LOG_LEVEL, "Thread creation failed\n");
   
   //Listen for messages from all slaves
-  for (i=1; i<_size; i++){
+  for (i=0; i<_size; i++){
     MPI_Irecv(&bufs[i], 1, MPI_DOUBLE, i, MPI_ANY_TAG, MPI_COMM_WORLD, &reqs[i]);
   }
   
@@ -288,6 +288,17 @@ void _master()
 
   //Kill slave thread
   pthread_cancel(helper);
+  
+  delete[] schedule;
+  delete[] timing;
+  delete[] partitions;
+  delete[] stats;
+  delete[] reqs;
+  delete[] indices;
+  delete[] bufs;
+  delete[] slave_stat;
+  delete[] throughput;
+  delete[] commave;
 }
 
 void *_mslave(void *ptr) 
@@ -342,6 +353,8 @@ void *_mslave(void *ptr)
   
   //Unlocking indicates that the thread slave has finished processing 
   pthread_mutex_unlock(&finlock);
+  
+  return NULL;
 }
 
 void _slave() 
