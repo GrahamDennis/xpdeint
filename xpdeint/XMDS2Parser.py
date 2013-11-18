@@ -1378,6 +1378,12 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       'ARK45': (Integrators.AdaptiveStep.AdaptiveStep,             Integrators.RK45Stepper.RK45Stepper),
       'ARK89': (Integrators.AdaptiveStep.AdaptiveStep,             Integrators.RK89Stepper.RK89Stepper),
       'SIC':   (Integrators.FixedStepWithCross.FixedStepWithCross, Integrators.SICStepper.SICStepper),
+      'MM':    (Integrators.FixedStep.FixedStep, Integrators.MMStepper.MMStepper),
+      'REMM':  (Integrators.RichardsonFixedStep.RichardsonFixedStep, Integrators.MMStepper.MMStepper),
+      'BS':    (Integrators.RichardsonFixedStep.RichardsonFixedStep, Integrators.MMStepper.MMStepper), # Synonym for REMM
+      'RERK4': (Integrators.RichardsonFixedStep.RichardsonFixedStep, Integrators.RK4Stepper.RK4Stepper),
+      'RERK9': (Integrators.RichardsonFixedStep.RichardsonFixedStep, Integrators.RK9Stepper.RK9Stepper),
+      'RESI':  (Integrators.RichardsonFixedStep.RichardsonFixedStep, Integrators.SIStepper.SIStepper),
     }
     integratorTemplateClass, stepperTemplateClass = algorithmMap.get(algorithmString, (None, None))
     
@@ -1399,6 +1405,12 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
         "RK89 is probably not the algorithm you want. RK89 is a 9th-order algorithm with embedded 8th-order "
         "where the 8th-order results are just thrown away. Unless you know what you are doing, you probably meant RK9 or ARK89."
       )
+    elif algorithmString == 'MM':
+      parserWarning(
+        integrateElement,
+        "You have selected the Modified Midpoint Stepper directly. To use the full functionality of this "
+        "stepper, use 'REMM' instead, which is Richardson Extrapolation using the Modified Midpoint Stepper."
+      )  
     elif algorithmString in ['SI','SIC']:
       if integrateElement.hasAttribute('iterations'):
         algorithmSpecificOptionsDict['iterations'] = RegularExpressionStrings.integerInString(integrateElement.getAttribute('iterations'))
@@ -1456,7 +1468,20 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
                                                   "as a number." % locals())
         integratorTemplate.cutoff = cutoff
         
-    
+    if integrateElement.hasAttribute('extrapolations'):
+      if isinstance(integratorTemplate, Integrators.RichardsonFixedStep.RichardsonFixedStep):
+        extrapolations = RegularExpressionStrings.integerInString(integrateElement.getAttribute('extrapolations'))
+        if extrapolations < 1:
+          raise ParserException(integrateElement, "Extrapolations element must be 1 or greater (default 4).")
+        else:
+          integratorTemplate.extrapolations = extrapolations
+      else:
+        parserWarning(
+          integrateElement,
+          "Extrapolations attribute is only applicable to fixed step Richardson Extrapolation integrators (including \'BS\'). "
+          "This attribute will been ignored."
+        )
+          
     if not integrateElement.hasAttribute('interval'):
       raise ParserException(integrateElement, "Integrator needs 'interval' attribute.")
     

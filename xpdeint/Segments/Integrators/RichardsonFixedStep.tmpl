@@ -1,0 +1,186 @@
+@*
+RichardsonFixedStep.tmpl
+
+Created by Sean Wild on 2013-10-10.
+
+Copyright (c) 2007-2013, Graham Dennis
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+*@
+@extends xpdeint.Segments.Integrators.FixedStep
+
+@def description: segment $segmentNumber ($stepper.name fixed-step, fixed-order integrator with Richardson Extrapolation)
+
+@attr $extrapolations = 4
+
+@attr $supportsConstantIPOperators = False
+
+@attr $maxIntegrationStepsVar = '_max_integration_steps'
+                                      
+@def globals
+  @for $i in range(0, $extrapolations)
+     @set global $extraIntegrationArrayNames = $extraIntegrationArrayNames + ['rerow_T0_' + str($i), 'rerow_T1_' + str($i)]
+  @end for
+  
+  @* Declare a new reset field for extrapolations *@
+  @set global $extraIntegrationArrayNames = $extraIntegrationArrayNames + ['re_reset']
+  
+  @#
+  @super
+  @#
+@end def
+
+@def localInitialise
+   @#
+   @super
+   @#
+   
+   @for $vector in $integrationVectors
+   ${vector.type}* _T0_${vector.id}[$extrapolations];
+   ${vector.type}* _T1_${vector.id}[$extrapolations];
+   
+   @for $i in range(0, $extrapolations)
+   _T0_${vector.id}[$i] = _rerow_T0_${i}_${vector.id};
+   _T1_${vector.id}[$i] = _rerow_T1_${i}_${vector.id};
+   @end for
+   
+   ${vector.type}* (*_Tprev_${vector.id})[$extrapolations] = &_T0_${vector.id};
+   ${vector.type}* (*_Tcurr_${vector.id})[$extrapolations] = &_T1_${vector.id};
+   ${vector.type}* _result_${vector.id};
+   
+   @end for
+   
+   ${copyVectors($integrationVectors, '_re_reset')}@slurp
+    
+@end def
+
+@*
+  Function prototypes
+*@
+@def functionPrototypes
+  @#
+  @super
+  @#
+  @for $vector in $integrationVectors
+void _segment${segmentNumber}_${vector.id}_reset(${vector.type}* _reset_to);
+  @end for
+  @#
+@end def
+
+@def segmentFunctionBody($function) @* Overrides segmentFunctionBody of FixedStep *@
+  @#
+${createStepVariable}@slurp
+  @#
+  @set $featureOrderingOuter = ['Stochastic']
+${insertCodeForFeatures('integrateFixedStepBegin', featureOrderingOuter)}@slurp
+
+${allocate}@slurp
+${initialise}@slurp
+${localInitialise}@slurp
+
+for (long _istep = 0; _istep < ${stepCount}; _istep++) {
+  @# Insert code for features
+  @set $featureOrderingInner = ['Output', 'ErrorCheck', 'Stochastic']
+  @#
+  @set $dict = {'extraIndent': 0}
+  ${insertCodeForFeatures('integrateFixedStepInnerLoopBegin', featureOrderingInner, dict), autoIndent=True}@slurp
+  @set $extraIndent = $dict.extraIndent
+  
+  ${preSingleStep, autoIndent=True, extraIndent=extraIndent}@slurp
+  ${richardsonExtrapolate(function, autoIndent=True, extraIndent=extraIndent)}@slurp
+  ${postSingleStep, autoIndent=True, extraIndent=extraIndent}@slurp
+  
+  @if $cross
+    @# If we are cross-integrating, then we now need to copy our result back
+    @# into the original arrays for the integration vectors
+  ${copyResultIntoIntegrationArrays, autoIndent=True, extraIndent=extraIndent}@slurp
+  
+  @end if
+  @#
+  ${insertCodeForFeaturesInReverseOrder('integrateFixedStepInnerLoopEnd', featureOrderingInner, dict), autoIndent=True}@slurp
+}
+
+${localFinalise}@slurp
+${finalise}@slurp
+${free}@slurp
+
+${insertCodeForFeaturesInReverseOrder('integrateFixedStepEnd', featureOrderingOuter)}@slurp
+  @#
+@end def
+
+@def richardsonExtrapolate($function, $autoIndent, $extraIndent)
+  @#
+    long _k = 0;
+    long _max_integration_steps = 0;
+    
+    long _istep_temp = _istep;
+    real _step_temp = _step;
+    real _${propagationDimension}_temp = ${propagationDimension};
+
+    while (_k < $extrapolations)
+    {
+        // Swap active rows
+        @for $vector in $integrationVectors
+        ${vector.type}* (*_temp_${vector.id})[$extrapolations] = _Tprev_${vector.id};
+        _Tprev_${vector.id} = _Tcurr_${vector.id};
+        _Tcurr_${vector.id} = _temp_${vector.id};
+        @end for
+
+        long _nk = 2 * (_k + 1);
+        _max_integration_steps = _nk;
+        
+        _step = _step_temp / _nk;
+        
+        ${propagationDimension} = _${propagationDimension}_temp;
+        
+        for (_istep = 0; _istep < _nk; _istep++) {
+            ${stepper.singleIntegrationStep(function), autoIndent=autoIndent, extraIndent=extraIndent}@slurp
+        }
+        _istep = _istep_temp;
+        _step = _step_temp;
+        
+        @for $vector in $integrationVectors
+            _result_${vector.id} = (*_Tcurr_${vector.id})[0];
+        @end for
+ 
+        ${copyVectors($integrationVectors, '_result', '_active')}@slurp
+
+        for (long _j = 0; _j < _k; _j++)
+        {
+            real _nksubj = 2 * (_k - _j);
+           
+        ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
+        """
+        ${vector.type} _denominator = ${vector.type}(pow(static_cast<real>(_nk) / _nksubj, 2) - 1);
+        *((*_Tcurr_${vector.id})[_j+1]+$index) = *((*_Tcurr_${vector.id})[_j]+$index)+ ((*((*_Tcurr_${vector.id})[_j]+$index) - *((*_Tprev_${vector.id})[_j]+$index)) / _denominator);
+        """, basis = $homeBasis)}@slurp
+        }
+        
+        // Reset
+        ${copyVectors($integrationVectors, '_active', '_re_reset')}@slurp
+        
+        _k++;
+    }
+    
+    @for $vector in $integrationVectors
+    _result_${vector.id} = (*_Tcurr_${vector.id})[_k-1];
+    @end for
+    
+    ${copyVectors($integrationVectors, '_active', '_result')}@slurp
+    ${copyVectors($integrationVectors, '_re_reset', '_active')}@slurp
+    ${propagationDimension} = _${propagationDimension}_temp + _step;
+  
+  @#
+@end def

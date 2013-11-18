@@ -600,3 +600,23 @@ memcpy(${destPrefix}_${vector.id}, ${srcPrefix}_${vector.id}, sizeof(${vector.ty
   @#
 @end def
 
+@def swapVectorPointers($vectors, $destPrefix, $srcPrefix = None)
+@#dex: Swap the pointers of `vecSrc` and `vecDest`
+  @#
+  @for $vector in $vectors
+${vector.type}* _temp_${destPrefix}_${vector.id} = ${destPrefix}_${vector.id};
+${destPrefix}_${vector.id} = ${srcPrefix}_${vector.id};
+${srcPrefix}_${vector.id} = _temp_${destPrefix}_${vector.id};
+  @end for
+  @#
+@end def
+
+@def assignVectorPointers($vectors, $destPrefix, $srcPrefix = None)
+@#dex: Assign the pointer of `vecSrc` to `vecDest`
+  @#
+  @for $vector in $vectors
+${destPrefix}_${vector.id} = ${srcPrefix}_${vector.id};
+  @end for
+  @#
+@end def
+

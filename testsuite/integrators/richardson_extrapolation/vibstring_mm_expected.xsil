@@ -1,0 +1,125 @@
+<?xml version="1.0" ?><simulation xmds-version="2">
+  
+  <testing>
+    <xsil_file absolute_tolerance="1e-7" expected="vibstring_mm_expected.xsil" name="vibstring_mm.xsil" relative_tolerance="1e-5">
+      <moment_group absolute_tolerance="1e-7" number="1" relative_tolerance="1e-6"/>
+      <moment_group absolute_tolerance="1e-3" number="2" relative_tolerance="1e-6"/>
+    </xsil_file>
+  </testing>
+  
+  <name>vibstring_mm</name>
+  <author>Emily McAlister</author>
+  <description>
+    Vibrating string
+  </description>
+  
+  <features>
+    <benchmark/>
+    <bing/>
+    <fftw plan="estimate"/>
+    <globals>
+      <![CDATA[
+      const real T = 10.0;
+      const real mass = 1e-3;
+      const real length = 1.0;
+      const real mu = mass/length;
+      ]]>
+    </globals>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension domain="(0, 1)" lattice="100" name="x"/>
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector initial_basis="x" name="main" type="complex">
+    <components>
+      u uDot
+    </components>
+    <initialisation>
+      <![CDATA[
+        u = exp(-100.0*(x-0.5)*(x-0.5));
+        uDot = 0.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="MM" interval="2e-3" steps="100">
+      <samples>50 50</samples>
+      <operators>
+        <operator constant="yes" kind="ex">
+          <operator_names>L</operator_names>
+          <![CDATA[
+            L = -T*kx*kx/mu;
+          ]]>
+        </operator>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+          du_dt = uDot;
+          duDot_dt = L[u];
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  <output format="binary">
+      <sampling_group basis="x" initial_sample="yes">
+        <moments>amp</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          amp = u.Re();
+        ]]>
+      </sampling_group>
+      <sampling_group basis="kx(50)" initial_sample="no">
+        <moments>amp</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          amp = u.Re();
+
+        ]]>
+      </sampling_group>
+  </output>
+
+<info>
+Script compiled with XMDS2 version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+See http://www.xmds.org for more information.
+</info>
+
+<XSIL Name="moment_group_1">
+  <Param Name="n_independent">2</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>3</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t x amp 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>51</Dim>
+    <Dim>100</Dim>
+    <Dim>3</Dim>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
+vibstring_mm_expected_mg0.dat
+    </Stream>
+  </Array>
+</XSIL>
+
+<XSIL Name="moment_group_2">
+  <Param Name="n_independent">2</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>3</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t kx amp 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>50</Dim>
+    <Dim>50</Dim>
+    <Dim>3</Dim>
+    <Stream><Metalink Format="Binary" UnsignedLong="uint32" precision="double" Type="Remote" Encoding="LittleEndian"/>
+vibstring_mm_expected_mg1.dat
+    </Stream>
+  </Array>
+</XSIL>
+</simulation>

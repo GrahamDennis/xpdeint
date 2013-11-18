@@ -28,6 +28,7 @@ clean:
 html:
 	mkdir -p ../../documentation ../../documentation/doctrees
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) ../../documentation
+	cp images/*.dia ../../documentation/_images/
 	@echo
 	@echo "Build finished. The HTML pages are in ../../documentation."
 

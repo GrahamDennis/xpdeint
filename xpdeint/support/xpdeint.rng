@@ -370,6 +370,9 @@
       <optional>
         <attribute name="home_space"/>
       </optional>
+      <optional>
+        <attribute name="extrapolations"/>
+      </optional>
       <oneOrMore>
         <choice>
           <element name="samples">

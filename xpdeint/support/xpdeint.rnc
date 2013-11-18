@@ -178,6 +178,7 @@ Integrate = element integrate {
     , attribute iterations { text }?
     , attribute cutoff { text }?
     , attribute home_space { text }?
+    , attribute extrapolations { text }?
     , (
         element samples { text }
         | Filters

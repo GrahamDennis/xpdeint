@@ -1,0 +1,166 @@
+@*
+MMStepper.tmpl
+
+Created by Damien Beard on 2013-08-07, with code adapted from Graham Dennis.
+Last modified by Sean Wild on 2013-08-02.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+*@
+// Start of stepper
+@extends xpdeint.Segments.Integrators._Stepper
+
+@def name: MM
+@attr $ipPropagationStepFractions = ['1']
+@attr $nonconstantIPFields = 1
+@attr $extraIntegrationArrayNames = ['akfield', 'aifield']
+@attr $isCrossCapable = False
+
+@attr $integrationOrder = 2.0
+
+@*
+  Single integration step (MM)
+*@
+@def singleIntegrationStep($function)
+  @#
+  // Start of single step
+  @set $arguments = {'_step': '_step', $propagationDimension: $propagationDimension}
+  
+${transformVectorsToBasis($integrationVectors, $homeBasis)}@slurp
+
+if (_istep == 0) 
+{
+
+// a_k = a
+${copyVectors($integrationVectors, '_akfield')}@slurp
+
+// active vector = a_i
+${assignVectorPointers($integrationVectors, '_active', '_aifield')}@slurp
+
+// a_i = a
+${copyVectors($integrationVectors, '_aifield')}@slurp
+
+// a_i = G[a_i, t]
+${callFunction('deltaA', arguments, parentFunction = function)}
+
+// transformToHomeSpace()
+${transformVectorsToBasis($integrationVectors, $homeBasis)}@slurp
+
+// active vector = a
+${assignVectorPointers($integrationVectors, '_active')}@slurp
+
+// a = a + G[a_i, t]
+${loopOverVectorsWithInnerContentTemplate($integrationVectors, 
+"""_${vector.id}[$index] += _aifield_${vector.id}[$index];
+""", basis = $homeBasis)}@slurp
+
+// ipEvolve a +1
+${callFunction('nonconstantIPFields', arguments, _exponent = 1, _arrayIndex = 0, parentFunction = function)}
+${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction = function)}
+
+// transformToHomeSpace()
+${transformVectorsToBasis($integrationVectors, $homeBasis)}@slurp
+
+${propagationDimension} += _step;
+
+} // For all steps past the first:
+else 
+{
+
+// active vector = a_k
+${assignVectorPointers($integrationVectors, '_active', '_akfield')}@slurp
+
+// ipEvolve a_k +1
+${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction = function)}
+
+// transformToHomeSpace()
+${transformVectorsToBasis($integrationVectors, $homeBasis)}@slurp
+
+// active vector = a_i
+${assignVectorPointers($integrationVectors, '_active', '_aifield')}@slurp
+
+// a_i = a
+${copyVectors($integrationVectors, '_aifield')}@slurp
+
+// a_i = G[a_i, t]
+${callFunction('deltaA', arguments, parentFunction = function)}
+
+// transformToHomeSpace()
+${transformVectorsToBasis($integrationVectors, $homeBasis)}@slurp
+
+// active vector = a_k
+${assignVectorPointers($integrationVectors, '_active', '_akfield')}@slurp
+
+// a_k = a_k + 2*a_i
+${loopOverVectorsWithInnerContentTemplate($integrationVectors, 
+"""_akfield_${vector.id}[$index] = _akfield_${vector.id}[$index] + 2*_aifield_${vector.id}[$index];
+""", basis = $homeBasis)}@slurp
+
+// ipEvolve a_k +1
+${callFunction('nonconstantIPFields', arguments, _exponent = 1, _arrayIndex = 0, parentFunction = function)}
+${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction = function)}
+
+// transformToHomeSpace()
+${transformVectorsToBasis($integrationVectors, $homeBasis)}@slurp
+
+// a = a_k, a_k = a
+${swapVectorPointers($integrationVectors, '_akfield')}@slurp
+
+${propagationDimension} += _step;
+
+}
+    
+if (_istep == ($getVar('integrator.maxIntegrationStepsVar', $integrator.stepCount) - 1)) {
+
+// active vector = a_k
+${assignVectorPointers($integrationVectors, '_active', '_akfield')}@slurp
+
+// ipEvolve a_k +1
+${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction = function)}
+
+// transformToHomeSpace()
+${transformVectorsToBasis($integrationVectors, $homeBasis)}@slurp
+
+// active vector = a_i
+${assignVectorPointers($integrationVectors, '_active', '_aifield')}@slurp
+
+// a_i = a
+${copyVectors($integrationVectors, '_aifield')}@slurp
+
+// a_i = G[a_i, t]
+${callFunction('deltaA', arguments, parentFunction = function)}
+
+// transformToHomeSpace()
+${transformVectorsToBasis($integrationVectors, $homeBasis)}@slurp
+
+// a = 0.5(a + a_k + G[a_i, t])
+${loopOverVectorsWithInnerContentTemplate($integrationVectors, """
+_${vector.id}[$index] = 0.5*(_${vector.id}[$index] + _akfield_${vector.id}[$index] + _aifield_${vector.id}[$index]);
+""", basis = $homeBasis)}@slurp
+
+if (($getVar('integrator.maxIntegrationStepsVar', $integrator.stepCount) % 2) == 0) {
+// Odd number of vector swaps, need to swap back and memcpy
+// so that the original vectors are deallocated correctly
+${swapVectorPointers($integrationVectors, '_akfield')}@slurp
+${copyVectors($integrationVectors, None, '_akfield')}@slurp
+}
+
+}
+
+// To ensure correct sampling, set active dimension to vector
+${assignVectorPointers($integrationVectors, '_active')}@slurp
+
+// End of single step
+  @#
+@end def

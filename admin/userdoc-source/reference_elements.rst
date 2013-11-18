@@ -1210,6 +1210,20 @@ All adaptive stepsize algorithms require a ``tolerance`` attribute, which must b
 
 As all Runge-Kutta solutions have equal order of convergence for stochastic equations, *if the step-size is limited by the stochastic term then the step-size estimation is entirely unreliable*.  Adaptive Runge-Kutta algorithms are therefore not appropriate for stochastic equations.
 
+.. _REAlgorithm:
+
+Richardson Extrapolation Algorithms and the Bulirsch-Stoer Method
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The Richardson Extrapolation technique begins with a large initial interval and uses another stepper algorithm to compute the solution for this interval. It does this by subdividing the interval into increasing subintervals (i.e. with smaller and smaller stepsizes) and uses rational extrapolation to produce a higher order result than would be obtained using the other stepper on its own. The number of extrapolations performed is controllable via the ``extrapolations`` attribute which is a positive integer (defaults to 4).
+
+Richardson Extrapolation provides the best trade off between computational effort and accuracy when paired with the Modified Midpoint stepper. This stepper is notable as it's error scaling function contains only even powers of two. This means that each extrapolation performed in the Richardson technique gains two orders rather than one order as is expected for most other steppers. This combined with the low computational overhead of the Modified Midpoint makes it a powerful tool. The combination of Richardson Extrapolation and the Modified Midpoint stepper is known as the Bulirsch-Stoer method.
+
+A number of combinations of fixed-step, fixed-order Richardson Extrapolation are available in XMDS2. The most notable is the Bulirsch-Stoer method which can be selected using ``algorithm="BS"`` or alternatively ``algorithm="REMM"``. Other combinations include 'RERK4', 'RERK9' and 'RESI' (for stochastic equations). Please note that these additional combinations have not been tested as strictly as the the 'REMM' combination and so care should be taken to ensure the results are sane. Additionally the Modified Midpoint stepper is available as a standalone stepper under the mnemonic 'MM', although this is probably not useful outside of testing.
+
+Richardson Extrapolation in general uses more memory than other integrators as multiple result vectors must be stored at the same time, which is something users should be aware of if the ``extrapolations`` attribute is set too high (generally < 10 should be sufficient).
+
+See the section on the :ref:`Bulirsch-Stoer Algorithm <MMDetail>` for more details.
 
 .. _FiltersElement:
 

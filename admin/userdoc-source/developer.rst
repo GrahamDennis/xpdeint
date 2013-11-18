@@ -1,3 +1,5 @@
+.. _DeveloperDocumentation:
+
 Developer Documentation
 =======================
 
@@ -64,14 +66,149 @@ xsil_file element
 moment_group element
 ~~~~~~~~~~~~~~~~~~~~
 
+.. _UserDocumentation:
+
+XMDS Documentation
+------------------
+
+.. Author: Justin Lewer, 2013.
+
+Documentation in XMDS is written as reStructuredText files (.rst), which are then parsed into HTML files to be displayed on their website. 
+
+You can find the user documentation folder located ``admin/userdoc-source``. This is where all of the .rst files are kept. If you’re wanting to add documentation to the site, you’ll need to create your own .rst file, with the name of the webpage as the filename.
+
+RST is a relatively simple language, which is basically simplified HTML markup. For documentation on how to make Lists, Href Links, Embed images etc, you should check here;
+
+http://docutils.sourceforge.net/docs/user/rst/quickref.html
+http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html
+
+However, you should easily be able to use some of the pre-existing .rst files in the project as a template to create yours.
+
+Once your documentation is in this folder, it should be deployed along with the project to their website when you run create_release_version.sh, which can be found in the /Trunk/xpdeint/admin folder. If you would like to test to see what your rst file generates without running this shell script, you can use the Makefile in the userdoc-source folder, by running “make html”.
+
+NOTE: Before you can run the create_release_version.sh file, there are a few packages you will need. This command uses latex to generate the XMDS2 pdf, so you’ll be needing the following packages; ``texlive-fonts-recommended``, ``texlive-lang-cjk``, ``texlive-latex-base``.
 
 
-Steps to update ``XMDS`` script validator (XML schema)
-------------------------------------------------------
 
-1. Modify ``xpdeint/support/xpdeint.rnc``. This is a RelaxNG compact file, which specifies the XML schema which is only used for issuing warnings to users about missing or extraneous XML tags / attributes.
-2. Run ``make`` in ``xpdeint/support/`` to update ``xpdeint/support/xpdeint.rng``. This is the file which is actually used, which is in RelaxNG format, but RelaxNG compact is easier to read and edit.
-3. Commit both ``xpdeint/support/xpdeint.rnc`` and ``xpdeint/support/xpdeint.rng``.
+.. _HowToAddElementToValidator:
+
+How to update ``XMDS2`` script validator (XML schema)
+-------------------------------------------------------
+
+.. Author: Damien Beard. 2013.
+
+.. image:: images/IntroduceNewElement.png
+           :align: right
+
+This is a short guide to adding an element to XMDS2, so that it can be validated by the XMDS2 script validator. In this guide, the example being used will be the addition of a matrix element to the validator.  The matrix will have a  ‘name’ and a ‘type’ (so it can be called later, and the type is known for future reference). Each matrix will also need a ‘row’ component, and possibly an initialisation value.
+
+Navigate to ``xpdeint/support/xpdeint.rnc``. This is a RelaxNG compact file, which specifies the XML schema which is only used for issuing warnings to users about missing or extraneous XML tags / attributes. Add the following lines to the end of the file (so that it is outside all other brackets in the file):
+
+.. code-block:: none
+    
+    Matrix = element matrix {
+        attribute name { text }
+        , attribute type { text }?
+        , element components { text }
+        , element initialisation {
+            attribute kind { text }?
+        }?
+    }
+
+Save this file, and then in the terminal navigate to the folder ``xpdeint/support/`` and run ``make``. This updates the XML based file ``xpdeint/support/xpdeint.rng``, which is the file the parser uses to validate elements in XMDS2. This file which is  used is in RelaxNG format, but RelaxNG compact is easier to read and edit.
+
+Commit both ``xpdeint/support/xpdeint.rnc`` and ``xpdeint/support/xpdeint.rng`` to the code repository.
+
+.. _HowToAddIntegrator:
+
+How to introduce a new integrator Stepper into the XMDS2 environment
+--------------------------------------------------------------------
+
+.. Author: Damien Beard. 2013.
+
+.. image:: images/IntroduceNewIntegrationTechnique.png
+           :align: right
+
+This is a short guide to adding a new stepper containing a new mathematical technique to XMDS2, which can then be used by to integrate equations. This guide describes the logistics of introducing a new stepper and as such, the code inside the stepper template is outside the scope of this document. The new stepper which will be used in this guide will be called ‘IntegrateMethodStepper’.
+
+Navigate to the ``xpdeint/Segments/Integrators`` directory. Create a file called ``IntegrateMethodStepper.tmpl`` in this directory. In this file, implement the new integration algorithm (follow the convention of existing steppers in that folder). In this same folder, open the file named ``__init__.py`` and add the following line to the bottom of the file and save it:
+
+.. code-block:: none
+
+    import IntegrateMethodStepper
+
+Navigate up until you are in the ``xpdeint`` directory. Open the file ``XMDS2Parser.py``, and 'find' the algorithm map (Ctrl+F > algorithmMap works for most text editors). The mnemonic ‘IM’ will be used for our Stepper. If the stepper uses fixed step sizes, then add the following line to the algorithm map:
+
+.. code-block:: none
+
+    'IM':   (Integrators.FixedStep.FixedStep, Integrators.IntegrateMethodStepper.IntegrateMethodStepper),
+
+Otherwise, if your stepper is an adaptive Stepper, add the following line:
+
+.. code-block:: none
+
+    'IM':   (Integrators.AdaptiveStep.AdaptiveStep, Integrators.IntegrateMethodStepper.IntegrateMethodStepper),
+
+In the terminal, navigate to the ``xpdeint`` directory, and run make over the entire directory. 'IM' can now be used to specify the new Stepper as your integration algorithm inside your .xmds files, e.g.
+
+.. code-block:: xpdeint
+
+    <integrate algorithm="IM" interval="5.0" steps="2000">
+        ...
+    </integrate>
+
+
+.. _LogicalBreakDownParsingProcess:
+
+Logical breakdown of XMDS2 Parsing Process
+------------------------------------------
+
+.. Author: Damien Beard. 2013.
+
+The following information is intended to assist developers in understanding the logical process undertaken by the XMDS2 system when parsing an .xmds file. The documentation was not designed to be exhaustive, but rather to help paint a picture of part of the way XMDS2 works. 
+
+The flowcharts have been created in open source diagram drawing program Dia, and compiled into .png files which are displayed below. This page contains links to the original .dia files, so if you find any error in the information below (or you'd like to extend it, by adding in more information), please update the .dia files and commit them (and their compiled versions) to svn. 
+
+Overall process for parsing XML file in XMDS2
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. image:: images/Overall_Flowchart.png
+   :align: center
+
+The original .dia file can be downloaded `here <_images/Overall_Flowchart.dia>`_.
+
+parser2.py parses XML file (Sub process 3)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. image:: images/Subprocess3_ParsingXMLFile.png
+   :align: center
+
+You can download the original dia file `here <_images/Subprocess3_ParsingXMLFile.dia>`_.
+
+Pass file to XMDS2Parser to parse xmlDocument with parseXMLDocument() (Sub process 3.4)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. image:: images/Subprocess3_4_parseXMLDocument.png
+   :align: center
+
+You can download the original dia file `here <_images/Subprocess3_4_parseXMLDocument.dia>`_.
+
+Parse Top Level Sequence elements (Sub process 3.4.11)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. image:: images/Subprocess3_4_11_ParseTopLvlSeqElements.png
+   :align: center
+
+You can download the original dia file `here <_images/Subprocess3_4_11_ParseTopLvlSeqElements.dia>`_.
+
+Parse Integrate Element (Sub process 3.4.11.2)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. image:: images/Subprocess3_4_11_2_ParseIntegrateElement.png
+   :align: center
+
+You can download the original dia file `here <_images/Subprocess3_4_11_2_ParseIntegrateElement.dia>`_.
+
 
 
 Directory layout
