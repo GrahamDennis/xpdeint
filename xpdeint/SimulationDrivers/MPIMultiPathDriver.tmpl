@@ -1,7 +1,9 @@
 @*
 MPIMultiPathDriver.tmpl
 
-Created by Graham Dennis on 2008-02-25.
+Created by Graham Dennis on 2008-02-25
+Modified by Liam Madge on 2013-09-11
+Modified by Gregory Bogomiagkov on 2013-09-12
 
 Copyright (c) 2008-2012, Graham Dennis
 
@@ -43,6 +45,11 @@ int main(int argc, char **argv)
   @#
 @end def
 
+@def segment0End
+  @#
+${segment0ReduceBlock}@slurp
+  @#
+@end def
 
 @def topLevelSegmentFunctionImplementation
   @#
@@ -58,22 +65,28 @@ void _segment0()
   
   ${insertCodeForFeaturesInReverseOrder('topLevelSequenceEnd', featureOrdering, dict), autoIndent=True}@slurp
   
+  ${segment0End, autoIndent=True}@slurp
+}
+  @#
+@end def
+
+@def segment0ReduceBlock
+  @#
   @for mg in $momentGroups
     @for vector in mg.outputField.managedVectors
       @set $arrayNames = [c'_${vector.id}']
       @silent $arrayNames.extend($vector.aliases)
       @for arrayName in arrayNames
   
-  if (_rank == 0)
-    MPI_Reduce(MPI_IN_PLACE, $arrayName, ${vector.sizeInBasisInReals(mg.outputBasis)},
-               MPI_REAL, MPI_SUM, 0, MPI_COMM_WORLD);
-  else
-    MPI_Reduce($arrayName, NULL, ${vector.sizeInBasisInReals(mg.outputBasis)},
-               MPI_REAL, MPI_SUM, 0, MPI_COMM_WORLD);
+if (_rank == 0)
+  MPI_Reduce(MPI_IN_PLACE, $arrayName, ${vector.sizeInBasisInReals(mg.outputBasis)},
+             MPI_REAL, MPI_SUM, 0, MPI_COMM_WORLD);
+else
+  MPI_Reduce($arrayName, NULL, ${vector.sizeInBasisInReals(mg.outputBasis)},
+             MPI_REAL, MPI_SUM, 0, MPI_COMM_WORLD);
       @end for
     @end for
   @end for
-}
   @#
 @end def
 

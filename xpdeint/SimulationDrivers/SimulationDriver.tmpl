@@ -1,7 +1,9 @@
 @*
 SimulationDriver.tmpl
 
-Created by Graham Dennis on 2008-02-27.
+Created by Graham Dennis on 2008-02-27
+Modified by Liam Madge on 2013-09-11
+Modified by Gregory Bogomiagkov on 2013-09-12
 
 Copyright (c) 2008-2012, Graham Dennis
 
@@ -31,6 +33,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   @#
 ${topLevelSegmentFunctionImplementation}@slurp
 
+  @#
+@end def
+
+@def runningSimulationCode
+  @#
+_segment0();
   @#
 @end def
 
@@ -111,7 +119,7 @@ ${insertCodeForFeatures('mainBegin', $featureOrdering)}@slurp
 
 @# This needs to be extracted into a function so that it can be indented further if necessary
 /* Code that actually does stuff goes here */
-_segment0();
+${runningSimulationCode}@slurp
 
 ${insertCodeForFeaturesInReverseOrder('mainEnd', $featureOrdering)}@slurp
   @#

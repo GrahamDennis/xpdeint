@@ -62,6 +62,7 @@ from xpdeint.Segments.TopLevelSequenceElement import TopLevelSequenceElement as 
 from xpdeint.SimulationDrivers.SimulationDriver import SimulationDriver as SimulationDriverTemplate
 from xpdeint.SimulationDrivers.MultiPathDriver import MultiPathDriver as MultiPathDriverTemplate
 from xpdeint.SimulationDrivers.MPIMultiPathDriver import MPIMultiPathDriver as MPIMultiPathDriverTemplate
+from xpdeint.SimulationDrivers.AdaptiveMPIMultiPathDriver import AdaptiveMPIMultiPathDriver as AdaptiveMPIMultiPathDriverTemplate
 from xpdeint.SimulationDrivers.DistributedMPIDriver import DistributedMPIDriver as DistributedMPIDriverTemplate
 
 from xpdeint.Segments import Integrators
@@ -198,6 +199,8 @@ class XMDS2Parser(ScriptParser):
             driverClass = MultiPathDriverTemplate
           elif driverName == 'mpi-multi-path':
             driverClass = MPIMultiPathDriverTemplate
+          elif driverName == 'adaptive-mpi-multi-path':
+            driverClass = AdaptiveMPIMultiPathDriverTemplate
           else:
             raise UnknownDriverException()
           
@@ -228,7 +231,7 @@ class XMDS2Parser(ScriptParser):
           raise UnknownDriverException()
       except UnknownDriverException, err:
         raise ParserException(driverElement, "Unknown driver type '%(driverName)s'. "
-                                             "The options are 'none' (default), 'multi-path', 'mpi-multi-path' or 'distributed-mpi'." % locals())
+                                             "The options are 'none' (default), 'multi-path', 'mpi-multi-path', 'adaptive-mpi-multi-path' or 'distributed-mpi'." % locals())
       
       if driverClass == MultiPathDriverTemplate:
         kindString = None

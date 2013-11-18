@@ -366,12 +366,13 @@ Driver Element
 
 The driver element controls the overall management of the simulation, including how many paths of a stochastic simulation are to be averaged, and whether or not it is to be run using distributed memory parallelisation.  If it is not included, then the simulation is performed once without using MPI parallelisation.  If it is included, it must have a ``name`` attribute.
 
-The ``name`` attribute can have values of "none" (which is equivalent to the default option of not specifying a driver), "distributed-mpi", "multi-path" or "mpi-multi-path".
+The ``name`` attribute can have values of "none" (which is equivalent to the default option of not specifying a driver), "distributed-mpi", "multi-path", "mpi-multi-path" or "adaptive-mpi-multi-path".
 
 Choosing the ``name="distributed-mpi"`` option allows a single integration over multiple processors.  The resulting executable can then be run according to your particular implementation of MPI.  The FFTW library only allows MPI processing of multidimensional vectors, as otherwise shared memory parallel processing requires too much inter-process communication to be efficient.  Maximally efficient parallelisation occurs where evolution is entirely local in one transverse dimension (see :ref:`transverse dimensions<TransverseDimensionsElement>` below).  In that case, that dimension should be listed first in the :ref:`<geometry><GeometryElement>` element.  As noted in the worked example :ref:`WignerArguments`, it is wise to test the speed of the simulation using different numbers of processors.  
 
 The ``name="multi-path"`` option is used for stochastic simulations, which are typically run multiple times and averaged.  It requires a ``paths`` attribute with the number of iterations of the integration to be averaged.  The output will report the averages of the desired samples, and the standard error in those averages.  
-The ``name="mpi-multi-path"`` option integrates separate paths on different processors, which is typically a highly efficient process.
+The ``name="mpi-multi-path"`` option integrates separate paths on different processors, which is typically a highly efficient process.  
+The ``name="adaptive-mpi-multi-path"`` option integrates separate paths on different processors with load balancing.
 
 Example syntax::
 
@@ -381,6 +382,8 @@ Example syntax::
         <driver name="multi-path" paths="10" />
             <!-- or -->
         <driver name="mpi-multi-path" paths="1000" />
+		    <!-- or -->
+        <driver name="adaptive-mpi-multi-path" paths="1000" />
     </simulation>
 
 .. _GeometryElement:

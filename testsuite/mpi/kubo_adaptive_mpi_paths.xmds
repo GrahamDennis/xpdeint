@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <command_line>mpirun -n 2 ./kubo_adaptive_mpi_paths</command_line>
+    <xsil_file name="kubo_adaptive_mpi_paths.xsil" expected="kubo_mpi_paths_expected.xsil" absolute_tolerance="4e-2" relative_tolerance="4e-2" />
+  </testing>
+  
+  <name>kubo_adaptive_mpi_paths</name>
+  <author>Graham Dennis / Michael Hush</author>
+  <description>
+    Example Kubo oscillator simulation 
+  </description>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+  </geometry>
+  
+  <driver name="adaptive-mpi-multi-path" paths="10000" />
+  
+  <vector name="main">
+    <components type="complex">
+      z
+    </components>
+    <initialisation>
+      <![CDATA[
+        z = 1.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <noise_vector name="noise" kind="wiener" type="real">
+    <components>n_1</components>
+  </noise_vector>
+  
+  <sequence>
+    <integrate algorithm="ARK89" interval="3" steps="1000" tolerance="1e-6">
+      <samples>50 </samples>
+      <operators>
+        <integration_vectors>main</integration_vectors>
+        <dependencies>noise</dependencies>
+        <![CDATA[
+          dz_dt = i*z*n_1;
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  
+  <output format="binary">
+      <sampling_group initial_sample="yes">
+        <moments>zR zI</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+            _SAMPLE_COMPLEX(z);
+        ]]>
+      </sampling_group>
+  </output>
+</simulation>

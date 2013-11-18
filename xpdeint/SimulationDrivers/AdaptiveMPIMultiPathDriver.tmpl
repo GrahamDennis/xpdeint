@@ -1,0 +1,376 @@
+@*
+AdaptiveMPIMultiPathDriver.tmpl
+
+Created by Liam Madge on 2013-09-20.
+Modified by Gregory Bogomiagkov on 2013-10-12
+
+Copyright (c) 2008-2013, Graham Dennis
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+*@
+@extends xpdeint.SimulationDrivers.MPIMultiPathDriver
+
+@def description: Adaptive MPI Multipath Simulation Driver
+
+@attr $pathLoopStart = '0'
+@attr $pathLoopStep = '1'
+@attr $pathLoopEnd = '_local_schedule'
+
+@def seedOffset($dict)
+  @#
+ + _rank + (_size * _batches_run)@slurp
+  @#
+@end def
+
+@def segment0_loop
+  @#
+for (long _i0 = ${pathLoopStart}; _i0 < ${pathLoopEnd}; _i0+=${pathLoopStep}) {
+  @#
+@end def
+
+@def runningSimulationCode
+  @#
+if (_size > 1){
+  if (_rank == 0)
+    _master();
+  else
+    _slave();
+  
+  _reduce();
+}
+else
+{
+  _local_schedule = _n_paths;
+  _segment0();
+}
+  @#
+@end def
+
+@def segment0End
+  @#
+  @#
+@end def
+
+@def functionPrototypes
+  @#
+  @super
+  @#
+void _master();
+void *_mslave(void *ptr); 
+void _slave();
+
+void _reduce();
+  @#
+@end def
+
+@def globals
+  @#
+  @super
+  @#
+
+pthread_mutex_t tasklock;    /*Ensures mutual exclusion when assigning tasks*/
+pthread_mutex_t finlock;     /*Lock to synchronize completion of thread and master*/
+
+int paths_assigned=0;        /*number of full paths assigned or completed*/
+
+long _local_schedule;        /*current batch size for a slave*/
+long _batches_run=0;         /*number of batches a slave has run*/
+  @#
+@end def
+
+@def topLevelSegmentFunctionImplementation
+  @#
+void _segment0()
+{
+  _LOG(_PATH_LOG_LEVEL, "Running %li paths\n", ${pathLoopEnd});
+  @# And now insert the code for the features that apply in the top level sequence
+  @set $featureOrdering = ['ErrorCheck', 'Stochastic']
+  @set $dict = {'extraIndent': 0}
+  ${insertCodeForFeatures('topLevelSequenceBegin', featureOrdering, dict), autoIndent=True}@slurp
+  @set $extraIndent = dict['extraIndent']
+  
+  ${topLevelSegmentPathLoop, autoIndent=True, extraIndent=extraIndent}@slurp
+  
+  ${insertCodeForFeaturesInReverseOrder('topLevelSequenceEnd', featureOrdering, dict), autoIndent=True}@slurp
+  
+  ${segment0End}
+}
+  @#
+@end def
+
+@def functionImplementations
+  @#
+  @super
+  @#
+
+void _reduce()
+{
+  ${segment0ReduceBlock}
+}
+
+void _master() 
+{  
+  int outstanding = 0;        /*number of slaves that are still processing tasks*/
+  int schedule[_size];        /*Batch size scheduled for each slave [reset every iteration]*/
+  double timing[_size];       /*Timing function to determine computation to communication ratio*/
+  int partitions[_size];      /*Batch size scheduled for each slave [resetted after completion]*/
+
+  int i, j;                   /*indexes*/
+
+  MPI_Status stats[_size];    /*MPI Structures*/
+  MPI_Request reqs[_size];
+  int indices[_size];
+  int ndone;
+  double bufs[_size];         /*MPI Input buffer*/
+  
+  int slave_stat[_size];
+  double throughput[_size];
+  double commave[_size];
+
+  double schedtime=0.0;      /*time spent deciding and dispatching schedules*/
+  double commtime=0.0;       /*index for communication latency*/
+  double totaltime=0.0;      /*index for seconds per schedule*/
+  double totalcommtime=0.0;  /*total communication latency*/
+  double paratime=0.0;       /*total parallel walltime for slaves excluding mslave*/
+
+  /************* Scheduling Parameters **************/
+  double calpha = 0.2;        /*weighting for communication average*/
+  double talpha = 0.2;        /*weighting for throughput average*/
+
+  double epsilon = 0.005;     /*maximum tolerated communication overhead*/
+  double lower = 2.0;         /*minimum tolerated resolution in seconds*/
+  double upper = 10.0;        /*maximum tolerated resolution seconds*/
+  /***************************************************/
+
+  double tp1, tp2;
+
+  //Initialise slave status arrays
+  for (i=0; i<_size; i++){
+    slave_stat[i]=0;
+    partitions[i]=0;
+    commave[i]=0.0;
+    throughput[i]=0.0;
+  }
+
+  //pthread is always busy doing something
+  slave_stat[0] = 1;
+
+  /************* PThread Initialization **************/
+  pthread_t helper;
+  
+  //Initialise mutual exclusion mechanism
+  pthread_mutex_init(&tasklock, NULL);
+  pthread_mutex_init(&finlock, NULL);
+  pthread_mutex_lock(&finlock);
+
+  //Create a thread to act as a slave
+  if (pthread_create(&helper, NULL, _mslave, NULL)!=0)
+    _LOG(_ERROR_LOG_LEVEL, "Thread creation failed\n");
+  
+  //Listen for messages from all slaves
+  for (i=1; i<_size; i++){
+    MPI_Irecv(&bufs[i], 1, MPI_DOUBLE, i, MPI_ANY_TAG, MPI_COMM_WORLD, &reqs[i]);
+  }
+  
+  //Loop until all paths are finished, and all results recieved
+  //      -Test for messages from slaves
+  //      -Determine path schedule for idle slaves
+  //      -Send schedule to slaves
+  
+  /**************LISTEN FOR "TASKS COMPLETED" MESSAGES FROM SLAVES*******************/
+  
+  while (paths_assigned < _n_paths || outstanding > 0){
+    
+    //Wait for messages from slaves
+    if (outstanding > 0){
+      MPI_Waitsome(_size, reqs, &ndone, indices, stats);
+      
+      for (i=0; i<ndone; i++){
+        //Deal with incoming messages
+        j = indices[i];
+
+        //Dynamically determine bandwidth and throughput
+        totaltime = MPI_Wtime() - timing[j];
+        commtime = totaltime - bufs[j];
+
+        //Calculate average communication time and average throughput
+        if (commave[j] == 0.0){
+          commave[j] = commtime;
+          throughput[j] = partitions[j]/totaltime;
+        }
+        else {
+          commave[j] = commave[j] * (1 - calpha) + (commtime * calpha);
+          throughput[j] = throughput[j] * (1 - talpha) + (partitions[j] / totaltime) * talpha;
+        }
+        
+        totalcommtime += commtime;
+        paratime += totaltime;
+        slave_stat[j] = 0;
+        outstanding--;
+        MPI_Irecv(&bufs[j], 1, MPI_DOUBLE, j, MPI_ANY_TAG, MPI_COMM_WORLD, &reqs[j]);
+      }
+    }
+    
+    // If no more tasks need to be assigned continue to listen for messages from slaves
+    if (paths_assigned >= _n_paths)
+      continue;
+    
+    /********************SCHEDULE MORE TASKS FOR IDLE SLAVES***********************/
+    
+    for (i=0; i<_size; i++){
+      schedule[i]=0;
+    }
+    tp1 = MPI_Wtime();
+
+    //allocate tasks to free processors
+    //scheduling must be mutually exclusive as the slave thread
+    //also modifies the global variables below for self-scheduling
+    pthread_mutex_lock(&tasklock);
+    
+    for (i=1; i<_size; i++){
+      if (paths_assigned >= _n_paths)
+        break;
+      
+      //only allocate more tasks to slaves that are idle
+      if (slave_stat[i] == 0){
+        slave_stat[i]=1;
+        
+        //Determine new batch size based on slave throughput and
+        //communication overhead. Preferable estimated computing times
+        //for each schedule is high enough to reduce comm overhead
+        //and between upper and lower
+        partitions[i] = (int) (MAX((commave[i]*throughput[i])/epsilon, throughput[i]*lower));
+        partitions[i] = (int) (MIN(partitions[i], throughput[i]*upper));
+        partitions[i] = (int) (MAX(partitions[i], 1));
+        
+        if (paths_assigned + partitions[i] > _n_paths){
+          partitions[i] = _n_paths - paths_assigned;
+        }
+        
+        schedule[i] = partitions[i];
+        paths_assigned += partitions[i];
+      }
+    }
+    
+    pthread_mutex_unlock(&tasklock);
+    
+    /**************************SEND SCHEDULE TO SLAVE(S)********************/
+    for (i=1; i<_size; i++){
+      if (schedule[i]>0){
+        timing[i] = MPI_Wtime();
+        MPI_Send(&schedule[i], 1, MPI_INT, i, 1, MPI_COMM_WORLD);
+        outstanding++;
+      }
+    }
+    tp2 = MPI_Wtime() - tp1;
+    schedtime += tp2;
+  }
+  
+  //Block until the thread slave has completed processing
+  pthread_mutex_lock(&finlock);
+  
+  //Tell slave processes to Reduce then exit
+  for (i=1; i<_size; i++){
+    MPI_Send(NULL, 0, MPI_INT, i, 0, MPI_COMM_WORLD);
+  }
+
+  //Kill slave thread
+  pthread_cancel(helper);
+}
+
+void *_mslave(void *ptr) 
+{
+  double thr_throughput=0.0; 
+  double thr_time_per_batch=2.0; 
+  double thr_talpha=0.2; 
+  
+  int i; 
+  double tp1, tp2;
+  
+  _local_schedule = 1; 
+  
+  while(paths_assigned < _n_paths)
+  { 
+    //Self schedule more tasks to process
+    tp1 = MPI_Wtime();
+    
+    /********************SCHEDULE MORE TASKS*************************/
+    pthread_mutex_lock(&tasklock);
+    
+    if (paths_assigned >= _n_paths){
+      pthread_mutex_unlock(&tasklock);
+      break;
+    }
+    
+    if (paths_assigned + _local_schedule > _n_paths)
+      _local_schedule = _n_paths - paths_assigned;
+    
+    paths_assigned += _local_schedule;
+    
+    pthread_mutex_unlock(&tasklock);
+    /*****************************************************************/
+    
+    _segment0();
+    
+    _batches_run++;
+    
+    tp2 = MPI_Wtime() - tp1;
+    
+    /********************CALCULATE NEW BATCH SIZE*********************/
+    
+    if (thr_throughput == 0.0)
+      thr_throughput = _local_schedule/tp2;
+    else
+      thr_throughput = (1-thr_talpha)*thr_throughput + thr_talpha * (_local_schedule/tp2);
+    
+    _local_schedule = MAX(1, (int) (thr_throughput * thr_time_per_batch));
+    
+    /*****************************************************************/ 
+  }
+  
+  //Unlocking indicates that the thread slave has finished processing 
+  pthread_mutex_unlock(&finlock);
+}
+
+void _slave() 
+{
+  MPI_Status stat;
+  
+  double tp1, tp2;
+  
+  while(1) {
+    //Wait for initial communication from master
+    MPI_Recv(&_local_schedule, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &stat);
+    
+    tp1 = MPI_Wtime();    
+    
+    if (stat.MPI_TAG == 0)
+      break;
+    
+    _segment0();
+    
+    _batches_run++;
+    
+    tp2 = MPI_Wtime() - tp1;
+    
+    //Send completion notice to the master
+    MPI_Send(&tp2, 1, MPI_DOUBLE, 0, stat.MPI_TAG, MPI_COMM_WORLD);
+  }
+  
+  //Tell master that slave is done
+  MPI_Send(NULL, 0, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+}
+  @#
+@end def
