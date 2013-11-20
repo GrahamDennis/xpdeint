@@ -56,8 +56,8 @@ _T0_${vector.id}[$i] = _rerow_T0_${i}_${vector.id};
 _T1_${vector.id}[$i] = _rerow_T1_${i}_${vector.id};
   @end for
 
-${vector.type}* (*_Tprev_${vector.id})[$extrapolations] = &_T0_${vector.id};
-${vector.type}* (*_Tcurr_${vector.id})[$extrapolations] = &_T1_${vector.id};
+${vector.type}** _Tprev_${vector.id} = _T0_${vector.id};
+${vector.type}** _Tcurr_${vector.id} = _T1_${vector.id};
 ${vector.type}* _result_${vector.id};
 
   @end for
@@ -129,11 +129,11 @@ long _istep_temp = _istep;
 real _step_temp = _step;
 real _${propagationDimension}_temp = ${propagationDimension};
 
-while (_k < $extrapolations)
+for (_k = 0; _k < $extrapolations; _k++)
 {
   // Swap active rows
   @for $vector in $integrationVectors
-  ${vector.type}* (*_temp_${vector.id})[$extrapolations] = _Tprev_${vector.id};
+  ${vector.type}** _temp_${vector.id} = _Tprev_${vector.id};
   _Tprev_${vector.id} = _Tcurr_${vector.id};
   _Tcurr_${vector.id} = _temp_${vector.id};
   @end for
@@ -152,7 +152,7 @@ while (_k < $extrapolations)
   _step = _step_temp;
   
   @for $vector in $integrationVectors
-  _result_${vector.id} = (*_Tcurr_${vector.id})[0];
+  _result_${vector.id} = _Tcurr_${vector.id}[0];
   @end for
   
   ${copyVectors($integrationVectors, '_result', '_active'), autoIndent=True}@slurp
@@ -160,21 +160,25 @@ while (_k < $extrapolations)
   for (long _j = 0; _j < _k; _j++)
   {
     real _nksubj = 2 * (_k - _j);
+    real _denominator = pow(((real)_nk) / _nksubj, 2) - 1.0;
+    
+    @for $vector in $integrationVectors
+    ${vector.type}* const _TcurrJPlusOne_${vector.id} = _Tcurr_${vector.id}[_j+1];
+    ${vector.type}* const _TcurrJ_${vector.id} = _Tcurr_${vector.id}[_j];
+    ${vector.type}* const _TprevJ_${vector.id} = _Tprev_${vector.id}[_j];
+    @end for
     
     ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
-"""${vector.type} _denominator = ${vector.type}(pow(static_cast<real>(_nk) / _nksubj, 2) - 1);
-*((*_Tcurr_${vector.id})[_j+1]+$index) = *((*_Tcurr_${vector.id})[_j]+$index)+ ((*((*_Tcurr_${vector.id})[_j]+$index) - *((*_Tprev_${vector.id})[_j]+$index)) / _denominator);
+"""_TcurrJPlusOne_${vector.id}[$index] = _TcurrJ_${vector.id}[$index] + (_TcurrJ_${vector.id}[$index] - _TprevJ_${vector.id}[$index]) / _denominator;
 """, basis = $homeBasis), autoIndent=True}@slurp
   }
   
   // Reset
   ${copyVectors($integrationVectors, '_active', '_re_reset'), autoIndent=True}@slurp
-  
-  _k++;
 }
 
   @for $vector in $integrationVectors
-_result_${vector.id} = (*_Tcurr_${vector.id})[_k-1];
+_result_${vector.id} = _Tcurr_${vector.id}[_k-1];
   @end for
 
 ${copyVectors($integrationVectors, '_active', '_result')}@slurp
