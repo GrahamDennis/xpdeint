@@ -43,27 +43,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @end def
 
 @def localInitialise
-   @#
-   @super
-   @#
-   
-   @for $vector in $integrationVectors
-   ${vector.type}* _T0_${vector.id}[$extrapolations];
-   ${vector.type}* _T1_${vector.id}[$extrapolations];
-   
-   @for $i in range(0, $extrapolations)
-   _T0_${vector.id}[$i] = _rerow_T0_${i}_${vector.id};
-   _T1_${vector.id}[$i] = _rerow_T1_${i}_${vector.id};
-   @end for
-   
-   ${vector.type}* (*_Tprev_${vector.id})[$extrapolations] = &_T0_${vector.id};
-   ${vector.type}* (*_Tcurr_${vector.id})[$extrapolations] = &_T1_${vector.id};
-   ${vector.type}* _result_${vector.id};
-   
-   @end for
-   
-   ${copyVectors($integrationVectors, '_re_reset')}@slurp
-    
+  @#
+  @super
+  @#
+
+  @for $vector in $integrationVectors
+${vector.type}* _T0_${vector.id}[$extrapolations];
+${vector.type}* _T1_${vector.id}[$extrapolations];
+
+  @for $i in range(0, $extrapolations)
+_T0_${vector.id}[$i] = _rerow_T0_${i}_${vector.id};
+_T1_${vector.id}[$i] = _rerow_T1_${i}_${vector.id};
+  @end for
+
+${vector.type}* (*_Tprev_${vector.id})[$extrapolations] = &_T0_${vector.id};
+${vector.type}* (*_Tcurr_${vector.id})[$extrapolations] = &_T1_${vector.id};
+${vector.type}* _result_${vector.id};
+
+  @end for
+
+${copyVectors($integrationVectors, '_re_reset')}@slurp
+
 @end def
 
 @*
@@ -99,7 +99,7 @@ for (long _istep = 0; _istep < ${stepCount}; _istep++) {
   @set $extraIndent = $dict.extraIndent
   
   ${preSingleStep, autoIndent=True, extraIndent=extraIndent}@slurp
-  ${richardsonExtrapolate(function, autoIndent=True, extraIndent=extraIndent)}@slurp
+  ${richardsonExtrapolate(function), autoIndent=True, extraIndent=extraIndent}@slurp
   ${postSingleStep, autoIndent=True, extraIndent=extraIndent}@slurp
   
   @if $cross
@@ -120,67 +120,66 @@ ${insertCodeForFeaturesInReverseOrder('integrateFixedStepEnd', featureOrderingOu
   @#
 @end def
 
-@def richardsonExtrapolate($function, $autoIndent, $extraIndent)
+@def richardsonExtrapolate($function)
   @#
-    long _k = 0;
-    long _max_integration_steps = 0;
-    
-    long _istep_temp = _istep;
-    real _step_temp = _step;
-    real _${propagationDimension}_temp = ${propagationDimension};
+long _k = 0;
+long _max_integration_steps = 0;
 
-    while (_k < $extrapolations)
-    {
-        // Swap active rows
-        @for $vector in $integrationVectors
-        ${vector.type}* (*_temp_${vector.id})[$extrapolations] = _Tprev_${vector.id};
-        _Tprev_${vector.id} = _Tcurr_${vector.id};
-        _Tcurr_${vector.id} = _temp_${vector.id};
-        @end for
+long _istep_temp = _istep;
+real _step_temp = _step;
+real _${propagationDimension}_temp = ${propagationDimension};
 
-        long _nk = 2 * (_k + 1);
-        _max_integration_steps = _nk;
-        
-        _step = _step_temp / _nk;
-        
-        ${propagationDimension} = _${propagationDimension}_temp;
-        
-        for (_istep = 0; _istep < _nk; _istep++) {
-            ${stepper.singleIntegrationStep(function), autoIndent=autoIndent, extraIndent=extraIndent}@slurp
-        }
-        _istep = _istep_temp;
-        _step = _step_temp;
-        
-        @for $vector in $integrationVectors
-            _result_${vector.id} = (*_Tcurr_${vector.id})[0];
-        @end for
- 
-        ${copyVectors($integrationVectors, '_result', '_active')}@slurp
-
-        for (long _j = 0; _j < _k; _j++)
-        {
-            real _nksubj = 2 * (_k - _j);
-           
-        ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
-        """
-        ${vector.type} _denominator = ${vector.type}(pow(static_cast<real>(_nk) / _nksubj, 2) - 1);
-        *((*_Tcurr_${vector.id})[_j+1]+$index) = *((*_Tcurr_${vector.id})[_j]+$index)+ ((*((*_Tcurr_${vector.id})[_j]+$index) - *((*_Tprev_${vector.id})[_j]+$index)) / _denominator);
-        """, basis = $homeBasis)}@slurp
-        }
-        
-        // Reset
-        ${copyVectors($integrationVectors, '_active', '_re_reset')}@slurp
-        
-        _k++;
-    }
-    
-    @for $vector in $integrationVectors
-    _result_${vector.id} = (*_Tcurr_${vector.id})[_k-1];
-    @end for
-    
-    ${copyVectors($integrationVectors, '_active', '_result')}@slurp
-    ${copyVectors($integrationVectors, '_re_reset', '_active')}@slurp
-    ${propagationDimension} = _${propagationDimension}_temp + _step;
+while (_k < $extrapolations)
+{
+  // Swap active rows
+  @for $vector in $integrationVectors
+  ${vector.type}* (*_temp_${vector.id})[$extrapolations] = _Tprev_${vector.id};
+  _Tprev_${vector.id} = _Tcurr_${vector.id};
+  _Tcurr_${vector.id} = _temp_${vector.id};
+  @end for
   
+  long _nk = 2 * (_k + 1);
+  _max_integration_steps = _nk;
+  
+  _step = _step_temp / _nk;
+  
+  ${propagationDimension} = _${propagationDimension}_temp;
+  
+  for (_istep = 0; _istep < _nk; _istep++) {
+    ${stepper.singleIntegrationStep(function), autoIndent=True}@slurp
+  }
+  _istep = _istep_temp;
+  _step = _step_temp;
+  
+  @for $vector in $integrationVectors
+  _result_${vector.id} = (*_Tcurr_${vector.id})[0];
+  @end for
+  
+  ${copyVectors($integrationVectors, '_result', '_active'), autoIndent=True}@slurp
+  
+  for (long _j = 0; _j < _k; _j++)
+  {
+    real _nksubj = 2 * (_k - _j);
+    
+    ${loopOverVectorsWithInnerContentTemplate($integrationVectors,
+"""${vector.type} _denominator = ${vector.type}(pow(static_cast<real>(_nk) / _nksubj, 2) - 1);
+*((*_Tcurr_${vector.id})[_j+1]+$index) = *((*_Tcurr_${vector.id})[_j]+$index)+ ((*((*_Tcurr_${vector.id})[_j]+$index) - *((*_Tprev_${vector.id})[_j]+$index)) / _denominator);
+""", basis = $homeBasis), autoIndent=True}@slurp
+  }
+  
+  // Reset
+  ${copyVectors($integrationVectors, '_active', '_re_reset'), autoIndent=True}@slurp
+  
+  _k++;
+}
+
+  @for $vector in $integrationVectors
+_result_${vector.id} = (*_Tcurr_${vector.id})[_k-1];
+  @end for
+
+${copyVectors($integrationVectors, '_active', '_result')}@slurp
+${copyVectors($integrationVectors, '_re_reset', '_active')}@slurp
+${propagationDimension} = _${propagationDimension}_temp + _step;
+
   @#
 @end def
