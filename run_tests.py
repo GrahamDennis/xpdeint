@@ -319,14 +319,15 @@ def main(argv=None):
     if not testSuiteName in testsuites:
       testsuites[testSuiteName] = unittest.TestSuite()
     
-    suite = testsuites[testSuiteName]
-    # Add our TestSuite as a sub-suite of all parent suites
-    head = testSuiteName
-    while True:
-      head, tail = os.path.split(head)
-      if not head or not tail:
-        break
-      testsuites[head].addTest(suite)
+    if not any(filename == 'do_not_run_tests_by_default' for filename in files):
+      # Add our TestSuite as a sub-suite of all parent suites
+      suite = testsuites[testSuiteName]
+      head = testSuiteName
+      while True:
+        head, tail = os.path.split(head)
+        if not head or not tail:
+          break
+        testsuites[head].addTest(suite)
   
   
   suitesToRun = list()
