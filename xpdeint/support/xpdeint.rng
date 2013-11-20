@@ -56,7 +56,7 @@
       <optional>
         <attribute name="relative_tolerance"/>
       </optional>
-      <optional>
+      <zeroOrMore>
         <element name="moment_group">
           <attribute name="number"/>
           <optional>
@@ -66,7 +66,7 @@
             <attribute name="absolute_tolerance"/>
           </optional>
         </element>
-      </optional>
+      </zeroOrMore>
     </element>
   </define>
   <define name="InputXSILFile">
