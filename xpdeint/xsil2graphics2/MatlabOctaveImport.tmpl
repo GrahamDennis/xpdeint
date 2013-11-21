@@ -65,15 +65,15 @@ ${handleHDF5XSILObject(objectNum, xsilObject)}@slurp
 clear $varName
 $varName = [${', '.join([format(float(e),$stringFormat) for e in var["array"]])}];
   @end for
-  @for varD in xsilObject.dependentVariables:
+  @for var in xsilObject.dependentVariables:
     @set varName = $generateVariableName(var, objectNum)
 clear $varName
     @if nIndepVar == 1:
-$varName = [${', '.join([format(float(e), $stringFormat) for e in varD["array"]])}];
+$varName = [${', '.join([format(float(e), $stringFormat) for e in var["array"]])}];
     @else if nIndepVar == 2:
-$varName = [${';'.join([(','.join([format(float(val), $stringFormat) for val in subArray])) for subArray in varD["array"]])}];
+$varName = [${';'.join([(','.join([format(float(val), $stringFormat) for val in subArray])) for subArray in var["array"]])}];
     @else
-$varName = $printMatlabListOrElement($varD["array"], $nIndepVar);
+$varName = $printMatlabListOrElement($var["array"], $nIndepVar);
     @end if
 ${permuteDimensionsOfMATLABVariable(varName)}@slurp
   @end for
