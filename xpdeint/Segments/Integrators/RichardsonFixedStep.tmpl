@@ -19,7 +19,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 *@
-@extends xpdeint.Segments.Integrators.FixedStep
+@extends xpdeint.Segments.Integrators._RichardsonFixedStep
 
 @def description: segment $segmentNumber ($stepper.name fixed-step, fixed-order integrator with Richardson Extrapolation)
 
@@ -29,19 +29,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 @attr $maxIntegrationStepsVar = '_max_integration_steps'
                                       
-@def globals
-  @for $i in range(0, $extrapolations)
-     @set global $extraIntegrationArrayNames = $extraIntegrationArrayNames + ['rerow_T0_' + str($i), 'rerow_T1_' + str($i)]
-  @end for
-  
-  @* Declare a new reset field for extrapolations *@
-  @set global $extraIntegrationArrayNames = $extraIntegrationArrayNames + ['re_reset']
-  
-  @#
-  @super
-  @#
-@end def
-
 @def localInitialise
   @#
   @super
@@ -132,11 +119,13 @@ real _${propagationDimension}_temp = ${propagationDimension};
 for (_k = 0; _k < $extrapolations; _k++)
 {
   // Swap active rows
+  {
   @for $vector in $integrationVectors
-  ${vector.type}** _temp_${vector.id} = _Tprev_${vector.id};
-  _Tprev_${vector.id} = _Tcurr_${vector.id};
-  _Tcurr_${vector.id} = _temp_${vector.id};
+    ${vector.type}** _temp_${vector.id} = _Tprev_${vector.id};
+    _Tprev_${vector.id} = _Tcurr_${vector.id};
+    _Tcurr_${vector.id} = _temp_${vector.id};
   @end for
+  }
   
   long _nk = 2 * (_k + 1);
   _max_integration_steps = _nk;

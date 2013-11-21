@@ -51,7 +51,7 @@ if (_istep == 0)
   ${copyVectors($integrationVectors, '_aifield'), autoIndent=True}@slurp
   
   // a_i = G[a_i, t]
-  ${callFunction('deltaA', arguments, parentFunction = function), autoIndent=True}@slurp
+  ${callFunction('deltaA', arguments, parentFunction = function), autoIndent=True}
   
   // transformToHomeSpace()
   ${transformVectorsToBasis($integrationVectors, $homeBasis), autoIndent=True}@slurp
@@ -64,9 +64,10 @@ if (_istep == 0)
 """_${vector.id}[$index] += _aifield_${vector.id}[$index];
 """, basis = $homeBasis), autoIndent=True}@slurp
   
+  ${callFunction('nonconstantIPFields', arguments, _exponent = 1, _arrayIndex = 0, parentFunction = function), autoIndent=True}
+  
   // ipEvolve a +1
-  ${callFunction('nonconstantIPFields', arguments, _exponent = 1, _arrayIndex = 0, parentFunction = function), autoIndent=True}@slurp
-  ${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction = function), autoIdent=True}@slurp
+  ${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction = function), autoIdent=True}
   
   // transformToHomeSpace()
   ${transformVectorsToBasis($integrationVectors, $homeBasis), autoIndent=True}@slurp
@@ -80,7 +81,7 @@ else
   ${assignVectorPointers($integrationVectors, '_active', '_akfield'), autoIndent=True}@slurp
   
   // ipEvolve a_k +1
-  ${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction = function), autoIndent=True}@slurp
+  ${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction = function), autoIndent=True}
   
   // transformToHomeSpace()
   ${transformVectorsToBasis($integrationVectors, $homeBasis), autoIndent=True}@slurp
@@ -92,7 +93,7 @@ else
   ${copyVectors($integrationVectors, '_aifield'), autoIndent=True}@slurp
   
   // a_i = G[a_i, t]
-  ${callFunction('deltaA', arguments, parentFunction = function), autoIndent=True}@slurp
+  ${callFunction('deltaA', arguments, parentFunction = function), autoIndent=True}
   
   // transformToHomeSpace()
   ${transformVectorsToBasis($integrationVectors, $homeBasis), autoIndent=True}@slurp
@@ -105,9 +106,10 @@ else
 """_akfield_${vector.id}[$index] = _akfield_${vector.id}[$index] + 2*_aifield_${vector.id}[$index];
 """, basis = $homeBasis), autoIndent=True}@slurp
   
+  ${callFunction('nonconstantIPFields', arguments, _exponent = 1, _arrayIndex = 0, parentFunction = function), autoIndent=True}
+  
   // ipEvolve a_k +1
-  ${callFunction('nonconstantIPFields', arguments, _exponent = 1, _arrayIndex = 0, parentFunction = function), autoIndent=True}@slurp
-  ${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction = function), autoIndent=True}@slurp
+  ${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction = function), autoIndent=True}
   
   // transformToHomeSpace()
   ${transformVectorsToBasis($integrationVectors, $homeBasis), autoIndent=True}@slurp
@@ -124,7 +126,7 @@ if (_istep == ($getVar('integrator.maxIntegrationStepsVar', $integrator.stepCoun
   ${assignVectorPointers($integrationVectors, '_active', '_akfield'), autoIndent=True}@slurp
   
   // ipEvolve a_k +1
-  ${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction = function), autoIndent=True}@slurp
+  ${callFunction('ipEvolve', arguments, _exponent = +1, parentFunction = function), autoIndent=True}
   
   // transformToHomeSpace()
   ${transformVectorsToBasis($integrationVectors, $homeBasis), autoIndent=True}@slurp
@@ -136,7 +138,7 @@ if (_istep == ($getVar('integrator.maxIntegrationStepsVar', $integrator.stepCoun
   ${copyVectors($integrationVectors, '_aifield'), autoIndent=True}@slurp
   
   // a_i = G[a_i, t]
-  ${callFunction('deltaA', arguments, parentFunction = function), autoIndent=True}@slurp
+  ${callFunction('deltaA', arguments, parentFunction = function), autoIndent=True}
   
   // transformToHomeSpace()
   ${transformVectorsToBasis($integrationVectors, $homeBasis), autoIndent=True}@slurp
