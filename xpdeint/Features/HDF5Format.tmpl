@@ -86,6 +86,13 @@ snprintf(_h5Filename, 200, "%s.h5", ${baseFilename});
 
 /* Open the file */
 hid_t hdf5_file = H5Fopen(_h5Filename, H5F_ACC_RDWR, H5P_DEFAULT);
+if (hdf5_file < 0) {
+  _LOG(_WARNING_LOG_LEVEL, "Failed to open HDF5 file '%s', will try to create it.", _h5Filename);
+  hdf5_file = H5Fcreate(_h5Filename, H5F_ACC_EXCL, H5P_DEFAULT, H5P_DEFAULT);
+  if (hdf5_file < 0) {
+    _LOG(_ERROR_LOG_LEVEL, "Failed to create HDF5 file '%s'. Bailing.", _h5Filename);
+  }
+}
 
 /* Create the group for this data */
 hid_t group;
