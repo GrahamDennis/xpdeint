@@ -15,7 +15,10 @@ import FourierTransformFFTW3MPI
 FourierTransformFFTW3.FourierTransformFFTW3.mpiCapableSubclass = FourierTransformFFTW3MPI.FourierTransformFFTW3MPI
 transformClasses.update([(name, FourierTransformFFTW3.FourierTransformFFTW3) for name in ['dft', 'dct', 'dst', 'mpi']])
 
-import MMT
-transformClasses.update([(name, MMT.MMT) for name in ['bessel', 'spherical-bessel', 'hermite-gauss']])
+import BesselTransform
+transformClasses.update([(name, BesselTransform.BesselTransform) for name in ['bessel', 'spherical-bessel']])
+
+import HermiteGaussTransform
+transformClasses['hermite-gauss'] = HermiteGaussTransform.HermiteGaussTransform
 
 del transformClasses

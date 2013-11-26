@@ -47,23 +47,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   @#
 @end def
 
-@def besselGlobalsForDim($dimName, $basisDict)
-  @#
-  @set $besselOrder = basisDict['order'] + basisDict['orderOffset']
-  @set $lattice = basisDict['lattice']
-const real _normbesseljzeros_${dimName}[] = {${wrapArray($normalisedBesselJZeros(besselOrder, lattice))}};
-const real _besseljnorm_${dimName} = ${besselJZeros(besselOrder, lattice+1)[-1]};
-  @#
-@end def
-
-@def hermiteGaussGlobalsForDim($dimName, $basisDict)
-  @#
-  @set $lattice = basisDict['lattice']
-const real _hermite_zeros_${dimName}[] = {${wrapArray($hermiteZeros(lattice))}};
-const real _hermite_gauss_weights_${dimName}[] = {${wrapArray($hermiteGaussWeights(lattice))}};
-  @#
-@end def
-
 @def mainBegin($dict)
   @#
 
