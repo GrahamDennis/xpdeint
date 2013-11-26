@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *@
 @extends xpdeint.Geometry.NonUniformDimensionRepresentation
 
-@attr $instanceAttributes = ['_maximum', '_order']
+@attr $instanceAttributes = ['_maximum', '_order', '_weightOrder']
 
 @attr $orderOffset = 0
 
@@ -35,7 +35,7 @@ jn(${order}, ${argument})@slurp
 
 @def gridAndStepAtIndex($index)
   @#
-const real besselFactor = ${besselJFunctionCall($_order + 1, c'_normbesseljzeros_${parent.name}[${index}] * _besseljnorm_${parent.name}')};
+const real besselFactor = ${besselJFunctionCall($_weightOrder, c'_besseljzeros_${parent.name}[${index}]')};
 const real ${name}_max = ${_maximum};
   @#
   @super(index)
@@ -44,13 +44,13 @@ const real ${name}_max = ${_maximum};
 
 @def gridAtIndex($index)
   @#
-_normbesseljzeros_${parent.name}[$index] * ${name}_max@slurp
+(_besseljzeros_${parent.name}[$index] / _besseljS_${parent.name}) * ${name}_max@slurp
   @#
 @end def
 
 @def stepWeightAtIndex($index)
   @#
-2.0 / (besselFactor * besselFactor * _besseljnorm_${parent.name} * _besseljnorm_${parent.name}) * ${name}_max * ${name}_max@slurp
+2.0 / (besselFactor * besselFactor * _besseljS_${parent.name} * _besseljS_${parent.name}) * ${name}_max * ${name}_max@slurp
   @#
 @end def
 

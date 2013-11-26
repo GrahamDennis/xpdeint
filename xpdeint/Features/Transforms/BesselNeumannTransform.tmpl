@@ -1,5 +1,5 @@
 @*
-BesselTransform.tmpl
+BesselNeumannTransform.tmpl
 
 Created by Graham Dennis on 2013-11-26.
 
@@ -23,9 +23,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 @def globalsForDim($dimName, $basisDict)
   @#
-  @set $besselOrder = basisDict['order'] + basisDict['orderOffset']
+  @set $besselOrder = basisDict['order']
   @set $lattice = basisDict['lattice']
-const real _besseljzeros_${dimName}[] = {${wrapArray($besselJZeros(besselOrder, lattice))}};
-const real _besseljS_${dimName} = ${besselJZeros(besselOrder, lattice+1)[-1]};
+const real _besseljzeros_${dimName}[] = {${wrapArray([0] + $besselJZeros(besselOrder + 1, lattice - 1))}};
+const real _besseljS_${dimName} = ${besselNeumannSFactor(besselOrder, lattice)};
   @#
 @end def

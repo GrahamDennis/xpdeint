@@ -45,6 +45,6 @@ gsl_sf_bessel_jl($order, $argument)@slurp
 
 @def stepWeightAtIndex($index)
   @#
-2.0 / (besselFactor * besselFactor * _besseljnorm_${parent.name} * _besseljnorm_${parent.name} * _besseljnorm_${parent.name}) * ${name}_max * ${name}_max * ${name}_max@slurp
+2.0 / (besselFactor * besselFactor * _besseljS_${parent.name} * _besseljS_${parent.name} * _besseljS_${parent.name}) * ${name}_max * ${name}_max * ${name}_max@slurp
   @#
 @end def

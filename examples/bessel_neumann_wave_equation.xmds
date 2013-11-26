@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <name>bessel_neumann_wave_equation</name>
+  <author>Graham Dennis</author>
+  <description>
+    Solve the wave equation on a disk of radius 1 utilising cylindrical symmetry
+    by using the Bessel function transform.  The boundary condition at r=1 is d/dr u = 0
+  </description>
+  
+  <features>
+    <benchmark />
+    <bing />
+    <validation kind="run-time" />
+    <globals>
+      <![CDATA[
+      const real T = 10.0;
+      const real mass = 1e-3;
+      const real length = 1.0;
+      const real mu = mass/length;
+      ]]>
+    </globals>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <!-- Volume prefactor = 2 \pi is to cover the suppressed integration over \theta -->
+      <!-- transform="bessel-neumann" means cylindrical symmetry with zero derivative boundary conditions at the outer boundary -->
+      <dimension name="x" lattice="100"  domain="(0, 1)" transform="bessel-neumann" order="0" volume_prefactor="2.0*M_PI"/>
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="main" initial_basis="x" type="complex">
+    <components>
+      u uDot
+    </components>
+    <initialisation>
+      <![CDATA[
+        u = exp(-100.0*(x-0.25)*(x-0.25));
+        uDot = 0.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    
+    <integrate algorithm="ARK45" tolerance="1e-6" interval="40e-3" steps="400">
+      <samples>100 100</samples>
+      <operators>
+        <operator kind="ex" basis="kx" type="real">
+          <operator_names>L</operator_names>
+          <![CDATA[
+            L = -T*kx*kx/mu;
+          ]]>
+        </operator>
+        <integration_vectors>main</integration_vectors>
+        <![CDATA[
+          du_dt = uDot;
+          duDot_dt = L[u];
+        ]]>
+      </operators>
+    </integrate>
+  </sequence>
+  
+  <output format="hdf5">
+      <sampling_group basis="x" initial_sample="yes">
+        <moments>amp</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          amp = u.Re();
+        ]]>
+      </sampling_group>
+      <sampling_group basis="kx" initial_sample="no">
+        <moments>amp</moments>
+        <dependencies>main</dependencies>
+        <![CDATA[
+          amp = u.Re();
+        
+        ]]>
+      </sampling_group>
+  </output>
+</simulation>

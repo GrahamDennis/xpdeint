@@ -17,6 +17,8 @@ transformClasses.update([(name, FourierTransformFFTW3.FourierTransformFFTW3) for
 
 import BesselTransform
 transformClasses.update([(name, BesselTransform.BesselTransform) for name in ['bessel', 'spherical-bessel']])
+import BesselNeumannTransform
+transformClasses['bessel-neumann'] = BesselNeumannTransform.BesselNeumannTransform
 
 import HermiteGaussTransform
 transformClasses['hermite-gauss'] = HermiteGaussTransform.HermiteGaussTransform

@@ -411,7 +411,7 @@ If you are using the ``distributed-mpi`` driver to parallelise the simulation, p
 
 .. _Transforms:
 
-Each transverse dimension can be associated with a transform.  This allows the simulation to manipulate vectors defined on that dimension in the transform space.  The default is Fourier space (with the associated transform being the discrete Fourier transform, or "dft"), but others can be specified with the ``transform`` attribute.  The other options are "none", "dst", "dct", "bessel", "spherical-bessel" and "hermite-gauss".  Using the right transform can dramatically improve the speed of a calculation.
+Each transverse dimension can be associated with a transform.  This allows the simulation to manipulate vectors defined on that dimension in the transform space.  The default is Fourier space (with the associated transform being the discrete Fourier transform, or "dft"), but others can be specified with the ``transform`` attribute.  The other options are "none", "dst", "dct", "bessel", "spherical-bessel", "bessel-neumann" and "hermite-gauss".  Using the right transform can dramatically improve the speed of a calculation.
 
 An advanced feature discussed further in :ref:`DimensionAliases` are dimension aliases, which are specified by the ``aliases`` attribute.  This feature is useful for example, when calculating correlation functions.
 
@@ -539,8 +539,8 @@ Example syntax::
 
 .. _BesselTransform:
 
-The "bessel" transform
-----------------------
+The "bessel" and "bessel-neumann" transforms
+--------------------------------------------
 
 Just as the Fourier basis is useful for finding derivatives in Euclidean geometry, the basis of Bessel functions is useful for finding certain common operators in cylindrical co-ordinates.  In particular, we use the Bessel functions of the first kind, :math:`J_m(u)`.  The relevant transform is the Hankel transform:
 
@@ -558,6 +558,8 @@ This transform pair has the useful property that the Laplacian in cylindrical co
     \nabla^2 \left(f(r) e^{i m \theta}\right) &= \left(\frac{\partial^2 f}{\partial r^2} +\frac{1}{r}\frac{\partial f}{\partial r} -\frac{m^2}{r^2} f \right) e^{i m \theta} = \left\{\mathcal{H}^{-1}_m \left[(-k^2) F_m(k)\right](r) \right\} e^{i m \theta}
     
 XMDS labels the variables in the transformed space with a prefix of 'k', just as for :ref:`Fourier transforms<dft_Transform>`.  The order :math:`m` of the transform is defined by the ``order`` attribute in the ``<dimension>`` element, which must be assigned as a non-negative integer.  If the order is not specified, it defaults to zero which corresponds to the solution being independent of the angular coordinate :math:`\theta`.  
+
+The difference between the "bessel" and "bessel-neumann" transforms is that the "bessel" transform enforces Dirichlet boundary conditions at the edge of the computational domain (:math:`f(R) = 0`), while "bessel-neumann" enforces Neumann boundary conditions (:math:`\left.\frac{\partial}{\partial r}f(r) \right|_{r=R} = 0`).
 
 It can often be useful to have a different sampling in normal space and Hankel space.  Reducing the number of modes in either space dramatically speeds simulations.  To set the number of lattice points in Hankel space to be different to the number of lattice points for the field in its original space, use the attribute ``spectral_lattice``.  The Bessel space lattice is chosen such that the boundary condition at the edge of the domain is zero.  This ensures that all of the Bessel modes are orthogonal.  The spatial lattice is also chosen in a non-uniform manner so that Gaussian quadrature methods can be usedfor spectrally accurate transforms.
 

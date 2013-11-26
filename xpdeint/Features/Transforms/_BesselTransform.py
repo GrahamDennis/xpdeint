@@ -37,6 +37,7 @@ mpmath = None
 
 # Again, don't directly import numpy
 numpy = None
+scipy = None
 
 def require_mpmath():
   global mpmath
@@ -52,6 +53,13 @@ def require_numpy():
   if not numpy:
     import numpy
 
+def require_scipy():
+  require_numpy()
+  global scipy
+  if not scipy:
+    import scipy
+    import scipy.special
+    import scipy.optimize
 
 def besselJZeros(m, a, b):
   require_mpmath()
@@ -64,6 +72,26 @@ def besselJZeros(m, a, b):
   assert all([0.6*mpmath.pi < (b - a) < 1.4*mpmath.pi for a, b in zip(results[:-1], results[1:])]), "Separation of Bessel zeros was incorrect."
   return results
 
+def besselNeumannMatrix(m, besseljzeros, S):
+  require_scipy()
+  N = len(besseljzeros)
+  matrix = numpy.zeros([N, N])
+  for i in xrange(N):
+    for j in xrange(N):
+      matrix[i,j] = (2.0 / S) * scipy.special.jn(m, besseljzeros[i] * besseljzeros[j] / S) \
+          / numpy.abs(scipy.special.jn(m, besseljzeros[i]) * scipy.special.jn(m, besseljzeros[j]))
+  return matrix
+  
+def besselNeumannSFactor(m, besseljzeros):
+  require_scipy()
+  besseljzeros_for_matrix = besseljzeros[:-1]
+  def f(S):
+    matrix = besselNeumannMatrix(m, besseljzeros_for_matrix, S)
+    determinant = numpy.linalg.det(matrix)
+    return numpy.abs(determinant) - 1.0
+  
+  S, results = scipy.optimize.brentq(f, besseljzeros[-2], besseljzeros[-1], full_output=True)
+  return S
 
 
 class _BesselTransform(MMT):
@@ -74,6 +102,7 @@ class _BesselTransform(MMT):
     dataCache = self.getVar('dataCache')
     
     self.besselJZeroCache = dataCache.setdefault('besselJZeros', {})
+    self.besselNeumannSCache = dataCache.setdefault('besselNeumannSFactor', {})
   
   def newDimension(self, name, lattice, minimum, maximum,
                    parent, transformName, aliases = set(),
@@ -81,7 +110,7 @@ class _BesselTransform(MMT):
                    type = 'real', volumePrefactor = None,
                    xmlElement = None):
     assert type == 'real'
-    assert transformName in ['bessel', 'spherical-bessel']
+    assert transformName in ['bessel', 'spherical-bessel', 'bessel-neumann']
     if not spectralLattice:
       spectralLattice = lattice
     dim = super(_BesselTransform, self).newDimension(name, max(lattice, spectralLattice), minimum, maximum,
@@ -104,6 +133,10 @@ class _BesselTransform(MMT):
         if order < 0:
           raise ParserException(xmlElement, "The 'order' attribute for Bessel transforms must be non-negative integers.")
     orderOffset = 0
+    if transformName == 'bessel-neumann':
+      weightOrder = order
+    else:
+      weightOrder = order + 1
     dimRepClass = BesselDimensionRepresentation
     
     if transformName == 'spherical-bessel':
@@ -132,15 +165,15 @@ class _BesselTransform(MMT):
     xspace = dimRepClass(name = name, type = type, runtimeLattice = lattice,
                          stepSizeArray = True, parent = dim,
                          tag = self.coordinateSpaceTag,
-                         _maximum = maximum, _order = order,
+                         _maximum = maximum, _order = order, _weightOrder = weightOrder,
                          **self.argumentsToTemplateConstructors)
     dim.addRepresentation(xspace)
     
     # Spectral space representation
     kspace = dimRepClass(name = 'k' + name, type = type, runtimeLattice = spectralLattice,
                          stepSizeArray = True, parent = dim,
-                         _maximum = '(_besseljnorm_%(name)s/((real)%(maximum)s))' % locals(),
-                         _order = order,
+                         _maximum = '(_besseljS_%(name)s/((real)%(maximum)s))' % locals(),
+                         _order = order, _weightOrder = weightOrder,
                          reductionMethod = dimRepClass.ReductionMethod.fixedStep,
                          tag = self.spectralSpaceTag,
                          **self.argumentsToTemplateConstructors)
@@ -157,8 +190,11 @@ class _BesselTransform(MMT):
     
     return self.besselJZeroCache[m][:k]
   
-  def normalisedBesselJZeros(self, m, k):
-    zeros = self.besselJZeros(m, k+1)
-    norm = zeros[-1]
-    return [zero/norm for zero in zeros[:-1]]
-  
+  def besselNeumannSFactor(self, m, k):
+    require_numpy()
+    if not (m, k) in self.besselNeumannSCache:
+      zeros = [numpy.double(0.0)] + map(numpy.double, self.besselJZeros(m+1, k))
+      S = besselNeumannSFactor(m, zeros)
+      self.besselNeumannSCache[(m, k)] = float(S)
+    
+    return self.besselNeumannSCache[(m, k)]
