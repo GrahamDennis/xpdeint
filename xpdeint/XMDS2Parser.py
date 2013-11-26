@@ -1963,8 +1963,8 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
     propDimRep = propagationDimension.representations[0]
     
     if not propDimRep.type == 'real' or not isinstance(propDimRep, UniformDimensionRepresentation):
-      raise ParserException(operatorElement, "Cannot integrate in the '%(propagationDimensionName)s' direction as it is an integer-valued dimension.\n"
-                                             "Cross-propagators can only integrate along normal dimensions." % locals())
+      raise ParserException(operatorElement, "Cannot integrate in the '%(propagationDimensionName)s' direction as it is not a uniformly spaced 'real' dimension.\n"
+                                             "Cross-propagators can only integrate along dimensions with transforms 'dft', 'dct', 'dst', or 'none'." % locals())
     
     fieldPropagationDimensionIndex = fullField.indexOfDimension(propagationDimension)
     # Set the stepCount -- this is the lattice for this dimension minus 1 because we know the value at the starting boundary
