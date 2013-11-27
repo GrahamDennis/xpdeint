@@ -1,19 +1,3 @@
-.. raw:: html
-
-  <style> .attributes-code {color:#0000BB; font-family:'monospace'; font-style:italic} </style>
-
-.. raw:: html
-
-  <style> .attributes-standard {color:#0000BB; font-family:'monospace'; font-style:italic; font-size:smaller} </style>
-
-.. raw:: html
-
-  <style> .smaller-font {font-size:smaller} </style>
-
-.. role:: attributes-code
-.. role:: attributes-standard
-.. role:: smaller-font
-
 .. _ReferenceElements:
 
 *********************
