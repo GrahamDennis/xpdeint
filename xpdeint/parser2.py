@@ -33,7 +33,7 @@ from pkg_resources import resource_filename
 import hashlib
 import shutil
 
-DATA_CACHE_VERSION = 1
+DATA_CACHE_VERSION = 2
 
 import cPickle
 

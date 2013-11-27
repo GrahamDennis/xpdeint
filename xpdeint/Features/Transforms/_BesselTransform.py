@@ -27,6 +27,7 @@ from xpdeint.Features.Transforms.MMT import MMT
 from xpdeint.Features.Transforms.BesselBasis import BesselBasis
 
 from xpdeint.Geometry.BesselDimensionRepresentation import BesselDimensionRepresentation
+from xpdeint.Geometry.BesselNeumannDimensionRepresentation import BesselNeumannDimensionRepresentation
 from xpdeint.Geometry.SphericalBesselDimensionRepresentation import SphericalBesselDimensionRepresentation
 
 from xpdeint.ParserException import ParserException
@@ -72,23 +73,38 @@ def besselJZeros(m, a, b):
   assert all([0.6*mpmath.pi < (b - a) < 1.4*mpmath.pi for a, b in zip(results[:-1], results[1:])]), "Separation of Bessel zeros was incorrect."
   return results
 
-def besselNeumannMatrix(m, besseljzeros, S):
+def besselJPrimeZeros(m, a, b):
+  require_mpmath()
+  results = [mpmath.besseljzero(m, i, derivative=1) for i in xrange(a, b+1)]
+  return results
+
+def besselNeumannMatrix(m, besseljzeros, besselValues, S):
   require_scipy()
   N = len(besseljzeros)
   matrix = numpy.zeros([N, N])
   for i in xrange(N):
     for j in xrange(N):
       matrix[i,j] = (2.0 / S) * scipy.special.jn(m, besseljzeros[i] * besseljzeros[j] / S) \
-          / numpy.abs(scipy.special.jn(m, besseljzeros[i]) * scipy.special.jn(m, besseljzeros[j]))
+          / (besselValues[i] * besselValues[j])
   return matrix
   
 def besselNeumannSFactor(m, besseljzeros):
   require_scipy()
   besseljzeros_for_matrix = besseljzeros[:-1]
+  N = len(besseljzeros_for_matrix)
+  print "Computing the Bessel-Neumann transform S factor for lattice size %i (this will be performed once and saved for each lattice size)..." % (N)
+  besselValues = []
+  for i in xrange(N):
+    x = numpy.abs(scipy.special.jn(m, besseljzeros[i]))
+    if m > 0:
+      x *= numpy.sqrt(1.0 - m*m / (besseljzeros[i] * besseljzeros[i]))
+    besselValues.append(x)
+
   def f(S):
-    matrix = besselNeumannMatrix(m, besseljzeros_for_matrix, S)
+    matrix = besselNeumannMatrix(m, besseljzeros_for_matrix, besselValues, S)
     determinant = numpy.linalg.det(matrix)
-    return numpy.abs(determinant) - 1.0
+    result = numpy.abs(determinant) - 1.0
+    return result
   
   S, results = scipy.optimize.brentq(f, besseljzeros[-2], besseljzeros[-1], full_output=True)
   return S
@@ -102,6 +118,7 @@ class _BesselTransform(MMT):
     dataCache = self.getVar('dataCache')
     
     self.besselJZeroCache = dataCache.setdefault('besselJZeros', {})
+    self.besselJPrimeZeroCache = dataCache.setdefault('besselJPrimeZeros', {})
     self.besselNeumannSCache = dataCache.setdefault('besselNeumannSFactor', {})
   
   def newDimension(self, name, lattice, minimum, maximum,
@@ -133,11 +150,12 @@ class _BesselTransform(MMT):
         if order < 0:
           raise ParserException(xmlElement, "The 'order' attribute for Bessel transforms must be non-negative integers.")
     orderOffset = 0
+    dimRepClass = BesselDimensionRepresentation
     if transformName == 'bessel-neumann':
       weightOrder = order
+      dimRepClass = BesselNeumannDimensionRepresentation
     else:
       weightOrder = order + 1
-    dimRepClass = BesselDimensionRepresentation
     
     if transformName == 'spherical-bessel':
       dimRepClass = SphericalBesselDimensionRepresentation
@@ -190,10 +208,19 @@ class _BesselTransform(MMT):
     
     return self.besselJZeroCache[m][:k]
   
+  def besselJPrimeZeros(self, m, k):
+    if not m in self.besselJPrimeZeroCache:
+      self.besselJPrimeZeroCache[m] = besselJPrimeZeros(m, 1, k)
+    else:
+      if len(self.besselJPrimeZeroCache[m]) < k:
+        self.besselJPrimeZeroCache[m].extend(besselJPrimeZeros(m, len(self.besselJPrimeZeroCache[m])+1, k))
+    
+    return self.besselJPrimeZeroCache[m][:k]
+  
   def besselNeumannSFactor(self, m, k):
     require_numpy()
     if not (m, k) in self.besselNeumannSCache:
-      zeros = [numpy.double(0.0)] + map(numpy.double, self.besselJZeros(m+1, k))
+      zeros = map(numpy.double, self.besselJPrimeZeros(m, k+1))
       S = besselNeumannSFactor(m, zeros)
       self.besselNeumannSCache[(m, k)] = float(S)
     

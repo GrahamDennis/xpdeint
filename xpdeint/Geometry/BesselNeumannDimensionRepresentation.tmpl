@@ -1,7 +1,7 @@
 @*
-BesselNeumannTransform.tmpl
+BesselNeumannDimensionRepresentation.tmpl
 
-Created by Graham Dennis on 2013-11-26.
+Created by Graham Dennis on 2013-11-27.
 
 Copyright (c) 2013, Graham Dennis
 
@@ -19,13 +19,24 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 *@
-@extends xpdeint.Features.Transforms._BesselTransform
+@extends xpdeint.Geometry.BesselDimensionRepresentation
 
-@def globalsForDim($dimName, $basisDict)
+@def gridAndStepAtIndex($index)
   @#
-  @set $besselOrder = basisDict['order']
-  @set $lattice = basisDict['lattice']
-const real _besseljzeros_${dimName}[] = {${wrapArray($besselJPrimeZeros(besselOrder, lattice))}};
-const real _besseljS_${dimName} = ${besselNeumannSFactor(besselOrder, lattice)};
+const real mSquaredFactor = @slurp
+  @if self._order == 0
+1.0@slurp
+  @else
+1.0 - ${_order} * ${_order} / (_besseljzeros_${parent.name}[${index}] * _besseljzeros_${parent.name}[${index}])@slurp
+  @end if
+;
+  @#
+  @super(index)
+  @#
+@end def
+
+@def stepWeightAtIndex($index)
+  @#
+2.0 / (mSquaredFactor * besselFactor * besselFactor * _besseljS_${parent.name} * _besseljS_${parent.name}) * ${name}_max * ${name}_max@slurp
   @#
 @end def
