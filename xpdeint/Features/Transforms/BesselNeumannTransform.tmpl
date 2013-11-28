@@ -20,6 +20,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 *@
 @extends xpdeint.Features.Transforms._BesselTransform
+@from xpdeint.CallOnceGuards import callOnceGuard
+
+@@callOnceGuard
+@def static_includes
+extern "C" {
+  #include <clapack.h>
+}
+@end def
 
 @def globalsForDim($dimName, $basisDict)
   @#
@@ -29,3 +37,56 @@ const real _besseljzeros_${dimName}[] = {${wrapArray($besselJPrimeZeros(besselOr
 const real _besseljS_${dimName} = ${besselNeumannSFactor(besselOrder, lattice)};
   @#
 @end def
+
+@@callOnceGuard
+@def static_functionPrototypes
+  @#
+void _xmds_invert_real_square_transform_matrix(real *output, real *input, size_t matrix_dimension);
+  @#
+@end def
+
+
+@@callOnceGuard
+@def static_functionImplementations
+  @#
+void _xmds_invert_real_square_transform_matrix(real *output, real *input, size_t matrix_dimension)
+{
+  @set $blasTypeChar = {'single': 's', 'double': 'd'}[$precision]
+  __CLPK_integer N = matrix_dimension;
+  __CLPK_integer *ipiv = (__CLPK_integer *)xmds_malloc(sizeof(__CLPK_integer) * matrix_dimension);
+  __CLPK_integer info = 0;
+  __CLPK_integer dummy = 0;
+  
+  memcpy(output, input, matrix_dimension * matrix_dimension * sizeof(real));
+  
+  ${blasTypeChar}getrf_(&N, &N, output, &N, ipiv, &info);
+  
+  if (info != 0) {
+    _LOG(_ERROR_LOG_LEVEL, "Failed to LU transform matrix");
+    return;
+  }
+  
+  __CLPK_integer ispec = 1;
+  
+  // Query optimal workspace size
+  char *function_name = strdup("${blasTypeChar.upper()}GETRI");
+  char *empty_options = strdup(" ");
+  __CLPK_integer blockSize = ilaenv_(&ispec, function_name, empty_options, &N, &dummy, &dummy, &dummy);
+  free(function_name); function_name = NULL;
+  free(empty_options); empty_options = NULL;
+  
+  __CLPK_integer lwork = N*blockSize;
+  real *workspace = (real *)xmds_malloc(sizeof(real) * lwork);
+  
+  ${blasTypeChar}getri_(&N, output, &N, ipiv, workspace, &lwork, &info);
+  
+  if(info !=0) {
+    _LOG(_ERROR_LOG_LEVEL, "Failed to invert transform matrix");
+    return;
+  }
+  
+  xmds_free(workspace);
+  xmds_free(ipiv);
+}
+  @#
+@end def    
