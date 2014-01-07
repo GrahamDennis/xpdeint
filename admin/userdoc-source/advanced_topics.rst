@@ -1,3 +1,5 @@
+.. index:: Advanced topics
+
 .. _AdvancedTopics:
 
 Advanced Topics
@@ -10,6 +12,9 @@ This section has further details on some important topics.
 :ref:`Convolutions` (extra information on the Fourier transforms used in XMDS2, and applications to defining convolutions)
 
 :ref:`DimensionAliases` (dimensions which are declared to be identical, useful for correlation functions)
+
+
+.. index:: Importing data
 
 .. _Importing:
 
@@ -166,6 +171,9 @@ This function can be exported as an h5 file,
 
 and imported into XMDS2 as outlined above.
 
+
+.. index:: Convolutions and Fourier transforms
+
 .. _Convolutions:
 
 Convolutions and Fourier transforms
@@ -220,15 +228,21 @@ Example 3
     
 Sometimes when the convolution theorem is used one of the forward Fourier transforms is calculated analytically and input in Fourier space. In this case only one forward numerical Fourier transform and one backward numerical Fourier transform is used. The number of forward and backward transforms are equal, so no phase factor is required.
 
+.. index:: Geometry matching mode - loose
+
 .. _LooseGeometryMatchingMode:
 
 'Loose' ``geometry_matching_mode``
 ----------------------------------
 
+
+
+.. index:: Dimension aliases
 .. _DimensionAliases:
 
 Dimension aliases
 -----------------
+
 
 Dimension aliases specify that two or more dimensions have exactly the same ``lattice``, ``domain`` and ``transform``.  This can be useful in situations where the problem enforces this, for example when computing correlation functions or representing square matrices.  
 

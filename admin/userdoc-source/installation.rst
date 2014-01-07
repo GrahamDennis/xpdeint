@@ -1,3 +1,5 @@
+.. index:: Installing XMDS2
+
 .. _Installation:
 
 ************
@@ -37,6 +39,9 @@ The easiest way to get started is with an installer.  If we don't have an instal
 
 If you have one of the supported operating systems listed above, but you find the installer doesn't work for you, please let us know by emailing xmds-devel <at> lists.sourceforge.net. If you'd like to tweak the linux installer to work on a distribution we haven't tested, we'd love you to do that and let us know!
 
+
+.. index:: Installers - linux
+
 .. _linux_installation:
 
 Linux installer instructions
@@ -62,6 +67,8 @@ By default, this installer will install a known stable version of XMDS, which ca
 Once XMDS2 has been installed, you can run it from the terminal by typing ``xmds2``. See the :ref:`QuickStartTutorial` for next steps.
 
 
+.. index:: Installers - Max OS X
+
 .. _mac_installation:
 
 Mac OS X Installation
@@ -86,6 +93,9 @@ The terminal window launched by the XMDS application has environment variables s
 To uninstall XMDS, drag the XMDS application to the trash. XMDS places some files in the directory ``~/Library/XMDS``. Remove this directory to completely remove XMDS from your system.
 
 This package includes binaries for `OpenMPI <http://www.open-mpi.org>`_, `FFTW <http://www.fftw.org>`_, `HDF5 <http://www.hdfgroup.org/HDF5>`_ and `GSL <http://www.gnu.org/software/gsl>`_. These binaries are self-contained and do not overwrite any existing installations.
+
+
+.. index:: Installing via source
 
 .. _ManualInstallation:
 

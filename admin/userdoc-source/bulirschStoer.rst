@@ -1,3 +1,5 @@
+.. index:: Modified midpoint method
+
 .. _MMDetail:
 
 Modified Midpoint Method
@@ -26,6 +28,8 @@ The importance of this even power series is that using Richardson Extrapolation 
 
 The modified midpoint method is a second-order method, but holds an advantage over second order Runge-Kutta, as it only requires 1 derivative evaluation per step, instead of the two evaluations that Runge-Kutta necessitates.
 
+.. index:: Bulirsch-Stoer algorithm
+
 .. _BSDetail:
 
 Bulirsch-Stoer Algorithm
@@ -47,6 +51,9 @@ The third idea is to use an integration method whose error function is strictly 
 These three ideas give us the Bulirsch-Stoer method, where a single step takes us from :math:`x` to :math:`x + H`, where :math:`H` is supposed to be a significantly large distance. That single step consists of many substeps of the modified midpoint method, which is then extrapolated to zero stepsize.
 
 (Excerpts derived from **Numerical Recipes: The Art of Scientific Computing**, Third Edition (2007), p1256; Cambridge University Press; ISBN-10: 0521880688, `<http://www.nr.com/>`_)
+
+
+.. index:: Bulirsch-Stoer error scaling
 
 .. _ErrorScaling:
 

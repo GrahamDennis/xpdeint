@@ -1,3 +1,5 @@
+.. index:: FAQ
+
 .. _FAQ:
 
 Frequently Asked Questions
@@ -18,17 +20,22 @@ The documentation on this website is currently incomplete, but it still covers a
 
 You should also feel free to email questions to the XMDS users' mailing list at xmds-users@lists.sourceforge.net, where the developers and other users can assist you. You can join the mailing list by going to http://sourceforge.net/projects/xmds/ and clicking on "mailing lists." Also, if you look through the mailing list archives, your particular problem may already have been discussed.
 
+.. index:: Citing XMDS2
 
 How should I cite XMDS2?
 ~~~~~~~~~~~~~~~~~~~~~~~~
 If you publish work that has involved XMDS2, please cite it as: `Comput. Phys. Commun. 184, 201-208 (2013) <http://dx.doi.org/10.1016/j.cpc.2012.08.016>`_.
 
 
+.. index:: Bug reports
+
 I think I found a bug! Where should I report it?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Please report bugs to the developer mailing list at xmds-devel@lists.sourceforge.net. In your email, please include a description of the problem and attach the XMDS2 script that triggers the bug.
 
+
+.. index:: Time dependence in vectors
 
 How do I put time dependence into my vectors?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -37,6 +44,8 @@ Standard vectors can't have time dependence (or, more accurately, depend on the 
 
 Alternatively, you can explicitly use the ``propagation_dimension`` variable in your differential equation inside the ``<operators>`` block.  
 
+
+.. index:: Grid specification at run-time
 
 Can I specify the range of my domain and number of grid points at run-time?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -47,6 +56,8 @@ While the domain can always be specified in this way, specifying the lattice siz
 
 Also note that for some multi-dimensional spaces using different transforms, XMDS2 will sometimes optimise the code it generates based on the relative sizes of the dimensions. If one or more of the lattices are specified at run-time it is unable to do this and will have to make guesses. In some situations this may result in slightly slower code.
 
+
+.. index:: IP versus EX operators
 
 When can I use IP operators (and why should I) and when must I use EX operators?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -1,3 +1,5 @@
+.. index:: Licensing
+
 .. _Licensing:
 
 Licensing
@@ -14,6 +16,8 @@ Both licenses can be found at http://www.gnu.org/licenses/, but we also include 
 |
 |
 
+
+.. index:: GNU General Public License, GPL
 
 GNU General Public License
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -109,6 +113,8 @@ NO WARRANTY
 |
 |
 
+
+.. index:: GNU Free Documentation License
 
 GNU Free Documentation License
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

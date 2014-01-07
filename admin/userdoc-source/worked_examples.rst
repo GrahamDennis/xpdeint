@@ -1,3 +1,5 @@
+.. index:: Examples
+
 .. _WorkedExamples:
 
 Worked Examples

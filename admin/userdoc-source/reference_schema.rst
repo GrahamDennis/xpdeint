@@ -1,3 +1,5 @@
+.. index:: XMDS2 XML schema, XML schema
+
 .. _ReferenceSchema:
 
 ****************

@@ -1,3 +1,5 @@
+.. index:: Reference, XML Elements, Script elements
+
 .. _ReferenceElements:
 
 *********************

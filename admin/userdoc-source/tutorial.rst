@@ -1,3 +1,5 @@
+.. index:: Tutorial
+
 .. _QuickStartTutorial:
 
 Quickstart Tutorial

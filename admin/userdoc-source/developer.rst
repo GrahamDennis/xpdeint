@@ -5,6 +5,9 @@ Developer Documentation
 
 Developers need to know more than users.  For example, they need to know about the test suite, and writing test cases.  They need to know how to perform a developer installation.  They need to know how to edit and compile this documentation.  They need a step-by-step release process.
 
+
+.. index:: Test scripts
+
 .. _TestScripts:
 
 Test scripts
@@ -66,6 +69,9 @@ xsil_file element
 moment_group element
 ~~~~~~~~~~~~~~~~~~~~
 
+
+.. index:: Documentation format
+
 .. _UserDocumentation:
 
 XMDS Documentation
@@ -89,6 +95,7 @@ Once your documentation is in this folder, it should be deployed along with the 
 NOTE: Before you can run the create_release_version.sh file, there are a few packages you will need. This command uses latex to generate the XMDS2 pdf, so you’ll be needing the following packages; ``texlive-fonts-recommended``, ``texlive-lang-cjk``, ``texlive-latex-base``.
 
 
+.. index:: XML schema updates
 
 .. _HowToAddElementToValidator:
 
@@ -118,6 +125,9 @@ Navigate to ``xpdeint/support/xpdeint.rnc``. This is a RelaxNG compact file, whi
 Save this file, and then in the terminal navigate to the folder ``xpdeint/support/`` and run ``make``. This updates the XML based file ``xpdeint/support/xpdeint.rng``, which is the file the parser uses to validate elements in XMDS2. This file which is  used is in RelaxNG format, but RelaxNG compact is easier to read and edit.
 
 Commit both ``xpdeint/support/xpdeint.rnc`` and ``xpdeint/support/xpdeint.rng`` to the code repository.
+
+
+.. index:: Adding an integrator
 
 .. _HowToAddIntegrator:
 
@@ -159,6 +169,9 @@ In the terminal, navigate to the ``xpdeint`` directory, and run make over the en
 
 
 .. _LogicalBreakDownParsingProcess:
+
+
+.. index:: XMDS2 parsing process
 
 Logical breakdown of XMDS2 Parsing Process
 ------------------------------------------
@@ -210,6 +223,8 @@ Parse Integrate Element (Sub process 3.4.11.2)
 You can download the original dia file `here <_images/Subprocess3_4_11_2_ParseIntegrateElement.dia>`_.
 
 
+
+.. index:: XMDS2 project directory layout
 
 Directory layout
 ----------------
