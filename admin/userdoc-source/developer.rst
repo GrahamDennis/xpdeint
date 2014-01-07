@@ -188,7 +188,7 @@ Overall process for parsing XML file in XMDS2
 .. image:: images/Overall_Flowchart.png
    :align: center
 
-The original .dia file can be downloaded `here <_images/Overall_Flowchart.dia>`_.
+The original .dia file can be downloaded `here <_images/Overall_Flowchart.dia>`__.
 
 parser2.py parses XML file (Sub process 3)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -196,7 +196,7 @@ parser2.py parses XML file (Sub process 3)
 .. image:: images/Subprocess3_ParsingXMLFile.png
    :align: center
 
-You can download the original dia file `here <_images/Subprocess3_ParsingXMLFile.dia>`_.
+You can download the original dia file `here <_images/Subprocess3_ParsingXMLFile.dia>`__.
 
 Pass file to XMDS2Parser to parse xmlDocument with parseXMLDocument() (Sub process 3.4)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -204,7 +204,7 @@ Pass file to XMDS2Parser to parse xmlDocument with parseXMLDocument() (Sub proce
 .. image:: images/Subprocess3_4_parseXMLDocument.png
    :align: center
 
-You can download the original dia file `here <_images/Subprocess3_4_parseXMLDocument.dia>`_.
+You can download the original dia file `here <_images/Subprocess3_4_parseXMLDocument.dia>`__.
 
 Parse Top Level Sequence elements (Sub process 3.4.11)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -212,7 +212,7 @@ Parse Top Level Sequence elements (Sub process 3.4.11)
 .. image:: images/Subprocess3_4_11_ParseTopLvlSeqElements.png
    :align: center
 
-You can download the original dia file `here <_images/Subprocess3_4_11_ParseTopLvlSeqElements.dia>`_.
+You can download the original dia file `here <_images/Subprocess3_4_11_ParseTopLvlSeqElements.dia>`__.
 
 Parse Integrate Element (Sub process 3.4.11.2)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -220,7 +220,7 @@ Parse Integrate Element (Sub process 3.4.11.2)
 .. image:: images/Subprocess3_4_11_2_ParseIntegrateElement.png
    :align: center
 
-You can download the original dia file `here <_images/Subprocess3_4_11_2_ParseIntegrateElement.dia>`_.
+You can download the original dia file `here <_images/Subprocess3_4_11_2_ParseIntegrateElement.dia>`__.
 
 
 
