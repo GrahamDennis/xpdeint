@@ -41,9 +41,31 @@ make
 # Clean up after waf
 make distclean
 
+# Before we put everything into the tarball, remove files and
+# directories that don't need to be distributed to the user.
+
+# Don't need admin/ folder. It's just for developers, who will
+# use the SVN repo and can get it from there.
+rm -rf admin/
+
+# There may be an FFTW directory if the linux installer was used
+rm -rf fftw*
+
+# debian/ and bin/ directories are not needed by the end user
+rm -rf debian/
+rm -rf bin/
+
+# The html docs have been built, so don't need the doctrees or _sources
+rm -rf documentation/doctrees/
+rm -rf documentation/_sources/
+
+# Finally package everything up into the tarball
 cd ..
 tar -czf xmds-${XMDS_VERSION}.tar.gz xmds-${XMDS_VERSION}
 
+echo
 echo To release to sourceforge, execute the following commands.
 echo scp staging/xmds-${XMDS_VERSION}.tar.gz username@frs.sf.net:/home/frs/project/x/xm/xmds/
 echo "cd staging; scp -r documentation/* username@web.sf.net:/home/project-web/xmds/htdocs/"
+echo
+
