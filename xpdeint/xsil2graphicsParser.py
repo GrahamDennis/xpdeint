@@ -39,6 +39,7 @@ if sys.platform == 'darwin':
 from xpdeint.xsil2graphics2.MathematicaImport import MathematicaImport
 from xpdeint.xsil2graphics2.MatlabOctaveImport import MatlabOctaveImport
 from xpdeint.xsil2graphics2.PythonImport import PythonImport
+from xpdeint.xsil2graphics2.RImport import RImport
 
 
 # The help message printed when --help is used as an argument
@@ -57,6 +58,7 @@ Options:
   -e/--mathematica: optional, produce mathematica output
   -8/--octave:      optional, produce octave output (identical to MATLAB output)
   -p/--python:      optional, produce Python/pylab/matplotlib script (HDF5 requires h5py)
+  -r/--R:           optional, produce R output
   -o/--outfile:     optional, alternate output file name (one input file only)
   --debug:          Debug mode
   
@@ -91,7 +93,7 @@ def main(argv=None):
     argv = sys.argv
   try:
     try:
-      opts, args = getopt.gnu_getopt(argv[1:], "hm8epo:", ["help", "matlab", "octave", "mathematica", "python", "outfile=", "debug"])
+      opts, args = getopt.gnu_getopt(argv[1:], "hm8epro:", ["help", "matlab", "octave", "mathematica", "python", "R", "outfile=", "debug"])
     except getopt.error, msg:
       raise Usage(msg)
     
@@ -104,6 +106,7 @@ def main(argv=None):
       ("-8", "--octave", MatlabOctaveImport),
       ("-e", "--mathematica", MathematicaImport),
       ("-p", "--python", PythonImport),
+      ("-r", "--R", RImport),
     ]
     
     # option processing
