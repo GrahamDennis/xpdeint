@@ -10,7 +10,8 @@ This section outlines all the elements and options available in an XMDS2 script.
 
 
 
-
+.. index::
+   single: XML elements; simulation
 .. _SimulationElement:
 
 Simulation element
@@ -26,7 +27,8 @@ Example syntax::
 
 
 
-
+.. index::
+   single: XML elements; name
 .. _NameElement:
 
 Name element
@@ -39,6 +41,8 @@ Example syntax::
     <name> funky_solver </name>
 
 
+.. index::
+   single: XML elements; author
 .. _AuthorElement:
 
 Author element
@@ -51,6 +55,8 @@ Example syntax::
     <author> Ima Mollusc </author>
 
 
+.. index::
+   single: XML elements; description
 .. _DescriptionElement:
 
 Description element
@@ -68,7 +74,8 @@ Example syntax::
     </description>
 
 
-
+.. index::
+   single: XML elements; features
 .. _FeaturesElement:
 
 Features Elements
@@ -103,6 +110,8 @@ Example syntax::
     </simulation>
 
 
+.. index::
+   single: XML elements; arguments
 .. _ArgumentsElement:
 
 Arguments Element
@@ -141,6 +150,9 @@ It is also possible to include an optional ``CDATA`` block inside the ``<argumen
       </arguments>
     </features>
 
+
+.. index::
+   single: XML elements; argument
 .. _ArgumentElement:
 
 Argument element
@@ -150,6 +162,8 @@ Argument element
 Each ``<argument>`` element describes one variable that can be passed to the simulation at runtime via the command line. There are three mandatory attributes: ``name``, ``type``, and ``default_value``. ``name`` is the name by which you can refer to that variable later in the script, as well as the name of the command line parameter. ``type`` defines the data type of the variable, and ``default_value`` is the value to which the variable is set if it is not given a value on the command line.
 
 
+.. index::
+   single: XML elements; autovectorise
 .. _AutoVectorise:
 
 Auto_vectorise element
@@ -158,6 +172,8 @@ Auto_vectorise element
 The ``<auto_vectorise />`` feature attempts to activate automatic vectorisation for large loops, if it is available in the compiler.  This should make some simulations go faster.
 
 
+.. index::
+   single: XML elements; benchmark
 .. _Benchmark:
 
 Benchmark
@@ -166,6 +182,8 @@ Benchmark
 The ``<benchmark />`` feature includes a timing routine in the generated code, so that it is possible to see how long the simulations take to run.
 
 
+.. index::
+   single: XML elements; bing
 .. _Bing:
 
 Bing
@@ -174,6 +192,8 @@ Bing
 The ``<bing />`` feature causes the simulation to make an invigorating sound when the simulation finishes executing.
 
 
+.. index::
+   single: XML elements; cflags
 .. _CFlags:
 
 C Flags
@@ -190,6 +210,8 @@ Example syntax::
     </cflags>
 
 
+.. index::
+   single: XML elements; chunked_output
 .. _ChunkedOutput:
 
 Chunked Output
@@ -211,6 +233,9 @@ Example syntax::
         </features>
     </simulation>
 
+
+.. index::
+   single: XML elements; diagnostics
 .. _Diagnostics:
 
 Diagnostics
@@ -219,7 +244,8 @@ Diagnostics
 The ``<diagnostics />`` feature causes a simulation to output more information as it executes.  This should be useful when a simulation is dying / giving bad results to help diagnose the cause.  Currently, it largely outputs step error information.
 
 
-
+.. index::
+   single: XML elements; error_check
 .. _ErrorCheck:
 
 Error Check
@@ -237,6 +263,8 @@ Example syntax::
     </simulation>
 
 
+.. index::
+   single: XML elements; halt_non_finite
 .. _HaltNonFinite:
 
 Halt_Non_Finite
@@ -245,6 +273,8 @@ Halt_Non_Finite
 The ``<halt_non_finite />`` feature is used to stop computations from continuing to run after the vectors stop having numerical values.  This can occur when a number is too large to represent numerically, or when an illegal operation occurs.  Processing variables with non-numerical values is usually much slower than normal processing, and the results are meaningless.  Of course, there is a small cost to introducing a run-time check, so this feature is optional.
 
 
+.. index::
+   single: XML elements; fftw
 .. _FFTW:
 
 fftw element
@@ -257,6 +287,8 @@ Example syntax::
     <fftw plan="patient" threads="3" />
 
 
+.. index::
+   single: XML elements; globals
 .. _Globals:
 
 Globals
@@ -277,6 +309,8 @@ Example syntax::
     </globals>
 
 
+.. index::
+   single: XML elements; openmp
 .. _OpenMP:
 
 OpenMP
@@ -287,6 +321,9 @@ The ``<openmp />`` feature instructs compatible compilers to parallelise key loo
 	OMP_NUM_THREADS=2 ./simulation_name
 
 
+
+.. index::
+   single: XML elements; precision
 .. _Precision:
 
 Precision
@@ -313,6 +350,8 @@ Example syntax::
     </simulation>
 
 
+.. index::
+   single: XML elements; validation
 .. _Validation:
 
 Validation
@@ -345,6 +384,9 @@ and then run the resulting executable with::
 
 This approach means that when XMDS2 is parsing the script it is unable to tell, for example, if the number of sampling points requested is less than or equal to the lattice size. Consequently it will create an executable with "numGridPoints" as an internal variable, and make the check at run-time, when it knows the value of "numGridPoints" rather than at compile time, when it doesn't.
 
+
+.. index::
+   single: XML elements; driver
 .. _DriverElement:
 
 Driver Element
@@ -372,17 +414,28 @@ Example syntax::
         <driver name="adaptive-mpi-multi-path" paths="1000" />
     </simulation>
 
+
+.. index::
+   single: XML elements; geometry
 .. _GeometryElement:
 
 Geometry Element
 ================
 
+
+.. index::
+   single: XML elements; propagation_dimension
 .. _PropagationDimensionElement:
 
 The ``<geometry>`` element describes the dimensions used in your simulation, and is required.  The only required element inside is the ``<propagation_dimension>`` element, which defines the name of the dimension along which your simulation will integrate.  Nothing else about this dimension is specified, as requirements for the lattice along the integration dimension is specified by the ``<integrate>`` blocks themselves, as described in section :ref:`IntegrateElement`.
 
+.. index::
+   single: XML elements; transverse_dimensions
 .. _TransverseDimensionsElement:
 
+
+.. index::
+   single: XML elements; dimension
 .. _DimensionElement:
 
 If there are other dimensions in your problem, they are called "transverse dimensions", and are described in the ``<transverse_dimensions>`` element.  Each dimension is then described in its own ``<dimension>`` element.  A transverse dimension must have a unique name defined by a ``name`` attribute.  If it is not specified, the type of dimension will default to "real", otherwise it can be specified with the ``type`` attribute.  Allowable types (other than "real") are "long", "int", and "integer", which are actually all synonyms for an integer-valued dimension.
@@ -395,6 +448,8 @@ Integrals over a dimension can be multiplied by a common prefactor, which is spe
     
 If you are using the ``distributed-mpi`` driver to parallelise the simulation, place the dimension you wish to split over multiple processors first.  The most efficient parallelisation would involve distributing a dimension with only local evolution, as the different memory blocks would not need to communicate.  Nonlocal evolution that is local in Fourier space is the second preference, as the Fourier transform can also be successfully parallelised with minimum communication.  
 
+.. index::
+   single: XML elements; transform
 .. _Transforms:
 
 Each transverse dimension can be associated with a transform.  This allows the simulation to manipulate vectors defined on that dimension in the transform space.  The default is Fourier space (with the associated transform being the discrete Fourier transform, or "dft"), but others can be specified with the ``transform`` attribute.  The other options are "none", "dst", "dct", "bessel", "spherical-bessel", "bessel-neumann" and "hermite-gauss".  Using the right transform can dramatically improve the speed of a calculation.
@@ -420,6 +475,8 @@ Example syntax::
     </simulation>
 
 
+.. index::
+   single: Transforms; dft
 .. _dft_Transform:
 
 The "dft" transform
@@ -461,6 +518,11 @@ Example syntax::
     </simulation>
 
 
+.. index::
+   single: Transforms; dct
+
+.. _dct_Transform:
+
 The "dct" transform
 -------------------
 
@@ -494,6 +556,11 @@ Example syntax::
     </simulation>
 
 
+.. index::
+   single: Transforms; dst
+
+.. _dst_Transform:
+
 The "dst" transform
 -------------------
 
@@ -523,6 +590,8 @@ Example syntax::
     </simulation>
 
 
+.. index::
+   single: Transforms; bessel
 .. _BesselTransform:
 
 The "bessel" and "bessel-neumann" transforms
@@ -570,6 +639,10 @@ Example syntax::
     </simulation>
 
 
+.. index::
+   single: Transforms; spherical-bessel
+
+.. _spherical_bessel_Transform:
 
 The "spherical-bessel" transform
 --------------------------------
@@ -607,6 +680,10 @@ Example syntax::
     </simulation>
 
 
+.. index::
+   single: Transforms; hermite-gauss
+
+.. _hermite-gauss_Transform:
 
 The "hermite-gauss" transform
 -----------------------------
@@ -658,7 +735,8 @@ Example syntax::
 
 
 
-
+.. index::
+   single: XML elements; vector
 .. _VectorElement:
 
 Vector Element
@@ -668,16 +746,22 @@ Vectors are arrays of data, defined over any subset of the transverse dimensions
 
 Each ``<vector>`` element has a unique name, defined by a ``name`` attribute.  It is either complex-valued (the default) or real-valued, which can be specified using the ``type="real"`` attribute.
 
+.. index::
+   single: XML elements; components
 .. _ComponentsElement:
 
 A vector contains a list of variables, each defined by name in the ``<components>`` element.  The name of each component is the name used to reference it later in the simulation.
 
 Vectors are initialised at the beginning of a simulation, either from code or from an input file.  The basis choice for this initialisation defaults to the normal space as defined in the ``<geometry>`` element, but any transverse dimension can be initialised in their transform basis by specifying them in an ``initial_basis`` attribute.  The ``initial_basis`` attribute lists dimensions either by their name as defined by the ``<geometry>`` element, or by their transformed name.  For example, to initialise a two-dimensional vector defined with ``dimensions="x y"`` in Fourier space for the y-dimension, we would include the attribute ``initial_basis="x ky"``, or just ``initial_basis="ky"``.  
 
+.. index::
+   single: XML elements; initialisation
 .. _InitialisationElement:
 
 When initialising the vector within the XMDS script, the appropriate code is placed in a 'CDATA' block inside an ``<initialisation>`` element.  This code is in standard C-syntax, and should reference the components of the vector by name.  XMDS defines a few useful :ref:`shorthand macros<XMDSCSyntax>` for this C-code.  If you wish to initialise all the components of the vector as zeros, then it suffices simply to add the attribute ``kind="zero"`` or to omit the ``<initialisation>`` element entirely.  
-    
+
+.. index::
+   single: Vectors; non-local access
 .. _ReferencingNonlocal:
 
 While the default XMDS behaviour is to reference all variables locally, any vector can be referenced non-locally.  The notation for referencing the value of a vector 'phi' with a dimension 'j' at a value of 'j=jk' is ``phi(j => jk)``.  Multiple non-local dimensions are addressed by adding the references in a list, e.g. ``phi(j => jk, x => y)``.  See ``2DMultistateSE.xmds`` for an example.
@@ -694,6 +778,8 @@ Dimensions can only be accessed non-locally if one of the following conditions i
 
 Note that a dimension cannot be accessed non-locally in ``distributed-mpi`` simulations if the simulation is distributed across that dimension.
 
+.. index::
+   single: XML elements; filename
 .. _FilenameElement:
 
 If you wish to initialise from a file, then you can choose to initialise from an hdf5 file using ``kind="hdf5"`` in the ``<initialisation>`` element, and then supply the name of the input file with the ``filename`` element.  This is a standard data format which can be generated from XMDS, or from another program.  An example for generating a file in another program for input into XMDS is detailed in the Advanced topic: :ref:`Importing`.
@@ -733,7 +819,8 @@ Example syntax::
     </simulation>
 
 
-
+.. index::
+   single: XML elements; dependencies
 .. _Dependencies:
 
 The dependencies element
@@ -786,12 +873,15 @@ Example syntax::
     </simulation>
 
 
-
+.. index::
+   single: XML elements; computed_vector
 .. _ComputedVectorElement:
 
 Computed Vector Element
 =======================
 
+.. index::
+   single: XML elements; evaluation
 .. _EvaluationElement:
 
 Computed vectors are arrays of data much like normal ``<vector>`` elements, but they are always calculated as they are referenced, so they cannot be initialised from file.  It is defined with a ``<computed_vector>`` element, which has a ``name`` attribute, optional ``dimensions`` and ``type`` attributes, and a ``<components>`` element, just like a ``<vector>`` element.  Instead of an <:ref:`initialisation<InitialisationElement>`> element, it has an ``<evaluation>`` element that serves the same purpose.  The ``<evaluation>`` element contains a ``<dependencies>`` element (see ``above<Dependencies>``), and a 'CDATA' block containing the code that defines it.
@@ -835,7 +925,8 @@ Example syntax::
     </simulation>
 
 
-
+.. index::
+   single: XML elements; noise_vector
 .. _NoiseVectorElement:
 
 Noise Vector Element
@@ -873,6 +964,8 @@ Example syntax::
     </simulation>
 
 
+.. index::
+   single: Noise; uniform
 .. _uniformNoise:
 
 Uniform noise
@@ -889,6 +982,8 @@ Example syntax::
     </simulation>
 
 
+.. index::
+   single: Noise; gaussian
 .. _gaussianNoise:
 
 Gaussian noise
@@ -911,6 +1006,8 @@ Example syntax::
     </simulation>
 
 
+.. index::
+   single: Noise; wiener
 .. _wienerNoise:
 
 Wiener noise
@@ -929,6 +1026,8 @@ Example syntax::
     </simulation>
 
 
+.. index::
+   single: Noise; poissonian
 .. _poissionianNoise:
 
 Poissonian noise
@@ -947,6 +1046,8 @@ Example syntax::
     </simulation>
 
 
+.. index::
+   single: Noise; jump
 .. _jumpNoise:
 
 Jump noise
@@ -967,7 +1068,8 @@ Example syntax::
     </simulation>
 
 
-
+.. index::
+   single: XML elements; sequence
 .. _SequenceElement:
 
 Sequence Element
@@ -985,6 +1087,9 @@ Example syntax::
         </sequence>
     </simulation>    
 
+
+.. index::
+   single: XML elements; filter
 .. _FilterElement:
 
 Filter element
@@ -1015,6 +1120,8 @@ Example syntax::
     </sequence>
 
 
+.. index::
+   single: XML elements; integrate
 .. _IntegrateElement:
 
 Integrate element
@@ -1024,6 +1131,9 @@ The ``<integrate>`` element is at the heart of most XMDS simulations.  It is use
     
 The length of the integration is defined by the ``interval`` attribute, which must be a positive real number.  An ``<integrate>`` element must have an ``algorithm`` attribute defined, which defines the integration method.  Current methods include :ref:`SI <SI>`, :ref:`SIC <SI>`, :ref:`RK4 <RK4>`, :ref:`RK9 <RK4>`, :ref:`ARK45 <ARK45>`, and :ref:`ARK89 <ARK45>`.  Fixed step algorithms require a ``steps`` attribute, which must be a positive integer that defines the number of (evenly spaced) integration steps.  Adaptive stepsize algorithms require a ``tolerance`` attribute that must be a positive real number much smaller than one, which defines the allowable relative error per integration step.  If the ``steps`` attribute is specified for an adaptive stepsize algorithm, then it is used to generate the initial stepsize estimate.
 
+
+.. index::
+   single: XML elements; samples
 .. _SamplesElement:
 
 The optional ``<samples>`` element is used to track the evolution of one or more vectors or variables during an integration.  This element must contain a non-negative integer for each :ref:`<sampling_group><SamplingGroupElement>` element defined in the simulation's :ref:`<output><OutputElement>` element.  The list of integers then defines the number of times that the moments defined in those groups will be sampled.  For a fixed step algorithm, each non-zero number of samples must be a factor of the total number of steps. 
@@ -1059,6 +1169,9 @@ Example syntax::
       </operators>
     </integrate>
 
+
+.. index::
+   single: XML elements; operators
 .. _OperatorsElement:
 
 Operators and operator elements
@@ -1066,6 +1179,9 @@ Operators and operator elements
 
 An :ref:`<integrate><IntegrateElement>` element must contain one or more ``<operators>`` elements, which define both which vectors are to be integrated, and their derivative in the propagation dimension.  When all vectors to be integrated have the same dimensionality, they can all be defined within a single ``<operators>`` element, and when vectors with different dimension are to be integrated, each set of vectors with the same dimensionality should be placed in separate ``<operators>`` elements.  
     
+
+.. index::
+   single: XML elements; integration_vectors
 .. _IntegrationVectorsElement:
 
 Within each ``<operators>`` element, the vectors that are to be integrated are listed by name in the ``<integration_vectors>`` element, and the differential equations are written in a 'CDATA' block.   The derivative of each component of the integration vectors must be defined along the propagation dimension.  For example, if the integration vectors have components 'phi' and 'beta', and the propagation dimension is labelled 'tau', then the 'CDATA' block must define the variables 'dphi_dtau' and 'dbeta_dtau'.  These derivatives can be any function of the available variables, including any components from other vectors, computed vectors or noise vectors that are listed in the optional :ref:`<dependencies><Dependencies>` element.  These dependent vectors must be defined on a subset of the dimensions of the integration vectors.  
@@ -1074,6 +1190,9 @@ When noise vectors are referenced, equations with Wiener noises should be writte
     
 By default, the name of each component references the local value of the vector, but :ref:`nonlocal variables<ReferencingNonlocal>` can be accessed using the standard syntax.  However, typically the most common (and most efficient) method of referencing nonlocal variables is to reference variables that are local in the :ref:`transformed space<Transforms>` for a given transverse dimension.  This is done using ``<operator>`` elements.
     
+
+.. index::
+   single: XML elements; operator
 .. _OperatorElement:
 
 There are three kinds of ``<operator>`` elements.  The first is denoted with a ``kind="functions"`` attribute, and contains a 'CDATA' block that will be executed in the order that it is defined.  This is useful when you wish to calculate functions that do not depend on the transverse dimensions.  Defining these along with the main equations of motion causes them to be recalculated separately for each point.  The second kind of ``<operator>`` element is used to define an operation in a transformed space.  This is often an efficient method of calculating common nonlocal terms such as derivatives.  The third kind is used to define integration of one or more vectors along a transverse dimension.
@@ -1107,6 +1226,9 @@ The third kind of operator element is used to define an integration along a tran
     
 An operator element with the ``kind="cross_propagation"`` attribute must specify the transverse dimension along which the integration would proceed with the ``propagation_dimension`` attribute.  It must also specify its own :ref:`<integration_vectors><IntegrationVectorsElement>` element, its own ``<operators>`` elements (of the second kind), and may define an optional :ref:`<dependencies><Dependencies>` element.  The algorithm to be used for the transverse integration is specified by the ``algorithm`` attribute, with options being ``algorithm="SI"`` and ``algorithm="RK4"``.  The derivatives in the cross propagation direction are defined in a 'CDATA' block, just as for a normal ``<integrate>`` element.  
     
+
+.. index::
+   single: XML elements; boundary_conditions
 .. _BoundaryConditionElement:
 
 The boundary conditions are specified by a ``<boundary_conditions>`` element, which requires the ``kind="left"`` or ``kind="right"`` attribute to specify on which side of the grid that the boundary conditions are specified.  The boundary conditions for the ``<integration_vectors>`` are then specified in a 'CDATA' block, which may refer to vectors in an optional :ref:`<dependencies><Dependencies>` element that can be contained in the ``<boundary_conditions>`` element.
@@ -1137,6 +1259,7 @@ Example syntax::
     </operator>
 
 
+
 .. _Algorithms:
 
 Algorithms
@@ -1150,6 +1273,9 @@ For the purposes of the descriptions below, we will assume that we are consideri
 
     \frac{d x_j}{dt} = f_j(\mathbf{x}(t),t)
 
+
+.. index:: 
+   single: Integration algorithms; semi-implicit (SI)
 .. _SI:
 
 SI and SIC algorithms
@@ -1174,6 +1300,8 @@ When SI integration is used in conjunction with SI cross-propagation, a slight v
 The SI algorithm is correct to second order in the step-size for deterministic equations, and first order in the step-size for Stratonovich stochastic equations with Wiener noises.  This makes it the highest order stochastic algorithm in XMDS, although there are many sets of equations that integrate more efficiently with lower order algorithms.  When called with the ``iterations="1"`` option (the Euler algorithm), it is correct to first order in the step-size for deterministic equations, and one-half order in the step-size for Ito stochastic equations with Wiener noises.
 
 
+.. index:: 
+   single: Integration algorithms; Runge-Kutta (RK)
 .. _RK4:
 
 Runge-Kutta algorithms
@@ -1184,6 +1312,8 @@ Runge-Kutta algorithms are the workhorse of numerical integration, and XMDS empl
 All Runge-Kutta algorithms are convergent for Stratonovich stochastic equations at the order of the square root of the step-size.  This 'half-order' convergence may seem very weak, but for some classes of stochastic equation this improves up to one half of the deterministic order of convergence.  Also, the convergence of some stochastic equations is limited by the 'deterministic part', which can be improved dramatically by using a higher order Runge-Kutta method.
 
 
+.. index:: 
+   single: Integration algorithms; adaptive Runge-Kutta (ARK)
 .. _ARK45:
 
 Adaptive Runge-Kutta algorithms
@@ -1197,6 +1327,10 @@ XMDS employs two adaptive step-size algorithms based on 'embedded Runge-Kutta' m
 All adaptive stepsize algorithms require a ``tolerance`` attribute, which must be a positive real number that defines the allowable error per step.  It is also possible to specify a ``max_iterations`` attribute, which is a positive integer that stops the integrator from trying too many times to find an acceptable stepsize.  The integrator will abort with an error if the number of attempts for a single step exceeds the maximum specified with this attribute.
 
 As all Runge-Kutta solutions have equal order of convergence for stochastic equations, *if the step-size is limited by the stochastic term then the step-size estimation is entirely unreliable*.  Adaptive Runge-Kutta algorithms are therefore not appropriate for stochastic equations.
+
+
+.. index:: 
+   single: Integration algorithms; Richardson extrapolation
 
 .. _REAlgorithm:
 
@@ -1213,6 +1347,9 @@ Richardson Extrapolation in general uses more memory than other integrators as m
 
 See the section on the :ref:`Bulirsch-Stoer Algorithm <MMDetail>` for more details.
 
+
+.. index:: 
+   single: XML elements; filters
 .. _FiltersElement:
 
 Filters element
@@ -1245,6 +1382,8 @@ Example syntax::
     </integrate>
 
 
+.. index:: 
+   single: XML elements; breakpoint
 .. _BreakpointElement:
 
 Breakpoint element
@@ -1258,6 +1397,9 @@ Example syntax::
       <dependencies basis="ky">wavefunction</dependencies>
     </breakpoint>
 
+
+.. index:: 
+   single: XML elements; output
 .. _OutputElement:
 
 Output element
@@ -1268,6 +1410,8 @@ The ``<output>`` element describes the output of the program.  It is often ineff
 The ``<samples>`` inside ``<integrate>`` elements defines a string of integers, with exactly one for each ``<sampling_group>`` element.  During that integration, the variables described in each ``<sampling_group>`` element will be sampled and stored that number of times.  
 
 
+.. index:: 
+   single: XML elements; sampling_group
 .. _SamplingGroupElement:
 
 Sampling Group Element
