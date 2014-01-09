@@ -6,10 +6,6 @@ import os
 if not os.path.exists('xpdeint'):
     raise Exception("setup.py must be run from the xpdeint main directory.")
 
-# We don't ship the python files that are generated from the Cheetah
-# templates, so generate them now
-os.system("make")
-
 packages = ['xpdeint.waf.waflib', 'xpdeint.waf.waflib.Tools', 'xpdeint.waf.waflib.extras'] # The packages needed by waf
 skip_dirs = set(['.svn', 'waf_build'])
 for root, dirs, files in os.walk('xpdeint'):
