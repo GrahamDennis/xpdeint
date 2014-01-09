@@ -484,11 +484,13 @@ else
   svn checkout -r $KNOWN_GOOD_XMDS_REVISION $SVN_REPOSITORY .
 fi
 
-# Compile the Cheetah templates into Python
-echo
-echo "Compiling Cheetah templates..."
-echo
-make
+# No longer need to compile the templates since that's now done
+# by setup.py
+## Compile the Cheetah templates into Python
+#echo
+#echo "Compiling Cheetah templates..."
+#echo
+#make
 
 # Creates the xmds2 and xsil2graphics2 files in /usr/bin (or wherever), 
 # and copy xmds2 python code into the python install path (typically 
