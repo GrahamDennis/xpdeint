@@ -251,6 +251,8 @@ def partial(func, *args, **keywords):
 
 
 def main(argv=None):
+  verbose = False
+  
   if argv is None:
     argv = sys.argv
   try:
@@ -344,7 +346,7 @@ def main(argv=None):
   
   fullSuite = unittest.TestSuite(tests=suitesToRun)
   
-  return not unittest.TextTestRunner().run(fullSuite).wasSuccessful()
+  return not unittest.TextTestRunner(verbosity = 2 if verbose else 1).run(fullSuite).wasSuccessful()
 
 
 if __name__ == "__main__":
