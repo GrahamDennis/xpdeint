@@ -1,3 +1,5 @@
+:: index:: Configure, Reconfigure, XMDS2 runtime options
+
 .. _ReferenceConfigurationInstallationRuntime:
 
 Configuration, installation and runtime options

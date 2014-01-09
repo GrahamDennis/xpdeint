@@ -1,4 +1,5 @@
-.. index:: xsil2graphics2
+
+.. index:: xsil2graphics2, Exporting data
 
 .. _xsil2graphics2:
 

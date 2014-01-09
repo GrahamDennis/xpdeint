@@ -25,6 +25,8 @@ One of the best ways to learn XMDS2 is to see several illustrative examples.  He
 
 All of these scripts are available in the included "examples" folder, along with more examples that demonstrate other tricks.  Together, they provide starting points for a huge range of different simulations.
 
+.. index:: Nonlinear Schroedinger equation
+
 .. _NonLinearSchrodingerEquation:
 
 The nonlinear Schrödinger equation
@@ -230,7 +232,7 @@ Finally, functions of the vectors can be sampled with their dimensions in Fourie
 
 The final output group above samples the mod square of the Fourier-space wavefunction phi on a sample of 32 points.
 
-
+.. index:: Kubo oscillator
 .. _Kubo:
 
 Kubo Oscillator
@@ -306,9 +308,15 @@ Most algorithms employed by XMDS require the equations to be input in the Strato
       </output>
     </simulation>
 
+
+.. index::
+   single: Driver examples; multi-path
+
 The first new item in this script is the ``<driver>`` element.  This element enables us to change top level management of the simulation.  Without this element, XMDS2 will integrate the stochastic equation as described.  With this element and the option ``name="multi-path"``, it will integrate it multiple times, using different random numbers each time.  The output will then contain the mean values and standard errors of your output variables.  The number of integrations included in the averages is set with the ``paths`` variable.
 
 In the ``<features>`` element we have included the ``<error_check>`` element.  This performs the integration first with the specified number of steps (or with the specified tolerance), and then with twice the number of steps (or equivalently reduced tolerance).  The output then includes the difference between the output variables on the coarse and the fine grids as the 'error' in the output variables.  This error is particularly useful for stochastic integrations, where algorithms with adaptive step-sizes are less safe, so the number of integration steps must be user-specified.
+
+.. index:: Noise vector example
 
 We define the stochastic elements in a simulation with the ``<noise_vector>`` element.  
 
@@ -366,6 +374,7 @@ The average over multiple paths can be increasingly smooth.
     The mean and standard error of the z variable averaged over 10000 paths, as given by this simulation.  It agrees within the standard error with the expected result of :math:`\exp(-t/2)`.
 
 
+.. index:: Fibre noise
 .. _Fibre:
 
 Fibre Noise
@@ -453,6 +462,11 @@ where the noise terms :math:`\eta_j(x,t)` are Wiener differentials and the equat
 
 Note that the noise vector used in this example is complex-valued, and has the argument ``dimensions="x"`` to define it as a field of delta-correlated noises along the x-dimension.
 
+.. index:: Multi-path MPI
+
+.. index::
+   single: Driver examples; mpi-multi-path
+
 This simulation demonstrates the ease with which XMDS2 can be used in a parallel processing environment.  Instead of using the stochastic driver "multi-path", we simply replace it with "mpi-multi-path".  This instructs XMDS2 to write a parallel version of the program based on the widespread `MPI standard <http://www.open-mpi.org/>`_.  This protocol allows multiple processors or clusters of computers to work simultaneously on the same problem.  Free open source libraries implementing this standard can be installed on a linux machine, and come standard on Mac OS X.  They are also common on many supercomputer architectures.  Parallel processing can also be used with deterministic problems to great effect, as discussed in the later example :ref:`WignerArguments`.
 
 Executing this program is slightly different with the MPI option.  The details can change between MPI implementations, but as an example:
@@ -520,6 +534,7 @@ while an average of 1024 paths (change ``paths="8"`` to ``paths="1024"`` in the 
 
 
 
+.. index:: Integer dimensions
 .. _IntegerDimensionExample:
 
 Integer Dimensions
@@ -610,7 +625,6 @@ where the syntax ``x(j => 0)`` is used to reference the variable :math:`x_0` dir
             dx_dt(j => j) = x(j => j)*(x(j => j_minus_one) - x(j => j_plus_one));
 
 where the vector "x" is called using locally defined variables.  This syntax is chosen so that multiple dimensions can be addressed non-locally with minimal possibility for confusion.
-
 
 
 
@@ -733,6 +747,12 @@ with the added restriction that the derivative is forced to zero outside a certa
       </output>
     </simulation>
 
+
+.. index:: Distributed MPI, MPI
+
+.. index::
+   single: Driver examples; distributed-mpi
+
 This example demonstrates two new features of XMDS2.  The first is the use of parallel processing for a deterministic problem.  The FFTW library only allows MPI processing of multidimensional vectors.  For multidimensional simulations, the generated program can be parallelised simply by adding the ``name="distributed-mpi"`` argument to the ``<driver>`` element.  
 
 .. code-block:: xpdeint
@@ -761,6 +781,8 @@ To use multiple processors, the final program is then called using the (implemen
     ...
 
 The possible acceleration achievable when parallelising a given simulation depends on a great many things including available memory and cache.  As a general rule, it will improve as the simulation size gets larger, but the easiest way to find out is to test.  The optimum speed up is obviously proportional to the number of available processing cores.
+
+.. index:: Command line arguments
 
 The second new feature in this simulation is the ``<arguments>`` element in the ``<features>`` block.  This is a way of specifying global variables with a given type that can then be input at run time.  The variables are specified in a self explanatory way
 
@@ -815,6 +837,8 @@ The values that were used for the variables, whether default or passed in, are s
       Command line argument width = 3.000000e-01
       Command line argument Uint_hbar = 0.000000e+00
     </info>
+
+.. index:: _SAMPLE_COMPLEX
     
 Finally, note the shorthand used in the output group
 
@@ -983,6 +1007,8 @@ The code for this simulation can be found in ``examples/groundstate_workedexampl
     </simulation>
 
 We have used the ``plan="exhasutive"`` option in the ``<fftw>`` element to ensure that the absolute fastest transform method is found.  Because the FFTW package stores the results of its tests (by default in the ~/.xmds/wisdom directory), this option does not cause significant computational overhead, except perhaps on the very first run of a new program.
+
+.. index:: Computed vectors
 
 This simulation introduces the first example of a very powerful feature in XMDS2: the ``<computed_vector>`` element.  This has syntax like any other vector, including possible dependencies on other vectors, and an ability to be used in any element that can use vectors.  The difference is that, much like noise vectors, computed vectors are recalculated each time they are required.  This means that a computed vector can never be used as an integration vector, as its values are not stored.  However, computed vectors allow a simple and efficient method of describing complicated functions of other vectors.  Computed vectors may depend on other computed vectors, allowing for spectral filtering and other advanced options.  See for example, the :ref:`AdvancedTopics` section on :ref:`Convolutions`.
 
@@ -1335,6 +1361,8 @@ where the last term is more commonly written as a matrix multiplication.  Writin
             </sampling_group>
           </output>
         </simulation>
+
+.. index:: Aliases
 
 The only truly new feature in this script is the "aliases" option on a dimension.  The integer-valued dimension in this script indexes the components of the PDE (in this case only two).  The  :math:`V_{j k}` term is required to be a square array of dimension of this number of components.  If we wrote the k-index of :math:`V_{j k}` using a separate ``<dimension>`` element, then we would not be enforcing the requirement that the matrix be square.  Instead, we note that we will be using multiple 'copies' of the j-dimension by using the "aliases" tag.
 
