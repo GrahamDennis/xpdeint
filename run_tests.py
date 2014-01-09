@@ -77,21 +77,19 @@ def scriptTestingFunction(root, scriptName, testDir, absPath, self):
   
   message = ''.join(["\n%(handleName)s:\n%(content)s" % locals() for handleName, content in [('stdout', stdout), ('stderr', stderr)] if content])
   
-  # A few tests require XMDS1. If XMDS1 isn't present we should just
-  # skip that test rather than failing.
-  # The skip functionality for the unittest class is only available
-  # in python 2.7 and later, so check for that too.
-  if returnCode != 0 and sys.version_info[:2] >= (2, 7):
-    if re.search(r'^The missing \w+ feature\(s\) were: .*xmds.*', message, re.MULTILINE):
-      self.skipTest("Skipping test as XMDS1 is required and not installed")
-
   # A few tests require specific features.  If it isn't available, skip the test
   # rather than failing.
   # The skip functionality for the unittest class is only available
   # in python 2.7 and later, so check for that too.
   if returnCode != 0 and sys.version_info[:2] >= (2, 7):
+    # A few tests require XMDS1. If XMDS1 isn't present we should just
+    # skip that test rather than failing.
+    if re.search(r'^The missing \w+ feature\(s\) were: .*xmds.*', message, re.MULTILINE):
+      self.skipTest("Skipping test as XMDS1 is required and not installed")
     if re.search(r'^The missing \w+ feature\(s\) were:', message, re.MULTILINE):
       self.skipTest("Skipping test as feature required is not installed")
+    if re.search(r'This script requires the python package', message, re.MULTILINE):
+      self.skipTest("Skipping test as python package required is not installed")
 
   self.assert_(returnCode == 0, ("Failed to compile." % locals()) + message)
   

@@ -30,7 +30,7 @@ from xpdeint.Geometry.BesselDimensionRepresentation import BesselDimensionRepres
 from xpdeint.Geometry.BesselNeumannDimensionRepresentation import BesselNeumannDimensionRepresentation
 from xpdeint.Geometry.SphericalBesselDimensionRepresentation import SphericalBesselDimensionRepresentation
 
-from xpdeint.ParserException import ParserException
+from xpdeint.ParserException import ParserException, error_missing_python_library
 
 # We don't directly import mpmath so that mpmath isn't a requirement for xpdeint
 # unless you use MMT's.
@@ -40,10 +40,15 @@ mpmath = None
 numpy = None
 scipy = None
 
+
 def require_mpmath():
   global mpmath
   if not mpmath:
-    import mpmath
+    try:
+      import mpmath
+    except ImportError:
+      error_missing_python_library("mpmath")
+    
     if not hasattr(mpmath, 'besselj'):
       mpmath.besselj = mpmath.jn
     mpmath.mp.prec = 64
@@ -52,15 +57,21 @@ def require_mpmath():
 def require_numpy():
   global numpy
   if not numpy:
-    import numpy
+    try:
+      import numpy
+    except ImportError:
+      error_missing_python_library("numpy")
 
 def require_scipy():
   require_numpy()
   global scipy
   if not scipy:
-    import scipy
-    import scipy.special
-    import scipy.optimize
+    try:
+      import scipy
+      import scipy.special
+      import scipy.optimize
+    except ImportError:
+      error_missing_python_library("scipy")
 
 def besselJZeros(m, a, b):
   require_mpmath()

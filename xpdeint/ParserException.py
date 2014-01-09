@@ -33,6 +33,8 @@ def indentMessageWithPrefix(prefix, msg):
     result.extend([textWrapper.fill(line) for line in msgLines[1:]])
     return '\n'.join(result)
 
+def error_missing_python_library(library_name, xmlElement = None):
+  raise ParserException(xmlElement, "This script requires the python package '%s' which is not installed.  Please install it to run this script.")
 
 class ParserException(Exception):
     def __init__(self, element, msg):
