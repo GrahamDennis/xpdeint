@@ -1,3 +1,5 @@
+.. _OptimisationHints:
+
 Optimisation Hints
 ===================
 

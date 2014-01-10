@@ -403,6 +403,7 @@ This approach means that when XMDS2 is parsing the script it is unable to tell, 
    single: Drivers; adaptive-mpi-multi-path"
 
 ..index:: MPI
+
 .. _DriverElement:
 
 Driver Element
@@ -1325,6 +1326,7 @@ Example syntax::
     </operator>
 
 .. index:: Cross-propagation
+
 The third kind of operator element is used to define an integration along a transverse dimension.  This kind of evolution is called "cross-propagation", and is described briefly in the examples 'tla.xmds', 'tla_sic.xmds' and 'sine_cross.xmds'.  This class of equations have a subset of vectors that have an initial condition on one side of a transverse dimension, and a differential equation defined in that dimension, and as such, this kind of operator element has much of the structure of an entire :ref:`<integrate><IntegrateElement>` element.
 
 .. index::
