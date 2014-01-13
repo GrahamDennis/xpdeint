@@ -16,15 +16,24 @@ required, the input xsil file or files
 optional, display this information
 .TP
 .BR \-m ", " \-\-matlab
-optional, produce matlab output (default) (only supports HDF5 output files)
+optional, produce matlab output (default, also supports Octave)
 .TP
-.BR \-e ", " \-\-mathmatica
+.BR \-e ", " \-\-mathematica
 optional, produce mathematica output
+.TP
+.BR \-8 ", " \-\-octave
+optional, produce octave output (identical to MATLAB output)
+.TP
+.BR \-p ", " \-\-python
+optional, produce Python/pylab/matplotlib script (HDF5 requires h5py)
+.TP
+.BR \-r ", " \-\-R
+optional, produce R output
 .TP
 .BR \-o ", " \-\-outfile
 optional, alternate output file name (one input file only)
 .TP
-.BR \-g ", " \-\-debug
+.BR \-\-debug
 Debug mode
 .\" ********************************************************************
 .SH "SEE ALSO"
