@@ -11,7 +11,7 @@ Installation
 Installers
 ==========
 
-If you are using Debian linux, XMDS2 is available in the package manager.
+If you are using Debian GNU/Linux, XMDS2 will eventually be available in the Debian "jessie" distribution.  In the meanwhile, a temporary APT repository has been set up, which works for both the current stable (a.k.a "wheezy") and testing (a.k.a. "jessie") distributions.  For using this repository, follow the instructions at http://xmds.laboissiere.net.
 
 If you're not using Debian, the easiest way to get started is with an installer.  If we don't have an installer for your system, follow the :ref:`manual installation <ManualInstallation>` instructions.
 
