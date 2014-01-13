@@ -13,7 +13,7 @@ XMDS 2.2.0 contains a number of new features, as well as bugfixes and updates. S
 * Bessel-Neumann transforms have been implemented.  Set transform="bessel-neumann" if you want a Bessel (Hankel) transform but have zero derivative at the boundary (Neumann boundary conditions) instead of zero function value (Dirichlet boundary conditions).  If you don't care about your boundary condition, stick with the "bessel" transform.
 * A Bulirisch-Stoer integrator.  This can be useful for problems which are very smooth as you can use an arbitrarily high order algorithm.  Specify algorithm="RE" and extrapolations="5" to have a 10th order integrator.  Currently this is fixed-step only.
 * "adaptive-mpi-multipath" driver.  This implements a load scheduler that better spreads the work across different CPUs when different paths can take very different amounts of time. Also useful in heterogeneous clusters.
-* XMDS2 has now been accepted into Debian unstable, and can now be installed via the package manager. Users of Debian testing and stable can find it in the private APT repository at http://xmds.laboissiere.net.
+* XMDS2 is currently undergoing acceptance into Debian linux and will soon be able to be installed via the package manager. In the meantime you can find it in the private APT repository at http://xmds.laboissiere.net.
 * A number of bug fixes.
 * Expanded and improved documentation.
 
