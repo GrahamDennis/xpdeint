@@ -44,11 +44,9 @@ make distclean
 # Before we put everything into the tarball, remove files and
 # directories that don't need to be distributed to the user.
 
-# Debian packages want the source documentation in admin/ in the
-# tarball so don't delete it
-## Don't need admin/ folder. It's just for developers, who will
-## use the SVN repo and can get it from there.
-#rm -rf admin/
+# Don't need admin/ folder. It's just for developers, who will
+# use the SVN repo and can get it from there.
+rm -rf admin/
 
 # There may be an FFTW directory if the linux installer was used
 rm -rf fftw*
