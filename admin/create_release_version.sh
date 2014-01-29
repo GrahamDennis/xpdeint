@@ -33,7 +33,10 @@ make latex
 cd ../../documentation/latex
 # Actually make the PDF
 make all-pdf
-cd ../..
+mv xmds2.pdf ..
+cd ..
+rm -rf latex
+cd ..
 
 # Compile Cheetah templates
 make
