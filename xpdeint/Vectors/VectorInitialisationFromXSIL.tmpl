@@ -34,10 +34,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   @#
   @super
   @#
-inline uint32_t XMDSSwapInt32(uint32_t __arg);
-inline uint64_t XMDSSwapInt64(uint64_t __arg);
-inline float XMDSSwapFloat(float __in);
-inline double XMDSSwapDouble(double __in);
+static inline uint32_t XMDSSwapInt32(uint32_t __arg);
+static inline uint64_t XMDSSwapInt64(uint64_t __arg);
+static inline float XMDSSwapFloat(float __in);
+static inline double XMDSSwapDouble(double __in);
   @#
 @end def
 
@@ -58,62 +58,53 @@ bool xmlDebugFlag =  false;
   @#
   @super
   @#
-// The following code is imported from CFByteOrder.h, and is used subject to the APSL v2
-// The license is at: http://www.opensource.apple.com/apsl
 
-// These functions have been renamed to avoid conflicts with the actual functions if an XMDS simulation
-// is ever linked against the CoreFoundation framework
-
-// 32-bit byte swapper
-inline uint32_t XMDSSwapInt32(uint32_t __arg)
+static inline uint32_t XMDSSwapInt32(uint32_t __arg)
 {
-#if defined(__i386__) && defined(__GNUC__)
-  __asm__("bswap %0" : "+r" (__arg));
-  return __arg;
-#elif defined(__ppc__) && defined(__GNUC__)
-  uint32_t __result;
-  __asm__("lwbrx %0, 0, %1" : "=r" (__result) : "r" (&__arg), "m" (__arg));
-  return __result;
-#else
-  uint32_t __result;
-  __result = ((__arg & 0xFF) << 24) | ((__arg & 0xFF00) << 8) | ((__arg >> 8) & 0xFF00) | ((__arg >> 24) & 0xFF);
-  return __result;
-#endif
+  union {
+    uint8_t ui8[4];
+    uint32_t ui32;
+  } a, b;
+  a.ui32 = __arg;
+  b.ui8[0] = a.ui8[3];
+  b.ui8[1] = a.ui8[2];
+  b.ui8[2] = a.ui8[1];
+  b.ui8[3] = a.ui8[0];
+  return b.ui32;
 }
 
-// 64-bit byte-swapper
-inline uint64_t XMDSSwapInt64(uint64_t __arg)
+static inline uint64_t XMDSSwapInt64(uint64_t __arg)
 {
-  union XMDSSwap {
-    uint64_t __sv;
-    uint32_t __ul[2];
-    } __tmp, __result;
-  __tmp.__sv = __arg;
-  __result.__ul[0] = XMDSSwapInt32(__tmp.__ul[1]);
-  __result.__ul[1] = XMDSSwapInt32(__tmp.__ul[0]);
-  return __result.__sv;
+  union {
+    uint32_t ui32[2];
+    uint64_t ui64;
+  } a, b;
+  a.ui64 = __arg;
+  b.ui32[0] = XMDSSwapInt32(a.ui32[1]);
+  b.ui32[1] = XMDSSwapInt32(a.ui32[0]);
+  return b.ui64;
 }
 
-inline float XMDSSwapFloat(float __in)
+static inline float XMDSSwapFloat(float __arg)
 {
-  union XMDSSwap {
-    float __f;
-    uint32_t __ul;
-  } __tmp;
-  __tmp.__f = __in;
-  __tmp.__ul = XMDSSwapInt32(__tmp.__ul);
-  return __tmp.__f;
+  union {
+    uint32_t ui32;
+    float f;
+  } a;
+  a.f = __arg;
+  a.ui32 = XMDSSwapInt32(a.ui32);
+  return a.f;
 }
 
-inline double XMDSSwapDouble(double __in)
+static inline double XMDSSwapDouble(double __arg)
 {
-  union XMDSSwap {
-    double __d;
-    uint64_t __ull;
-  } __tmp;
-  __tmp.__d = __in;
-  __tmp.__ull = XMDSSwapInt64(__tmp.__ull);
-  return __tmp.__d;
+  union {
+    uint64_t ui64;
+    double d;
+  } a;
+  a.d = __arg;
+  a.ui64 = XMDSSwapInt64(a.ui64);
+  return a.d;
 }
   @#
 @end def
