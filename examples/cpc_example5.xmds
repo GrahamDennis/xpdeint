@@ -57,12 +57,16 @@
 		<dependencies basis="kx">density</dependencies>
 		<![CDATA[
 				  // The analytic term is (1/(kx*kx) * (1 - cos(kx * R))) where R is the upper limit on the
-				  // Fourier transform.  This has zero limit near kx = 0 analytically, but the computer
+				  // Fourier transform.  This has finite limit near kx = 0 analytically, but the computer
 				  // won't know that when it tries to divide by zero.
-				  V_E = +1e-1 * dens * 2 / (kx * kx) * (1.0 - cos(kx * 0.5* (_max_x - _min_x)));
-		if (kx == 0.0)
-			V_E = 0.0;
-		]]>
+    real factor = 0.0;
+    if (kx == 0.0)
+      factor = 0.125 * (_max_x - _min_x) * (_max_x - _min_x);
+    else
+      factor = (1.0 - cos(kx * 0.5 * (_max_x - _min_x))) / (kx * kx);
+
+    V_E = +1e-1 * dens * factor;
+    ]]>
 	</evaluation>
   </computed_vector>
   
