@@ -761,28 +761,32 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       ## putting the matrix transform dimension first.
 
       if len(dimensionElements) >= 2:
-        # Check if any of the dimensions have a matrix transform
-        matrixTransformTypes = ['bessel', 'spherical-bessel', 'bessel-neumann', 'hermite-gauss']
-        firstDimensionTransformType = dimensionElements[0].getAttribute('transform').strip().lower()
+
+        firstDimensionTransformIsMMT = False
         matrixTransformPresent = False
 
-        for dimensionElement in dimensionElements:
-          if dimensionElement.getAttribute('transform').strip().lower() in matrixTransformTypes:
+        # Check if any of the dimensions have a matrix transform
+        for dimension in geometryTemplate.transverseDimensions:
+          if "Transforms.MMT" in str(dimension.transform.__class__.__mro__):
             matrixTransformPresent = True
 
-        if matrixTransformPresent == True and firstDimensionTransformType not in matrixTransformTypes:
+        # Does the *first* transverse dimension have a matrix transform?
+        if "Transforms.MMT" in str(geometryTemplate.transverseDimensions[0].transform.__class__.__mro__):
+          firstDimensionTransformIsMMT = True
+
+        if matrixTransformPresent == True and not firstDimensionTransformIsMMT:
           print
           parserWarning(transverseDimensionsElement,
-                        "If using both matrix transforms (bessel, spherical-bessel, bessel-neumann, " 
-                        "or hermite-gauss) and non-matrix transforms (none, dft, dct, dst), the "
+                        "If using both matrix transforms (e.g. bessel, spherical-bessel, bessel-neumann, " 
+                        "hermite-gauss, ...) and non-matrix transforms (none, dft, dct, dst), the "
                         "first transverse dimension should be one of the matrix transform dimensions "
                         "for optimum speed.\n"
                         "Unless you're sure you know what you're doing, you should consider "
                         "re-ordering your transverse dimensions.")
           print
  
-    ## End of "if transverseDimensionsElement" block
 
+    ## End of "if transverseDimensionsElement" block
 
     
     driver = self.globalNameSpace['features']['Driver']
