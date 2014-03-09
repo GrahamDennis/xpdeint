@@ -5,7 +5,7 @@ XMDS2Parser.py
 
 Created by Graham Dennis on 2007-12-29.
 
-Copyright (c) 2007-2012, Graham Dennis and Joe Hope
+Copyright (c) 2007-2014, Graham Dennis, Joe Hope and Mattias Johnsson
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -744,9 +744,46 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
             geometryTemplate.dimensions.append(dim)
           else:
             aliasDimensions.append(dim)
-      
+      ## End of "for dimensionElement in dimensionElements" block      
+
+
       # Alias dimensions come after normal dimensions so that we don't end up with a distributed-mpi set up over the first dimension and its alias
       geometryTemplate.dimensions.extend(aliasDimensions)
+
+      ## If there is more than one transverse dimension, and at least one
+      ## of the dimensions has a matrix transform, it should be listed first
+      ## for optimum speed. This is due to the BLAS API. The API can do the
+      ## matrix transform with one function call if the matrix transform
+      ## dimension is first; otherwise it needs N calls where N is the
+      ## number of points in the dimension.
+      ##
+      ## Since users may not be aware of this, warn them if they aren't
+      ## putting the matrix transform dimension first.
+
+      if len(dimensionElements) >= 2:
+        # Check if any of the dimensions have a matrix transform
+        matrixTransformTypes = ['bessel', 'spherical-bessel', 'bessel-neumann', 'hermite-gauss']
+        firstDimensionTransformType = dimensionElements[0].getAttribute('transform').strip().lower()
+        matrixTransformPresent = False
+
+        for dimensionElement in dimensionElements:
+          if dimensionElement.getAttribute('transform').strip().lower() in matrixTransformTypes:
+            matrixTransformPresent = True
+
+        if matrixTransformPresent == True and firstDimensionTransformType not in matrixTransformTypes:
+          print
+          parserWarning(transverseDimensionsElement,
+                        "If using both matrix transforms (bessel, spherical-bessel, bessel-neumann, " 
+                        "or hermite-gauss) and non-matrix transforms (none, dft, dct, dst), the "
+                        "first transverse dimension should be one of the matrix transform dimensions "
+                        "for optimum speed.\n"
+                        "Unless you're sure you know what you're doing, you should consider "
+                        "re-ordering your transverse dimensions.")
+          print
+ 
+    ## End of "if transverseDimensionsElement" block
+
+
     
     driver = self.globalNameSpace['features']['Driver']
     if isinstance(driver, DistributedMPIDriverTemplate):
