@@ -151,6 +151,19 @@ It is also possible to include an optional ``CDATA`` block inside the ``<argumen
       </arguments>
     </features>
 
+The arguments and their values can be added to the filename of the output files by using the ``append_args_to_output_filename`` attribute.  For example::
+
+    <name> arguments_test </name>
+    <features>
+      <arguments append_args_to_output_filename="yes">
+        <argument name="size" type="real" default_value="20.0"/>
+        <argument name="number" type="integer" default_value="7"/>
+        <argument name="pulse_shape" type="string" default_value="gaussian"/>
+      </arguments>
+    </features>
+
+When the ``arguments_test`` executable is run, it will create output files named ``arguments_test.number_7.pulse_shape_gaussian.size_20.0.xsil`` and ``arguments_test.number_7.pulse_shape_gaussian.size_20.0.h5``.
+
 
 .. index::
    single: XML elements; argument
