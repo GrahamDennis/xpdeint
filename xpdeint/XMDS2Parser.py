@@ -767,11 +767,11 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
 
         # Check if any of the dimensions have a matrix transform
         for dimension in geometryTemplate.transverseDimensions:
-          if "Transforms.MMT" in str(dimension.transform.__class__.__mro__):
+          if isinstance(dimension.transform, Transforms.MMT.MMT):
             matrixTransformPresent = True
 
         # Does the *first* transverse dimension have a matrix transform?
-        if "Transforms.MMT" in str(geometryTemplate.transverseDimensions[0].transform.__class__.__mro__):
+        if isinstance(geometryTemplate.transverseDimensions[0].transform, Transforms.MMT.MMT):
           firstDimensionTransformIsMMT = True
 
         if matrixTransformPresent == True and not firstDimensionTransformIsMMT:
