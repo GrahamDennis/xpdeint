@@ -132,17 +132,18 @@ install_FFTW_from_source() {
 
   echo; echo "Downloading FFTW from www.fftw.org..."; echo
 
-  wget http://www.fftw.org/fftw-3.3.2.tar.gz
-  fftwversion="3.3.2"
-  if [ ! -f fftw-3.3.2.tar.gz ]; then
+  fftwversion="3.3.4"
+  wget http://www.fftw.org/fftw-${fftwversion}.tar.gz
+  
+  if [ ! -f fftw-${fftwversion}.tar.gz ]; then
     # Fall back to the known-to-exist 3.3.1
-    wget ftp://ftp.fftw.org/pub/fftw/old/fftw-3.3.1.tar.gz
     fftwversion="3.3.1"
-
+    wget ftp://ftp.fftw.org/pub/fftw/old/fftw-${fftwversion}.tar.gz
+    
     # If *that's* not present, we can't continue
-    if [ ! -f fftw-3.3.1.tar.gz ]; then
+    if [ ! -f fftw-${fftwversion}.tar.gz ]; then
       echo
-      echo "ERROR: Couldn't obtain fftw-3.3.2.tar.gz or fftw-3.3.1.tar.gz from www.fftw.org."
+      echo "ERROR: Couldn't obtain fftw-${fftwversion}.tar.gz or fftw-${fftwversion}.tar.gz from www.fftw.org."
       echo "Aborting install."
       exit
     fi
