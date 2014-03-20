@@ -143,6 +143,38 @@ Faster libraries
 ^^^^^^^^^^^^^^^^
 Intel MKL is faster than ATLAS, which is faster than GSL CBLAS. If you have a Mac, then Apple's vecLib is plenty fast.
 
+**Note for Linux users**
+
+If you used the linux installer, and are using Ubuntu or Debian, the version of the ATLAS package that gets installed is the generic version in the repositories. This version lacks architecture and CPU-specific optimizations. 
+
+Creating an ATLAS package locally tuned for your specific machine will result in a faster linear algebra implementation, which can significantly speed up problems utilizing matrix based transforms (bessel, hermite-gauss etc). Some simple tests using a cylindrically symmetric problem with one bessel transform dimension and one FFT transform dimension showed speed increases from 5% - 100% over the default ATLAS package, depending on the number of grid points.
+
+To create and install an ATLAS package optimized for your machine, carry out the following procedure:
+
+Using your favourite package manager (e.g. Synaptic) to remove any current ATLAS libraries (probably libatlas3gf-base, libatlas-dev, libatlas-base-dev). Then create an empty directory whose path doesn't include any spaces. In this directory, do
+
+.. code-block:: xpdeint
+
+  apt-get source atlas
+  apt-get build-dep atlas
+  apt-get install devscripts dpkg-dev
+
+  cd atlas-*
+  sudo fakeroot debian/rules custom
+  cd ..
+  ls libatlas*.deb
+
+Then, for each of the .deb packages listed by the ls command, install via:
+
+.. code-block:: xpdeint
+
+  sudo dpkg -i <filename here>.deb
+
+This procedure was tested on Ubuntu 12.04 LTS, but an identical or very similar procedure should work for other Ubuntu/Debian versions. 
+
+Finally, note that the "sudo fakeroot debian/rules custom" package creation step carries out an exhaustive series of tests to optimize for your architecture, SSE support, cache hierarchy and so on, and takes a long time - two hours(!) on my machine.
+
+
 Auto-vectorisation
 ^^^^^^^^^^^^^^^^^^
 Auto-vectorisation is a compiler feature that makes compilers generate more efficient code that can execute the same operation on multiple pieces of data simultaneously. To use this feature, you need to add the following to the ``<features>`` block at the start of your simulation:
