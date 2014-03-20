@@ -304,30 +304,18 @@ echo
 
 if [ $DEB_INSTALL -eq 1 ]; then
   # Begin Debian package install
-  sudo apt-get -y install build-essential subversion libopenmpi-dev openmpi-bin python-dev python-setuptools python-cheetah python-numpy python-pyparsing python-lxml python-mpmath libhdf5-serial-dev libgsl0-dev python-sphinx python-h5py wget
+  sudo apt-get -y install build-essential subversion libopenmpi-dev openmpi-bin python-dev python-setuptools python-cheetah python-numpy python-pyparsing python-lxml python-mpmath libhdf5-serial-dev libgsl0-dev python-sphinx python-h5py wget libatlas-base-dev
 
-  # Find the optimum ATLAS version (i.e. CBLAS implementation) and install it
-  # Older versions of Ubuntu/Debian offered pre-optimized packages for various architectures,
-  # but newer versions don't, and only offer a single generic package.
-  if [ `cat /proc/cpuinfo | grep sse3 |wc -l` -gt 0 ]; then
-    if [ `cat /proc/cpuinfo | grep "Core(TM) i7" | wc -l` -ne 0 ] && [ `apt-cache --names-only search libatlas-corei7sse3-dev | wc -l` -ne 0 ]; then
-      sudo apt-get -y install libatlas-corei7sse3-dev
-    elif [ `apt-cache --names-only search libatlas-amd64sse3-dev | wc -l` -ne 0 ]; then
-      sudo apt-get -y install libatlas-amd64sse3-dev
-    else
-      sudo apt-get -y install libatlas-base-dev
-    fi
-  else
-    sudo apt-get -y install libatlas-base-dev
-  fi 
+  COMPLETION_MESSAGE=$COMPLETION_MESSAGE"\nA generic version of ATLAS (a linear algebra library) was installed. Building a\n"
+  COMPLETION_MESSAGE=$COMPLETION_MESSAGE"version specifically tuned to your local machine can lead to considerable speed\n"
+  COMPLETION_MESSAGE=$COMPLETION_MESSAGE"increases when using matrix transforms such as bessel, hermite-gauss etc.\n"
+  COMPLETION_MESSAGE=$COMPLETION_MESSAGE"See Optimization Hints in the documentation at xmds.org for details.\n"
   # End Debian packages install
 elif [ $RPM_INSTALL -eq 1 ]; then
   # Begin RPM packages install
   sudo yum -y install gcc gcc-c++ make automake subversion openmpi-devel python-devel python-setuptools python-cheetah numpy gsl-devel python-sphinx wget libxml2-devel libxslt-devel
   
   # Find the optimum ATLAS version (i.e. CBLAS implementation) and install it
-  # Older versions of Fedora offered pre-optimized packages for various architectures,
-  # but newer versions don't, and only offer a single generic package.
   SUCCESS=0
   if [ $SUCCESS -eq 0 ] && [ `cat /proc/cpuinfo | grep sse3 |wc -l` -gt 0 ]; then
     sudo yum -y install atlas-sse3-devel
