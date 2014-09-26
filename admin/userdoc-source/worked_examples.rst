@@ -248,7 +248,7 @@ where :math:`\eta(t)` is the Wiener differential, and we interpret this as a Str
 .. math::
     dz = i z \;\circ dW
 
-Most algorithms employed by XMDS require the equations to be input in the Stratonovich form.  Ito differential equations can always be transformed into Stratonovich euqations, and in this case the difference is equivalent to the choice of rotating frame.  This equation is solved by the following XMDS2 script:
+Most algorithms employed by XMDS require the equations to be input in the Stratonovich form.  Ito differential equations can always be transformed into Stratonovich equations, and in this case the difference is equivalent to the choice of rotating frame.  This equation is solved by the following XMDS2 script:
 
 .. code-block:: xpdeint
 
@@ -1006,7 +1006,7 @@ The code for this simulation can be found in ``examples/groundstate_workedexampl
       </output>
     </simulation>
 
-We have used the ``plan="exhasutive"`` option in the ``<fftw>`` element to ensure that the absolute fastest transform method is found.  Because the FFTW package stores the results of its tests (by default in the ~/.xmds/wisdom directory), this option does not cause significant computational overhead, except perhaps on the very first run of a new program.
+We have used the ``plan="exhaustive"`` option in the ``<fftw>`` element to ensure that the absolute fastest transform method is found.  Because the FFTW package stores the results of its tests (by default in the ~/.xmds/wisdom directory), this option does not cause significant computational overhead, except perhaps on the very first run of a new program.
 
 .. index:: Computed vectors
 
@@ -1108,7 +1108,7 @@ where
 .. math::
     \phi_n(x,t) = \sqrt{\frac{1}{2^n n!}} \left(\frac{m \omega}{\hbar \pi}\right)^\frac{1}{4} e^{-\frac{m \omega x^2}{2\hbar}} H_n\left(\sqrt{\frac{m \omega}{\hbar}x}\right),\;\;\;\;\;\;E_n = \left(n+\frac{1}{2}\right) \omega
 
-where :math:`H_n(u)` are the physicist's version of the Hermite polynomials.  Rather than describing the derivatives as diagonal terms in Fourier space, we therefore have the option of describing the entire :math:`-\frac{\hbar}{2 m}\frac{\partial^2}{\partial x^2} + \frac{1}{2}\omega^2 x^2` term as a diagonal term in the hermite-Gaussian basis.  Here is an XMDS2 simulation that performs the integration in this basis. The following is a simplified version of the ``examples/hermitegauss_groundstate.xmds`` script.
+where :math:`H_n(u)` are the physicist's version of the Hermite polynomials.  Rather than describing the derivatives as diagonal terms in Fourier space, we therefore have the option of describing the entire :math:`-\frac{\hbar}{2 m}\frac{\partial^2}{\partial x^2} + \frac{1}{2}\omega^2 x^2` term as a diagonal term in the Hermite-Gaussian basis.  Here is an XMDS2 simulation that performs the integration in this basis. The following is a simplified version of the ``examples/hermitegauss_groundstate.xmds`` script.
 
 .. code-block:: xpdeint
 
@@ -1116,7 +1116,7 @@ where :math:`H_n(u)` are the physicist's version of the Hermite polynomials.  Ra
       <name>hermitegauss_groundstate</name>
       <author>Graham Dennis</author>
       <description>
-        Solve for the groundstate of the Gross-Pitaevskii equation using the hermite-Gauss basis.
+        Solve for the groundstate of the Gross-Pitaevskii equation using the Hermite-Gauss basis.
       </description>
   
       <features>
@@ -1230,7 +1230,7 @@ The major difference in this simulation code, aside from the switch back from di
  
           <dimension name="x" lattice="100" length_scale="sqrt(hbar/(M*omegarho))" transform="hermite-gauss" />
 
-We have explicitly defined the "transform" option, which by defaults expects the Fourier transform.  The ``transform="hermite-gauss"`` option requires the 'mpmath' package installed, just as Fourier transforms require the FFTW package to be installed.  The "lattice" option details the number of hermite-Gaussian eigenstates to include, and automatically starts from the zeroth order polynomial and increases.  The number of hermite-Gaussian modes fully determines the irregular spatial grid up to an overall scale given by the ``length_scale`` parameter.
+We have explicitly defined the "transform" option, which by default expects the Fourier transform.  The ``transform="hermite-gauss"`` option requires the 'mpmath' package installed, just as Fourier transforms require the FFTW package to be installed.  The "lattice" option details the number of hermite-Gaussian eigenstates to include, and automatically starts from the zeroth order polynomial and increases.  The number of hermite-Gaussian modes fully determines the irregular spatial grid up to an overall scale given by the ``length_scale`` parameter.
 
 The ``length_scale="sqrt(hbar/(M*omegarho))"`` option requires a real number, but since this script defines it in terms of variables, XMDS2 is unable to verify that the resulting function is real-valued at the time of generating the code.  XMDS2 will therefore fail to compile this program without the feature:
 

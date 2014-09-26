@@ -172,7 +172,7 @@ Then, for each of the .deb packages listed by the ls command, install via:
 
 This procedure was tested on Ubuntu 12.04 LTS, but an identical or very similar procedure should work for other Ubuntu/Debian versions. 
 
-Finally, note that the "sudo fakeroot debian/rules custom" package creation step carries out an exhaustive series of tests to optimize for your architecture, SSE support, cache hierarchy and so on, and takes a long time - two hours(!) on my machine.
+Finally, note that the "sudo fakeroot debian/rules custom" package creation step carries out an exhaustive series of tests to optimize for your architecture, SSE support, cache hierarchy and so on, and can take a long time. Be patient.
 
 
 Auto-vectorisation

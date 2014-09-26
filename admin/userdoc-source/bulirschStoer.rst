@@ -5,7 +5,7 @@
 Modified Midpoint Method
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-The modified midpoint can be used standalone as an ordinary differential equation integrator, however it is regarded as much more powerful when used as a stepper to complement the Bulirsch-Stoer technique.
+Although the modified midpoint can be used standalone as an ordinary differential equation integrator, it is regarded as much more powerful when used as a stepper to complement the Bulirsch-Stoer technique.
 
 The modified midpoint method advances a vector of dependent variables :math:`y(x)` from a point :math:`x`, to a point :math:`x + H` by a sequence of :math:`n` substeps, each of size :math:`h=H/n`.
 
@@ -17,16 +17,16 @@ The number of right-hand side evaluations required by the modified midpoint meth
     z_{m+1} &= z_{m-1} + 2 h f(x + m h, z_m)\; \text{ for } m = 1, 2, \dots, n-1 \\
     y(x+H) \approx y_n &= \frac{1}{2} \left[ z_n + z_{n-1} + h f(x + H, z_n) \right]
     
-The error of this, expressed as a power series in :math:`h`, the stepsize, contains only even powers of :math:`h`.
+The error of this, expressed as a power series in :math:`h`, the stepsize, contains only even powers of :math:`h`:
 
 .. math::
     y_n - y(x + H) &= \sum_{i=1}^{\infty} \alpha_i h^{2i}
 
-Where :math:`H` is held constant, but :math:`h` changes :math:`y` by varing the :math:`n` in :math:`h = H/n`.
+where :math:`H` is held constant, but :math:`h` changes :math:`y` by varing the :math:`n` in :math:`h = H/n`.
 
 The importance of this even power series is that using Richardson Extrapolation to combine steps and knock out higher-order error terms gains us two orders at a time.
 
-The modified midpoint method is a second-order method, but holds an advantage over second order Runge-Kutta, as it only requires 1 derivative evaluation per step, instead of the two evaluations that Runge-Kutta necessitates.
+The modified midpoint method is a second-order method, but holds an advantage over second order Runge-Kutta, as it only requires one derivative evaluation per step, instead of the two evaluations that Runge-Kutta necessitates.
 
 .. index:: Bulirsch-Stoer algorithm
 
@@ -35,14 +35,14 @@ The modified midpoint method is a second-order method, but holds an advantage ov
 Bulirsch-Stoer Algorithm
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-The Bulirsch-Stoer algorithm utilizes three core concepts in its design. These are;
+The Bulirsch-Stoer algorithm utilizes three core concepts in its design.
 
-Firstly, the usage of Richardson Extrapolation
+First, the usage of Richardson Extrapolation.
 
 .. image:: images/modifiedMidpoint/richardsonExtrapolation.*
     :align: center
 
-Richardson Extrapolation considers the final answer of a numerical calculation, as being an analytic function of an adjustable parameter such as the stepsize :math:`h`. That analytic function can be probed by performing the calculation with various values of :math:`h`, none of them being necessarily small enough to yield the accuracy that we desire. When we know enough about the function, we fit it to some analytic form and then evaluate it, at the point where :math:`h = 0`.
+Richardson Extrapolation considers the final answer of a numerical calculation as being an analytic function of an adjustable parameter such as the stepsize :math:`h`. That analytic function can be probed by performing the calculation with various values of :math:`h`, none of them being necessarily small enough to yield the accuracy that we desire. When we know enough about the function, we fit it to some analytic form and then evaluate it at the point where :math:`h = 0`.
 
 Secondly, the usage of rational function extrapolation in Richardson-type applications. Rational function fits can remain good approximations to analytic functions even after the various terms in powers of :math:`h`, all have comparable magnitudes. In other words, :math:`h` can be so large as to make the whole notion of the “order” of the method meaningless — and the method can still work superbly.
 

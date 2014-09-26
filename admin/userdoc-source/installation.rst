@@ -11,9 +11,13 @@ Installation
 Installers
 ==========
 
-If you are using Debian GNU/Linux, XMDS2 will eventually be available in the Debian "jessie" distribution.  In the meanwhile, a temporary APT repository has been set up, which works for both the current stable (a.k.a "wheezy") and testing (a.k.a. "jessie") distributions.  For using this repository, follow the instructions at http://xmds.laboissiere.net.
+If you're using a Mac with OSX >= 10.6, there is a simple drag-and-drop installer available.
 
-If you're not using Debian, the easiest way to get started is with an installer.  If we don't have an installer for your system, follow the :ref:`manual installation <ManualInstallation>` instructions.
+If you are using a recent version of Ubuntu or Debian, XMDS2 is available as a package in your package / software manager. Note that if using the Ubuntu Software Centre rather than Synaptic, you must explicitly search for "xmds2" rather than "xmds", or you will only get XMDS1 as a result.
+
+If you're using a version of Linux that's not Ubuntu / Debian, the easiest way to get started is to use the install shell script linked to below. 
+
+If we don't have an installer for your system, follow the :ref:`manual installation <ManualInstallation>` instructions.
 
 .. tabularcolumns:: |c|c|c|
 
@@ -23,11 +27,11 @@ If you're not using Debian, the easiest way to get started is with an installer.
 
     * - Linux (Ubuntu/Debian/Fedora/RedHat)
 
-      - `Download Linux Installer <http://svn.code.sf.net/p/xmds/code/trunk/xpdeint/admin/linux_installer.sh>`_
+      - `Download Linux shell script installer <http://svn.code.sf.net/p/xmds/code/trunk/xpdeint/admin/linux_installer.sh>`_
 
       - :ref:`Learn more <linux_installation>`
 
-    * - OS X 10.6/10.7
+    * - OS X 10.6 / 10.7 / 10.8 / 10.9
 
       - `Download OS X Installer <http://sourceforge.net/projects/xmds/files>`_
 
@@ -48,6 +52,8 @@ If you have one of the supported operating systems listed above, but you find th
 
 Linux installer instructions
 ============================
+
+Note: If you're using Debian / Ubuntu, unless you want a developer install, you're probably better off installing XMDS2 via your package manager rather than this install script.
 
 The linux installer has currently only been tested with Ubuntu, Debian, Fedora, and Red Hat. Download the installer here: http://svn.code.sf.net/p/xmds/code/trunk/xpdeint/admin/linux_installer.sh
 

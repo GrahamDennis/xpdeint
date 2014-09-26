@@ -9,7 +9,7 @@ This section has further details on some important topics.
 
 :ref:`Importing` (importing data into XMDS2, and data formats used in the export)
 
-:ref:`Convolutions` (extra information on the Fourier transforms used in XMDS2, and applications to defining convolutions)
+:ref:`Convolutions` (extra information on the Fourier transforms used in XMDS2, how this applies to convolutions)
 
 :ref:`DimensionAliases` (dimensions which are declared to be identical, useful for correlation functions)
 
@@ -26,7 +26,7 @@ There are many cases where it is advantageous to import previously acquired data
 Suppose we want to import the following function into XMDS2:
 
 .. math::
-    f(x) = x^2
+    f(x) = x^2.
 
 The first step is to create an hdf5 file, from XMDS2, which specifies the dimensions of the grid for the x dimension. Create and save a new XMDS2 file. For the purposes of this tutorial we shall call it "grid_specifier.xmds" with name "grid_specifier". Within this file, enter the following "dummy" vector - which we shall call "gen_dummy" - which depends on the x dimension:
 
@@ -52,7 +52,7 @@ What "dummy" is is not actually important. It is only necessary that it is a fun
           </dependencies>
       </breakpoint>
 
-In terminal, compile the file "grid_specifier.xmds" in XMDS2 and run the c code as usual. This creates two files - "grid.xsil" and "grid.h5". The file "grid.h5" contains the list of points which make up the grids for the x dimensions. This data can now be used to ensure that the function :math:`f(x)` which we will import into XMDS2 is compatible with the the specified grid in your primary XMDS2 file.
+In terminal, compile the file "grid_specifier.xmds" in XMDS2 and run the C code as usual. This creates two files - "grid.xsil" and "grid.h5". The file "grid.h5" contains the list of points which make up the grids for the x dimensions. This data can now be used to ensure that the function :math:`f(x)` which we will import into XMDS2 is compatible with the the specified grid in your primary XMDS2 file.
 
 In order to read the "grid.h5" data into Mathematica version 6.0, type the following command into terminal:.. code-block::
 
