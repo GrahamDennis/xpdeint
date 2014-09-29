@@ -1028,7 +1028,7 @@ The choice of pseudo-random number generator (RNG) can be specified with the ``m
 
 The random number generators can be provided with a seed using the ``seed`` attribute, which should typically consist of a list of three integers.  All RNGs require positive integers as seeds.  It is possible to use the :ref:`<validation kind="run-time"/><Validation>` feature to use passed variables as seeds.  It is advantageous to use fixed seeds rather than timer-based seeds, as the :ref:`<error_check><ErrorCheck>` element can test for strong convergence if the same seeds are used for both integrations.  If the ``seed`` attribute is not specified, then seeds will be generated at the time the simulation is run.  Different executions of the same simulation will therefore give different results.  However, results can be reproduced by examining the ``.xsil`` file produced by the simulation which contains the generated seeds.  If these seeds are used for the ``seed`` attribute, the same results can be reproduced.  Unless you need to reproduce particular results, it is unnecessary to specify the ``seed`` attribute.
 
-The different types of noise vectors are defined by a mandatory ``kind`` attribute, which must take the value of 'gauss', 'gaussian', 'wiener', 'poissonian','jump' or 'uniform'.  
+The different types of noise vectors are defined by a mandatory ``kind`` attribute, which must take the value of 'gauss', 'gaussian', 'wiener', 'poissonian','jump' or 'uniform'. 
 
 Example syntax::
 
@@ -1147,7 +1147,7 @@ A noise vector using the "jump" method is the dynamic version of the poissonian 
 
 It is common to wish to vary the mean rate of a jump process, which means that the ``mean-rate`` attribute must be a variable or a piece of code.  These cannot be verified to be a positive real number at compile time, so they must be used with the :ref:`<validation><Validation>` feature with either the ``kind="none"`` or ``kind="run-time"`` attributes.
 
-As a dynamic noise, a jump process is not well-defined except in an ``integrate`` element.
+As a dynamic noise, a jump process is not well-defined except in an ``integrate`` element.  The only algorithm that currently integrates jump noises correctly is the Euler algorithm.  This can be implemented by the "SI" method with the option ``iterations="1"``.
 
 Example syntax::
 
