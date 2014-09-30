@@ -13,7 +13,7 @@
 # directories should be run as sudo, which is taken care of within this script.
 
 XMDS_VERSION="2.2.1"
-KNOWN_GOOD_XMDS_REVISION="2958"
+KNOWN_GOOD_XMDS_REVISION="2961"
 
 if [ "$(whoami)" = "root" ]; then
   echo
