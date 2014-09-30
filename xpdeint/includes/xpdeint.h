@@ -41,8 +41,8 @@ inline XMDSComplexType operator-(const int b, const XMDSComplexType& a) { return
 
 
 extern bool initialiseFieldFromXSILFile(const char *filename,
-   const char *mgName, unsigned long dimension, char **dimNames,
-   char **componentNames,
+   const char *mgName, unsigned long dimension, char const **dimNames,
+   char const **componentNames,
    // output variables
    char**binaryDataFilename, int *unsignedLongSize,
    bool *dataEncodingIsNative, bool *isPrecisionDouble,

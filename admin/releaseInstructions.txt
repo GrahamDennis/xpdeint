@@ -13,19 +13,20 @@ Release Instructions:
     admin/userdoc-source/installation.rst
     admin/userdoc-source/conf.py.  
     
-    ChangeLog is an optional change.
+1. Run the ChangeLog script at the top of this file in the top directory, and
+     use the resulting ChangeLog to update admin/userdoc-source/news_content.rst
 
-1. Make sure everything works with a clean install.  
+2. Make sure everything works with a clean install.  
     (Check out a clean copy and do tests) 
     "svn checkout https://svn.code.sf.net/p/xmds/code/trunk/xpdeint xmds2"
 
-2. Change the "last known good" choices in the linux and mac installers, and check them.
+3. Change the "last known good" choices in the linux and mac installers, and check them.
 
-3. Go into the admin directory, and run "./create_release_version.sh".
+4. Go into the admin directory, and run "./create_release_version.sh".
 
-4. Follow that script's instructions for putting the documentation and tarball on sourceforge
+5. Follow that script's instructions for putting the documentation and tarball on sourceforge
 
-5. Update the mac installer file.
+6. Update the mac installer file.
 
 6. Announce!
 

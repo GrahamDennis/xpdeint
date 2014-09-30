@@ -2,7 +2,7 @@
 # encoding: utf-8
 import os
 
-versionString = '2.2.0 "Out of cheese error"'
+versionString = '2.2.1 "XMDS2 is a game of two halves"'
 
 if 'XMDS_USER_DATA' in os.environ:
     xpdeintUserDataPath = os.environ['XMDS_USER_DATA']

@@ -49,7 +49,7 @@ copyright = u'2008-2014, Graham Dennis, Joe Hope and Mattias Johnsson. Licensed 
 # The short X.Y version.
 version = '2.2'
 # The full version, including alpha/beta/rc tags.
-release = '2.2.0'
+release = '2.2.1'
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -124,8 +124,9 @@ html_use_smartypants = True
 # Custom sidebar templates, maps document names to template names.
 #html_sidebars = {}
 #html_sidebars = {'**': ['globaltoc.html', 'localtoc.html','searchbox.html']}
-html_sidebars = {'**': ['localtoc.html','searchbox.html']}
-
+html_sidebars = {'**': ['localtoc.html', 'searchbox.html'],
+   'index': ['globaltoc.html', 'searchbox.html'],
+}
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
 #html_additional_pages = {}

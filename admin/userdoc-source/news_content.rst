@@ -1,6 +1,12 @@
 News
 -----
 
+XMDS 2.2.1 "XMDS2 is a game of two halves" (September 30, 2014)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+XMDS 2.2.1 contains minor bugfixes and updates. This includes documentation improvements, superior handling of external packages and more informative errors.
+
+
 XMDS 2.2.0 "Out of cheese error" (January 13, 2014)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

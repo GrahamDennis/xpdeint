@@ -136,7 +136,7 @@ static inline double XMDSSwapDouble(double __arg)
   @end if
 }
 
-char **_dimNames  = new char* [_${vector.field.name}_ndims];
+char const **_dimNames  = new char const * [_${vector.field.name}_ndims];
 double *_dimDelta = new double[_${vector.field.name}_ndims];
 double *_dimMin   = new double[_${vector.field.name}_ndims];
 unsigned long *_dimLattice = new unsigned long[_${vector.field.name}_ndims];
@@ -154,7 +154,7 @@ _dimLattice[$dimensionNumber] = ${dimRep.globalLattice};
   @if $vector.type == 'complex'
     @set $componentNameSizePrefix = '2 * '
   @end if
-char **_componentNames = new char*[${componentNameSizePrefix}_${vector.id}_ncomponents + 1];
+char const **_componentNames = new char const *[${componentNameSizePrefix}_${vector.id}_ncomponents + 1];
 int *_componentFieldIndices = new int[${componentNameSizePrefix}_${vector.id}_ncomponents];
 
   @set $componentNameIndex = 0
