@@ -366,16 +366,31 @@ def configure(conf):
             h5cc_shared_flags = conf.cmd_and_log([conf.env['H5CC'], '-show', '-shlib'])
             h5cc_static_flags = conf.cmd_and_log([conf.env['H5CC'], '-show', '-noshlib'])
             
-            conf.parse_flags(h5cc_shared_flags, 'hdf5', force_static = False)
-            conf.parse_flags(h5cc_static_flags, 'hdf5', force_static = True)
+            conf.parse_flags(h5cc_shared_flags, 'hdf5_shared', force_static = False)
+            conf.parse_flags(h5cc_static_flags, 'hdf5_static', force_static = True)
             
-            check_cxx(
-                header_name=['hdf5.h'],
-                defines='HAVE_H5LEXISTS',
-                function_name='H5Lexists',
-                uselib = 'hdf5',
-                uselib_store = 'hdf5',
-            )
+            conf.env['uselib'].extend(['hdf5_shared', 'hdf5_static'])
+            
+            hdf5_options = [
+                {'uselib': 'hdf5_static', 'msg': "HDF5 (static library)", 'errmsg': "no (will try dynamic library instead)"},
+                {'uselib': 'hdf5_shared', 'msg': "HDF5 (dynamic library)"}
+            ]
+            
+            hdf5_common = {
+                'header_name': 'hdf5.h',
+                'function_name': 'H5check_version'
+            }
+            
+            try_options('hdf5', hdf5_options, hdf5_common)
+            
+            if 'hdf5' in conf.env['uselib']:
+                check_cxx(
+                    header_name='hdf5.h',
+                    defines='HAVE_H5LEXISTS',
+                    function_name='H5Lexists',
+                    uselib = 'hdf5',
+                    uselib_store = 'hdf5',
+                )
         
         check_cxx(
             lib='xmds',
