@@ -126,6 +126,7 @@ html_use_smartypants = True
 #html_sidebars = {'**': ['globaltoc.html', 'localtoc.html','searchbox.html']}
 html_sidebars = {'**': ['localtoc.html', 'searchbox.html'],
    'index': ['globaltoc.html', 'searchbox.html'],
+   'reference_index': ['globaltoc.html', 'searchbox.html'],
 }
 # Additional templates that should be rendered to pages, maps page names to
 # template names.

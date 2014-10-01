@@ -59,8 +59,9 @@ rm -rf debian/
 rm -rf documentation/_sources/
 
 # Finally package everything up into the tarball
+# The environment variable is to stop OS X leaving resource files everywhere
 cd ..
-tar -czf xmds-${XMDS_VERSION}.tar.gz xmds-${XMDS_VERSION}
+COPYFILE_DISABLE=1 tar -czf xmds-${XMDS_VERSION}.tar.gz xmds-${XMDS_VERSION}
 
 echo
 echo To release to sourceforge, execute the following commands.

@@ -19,6 +19,7 @@ Release Instructions:
 2. Make sure everything works with a clean install.  
     (Check out a clean copy and do tests) 
     "svn checkout https://svn.code.sf.net/p/xmds/code/trunk/xpdeint xmds2"
+    (Don't forget to "make", "sudo ./setup.py develop", and compile documentation.)
 
 3. Change the "last known good" choices in the linux and mac installers, and check them.
 
