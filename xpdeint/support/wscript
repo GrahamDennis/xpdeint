@@ -23,9 +23,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import os, sys, platform
+import os, sys, platform, re
 
-from waflib import Task, TaskGen
+from waflib import Task, TaskGen, Errors
 from waflib.TaskGen import feature
 
 def options(opt):
@@ -361,36 +361,63 @@ def configure(conf):
             msg = "Checking for /dev/urandom",
         )
         
-        # Check for hdf5
+        # Check for zlib, used by hdf5
+        check_cxx(
+            lib='z',
+            function_name="deflate",
+            header_name="zlib.h",
+            uselib_store="zlib",
+            msg = "Checking for zlib"
+        )
+        
+        # Check for h5cc
         if conf.find_program('h5cc', var='H5CC', mandatory = False):
-            h5cc_shared_flags = conf.cmd_and_log([conf.env['H5CC'], '-show', '-shlib'])
-            h5cc_static_flags = conf.cmd_and_log([conf.env['H5CC'], '-show', '-noshlib'])
+            try:
+                # *sigh* h5cc is broken in that it returns a failure return status when you ask for -help.
+                # But maybe, one day, magical fairies will fix the many things broken about h5cc,
+                # and after that day, the following line will work...
+                h5cc_output = conf.cmd_and_log([conf.env['H5CC'], '-help'])
+            except Errors.WafError as e:
+                # Until that day, we have to get the h5cc output from the waf error.
+                h5cc_output = e.stdout
             
-            conf.parse_flags(h5cc_shared_flags, 'hdf5_shared', force_static = False)
-            conf.parse_flags(h5cc_static_flags, 'hdf5_static', force_static = True)
-            
-            conf.env['uselib'].extend(['hdf5_shared', 'hdf5_static'])
-            
-            hdf5_options = [
-                {'uselib': 'hdf5_static', 'msg': "HDF5 (static library)", 'errmsg': "no (will try dynamic library instead)"},
-                {'uselib': 'hdf5_shared', 'msg': "HDF5 (dynamic library)"}
-            ]
-            
-            hdf5_common = {
-                'header_name': 'hdf5.h',
-                'function_name': 'H5check_version'
-            }
-            
-            try_options('hdf5', hdf5_options, hdf5_common)
-            
+            hdf5_libpath = re.search(r"\[default: (.*)\]", h5cc_output).group(1)
+            conf.env.append_unique("LIBPATH_hdf5", hdf5_libpath)
+            print repr(conf.env["LIBPATH_hdf5"])
+
+            check_cxx(
+                lib='hdf5',
+                header_name="hdf5.h",
+                function_name="H5check_version",
+                uselib_store="hdf5",
+                uselib="zlib" if "zlib" in conf.env['uselib'] else [],
+                msg = "Checking for HDF5",
+            )
+
             if 'hdf5' in conf.env['uselib']:
                 check_cxx(
-                    header_name='hdf5.h',
+                    lib='hdf5_hl',
+                    defines='HAVE_HDF5_HL',
+                    header_name=['hdf5.h', 'hdf5_hl.h'],
+                    function_name='H5DSset_scale',
+                    uselib_store='hdf5',
+                    uselib='hdf5',
+                    msg = "Checking for HDF5 High-level library",
+                )
+
+                # We need to reverse the library order because hdf5_hl depends on hdf5
+                if conf.env['STLIB_hdf5']: conf.env['STLIB_hdf5'] = list(reversed(conf.env.get_flat('STLIB_hdf5').split()))
+                if conf.env['SHLIB_hdf5']: conf.env['SHLIB_hdf5'] = list(reversed(conf.env.get_flat('SHLIB_hdf5').split()))
+
+                check_cxx(
+                    header_name=['hdf5.h'],
                     defines='HAVE_H5LEXISTS',
                     function_name='H5Lexists',
                     uselib = 'hdf5',
                     uselib_store = 'hdf5',
                 )
+            
+        
         
         check_cxx(
             lib='xmds',
@@ -587,4 +614,6 @@ def configure(conf):
         del conf.env["DEFINES"]
     else:
         print "MPI not found. No scripts using MPI can be compiled on this system."
+        conf.setenv('default')
+        del conf.all_envs['mpi']
     
