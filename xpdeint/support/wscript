@@ -117,15 +117,18 @@ def configure(conf):
         uselib_store = KWs['uselib_store']
         KWs['_skip'] = True
         del KWs['uselib_store']
+        extra_static_kws = KWs.get("static_lib_extra_options", {})
+        extra_shared_kws = KWs.get("shared_lib_extra_options", {})
+        
         options = [
-            {'stlib': lib,   'msg': "%s (static library)" % KWs['msg'], 'errmsg': "no (will try dynamic library instead)"},
-            {'lib'  : lib,   'msg': "%s (dynamic library)" % KWs['msg']},
+            dict(stlib=lib, msg=KWs['msg'] + " (static library)", errmsg="no (will try dynamic library instead)", **extra_static_kws),
+            dict(lib=lib,   msg=KWs['msg'] + " (dynamic library)", **extra_shared_kws),
         ]
         if not conf.env['STLIB_MARKER']:
             options = [
             # On systems like Mac OS X, it seems we can't force the linker to prefer static libraries over dynamic ones
             # Except of course by including them by listing the full path.
-                {'lib': lib}
+                dict(lib=lib, **extra_shared_kws),
             ]
         if not 'errmsg' in KWs:
             KWs['errmsg'] = "no (it's optional anyway)"
@@ -361,16 +364,7 @@ def configure(conf):
             msg = "Checking for /dev/urandom",
         )
         
-        # Check for zlib, used by hdf5
-        check_cxx(
-            lib='z',
-            function_name="deflate",
-            header_name="zlib.h",
-            uselib_store="zlib",
-            msg = "Checking for zlib"
-        )
-        
-        # Check for h5cc
+        # Check for hdf5
         if conf.find_program('h5cc', var='H5CC', mandatory = False):
             try:
                 # *sigh* h5cc is broken in that it returns a failure return status when you ask for -help.
@@ -381,19 +375,35 @@ def configure(conf):
                 # Until that day, we have to get the h5cc output from the waf error.
                 h5cc_output = e.stdout
             
-            hdf5_libpath = re.search(r"\[default: (.*)\]", h5cc_output).group(1)
+            # Grab the HDF5 install prefix from the help command output.  
+            # We're searching for a string of the form [default: ZZZZ]
+            hdf5_prefix = re.search(r"\[default: (.*)\]", h5cc_output).group(1)
+            hdf5_libpath = os.path.join(hdf5_prefix, "lib")
             conf.env.append_unique("LIBPATH_hdf5", hdf5_libpath)
-            print repr(conf.env["LIBPATH_hdf5"])
-
+            
+            h5cc_shared_flags = conf.cmd_and_log([conf.env['H5CC'], '-show', '-shlib'])
+            h5cc_static_flags = conf.cmd_and_log([conf.env['H5CC'], '-show', '-noshlib'])
+            
+            # h5cc uses absolute paths to the static libraries.  This interferes with how waf likes to link
+            # against static libraries.  Let's remove the absolute paths to the libraries, and add the static libraries
+            # again later.
+            h5cc_static_flags = re.sub(re.escape(hdf5_libpath) + r"/libhdf5\S*\.a", "", h5cc_static_flags)
+            
+            conf.parse_flags(h5cc_shared_flags, 'hdf5_shared', force_static = False)
+            conf.parse_flags(h5cc_static_flags, 'hdf5_static', force_static = True)
+            
+            conf.env['uselib'].extend(['hdf5_shared', 'hdf5_static'])
+            
             check_cxx(
                 lib='hdf5',
-                header_name="hdf5.h",
-                function_name="H5check_version",
-                uselib_store="hdf5",
-                uselib="zlib" if "zlib" in conf.env['uselib'] else [],
+                header_name='hdf5.h',
+                function_name='H5check_version',
+                static_lib_extra_options = dict(uselib = 'hdf5_static'),
+                shared_lib_extra_options = dict(uselib = 'hdf5_shared'),
+                uselib_store='hdf5',
                 msg = "Checking for HDF5",
             )
-
+            
             if 'hdf5' in conf.env['uselib']:
                 check_cxx(
                     lib='hdf5_hl',
@@ -405,19 +415,21 @@ def configure(conf):
                     msg = "Checking for HDF5 High-level library",
                 )
 
-                # We need to reverse the library order because hdf5_hl depends on hdf5
-                if conf.env['STLIB_hdf5']: conf.env['STLIB_hdf5'] = list(reversed(conf.env.get_flat('STLIB_hdf5').split()))
-                if conf.env['SHLIB_hdf5']: conf.env['SHLIB_hdf5'] = list(reversed(conf.env.get_flat('SHLIB_hdf5').split()))
-
+                # We need to ensure hdf5_hl appears *before* hdf5 for static compile order
+                if conf.env['STLIB_hdf5']:
+                    hdf5_stlib = conf.env._get_list_value_for_modification('STLIB_hdf5')
+                    if 'hdf5_hl' in hdf5_stlib:
+                        hdf5_stlib.remove('hdf5_hl')
+                        hdf5_stlib.insert(hdf5_stlib.index('hdf5'), 'hdf5_hl')
+                
                 check_cxx(
-                    header_name=['hdf5.h'],
+                    header_name='hdf5.h',
                     defines='HAVE_H5LEXISTS',
                     function_name='H5Lexists',
                     uselib = 'hdf5',
                     uselib_store = 'hdf5',
                 )
-            
-        
+                
         
         check_cxx(
             lib='xmds',
@@ -438,8 +450,6 @@ def configure(conf):
                 uselib="system",
                 msg = "Checking for Apple IOKit framework",
             )
-        
-        
         
         check_cxx(
             lib=["iomp", "vml"],
