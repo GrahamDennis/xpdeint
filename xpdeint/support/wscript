@@ -366,31 +366,20 @@ def configure(conf):
         
         # Check for hdf5
         if conf.find_program('h5cc', var='H5CC', mandatory = False):
-            try:
-                # *sigh* h5cc is broken in that it returns a failure return status when you ask for -help.
-                # But maybe, one day, magical fairies will fix the many things broken about h5cc,
-                # and after that day, the following line will work...
-                h5cc_output = conf.cmd_and_log([conf.env['H5CC'], '-help'])
-            except Errors.WafError as e:
-                # Until that day, we have to get the h5cc output from the waf error.
-                h5cc_output = e.stdout
-            
-            # Grab the HDF5 install prefix from the help command output.  
-            # We're searching for a string of the form [default: ZZZZ]
-            hdf5_prefix = re.search(r"\[default: (.*)\]", h5cc_output).group(1)
-            hdf5_libpath = os.path.join(hdf5_prefix, "lib")
-            conf.env.append_unique("LIBPATH_hdf5", hdf5_libpath)
-            
             h5cc_shared_flags = conf.cmd_and_log([conf.env['H5CC'], '-show', '-shlib'])
             h5cc_static_flags = conf.cmd_and_log([conf.env['H5CC'], '-show', '-noshlib'])
+            
+            hdf5_libpath = re.search(r'(\S*)/libhdf5\.a', h5cc_static_flags).group(1)
+            
+            conf.env.append_unique("LIBPATH_hdf5", hdf5_libpath)
             
             # h5cc uses absolute paths to the static libraries.  This interferes with how waf likes to link
             # against static libraries.  Let's remove the absolute paths to the libraries, and add the static libraries
             # again later.
             h5cc_static_flags = re.sub(re.escape(hdf5_libpath) + r"/libhdf5\S*\.a", "", h5cc_static_flags)
             
-            conf.parse_flags(h5cc_shared_flags, 'hdf5_shared', force_static = False)
-            conf.parse_flags(h5cc_static_flags, 'hdf5_static', force_static = True)
+            conf.parse_flags(h5cc_shared_flags, 'hdf5_shared')
+            conf.parse_flags(h5cc_static_flags, 'hdf5_static')
             
             conf.env['uselib'].extend(['hdf5_shared', 'hdf5_static'])
             
@@ -420,7 +409,7 @@ def configure(conf):
                     hdf5_stlib = conf.env._get_list_value_for_modification('STLIB_hdf5')
                     if 'hdf5_hl' in hdf5_stlib:
                         hdf5_stlib.remove('hdf5_hl')
-                        hdf5_stlib.insert(hdf5_stlib.index('hdf5'), 'hdf5_hl')
+                        hdf5_stlib.insert(0, 'hdf5_hl')
                 
                 check_cxx(
                     header_name='hdf5.h',
@@ -626,4 +615,3 @@ def configure(conf):
         print "MPI not found. No scripts using MPI can be compiled on this system."
         conf.setenv('default')
         del conf.all_envs['mpi']
-    
