@@ -132,10 +132,10 @@ Also note that this guide adds extra notes for users wishing to install XMDS2 us
     
     * Developer-only instructions: You can instead check out a working copy of the source using SVN. 
       In a directory where you want to check out the repository, run:
-      ``svn checkout svn://svn.code.sf.net/p/xmds/code/trunk/xpdeint .``
+      ``svn checkout https://svn.code.sf.net/p/xmds/code/trunk/xpdeint .``
       (Only do this once.  To update your copy, type ``svn up`` or ``make update`` in the same directory, and then repeat any developer-only instructions below).
       A checkout with read/write permissions requires a checkout with your login details.  e.g.:
-      ``svn checkout --username=mysourceforgeusername svn+ssh://mysourceforgeusername@svn.code.sf.net/p/xmds/code/trunk/xpdeint xmds2``
+      ``svn checkout --username=myusername https://myusername@svn.code.sf.net/p/xmds/code/trunk/xpdeint .``
     
 #. You will need a working C++ compiler.  
     For Mac OS X, this means that the developer tools (XCode) should be installed.

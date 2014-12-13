@@ -53,6 +53,7 @@ class _Integrator (_Segment):
     assert stepperClass
     self.stepper = stepperClass(parent = self, **self.argumentsToTemplateConstructors)
     self._children.append(self.stepper)
+    self.only_when_called = False
     
     functionNamePrefix = '_' + self.id
     

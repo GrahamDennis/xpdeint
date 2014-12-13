@@ -20,7 +20,13 @@
     </transverse_dimensions>
   </geometry>
   
-  <vector name="potential" initial_basis="y" type="complex">
+  <filter name="toplevelfilter">
+    <![CDATA[
+      printf("Hello world from a named filter!\n");
+    ]]>
+  </filter>
+
+   <vector name="potential" initial_basis="y" type="complex">
     <components> V1 </components>
     <initialisation>
       <![CDATA[
@@ -57,10 +63,17 @@
   </computed_vector>
   
   <sequence>
+      <filter name="sequencelevelfilter">
+        <![CDATA[
+          toplevelfilter();
+          normalisy();
+        ]]>
+      </filter>
+  
     <integrate algorithm="RK4" interval="10.0" steps="10000" tolerance="1e-8">
       <samples>50 50 1</samples>
       <filters>
-        <filter>
+        <filter name="normalisy">
           <dependencies>wavefunction normalisation</dependencies>
           <![CDATA[
             // Correct normalisation of the wavefunction

@@ -29,6 +29,8 @@ class _FilterSegment (_Segment):
     _Segment.__init__(self, *args, **KWs)
     
     self.operatorContainers = []
+    self.onlyWhenCalled = False
+
   
   @property
   def children(self):

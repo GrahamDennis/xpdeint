@@ -68,6 +68,16 @@ The possible attributes and attribute values for each element are not shown; see
       <:ref:`vector <VectorElement>`> ... <:ref:`/vector <VectorElement>`>
       ...
 
+      <:ref:`filter <FilterElement>`>
+        <:ref:`dependencies <Dependencies>`> <:ref:`/dependencies <Dependencies>`>
+        <![:ref:`CDATA <XMDSCSyntax>` [
+        ]]>
+      <:ref:`/filter <FilterElement>`>
+
+      <:ref:`filter <FilterElement>`> ... <:ref:`/filter <FilterElement>`>
+      <:ref:`filter <FilterElement>`> ... <:ref:`/filter <FilterElement>`>
+      ...
+
       <:ref:`computed_vector <ComputedVectorElement>`>
         <:ref:`components <ComponentsElement>`> <:ref:`/components <ComponentsElement>`>
         <:ref:`evaluation <EvaluationElement>`>

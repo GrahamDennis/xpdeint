@@ -159,6 +159,8 @@ class XMDS2Parser(ScriptParser):
     
     self.parseTopLevelSequenceElement(simulationElement)
     
+    self.parseSimulationFilterElements(simulationElement, None)
+
     self.parseOutputElement(simulationElement)
     
   
@@ -1364,7 +1366,7 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
         # Add the operator container to the filter segment
         filterSegmentTemplate.operatorContainers.append(operatorContainer)
         # parse the filter operator
-        filterOperator = self.parseFilterOperator(childNode, operatorContainer)
+        filterOperator = self.parseFilterOperator(childNode, operatorContainer, forceOnlyWhenCalled = False)
       elif tagName == 'breakpoint':
         # Construct the breakpoint segment
         breakpointSegmentTemplate = BreakpointSegmentTemplate(xmlElement = childNode,
@@ -1615,11 +1617,30 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
       operatorContainer = None
     
     for filterElement in filterElements:
-      filterTemplate = self.parseFilterOperator(filterElement, operatorContainer)
+      filterTemplate = self.parseFilterOperator(filterElement, operatorContainer, forceOnlyWhenCalled = False)
     
     return operatorContainer
   
-  def parseFilterOperator(self, filterElement, parentTemplate):
+  def parseSimulationFilterElements(self, simulationElement, parent):
+    filterElements = simulationElement.getChildElementsByTagName('filter', optional = True)
+    results =[]
+    
+    for filterElement in filterElements:
+      # Construct the filter segment
+      filterSegmentTemplate = FilterSegmentTemplate(xmlElement = filterElement,
+                                                    **self.argumentsToTemplateConstructors)
+      # Create an operator container to house the filter operator
+      operatorContainer = OperatorContainerTemplate(parent = filterSegmentTemplate,
+                                                    **self.argumentsToTemplateConstructors)
+      # Add the operator container to the filter segment
+      filterSegmentTemplate.operatorContainers.append(operatorContainer)
+      # parse the filter operator
+      
+      filterOperator = self.parseFilterOperator(filterElement, operatorContainer, forceOnlyWhenCalled = True) 
+    
+    return results
+    
+  def parseFilterOperator(self, filterElement, parentTemplate, forceOnlyWhenCalled):
     filterName = filterElement.getAttribute('name')
     
     if filterName:
@@ -1631,9 +1652,36 @@ Use feature <validation kind="run-time"/> to allow for arbitrary code.""" % loca
         ## Make sure no-one else takes the name
         self.globalNameSpace['symbolNames'].add(filterName)
     
+    
     filterTemplate = FilterOperatorTemplate(parent = parentTemplate,
                                             xmlElement = filterElement, name = filterName,
                                             **self.argumentsToTemplateConstructors)
+    
+    if filterElement.hasAttribute('only_when_called'):
+      if not filterName:
+          raise ParserException(filterElement, "Filters that are only called explicitly must be named.")
+      if filterElement.getAttribute('only_when_called').strip().lower() == 'yes':
+        filterTemplate.parent.parent.onlyWhenCalled = True
+        if not forceOnlyWhenCalled:
+            parserWarning(
+              filterElement,
+              "You have tried to stop this filter activating (using only_when_called = 'yes'), "
+              "but you placed that filter where it should be activated. "
+              "Have you made an error?"
+            )
+      elif filterElement.getAttribute('only_when_called').strip().lower() == 'no':
+        filterTemplate.parent.parent.onlyWhenCalled = forceOnlyWhenCalled
+        if forceOnlyWhenCalled:
+            parserWarning(
+              filterElement,
+              "You have tried to ask this filter to activate in sequence (using only_when_called = 'no'), "
+              "but you placed that filter where that does not make sense. "
+              "Have you made an error?"
+            )
+      else:
+        raise ParserException(filterElement, "Attribute 'only_when_called' should be either 'yes' or 'no'.")
+    else:
+        filterTemplate.parent.parent.onlyWhenCalled = forceOnlyWhenCalled
     
     codeBlock = _UserLoopCodeBlock(field = None, xmlElement = filterElement,
                                    parent = filterTemplate, **self.argumentsToTemplateConstructors)

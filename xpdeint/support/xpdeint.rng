@@ -24,6 +24,7 @@
           <ref name="Geometry"/>
           <ref name="Driver"/>
           <ref name="Vector"/>
+          <ref name="Filter"/>
           <ref name="ComputedVector"/>
           <ref name="NoiseVector"/>
           <ref name="Sequence"/>
@@ -492,15 +493,18 @@
   </define>
   <define name="Filter">
     <element name="filter">
-      <interleave>
-        <optional>
-          <attribute name="name"/>
-        </optional>
-        <optional>
-          <ref name="Dependencies"/>
-        </optional>
-        <text/>
-      </interleave>
+      <optional>
+        <attribute name="name"/>
+      </optional>
+      <optional>
+        <attribute name="only_when_called">
+          <ref name="Bool"/>
+        </attribute>
+      </optional>
+      <optional>
+        <ref name="Dependencies"/>
+      </optional>
+      <text/>
     </element>
   </define>
   <define name="Breakpoint">

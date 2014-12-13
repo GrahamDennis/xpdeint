@@ -10,6 +10,7 @@ Simulation = element simulation {
         | Geometry
         | Driver
         | Vector
+        | Filter
         | ComputedVector
         | NoiseVector
         | Sequence
@@ -243,9 +244,10 @@ CrossPropagationOperatorContents =
       )+
 
 Filter = element filter {
-    attribute name { text }?
-    & Dependencies?
-    & text
+    attribute name { text }?, 
+    attribute only_when_called { Bool }?
+    , Dependencies?
+    , text
 }
 
 Breakpoint = element breakpoint {

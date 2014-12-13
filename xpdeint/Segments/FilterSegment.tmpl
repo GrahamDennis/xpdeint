@@ -31,6 +31,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   Function implementations
 *@
 @def segmentFunctionBody($function)
+@if $onlyWhenCalled
+// This filter is only activated when called explicitly
+@else
 ${evaluateComputedVectors($dynamicVectorsNeedingPrecalculationForOperatorContainers($operatorContainers))}@slurp
   @#
   @for $operatorContainer in $operatorContainers
@@ -38,5 +41,6 @@ ${evaluateComputedVectors($dynamicVectorsNeedingPrecalculationForOperatorContain
 ${operatorContainer.evaluateOperators(parentFunction = function)}@slurp
   @end for
   @#
+@end if
 @end def
 

@@ -1186,13 +1186,15 @@ Example syntax::
 Filter element
 ==============
 
-A ``<filter>`` element can be placed inside a ``<sequence>`` element or an :ref:`<integrate><IntegrateElement>` element.  It contains a 'CDATA' block and an optional :ref:`<dependencies><Dependencies>` element, which may give access to variables in other ``<vector>``, ``<computed_vector>`` or ``<noise_vector>`` elements.  The code inside the 'CDATA' block is executed over the combined tensor product space of the dependencies, or simply once if there is no dependencies element.  This element therefore allows arbitrary execution of C-code.
+A ``<filter>`` element can be placed inside the ``<simulation>`` element, a :ref:`<sequence><SequenceElement>` element, or an :ref:`<integrate><IntegrateElement>` element.  It contains a 'CDATA' block and an optional :ref:`<dependencies><Dependencies>` element, which may give access to variables in other ``<vector>``, ``<computed_vector>`` or ``<noise_vector>`` elements.  The code inside the 'CDATA' block is executed over the combined tensor product space of the dependencies, or simply once if there is no dependencies element.  This element therefore allows arbitrary execution of C-code.
 
 .. index::
    single: XML element attributes; name (filter)
     
-Sometimes it is desirable to apply a filter conditionally.  The most efficient way of doing this is to call the function from the piece of code that contains the conditional statement (likely another ``<filter>`` element) rather than embed the conditional function in the filter itself, as the latter method can involve the conditional statement being evaluated multiple times over the transverse dimensions.  For this reason, it is possible to give a filter a ``name`` attribute, and the filter can thenceforth be called in CDATA blocks by that name.  For example: ``<filter name="filterName">`` allows the function to be called using the C-function ``filterName()``.
-    
+If a ``<filter>`` element is placed in a ``<sequence>`` element, then it executes once at that point in the sequence.  If it is placed in an ``<integrate>`` element, then it is executed each integration step as described in the description of the :ref:`<filters><FiltersElement>` element.
+
+If a filter is placed in the ``<simulation>`` element, it must be given a name with the ``name`` attribute.  It can thenceforth be called in CDATA blocks by that name.  For example: ``<filter name="filterName">`` allows the function to be called using the C-function ``filterName()``.  Other filters that are given names can also be called in that fashion. This is useful for applying a filter conditionally.  The most efficient way of doing this is to call the function from the piece of code that contains the conditional statement (likely another ``<filter>`` element) rather than embed the conditional function in the filter itself, as the latter method can involve the conditional statement being evaluated multiple times over the transverse dimensions.  
+
 One of the common uses of a filter element is to apply discontinuous changes to the vectors and variables of the simulation.
 
 Example syntax::
