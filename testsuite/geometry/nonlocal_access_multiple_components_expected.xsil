@@ -1,0 +1,96 @@
+<?xml version="1.0" ?><simulation xmds-version="2">
+  <testing>
+    <xsil_file absolute_tolerance="1e-7" expected="nonlocal_access_multiple_components_expected.xsil" name="nonlocal_access_multiple_components.xsil" relative_tolerance="1e-5"/>
+  </testing>
+  
+  <name>nonlocal_access_multiple_components</name>
+  <author>Mattias Johnsson</author>
+  <description>
+     Attempted simulation of Keyu's differential equation
+  </description>
+  
+  <features>
+    <benchmark/>
+    <!-- <error_check /> -->
+    <bing/>
+    <fftw plan="patient"/>
+    <halt_non_finite/>
+
+    <globals>
+      <![CDATA[
+        const real x0 = -5.0;
+        const real xp0 = 5.0;
+      ]]>
+    </globals>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension aliases="xp" domain="(-10, 10)" lattice="16" name="x"/>
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector dimensions="x xp" name="main" type="real">
+    <components> phia phips </components>
+    <initialisation>
+      <![CDATA[
+        phia = 0.0;
+        phips = 0.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="ARK45" interval="1" steps="1000" tolerance="1e-5">
+      <samples> 10 </samples>
+
+      <operators>
+
+        <integration_vectors> main </integration_vectors>
+        <![CDATA[
+          dphia_dt = phips(x=>x,xp=>x);
+          dphips_dt = 1.0;
+        ]]>
+      </operators>
+
+    </integrate>
+  </sequence>
+  
+  <output>
+
+      <sampling_group basis="x xp" initial_sample="yes">
+        <moments> phiaOut phipsOut </moments>
+        <dependencies> main </dependencies>
+        <![CDATA[
+          phiaOut = phia;
+          phipsOut = phips;
+        ]]>
+      </sampling_group>
+
+  </output>
+
+<info>
+Script compiled with XMDS2 version VERSION_PLACEHOLDER (SUBVERSION_REVISION_PLACEHOLDER)
+See http://www.xmds.org for more information.
+</info>
+
+<XSIL Name="moment_group_1">
+  <Param Name="n_independent">3</Param>
+  <Array Name="variables" Type="Text">
+    <Dim>5</Dim>
+    <Stream><Metalink Format="Text" Delimiter=" \n"/>
+t x xp phiaOut phipsOut 
+    </Stream>
+  </Array>
+  <Array Name="data" Type="double">
+    <Dim>11</Dim>
+    <Dim>16</Dim>
+    <Dim>16</Dim>
+    <Dim>5</Dim>
+    <Stream><Metalink Format="HDF5" Type="Remote" Group="/1"/>
+nonlocal_access_multiple_components_expected.h5
+    </Stream>
+  </Array>
+</XSIL>
+</simulation>

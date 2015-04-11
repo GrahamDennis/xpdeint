@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+  <testing>
+    <xsil_file name="nonlocal_access_multiple_components.xsil" expected="nonlocal_access_multiple_components_expected.xsil" absolute_tolerance="1e-7" relative_tolerance="1e-5" />
+  </testing>
+  
+  <name>nonlocal_access_multiple_components</name>
+  <author>Mattias Johnsson</author>
+  <description>
+     Attempted simulation of Keyu's differential equation
+  </description>
+  
+  <features>
+    <benchmark />
+    <!-- <error_check /> -->
+    <bing />
+    <fftw plan="patient" />
+    <halt_non_finite />
+
+    <globals>
+      <![CDATA[
+        const real x0 = -5.0;
+        const real xp0 = 5.0;
+      ]]>
+    </globals>
+  </features>
+  
+  <geometry>
+    <propagation_dimension> t </propagation_dimension>
+    <transverse_dimensions>
+      <dimension name="x" lattice="16"  domain="(-10, 10)"  aliases="xp" />
+    </transverse_dimensions>
+  </geometry>
+  
+  <vector name="main" dimensions="x xp" type="real" >
+    <components> phia phips </components>
+    <initialisation>
+      <![CDATA[
+        phia = 0.0;
+        phips = 0.0;
+      ]]>
+    </initialisation>
+  </vector>
+  
+  <sequence>
+    <integrate algorithm="ARK45" tolerance="1e-5" interval="1" steps="1000">
+      <samples> 10 </samples>
+
+      <operators>
+
+        <integration_vectors> main </integration_vectors>
+        <![CDATA[
+          dphia_dt = phips(x=>x,xp=>x);
+          dphips_dt = 1.0;
+        ]]>
+      </operators>
+
+    </integrate>
+  </sequence>
+  
+  <output>
+
+      <sampling_group basis="x xp" initial_sample="yes">
+        <moments> phiaOut phipsOut </moments>
+        <dependencies> main </dependencies>
+        <![CDATA[
+          phiaOut = phia;
+          phipsOut = phips;
+        ]]>
+      </sampling_group>
+
+  </output>
+</simulation>
