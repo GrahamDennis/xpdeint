@@ -229,7 +229,6 @@ def configure(conf):
             check_cxx(
                 cxxflags=['-fno-unsafe-math-optimizations', '-fno-finite-math-only'],
                 uselib_store="safe_math",
-                uselib='optimise',
                 msg = "Checking for cautious math flags"
             )
             
